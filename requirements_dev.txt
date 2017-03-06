@@ -1,0 +1,7 @@
+pip
+bumpversion
+wheel
+coverage
+Sphinx
+pytest
+
