@@ -336,4 +336,4 @@ def _write_empty():
 
 if __name__ == '__main__':
     from werkzeug.serving import run_simple  # pylint: disable=import-error
-    run_simple('127.0.0.1', 8000, application, use_debugger=False, use_reloader=True)
+    run_simple('0.0.0.0', 8888, application, use_debugger=False, use_reloader=True)
