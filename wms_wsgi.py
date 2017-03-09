@@ -278,7 +278,10 @@ def get_map(dc, args, start_response):
     datasets = tiler.datasets(dc.index)
     data = tiler.data(datasets)
 
-    body = _write_png(data)
+    if data:
+        body = _write_png(data)
+    else:
+        body = _write_empty()
     start_response("200 OK", [
         ("Access-Control-Allow-Origin", "*"),
         ("Content-Type", "image/png"),
@@ -312,6 +315,22 @@ def _write_png(data):
             for idx, band in enumerate(data.data_vars, start=1):
                 scaled = numpy.clip(data[band].values[::-1] / 12.0, 0, 255).astype('uint8')
                 thing.write_band(idx, scaled)
+        return memfile.read()
+
+
+def _write_empty():
+    width, height = 1, 1
+    
+    with MemoryFile() as memfile:
+        with memfile.open(driver='PNG',
+                          width=width,
+                          height=height,
+                          count=1,
+                          transform=Affine.identity(),
+                          nodata=0,
+                          dtype='uint8') as thing:
+            thing.write_band(1, numpy.array([[0]], dtype='uint8'))
+            # pass
         return memfile.read()
 
 
