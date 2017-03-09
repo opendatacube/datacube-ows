@@ -235,7 +235,7 @@ def _parse_query(qs):
 
 
 def _script_url(environ):
-    return environ['wsgi.url_scheme']+'://'+environ['HTTP_HOST']+environ['SCRIPT_NAME']
+    return 'https://'+environ['HTTP_HOST']+environ['SCRIPT_NAME']
 
 
 def get_capabilities(dc, args, environ, start_response):
