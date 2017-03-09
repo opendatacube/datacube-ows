@@ -252,6 +252,7 @@ def get_capabilities(dc, args, environ, start_response):
 
     data = GET_CAPS_TEMPLATE.format(location=_script_url(environ), layers=layers).encode('utf-8')
     start_response("200 OK", [
+        ("Access-Control-Allow-Origin", "*"),
         ("Content-Type", "application/xml"),
         ("Content-Length", str(len(data)))
     ])
@@ -279,6 +280,7 @@ def get_map(dc, args, start_response):
 
     body = _write_png(data)
     start_response("200 OK", [
+        ("Access-Control-Allow-Origin", "*"),
         ("Content-Type", "image/png"),
         ("Content-Length", str(len(body)))
     ])
