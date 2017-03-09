@@ -14,6 +14,7 @@ except ImportError:
     MemoryFile = None
 
 import numpy
+import pandas
 import xarray
 from affine import Affine
 from datetime import datetime, timedelta
@@ -272,6 +273,9 @@ def get_layer_metadata(layer, product):
 def get_map(dc, args, start_response):
     geobox = _get_geobox(args)
     time = args.get('time', '2015-01-01/2015-02-01').split('/')
+    if len(time) == 1:
+        time = pandas.to_datetime(time[0])
+        time = [time - timedelta(days=30), time]
 
     layer_config = LAYER_SPEC[args['layers']]
     tiler = RGBTileGenerator(layer_config, geobox, time)
