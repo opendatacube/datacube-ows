@@ -20,6 +20,8 @@ from affine import Affine
 from datetime import datetime, timedelta
 
 import datacube
+import datacube.api.query
+from datacube.storage.masking import mask_valid_data as mask_invalid_data, make_mask
 from datacube.utils import geometry
 
 
@@ -31,25 +33,85 @@ INDEX_TEMPLATE = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.18.1/vis-timeline-graph2d.min.css" />
     <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.18.1/vis.min.js"></script>
 </head>
 <body>
 
 <div id="mapid" style="width: 1200px; height: 800px;"></div>
+<div id="timeline" style="width: 1200px; height: 200px;"></div>
 <script>
-    var mymap = L.map('mapid').setView([-35.28, 149.12], 12);
+    function formatDate(date) {{
+      return date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate();
+    }};
+    function formatDateRange(start, end) {{
+        return formatDate(start) + "/" + formatDate(end);
+    }};
 
-    L.tileLayer.wms(
+    var start = new Date(2016, 10, 1);
+    var end = new Date(2016, 11, 1);
+
+    var mymap = L.map('mapid').setView([17.385, 78.487], 12);
+    mbUrl = 'http://{{s}}.tile.osm.org/{{z}}/{{x}}/{{y}}.png'; 
+    osm = L.tileLayer(mbUrl, {{id: 'mapbox.light', attribution: ""}});
+    cube = L.tileLayer.wms(
         "{wms_url}",
         {{
             minZoom: 6,
             maxZoom: 19,
-            layers: "ls8_nbar_rgb",
+            layers: "ls8_sr_rgb",
             format: 'image/png',
             transparent: true,
-            attribution: "Teh Cube"
+            attribution: "Teh Cube",
+            time: formatDateRange(start, end)
         }}
-    ).addTo(mymap);
+    );
+    cube_cir = L.tileLayer.wms(
+        "{wms_url}",
+        {{
+            minZoom: 6,
+            maxZoom: 19,
+            layers: "ls8_sr_cir",
+            format: 'image/png',
+            transparent: true,
+            attribution: "Teh Cube",
+            time: formatDateRange(start, end)
+        }}
+    );
+    cube_false = L.tileLayer.wms(
+        "{wms_url}",
+        {{
+            minZoom: 6,
+            maxZoom: 19,
+            layers: "ls8_sr_false",
+            format: 'image/png',
+            transparent: true,
+            attribution: "Teh Cube",
+            time: formatDateRange(start, end)
+        }}
+    );
+    cube.addTo(mymap);
+    L.control.layers({{'OSM': osm, 'RGB': cube, 'CIR': cube_cir, 'False': cube_false}}, {{}}).addTo(mymap);
+
+    items = new vis.DataSet([{{id: 1, content: 'time', start: start, end: end}}]);
+    function onUpdate(event, properties, senderId) {{
+        start = properties.data[0].start;
+        end = properties.data[0].end;
+        cube.setParams({{time: formatDateRange(start, end)}});
+        cube_cir.setParams({{time: formatDateRange(start, end)}});
+        cube_false.setParams({{time: formatDateRange(start, end)}});
+    }};
+    items.on('update', onUpdate);
+
+    options = {{
+        editable: {{
+            updateTime: true
+        }},
+        start: new Date(2015, 1, 1),
+        end: new Date()
+    }};
+    var timeline = new vis.Timeline(document.getElementById('timeline'), items, options);
 </script>
 </body>
 </html>
@@ -115,36 +177,67 @@ LAYER_TEMPLATE = """
 """
 
 LAYER_SPEC = {
-    'ls8_nbar_rgb': {
-        'product': 'ls8_nbar_albers',
+    'ls8_sr_rgb': {
+        'product': 'ls8_ledaps_scene',
+        'mask': 'ls8_ledaps_scene',
+        'mask_band': 'sr_cloud',
+        'mask_flags': dict(
+            cirrus_cloud=False,
+            cloud=False,
+            adjacent_to_cloud=False,
+            cloud_shadow=False,
+        ),
+        #'mask_band': 'cfmask',
+        #'mask_flags': {'cfmask': 'clear'},
         'bands': ('red', 'green', 'blue'),
-        'extents': geometry.box(100, -50, 160, 0, crs=geometry.CRS('EPSG:4326')),
+        'extents': geometry.box(60, 0, 100, 40, crs=geometry.CRS('EPSG:4326')),
         'time': {
             'start': datetime(2013, 1, 1),
             'end': datetime(2017, 1, 1),
             'period': timedelta(days=0)
         }
     },
-    'ls8_l1t_rgb': {
-        'product': 'ls8_l1t_scene',
-        'bands': ('red', 'green', 'blue'),
-        'extents': geometry.box(100, -50, 160, 0, crs=geometry.CRS('EPSG:4326')),
+    'ls8_sr_cir': {
+        'product': 'ls8_ledaps_scene',
+        'mask': 'ls8_ledaps_scene',
+        'mask_band': 'sr_cloud',
+        'mask_flags': dict(
+            cirrus_cloud=False,
+            cloud=False,
+            adjacent_to_cloud=False,
+            cloud_shadow=False,
+        ),
+        #'mask_band': 'cfmask',
+        #'mask_flags': {'cfmask': 'clear'},
+        'bands': ('nir', 'red', 'green'),
+        'extents': geometry.box(60, 0, 100, 40, crs=geometry.CRS('EPSG:4326')),
         'time': {
             'start': datetime(2013, 1, 1),
             'end': datetime(2017, 1, 1),
             'period': timedelta(days=0)
         }
     },
-    'modis_mcd43a4_rgb': {
-        'product': 'modis_mcd43a4_tile',
-        'bands': ('Nadir_Reflectance_Band1', 'Nadir_Reflectance_Band4', 'Nadir_Reflectance_Band3'),
-        'extents': geometry.box(100, -50, 160, 0, crs=geometry.CRS('EPSG:4326')),
+    'ls8_sr_false': {
+        'product': 'ls8_ledaps_scene',
+        'mask': 'ls8_ledaps_scene',
+        'mask_band': 'sr_cloud',
+        'mask_flags': dict(
+            cirrus_cloud=False,
+            cloud=False,
+            adjacent_to_cloud=False,
+            cloud_shadow=False,
+        ),
+        #'mask_band': 'cfmask',
+        #'mask_flags': {'cfmask': 'clear'},
+        'bands': ('swir2', 'nir', 'green'),
+        'extents': geometry.box(60, 0, 100, 40, crs=geometry.CRS('EPSG:4326')),
         'time': {
             'start': datetime(2013, 1, 1),
             'end': datetime(2017, 1, 1),
             'period': timedelta(days=0)
         }
-    }
+    },
+
 }
 
 
@@ -179,6 +272,76 @@ class RGBTileGenerator(TileGenerator):
         measurements = [self._set_resampling(prod.measurements[name]) for name in self._bands]
         with datacube.set_options(reproject_threads=1, fast_load=True):
             return datacube.Datacube.load_data(sources, self._geobox, measurements)
+
+    def _set_resampling(self, measurement):
+        mc = measurement.copy()
+        # mc['resampling_method'] = 'cubic'
+        return mc
+
+
+class LatestCloudFree(TileGenerator):
+    def __init__(self, product, bands, mask, mask_band, mask_flags, geobox, time, **kwargs):
+        super(LatestCloudFree, self).__init__(**kwargs)
+        self._product = product
+        self._bands = bands
+        self._mask = mask
+        self._mask_band = mask_band
+        self._mask_flags = mask_flags
+        self._geobox = geobox
+        self._time = time
+
+    def _get_datasets(self, index, product, geobox, time):
+        query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time)
+        datasets = index.datasets.search_eager(**query.search_terms)
+        return [dataset for dataset in datasets if dataset.extent.to_crs(geobox.crs).intersects(geobox.extent)]
+
+    def datasets(self, index):
+        return {
+            'product': self._get_datasets(index, self._product, self._geobox, self._time),
+            'mask': self._get_datasets(index, self._mask, self._geobox, self._time)
+        }
+
+    def data(self, datasets):
+        prod_sources = datacube.Datacube.group_datasets(datasets['product'], datacube.api.query.query_group_by())
+        mask_sources = datacube.Datacube.group_datasets(datasets['mask'], datacube.api.query.query_group_by())
+        # pylint: disable=unbalanced-tuple-unpacking
+        prod_sources, mask_sources = xarray.align(prod_sources, mask_sources)
+
+        fused_data = None
+        fused_mask = None
+        for i in reversed(range(0, prod_sources.time.size)):
+            prod = datasets['mask'][0].type
+            measurements = [self._set_resampling(prod.measurements[name]) for name in (self._mask_band, )]
+            with datacube.set_options(reproject_threads=1, fast_load=True):
+                pq_data = datacube.Datacube.load_data(mask_sources[i], self._geobox, measurements)
+            mask = make_mask(pq_data[self._mask_band], **self._mask_flags)
+
+            # skip real cloudy stuff
+            if numpy.count_nonzero(mask) < mask.size*0.05:
+                continue
+
+            prod = datasets['product'][0].type
+            measurements = [self._set_resampling(prod.measurements[name]) for name in self._bands]
+
+            with datacube.set_options(reproject_threads=1, fast_load=True):
+                pix_data = datacube.Datacube.load_data(prod_sources[i], self._geobox, measurements)
+            pix_data = mask_invalid_data(pix_data)
+
+            if fused_data is None:
+                fused_data = pix_data
+                fused_mask = mask
+                continue
+
+            copy_mask = (~fused_mask) & mask
+            for band in self._bands:
+                numpy.copyto(fused_data[band].values, pix_data[band].values, where=copy_mask)
+            fused_mask = fused_mask | mask
+
+            # don't try to get 100% cloud free
+            if numpy.count_nonzero(fused_mask) > fused_mask.size*0.95:
+                break
+
+        return fused_data
 
     def _set_resampling(self, measurement):
         mc = measurement.copy()
@@ -262,10 +425,10 @@ def get_capabilities(dc, args, environ, start_response):
 
 def get_layer_metadata(layer, product):
     metadata = """
-<LatLonBoundingBox minx="100" miny="-50" maxx="160" maxy="0"></LatLonBoundingBox>
-<BoundingBox CRS="EPSG:4326" minx="100" miny="-50" maxx="160" maxy="0"/>
+<LatLonBoundingBox minx="60" miny="0" maxx="100" maxy="40"></LatLonBoundingBox>
+<BoundingBox CRS="EPSG:4326" minx="60" miny="0" maxx="100" maxy="40"/>
 <Dimension name="time" units="ISO8601"/>
-<Extent name="time" default="2015-01-01">2013-01-01/2017-01-01/P8D</Extent>
+<Extent name="time" default="2015-01-01">2013-01-01/2017-01-01/P1M</Extent>
     """
     return metadata
 
@@ -278,7 +441,13 @@ def get_map(dc, args, start_response):
         time = [time - timedelta(days=30), time]
 
     layer_config = LAYER_SPEC[args['layers']]
-    tiler = RGBTileGenerator(layer_config, geobox, time)
+    #tiler = RGBTileGenerator(layer_config, geobox, time)
+    tiler = LatestCloudFree(layer_config['product'],
+                            layer_config['bands'],
+                            layer_config['mask'],
+                            layer_config['mask_band'],
+                            layer_config['mask_flags'],
+                            geobox, time)
     datasets = tiler.datasets(dc.index)
     data = tiler.data(datasets)
 
