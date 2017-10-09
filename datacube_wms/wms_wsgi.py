@@ -285,7 +285,7 @@ class LatestCloudFree(TileGenerator):
                 fused_mask = mask
                 continue
 
-            copy_mask = (~fused_mask) & mask
+            copy_mask = (~fused_mask) & mask if fused_mask is not None else mask
             for band in self._bands:
                 numpy.copyto(fused_data[band].values, pix_data[band].values, where=copy_mask)
             fused_mask = fused_mask | mask
@@ -445,7 +445,6 @@ def _write_png(data):
 
 def _write_empty():
     width, height = 1, 1
-    
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,
@@ -460,5 +459,5 @@ def _write_empty():
 
 
 if __name__ == '__main__':
-    from werkzeug.serving import run_simple  # pylint: disable=import-error
+    from werkzeug.serving import run_simple  # pylint: disable=import-error, wrong-import-position
     run_simple('0.0.0.0', 8888, application, use_debugger=False, use_reloader=True)
