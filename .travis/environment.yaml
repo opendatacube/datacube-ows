@@ -5,6 +5,7 @@ channels:
 - defaults
 - nodefaults
 dependencies:
+- datacube
 - pyyaml
 - sqlalchemy
 - python-dateutil
@@ -47,6 +48,7 @@ dependencies:
   - pytest-cov # testing
   - pytest-logging
   - pytest-faulthandler
+  - pytest_localserver
   - SharedArray
   - yamllint # testing
 

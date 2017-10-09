@@ -200,7 +200,7 @@ class LatestCloudFree(TileGenerator):
                 fused_mask = mask
                 continue
 
-            copy_mask = (~fused_mask) & mask
+            copy_mask = (~fused_mask) & mask  # pylint: disable=invalid-unary-operand-type
             for band in self._bands:
                 numpy.copyto(fused_data[band].values, pix_data[band].values, where=copy_mask)
             fused_mask = fused_mask | mask
@@ -394,7 +394,6 @@ def _write_png(data):
 
 def _write_empty():
     width, height = 1, 1
-    
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,
