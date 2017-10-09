@@ -5,6 +5,7 @@ channels:
 - defaults
 - nodefaults
 dependencies:
+- datacube
 - pyyaml
 - sqlalchemy
 - python-dateutil
