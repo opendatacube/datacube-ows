@@ -5,6 +5,12 @@ try:
 except ImportError:
     from urllib.parse import parse_qs
 
+from werkzeug.datastructures import MultiDict
+
+from flask import Flask, request, render_template
+
+app = Flask(__name__)
+
 # travis can only get earlier version of rasterio which doesn't have MemoryFile, so
 # - tell pylint to ingnore inport error
 # - catch ImportError so pytest doctest don't fall over
@@ -23,97 +29,6 @@ import datacube
 import datacube.api.query
 from datacube.storage.masking import mask_valid_data as mask_invalid_data, make_mask
 from datacube.utils import geometry
-
-
-INDEX_TEMPLATE = """<!DOCTYPE html>
-<html>
-<head>
-    <title>Map</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.18.1/vis-timeline-graph2d.min.css" />
-    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.18.1/vis.min.js"></script>
-</head>
-<body>
-
-<div id="mapid" style="width: 1200px; height: 800px;"></div>
-<div id="timeline" style="width: 1200px; height: 200px;"></div>
-<script>
-    function formatDate(date) {{
-      return date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate();
-    }};
-    function formatDateRange(start, end) {{
-        return formatDate(start) + "/" + formatDate(end);
-    }};
-
-    var start = new Date(2006, 1, 1);
-    var end = new Date(2006, 3, 1);
-
-    var mymap = L.map('mapid').setView([-35.0, 148.75], 12);
-    mbUrl = 'http://{{s}}.tile.osm.org/{{z}}/{{x}}/{{y}}.png'; 
-    osm = L.tileLayer(mbUrl, {{id: 'mapbox.light', attribution: ""}});
-    cube = L.tileLayer.wms(
-        "{wms_url}",
-        {{
-            minZoom: 6,
-            maxZoom: 19,
-            layers: "ls5_sr_rgb",
-            format: 'image/png',
-            transparent: true,
-            attribution: "Teh Cube",
-            time: formatDateRange(start, end)
-        }}
-    );
-    cube_cir = L.tileLayer.wms(
-        "{wms_url}",
-        {{
-            minZoom: 6,
-            maxZoom: 19,
-            layers: "ls8_sr_cir",
-            format: 'image/png',
-            transparent: true,
-            attribution: "Teh Cube",
-            time: formatDateRange(start, end)
-        }}
-    );
-    cube_false = L.tileLayer.wms(
-        "{wms_url}",
-        {{
-            minZoom: 6,
-            maxZoom: 19,
-            layers: "ls8_sr_false",
-            format: 'image/png',
-            transparent: true,
-            attribution: "Teh Cube",
-            time: formatDateRange(start, end)
-        }}
-    );
-    cube.addTo(mymap);
-    L.control.layers({{'OSM': osm, 'RGB': cube}}, {{}}).addTo(mymap);
-
-    items = new vis.DataSet([{{id: 1, content: 'time', start: start, end: end}}]);
-    function onUpdate(event, properties, senderId) {{
-        start = properties.data[0].start;
-        end = properties.data[0].end;
-        cube.setParams({{time: formatDateRange(start, end)}});
-    }};
-    items.on('update', onUpdate);
-
-    options = {{
-        editable: {{
-            updateTime: true
-        }},
-        start: new Date(2006, 1, 1),
-        end: new Date()
-    }};
-    var timeline = new vis.Timeline(document.getElementById('timeline'), items, options);
-</script>
-</body>
-</html>
-"""
 
 
 GET_CAPS_TEMPLATE = """<?xml version='1.0' encoding="UTF-8" standalone="no" ?>
@@ -327,33 +242,67 @@ def _get_datasets(index, geobox, product, time_):
             geom = geom.union(dataset.extent.to_crs(geobox.crs))
     return to_load
 
+class WMSException(Exception):
+    INVALID_FORMAT = "InvalidFormat"
+    INVALID_CRS = "InvalidCRS"
+    LAYER_NOT_DEFINED = "LayerNotDefined"
+    STYLE_NOT_DEFINED = "StyleNotDefined"
+    LAYER_NOT_QUERYABLE = "LayerNotQueryable"
+    INVALID_POINT = "InvalidPoint"
+    CURRENT_UPDATE_SEQUENCE = "CurrentUpdateSequence"
+    INVALID_UPDATE_SEQUENCE = "InvalidUpdateSequence"
+    MISSING_DIMENSION_VALUE = "MissingDimensionValue"
+    INVALID_DIMENSION_VALUE = "InvalidDimensionValue"
+    OPERATION_NOT_SUPPORTED = "OperationNotSupported"
 
-def application(environ, start_response):
-    with datacube.Datacube(app="WMS") as dc:
-        args = _parse_query(environ['QUERY_STRING'])
+    def __init__(self, msg, code=None, locator=None):
+        self.errors=[]
+        self.add_error(msg, code, locator)
+    def add_error(self, msg, code=None, locator=None):
+        self.errors.append( {
+                "msg": msg,
+                "code": code,
+                "locator": locator
+        })
 
-        if args.get('request') == 'GetMap':
-            return get_map(dc, args, start_response)
+def lower_get_args():
+    # Get parameters in WMS are case-insensitive, and intended to be single use.
+    # Spec does not specify which instance should be used if a parameter is provided more than once.
+    # This function uses the LAST instance.
+    d = {}
+    for k in request.args.keys():
+        kl = k.lower()
+        for v in request.args.getlist(k):
+            d[kl] = v
+    return d
 
-        if args.get('request') == 'GetCapabilities':
-            return get_capabilities(dc, args, environ, start_response)
+@app.route('/')
+def wms_impl():
+    nocase_args = lower_get_args()
+    operation = nocase_args.get("request")
+    try:
+        if not operation:
+            raise WMSException("No operation specified", locator="Request parameter")
+        elif operation == "GetCapabilities":
+            # See old get_capabilities function
+            pass
+        elif operation == "GetMap":
+            # See old get_map function
+            pass
+        elif operation == "GetFeatureInfo":
+            raise WMSException("GetFeatureInfo not implemented yet", WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
+        else:
+            raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
+        return "TODO: Required server behaviour not implemented yet"
+    except WMSException as e:
+        return wms_exception(e)
 
-        data = INDEX_TEMPLATE.format(wms_url=_script_url(environ)).encode('utf-8')
+@app.route('/test_client')
+def test_client():
+    return render_template("test_client.html")
 
-        start_response("200 OK", [
-            ("Content-Type", "text/html"),
-            ("Content-Length", str(len(data)))
-        ])
-        return iter([data])
-
-
-def _parse_query(qs):
-    return {key.lower(): (val[0] if len(val) == 1 else val) for key, val in parse_qs(qs).items()}
-
-
-def _script_url(environ):
-    return 'http://'+environ['HTTP_HOST']+environ['SCRIPT_NAME']
-
+def wms_exception(e):
+    return render_template("wms_error.xml", exception=e), 400, { "Content-Type": "application/xml"}
 
 def get_capabilities(dc, args, environ, start_response):
     layers = ""
@@ -458,7 +407,3 @@ def _write_empty():
             # pass
         return memfile.read()
 
-
-if __name__ == '__main__':
-    from werkzeug.serving import run_simple  # pylint: disable=import-error
-    run_simple('0.0.0.0', 8888, application, use_debugger=False, use_reloader=True)

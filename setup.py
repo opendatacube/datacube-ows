@@ -10,7 +10,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'datacube', 'werkzeug',
+    'datacube', 'flask',
 ]
 
 test_requirements = [
@@ -20,7 +20,7 @@ test_requirements = [
 
 setup(
     name='datacube_wms',
-    version='0.1.0',
+    version='0.1.1',
     description="Datacube Web Map Service",
     long_description=readme + '\n\n' + history,
     author="Open Data Cube",
