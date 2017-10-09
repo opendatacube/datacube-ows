@@ -285,7 +285,7 @@ class LatestCloudFree(TileGenerator):
                 fused_mask = mask
                 continue
 
-            copy_mask = (~fused_mask) & mask if fused_mask is not None else mask
+            copy_mask = (~fused_mask) & mask  # pylint: disable=invalid-unary-operand-type
             for band in self._bands:
                 numpy.copyto(fused_data[band].values, pix_data[band].values, where=copy_mask)
             fused_mask = fused_mask | mask
