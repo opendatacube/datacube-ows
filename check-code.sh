@@ -6,7 +6,7 @@ set -x
 
 pep8 tests --max-line-length 120
 
-pylint -j 2 --reports no
+pylint -j 2 --reports no datacube_wms
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
