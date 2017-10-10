@@ -19,6 +19,8 @@ try:
 except ImportError:
     MemoryFile = None
 
+from .wms_cfg import service_cfg
+
 import numpy
 import pandas
 import xarray
@@ -255,7 +257,8 @@ class WMSException(Exception):
     INVALID_DIMENSION_VALUE = "InvalidDimensionValue"
     OPERATION_NOT_SUPPORTED = "OperationNotSupported"
 
-    def __init__(self, msg, code=None, locator=None):
+    def __init__(self, msg, code=None, locator=None, http_response = 400):
+        self.http_response = http_response
         self.errors=[]
         self.add_error(msg, code, locator)
     def add_error(self, msg, code=None, locator=None):
@@ -284,8 +287,7 @@ def wms_impl():
         if not operation:
             raise WMSException("No operation specified", locator="Request parameter")
         elif operation == "GetCapabilities":
-            # See old get_capabilities function
-            pass
+            return get_capabilities(nocase_args)
         elif operation == "GetMap":
             # See old get_map function
             pass
@@ -296,15 +298,26 @@ def wms_impl():
         return "TODO: Required server behaviour not implemented yet"
     except WMSException as e:
         return wms_exception(e)
+    except Exception as e:
+        wms_e = WMSException("Unexpected server error: " % str(e))
+        return wms_exception(e)
 
 @app.route('/test_client')
 def test_client():
     return render_template("test_client.html")
 
 def wms_exception(e):
-    return render_template("wms_error.xml", exception=e), 400, { "Content-Type": "application/xml"}
+    return render_template("wms_error.xml", exception=e), e.http_response, { "Content-Type": "application/xml"}
 
-def get_capabilities(dc, args, environ, start_response):
+def get_capabilities(args):
+    if args.get("service") != "WMS":
+        raise WMSException("Invalid service", locator="Service parameter")
+    # TODO: Handle updatesequence request parameter for cache consistency.
+    # Note: Only WMS v1.3.0 is supported at this stage, so no version negotiation is necessary
+    # TODO: Extract layer metadata from Datacube.
+    return render_template("capabilities.xml", service=service_cfg, layers=[]), 200, { "Content-Type": "application/xml" }
+
+def old_get_capabilities(dc, args, environ, start_response):
     layers = ""
     for name, layer in LAYER_SPEC.items():
         product = dc.index.products.get_by_name(layer['product'])
