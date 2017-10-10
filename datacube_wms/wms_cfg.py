@@ -31,7 +31,7 @@ service_cfg = {
         },
         "telephone": "+61 2 6249 9545",
         "fax": "+61 2 6249 9999",
-        "email": "david.gavin@ga.gov.au",
+        "email": "test@example.com",
     },
     "fees": "",
     "access_constraints": "",
