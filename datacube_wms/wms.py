@@ -33,62 +33,6 @@ from datacube.storage.masking import mask_valid_data as mask_invalid_data, make_
 from datacube.utils import geometry
 
 
-GET_CAPS_TEMPLATE = """<?xml version='1.0' encoding="UTF-8" standalone="no" ?>
-<!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/WMS_MS_Capabilities.dtd"
- [
- <!ELEMENT VendorSpecificCapabilities EMPTY>
- ]>
-<WMT_MS_Capabilities version="1.1.1"
-        xmlns:xlink="http://www.w3.org/1999/xlink">
-<Service>
-  <Name>OGC:WMS</Name>
-  <Title>WMS server for Datacube</Title>
-  <OnlineResource xlink:href="{location}"></OnlineResource>
-</Service>
-<Capability>
-  <Request>
-    <GetCapabilities>
-      <Format>application/vnd.ogc.wms_xml</Format>
-      <DCPType>
-        <HTTP>
-          <Get><OnlineResource xlink:href="{location}"></OnlineResource></Get>
-        </HTTP>
-      </DCPType>
-    </GetCapabilities>
-    <GetMap>
-      <Format>image/png</Format>
-      <DCPType>
-        <HTTP>
-          <Get><OnlineResource xlink:href="{location}"></OnlineResource></Get>
-        </HTTP>
-      </DCPType>
-    </GetMap>
-  </Request>
-  <Exception>
-    <Format>application/vnd.ogc.se_blank</Format>
-  </Exception>
-  <VendorSpecificCapabilities></VendorSpecificCapabilities>
-  <UserDefinedSymbolization SupportSLD="1" UserLayer="0" UserStyle="1" RemoteWFS="0"/>
-  <Layer>
-    <Title>WMS server for Datacube</Title>
-    <SRS>EPSG:3577</SRS>
-    <SRS>EPSG:3857</SRS>
-    <SRS>EPSG:4326</SRS>
-    {layers}
-  </Layer>
-</Capability>
-</WMT_MS_Capabilities>
-"""
-
-LAYER_TEMPLATE = """
-<Layer>
-  <Name>{name}</Name>
-  <Title>{title}</Title>
-  <Abstract>{abstract}</Abstract>
-  {metadata}
-</Layer>
-"""
-
 LAYER_SPEC = {
     'ls5_sr_rgb': {
         'product': 'ls5_nbar_albers',
@@ -316,36 +260,6 @@ def get_capabilities(args):
     # Note: Only WMS v1.3.0 is supported at this stage, so no version negotiation is necessary
     # TODO: Extract layer metadata from Datacube.
     return render_template("capabilities.xml", service=service_cfg, layers=[]), 200, { "Content-Type": "application/xml" }
-
-def old_get_capabilities(dc, args, environ, start_response):
-    layers = ""
-    for name, layer in LAYER_SPEC.items():
-        product = dc.index.products.get_by_name(layer['product'])
-        if not product:
-            continue
-        layers += LAYER_TEMPLATE.format(name=name,
-                                        title=name,
-                                        abstract=product.definition['description'],
-                                        metadata=get_layer_metadata(layer, product))
-
-    data = GET_CAPS_TEMPLATE.format(location=_script_url(environ), layers=layers).encode('utf-8')
-    start_response("200 OK", [
-        ("Access-Control-Allow-Origin", "*"),
-        ("Content-Type", "application/xml"),
-        ("Content-Length", str(len(data)))
-    ])
-    return iter([data])
-
-
-def get_layer_metadata(layer, product):
-    metadata = """
-<LatLonBoundingBox minx="60" miny="0" maxx="100" maxy="40"></LatLonBoundingBox>
-<BoundingBox CRS="EPSG:4326" minx="60" miny="0" maxx="100" maxy="40"/>
-<Dimension name="time" units="ISO8601"/>
-<Extent name="time" default="2015-01-01">2013-01-01/2017-01-01/P1M</Extent>
-    """
-    return metadata
-
 
 def get_map(dc, args, start_response):
     geobox = _get_geobox(args)
