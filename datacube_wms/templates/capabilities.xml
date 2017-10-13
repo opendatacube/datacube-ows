@@ -98,8 +98,45 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
         <Format>XML</Format>
     </Exception>
 
-    <!-- TODO: Layers -->
-    {% for layer in layers %}
-    {% endfor %}
+    <Layer>
+        <Title>{{ service.title }}</Title>
+        {% if service.abstract %}
+        <Abstract>
+            {{ service.abstract }}
+        </Abstract>
+        {% endif %}
+        {% for crs in service.published_CRSs %}
+        <CRS>{{ crs }}</CRS>
+        {% endfor %}
+        {% for platform in platforms %}
+        <Layer>
+            <Title>{{ platform.title }}</Title>
+            <Abstract>{{ platform.abstract }}</Abstract>
+            {% for style in platform.styles %}
+            <Style>
+                <Name>{{ style.name }}</Name>
+                <Title>{{ style.title }}</Title>
+                <Abstract>{{ style.abstract }}</Abstract>
+            </Style>
+            {% endfor %}
+            {% for product in platform.products %}
+                <Layer>
+                    <Name>{{ product.name }}</Name>
+                    <Title>{{ product.title }}</Title>
+                    <Abstract>{{ product.definition.description }}</Abstract>
+                    <KeywordList>
+                        <Keyword>Australia</Keyword>
+                        <Keyword>Landsat</Keyword>
+                        <Keyword>{{ product.definition.metadata.platform.code }}</Keyword>
+                        <Keyword>{{ product.definition.metadata.instrument.name }}</Keyword>
+                        <Keyword>{{ product.product_label }}</Keyword>
+                        <Keyword>{{ product.product_type }}</Keyword>
+                        <Keyword>{{ product.product_variant }}</Keyword>
+                    </KeywordList>
+                </Layer>
+            {% endfor %}
+        </Layer>
+        {% endfor %}
+    </Layer>
 </Capability>
 </WMS_Capabilities>

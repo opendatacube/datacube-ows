@@ -20,6 +20,7 @@ except ImportError:
     MemoryFile = None
 
 from .wms_cfg import service_cfg
+from .wms_layers import get_layers
 
 import numpy
 import pandas
@@ -51,6 +52,12 @@ LAYER_SPEC = {
             'end': datetime(2006, 3, 1),
             'period': timedelta(days=0)
         }
+    },
+}
+
+PRODUCTS_SPEC = {
+    "Landsat 8": {
+        "product": "ls8_nbart_albers",
     },
 }
 
@@ -243,8 +250,8 @@ def wms_impl():
     except WMSException as e:
         return wms_exception(e)
     except Exception as e:
-        wms_e = WMSException("Unexpected server error: " % str(e))
-        return wms_exception(e)
+        wms_e = WMSException("Unexpected server error: %s" % str(e))
+        return wms_exception(wms_e)
 
 @app.route('/test_client')
 def test_client():
@@ -259,7 +266,9 @@ def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.3.0 is supported at this stage, so no version negotiation is necessary
     # TODO: Extract layer metadata from Datacube.
-    return render_template("capabilities.xml", service=service_cfg, layers=[]), 200, { "Content-Type": "application/xml" }
+    # TODO: Can we cache and inject the datacube?
+    platforms = get_layers()
+    return render_template("capabilities.xml", service=service_cfg, platforms=platforms), 200, { "Content-Type": "application/xml" }
 
 def get_map(dc, args, start_response):
     geobox = _get_geobox(args)
