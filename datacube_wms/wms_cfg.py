@@ -1,5 +1,9 @@
 # Static config for the wms metadata.
 
+response_cfg = {
+    "Access-Control-Allow-Origin": "*"
+}
+
 service_cfg = {
     # Required config
     "title": "WMS server for Australian Landsat Datacube",
@@ -82,7 +86,8 @@ layer_cfg = [
                     "blue": {
                         "blue": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "extended_rgb",
@@ -99,7 +104,8 @@ layer_cfg = [
                         "blue": 0.6,
                         "coastal_aerosol": 0.4
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "wideband",
@@ -121,7 +127,8 @@ layer_cfg = [
                         "blue": 0.45,
                         "coastal_aerosol": 0.255,
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "infra_red",
@@ -137,7 +144,8 @@ layer_cfg = [
                     "blue": {
                         "nir": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "coastal_aerosol",
@@ -153,7 +161,8 @@ layer_cfg = [
                     "blue": {
                         "coastal_aerosol": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "blue",
@@ -169,7 +178,8 @@ layer_cfg = [
                     "blue": {
                         "blue": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "green",
@@ -185,7 +195,8 @@ layer_cfg = [
                     "blue": {
                         "green": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "red",
@@ -201,7 +212,8 @@ layer_cfg = [
                     "blue": {
                         "red": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "nir",
@@ -217,7 +229,8 @@ layer_cfg = [
                     "blue": {
                         "nir": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "swir1",
@@ -233,7 +246,8 @@ layer_cfg = [
                     "blue": {
                         "swir1": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             },
             {
                 "name": "swir2",
@@ -249,8 +263,10 @@ layer_cfg = [
                     "blue": {
                         "swir2": 1.0
                     }
-                }
+                },
+                "scale_factor": 12.0
             }
-        ]
+        ],
+        "default_style": "simple_rgb",
     }
 ]

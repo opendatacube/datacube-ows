@@ -1,4 +1,6 @@
 from __future__ import absolute_import, division, print_function
+import sys
+import traceback
 
 try:
     from urlparse import parse_qs
@@ -9,7 +11,7 @@ from werkzeug.datastructures import MultiDict
 
 from flask import Flask, request, render_template
 
-app = Flask(__name__)
+app = Flask(__name__.split('.')[0])
 
 # travis can only get earlier version of rasterio which doesn't have MemoryFile, so
 # - tell pylint to ingnore inport error
@@ -19,8 +21,8 @@ try:
 except ImportError:
     MemoryFile = None
 
-from .wms_cfg import service_cfg
-from .wms_layers import get_layers
+from datacube_wms.wms_cfg import service_cfg, response_cfg
+from datacube_wms.wms_layers import get_layers
 
 import numpy
 import pandas
@@ -33,34 +35,11 @@ import datacube.api.query
 from datacube.storage.masking import mask_valid_data as mask_invalid_data, make_mask
 from datacube.utils import geometry
 
-
-LAYER_SPEC = {
-    'ls5_sr_rgb': {
-        'product': 'ls5_nbar_albers',
-        'mask': 'ls5_pq_albers',
-        'mask_band': 'pixelquality',
-        'mask_flags': dict(
-            cloud_acca='no_cloud',
-            cloud_fmask='no_cloud',
-        ),
-        #'mask_band': 'cfmask',
-        #'mask_flags': {'cfmask': 'clear'},
-        'bands': ('red', 'green', 'blue'),
-        'extents': geometry.box(60, 0, 100, 40, crs=geometry.CRS('EPSG:4326')),
-        'time': {
-            'start': datetime(2006, 1, 1),
-            'end': datetime(2006, 3, 1),
-            'period': timedelta(days=0)
-        }
-    },
-}
-
-PRODUCTS_SPEC = {
-    "Landsat 8": {
-        "product": "ls8_nbart_albers",
-    },
-}
-
+def resp_headers(d):
+    hdrs = {}
+    hdrs.update(response_cfg)
+    hdrs.update(d)
+    return hdrs
 
 class TileGenerator(object):
     def __init__(self, **kwargs):
@@ -72,17 +51,16 @@ class TileGenerator(object):
     def data(self, datasets):
         pass
 
-
 class RGBTileGenerator(TileGenerator):
-    def __init__(self, config, geobox, time, **kwargs):
+    def __init__(self, product, style, geobox, time, **kwargs):
         super(RGBTileGenerator, self).__init__(**kwargs)
-        self._product = config['product']
-        self._bands = config['bands']
+        self._product = product
+        self._style = style
         self._geobox = geobox
-        self._time = time
+        self._time = [ time, time + timedelta(days=1) ]
 
     def datasets(self, index):
-        return _get_datasets(index, self._geobox, self._product, self._time)
+        return _get_datasets(index, self._geobox, self._product.name, self._time)
 
     def data(self, datasets):
         holder = numpy.empty(shape=tuple(), dtype=object)
@@ -90,7 +68,7 @@ class RGBTileGenerator(TileGenerator):
         sources = xarray.DataArray(holder)
 
         prod = datasets[0].type
-        measurements = [self._set_resampling(prod.measurements[name]) for name in self._bands]
+        measurements = [self._set_resampling(prod.measurements[name]) for name in self._style.needed_bands]
         with datacube.set_options(reproject_threads=1, fast_load=True):
             return datacube.Datacube.load_data(sources, self._geobox, measurements)
 
@@ -98,7 +76,6 @@ class RGBTileGenerator(TileGenerator):
         mc = measurement.copy()
         # mc['resampling_method'] = 'cubic'
         return mc
-
 
 class LatestCloudFree(TileGenerator):
     def __init__(self, product, bands, mask, mask_band, mask_flags, geobox, time, **kwargs):
@@ -240,8 +217,7 @@ def wms_impl():
         elif operation == "GetCapabilities":
             return get_capabilities(nocase_args)
         elif operation == "GetMap":
-            # See old get_map function
-            pass
+            return get_map(nocase_args)
         elif operation == "GetFeatureInfo":
             raise WMSException("GetFeatureInfo not implemented yet", WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
         else:
@@ -250,85 +226,157 @@ def wms_impl():
     except WMSException as e:
         return wms_exception(e)
     except Exception as e:
+        tb = sys.exc_info()[2]
         wms_e = WMSException("Unexpected server error: %s" % str(e))
-        return wms_exception(wms_e)
+        return wms_exception(wms_e, traceback=traceback.extract_tb(tb))
 
 @app.route('/test_client')
 def test_client():
     return render_template("test_client.html")
 
-def wms_exception(e):
-    return render_template("wms_error.xml", exception=e), e.http_response, { "Content-Type": "application/xml"}
+def wms_exception(e, traceback=[]):
+    return render_template("wms_error.xml", exception=e, traceback=traceback), e.http_response, resp_headers({ "Content-Type": "application/xml"})
 
 def get_capabilities(args):
     if args.get("service") != "WMS":
         raise WMSException("Invalid service", locator="Service parameter")
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.3.0 is supported at this stage, so no version negotiation is necessary
-    # TODO: Extract layer metadata from Datacube.
+    # Extract layer metadata from Datacube.
     # TODO: Can we cache and inject the datacube?
     platforms = get_layers()
-    return render_template("capabilities.xml", service=service_cfg, platforms=platforms), 200, { "Content-Type": "application/xml" }
+    return render_template("capabilities.xml", service=service_cfg, platforms=platforms), 200, resp_headers({ "Content-Type": "application/xml" })
 
-def get_map(dc, args, start_response):
-    geobox = _get_geobox(args)
-    time = args.get('time', '2015-01-01/2015-02-01').split('/')
-    if len(time) == 1:
-        time = pandas.to_datetime(time[0])
-        time = [time - timedelta(days=30), time]
+def get_map(args):
+    # Version parameter
+    version = args.get("version")
+    if not version:
+        raise WMSException("No WMS version supplied", locator="Version parameter")
+    if version not in [ "1.1.1", "1.3.0" ]:
+        raise WMSException("Unsupported WMS version: %s" % version, 
+                    locator="Version parameter")
 
-    layer_config = LAYER_SPEC[args['layers']]
-    #tiler = RGBTileGenerator(layer_config, geobox, time)
-    tiler = LatestCloudFree(layer_config['product'],
-                            layer_config['bands'],
-                            layer_config['mask'],
-                            layer_config['mask_band'],
-                            layer_config['mask_flags'],
-                            geobox, time)
-    datasets = tiler.datasets(dc.index)
-    data = tiler.data(datasets)
-
-    if data:
-        body = _write_png(data)
+    # CRS parameter
+    if version == "1.1.1":
+        crsid = args.get("srs")
     else:
+        crsid = args.get("crs")
+    if crsid not in service_cfg["published_CRSs"]:
+        raise WMSException(
+                    "Unsupported Coordinate Reference System: %s" % crsid,
+                    WMSException.INVALID_CRS,
+                    locator="CRS parameter")
+    crs = geometry.CRS(crsid)
+
+    # Layers and Styles parameters
+    layers = args.get("layers", "").split(",")
+    styles = args.get("styles", "").split(",")
+    if len(layers) != 1 or len(styles) != 1:
+        raise WMSException("Multi-layer GetMap requests not supported")
+    layer = layers[0]
+    style_r = styles[0]
+    if not layer:
+        raise WMSException("No layer specified in GetMap request")
+    platforms = get_layers()
+    product = platforms.product_index.get(layer)
+    if not product:
+        raise WMSException("Layer %s is not defined" % layer,
+                        WMSException.LAYER_NOT_DEFINED,
+                        locator="Layer parameter")
+    if not style_r:
+        style_r = product.platform.default_style
+    style = product.platform.style_index.get(style_r)
+    if not style:
+        raise WMSException("Style %s is not defined" % style_r,
+                        WMSException.STYLE_NOT_DEFINED,
+                        locator="Style parameter")
+
+    # Format parameter
+    fmt = args.get("format", "").lower()
+    if not fmt:
+        raise WMSException("No image format specified",
+                        WMSException.INVALID_FORMAT,
+                        locator="Format parameter")
+    elif fmt != "image/png":
+        raise WMSException("Image format %s is not supported" % layer,
+                        WMSException.INVALID_FORMAT,
+                        locator="Format parameter")
+
+    # BBox, height and width parameters
+    geobox = _get_geobox(args, crs)
+
+    # Time parameter
+    times = args.get('time', '').split('/')
+    if len(times) > 1:
+        raise WMSException(
+                    "Selecting multiple time dimension values not supported",
+                    WMSException.INVALID_DIMENSION_VALUE,
+                    locator="Time parameter")
+    elif not times[0]:
+        raise WMSException(
+                    "Time dimension value not supplied",
+                    WMSException.MISSING_DIMENSION_VALUE,
+                    locator="Time parameter")
+    try:
+        time = datetime.strptime(times[0], "%Y-%m-%d").date()
+    except ValueError:
+        raise WMSException(
+                    "Time dimension value '%s' not valid for this layer" % times[0],
+                    WMSException.INVALID_DIMENSION_VALUE,
+                    locator="Time parameter")
+
+    # Validate time paramter for requested layer.
+    if time not in product.ranges["time_set"]:
+        raise WMSException(
+                    "Time dimension value '%s' not valid for this layer" % times[0],
+                    WMSException.INVALID_DIMENSION_VALUE,
+                    locator="Time parameter")
+
+    # Tiling.
+    tiler = RGBTileGenerator(product, style, geobox, time)
+    datasets = tiler.datasets(product.dc.index)
+    if not datasets:
         body = _write_empty()
-    start_response("200 OK", [
-        ("Access-Control-Allow-Origin", "*"),
-        ("Content-Type", "image/png"),
-        ("Content-Length", str(len(body)))
-    ])
-    return iter([body])
-
-
-def _get_geobox(args):
+    else:
+        data = tiler.data(datasets)
+        if data:
+            body = _write_png(data, style)
+        else:
+            body = _write_empty()
+    return body, 200, resp_headers({ "Content-Type": "image/png" })
+            
+def _get_geobox(args, crs):
     width = int(args['width'])
     height = int(args['height'])
     minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
-    crs = geometry.CRS(args['srs'])
 
     affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
     return geometry.GeoBox(width, height, affine, crs)
 
 
-def _write_png(data):
+def _write_png(data, style):
     width = data[data.crs.dimensions[1]].size
     height = data[data.crs.dimensions[0]].size
+
+    img_data = style.transform_data(data)
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,
                           height=height,
-                          count=len(data.data_vars),
+                          count=3,
                           transform=Affine.identity(),
                           nodata=0,
                           dtype='uint8') as thing:
-            for idx, band in enumerate(data.data_vars, start=1):
-                scaled = numpy.clip(data[band].values[::-1] / 12.0, 0, 255).astype('uint8')
-                thing.write_band(idx, scaled)
+            scaled = None
+            for idx, band in enumerate(img_data.data_vars, start=1):
+                thing.write_band(idx, img_data[band].values)
+
         return memfile.read()
 
 
 def _write_empty():
+    # TODO This should be a 100% transparent PNG of the requested size - not a 1x1 black image.
     width, height = 1, 1
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',

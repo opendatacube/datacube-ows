@@ -63,3 +63,6 @@ target/
 
 # Editor temp files
 .*.swp
+
+# PyCharm project files
+.idea/
