@@ -1,7 +1,7 @@
 # Static config for the wms metadata.
 
 response_cfg = {
-    "Access-Control-Allow-Origin": "*"
+    "Access-Control-Allow-Origin": "*",   # CORS header
 }
 
 service_cfg = {
@@ -14,7 +14,7 @@ service_cfg = {
         "EPSG:3577"    # GDA-94, internal representation
     ],
     
-    # Techically optional config, but strongly reccommended
+    # Technically optional config, but strongly recommended
     "layer_limit": 1,
     "max_width": 512,
     "max_height": 512,
@@ -38,8 +38,8 @@ service_cfg = {
             "postcode": "2906",
             "country": "Australia",
         },
-        "telephone": "+61 2 6249 9545",
-        "fax": "+61 2 6249 9999",
+        "telephone": "+61 2 1234 5678",
+        "fax": "+61 2 1234 6789",
         "email": "test@example.com",
     },
     "fees": "",
@@ -69,8 +69,11 @@ layer_cfg = [
         # Styles.
         # The various available spectral bands, and ways to combine them
         # into a single rgb image.
-        # The examples here are ad hoc and not determined rigorously.
-        # TODO: Parameters for dynamic range compression should really go here as well.
+        # The examples here are ad hoc and the format only supports linear combinations of bands.
+        # More specialised mappings could be adapted from this site, but most would require support for
+        # non-linear band combinations and colour gradient mapping:
+        # LS7:  http://www.indexdatabase.de/db/s-single.php?id=8
+        # LS8:  http://www.indexdatabase.de/db/s-single.php?id=168
         # TODO: What about masking rules?
         "styles": [
             {
@@ -268,6 +271,10 @@ layer_cfg = [
                 "scale_factor": 12.0
             }
         ],
+        # Default style (if request does not specify style)
+        # MUST be defined in the styles list above.
+        # (Looks like Terria assumes this is the first style in the list, but this is
+        #  not required by the standard.)
         "default_style": "simple_rgb",
     }
 ]
