@@ -222,7 +222,6 @@ def wms_impl():
             raise WMSException("GetFeatureInfo not implemented yet", WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
         else:
             raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
-        return "TODO: Required server behaviour not implemented yet"
     except WMSException as e:
         return wms_exception(e)
     except Exception as e:
@@ -241,9 +240,8 @@ def get_capabilities(args):
     if args.get("service") != "WMS":
         raise WMSException("Invalid service", locator="Service parameter")
     # TODO: Handle updatesequence request parameter for cache consistency.
-    # Note: Only WMS v1.3.0 is supported at this stage, so no version negotiation is necessary
+    # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
-    # TODO: Can we cache and inject the datacube?
     platforms = get_layers()
     return render_template("capabilities.xml", service=service_cfg, platforms=platforms), 200, resp_headers({ "Content-Type": "application/xml" })
 
@@ -252,6 +250,7 @@ def get_map(args):
     version = args.get("version")
     if not version:
         raise WMSException("No WMS version supplied", locator="Version parameter")
+    # GetMap 1.1.1 must be supported for Terria
     if version not in [ "1.1.1", "1.3.0" ]:
         raise WMSException("Unsupported WMS version: %s" % version, 
                     locator="Version parameter")
@@ -336,13 +335,13 @@ def get_map(args):
     tiler = RGBTileGenerator(product, style, geobox, time)
     datasets = tiler.datasets(product.dc.index)
     if not datasets:
-        body = _write_empty()
+        body = _write_empty(geobox)
     else:
         data = tiler.data(datasets)
         if data:
             body = _write_png(data, style)
         else:
-            body = _write_empty()
+            body = _write_empty(geobox)
     return body, 200, resp_headers({ "Content-Type": "image/png" })
             
 def _get_geobox(args, crs):
@@ -375,18 +374,16 @@ def _write_png(data, style):
         return memfile.read()
 
 
-def _write_empty():
-    # TODO This should be a 100% transparent PNG of the requested size - not a 1x1 black image.
-    width, height = 1, 1
+def _write_empty(geobox):
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
-                          width=width,
-                          height=height,
+                          width=geobox.width,
+                          height=geobox.height,
                           count=1,
                           transform=Affine.identity(),
                           nodata=0,
                           dtype='uint8') as thing:
-            thing.write_band(1, numpy.array([[0]], dtype='uint8'))
-            # pass
+            pass
+            # thing.write_band(1, numpy.array([[0]], dtype='uint8'))
         return memfile.read()
 

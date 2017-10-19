@@ -9,7 +9,8 @@ service_cfg = {
     "title": "WMS server for Australian Landsat Datacube",
     "url": "http://localhost:5000/",
     "published_CRSs": [
-        "EPSG:4326",   # WGS-84, for Terria
+        "EPSG:3857",   # Web Mercator
+        "EPSG:4326",   # WGS-84
         "EPSG:3577"    # GDA-94, internal representation
     ],
     

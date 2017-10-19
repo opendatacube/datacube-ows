@@ -20,14 +20,12 @@ def accum_max(a, b):
         return max(a,b)
 
 class ProductLayerDef(object):
-    def __init__(self, product_cfg, platform_def, dc=None):
+    def __init__(self, product_cfg, platform_def, dc):
         self.platform = platform_def
         self.name = product_cfg["name"]
         self.product_label = product_cfg["label"]
         self.product_type = product_cfg["type"]
         self.product_variant = product_cfg["variant"]
-        if not dc:
-            dc = datacube.Datacube(app="wms")
         self.dc = dc
         self.product = dc.index.products.get_by_name(self.name)
         self.definition = self.product.definition
@@ -115,7 +113,7 @@ class StyleDef(object):
                 else:
                     imgband_data = imgband_component
             dims = imgband_data.dims
-            imgband_data = numpy.clip(imgband_data / self.scale_factor, 0, 255).astype('uint8')
+            imgband_data = numpy.clip(imgband_data.values[::-1] / self.scale_factor, 0, 255).astype('uint8')
             imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
@@ -134,17 +132,23 @@ class PlatformLayerDef(object):
             prod_idx[prod.name] = prod
 
 class LayerDefs(object):
-    def __init__(self, platforms_cfg, dc=None):
+    _dc = None
+    def __init__(self, platforms_cfg):
         self.platforms = []
         self.platform_index = {}
         self.product_index = {}
+        if LayerDefs._dc is None:
+            LayerDefs._dc = datacube.Datacube(app="wms")
         for platform_cfg in platforms_cfg:
-            platform = PlatformLayerDef(platform_cfg, self.product_index, dc=dc)
+            platform = PlatformLayerDef(platform_cfg, self.product_index, dc=self.dc)
             self.platforms.append(platform)
             self.platform_index[platform.name] = platform
     def __iter__(self):
         for p in self.platforms:
             yield p
+    @property
+    def dc(self):
+        return self._dc
     def __getitem__(self, name):
         if isinstance(name, int):
             return self.platforms[name]
@@ -152,6 +156,6 @@ class LayerDefs(object):
             return self.platform_index[name]
 
 # TODO: This is not scalable
-def get_layers(dc=None):
-    return LayerDefs(layer_cfg, dc=dc)
+def get_layers():
+    return LayerDefs(layer_cfg)
 
