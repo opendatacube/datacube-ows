@@ -1,8 +1,12 @@
 from datacube_wms.product_ranges import update_all_ranges
-from datacube import Datacube
+from datacube_wms.cube_pool import _init_pool, get_cube, release_cube
 
-if __name__ == "___main__":
-    dc = Datacube(app="wms_update")
-    updated, inserted = update_all_ranges(dc)
-    print ("%d existing products updated")
-    print ("%d new products inserted")
+if __name__ == "__main__":
+    app="wms_update"
+    _init_pool(app=app)
+    dc = get_cube(app=app)
+    passed, updated, inserted = update_all_ranges(dc)
+    release_cube(dc, app=app)
+    print ("%d existing products unchanged" % passed)
+    print ("%d existing products updated" % updated)
+    print ("%d new products inserted" % inserted)

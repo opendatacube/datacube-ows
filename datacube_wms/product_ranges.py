@@ -60,6 +60,7 @@ def determine_product_ranges(dc, product_name):
                 extents[crsid] = extents[crsid].union(ext)
 
     r["times"] = sorted(time_set)
+    r["time_set"] = time_set
     r["bboxes"] = { crsid: extents[crsid].boundingbox for crsid in crsids }
     return r
 
@@ -128,6 +129,35 @@ def rng_insert(conn, rng):
                      })
                  )
 
+def ranges_equal(r1, rdb):
+    if r1["product_id"] != rdb["product_id"]:
+        return False
+    for coord in ("lat", "lon"):
+        for ext in ("max", "min"):
+            if abs(r1[coord][ext] - rdb[coord][ext]) > 1e-12:
+                return False
+    if len(r1["times"]) != len(rdb["times"]):
+        return False
+    for t1,t2 in zip(r1["times"], rdb["times"]):
+        if t1 != t2:
+            return False
+    if len(r1["bboxes"]) != len(rdb["bboxes"]):
+        return False
+    try:
+        for cs in r1["bboxes"].keys():
+            bb1 = r1["bboxes"][cs]
+            bb2 = rdb["bboxes"][cs]
+            if abs(bb1.top - float(bb2["top"])) > 1e-12:
+                return False
+            if abs(bb1.bottom - float(bb2["bottom"])) > 1e-12:
+                return False
+            if abs(bb1.left - float(bb2["left"])) > 1e-12:
+                return False
+            if abs(bb1.right - float(bb2["right"])) > 1e-12:
+                return False
+    except KeyError:
+        return False
+    return True
 
 def update_all_ranges(dc):
     ranges = determine_ranges(dc)
@@ -136,33 +166,44 @@ def update_all_ranges(dc):
     ids_in_db = get_ids_in_db(conn)
     i = 0
     u = 0
+    p = 0
     for prod_ranges in ranges:
         if prod_ranges["product_id"] in ids_in_db:
-            rng_update(conn, prod_ranges)
-            u += 1
+            db_ranges = get_ranges(dc, prod_ranges["product_id"])
+            if ranges_equal(prod_ranges, db_ranges):
+                p += 1
+            else:
+                rng_update(conn, prod_ranges)
+                u += 1
         else:
             rng_insert(conn, prod_ranges)
             i += 1
     txn.commit()
     conn.close()
-    return u, i
+    return p, u, i
 
 def get_ranges(dc, product):
-    if isinstance(product, str):
-        product = dc.index.products.get_by_name(product)
+    if isinstance(product, int):
+        product_id = product
+    else:
+        if isinstance(product, str):
+            product = dc.index.products.get_by_name(product)
+        product_id = product.id
+
     conn = get_sqlconn(dc)
-    results = conn.execute("select * from wms.product_ranges where id=%s", product.id)
+    results = conn.execute("select * from wms.product_ranges where id=%s", product_id)
     for result in results:
         conn.close()
         times = [ datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"]]
         return {
+            "product_id": product_id,
             "lat": {
-                "min": result["lat_min"],
-                "max": result["lat_max"],
+                "min": float(result["lat_min"]),
+                "max": float(result["lat_max"]),
             },
             "lon": {
-                "min": result["lon_min"],
-                "max": result["lon_max"],
+                "min": float(result["lon_min"]),
+                "max": float(result["lon_max"]),
             },
             "times": times,
             "time_set": set(times),

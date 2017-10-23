@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 import traceback
 
+
 try:
     from urlparse import parse_qs
 except ImportError:
@@ -23,6 +24,7 @@ except ImportError:
 
 from datacube_wms.wms_cfg import service_cfg, response_cfg
 from datacube_wms.wms_layers import get_layers
+from datacube_wms.cube_pool import get_cube, release_cube
 
 import numpy
 import pandas
@@ -78,6 +80,7 @@ class RGBTileGenerator(TileGenerator):
         return mc
 
 class LatestCloudFree(TileGenerator):
+    # TODO: The contract for Tile Generators has changed since this was last used.
     def __init__(self, product, bands, mask, mask_band, mask_flags, geobox, time, **kwargs):
         super(LatestCloudFree, self).__init__(**kwargs)
         self._product = product
@@ -333,7 +336,8 @@ def get_map(args):
 
     # Tiling.
     tiler = RGBTileGenerator(product, style, geobox, time)
-    datasets = tiler.datasets(product.dc.index)
+    dc = get_cube()
+    datasets = tiler.datasets(dc.index)
     if not datasets:
         body = _write_empty(geobox)
     else:
@@ -342,6 +346,7 @@ def get_map(args):
             body = _write_png(data, style)
         else:
             body = _write_empty(geobox)
+    release_cube(dc)
     return body, 200, resp_headers({ "Content-Type": "image/png" })
             
 def _get_geobox(args, crs):
