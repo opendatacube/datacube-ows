@@ -35,11 +35,6 @@ class CubePool(object):
     def _new_cube(self):
         return Datacube(app=self.app)
 
-_pool = None
-
-def _init_pool(app="wms"):
-    _pool = CubePool(app=app)
-
 def get_cube(app="wms"):
     pool = CubePool(app=app)
     return pool.get_cube()
