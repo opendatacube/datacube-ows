@@ -2,6 +2,7 @@ from datacube_wms.wms_cfg import service_cfg, layer_cfg
 from xarray import Dataset
 import numpy
 import datacube
+from datacube_wms.product_ranges import get_ranges
 
 def accum_min(a, b):
     if a is None:
@@ -37,47 +38,9 @@ class ProductLayerDef(object):
 
     @property
     def ranges(self):
-        # TODO: This will not scale.
         if self._ranges is None:
-            self._ranges = self._determine_ranges()
+            self._ranges = get_ranges(self.dc, self.product)
         return self._ranges
-
-    def _determine_ranges(self):
-        r = {
-            "lat": {
-                "min": None,
-                "max": None
-            },
-            "lon": {
-                "min": None,
-                "max": None
-            },
-            "time_set": set(),
-            "extents": { crs: None for crs in service_cfg["published_CRSs"] }
-        }
-        crses = { crs: datacube.utils.geometry.CRS(crs) for crs in service_cfg["published_CRSs"] }
-
-        for ds in self.dc.find_datasets(product=self.name):
-            r["lat"]["min"] = accum_min(r["lat"]["min"], ds.metadata.lat.begin)
-            r["lat"]["max"] = accum_max(r["lat"]["max"], ds.metadata.lat.end)
-            r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
-            r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
-
-            r["time_set"].add(ds.center_time.date())
-            
-            for crsid in service_cfg["published_CRSs"]:
-                crs = crses[crsid]
-                ext = ds.extent
-                if ext.crs != crs:
-                    ext = ext.to_crs(crs)
-                if r["extents"][crsid] is None:
-                    r["extents"][crsid] = ext
-                else:
-                    r["extents"][crsid] = r["extents"][crsid].union(ext)
-                
-        r["times"] = sorted(r["time_set"])
-        r["bboxes"] = { crsid: r["extents"][crsid].boundingbox for crsid in service_cfg["published_CRSs"] }
-        return r
 
 class StyleDef(object):
     def __init__(self, style_cfg):

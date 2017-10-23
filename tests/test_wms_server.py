@@ -7,15 +7,23 @@ from urllib import request
 from lxml import etree
 from imghdr import what
 
+import os
+
+class generic_obj(object): pass
 
 @pytest.fixture
 def wms_server(request):
     """
     Run the WMS server for the duration of these tests
     """
-    server = WSGIServer(application=wms.app)
-    server.start()
-    request.addfinalizer(server.stop)
+    external_url = os.environ.get("SERVER_URL")
+    if external_url:
+        server = generic_obj()
+        server.url = external_url
+    else:
+        server = WSGIServer(application=wms.app)
+        server.start()
+        request.addfinalizer(server.stop)
     return server
 
 def get_xsd(name):
@@ -101,6 +109,13 @@ def test_wms_server(wms_server):
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
     assert contents
+
+def test_wms_getmap(wms_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=wms_server.url, version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
     test_layer_name = contents[0]
     test_layer = wms.contents[test_layer_name]
 
