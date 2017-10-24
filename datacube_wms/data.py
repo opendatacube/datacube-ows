@@ -1,4 +1,5 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
+import json
 
 import datacube
 import numpy
@@ -9,8 +10,8 @@ from datacube.utils import geometry
 
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.wms_cfg import service_cfg
-from datacube_wms.wms_layers import get_layers
-from datacube_wms.wms_utils import WMSException, _get_geobox, resp_headers
+from datacube_wms.wms_utils import get_arg, WMSException, _get_geobox, resp_headers, get_product_from_arg, get_time, \
+    img_coords_to_geopoint
 
 # travis can only get earlier version of rasterio which doesn't have MemoryFile, so
 # - tell pylint to ingnore inport error
@@ -34,15 +35,21 @@ class TileGenerator(object):
 
 
 class RGBTileGenerator(TileGenerator):
-    def __init__(self, product, style, geobox, time, **kwargs):
+    def __init__(self, product, geobox, time, style=None, **kwargs):
         super(RGBTileGenerator, self).__init__(**kwargs)
         self._product = product
-        self._style = style
         self._geobox = geobox
         self._time = [ time, time + timedelta(days=1) ]
+        self._style = style
 
-    def datasets(self, index):
-        return _get_datasets(index, self._geobox, self._product.name, self._time)
+    def needed_bands(self):
+        if self._style:
+            return self._style.needed_bands
+        else:
+            return self._product.product.measurements.keys()
+
+    def datasets(self, index, point=None):
+        return _get_datasets(index, self._geobox, self._product.name, self._time, point=point)
 
     def data(self, datasets):
         holder = numpy.empty(shape=tuple(), dtype=object)
@@ -50,7 +57,7 @@ class RGBTileGenerator(TileGenerator):
         sources = xarray.DataArray(holder)
 
         prod = datasets[0].type
-        measurements = [self._set_resampling(prod.measurements[name]) for name in self._style.needed_bands]
+        measurements = [self._set_resampling(prod.measurements[name]) for name in self.needed_bands()]
         with datacube.set_options(reproject_threads=1, fast_load=True):
             return datacube.Datacube.load_data(sources, self._geobox, measurements)
 
@@ -131,12 +138,16 @@ class LatestCloudFree(TileGenerator):
         return mc
 
 
-def _get_datasets(index, geobox, product, time_):
+def _get_datasets(index, geobox, product, time_, point=None):
     query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time_)
     datasets = index.datasets.search_eager(**query.search_terms)
     datasets.sort(key=lambda d: d.center_time)
     dataset_iter = iter(datasets)
     to_load = []
+    if point:
+        for dataset in dataset_iter:
+            if dataset.extent.to_crs(geobox.crs).contains(point):
+                return [ dataset ]
     for dataset in dataset_iter:
         if dataset.extent.to_crs(geobox.crs).intersects(geobox.extent):
             to_load.append(dataset)
@@ -159,41 +170,26 @@ def _get_datasets(index, geobox, product, time_):
 
 def get_map(args):
     # Version parameter
-    version = args.get("version")
-    if not version:
-        raise WMSException("No WMS version supplied", locator="Version parameter")
     # GetMap 1.1.1 must be supported for Terria
-    if version not in [ "1.1.1", "1.3.0" ]:
-        raise WMSException("Unsupported WMS version: %s" % version,
-                           locator="Version parameter")
+    version = get_arg(args, "version", "WMS version",
+                      permitted_values=["1.1.1", "1.3.0"])
 
     # CRS parameter
     if version == "1.1.1":
-        crsid = args.get("srs")
+        crs_arg = "srs"
     else:
-        crsid = args.get("crs")
-    if crsid not in service_cfg["published_CRSs"]:
-        raise WMSException(
-                    "Unsupported Coordinate Reference System: %s" % crsid,
-                    WMSException.INVALID_CRS,
-                    locator="CRS parameter")
+        crs_arg = "crs"
+    crsid = get_arg(args, crs_arg, "Coordinate Reference System",
+                  errcode=WMSException.INVALID_CRS,
+                  permitted_values=service_cfg["published_CRSs"])
     crs = geometry.CRS(crsid)
 
     # Layers and Styles parameters
-    layers = args.get("layers", "").split(",")
+    product = get_product_from_arg(args)
     styles = args.get("styles", "").split(",")
-    if len(layers) != 1 or len(styles) != 1:
+    if len(styles) != 1:
         raise WMSException("Multi-layer GetMap requests not supported")
-    layer = layers[0]
     style_r = styles[0]
-    if not layer:
-        raise WMSException("No layer specified in GetMap request")
-    platforms = get_layers()
-    product = platforms.product_index.get(layer)
-    if not product:
-        raise WMSException("Layer %s is not defined" % layer,
-                           WMSException.LAYER_NOT_DEFINED,
-                           locator="Layer parameter")
     if not style_r:
         style_r = product.platform.default_style
     style = product.platform.style_index.get(style_r)
@@ -203,48 +199,19 @@ def get_map(args):
                            locator="Style parameter")
 
     # Format parameter
-    fmt = args.get("format", "").lower()
-    if not fmt:
-        raise WMSException("No image format specified",
-                           WMSException.INVALID_FORMAT,
-                           locator="Format parameter")
-    elif fmt != "image/png":
-        raise WMSException("Image format %s is not supported" % layer,
-                           WMSException.INVALID_FORMAT,
-                           locator="Format parameter")
+    fmt = get_arg(args, "format", "image format",
+                  errcode=WMSException.INVALID_FORMAT,
+                  lower=True,
+                  permitted_values=["image/png"])
 
     # BBox, height and width parameters
     geobox = _get_geobox(args, crs)
 
     # Time parameter
-    times = args.get('time', '').split('/')
-    if len(times) > 1:
-        raise WMSException(
-                    "Selecting multiple time dimension values not supported",
-                    WMSException.INVALID_DIMENSION_VALUE,
-                    locator="Time parameter")
-    elif not times[0]:
-        raise WMSException(
-                    "Time dimension value not supplied",
-                    WMSException.MISSING_DIMENSION_VALUE,
-                    locator="Time parameter")
-    try:
-        time = datetime.strptime(times[0], "%Y-%m-%d").date()
-    except ValueError:
-        raise WMSException(
-                    "Time dimension value '%s' not valid for this layer" % times[0],
-                    WMSException.INVALID_DIMENSION_VALUE,
-                    locator="Time parameter")
-
-    # Validate time paramter for requested layer.
-    if time not in product.ranges["time_set"]:
-        raise WMSException(
-                    "Time dimension value '%s' not valid for this layer" % times[0],
-                    WMSException.INVALID_DIMENSION_VALUE,
-                    locator="Time parameter")
+    time = get_time(args, product)
 
     # Tiling.
-    tiler = RGBTileGenerator(product, style, geobox, time)
+    tiler = RGBTileGenerator(product, geobox, time, style=style)
     dc = get_cube()
     datasets = tiler.datasets(dc.index)
     if not datasets:
@@ -291,3 +258,86 @@ def _write_empty(geobox):
                           dtype='uint8') as thing:
             pass
         return memfile.read()
+
+def feature_info(args):
+    # Version parameter
+    version = get_arg(args, "version", "WMS version",
+                        permitted_values=["1.1.1", "1.3.0"])
+
+    # Layer/product
+    product = get_product_from_arg(args, "query_layers")
+
+    fmt = get_arg(args, "info_format", "info format", lower=True, errcode=WMSException.INVALID_FORMAT,
+                  permitted_values=["application/json"])
+
+    # CRS parameter
+    if version == "1.1.1":
+        crs_arg = "srs"
+    else:
+        crs_arg = "crs"
+    crsid = get_arg(args, crs_arg, "Coordinate Reference System",
+                    errcode=WMSException.INVALID_FORMAT,
+                    permitted_values=service_cfg["published_CRSs"])
+    crs = geometry.CRS(crsid)
+
+    # BBox, height and width parameters
+    geobox = _get_geobox(args, crs)
+
+    # Time parameter
+    time = get_time(args, product)
+
+    # Point coords
+    if version == "1.1.1":
+        coords = [ "x", "y" ]
+    else:
+        coords = [ "i", "j" ]
+    i = args.get(coords[0])
+    j = args.get(coords[1])
+    if i is None:
+        raise WMSException("HorizontalCoordinate not supplied", WMSException.INVALID_POINT,
+                           "%s parameter" % coords[0])
+    if j is None:
+        raise WMSException("Vertical coordinate not supplied", WMSException.INVALID_POINT,
+                           "%s parameter" % coords[0])
+    i = int(i)
+    j = int(j)
+    feature_json = {}
+    tiler = RGBTileGenerator(product, geobox, time)
+    dc = get_cube()
+    datasets = tiler.datasets(dc.index, point=img_coords_to_geopoint(geobox, i, j))
+    if not datasets:
+        pass
+    else:
+        data = tiler.data(datasets)
+        # Use i,j image coordinates to extract data pixel from dataset, and
+        # convert to lat/long geographic coordinates
+        if crsid == "EPSG:4326":
+            feature_json["lat"]=data.latitude[j].item()
+            feature_json["lon"]=data.longitude[i].item()
+            pixel_ds = data.isel(latitude=[j], longitude=[i])
+        elif crsid == "EPSG:3857":
+            x=data.x[i].item()
+            y=data.y[j].item()
+            pt=geometry.point(x, y, crs)
+            crs_geo = geometry.CRS("EPSG:4326")
+            ptg = pt.to_crs(crs_geo)
+            feature_json["lon"], feature_json["lat"]=ptg.coords[0]
+            pixel_ds = data.isel(x=[i], y=[j])
+        # Get accurate timestamp from dataset
+        feature_json["time"]=datasets[0].center_time.strftime("%Y-%m-%d %H:%M:%S")
+        # Collect raw band values for pixel
+        for band in tiler.needed_bands():
+            feature_json[band] = pixel_ds[band].item()
+
+    release_cube(dc)
+    result = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": feature_json
+            }
+        ]
+    }
+    return json.dumps(result), 200, resp_headers({"Content-Type": "application/json"})
+

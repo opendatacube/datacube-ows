@@ -3,11 +3,10 @@ from __future__ import absolute_import, division, print_function
 import sys
 import traceback
 
-from datacube_wms.get_map import get_map
-from datacube_wms.wms_utils import resp_headers, WMSException, wms_exception
-
-
 from flask import Flask, request, render_template
+
+from datacube_wms.data import get_map, feature_info
+from datacube_wms.wms_utils import resp_headers, WMSException, wms_exception
 
 app = Flask(__name__.split('.')[0])
 
@@ -37,8 +36,8 @@ def wms_impl():
             return get_capabilities(nocase_args)
         elif operation == "GetMap":
             return get_map(nocase_args)
-        elif operation == "GetFeatureInfo":
-            raise WMSException("GetFeatureInfo not implemented yet", WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
+        elif operation== "GetFeatureInfo":
+            return feature_info(nocase_args)
         else:
             raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
     except WMSException as e:
