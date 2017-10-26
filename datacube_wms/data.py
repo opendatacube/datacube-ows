@@ -142,12 +142,13 @@ def _get_datasets(index, geobox, product, time_, point=None):
     query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time_)
     datasets = index.datasets.search_eager(**query.search_terms)
     datasets.sort(key=lambda d: d.center_time)
-    dataset_iter = iter(datasets)
-    to_load = []
     if point:
+        dataset_iter = iter(datasets)
         for dataset in dataset_iter:
             if dataset.extent.to_crs(geobox.crs).contains(point):
                 return [ dataset ]
+    dataset_iter = iter(datasets)
+    to_load = []
     for dataset in dataset_iter:
         if dataset.extent.to_crs(geobox.crs).intersects(geobox.extent):
             to_load.append(dataset)
@@ -181,7 +182,7 @@ def get_map(args):
         crs_arg = "crs"
     crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                   errcode=WMSException.INVALID_CRS,
-                  permitted_values=service_cfg["published_CRSs"])
+                  permitted_values=service_cfg["published_CRSs"].keys())
     crs = geometry.CRS(crsid)
 
     # Layers and Styles parameters
@@ -277,7 +278,7 @@ def feature_info(args):
         crs_arg = "crs"
     crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                     errcode=WMSException.INVALID_FORMAT,
-                    permitted_values=service_cfg["published_CRSs"])
+                    permitted_values=service_cfg["published_CRSs"].keys())
     crs = geometry.CRS(crsid)
 
     # BBox, height and width parameters
@@ -301,8 +302,15 @@ def feature_info(args):
                            "%s parameter" % coords[0])
     i = int(i)
     j = int(j)
-    feature_json = {}
+    # Image and Geobox coordinate systems are the same except the vertical
+    # co-ordinate increases in the opposite direction.
+    j = geobox.height - j
+
+    # Prepare to extract feature info
     tiler = RGBTileGenerator(product, geobox, time)
+    feature_json = {}
+
+    # --- Begin code section requiring datacube.
     dc = get_cube()
     datasets = tiler.datasets(dc.index, point=img_coords_to_geopoint(geobox, i, j))
     if not datasets:
@@ -311,25 +319,52 @@ def feature_info(args):
         data = tiler.data(datasets)
         # Use i,j image coordinates to extract data pixel from dataset, and
         # convert to lat/long geographic coordinates
-        if crsid == "EPSG:4326":
+        if service_cfg["published_CRSs"][crsid]["geographic"]:
+            # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
             feature_json["lat"]=data.latitude[j].item()
             feature_json["lon"]=data.longitude[i].item()
             pixel_ds = data.isel(latitude=[j], longitude=[i])
-        elif crsid == "EPSG:3857":
-            x=data.x[i].item()
-            y=data.y[j].item()
+        else:
+            # Non-geographic coordinate systems need to be projected onto a geographic
+            # coordinate system.  Why not use EPSG:4326?
+            # Extract coordinates in CRS
+            h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
+            v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
+            data_x = getattr(data, h_coord)
+            data_y = getattr(data, v_coord)
+
+            x=data_x[i].item()
+            y=data_y[j].item()
             pt=geometry.point(x, y, crs)
+
+            # Project to EPSG:4326
             crs_geo = geometry.CRS("EPSG:4326")
             ptg = pt.to_crs(crs_geo)
+
+            # Capture lat/long coordinates
             feature_json["lon"], feature_json["lat"]=ptg.coords[0]
-            pixel_ds = data.isel(x=[i], y=[j])
+
+            # Extract data pixel
+            isel_kwargs={
+                h_coord: [i],
+                v_coord: [j]
+            }
+            pixel_ds = data.isel(**isel_kwargs)
+
         # Get accurate timestamp from dataset
         feature_json["time"]=datasets[0].center_time.strftime("%Y-%m-%d %H:%M:%S")
+
         # Collect raw band values for pixel
         for band in tiler.needed_bands():
-            feature_json[band] = pixel_ds[band].item()
+            band_val = pixel_ds[band].item()
+            if band_val == -999:
+                feature_json[band] = "n/a"
+            else:
+                feature_json[band] = pixel_ds[band].item()
 
     release_cube(dc)
+    # --- End code section requiring datacube.
+
     result = {
         "type": "FeatureCollection",
         "features": [

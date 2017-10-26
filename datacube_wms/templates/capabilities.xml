@@ -116,7 +116,7 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
             {{ service.abstract }}
         </Abstract>
         {% endif %}
-        {% for crs in service.published_CRSs %}
+        {% for crs in service.published_CRSs.keys() %}
         <CRS>{{ crs }}</CRS>
         {% endfor %}
         {% for platform in platforms %}

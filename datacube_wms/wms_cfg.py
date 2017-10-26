@@ -8,11 +8,21 @@ service_cfg = {
     # Required config
     "title": "WMS server for Australian Landsat Datacube",
     "url": "http://localhost:5000/",
-    "published_CRSs": [
-        "EPSG:3857",   # Web Mercator
-        "EPSG:4326",   # WGS-84
-        "EPSG:3577"    # GDA-94, internal representation
-    ],
+    "published_CRSs": {
+        "EPSG:3857": { # Web Mercator
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+        },
+        "EPSG:4326": { # WGS-84
+            "geographic": True,
+        },
+        "EPSG:3577": { # GDA-94, internal representation
+            "geographic": False,
+            "horizontal_coord": "easting",
+            "vertical_coord": "northing",
+        },
+    },
     
     # Technically optional config, but strongly recommended
     "layer_limit": 1,
