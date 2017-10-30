@@ -59,7 +59,7 @@ service_cfg = {
 layer_cfg = [
     # Layer Config is a list of platform configs
     {
-        # Name and title of the platform layer.  
+        # Name and title of the platform layer.
         # Platform layers are not mappable. The name is for internal server use only.
         "name": "LANDSAT_8",
         "title": "Landsat 8",
@@ -68,12 +68,12 @@ layer_cfg = [
         # Products available for this platform.
         # For each product, the "name" is the Datacube name, and the label is used
         # to describe the label to end-users.
-        "products": [ 
+        "products": [
             {
                 "label": "NBAR-T",
                 "type": "surface reflectance",
                 "variant": "terrain corrected",
-                "name": "ls8_nbart_albers", 
+                "name": "ls8_nbart_albers",
             },
         ],
         # Styles.
@@ -286,5 +286,179 @@ layer_cfg = [
         # (Looks like Terria assumes this is the first style in the list, but this is
         #  not required by the standard.)
         "default_style": "simple_rgb",
-    }
+    },
 ]
+
+to_be_added_to_layer_cfg = {
+        "name": "LANDSAT_7",
+        "title": "Landsat 7",
+        "abstract": "Images from the Landsat 7 satellite",
+
+        "products": [
+            {
+                "label": "NBAR-T",
+                "type": "surface reflectance",
+                "variant": "terrain corrected",
+                "name": "ls7_nbart_albers",
+            },
+        ],
+        "styles": [
+            {
+                "name": "simple_rgb",
+                "title": "Simple RGB",
+                "abstract": "Simple true-colour image, using the red, green and blue bands",
+                "components": {
+                    "red": {
+                        "red": 1.0
+                    },
+                    "green": {
+                        "green": 1.0
+                    },
+                    "blue": {
+                        "blue": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "wideband",
+                "title": "Wideband false-colour",
+                "abstract": "False-colour image, incorporating all available spectral bands",
+                "components": {
+                    "red": {
+                        "swir2": 0.5,
+                        "swir1": 0.5,
+                    },
+                    "green": {
+                        "nir": 0.5,
+                        "red": 0.5,
+                    },
+                    "blue": {
+                        "green": 0.5,
+                        "blue": 0.5,
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "infra_red",
+                "title": "False colour multi-band infra-red",
+                "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
+                "components": {
+                    "red": {
+                        "swir1": 1.0
+                    },
+                    "green": {
+                        "swir2": 1.0
+                    },
+                    "blue": {
+                        "nir": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "blue",
+                "title": "Spectral band 1 - Blue",
+                "abstract": "Blue band, approximately 450nm to 520nm",
+                "components": {
+                    "red": {
+                        "blue": 1.0
+                    },
+                    "green": {
+                        "blue": 1.0
+                    },
+                    "blue": {
+                        "blue": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "green",
+                "title": "Spectral band 2 - Green",
+                "abstract": "Green band, approximately 530nm to 610nm",
+                "components": {
+                    "red": {
+                        "green": 1.0
+                    },
+                    "green": {
+                        "green": 1.0
+                    },
+                    "blue": {
+                        "green": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "red",
+                "title": "Spectral band 3 - Red",
+                "abstract": "Red band, roughly 630nm to 690nm",
+                "components": {
+                    "red": {
+                        "red": 1.0
+                    },
+                    "green": {
+                        "red": 1.0
+                    },
+                    "blue": {
+                        "red": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "nir",
+                "title": "Spectral band 4 - Near infra-red",
+                "abstract": "Near infra-red band, roughly 780nm to 840nm",
+                "components": {
+                    "red": {
+                        "nir": 1.0
+                    },
+                    "green": {
+                        "nir": 1.0
+                    },
+                    "blue": {
+                        "nir": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "swir1",
+                "title": "Spectral band 5 - Short wave infra-red 1",
+                "abstract": "Short wave infra-red band 1, roughly 1550nm to 1750nm",
+                "components": {
+                    "red": {
+                        "swir1": 1.0
+                    },
+                    "green": {
+                        "swir1": 1.0
+                    },
+                    "blue": {
+                        "swir1": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "swir2",
+                "title": "Spectral band 6 - Short wave infra-red 2",
+                "abstract": "Short wave infra-red band 2, roughly 2090nm to 2220nm",
+                "components": {
+                    "red": {
+                        "swir2": 1.0
+                    },
+                    "green": {
+                        "swir2": 1.0
+                    },
+                    "blue": {
+                        "swir2": 1.0
+                    }
+                },
+                "scale_factor": 12.0
+            }
+        ],
+        "default_style": "simple_rgb",
+}

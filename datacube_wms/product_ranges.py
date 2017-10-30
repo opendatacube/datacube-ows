@@ -22,7 +22,9 @@ def accum_max(a, b):
 
 
 def determine_product_ranges(dc, product_name):
+    start = datetime.now()
     product = dc.index.products.get_by_name(product_name)
+    print ("Product: ", product_name)
     r = {
         "product_id": product.id,
 
@@ -40,7 +42,7 @@ def determine_product_ranges(dc, product_name):
     crsids = service_cfg["published_CRSs"]
     extents = { crsid: None for crsid in crsids }
     crses = { crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids }
-
+    ds_count = 0
     for ds in dc.find_datasets(product=product_name):
         r["lat"]["min"] = accum_min(r["lat"]["min"], ds.metadata.lat.begin)
         r["lat"]["max"] = accum_max(r["lat"]["max"], ds.metadata.lat.end)
@@ -58,10 +60,13 @@ def determine_product_ranges(dc, product_name):
                 extents[crsid] = ext
             else:
                 extents[crsid] = extents[crsid].union(ext)
+        ds_count += 1
 
     r["times"] = sorted(time_set)
     r["time_set"] = time_set
     r["bboxes"] = { crsid: extents[crsid].boundingbox for crsid in crsids }
+    end = datetime.now()
+    print ("Scanned %d datasets in %d seconds" % (ds_count, (end-start).seconds))
     return r
 
 
