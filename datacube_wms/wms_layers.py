@@ -97,6 +97,7 @@ class PlatformLayerDef(object):
 
 class LayerDefs(object):
     _instance = None
+    initialised = False
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -104,15 +105,17 @@ class LayerDefs(object):
         return cls._instance
 
     def __init__(self, platforms_cfg):
-        self.platforms = []
-        self.platform_index = {}
-        self.product_index = {}
-        dc = get_cube()
-        for platform_cfg in platforms_cfg:
-            platform = PlatformLayerDef(platform_cfg, self.product_index, dc=dc)
-            self.platforms.append(platform)
-            self.platform_index[platform.name] = platform
-        release_cube(dc)
+        if not self.initialised:
+            self.initialised = True
+            self.platforms = []
+            self.platform_index = {}
+            self.product_index = {}
+            dc = get_cube()
+            for platform_cfg in platforms_cfg:
+                platform = PlatformLayerDef(platform_cfg, self.product_index, dc=dc)
+                self.platforms.append(platform)
+                self.platform_index[platform.name] = platform
+            release_cube(dc)
     def __iter__(self):
         for p in self.platforms:
             yield p

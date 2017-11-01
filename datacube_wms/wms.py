@@ -44,7 +44,7 @@ def wms_impl():
         return wms_exception(e)
     except Exception as e:
         tb = sys.exc_info()[2]
-        wms_e = WMSException("Unexpected server error: %s" % str(e))
+        wms_e = WMSException("Unexpected server error: %s" % str(e), http_response=500)
         return wms_exception(wms_e, traceback=traceback.extract_tb(tb))
 
 @app.route('/test_client')

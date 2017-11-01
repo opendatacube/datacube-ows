@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import json
 
 import datacube
@@ -48,8 +48,13 @@ class RGBTileGenerator(TileGenerator):
         else:
             return self._product.product.measurements.keys()
 
-    def datasets(self, index, point=None):
-        return _get_datasets(index, self._geobox, self._product.name, self._time, point=point)
+    def datasets(self, index, all_time=False, point=None):
+        if all_time:
+            times = self._product.ranges["times"]
+            time = [ times[0], times[-1] + timedelta(days=1)]
+        else:
+            time = self._time
+        return _get_datasets(index, self._geobox, self._product.name, time, point=point)
 
     def data(self, datasets):
         holder = numpy.empty(shape=tuple(), dtype=object)
@@ -142,13 +147,14 @@ def _get_datasets(index, geobox, product, time_, point=None):
     query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time_)
     datasets = index.datasets.search_eager(**query.search_terms)
     datasets.sort(key=lambda d: d.center_time)
+    to_load = []
     if point:
         dataset_iter = iter(datasets)
         for dataset in dataset_iter:
             if dataset.extent.to_crs(geobox.crs).contains(point):
-                return [ dataset ]
+                to_load.append( dataset )
+        return to_load
     dataset_iter = iter(datasets)
-    to_load = []
     for dataset in dataset_iter:
         if dataset.extent.to_crs(geobox.crs).intersects(geobox.extent):
             to_load.append(dataset)
@@ -312,56 +318,62 @@ def feature_info(args):
 
     # --- Begin code section requiring datacube.
     dc = get_cube()
-    datasets = tiler.datasets(dc.index, point=img_coords_to_geopoint(geobox, i, j))
+    datasets = tiler.datasets(dc.index, all_time=True, point=img_coords_to_geopoint(geobox, i, j))
     if not datasets:
         pass
     else:
-        data = tiler.data(datasets)
-        # Use i,j image coordinates to extract data pixel from dataset, and
-        # convert to lat/long geographic coordinates
-        if service_cfg["published_CRSs"][crsid]["geographic"]:
-            # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
-            feature_json["lat"]=data.latitude[j].item()
-            feature_json["lon"]=data.longitude[i].item()
-            pixel_ds = data.isel(latitude=[j], longitude=[i])
-        else:
-            # Non-geographic coordinate systems need to be projected onto a geographic
-            # coordinate system.  Why not use EPSG:4326?
-            # Extract coordinates in CRS
-            h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
-            v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
-            data_x = getattr(data, h_coord)
-            data_y = getattr(data, v_coord)
+        available_dates = set()
+        for d in datasets:
+            available_dates.add(d.center_time.date())
+            if d.center_time.date() == time and "lon" not in feature_json:
+                data = tiler.data(datasets)
+                # Use i,j image coordinates to extract data pixel from dataset, and
+                # convert to lat/long geographic coordinates
+                if service_cfg["published_CRSs"][crsid]["geographic"]:
+                    # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
+                    feature_json["lat"]=data.latitude[j].item()
+                    feature_json["lon"]=data.longitude[i].item()
+                    pixel_ds = data.isel(latitude=[j], longitude=[i])
+                else:
+                    # Non-geographic coordinate systems need to be projected onto a geographic
+                    # coordinate system.  Why not use EPSG:4326?
+                    # Extract coordinates in CRS
+                    h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
+                    v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
+                    data_x = getattr(data, h_coord)
+                    data_y = getattr(data, v_coord)
 
-            x=data_x[i].item()
-            y=data_y[j].item()
-            pt=geometry.point(x, y, crs)
+                    x=data_x[i].item()
+                    y=data_y[j].item()
+                    pt=geometry.point(x, y, crs)
 
-            # Project to EPSG:4326
-            crs_geo = geometry.CRS("EPSG:4326")
-            ptg = pt.to_crs(crs_geo)
+                    # Project to EPSG:4326
+                    crs_geo = geometry.CRS("EPSG:4326")
+                    ptg = pt.to_crs(crs_geo)
 
-            # Capture lat/long coordinates
-            feature_json["lon"], feature_json["lat"]=ptg.coords[0]
+                    # Capture lat/long coordinates
+                    feature_json["lon"], feature_json["lat"]=ptg.coords[0]
 
-            # Extract data pixel
-            isel_kwargs={
-                h_coord: [i],
-                v_coord: [j]
-            }
-            pixel_ds = data.isel(**isel_kwargs)
+                    # Extract data pixel
+                    isel_kwargs={
+                        h_coord: [i],
+                        v_coord: [j]
+                    }
+                    pixel_ds = data.isel(**isel_kwargs)
 
-        # Get accurate timestamp from dataset
-        feature_json["time"]=datasets[0].center_time.strftime("%Y-%m-%d %H:%M:%S")
+                # Get accurate timestamp from dataset
+                feature_json["time"]=d.center_time.strftime("%Y-%m-%d %H:%M:%S")
 
-        # Collect raw band values for pixel
-        for band in tiler.needed_bands():
-            band_val = pixel_ds[band].item()
-            if band_val == -999:
-                feature_json[band] = "n/a"
-            else:
-                feature_json[band] = pixel_ds[band].item()
-
+                # Collect raw band values for pixel
+                for band in tiler.needed_bands():
+                    band_val = pixel_ds[band].item()
+                    if band_val == -999:
+                        feature_json[band] = "n/a"
+                    else:
+                        feature_json[band] = pixel_ds[band].item()
+        lads = list(available_dates)
+        lads.sort()
+        feature_json["data_available_for_dates"] = [ d.strftime("%Y-%m-%d") for d in lads ]
     release_cube(dc)
     # --- End code section requiring datacube.
 
