@@ -1,9 +1,7 @@
 from datacube_wms.wms_cfg import service_cfg, layer_cfg
-from xarray import Dataset
-import numpy
-import datacube
 from datacube_wms.product_ranges import get_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
+from datacube_wms.band_mapper import StyleDef
 
 def accum_min(a, b):
     if a is None:
@@ -37,47 +35,6 @@ class ProductLayerDef(object):
                                         self.product_type,
                                         self.product_label)
         self.ranges = get_ranges(dc, self.product)
-
-
-class StyleDef(object):
-    def __init__(self, style_cfg):
-        self.name = style_cfg["name"]
-        self.title = style_cfg["title"]
-        self.abstract = style_cfg["abstract"]
-        self.red_components = style_cfg["components"]["red"]
-        self.green_components = style_cfg["components"]["green"]
-        self.blue_components = style_cfg["components"]["blue"]
-        self.scale_factor = style_cfg["scale_factor"]
-        self.needed_bands = set()
-        for band in self.red_components.keys():
-            self.needed_bands.add(band)
-        for band in self.green_components.keys():
-            self.needed_bands.add(band)
-        for band in self.blue_components.keys():
-            self.needed_bands.add(band)
-
-    @property
-    def components(self):
-        return {
-            "red": self.red_components,
-            "green": self.green_components,
-            "blue": self.blue_components,
-        }
-
-    def transform_data(self, data):
-        imgdata = Dataset()
-        for imgband, components in self.components.items():
-            imgband_data = None
-            for band, intensity in components.items():
-                imgband_component = data[band] * intensity
-                if imgband_data is not None:
-                    imgband_data += imgband_component
-                else:
-                    imgband_data = imgband_component
-            dims = imgband_data.dims
-            imgband_data = numpy.clip(imgband_data.values[::-1] / self.scale_factor, 0, 255).astype('uint8')
-            imgdata[imgband] = (dims, imgband_data)
-        return imgdata
 
 
 class PlatformLayerDef(object):
