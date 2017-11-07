@@ -117,3 +117,13 @@ def get_time(args, product):
             WMSException.INVALID_DIMENSION_VALUE,
             locator="Time parameter")
     return time
+
+def bounding_box_to_geom(bbox, bb_crs, target_crs):
+    poly = geometry.polygon([
+                                ( bbox.left, bbox.top ),
+                                ( bbox.left, bbox.bottom ),
+                                ( bbox.right, bbox.bottom ),
+                                ( bbox.right, bbox.top ),
+                                ( bbox.left, bbox.top ),
+                            ], bb_crs)
+    return poly.to_crs(target_crs)

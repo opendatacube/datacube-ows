@@ -25,16 +25,24 @@ class ProductLayerDef(object):
     def __init__(self, product_cfg, platform_def, dc):
         self.platform = platform_def
         self.name = product_cfg["name"]
+        self.product_name = product_cfg["product_name"]
         self.product_label = product_cfg["label"]
         self.product_type = product_cfg["type"]
         self.product_variant = product_cfg["variant"]
-        self.product = dc.index.products.get_by_name(self.name)
+        self.product = dc.index.products.get_by_name(self.product_name)
         self.definition = self.product.definition
         self.title = "%s %s %s (%s)" % (platform_def.title,
                                         self.product_variant,
                                         self.product_type,
                                         self.product_label)
         self.ranges = get_ranges(dc, self.product)
+        self.pq_name = product_cfg.get("pq_dataset")
+        self.pq_mask_flags = product_cfg.get("pq_mask_flags")
+        self.pq_band = product_cfg.get("pq_band")
+        if self.pq_name:
+            self.pq_product = dc.index.products.get_by_name(self.pq_name)
+        else:
+            self.pq_product = None
 
 
 class PlatformLayerDef(object):

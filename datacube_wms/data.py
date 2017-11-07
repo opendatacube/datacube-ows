@@ -2,16 +2,18 @@ from datetime import timedelta, datetime
 import json
 
 import datacube
+
 import numpy
 import xarray
 from affine import Affine
-from datacube.storage.masking import make_mask, mask_valid_data as mask_invalid_data
+from datacube.storage.masking import make_mask, mask_invalid_data
 from datacube.utils import geometry
 
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.wms_utils import get_arg, WMSException, _get_geobox, resp_headers, get_product_from_arg, get_time, \
-    img_coords_to_geopoint
+    img_coords_to_geopoint, bounding_box_to_geom
+
 
 # travis can only get earlier version of rasterio which doesn't have MemoryFile, so
 # - tell pylint to ingnore inport error
@@ -48,21 +50,31 @@ class RGBTileGenerator(TileGenerator):
         else:
             return self._product.product.measurements.keys()
 
-    def datasets(self, index, all_time=False, point=None):
+    def datasets(self, index, mask=False, all_time=False, point=None):
         if all_time:
             times = self._product.ranges["times"]
             time = [ times[0], times[-1] + timedelta(days=1)]
         else:
             time = self._time
-        return _get_datasets(index, self._geobox, self._product.name, time, point=point)
+        if mask and self._product.pq_name:
+            prod_name = self._product.pq_name
+        elif mask:
+            return []
+        else:
+            prod_name = self._product.product_name
+        return _get_datasets(index, self._geobox, prod_name, time, mask=mask, point=point)
 
-    def data(self, datasets):
+    def data(self, datasets, mask=False):
         holder = numpy.empty(shape=tuple(), dtype=object)
         holder[()] = datasets
         sources = xarray.DataArray(holder)
 
-        prod = datasets[0].type
-        measurements = [self._set_resampling(prod.measurements[name]) for name in self.needed_bands()]
+        if mask:
+            prod = datasets[0].type
+            measurements = [ self._set_resampling(prod.measurements[self._product.pq_band]) ]
+        else:
+            prod = datasets[0].type
+            measurements = [self._set_resampling(prod.measurements[name]) for name in self.needed_bands()]
         with datacube.set_options(reproject_threads=1, fast_load=True):
             return datacube.Datacube.load_data(sources, self._geobox, measurements)
 
@@ -71,79 +83,7 @@ class RGBTileGenerator(TileGenerator):
         # mc['resampling_method'] = 'cubic'
         return mc
 
-
-class LatestCloudFree(TileGenerator):
-    # TODO: The contract for Tile Generators has changed since this was last used.
-    def __init__(self, product, bands, mask, mask_band, mask_flags, geobox, time, **kwargs):
-        super(LatestCloudFree, self).__init__(**kwargs)
-        self._product = product
-        self._bands = bands
-        self._mask = mask
-        self._mask_band = mask_band
-        self._mask_flags = mask_flags
-        self._geobox = geobox
-        self._time = time
-
-    def _get_datasets(self, index, product, geobox, time):
-        query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time)
-        datasets = index.datasets.search_eager(**query.search_terms)
-        return [dataset for dataset in datasets if dataset.extent.to_crs(geobox.crs).intersects(geobox.extent)]
-
-    def datasets(self, index):
-        return {
-            'product': self._get_datasets(index, self._product, self._geobox, self._time),
-            'mask': self._get_datasets(index, self._mask, self._geobox, self._time)
-        }
-
-    def data(self, datasets):
-        prod_sources = datacube.Datacube.group_datasets(datasets['product'], datacube.api.query.query_group_by())
-        mask_sources = datacube.Datacube.group_datasets(datasets['mask'], datacube.api.query.query_group_by())
-        # pylint: disable=unbalanced-tuple-unpacking
-        prod_sources, mask_sources = xarray.align(prod_sources, mask_sources)
-
-        fused_data = None
-        fused_mask = None
-        for i in reversed(range(0, prod_sources.time.size)):
-            prod = datasets['mask'][0].type
-            measurements = [self._set_resampling(prod.measurements[name]) for name in (self._mask_band, )]
-            with datacube.set_options(reproject_threads=1, fast_load=True):
-                pq_data = datacube.Datacube.load_data(mask_sources[i], self._geobox, measurements)
-            mask = make_mask(pq_data[self._mask_band], **self._mask_flags)
-
-            # skip real cloudy stuff
-            if numpy.count_nonzero(mask) < mask.size*0.05:
-                continue
-
-            prod = datasets['product'][0].type
-            measurements = [self._set_resampling(prod.measurements[name]) for name in self._bands]
-
-            with datacube.set_options(reproject_threads=1, fast_load=True):
-                pix_data = datacube.Datacube.load_data(prod_sources[i], self._geobox, measurements)
-            pix_data = mask_invalid_data(pix_data)
-
-            if fused_data is None:
-                fused_data = pix_data
-                fused_mask = mask
-                continue
-
-            copy_mask = (~fused_mask) & mask  # pylint: disable=invalid-unary-operand-type
-            for band in self._bands:
-                numpy.copyto(fused_data[band].values, pix_data[band].values, where=copy_mask)
-            fused_mask = fused_mask | mask
-
-            # don't try to get 100% cloud free
-            if numpy.count_nonzero(fused_mask) > fused_mask.size*0.95:
-                break
-
-        return fused_data
-
-    def _set_resampling(self, measurement):
-        mc = measurement.copy()
-        # mc['resampling_method'] = 'cubic'
-        return mc
-
-
-def _get_datasets(index, geobox, product, time_, point=None):
+def _get_datasets(index, geobox, product, time_, mask=False, point=None):
     query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time_)
     datasets = index.datasets.search_eager(**query.search_terms)
     datasets.sort(key=lambda d: d.center_time)
@@ -151,7 +91,12 @@ def _get_datasets(index, geobox, product, time_, point=None):
     if point:
         dataset_iter = iter(datasets)
         for dataset in dataset_iter:
-            if dataset.extent.to_crs(geobox.crs).contains(point):
+            if mask:
+                bbox = dataset.bounds
+                compare_geometry = bounding_box_to_geom(bbox, dataset.crs, geobox.crs)
+            else:
+                compare_geometry = dataset.extent.to_crs(geobox.crs)
+            if compare_geometry.contains(point):
                 to_load.append( dataset )
         return to_load
     dataset_iter = iter(datasets)
@@ -221,10 +166,18 @@ def get_map(args):
     tiler = RGBTileGenerator(product, geobox, time, style=style)
     dc = get_cube()
     datasets = tiler.datasets(dc.index)
+    # pq_datasets = tiler.datasets(dc.index, mask=True)
+    pq_datasets = None
     if not datasets:
         body = _write_empty(geobox)
     else:
         data = tiler.data(datasets)
+        if pq_datasets:
+            # ??????
+            pq_data=tiler.data(pq_datasets, mask=True)
+            mask = make_mask(pq_data, **product.pq_mask_flags)
+            mask_data = mask.pixelquality
+            data = data.where(mask_data)
         if data:
             body = _write_png(data, style)
         else:
@@ -310,7 +263,7 @@ def feature_info(args):
     j = int(j)
     # Image and Geobox coordinate systems are the same except the vertical
     # co-ordinate increases in the opposite direction.
-    j = geobox.height - j
+    j = geobox.height - j - 1
 
     # Prepare to extract feature info
     tiler = RGBTileGenerator(product, geobox, time)
@@ -318,7 +271,22 @@ def feature_info(args):
 
     # --- Begin code section requiring datacube.
     dc = get_cube()
-    datasets = tiler.datasets(dc.index, all_time=True, point=img_coords_to_geopoint(geobox, i, j))
+    geo_point=img_coords_to_geopoint(geobox, i, j)
+    datasets = tiler.datasets(dc.index, all_time=True,
+                              point=geo_point)
+    pq_datasets = tiler.datasets(dc.index, mask=True, all_time=True,
+                            point=geo_point)
+
+    if service_cfg["published_CRSs"][crsid]["geographic"]:
+        h_coord = "longitude"
+        v_coord = "latitude"
+    else:
+        h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
+        v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
+    isel_kwargs={
+        h_coord: [i],
+        v_coord: [j]
+    }
     if not datasets:
         pass
     else:
@@ -326,20 +294,19 @@ def feature_info(args):
         for d in datasets:
             available_dates.add(d.center_time.date())
             if d.center_time.date() == time and "lon" not in feature_json:
-                data = tiler.data(datasets)
+                data = tiler.data([d])
+
                 # Use i,j image coordinates to extract data pixel from dataset, and
                 # convert to lat/long geographic coordinates
                 if service_cfg["published_CRSs"][crsid]["geographic"]:
                     # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
                     feature_json["lat"]=data.latitude[j].item()
                     feature_json["lon"]=data.longitude[i].item()
-                    pixel_ds = data.isel(latitude=[j], longitude=[i])
+                    pixel_ds = data.isel(**isel_kwargs)
                 else:
                     # Non-geographic coordinate systems need to be projected onto a geographic
                     # coordinate system.  Why not use EPSG:4326?
                     # Extract coordinates in CRS
-                    h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
-                    v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
                     data_x = getattr(data, h_coord)
                     data_y = getattr(data, v_coord)
 
@@ -354,23 +321,43 @@ def feature_info(args):
                     # Capture lat/long coordinates
                     feature_json["lon"], feature_json["lat"]=ptg.coords[0]
 
-                    # Extract data pixel
-                    isel_kwargs={
-                        h_coord: [i],
-                        v_coord: [j]
-                    }
-                    pixel_ds = data.isel(**isel_kwargs)
+                # Extract data pixel
+                pixel_ds = data.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
                 feature_json["time"]=d.center_time.strftime("%Y-%m-%d %H:%M:%S")
 
                 # Collect raw band values for pixel
+                feature_json["bands"] = {}
                 for band in tiler.needed_bands():
                     band_val = pixel_ds[band].item()
                     if band_val == -999:
-                        feature_json[band] = "n/a"
+                        feature_json["bands"][band] = "n/a"
                     else:
-                        feature_json[band] = pixel_ds[band].item()
+                        feature_json["bands"][band] = pixel_ds[band].item()
+
+        my_flags = 0
+        for pqd in pq_datasets:
+            if pqd.center_time.date() == time:
+                pq_data = tiler.data([pqd], mask=True)
+                pq_pixel_ds = pq_data.isel(**isel_kwargs)
+                # PQ flags
+                m = product.pq_product.measurements[product.pq_band]
+                flags = pq_pixel_ds[product.pq_band].item()
+                my_flags = flags | flags
+                feature_json["flags"] = {}
+                for mk, mv in m["flags_definition"].items():
+                    bits = mv["bits"]
+                    values = mv["values"]
+                    if not isinstance(bits, int):
+                        continue
+                    flag = 1 << bits
+                    if my_flags & flag:
+                        val = values['1']
+                    else:
+                        val = values['0']
+                    feature_json["flags"][mk] = val
+
         lads = list(available_dates)
         lads.sort()
         feature_json["data_available_for_dates"] = [ d.strftime("%Y-%m-%d") for d in lads ]

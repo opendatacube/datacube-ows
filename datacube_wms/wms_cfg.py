@@ -74,6 +74,12 @@ layer_cfg = [
                 "type": "surface reflectance",
                 "variant": "terrain corrected",
                 "name": "ls8_nbart_albers",
+                "product_name": "ls8_nbart_albers",
+                "pq_dataset": "ls8_pq_albers",
+                "pq_band": "pixelquality",
+                "pq_mask_flags": {
+                    "contiguous": True
+                }
             },
         ],
         # Styles.
@@ -338,6 +344,12 @@ to_be_added_to_layer_cfg = {
                 "type": "surface reflectance",
                 "variant": "terrain corrected",
                 "name": "ls7_nbart_albers",
+                "product_name": "ls7_nbart_albers",
+                "pq_dataset": "ls7_pq_albers",
+                "pq_band": "pixelquality",
+                "pq_mask_flags": {
+                    "contiguous": True
+                }
             },
         ],
         "styles": [
