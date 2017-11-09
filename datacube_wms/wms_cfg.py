@@ -79,7 +79,9 @@ layer_cfg = [
                 "pq_band": "pixelquality",
                 "pq_mask_flags": {
                     "contiguous": True
-                }
+                },
+                "min_zoom_factor": 500.0,
+                "zoomed_out_fill_colour": [ 150, 180, 200, 160]
             },
         ],
         # Styles.
@@ -349,7 +351,8 @@ to_be_added_to_layer_cfg = {
                 "pq_band": "pixelquality",
                 "pq_mask_flags": {
                     "contiguous": True
-                }
+                },
+                "min_zoom_factor": 500.0
             },
         ],
         "styles": [

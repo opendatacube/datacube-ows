@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime
 import json
+from skimage.draw import polygon as skimg_polygon
 
 import datacube
 
@@ -12,7 +13,7 @@ from datacube.utils import geometry
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.wms_utils import get_arg, WMSException, _get_geobox, resp_headers, get_product_from_arg, get_time, \
-    img_coords_to_geopoint, bounding_box_to_geom
+    img_coords_to_geopoint, bounding_box_to_geom, zoom_factor
 
 
 # travis can only get earlier version of rasterio which doesn't have MemoryFile, so
@@ -159,6 +160,9 @@ def get_map(args):
     # BBox, height and width parameters
     geobox = _get_geobox(args, crs)
 
+    # Zoom Factor
+    zf = zoom_factor(args, crs)
+
     # Time parameter
     time = get_time(args, product)
 
@@ -170,6 +174,18 @@ def get_map(args):
     pq_datasets = None
     if not datasets:
         body = _write_empty(geobox)
+    elif zf < product.min_zoom:
+        # Zoomed out to far to properly render data.
+        # Construct a polygon which is the union of the extents of the matching datasets.
+        extent = None
+        for ds in datasets:
+            if extent:
+                extent = extent.union(ds.extent)
+            else:
+                extent = ds.extent
+        extent = extent.to_crs(geobox.crs)
+
+        body = _write_polygon(geobox, extent, product.zoom_fill)
     else:
         data = tiler.data(datasets)
         if pq_datasets:
@@ -218,6 +234,33 @@ def _write_empty(geobox):
                           dtype='uint8') as thing:
             pass
         return memfile.read()
+
+def _write_polygon(geobox, polygon, zoom_fill):
+    geobox_ext = geobox.extent
+    if geobox_ext.within(polygon):
+        data = numpy.full([geobox.width, geobox.height], fill_value=1, dtype="uint8")
+    else:
+        data = numpy.zeros([geobox.width, geobox.height], dtype="uint8")
+        if not geobox_ext.disjoint(polygon):
+            intersection = geobox_ext.intersection(polygon)
+            crs_coords = intersection.json["coordinates"][0]
+            pixel_coords = [ ~geobox.transform * coords for coords in crs_coords ]
+            rs, cs = skimg_polygon([ geobox.height - 1 - c[1] for c in pixel_coords ],
+                                   [ c[0] for c in pixel_coords ])
+            data[rs, cs] = 1
+
+    with MemoryFile() as memfile:
+        with memfile.open(driver='PNG',
+                          width=geobox.width,
+                          height=geobox.height,
+                          count=len(zoom_fill),
+                          transform=Affine.identity(),
+                          nodata=0,
+                          dtype='uint8') as thing:
+            for idx, fill in enumerate(zoom_fill, start=1):
+                thing.write_band(idx, data * fill)
+        return memfile.read()
+
 
 def feature_info(args):
     # Version parameter

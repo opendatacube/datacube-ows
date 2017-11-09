@@ -3,6 +3,7 @@ from datetime import datetime
 from affine import Affine
 from datacube.utils import geometry
 from flask import render_template
+import math
 
 from datacube_wms.wms_cfg import response_cfg
 from datacube_wms.wms_layers import get_layers
@@ -52,6 +53,36 @@ def _get_geobox(args, crs):
     affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
     return geometry.GeoBox(width, height, affine, crs)
 
+def zoom_factor(args, crs):
+    # Determine the geographic "zoom factor" for the request.
+    # (Larger zoom factor means deeper zoom.  Smaller zoom factor means larger area.)
+    # Extract request bbox and crs
+    width = int(args['width'])
+    height = int(args['height'])
+    minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
+    p1 = geometry.point(minx, maxy, crs)
+    p2 = geometry.point(minx, miny, crs)
+    p3 = geometry.point(maxx, maxy, crs)
+    p4 = geometry.point(maxx, miny, crs)
+
+    # Project to a geographic coordinate system
+    geo_crs = geometry.CRS("EPSG:4326")
+    gp1 = p1.to_crs(geo_crs)
+    gp2 = p2.to_crs(geo_crs)
+    gp3 = p3.to_crs(geo_crs)
+    gp4 = p4.to_crs(geo_crs)
+
+    minx = min(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
+    maxx = max(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
+    miny = min(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
+    maxy = max(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
+
+    # Create geobox affine transformation (N.B. Don't need an actual Geobox
+    affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
+
+    # Zoom factor is the reciprocal of the square root of the transform determinant
+    # (The determinant is x scale factor multiplied by the y scale factor)
+    return 1.0 / math.sqrt(affine.determinant)
 
 def img_coords_to_geopoint(geobox, i,j):
     return geometry.point( geobox.coordinates["x"].values[int(i)],
