@@ -102,8 +102,18 @@ class HeatMappedStyleDef(StyleDefBase):
             self.needed_bands.add(b)
         self._index_function = style_cfg["index_function"]
         self.range = style_cfg["range"]
+    def _masked_index_function(self, data):
+        result_mask = None
+        # This forces the result to be highly negative when any included band is not available.
+        for band in list(self.needed_bands):
+            band_mask = data[band] - abs(data[band])
+            if result_mask is None:
+                result_mask = band_mask
+            else:
+                result_mask *= band_mask
+        return self._index_function(data) + band_mask
     def transform_data(self, data):
-        hm_index_data = self._index_function(data).values[::-1]
+        hm_index_data = self._masked_index_function(data).values[::-1]
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
         for band, map_func in [
