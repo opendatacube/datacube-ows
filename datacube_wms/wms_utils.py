@@ -50,7 +50,8 @@ def _get_geobox(args, crs):
     height = int(args['height'])
     minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
 
-    affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
+    # miny-maxy for negative scale factor and maxy in the translation, includes inversion of Y axis.
+    affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
     return geometry.GeoBox(width, height, affine, crs)
 
 def zoom_factor(args, crs):

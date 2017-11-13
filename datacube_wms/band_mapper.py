@@ -44,7 +44,7 @@ class LinearStyleDef(StyleDefBase):
                 else:
                     imgband_data = imgband_component
             dims = imgband_data.dims
-            imgband_data = numpy.clip(imgband_data.values[::-1] / self.scale_factor, 0, 255).astype('uint8')
+            imgband_data = numpy.clip(imgband_data.values / self.scale_factor, 0, 255).astype('uint8')
             imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
@@ -113,7 +113,7 @@ class HeatMappedStyleDef(StyleDefBase):
                 result_mask *= band_mask
         return self._index_function(data) + band_mask
     def transform_data(self, data):
-        hm_index_data = self._masked_index_function(data).values[::-1]
+        hm_index_data = self._masked_index_function(data).values
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
         for band, map_func in [

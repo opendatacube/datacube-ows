@@ -245,7 +245,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
             intersection = geobox_ext.intersection(polygon)
             crs_coords = intersection.json["coordinates"][0]
             pixel_coords = [ ~geobox.transform * coords for coords in crs_coords ]
-            rs, cs = skimg_polygon([ geobox.height - 1 - c[1] for c in pixel_coords ],
+            rs, cs = skimg_polygon([ c[1] for c in pixel_coords ],
                                    [ c[0] for c in pixel_coords ])
             data[rs, cs] = 1
 
@@ -304,9 +304,6 @@ def feature_info(args):
                            "%s parameter" % coords[0])
     i = int(i)
     j = int(j)
-    # Image and Geobox coordinate systems are the same except the vertical
-    # co-ordinate increases in the opposite direction.
-    j = geobox.height - j - 1
 
     # Prepare to extract feature info
     tiler = RGBTileGenerator(product, geobox, time)
