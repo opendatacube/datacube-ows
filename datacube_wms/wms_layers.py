@@ -37,7 +37,6 @@ class ProductLayerDef(object):
                                         self.product_label)
         self.ranges = get_ranges(dc, self.product)
         self.pq_name = product_cfg.get("pq_dataset")
-        self.pq_mask_flags = product_cfg.get("pq_mask_flags")
         self.pq_band = product_cfg.get("pq_band")
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
         self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150,180,200])

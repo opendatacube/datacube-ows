@@ -67,6 +67,8 @@ def zoom_factor(args, crs):
     p4 = geometry.point(maxx, miny, crs)
 
     # Project to a geographic coordinate system
+    # This is why we can't just use the regular geobox.  The scale needs to be
+    # "standardised" in some sense, not dependent on the CRS of the request.
     geo_crs = geometry.CRS("EPSG:4326")
     gp1 = p1.to_crs(geo_crs)
     gp2 = p2.to_crs(geo_crs)
@@ -78,7 +80,7 @@ def zoom_factor(args, crs):
     miny = min(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
     maxy = max(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
 
-    # Create geobox affine transformation (N.B. Don't need an actual Geobox
+    # Create geobox affine transformation (N.B. Don't need an actual Geobox)
     affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
 
     # Zoom factor is the reciprocal of the square root of the transform determinant

@@ -6,6 +6,7 @@ class StyleDefBase(object):
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
+        self.pq_mask_flags = style_cfg.get("pq_mask_flags", {})
 
     def transform_data(self, data):
         pass

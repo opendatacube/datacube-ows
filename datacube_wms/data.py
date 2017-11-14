@@ -170,8 +170,7 @@ def get_map(args):
     tiler = RGBTileGenerator(product, geobox, time, style=style)
     dc = get_cube()
     datasets = tiler.datasets(dc.index)
-    # pq_datasets = tiler.datasets(dc.index, mask=True)
-    pq_datasets = None
+    pq_datasets = tiler.datasets(dc.index, mask=True)
     if not datasets:
         body = _write_empty(geobox)
     elif zf < product.min_zoom:
@@ -191,7 +190,7 @@ def get_map(args):
         if pq_datasets:
             # ??????
             pq_data=tiler.data(pq_datasets, mask=True)
-            mask = make_mask(pq_data, **product.pq_mask_flags)
+            mask = make_mask(pq_data, **style.pq_mask_flags)
             mask_data = mask.pixelquality
             data = data.where(mask_data)
         if data:

@@ -77,9 +77,6 @@ layer_cfg = [
                 "product_name": "ls8_nbart_albers",
                 "pq_dataset": "ls8_pq_albers",
                 "pq_band": "pixelquality",
-                "pq_mask_flags": {
-                    "contiguous": True
-                },
                 "min_zoom_factor": 500.0,
                 "zoomed_out_fill_colour": [ 150, 180, 200, 160]
             },
@@ -113,6 +110,28 @@ layer_cfg = [
                 "scale_factor": 12.0
             },
             {
+                "name": "cloud_masked_rgb",
+                "title": "Simple RGB with cloud masking",
+                "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud masking",
+                "heat_mapped": False,
+                "components": {
+                    "red": {
+                        "red": 1.0
+                    },
+                    "green": {
+                        "green": 1.0
+                    },
+                    "blue": {
+                        "blue": 1.0
+                    }
+                },
+                "pq_mask_flags": {
+                    "cloud_acca": "no_cloud",
+                    "cloud_fmask": "no_cloud",
+                },
+                "scale_factor": 12.0
+            },
+            {
                 "name": "extended_rgb",
                 "title": "Extended RGB",
                 "abstract": "Extended true-colour image, incorporating the coastal aerosol band",
@@ -128,6 +147,10 @@ layer_cfg = [
                         "blue": 0.6,
                         "coastal_aerosol": 0.4
                     }
+                },
+                "pq_mask_flags": {
+                    "cloud_acca": "no_cloud",
+                    "cloud_fmask": "no_cloud",
                 },
                 "scale_factor": 12.0
             },
