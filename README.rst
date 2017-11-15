@@ -35,7 +35,7 @@ Setup
   the Flask dev server.
 
 * In addition to the packages required for the Datacube and Flask, the
-  Datacube WMS server requires the skimage package:  `conda install skimage`
+  Datacube WMS server requires the scikit-image package:  `conda install scikit-image`
 
 Credits
 ---------
