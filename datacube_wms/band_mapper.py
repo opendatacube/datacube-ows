@@ -45,7 +45,8 @@ class LinearStyleDef(StyleDefBase):
                 else:
                     imgband_data = imgband_component
             dims = imgband_data.dims
-            imgband_data = numpy.clip(imgband_data.values / self.scale_factor, 0, 255).astype('uint8')
+            imgband_data = numpy.clip(imgband_data.values / self.scale_factor, -1, 254) + 1
+            imgband_data = imgband_data.astype('uint8')
             imgdata[imgband] = (dims, imgband_data)
         return imgdata
 

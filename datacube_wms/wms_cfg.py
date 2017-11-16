@@ -148,10 +148,6 @@ layer_cfg = [
                         "coastal_aerosol": 0.4
                     }
                 },
-                "pq_mask_flags": {
-                    "cloud_acca": "no_cloud",
-                    "cloud_fmask": "no_cloud",
-                },
                 "scale_factor": 12.0
             },
             {
