@@ -7,10 +7,11 @@ import datacube
 import numpy
 import xarray
 from affine import Affine
+
 from datacube.storage.masking import make_mask, mask_invalid_data
 from datacube.utils import geometry
 
-from datacube_wms.cube_pool import get_cube, release_cube
+from datacube_wms.cube_pool import get_cube, release_cube, pool_size
 from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.wms_utils import get_arg, WMSException, _get_geobox, resp_headers, get_product_from_arg, get_time, \
     img_coords_to_geopoint, bounding_box_to_geom, zoom_factor
@@ -66,15 +67,17 @@ class RGBTileGenerator(TileGenerator):
         return _get_datasets(index, self._geobox, prod_name, time, mask=mask, point=point)
 
     def data(self, datasets, mask=False):
-        holder = numpy.empty(shape=tuple(), dtype=object)
-        holder[()] = datasets
-        sources = xarray.DataArray(holder)
-
+        if isinstance(datasets, xarray.DataArray):
+            sources = datasets
+        else:
+            holder = numpy.empty(shape=tuple(), dtype=object)
+            holder[()] = datasets
+            sources = xarray.DataArray(holder)
         if mask:
-            prod = datasets[0].type
+            prod = self._product.pq_product
             measurements = [ self._set_resampling(prod.measurements[self._product.pq_band]) ]
         else:
-            prod = datasets[0].type
+            prod = self._product.product
             measurements = [self._set_resampling(prod.measurements[name]) for name in self.needed_bands()]
         with datacube.set_options(reproject_threads=1, fast_load=True):
             return datacube.Datacube.load_data(sources, self._geobox, measurements)
@@ -101,23 +104,42 @@ def _get_datasets(index, geobox, product, time_, mask=False, point=None):
                 to_load.append( dataset )
         return to_load
     dataset_iter = iter(datasets)
+    date_index = {}
     for dataset in dataset_iter:
         if dataset.extent.to_crs(geobox.crs).intersects(geobox.extent):
-            to_load.append(dataset)
-            break
-    else:
+            if dataset.center_time in date_index:
+                date_index[dataset.center_time].append(dataset)
+            else:
+                date_index[dataset.center_time] = [dataset]
+
+    if not date_index:
         return None
 
-    geom = to_load[0].extent.to_crs(geobox.crs)
-    for dataset in dataset_iter:
+    date_extents={}
+    for dt, dt_dss in date_index.items():
+        geom = None
+        for ds in dt_dss:
+            if geom is None:
+                geom = ds.extent.to_crs(geobox.crs)
+            else:
+                geom = geom.union(ds.extent.to_crs(geobox.crs))
         if geom.contains(geobox.extent):
-            break
-        ds_extent = dataset.extent.to_crs(geobox.crs)
-        if geom.contains(ds_extent):
-            continue
-        if ds_extent.intersects(geobox.extent):
-            to_load.append(dataset)
-            geom = geom.union(dataset.extent.to_crs(geobox.crs))
+            return dt_dss
+        date_extents[dt] = geom
+
+    dates = date_extents.keys()
+
+    biggest_geom_first = sorted(dates, key=lambda x: date_extents[x].area, reverse=True)
+
+    accum_geom = None
+    for d in biggest_geom_first:
+        geom = date_extents[d]
+        if accum_geom is None:
+            accum_geom = geom
+            to_load.extend(date_index[d])
+        elif not accum_geom.contains(geom):
+            accum_geom = accum_geom.union(geom)
+            to_load.extend(date_index[d])
     return to_load
 
 
@@ -189,13 +211,21 @@ def get_map(args):
 
         body = _write_polygon(geobox, extent, product.zoom_fill)
     else:
-        data = tiler.data(datasets)
         if pq_datasets:
             # ??????
+            # sources = datacube.Datacube.group_datasets(datasets, datacube.api.query.query_group_by())
+            # pq_sources = datacube.Datacube.group_datasets(pq_datasets, datacube.api.query.query_group_by())
+            # sources, pq_sources = xarray.align(sources, pq_sources)
+
+            data = tiler.data(datasets)
             pq_data=tiler.data(pq_datasets, mask=True)
+
             mask = make_mask(pq_data, **style.pq_mask_flags)
             mask_data = mask.pixelquality
             data = data.where(mask_data)
+        else:
+            data = tiler.data(datasets)
+
         if data:
             body = _write_png(data, style)
         else:
@@ -237,6 +267,9 @@ def _write_empty(geobox):
             pass
         return memfile.read()
 
+def int_trim(val, minval, maxval):
+    return max(min(val, maxval), minval)
+
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
@@ -247,8 +280,8 @@ def _write_polygon(geobox, polygon, zoom_fill):
             intersection = geobox_ext.intersection(polygon)
             crs_coords = intersection.json["coordinates"][0]
             pixel_coords = [ ~geobox.transform * coords for coords in crs_coords ]
-            rs, cs = skimg_polygon([ c[1] for c in pixel_coords ],
-                                   [ c[0] for c in pixel_coords ])
+            rs, cs = skimg_polygon([ int_trim(c[1], 0, geobox.height-1) for c in pixel_coords ],
+                                   [ int_trim(c[0], 0, geobox.width-1) for c in pixel_coords ])
             data[rs, cs] = 1
 
     with MemoryFile() as memfile:

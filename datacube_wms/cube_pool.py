@@ -22,9 +22,9 @@ class CubePool(object):
                 self._cubes[cube] = True
                 self._cubes_lock.release()
                 return cube
-        self._cubes_lock.release()
         cube = self._new_cube()
         self._cubes[cube] = True
+        self._cubes_lock.release()
         return cube
     def release_cube(self, cube):
         if cube not in self._cubes:
@@ -43,4 +43,7 @@ def release_cube(cube, app="wms"):
     pool = CubePool(app=app)
     return pool.release_cube(cube)
 
+def pool_size(app="wms"):
+    pool = CubePool(app=app)
+    return len(pool._cubes)
 
