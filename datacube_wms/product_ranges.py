@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import datacube
 from datacube_wms.wms_cfg import service_cfg, layer_cfg
 from psycopg2.extras import Json
@@ -21,7 +21,7 @@ def accum_max(a, b):
         return max(a,b)
 
 
-def determine_product_ranges(dc, product_name):
+def determine_product_ranges(dc, product_name, time_offset):
     start = datetime.now()
     product = dc.index.products.get_by_name(product_name)
     print ("Product: ", product_name)
@@ -49,7 +49,10 @@ def determine_product_ranges(dc, product_name):
         r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
         r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
-        time_set.add(ds.center_time.date())
+        dt = ds.center_time + timedelta(hours = time_offset)
+        if dt.date() != ds.center_time.date():
+            print ("Date boundary switch", ds.center_time, dt)
+        time_set.add(dt.date())
 
         for crsid in crsids:
             crs = crses[crsid]
@@ -74,7 +77,7 @@ def determine_ranges(dc):
     ranges = []
     for layer in layer_cfg:
         for product_cfg in layer["products"]:
-            ranges.append(determine_product_ranges(dc, product_cfg["name"]))
+            ranges.append(determine_product_ranges(dc, product_cfg["name"], product_cfg.get("time_zone", 9)))
     return ranges
 
 

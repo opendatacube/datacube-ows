@@ -44,6 +44,7 @@ class ProductLayerDef(object):
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
         else:
             self.pq_product = None
+        self.time_zone = product_cfg.get("time_zone", 9)
 
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):

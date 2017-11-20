@@ -43,7 +43,9 @@ class RGBTileGenerator(TileGenerator):
         super(RGBTileGenerator, self).__init__(**kwargs)
         self._product = product
         self._geobox = geobox
-        self._time = [ time, time + timedelta(days=1) ]
+
+        start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
+        self._time = [ start_time, time + timedelta(days=1) ]
         self._style = style
 
     def needed_bands(self):
@@ -367,8 +369,9 @@ def feature_info(args):
     else:
         available_dates = set()
         for d in datasets:
-            available_dates.add(d.center_time.date())
-            if d.center_time.date() == time and "lon" not in feature_json:
+            idx_date = (d.center_time + timedelta(hours=product.time_zone)).date()
+            available_dates.add(idx_date)
+            if idx_date == time and "lon" not in feature_json:
                 data = tiler.data([d])
 
                 # Use i,j image coordinates to extract data pixel from dataset, and
@@ -400,7 +403,7 @@ def feature_info(args):
                 pixel_ds = data.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
-                feature_json["time"]=d.center_time.strftime("%Y-%m-%d %H:%M:%S")
+                feature_json["time"]=d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
                 # Collect raw band values for pixel
                 feature_json["bands"] = {}

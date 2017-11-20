@@ -74,11 +74,22 @@ layer_cfg = [
                 "type": "surface reflectance",
                 "variant": "terrain corrected",
                 "name": "ls8_nbart_albers",
+                # The name of the associated Datacube product
                 "product_name": "ls8_nbart_albers",
+                # The name of the associated Datacube pixel-quality product
                 "pq_dataset": "ls8_pq_albers",
+                # The name of the measurement band for the pixel-quality product
                 "pq_band": "pixelquality",
+                # Min zoom factor - sets the zoom level where the cutover from indicative polygons
+                # to actual imagery occurs.
                 "min_zoom_factor": 500.0,
-                "zoomed_out_fill_colour": [ 150, 180, 200, 160]
+                # The fill-colour of the indicative polygons when zoomed out.
+                # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
+                "zoomed_out_fill_colour": [ 150, 180, 200, 160],
+                # Time Zone.  In hours added to UTC (maybe negative)
+                # Used for rounding off scene times to a date.
+                # 9 is good value for imagery of Australia.
+                "time_zone": 9
             },
         ],
         # Styles.
