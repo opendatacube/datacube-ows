@@ -70,15 +70,21 @@ layer_cfg = [
         # to describe the label to end-users.
         "products": [
             {
+                # Included as a keyword  for the layer
                 "label": "NBAR-T",
+                # Included as a keyword  for the layer
                 "type": "surface reflectance",
+                # Included as a keyword  for the layer
                 "variant": "terrain corrected",
+                # The WMS name for the layer
                 "name": "ls8_nbart_albers",
-                # The name of the associated Datacube product
+                # The Datacube name for the associated data product
                 "product_name": "ls8_nbart_albers",
+                # The Datacube name for the associated pixel-quality product (optional)
                 # The name of the associated Datacube pixel-quality product
                 "pq_dataset": "ls8_pq_albers",
                 # The name of the measurement band for the pixel-quality product
+                # (Only required if pq_dataset is set)
                 "pq_band": "pixelquality",
                 # Min zoom factor - sets the zoom level where the cutover from indicative polygons
                 # to actual imagery occurs.
@@ -93,15 +99,18 @@ layer_cfg = [
             },
         ],
         # Styles.
+        #
+        # See band_mapper.py
+        #
         # The various available spectral bands, and ways to combine them
         # into a single rgb image.
-        # The examples here are ad hoc and the format only supports linear combinations of bands.
-        # More specialised mappings could be adapted from this site, but most would require support for
-        # non-linear band combinations and colour gradient mapping:
+        # The examples here are ad hoc
+        #
         # LS7:  http://www.indexdatabase.de/db/s-single.php?id=8
         # LS8:  http://www.indexdatabase.de/db/s-single.php?id=168
-        # TODO: What about masking rules?
         "styles": [
+            # Examples of styles which are linear combinations of the available spectral bands.
+            #
             {
                 "name": "simple_rgb",
                 "title": "Simple RGB",
@@ -118,6 +127,7 @@ layer_cfg = [
                         "blue": 1.0
                     }
                 },
+                # Used to clip off very bright areas.
                 "scale_factor": 12.0
             },
             {
@@ -136,6 +146,7 @@ layer_cfg = [
                         "blue": 1.0
                     }
                 },
+                # PQ masking example
                 "pq_mask_flags": {
                     "cloud_acca": "no_cloud",
                     "cloud_fmask": "no_cloud",
@@ -329,6 +340,8 @@ layer_cfg = [
                 },
                 "scale_factor": 12.0
             },
+            #
+            # Examples of non-linear heat-mapped styles.
             {
                 "name": "ndvi",
                 "title": "NDVI",
@@ -336,6 +349,7 @@ layer_cfg = [
                 "heat_mapped": True,
                 "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
                 "needed_bands": [ "red", "nir" ],
+                # Areas where the index_function returns outside the range are masked.
                 "range": [ 0.0, 1.0 ],
             },
             {
@@ -359,6 +373,7 @@ layer_cfg = [
         ],
         # Default style (if request does not specify style)
         # MUST be defined in the styles list above.
+
         # (Looks like Terria assumes this is the first style in the list, but this is
         #  not required by the standard.)
         "default_style": "simple_rgb",

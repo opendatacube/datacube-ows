@@ -50,8 +50,6 @@ def determine_product_ranges(dc, product_name, time_offset):
         r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
         dt = ds.center_time + timedelta(hours = time_offset)
-        if dt.date() != ds.center_time.date():
-            print ("Date boundary switch", ds.center_time, dt)
         time_set.add(dt.date())
 
         for crsid in crsids:
