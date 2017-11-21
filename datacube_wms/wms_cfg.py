@@ -372,6 +372,33 @@ layer_cfg = [
                 "needed_bands": [ "swir2", "nir" ],
                 "range": [ 0.0, 1.0 ],
             },
+            # Mask layer - an example of how to display raw pixel quality data.
+            # This works by creatively mis-using the Heatmap style class.
+            {
+                "name": "cloud_mask",
+                "title": "Cloud Mask",
+                "abstract": "Highlight pixels with cloud.",
+                "heat_mapped": True,
+                "index_function": lambda data: data["red"] * 0.0 + 0.4,
+                "needed_bands": [ "red" ],
+                "range": [ 0.0, 1.0 ],
+                "pq_mask_flags": {
+                    "cloud_acca": "cloud",
+                    "cloud_fmask": "cloud",
+                },
+            },
+            {
+                "name": "contiguous_mask",
+                "title": "Contiguous Data Mask",
+                "abstract": "Highlight pixels with non-contiguous data",
+                "heat_mapped": True,
+                "index_function": lambda data: data["red"] * 0.0 + 0.4,
+                "needed_bands": [ "red" ],
+                "range": [ 0.0, 1.0 ],
+                "pq_mask_flags": {
+                    "contiguous": False
+                },
+            },
             # Hybrid style - mixes a linear mapping and a heat mapped index
             {
                 "name": "rgb_ndvi",
