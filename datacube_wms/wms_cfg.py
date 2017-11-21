@@ -115,7 +115,6 @@ layer_cfg = [
                 "name": "simple_rgb",
                 "title": "Simple RGB",
                 "abstract": "Simple true-colour image, using the red, green and blue bands",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "red": 1.0
@@ -134,7 +133,6 @@ layer_cfg = [
                 "name": "cloud_masked_rgb",
                 "title": "Simple RGB with cloud masking",
                 "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud masking",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "red": 1.0
@@ -157,7 +155,6 @@ layer_cfg = [
                 "name": "extended_rgb",
                 "title": "Extended RGB",
                 "abstract": "Extended true-colour image, incorporating the coastal aerosol band",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "red": 1.0
@@ -176,7 +173,6 @@ layer_cfg = [
                 "name": "wideband",
                 "title": "Wideband false-colour",
                 "abstract": "False-colour image, incorporating all available spectral bands",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir2": 0.255,
@@ -200,7 +196,6 @@ layer_cfg = [
                 "name": "infra_red",
                 "title": "False colour multi-band infra-red",
                 "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir1": 1.0
@@ -218,7 +213,6 @@ layer_cfg = [
                 "name": "coastal_aerosol",
                 "title": "Spectral band 1 - Coastal aerosol",
                 "abstract": "Coastal aerosol band, approximately 435nm to 450nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "coastal_aerosol": 1.0
@@ -236,7 +230,6 @@ layer_cfg = [
                 "name": "blue",
                 "title": "Spectral band 2 - Blue",
                 "abstract": "Blue band, approximately 453nm to 511nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "blue": 1.0
@@ -254,7 +247,6 @@ layer_cfg = [
                 "name": "green",
                 "title": "Spectral band 3 - Green",
                 "abstract": "Green band, approximately 534nm to 588nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "green": 1.0
@@ -272,7 +264,6 @@ layer_cfg = [
                 "name": "red",
                 "title": "Spectral band 4 - Red",
                 "abstract": "Red band, roughly 637nm to 672nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "red": 1.0
@@ -290,7 +281,6 @@ layer_cfg = [
                 "name": "nir",
                 "title": "Spectral band 5 - Near infra-red",
                 "abstract": "Near infra-red band, roughly 853nm to 876nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "nir": 1.0
@@ -308,7 +298,6 @@ layer_cfg = [
                 "name": "swir1",
                 "title": "Spectral band 6 - Short wave infra-red 1",
                 "abstract": "Short wave infra-red band 1, roughly 1575nm to 1647nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir1": 1.0
@@ -326,7 +315,6 @@ layer_cfg = [
                 "name": "swir2",
                 "title": "Spectral band 7 - Short wave infra-red 2",
                 "abstract": "Short wave infra-red band 2, roughly 2117nm to 2285nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir2": 1.0
@@ -353,6 +341,20 @@ layer_cfg = [
                 "range": [ 0.0, 1.0 ],
             },
             {
+                "name": "ndvi_cloudmask",
+                "title": "NDVI with cloud masking",
+                "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
+                "heat_mapped": True,
+                "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                "needed_bands": [ "red", "nir" ],
+                # Areas where the index_function returns outside the range are masked.
+                "range": [ 0.0, 1.0 ],
+                "pq_mask_flags": {
+                    "cloud_acca": "no_cloud",
+                    "cloud_fmask": "no_cloud",
+                },
+            },
+            {
                 "name": "ndwi",
                 "title": "NDWI",
                 "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
@@ -369,6 +371,30 @@ layer_cfg = [
                 "index_function": lambda data: (data["swir2"] - data["nir"]) / (data["swir2"] + data["nir"]),
                 "needed_bands": [ "swir2", "nir" ],
                 "range": [ 0.0, 1.0 ],
+            },
+            # Hybrid style - mixes a linear mapping and a heat mapped index
+            {
+                "name": "rgb_ndvi",
+                "title": "NDVI layered over RGB",
+                "abstract": "Normalised Difference Vegetation Index (over RGB) - a derived index that correlates well with the existence of vegetation",
+                "component_ratio": 0.6,
+                "heat_mapped": True,
+                "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                "needed_bands": [ "red", "nir" ],
+                # Areas where the index_function returns outside the range are masked.
+                "range": [ 0.0, 1.0 ],
+                "components": {
+                    "red": {
+                        "red": 1.0
+                    },
+                    "green": {
+                        "green": 1.0
+                    },
+                    "blue": {
+                        "blue": 1.0
+                    }
+                },
+                "scale_factor": 12.0
             }
         ],
         # Default style (if request does not specify style)
@@ -405,7 +431,6 @@ to_be_added_to_layer_cfg = {
                 "name": "simple_rgb",
                 "title": "Simple RGB",
                 "abstract": "Simple true-colour image, using the red, green and blue bands",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "red": 1.0
@@ -423,7 +448,6 @@ to_be_added_to_layer_cfg = {
                 "name": "wideband",
                 "title": "Wideband false-colour",
                 "abstract": "False-colour image, incorporating all available spectral bands",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir2": 0.5,
@@ -444,7 +468,6 @@ to_be_added_to_layer_cfg = {
                 "name": "infra_red",
                 "title": "False colour multi-band infra-red",
                 "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir1": 1.0
@@ -462,7 +485,6 @@ to_be_added_to_layer_cfg = {
                 "name": "blue",
                 "title": "Spectral band 1 - Blue",
                 "abstract": "Blue band, approximately 450nm to 520nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "blue": 1.0
@@ -480,7 +502,6 @@ to_be_added_to_layer_cfg = {
                 "name": "green",
                 "title": "Spectral band 2 - Green",
                 "abstract": "Green band, approximately 530nm to 610nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "green": 1.0
@@ -498,7 +519,6 @@ to_be_added_to_layer_cfg = {
                 "name": "red",
                 "title": "Spectral band 3 - Red",
                 "abstract": "Red band, roughly 630nm to 690nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "red": 1.0
@@ -516,7 +536,6 @@ to_be_added_to_layer_cfg = {
                 "name": "nir",
                 "title": "Spectral band 4 - Near infra-red",
                 "abstract": "Near infra-red band, roughly 780nm to 840nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "nir": 1.0
@@ -534,7 +553,6 @@ to_be_added_to_layer_cfg = {
                 "name": "swir1",
                 "title": "Spectral band 5 - Short wave infra-red 1",
                 "abstract": "Short wave infra-red band 1, roughly 1550nm to 1750nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir1": 1.0
@@ -552,7 +570,6 @@ to_be_added_to_layer_cfg = {
                 "name": "swir2",
                 "title": "Spectral band 6 - Short wave infra-red 2",
                 "abstract": "Short wave infra-red band 2, roughly 2090nm to 2220nm",
-                "heat_mapped": False,
                 "components": {
                     "red": {
                         "swir2": 1.0

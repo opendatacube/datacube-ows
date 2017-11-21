@@ -213,34 +213,35 @@ def get_map(args):
 
         body = _write_polygon(geobox, extent, product.zoom_fill)
     else:
+        masks = []
+        data = tiler.data(datasets)
+        for band in style.needed_bands:
+            masks.append(data[band] != data[band].attrs['nodata'])
         if pq_datasets:
             # ??????
             # sources = datacube.Datacube.group_datasets(datasets, datacube.api.query.query_group_by())
             # pq_sources = datacube.Datacube.group_datasets(pq_datasets, datacube.api.query.query_group_by())
             # sources, pq_sources = xarray.align(sources, pq_sources)
 
-            data = tiler.data(datasets)
             pq_data=tiler.data(pq_datasets, mask=True)
 
             mask = make_mask(pq_data, **style.pq_mask_flags)
             mask_data = mask.pixelquality
-            data = data.where(mask_data)
-        else:
-            data = tiler.data(datasets)
+            masks.append(mask_data)
 
         if data:
-            body = _write_png(data, style)
+            body = _write_png(data, style, *masks)
         else:
             body = _write_empty(geobox)
     release_cube(dc)
     return body, 200, resp_headers({"Content-Type": "image/png"})
 
 
-def _write_png(data, style):
+def _write_png(data, style, *masks):
     width = data[data.crs.dimensions[1]].size
     height = data[data.crs.dimensions[0]].size
 
-    img_data = style.transform_data(data)
+    img_data = style.transform_data(data, *masks)
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',

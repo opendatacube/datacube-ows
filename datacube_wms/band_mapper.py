@@ -18,7 +18,8 @@ class LinearStyleDef(StyleDefBase):
         self.green_components = style_cfg["components"]["green"]
         self.blue_components = style_cfg["components"]["blue"]
         self.scale_factor = style_cfg["scale_factor"]
-        self.needed_bands = set()
+        if not hasattr(self, "needed_bands"):
+            self.needed_bands = set()
         for band in self.red_components.keys():
             self.needed_bands.add(band)
         for band in self.green_components.keys():
@@ -34,7 +35,9 @@ class LinearStyleDef(StyleDefBase):
             "blue": self.blue_components,
         }
 
-    def transform_data(self, data):
+    def transform_data(self, data, *masks):
+        for mask in masks:
+            data = data.where(mask)
         imgdata = Dataset()
         for imgband, components in self.components.items():
             imgband_data = None
@@ -99,7 +102,8 @@ def hm_index_func_for_range(func, rmin, rmax):
 class HeatMappedStyleDef(StyleDefBase):
     def __init__(self, style_cfg):
         super(HeatMappedStyleDef, self).__init__(style_cfg)
-        self.needed_bands = set()
+        if not hasattr(self, "needed_bands"):
+            self.needed_bands = set()
         for b in style_cfg["needed_bands"]:
             self.needed_bands.add(b)
         self._index_function = style_cfg["index_function"]
@@ -113,8 +117,8 @@ class HeatMappedStyleDef(StyleDefBase):
                 result_mask = band_mask
             else:
                 result_mask *= band_mask
-        return self._index_function(data) + band_mask
-    def transform_data(self, data):
+        return self._index_function(data) + result_mask
+    def transform_data(self, data, *masks):
         hm_index_data = self._masked_index_function(data).values
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
@@ -133,11 +137,59 @@ class HeatMappedStyleDef(StyleDefBase):
             img_band_raw_data = f(hm_index_data)
             img_band_data = numpy.clip(img_band_raw_data*255.0, 0, 255).astype("uint8")
             imgdata[band] = (dims, img_band_data)
+        if masks:
+            for mask in masks:
+                imgdata = imgdata.where(mask)
+            imgdata = imgdata.astype("uint8")
+        return imgdata
+
+class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
+    def __init__(self, style_cfg):
+        super(HybridStyleDef, self).__init__(style_cfg)
+        self.component_ratio=style_cfg["component_ratio"]
+
+    def transform_data(self, data, *masks):
+        hm_index_data = self._masked_index_function(data).values
+        for mask in masks:
+            data = data.where(mask)
+        dims = data[list(self.needed_bands)[0]].dims
+        imgdata = Dataset()
+        for band, map_func in [
+            ("red", hm_index_to_red),
+            ("green", hm_index_to_green),
+            ("blue", hm_index_to_blue),
+        ]:
+            components = self.components[band]
+            component_band_data = None
+            for c_band, c_intensity in components.items():
+                imgband_component_data = data[c_band] * c_intensity
+                if component_band_data is not None:
+                    component_band_data += imgband_component_data
+                else:
+                    component_band_data = imgband_component_data
+            f = numpy.vectorize(
+                hm_index_func_for_range(
+                    map_func,
+                    self.range[0],
+                    self.range[1]
+                )
+            )
+            hmap_raw_data = f(hm_index_data)
+            unclipped_band_data = hmap_raw_data*255.0*(1.0-self.component_ratio) + self.component_ratio / self.scale_factor * imgband_component_data
+            img_band_data = numpy.clip(unclipped_band_data, 1, 254) + 1
+            img_band_data = img_band_data.astype("uint8")
+            imgdata[band] = (dims, img_band_data)
+        if masks:
+            for mask in masks:
+                imgdata = imgdata.where(mask)
+            imgdata = imgdata.astype("uint8")
         return imgdata
 
 def StyleDef(cfg):
+    if cfg.get("component_ratio", False):
+        return HybridStyleDef(cfg)
     if cfg.get("heat_mapped", False):
         return HeatMappedStyleDef(cfg)
-    else:
+    elif cfg.get("components", False):
         return LinearStyleDef(cfg)
 
