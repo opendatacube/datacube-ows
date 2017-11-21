@@ -53,10 +53,13 @@ class LinearStyleDef(StyleDefBase):
             imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
-def hm_index_to_blue(val, rmin, rmax):
+def hm_index_to_blue(val, rmin, rmax, nan_mask=True):
     scaled = (val - rmin)/(rmax-rmin)
     if scaled < 0.0:
-        return float("nan")
+        if nan_mask:
+            return float("nan")
+        else:
+            return 0.0
     elif scaled > 0.5:
         return 0.0
     elif scaled < 0.1:
@@ -66,10 +69,13 @@ def hm_index_to_blue(val, rmin, rmax):
     else:
         return 1.0
 
-def hm_index_to_green(val, rmin, rmax):
+def hm_index_to_green(val, rmin, rmax, nan_mask=True):
     scaled = (val - rmin)/(rmax-rmin)
     if scaled < 0.0:
-        return float("nan")
+        if nan_mask:
+            return float("nan")
+        else:
+            return 0.0
     elif scaled > 0.9:
         return 0.0
     elif scaled < 0.1:
@@ -81,10 +87,13 @@ def hm_index_to_green(val, rmin, rmax):
     else:
         return 1.0
 
-def hm_index_to_red(val, rmin, rmax):
+def hm_index_to_red(val, rmin, rmax, nan_mask=True):
     scaled = (val - rmin)/(rmax-rmin)
     if scaled < 0.0:
-        return float("nan")
+        if nan_mask:
+            return float("nan")
+        else:
+            return 0.0
     elif scaled < 0.5:
         return 0.0
     elif scaled < 0.7:
@@ -94,9 +103,9 @@ def hm_index_to_red(val, rmin, rmax):
     else:
         return 1.0
 
-def hm_index_func_for_range(func, rmin, rmax):
+def hm_index_func_for_range(func, rmin, rmax, nan_mask=True):
     def hm_index_func(val):
-        return func(val, rmin, rmax)
+        return func(val, rmin, rmax, nan_mask=nan_mask)
     return hm_index_func
 
 class HeatMappedStyleDef(StyleDefBase):
@@ -108,18 +117,8 @@ class HeatMappedStyleDef(StyleDefBase):
             self.needed_bands.add(b)
         self._index_function = style_cfg["index_function"]
         self.range = style_cfg["range"]
-    def _masked_index_function(self, data):
-        result_mask = None
-        # This forces the result to be highly negative when any included band is not available.
-        for band in list(self.needed_bands):
-            band_mask = data[band] - abs(data[band])
-            if result_mask is None:
-                result_mask = band_mask
-            else:
-                result_mask *= band_mask
-        return self._index_function(data) + result_mask
     def transform_data(self, data, *masks):
-        hm_index_data = self._masked_index_function(data).values
+        hm_index_data = self._index_function(data)
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
         for band, map_func in [
@@ -140,7 +139,7 @@ class HeatMappedStyleDef(StyleDefBase):
         if masks:
             for mask in masks:
                 imgdata = imgdata.where(mask)
-            imgdata = imgdata.astype("uint8")
+        imgdata = imgdata.astype("uint8")
         return imgdata
 
 class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
@@ -149,7 +148,9 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         self.component_ratio=style_cfg["component_ratio"]
 
     def transform_data(self, data, *masks):
-        hm_index_data = self._masked_index_function(data).values
+        hm_index_data = self._index_function(data)
+        hm_mask = hm_index_data != float("nan")
+
         for mask in masks:
             data = data.where(mask)
         dims = data[list(self.needed_bands)[0]].dims
@@ -171,7 +172,8 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
                 hm_index_func_for_range(
                     map_func,
                     self.range[0],
-                    self.range[1]
+                    self.range[1],
+                    nan_mask = False
                 )
             )
             hmap_raw_data = f(hm_index_data)
@@ -179,10 +181,11 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
             img_band_data = numpy.clip(unclipped_band_data, 1, 254) + 1
             img_band_data = img_band_data.astype("uint8")
             imgdata[band] = (dims, img_band_data)
+        imgdata = imgdata.where(hm_mask)
         if masks:
             for mask in masks:
                 imgdata = imgdata.where(mask)
-            imgdata = imgdata.astype("uint8")
+        imgdata = imgdata.astype("uint8")
         return imgdata
 
 def StyleDef(cfg):
