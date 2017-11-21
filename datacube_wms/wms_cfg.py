@@ -375,8 +375,8 @@ layer_cfg = [
             # Hybrid style - mixes a linear mapping and a heat mapped index
             {
                 "name": "rgb_ndvi",
-                "title": "NDVI layered over RGB",
-                "abstract": "Normalised Difference Vegetation Index (over RGB) - a derived index that correlates well with the existence of vegetation",
+                "title": "NDVI plus RGB",
+                "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
                 "component_ratio": 0.6,
                 "heat_mapped": True,
                 "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
@@ -393,6 +393,33 @@ layer_cfg = [
                     "blue": {
                         "blue": 1.0
                     }
+                },
+                "scale_factor": 12.0
+            },
+            {
+                "name": "rgb_ndvi_cloudmask",
+                "title": "NDVI plus RGB (Cloud masked)",
+                "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
+                "component_ratio": 0.6,
+                "heat_mapped": True,
+                "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                "needed_bands": [ "red", "nir" ],
+                # Areas where the index_function returns outside the range are masked.
+                "range": [ 0.0, 1.0 ],
+                "components": {
+                    "red": {
+                        "red": 1.0
+                    },
+                    "green": {
+                        "green": 1.0
+                    },
+                    "blue": {
+                        "blue": 1.0
+                    }
+                },
+                "pq_mask_flags": {
+                    "cloud_acca": "no_cloud",
+                    "cloud_fmask": "no_cloud",
                 },
                 "scale_factor": 12.0
             }
