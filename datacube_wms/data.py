@@ -216,7 +216,7 @@ def get_map(args):
         masks = []
         data = tiler.data(datasets)
         for band in style.needed_bands:
-            masks.append(data[band] != data[band].attrs['nodata'])
+            extent_mask = (data[band] != data[band].attrs['nodata'])
         if pq_datasets:
             # ??????
             # sources = datacube.Datacube.group_datasets(datasets, datacube.api.query.query_group_by())
@@ -230,18 +230,18 @@ def get_map(args):
             masks.append(mask_data)
 
         if data:
-            body = _write_png(data, style, *masks)
+            body = _write_png(data, style, extent_mask, *masks)
         else:
             body = _write_empty(geobox)
     release_cube(dc)
     return body, 200, resp_headers({"Content-Type": "image/png"})
 
 
-def _write_png(data, style, *masks):
+def _write_png(data, style, extent_mask, *masks):
     width = data[data.crs.dimensions[1]].size
     height = data[data.crs.dimensions[0]].size
 
-    img_data = style.transform_data(data, *masks)
+    img_data = style.transform_data(data, extent_mask, *masks)
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -417,7 +417,8 @@ def feature_info(args):
 
         my_flags = 0
         for pqd in pq_datasets:
-            if pqd.center_time.date() == time:
+            idx_date = (pqd.center_time + timedelta(hours=product.time_zone)).date()
+            if idx_date == time:
                 pq_data = tiler.data([pqd], mask=True)
                 pq_pixel_ds = pq_data.isel(**isel_kwargs)
                 # PQ flags

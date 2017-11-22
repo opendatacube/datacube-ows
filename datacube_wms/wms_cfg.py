@@ -372,11 +372,33 @@ layer_cfg = [
                 "needed_bands": [ "swir2", "nir" ],
                 "range": [ 0.0, 1.0 ],
             },
-            # Mask layer - an example of how to display raw pixel quality data.
+            # Mask layers - examples of how to display raw pixel quality data.
             # This works by creatively mis-using the Heatmap style class.
             {
                 "name": "cloud_mask",
                 "title": "Cloud Mask",
+                "abstract": "Highlight pixels without cloud.",
+                "heat_mapped": True,
+                "index_function": lambda data: data["red"] * 0.0 + 0.1,
+                "needed_bands": [ "red" ],
+                "range": [ 0.0, 1.0 ],
+                # Mask flags normally describe which areas SHOULD be shown.
+                # (i.e. pixels for which any of the declared flags are true)
+                # pq_mask_invert is intended to invert this logic.
+                # (i.e. pixels for which none of the declared flags are true)
+                #
+                # i.e. Specifying like this shows pixels which not clouds in either metric.
+                #      Specifying "cloud" and setting the "pq_mask_invert" to False would
+                #      show pixels which are not clouds in both metrics.
+                "pq_mask_invert": True,
+                "pq_mask_flags": {
+                    "cloud_acca": "no_cloud",
+                    "cloud_fmask": "no_cloud",
+                },
+            },
+            {
+                "name": "cloud_acca",
+                "title": "Cloud acca Mask",
                 "abstract": "Highlight pixels with cloud.",
                 "heat_mapped": True,
                 "index_function": lambda data: data["red"] * 0.0 + 0.4,
@@ -384,6 +406,17 @@ layer_cfg = [
                 "range": [ 0.0, 1.0 ],
                 "pq_mask_flags": {
                     "cloud_acca": "cloud",
+                },
+            },
+            {
+                "name": "cloud_fmask",
+                "title": "Cloud fmask Mask",
+                "abstract": "Highlight pixels with cloud.",
+                "heat_mapped": True,
+                "index_function": lambda data: data["red"] * 0.0 + 0.8,
+                "needed_bands": [ "red" ],
+                "range": [ 0.0, 1.0 ],
+                "pq_mask_flags": {
                     "cloud_fmask": "cloud",
                 },
             },
@@ -392,7 +425,7 @@ layer_cfg = [
                 "title": "Contiguous Data Mask",
                 "abstract": "Highlight pixels with non-contiguous data",
                 "heat_mapped": True,
-                "index_function": lambda data: data["red"] * 0.0 + 0.4,
+                "index_function": lambda data: data["red"] * 0.0 + 0.3,
                 "needed_bands": [ "red" ],
                 "range": [ 0.0, 1.0 ],
                 "pq_mask_flags": {

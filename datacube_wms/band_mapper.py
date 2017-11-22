@@ -7,8 +7,9 @@ class StyleDefBase(object):
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
         self.pq_mask_flags = style_cfg.get("pq_mask_flags", {})
+        self.pq_mask_invert = style_cfg.get('pq_mask_invert', False)
 
-    def transform_data(self, data):
+    def transform_data(self, data, extent_mask, *masks):
         pass
 
 class LinearStyleDef(StyleDefBase):
@@ -35,9 +36,20 @@ class LinearStyleDef(StyleDefBase):
             "blue": self.blue_components,
         }
 
-    def transform_data(self, data, *masks):
-        for mask in masks:
-            data = data.where(mask)
+    def transform_data(self, data, extent_mask, *masks):
+        data = data.where(extent_mask)
+        if masks:
+            and_mask = None
+            for mask in masks:
+                if and_mask is None:
+                    and_mask = mask
+                else:
+                    and_mask = and_mask & mask
+            if self.pq_mask_invert:
+                data = data.where(~and_mask)
+            else:
+                data = data.where(and_mask)
+
         imgdata = Dataset()
         for imgband, components in self.components.items():
             imgband_data = None
@@ -117,7 +129,7 @@ class HeatMappedStyleDef(StyleDefBase):
             self.needed_bands.add(b)
         self._index_function = style_cfg["index_function"]
         self.range = style_cfg["range"]
-    def transform_data(self, data, *masks):
+    def transform_data(self, data, extent_mask, *masks):
         hm_index_data = self._index_function(data)
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
@@ -136,9 +148,18 @@ class HeatMappedStyleDef(StyleDefBase):
             img_band_raw_data = f(hm_index_data)
             img_band_data = numpy.clip(img_band_raw_data*255.0, 0, 255).astype("uint8")
             imgdata[band] = (dims, img_band_data)
+        imgdata = imgdata.where(extent_mask)
         if masks:
+            andmask = None
             for mask in masks:
-                imgdata = imgdata.where(mask)
+                if andmask is None:
+                    andmask = mask
+                else:
+                    andmask = andmask & mask
+            if self.pq_mask_invert:
+                imgdata = imgdata.where(~andmask)
+            else:
+                imgdata = imgdata.where(andmask)
         imgdata = imgdata.astype("uint8")
         return imgdata
 
@@ -147,12 +168,14 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         super(HybridStyleDef, self).__init__(style_cfg)
         self.component_ratio=style_cfg["component_ratio"]
 
-    def transform_data(self, data, *masks):
+    def transform_data(self, data, extent_mask, *masks):
         hm_index_data = self._index_function(data)
         hm_mask = hm_index_data != float("nan")
 
-        for mask in masks:
-            data = data.where(mask)
+        if masks:
+            for mask in masks:
+                data = data.where(mask)
+
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
         for band, map_func in [
@@ -181,10 +204,19 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
             img_band_data = numpy.clip(unclipped_band_data, 1, 254) + 1
             img_band_data = img_band_data.astype("uint8")
             imgdata[band] = (dims, img_band_data)
+        imgdata = imgdata.where(extent_mask)
         imgdata = imgdata.where(hm_mask)
         if masks:
+            andmask = None
             for mask in masks:
-                imgdata = imgdata.where(mask)
+                if andmask is None:
+                    andmask = mask
+                else:
+                    andmask = andmask & mask
+            if self.pq_mask_invert:
+                imgdata = imgdata.where(~andmask)
+            else:
+                imgdata = imgdata.where(andmask)
         imgdata = imgdata.astype("uint8")
         return imgdata
 
