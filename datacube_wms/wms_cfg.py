@@ -152,6 +152,30 @@ layer_cfg = [
                 "scale_factor": 12.0
             },
             {
+                "name": "cloud_and_shadow_masked_rgb",
+                "title": "Simple RGB with cloud and cloud shadow masking",
+                "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud and cloud shadow masking",
+                "components": {
+                    "red": {
+                        "red": 1.0
+                    },
+                    "green": {
+                        "green": 1.0
+                    },
+                    "blue": {
+                        "blue": 1.0
+                    }
+                },
+                # PQ masking example
+                "pq_mask_flags": {
+                    "cloud_acca": "no_cloud",
+                    "cloud_fmask": "no_cloud",
+                    "cloud_shadow_acca": "no_cloud_shadow",
+                    "cloud_shadow_fmask": "no_cloud_shadow",
+                },
+                "scale_factor": 12.0
+            },
+            {
                 "name": "extended_rgb",
                 "title": "Extended RGB",
                 "abstract": "Extended true-colour image, incorporating the coastal aerosol band",
@@ -377,7 +401,7 @@ layer_cfg = [
             {
                 "name": "cloud_mask",
                 "title": "Cloud Mask",
-                "abstract": "Highlight pixels without cloud.",
+                "abstract": "Highlight pixels with cloud.",
                 "heat_mapped": True,
                 "index_function": lambda data: data["red"] * 0.0 + 0.1,
                 "needed_bands": [ "red" ],
@@ -394,6 +418,22 @@ layer_cfg = [
                 "pq_mask_flags": {
                     "cloud_acca": "no_cloud",
                     "cloud_fmask": "no_cloud",
+                },
+            },
+            {
+                "name": "cloud_and_shadow_mask",
+                "title": "Cloud and Shadow Mask",
+                "abstract": "Highlight pixels with cloud or cloud shadow.",
+                "heat_mapped": True,
+                "index_function": lambda data: data["red"] * 0.0 + 0.6,
+                "needed_bands": [ "red" ],
+                "range": [ 0.0, 1.0 ],
+                "pq_mask_invert": True,
+                "pq_mask_flags": {
+                    "cloud_acca": "no_cloud",
+                    "cloud_fmask": "no_cloud",
+                    "cloud_shadow_acca": "no_cloud_shadow",
+                    "cloud_shadow_fmask": "no_cloud_shadow",
                 },
             },
             {
