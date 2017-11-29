@@ -7,7 +7,7 @@ response_cfg = {
 service_cfg = {
     # Required config
     "title": "WMS server for Australian Landsat Datacube",
-    "url": "http://localhost:5000/",
+    "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
     "published_CRSs": {
         "EPSG:3857": { # Web Mercator
             "geographic": False,
