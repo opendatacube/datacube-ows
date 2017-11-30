@@ -52,7 +52,7 @@ Flask Dev Server
 
         export FLASK_APP=datacube_wms/wms.py
 
-* Run the Flask dev server:
+* Run the Flask dev server::
 
         flask run
 
