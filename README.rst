@@ -48,7 +48,7 @@ Flask Dev Server
 
 * `cd` to the directory containing this README file.
 
-* Set the `FLASK_APP` environment variable:
+* Set the `FLASK_APP` environment variable::
 
         export FLASK_APP=datacube_wms/wms.py
 
@@ -57,7 +57,7 @@ Flask Dev Server
         flask run
 
 * If you want the dev server to listen to external requests (i.e. requests
-  from other computers), use the `--host` option:
+  from other computers), use the `--host` option::
 
         flask run --host=0.0.0.0
 
@@ -72,25 +72,25 @@ to multiple web apps using different virtual environments.
 
 * (From the Datacube Conda environment) install mod_wsgi with pip.  Take note
   of the name of the resulting module which is given to you at the end of the
-  install process, you will need it later:
+  install process, you will need it later::
 
         pip install mod_wsgi
 
 * Find the full path of mod_wsgi-express with `which mod_wsgi-express`
 
-* Install mod_wsgi into Apache:
+* Install mod_wsgi into Apache::
 
         sudo /full/path/to/installed/mod_wsgi-express install-module
 
 * Ensure the following lines appear somewhere in your Apache2 config (Note
   they must appear in the "root" of the config, they cannot appear inside
-  a `VirtualHost` section):
+  a `VirtualHost` section)::
 
         LoadModule wsgi_module /full/path/to/wsgi/module.so
         WSGIPythonHome /path/to/your/conda/cubeenv
 
 * Add the following to your Apache config (inside the
-  appropriate `VirtualHost` section):
+  appropriate `VirtualHost` section)::
 
         WSGIDaemonProcess datacube_wms processes=20 threads=1 user=uuu group=ggg maximum-requests=10000
         WSGIScriptAlias /datacube_wms /path/to/source_code/wms/datacube_wms/wsgi.py
