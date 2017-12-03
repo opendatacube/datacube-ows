@@ -9,7 +9,10 @@ from imghdr import what
 
 import os
 
-class generic_obj(object): pass
+
+class generic_obj(object):
+    pass
+
 
 @pytest.fixture
 def wms_server(request):
@@ -24,12 +27,16 @@ def wms_server(request):
         server = WSGIServer(application=wms.app)
         server.start()
         request.addfinalizer(server.stop)
+
     return server
+
 
 def get_xsd(name):
     xsd_f = open("wms_xsds/" + name)
     schema_doc = etree.parse(xsd_f)
+
     return etree.XMLSchema(schema_doc)
+
 
 def check_wms_error(url, expected_error_message=None, expected_status_code=400):
     try:
@@ -37,7 +44,6 @@ def check_wms_error(url, expected_error_message=None, expected_status_code=400):
         
         # Should not get here
         assert False
-
     except Exception as e:
         # Validate status code
         assert e.getcode() == expected_status_code
@@ -53,17 +59,21 @@ def check_wms_error(url, expected_error_message=None, expected_status_code=400):
         if expected_error_message:
             assert resp_xml[0].text.strip() == expected_error_message
 
+
 def test_no_request(wms_server):
     # Make empty request to server:
     check_wms_error(wms_server.url + "/", "No operation specified", 400)
+
 
 def test_invalid_operation(wms_server):
     # Make invalid operation request to server:
     check_wms_error(wms_server.url + "/?request=NoSuchOperation", "Unrecognised operation: NoSuchOperation", 400)
 
+
 def test_getcap_badsvc(wms_server):
     # Make bad service request to server:
     check_wms_error(wms_server.url + "/?request=GetCapabilities&service=NotWMS", "Invalid service", 400)
+
 
 def test_getcap(wms_server):
     resp = request.urlopen(wms_server.url + "/?request=GetCapabilities&service=WMS")
@@ -75,6 +85,7 @@ def test_getcap(wms_server):
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("capabilities_1_3_0.xsd")
     assert gc_xds.validate(resp_xml)
+
 
 def enclosed_bbox(bbox):
     lon_min, lat_min, lon_max, lat_max = bbox
@@ -88,6 +99,7 @@ def enclosed_bbox(bbox):
         lat_max - 0.2*lat_range
     )
 
+
 def disjoint_bbox(bbox):
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max-lon_min
@@ -100,6 +112,7 @@ def disjoint_bbox(bbox):
         lat_min - 0.2*lat_range
     )
 
+
 def test_wms_server(wms_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=wms_server.url, version="1.3.0")
@@ -110,6 +123,7 @@ def test_wms_server(wms_server):
     contents = list(wms.contents)
     assert contents
 
+
 def test_wms_getmap(wms_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=wms_server.url, version="1.3.0")
@@ -119,9 +133,9 @@ def test_wms_getmap(wms_server):
     test_layer_name = contents[0]
     test_layer = wms.contents[test_layer_name]
 
-    bbox=test_layer.boundingBoxWGS84
+    bbox = test_layer.boundingBoxWGS84
 
-    img = wms.getmap( layers=[ test_layer_name ],
+    img = wms.getmap( layers=[test_layer_name],
                       styles=[],
                       srs="EPSG:4326",
                       bbox=enclosed_bbox(bbox),
@@ -133,7 +147,7 @@ def test_wms_getmap(wms_server):
     assert img
     assert what("", h=img.read()) == "png"
 
-    img = wms.getmap( layers=[ test_layer_name ],
+    img = wms.getmap( layers=[test_layer_name],
                       styles=[],
                       srs="EPSG:4326",
                       bbox=disjoint_bbox(bbox),
@@ -144,3 +158,4 @@ def test_wms_getmap(wms_server):
                       )
     assert img
     assert what("", h=img.read()) == "png"
+

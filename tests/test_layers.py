@@ -3,6 +3,7 @@ from datacube_wms.wms_layers import get_layers
 import datacube
 import pytest
 
+
 def test_get_layers():
     layers = get_layers()
 
@@ -13,4 +14,3 @@ def test_get_layers():
         for prd in p.products:
             assert layers.product_index[prd.name] == prd
             assert prd.title
-
