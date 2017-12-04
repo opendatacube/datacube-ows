@@ -25,6 +25,7 @@ def lower_get_args():
             d[kl] = v
     return d
 
+
 @app.route('/')
 def wms_impl():
     nocase_args = lower_get_args()
@@ -36,16 +37,18 @@ def wms_impl():
             return get_capabilities(nocase_args)
         elif operation == "GetMap":
             return get_map(nocase_args)
-        elif operation== "GetFeatureInfo":
+        elif operation == "GetFeatureInfo":
             return feature_info(nocase_args)
         else:
-            raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED, "Request parameter")
+            raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED,
+                               "Request parameter")
     except WMSException as e:
         return wms_exception(e)
     except Exception as e:
         tb = sys.exc_info()[2]
         wms_e = WMSException("Unexpected server error: %s" % str(e), http_response=500)
         return wms_exception(wms_e, traceback=traceback.extract_tb(tb))
+
 
 @app.route('/test_client')
 def test_client():
@@ -59,6 +62,5 @@ def get_capabilities(args):
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     platforms = get_layers()
-    return render_template("capabilities.xml", service=service_cfg, platforms=platforms), 200, resp_headers({"Content-Type": "application/xml"})
-
-
+    return render_template("capabilities.xml", service=service_cfg, platforms=platforms), 200, resp_headers(
+        {"Content-Type": "application/xml"})

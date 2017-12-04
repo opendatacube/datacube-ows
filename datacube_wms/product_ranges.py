@@ -111,9 +111,8 @@ def rng_update(conn, rng):
                  Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
                        for crsid, bbox in rng["bboxes"].items()
                        }),
-
-                 rng["product_id"],
-                 )
+                     rng["product_id"],
+                     )
 
 
 def rng_insert(conn, rng):
@@ -133,8 +132,8 @@ def rng_insert(conn, rng):
                  Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
                  Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
                        for crsid, bbox in rng["bboxes"].items()
-                       })
-                 )
+                 })
+    )
 
 
 def ranges_equal(r1, rdb):

@@ -41,6 +41,9 @@ class CubePool(object):
     def _new_cube(self):
         return Datacube(app=self.app)
 
+    def __len__(self):
+        return len(self._cubes)
+
 
 def get_cube(app="wms"):
     pool = CubePool(app=app)
@@ -54,4 +57,4 @@ def release_cube(cube, app="wms"):
 
 def pool_size(app="wms"):
     pool = CubePool(app=app)
-    return len(pool._cubes)
+    return len(pool)

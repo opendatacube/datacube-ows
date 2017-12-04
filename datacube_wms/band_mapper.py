@@ -1,6 +1,7 @@
 from xarray import Dataset
 import numpy
 
+
 class StyleDefBase(object):
     def __init__(self, style_cfg):
         self.name = style_cfg["name"]
@@ -11,6 +12,7 @@ class StyleDefBase(object):
 
     def transform_data(self, data, extent_mask, *masks):
         pass
+
 
 class LinearStyleDef(StyleDefBase):
     def __init__(self, style_cfg):
@@ -65,8 +67,9 @@ class LinearStyleDef(StyleDefBase):
             imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
+
 def hm_index_to_blue(val, rmin, rmax, nan_mask=True):
-    scaled = (val - rmin)/(rmax-rmin)
+    scaled = (val - rmin) / (rmax - rmin)
     if scaled < 0.0:
         if nan_mask:
             return float("nan")
@@ -81,8 +84,9 @@ def hm_index_to_blue(val, rmin, rmax, nan_mask=True):
     else:
         return 1.0
 
+
 def hm_index_to_green(val, rmin, rmax, nan_mask=True):
-    scaled = (val - rmin)/(rmax-rmin)
+    scaled = (val - rmin) / (rmax - rmin)
     if scaled < 0.0:
         if nan_mask:
             return float("nan")
@@ -99,8 +103,9 @@ def hm_index_to_green(val, rmin, rmax, nan_mask=True):
     else:
         return 1.0
 
+
 def hm_index_to_red(val, rmin, rmax, nan_mask=True):
-    scaled = (val - rmin)/(rmax-rmin)
+    scaled = (val - rmin) / (rmax - rmin)
     if scaled < 0.0:
         if nan_mask:
             return float("nan")
@@ -115,10 +120,13 @@ def hm_index_to_red(val, rmin, rmax, nan_mask=True):
     else:
         return 1.0
 
+
 def hm_index_func_for_range(func, rmin, rmax, nan_mask=True):
     def hm_index_func(val):
         return func(val, rmin, rmax, nan_mask=nan_mask)
+
     return hm_index_func
+
 
 class HeatMappedStyleDef(StyleDefBase):
     def __init__(self, style_cfg):
@@ -129,24 +137,25 @@ class HeatMappedStyleDef(StyleDefBase):
             self.needed_bands.add(b)
         self._index_function = style_cfg["index_function"]
         self.range = style_cfg["range"]
+
     def transform_data(self, data, extent_mask, *masks):
         hm_index_data = self._index_function(data)
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
         for band, map_func in [
-                            ("red", hm_index_to_red),
-                            ("green", hm_index_to_green),
-                            ("blue", hm_index_to_blue),
-                                ]:
+            ("red", hm_index_to_red),
+            ("green", hm_index_to_green),
+            ("blue", hm_index_to_blue),
+        ]:
             f = numpy.vectorize(
-                    hm_index_func_for_range(
-                            map_func,
-                            self.range[0],
-                            self.range[1]
-                    )
+                hm_index_func_for_range(
+                    map_func,
+                    self.range[0],
+                    self.range[1]
+                )
             )
             img_band_raw_data = f(hm_index_data)
-            img_band_data = numpy.clip(img_band_raw_data*255.0, 0, 255).astype("uint8")
+            img_band_data = numpy.clip(img_band_raw_data * 255.0, 0, 255).astype("uint8")
             imgdata[band] = (dims, img_band_data)
         imgdata = imgdata.where(extent_mask)
         if masks:
@@ -163,10 +172,11 @@ class HeatMappedStyleDef(StyleDefBase):
         imgdata = imgdata.astype("uint8")
         return imgdata
 
+
 class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
     def __init__(self, style_cfg):
         super(HybridStyleDef, self).__init__(style_cfg)
-        self.component_ratio=style_cfg["component_ratio"]
+        self.component_ratio = style_cfg["component_ratio"]
 
     def transform_data(self, data, extent_mask, *masks):
         hm_index_data = self._index_function(data)
@@ -196,11 +206,12 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
                     map_func,
                     self.range[0],
                     self.range[1],
-                    nan_mask = False
+                    nan_mask=False
                 )
             )
             hmap_raw_data = f(hm_index_data)
-            unclipped_band_data = hmap_raw_data*255.0*(1.0-self.component_ratio) + self.component_ratio / self.scale_factor * imgband_component_data
+            unclipped_band_data = hmap_raw_data * 255.0 * (
+                    1.0 - self.component_ratio) + self.component_ratio / self.scale_factor * imgband_component_data
             img_band_data = numpy.clip(unclipped_band_data, 1, 254) + 1
             img_band_data = img_band_data.astype("uint8")
             imgdata[band] = (dims, img_band_data)
@@ -220,6 +231,7 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         imgdata = imgdata.astype("uint8")
         return imgdata
 
+
 def StyleDef(cfg):
     if cfg.get("component_ratio", False):
         return HybridStyleDef(cfg)
@@ -227,4 +239,3 @@ def StyleDef(cfg):
         return HeatMappedStyleDef(cfg)
     elif cfg.get("components", False):
         return LinearStyleDef(cfg)
-
