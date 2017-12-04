@@ -1,7 +1,7 @@
 # Static config for the wms metadata.
 
 response_cfg = {
-    "Access-Control-Allow-Origin": "*",   # CORS header
+    "Access-Control-Allow-Origin": "*",  # CORS header
 }
 
 service_cfg = {
@@ -9,21 +9,21 @@ service_cfg = {
     "title": "WMS server for Australian Landsat Datacube",
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
     "published_CRSs": {
-        "EPSG:3857": { # Web Mercator
+        "EPSG:3857": {  # Web Mercator
             "geographic": False,
             "horizontal_coord": "x",
             "vertical_coord": "y",
         },
-        "EPSG:4326": { # WGS-84
+        "EPSG:4326": {  # WGS-84
             "geographic": True,
         },
-        "EPSG:3577": { # GDA-94, internal representation
+        "EPSG:3577": {  # GDA-94, internal representation
             "geographic": False,
             "horizontal_coord": "easting",
             "vertical_coord": "northing",
         },
     },
-    
+
     # Technically optional config, but strongly recommended
     "layer_limit": 1,
     "max_width": 512,
@@ -91,7 +91,7 @@ layer_cfg = [
                 "min_zoom_factor": 500.0,
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
-                "zoomed_out_fill_colour": [ 150, 180, 200, 160],
+                "zoomed_out_fill_colour": [150, 180, 200, 160],
                 # Time Zone.  In hours added to UTC (maybe negative)
                 # Used for rounding off scene times to a date.
                 # 9 is good value for imagery of Australia.
@@ -360,9 +360,9 @@ layer_cfg = [
                 "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
                 "heat_mapped": True,
                 "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
-                "needed_bands": [ "red", "nir" ],
+                "needed_bands": ["red", "nir"],
                 # Areas where the index_function returns outside the range are masked.
-                "range": [ 0.0, 1.0 ],
+                "range": [0.0, 1.0],
             },
             {
                 "name": "ndvi_cloudmask",
@@ -370,9 +370,9 @@ layer_cfg = [
                 "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
                 "heat_mapped": True,
                 "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
-                "needed_bands": [ "red", "nir" ],
+                "needed_bands": ["red", "nir"],
                 # Areas where the index_function returns outside the range are masked.
-                "range": [ 0.0, 1.0 ],
+                "range": [0.0, 1.0],
                 "pq_mask_flags": {
                     "cloud_acca": "no_cloud",
                     "cloud_fmask": "no_cloud",
@@ -384,8 +384,8 @@ layer_cfg = [
                 "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
                 "heat_mapped": True,
                 "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
-                "needed_bands": [ "green", "nir" ],
-                "range": [ 0.0, 1.0 ],
+                "needed_bands": ["green", "nir"],
+                "range": [0.0, 1.0],
             },
             {
                 "name": "ndbi",
@@ -393,8 +393,8 @@ layer_cfg = [
                 "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
                 "heat_mapped": True,
                 "index_function": lambda data: (data["swir2"] - data["nir"]) / (data["swir2"] + data["nir"]),
-                "needed_bands": [ "swir2", "nir" ],
-                "range": [ 0.0, 1.0 ],
+                "needed_bands": ["swir2", "nir"],
+                "range": [0.0, 1.0],
             },
             # Mask layers - examples of how to display raw pixel quality data.
             # This works by creatively mis-using the Heatmap style class.
@@ -404,8 +404,8 @@ layer_cfg = [
                 "abstract": "Highlight pixels with cloud.",
                 "heat_mapped": True,
                 "index_function": lambda data: data["red"] * 0.0 + 0.1,
-                "needed_bands": [ "red" ],
-                "range": [ 0.0, 1.0 ],
+                "needed_bands": ["red"],
+                "range": [0.0, 1.0],
                 # Mask flags normally describe which areas SHOULD be shown.
                 # (i.e. pixels for which any of the declared flags are true)
                 # pq_mask_invert is intended to invert this logic.
@@ -426,8 +426,8 @@ layer_cfg = [
                 "abstract": "Highlight pixels with cloud or cloud shadow.",
                 "heat_mapped": True,
                 "index_function": lambda data: data["red"] * 0.0 + 0.6,
-                "needed_bands": [ "red" ],
-                "range": [ 0.0, 1.0 ],
+                "needed_bands": ["red"],
+                "range": [0.0, 1.0],
                 "pq_mask_invert": True,
                 "pq_mask_flags": {
                     "cloud_acca": "no_cloud",
@@ -442,8 +442,8 @@ layer_cfg = [
                 "abstract": "Highlight pixels with cloud.",
                 "heat_mapped": True,
                 "index_function": lambda data: data["red"] * 0.0 + 0.4,
-                "needed_bands": [ "red" ],
-                "range": [ 0.0, 1.0 ],
+                "needed_bands": ["red"],
+                "range": [0.0, 1.0],
                 "pq_mask_flags": {
                     "cloud_acca": "cloud",
                 },
@@ -454,8 +454,8 @@ layer_cfg = [
                 "abstract": "Highlight pixels with cloud.",
                 "heat_mapped": True,
                 "index_function": lambda data: data["red"] * 0.0 + 0.8,
-                "needed_bands": [ "red" ],
-                "range": [ 0.0, 1.0 ],
+                "needed_bands": ["red"],
+                "range": [0.0, 1.0],
                 "pq_mask_flags": {
                     "cloud_fmask": "cloud",
                 },
@@ -466,8 +466,8 @@ layer_cfg = [
                 "abstract": "Highlight pixels with non-contiguous data",
                 "heat_mapped": True,
                 "index_function": lambda data: data["red"] * 0.0 + 0.3,
-                "needed_bands": [ "red" ],
-                "range": [ 0.0, 1.0 ],
+                "needed_bands": ["red"],
+                "range": [0.0, 1.0],
                 "pq_mask_flags": {
                     "contiguous": False
                 },
@@ -480,9 +480,9 @@ layer_cfg = [
                 "component_ratio": 0.6,
                 "heat_mapped": True,
                 "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
-                "needed_bands": [ "red", "nir" ],
+                "needed_bands": ["red", "nir"],
                 # Areas where the index_function returns outside the range are masked.
-                "range": [ 0.0, 1.0 ],
+                "range": [0.0, 1.0],
                 "components": {
                     "red": {
                         "red": 1.0
@@ -503,9 +503,9 @@ layer_cfg = [
                 "component_ratio": 0.6,
                 "heat_mapped": True,
                 "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
-                "needed_bands": [ "red", "nir" ],
+                "needed_bands": ["red", "nir"],
                 # Areas where the index_function returns outside the range are masked.
-                "range": [ 0.0, 1.0 ],
+                "range": [0.0, 1.0],
                 "components": {
                     "red": {
                         "red": 1.0
@@ -534,182 +534,182 @@ layer_cfg = [
 ]
 
 to_be_added_to_layer_cfg = {
-        "name": "LANDSAT_7",
-        "title": "Landsat 7",
-        "abstract": "Images from the Landsat 7 satellite",
+    "name": "LANDSAT_7",
+    "title": "Landsat 7",
+    "abstract": "Images from the Landsat 7 satellite",
 
-        "products": [
-            {
-                "label": "NBAR-T",
-                "type": "surface reflectance",
-                "variant": "terrain corrected",
-                "name": "ls7_nbart_albers",
-                "product_name": "ls7_nbart_albers",
-                "pq_dataset": "ls7_pq_albers",
-                "pq_band": "pixelquality",
-                "pq_mask_flags": {
-                    "contiguous": True
-                },
-                "min_zoom_factor": 500.0
+    "products": [
+        {
+            "label": "NBAR-T",
+            "type": "surface reflectance",
+            "variant": "terrain corrected",
+            "name": "ls7_nbart_albers",
+            "product_name": "ls7_nbart_albers",
+            "pq_dataset": "ls7_pq_albers",
+            "pq_band": "pixelquality",
+            "pq_mask_flags": {
+                "contiguous": True
             },
-        ],
-        "styles": [
-            {
-                "name": "simple_rgb",
-                "title": "Simple RGB",
-                "abstract": "Simple true-colour image, using the red, green and blue bands",
-                "components": {
-                    "red": {
-                        "red": 1.0
-                    },
-                    "green": {
-                        "green": 1.0
-                    },
-                    "blue": {
-                        "blue": 1.0
-                    }
+            "min_zoom_factor": 500.0
+        },
+    ],
+    "styles": [
+        {
+            "name": "simple_rgb",
+            "title": "Simple RGB",
+            "abstract": "Simple true-colour image, using the red, green and blue bands",
+            "components": {
+                "red": {
+                    "red": 1.0
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "green": 1.0
+                },
+                "blue": {
+                    "blue": 1.0
+                }
             },
-            {
-                "name": "wideband",
-                "title": "Wideband false-colour",
-                "abstract": "False-colour image, incorporating all available spectral bands",
-                "components": {
-                    "red": {
-                        "swir2": 0.5,
-                        "swir1": 0.5,
-                    },
-                    "green": {
-                        "nir": 0.5,
-                        "red": 0.5,
-                    },
-                    "blue": {
-                        "green": 0.5,
-                        "blue": 0.5,
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "wideband",
+            "title": "Wideband false-colour",
+            "abstract": "False-colour image, incorporating all available spectral bands",
+            "components": {
+                "red": {
+                    "swir2": 0.5,
+                    "swir1": 0.5,
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "nir": 0.5,
+                    "red": 0.5,
+                },
+                "blue": {
+                    "green": 0.5,
+                    "blue": 0.5,
+                }
             },
-            {
-                "name": "infra_red",
-                "title": "False colour multi-band infra-red",
-                "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
-                "components": {
-                    "red": {
-                        "swir1": 1.0
-                    },
-                    "green": {
-                        "swir2": 1.0
-                    },
-                    "blue": {
-                        "nir": 1.0
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "infra_red",
+            "title": "False colour multi-band infra-red",
+            "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
+            "components": {
+                "red": {
+                    "swir1": 1.0
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "swir2": 1.0
+                },
+                "blue": {
+                    "nir": 1.0
+                }
             },
-            {
-                "name": "blue",
-                "title": "Spectral band 1 - Blue",
-                "abstract": "Blue band, approximately 450nm to 520nm",
-                "components": {
-                    "red": {
-                        "blue": 1.0
-                    },
-                    "green": {
-                        "blue": 1.0
-                    },
-                    "blue": {
-                        "blue": 1.0
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "blue",
+            "title": "Spectral band 1 - Blue",
+            "abstract": "Blue band, approximately 450nm to 520nm",
+            "components": {
+                "red": {
+                    "blue": 1.0
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "blue": 1.0
+                },
+                "blue": {
+                    "blue": 1.0
+                }
             },
-            {
-                "name": "green",
-                "title": "Spectral band 2 - Green",
-                "abstract": "Green band, approximately 530nm to 610nm",
-                "components": {
-                    "red": {
-                        "green": 1.0
-                    },
-                    "green": {
-                        "green": 1.0
-                    },
-                    "blue": {
-                        "green": 1.0
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "green",
+            "title": "Spectral band 2 - Green",
+            "abstract": "Green band, approximately 530nm to 610nm",
+            "components": {
+                "red": {
+                    "green": 1.0
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "green": 1.0
+                },
+                "blue": {
+                    "green": 1.0
+                }
             },
-            {
-                "name": "red",
-                "title": "Spectral band 3 - Red",
-                "abstract": "Red band, roughly 630nm to 690nm",
-                "components": {
-                    "red": {
-                        "red": 1.0
-                    },
-                    "green": {
-                        "red": 1.0
-                    },
-                    "blue": {
-                        "red": 1.0
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "red",
+            "title": "Spectral band 3 - Red",
+            "abstract": "Red band, roughly 630nm to 690nm",
+            "components": {
+                "red": {
+                    "red": 1.0
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "red": 1.0
+                },
+                "blue": {
+                    "red": 1.0
+                }
             },
-            {
-                "name": "nir",
-                "title": "Spectral band 4 - Near infra-red",
-                "abstract": "Near infra-red band, roughly 780nm to 840nm",
-                "components": {
-                    "red": {
-                        "nir": 1.0
-                    },
-                    "green": {
-                        "nir": 1.0
-                    },
-                    "blue": {
-                        "nir": 1.0
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "nir",
+            "title": "Spectral band 4 - Near infra-red",
+            "abstract": "Near infra-red band, roughly 780nm to 840nm",
+            "components": {
+                "red": {
+                    "nir": 1.0
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "nir": 1.0
+                },
+                "blue": {
+                    "nir": 1.0
+                }
             },
-            {
-                "name": "swir1",
-                "title": "Spectral band 5 - Short wave infra-red 1",
-                "abstract": "Short wave infra-red band 1, roughly 1550nm to 1750nm",
-                "components": {
-                    "red": {
-                        "swir1": 1.0
-                    },
-                    "green": {
-                        "swir1": 1.0
-                    },
-                    "blue": {
-                        "swir1": 1.0
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "swir1",
+            "title": "Spectral band 5 - Short wave infra-red 1",
+            "abstract": "Short wave infra-red band 1, roughly 1550nm to 1750nm",
+            "components": {
+                "red": {
+                    "swir1": 1.0
                 },
-                "scale_factor": 12.0
+                "green": {
+                    "swir1": 1.0
+                },
+                "blue": {
+                    "swir1": 1.0
+                }
             },
-            {
-                "name": "swir2",
-                "title": "Spectral band 6 - Short wave infra-red 2",
-                "abstract": "Short wave infra-red band 2, roughly 2090nm to 2220nm",
-                "components": {
-                    "red": {
-                        "swir2": 1.0
-                    },
-                    "green": {
-                        "swir2": 1.0
-                    },
-                    "blue": {
-                        "swir2": 1.0
-                    }
+            "scale_factor": 12.0
+        },
+        {
+            "name": "swir2",
+            "title": "Spectral band 6 - Short wave infra-red 2",
+            "abstract": "Short wave infra-red band 2, roughly 2090nm to 2220nm",
+            "components": {
+                "red": {
+                    "swir2": 1.0
                 },
-                "scale_factor": 12.0
-            }
-        ],
-        "default_style": "simple_rgb",
+                "green": {
+                    "swir2": 1.0
+                },
+                "blue": {
+                    "swir2": 1.0
+                }
+            },
+            "scale_factor": 12.0
+        }
+    ],
+    "default_style": "simple_rgb",
 }

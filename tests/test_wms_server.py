@@ -41,7 +41,7 @@ def get_xsd(name):
 def check_wms_error(url, expected_error_message=None, expected_status_code=400):
     try:
         resp = request.urlopen(url)
-        
+
         # Should not get here
         assert False
     except Exception as e:
@@ -89,27 +89,27 @@ def test_getcap(wms_server):
 
 def enclosed_bbox(bbox):
     lon_min, lat_min, lon_max, lat_max = bbox
-    lon_range = lon_max-lon_min
-    lat_range = lat_max-lat_min
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
 
     return (
-        lon_min + 0.2*lon_range,
-        lat_min + 0.2*lat_range,
-        lon_max - 0.2*lon_range,
-        lat_max - 0.2*lat_range
+        lon_min + 0.2 * lon_range,
+        lat_min + 0.2 * lat_range,
+        lon_max - 0.2 * lon_range,
+        lat_max - 0.2 * lat_range
     )
 
 
 def disjoint_bbox(bbox):
     lon_min, lat_min, lon_max, lat_max = bbox
-    lon_range = lon_max-lon_min
-    lat_range = lat_max-lat_min
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
 
     return (
-        lon_min - 0.4*lon_range,
-        lat_min - 0.4*lat_range,
-        lon_min - 0.2*lon_range,
-        lat_min - 0.2*lat_range
+        lon_min - 0.4 * lon_range,
+        lat_min - 0.4 * lat_range,
+        lon_min - 0.2 * lon_range,
+        lat_min - 0.2 * lat_range
     )
 
 
@@ -136,26 +136,25 @@ def test_wms_getmap(wms_server):
     bbox = test_layer.boundingBoxWGS84
 
     img = wms.getmap(layers=[test_layer_name],
-                      styles=[],
-                      srs="EPSG:4326",
-                      bbox=enclosed_bbox(bbox),
-                      size=(256, 256),
-                      format="image/png",
-                      transparent=True,
-                      time=test_layer.timepositions[len(test_layer.timepositions)//2].strip(),
-                      )
+                     styles=[],
+                     srs="EPSG:4326",
+                     bbox=enclosed_bbox(bbox),
+                     size=(256, 256),
+                     format="image/png",
+                     transparent=True,
+                     time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+                     )
     assert img
     assert what("", h=img.read()) == "png"
 
     img = wms.getmap(layers=[test_layer_name],
-                      styles=[],
-                      srs="EPSG:4326",
-                      bbox=disjoint_bbox(bbox),
-                      size=(256, 256),
-                      format="image/png",
-                      transparent=True,
-                      time=test_layer.timepositions[len(test_layer.timepositions)//2].strip(),
-                      )
+                     styles=[],
+                     srs="EPSG:4326",
+                     bbox=disjoint_bbox(bbox),
+                     size=(256, 256),
+                     format="image/png",
+                     transparent=True,
+                     time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+                     )
     assert img
     assert what("", h=img.read()) == "png"
-

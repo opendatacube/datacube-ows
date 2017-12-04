@@ -5,11 +5,11 @@ sys.path.append("/home/phaesler/src/datacube/wms")
 
 # The location of the datcube config file.
 import os
+
 os.environ.setdefault("DATACUBE_CONFIG_PATH", "/home/phaesler/.datacube.conf")
 
 import math
 
-from datacube_wms.wms import app 
+from datacube_wms.wms import app
 
 application = app
-

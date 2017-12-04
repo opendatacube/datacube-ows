@@ -3,6 +3,7 @@ from datacube_wms.product_ranges import get_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.band_mapper import StyleDef
 
+
 def accum_min(a, b):
     if a is None:
         return b
@@ -39,12 +40,13 @@ class ProductLayerDef(object):
         self.pq_name = product_cfg.get("pq_dataset")
         self.pq_band = product_cfg.get("pq_band")
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
-        self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150,180,200])
+        self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150, 180, 200])
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
         else:
             self.pq_product = None
         self.time_zone = product_cfg.get("time_zone", 9)
+
 
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
@@ -82,6 +84,7 @@ class LayerDefs(object):
                 self.platforms.append(platform)
                 self.platform_index[platform.name] = platform
             release_cube(dc)
+
     def __iter__(self):
         for p in self.platforms:
             yield p
