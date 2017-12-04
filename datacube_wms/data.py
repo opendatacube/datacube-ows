@@ -16,7 +16,6 @@ from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.wms_utils import get_arg, WMSException, _get_geobox, resp_headers, get_product_from_arg, get_time, \
     img_coords_to_geopoint, bounding_box_to_geom, zoom_factor
 
-
 # travis can only get earlier version of rasterio which doesn't have MemoryFile, so
 # - tell pylint to ingnore inport error
 # - catch ImportError so pytest doctest don't fall over
@@ -24,7 +23,6 @@ try:
     from rasterio.io import MemoryFile  # pylint: disable=import-error
 except ImportError:
     MemoryFile = None
-
 
 
 class TileGenerator(object):
@@ -45,7 +43,7 @@ class RGBTileGenerator(TileGenerator):
         self._geobox = geobox
 
         start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
-        self._time = [ start_time, time + timedelta(days=1) ]
+        self._time = [start_time, time + timedelta(days=1)]
         self._style = style
 
     def needed_bands(self):
@@ -57,7 +55,7 @@ class RGBTileGenerator(TileGenerator):
     def datasets(self, index, mask=False, all_time=False, point=None):
         if all_time:
             times = self._product.ranges["times"]
-            time = [ times[0], times[-1] + timedelta(days=1)]
+            time = [times[0], times[-1] + timedelta(days=1)]
         else:
             time = self._time
         if mask and self._product.pq_name:
@@ -77,7 +75,7 @@ class RGBTileGenerator(TileGenerator):
             sources = xarray.DataArray(holder)
         if mask:
             prod = self._product.pq_product
-            measurements = [ self._set_resampling(prod.measurements[self._product.pq_band]) ]
+            measurements = [self._set_resampling(prod.measurements[self._product.pq_band])]
         else:
             prod = self._product.product
             measurements = [self._set_resampling(prod.measurements[name]) for name in self.needed_bands()]
@@ -88,6 +86,7 @@ class RGBTileGenerator(TileGenerator):
         mc = measurement.copy()
         # mc['resampling_method'] = 'cubic'
         return mc
+
 
 def _get_datasets(index, geobox, product, time_, mask=False, point=None):
     query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time_)
@@ -103,7 +102,7 @@ def _get_datasets(index, geobox, product, time_, mask=False, point=None):
             else:
                 compare_geometry = dataset.extent.to_crs(geobox.crs)
             if compare_geometry.contains(point):
-                to_load.append( dataset )
+                to_load.append(dataset)
         return to_load
     dataset_iter = iter(datasets)
     date_index = {}
@@ -117,7 +116,7 @@ def _get_datasets(index, geobox, product, time_, mask=False, point=None):
     if not date_index:
         return None
 
-    date_extents={}
+    date_extents = {}
     for dt, dt_dss in date_index.items():
         geom = None
         for ds in dt_dss:
@@ -157,8 +156,8 @@ def get_map(args):
     else:
         crs_arg = "crs"
     crsid = get_arg(args, crs_arg, "Coordinate Reference System",
-                  errcode=WMSException.INVALID_CRS,
-                  permitted_values=service_cfg["published_CRSs"].keys())
+                    errcode=WMSException.INVALID_CRS,
+                    permitted_values=service_cfg["published_CRSs"].keys())
     crs = geometry.CRS(crsid)
 
     # Layers and Styles parameters
@@ -197,7 +196,7 @@ def get_map(args):
     if style.pq_mask_flags:
         pq_datasets = tiler.datasets(dc.index, mask=True)
     else:
-        pq_datasets =  None
+        pq_datasets = None
     if not datasets:
         body = _write_empty(geobox)
     elif zf < product.min_zoom:
@@ -223,7 +222,7 @@ def get_map(args):
             # pq_sources = datacube.Datacube.group_datasets(pq_datasets, datacube.api.query.query_group_by())
             # sources, pq_sources = xarray.align(sources, pq_sources)
 
-            pq_data=tiler.data(pq_datasets, mask=True)
+            pq_data = tiler.data(pq_datasets, mask=True)
 
             mask = make_mask(pq_data, **style.pq_mask_flags)
             mask_data = mask.pixelquality
@@ -270,8 +269,10 @@ def _write_empty(geobox):
             pass
         return memfile.read()
 
+
 def int_trim(val, minval, maxval):
     return max(min(val, maxval), minval)
+
 
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
@@ -282,9 +283,9 @@ def _write_polygon(geobox, polygon, zoom_fill):
         if not geobox_ext.disjoint(polygon):
             intersection = geobox_ext.intersection(polygon)
             crs_coords = intersection.json["coordinates"][0]
-            pixel_coords = [ ~geobox.transform * coords for coords in crs_coords ]
-            rs, cs = skimg_polygon([ int_trim(c[1], 0, geobox.height-1) for c in pixel_coords ],
-                                   [ int_trim(c[0], 0, geobox.width-1) for c in pixel_coords ])
+            pixel_coords = [~geobox.transform * coords for coords in crs_coords]
+            rs, cs = skimg_polygon([int_trim(c[1], 0, geobox.height - 1) for c in pixel_coords],
+                                   [int_trim(c[0], 0, geobox.width - 1) for c in pixel_coords])
             data[rs, cs] = 1
 
     with MemoryFile() as memfile:
@@ -303,7 +304,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
 def feature_info(args):
     # Version parameter
     version = get_arg(args, "version", "WMS version",
-                        permitted_values=["1.1.1", "1.3.0"])
+                      permitted_values=["1.1.1", "1.3.0"])
 
     # Layer/product
     product = get_product_from_arg(args, "query_layers")
@@ -329,9 +330,9 @@ def feature_info(args):
 
     # Point coords
     if version == "1.1.1":
-        coords = [ "x", "y" ]
+        coords = ["x", "y"]
     else:
-        coords = [ "i", "j" ]
+        coords = ["i", "j"]
     i = args.get(coords[0])
     j = args.get(coords[1])
     if i is None:
@@ -349,11 +350,11 @@ def feature_info(args):
 
     # --- Begin code section requiring datacube.
     dc = get_cube()
-    geo_point=img_coords_to_geopoint(geobox, i, j)
+    geo_point = img_coords_to_geopoint(geobox, i, j)
     datasets = tiler.datasets(dc.index, all_time=True,
                               point=geo_point)
     pq_datasets = tiler.datasets(dc.index, mask=True, all_time=True,
-                            point=geo_point)
+                                 point=geo_point)
 
     if service_cfg["published_CRSs"][crsid]["geographic"]:
         h_coord = "longitude"
@@ -361,7 +362,7 @@ def feature_info(args):
     else:
         h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
         v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
-    isel_kwargs={
+    isel_kwargs = {
         h_coord: [i],
         v_coord: [j]
     }
@@ -379,8 +380,8 @@ def feature_info(args):
                 # convert to lat/long geographic coordinates
                 if service_cfg["published_CRSs"][crsid]["geographic"]:
                     # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
-                    feature_json["lat"]=data.latitude[j].item()
-                    feature_json["lon"]=data.longitude[i].item()
+                    feature_json["lat"] = data.latitude[j].item()
+                    feature_json["lon"] = data.longitude[i].item()
                     pixel_ds = data.isel(**isel_kwargs)
                 else:
                     # Non-geographic coordinate systems need to be projected onto a geographic
@@ -389,22 +390,22 @@ def feature_info(args):
                     data_x = getattr(data, h_coord)
                     data_y = getattr(data, v_coord)
 
-                    x=data_x[i].item()
-                    y=data_y[j].item()
-                    pt=geometry.point(x, y, crs)
+                    x = data_x[i].item()
+                    y = data_y[j].item()
+                    pt = geometry.point(x, y, crs)
 
                     # Project to EPSG:4326
                     crs_geo = geometry.CRS("EPSG:4326")
                     ptg = pt.to_crs(crs_geo)
 
                     # Capture lat/long coordinates
-                    feature_json["lon"], feature_json["lat"]=ptg.coords[0]
+                    feature_json["lon"], feature_json["lat"] = ptg.coords[0]
 
                 # Extract data pixel
                 pixel_ds = data.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
-                feature_json["time"]=d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
+                feature_json["time"] = d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
                 # Collect raw band values for pixel
                 feature_json["bands"] = {}
@@ -440,7 +441,7 @@ def feature_info(args):
 
         lads = list(available_dates)
         lads.sort()
-        feature_json["data_available_for_dates"] = [ d.strftime("%Y-%m-%d") for d in lads ]
+        feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in lads]
     release_cube(dc)
     # --- End code section requiring datacube.
 
@@ -454,4 +455,3 @@ def feature_info(args):
         ]
     }
     return json.dumps(result), 200, resp_headers({"Content-Type": "application/json"})
-

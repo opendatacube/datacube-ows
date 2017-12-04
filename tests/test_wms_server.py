@@ -135,11 +135,11 @@ def test_wms_getmap(wms_server):
 
     bbox = test_layer.boundingBoxWGS84
 
-    img = wms.getmap( layers=[test_layer_name],
+    img = wms.getmap(layers=[test_layer_name],
                       styles=[],
                       srs="EPSG:4326",
                       bbox=enclosed_bbox(bbox),
-                      size=(256,256),
+                      size=(256, 256),
                       format="image/png",
                       transparent=True,
                       time=test_layer.timepositions[len(test_layer.timepositions)//2].strip(),
@@ -147,11 +147,11 @@ def test_wms_getmap(wms_server):
     assert img
     assert what("", h=img.read()) == "png"
 
-    img = wms.getmap( layers=[test_layer_name],
+    img = wms.getmap(layers=[test_layer_name],
                       styles=[],
                       srs="EPSG:4326",
                       bbox=disjoint_bbox(bbox),
-                      size=(256,256),
+                      size=(256, 256),
                       format="image/png",
                       transparent=True,
                       time=test_layer.timepositions[len(test_layer.timepositions)//2].strip(),

@@ -29,20 +29,22 @@ class WMSException(Exception):
     INVALID_DIMENSION_VALUE = "InvalidDimensionValue"
     OPERATION_NOT_SUPPORTED = "OperationNotSupported"
 
-    def __init__(self, msg, code=None, locator=None, http_response = 400):
+    def __init__(self, msg, code=None, locator=None, http_response=400):
         self.http_response = http_response
-        self.errors=[]
+        self.errors = []
         self.add_error(msg, code, locator)
+
     def add_error(self, msg, code=None, locator=None):
-        self.errors.append( {
-                "msg": msg,
-                "code": code,
-                "locator": locator
+        self.errors.append({
+            "msg": msg,
+            "code": code,
+            "locator": locator
         })
 
 
 def wms_exception(e, traceback=[]):
-    return render_template("wms_error.xml", exception=e, traceback=traceback), e.http_response, resp_headers({"Content-Type": "application/xml"})
+    return render_template("wms_error.xml", exception=e, traceback=traceback), e.http_response, resp_headers(
+        {"Content-Type": "application/xml"})
 
 
 def _get_geobox(args, crs):
@@ -53,6 +55,7 @@ def _get_geobox(args, crs):
     # miny-maxy for negative scale factor and maxy in the translation, includes inversion of Y axis.
     affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
     return geometry.GeoBox(width, height, affine, crs)
+
 
 def zoom_factor(args, crs):
     # Determine the geographic "zoom factor" for the request.
@@ -87,17 +90,18 @@ def zoom_factor(args, crs):
     # (The determinant is x scale factor multiplied by the y scale factor)
     return 1.0 / math.sqrt(affine.determinant)
 
-def img_coords_to_geopoint(geobox, i,j):
-    return geometry.point( geobox.coordinates["x"].values[int(i)],
-             geobox.coordinates["y"].values[int(j)],
-             geobox.crs)
+
+def img_coords_to_geopoint(geobox, i, j):
+    return geometry.point(geobox.coordinates["x"].values[int(i)],
+                          geobox.coordinates["y"].values[int(j)],
+                          geobox.crs)
 
 
 def get_product_from_arg(args, argname="layers"):
     layers = args.get(argname, "").split(",")
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
-    layer=layers[0]
+    layer = layers[0]
     platforms = get_layers()
     product = platforms.product_index.get(layer)
     if not product:
@@ -119,9 +123,10 @@ def get_arg(args, argname, verbose_name, lower=False,
     if permitted_values:
         if fmt not in permitted_values:
             raise WMSException("%s %s is not supported" % (verbose_name, fmt),
-                           errcode,
-                           locator="%s parameter" % argname)
+                               errcode,
+                               locator="%s parameter" % argname)
     return fmt
+
 
 def get_time(args, product):
     # Time parameter
@@ -152,12 +157,13 @@ def get_time(args, product):
             locator="Time parameter")
     return time
 
+
 def bounding_box_to_geom(bbox, bb_crs, target_crs):
     poly = geometry.polygon([
-                                ( bbox.left, bbox.top ),
-                                ( bbox.left, bbox.bottom ),
-                                ( bbox.right, bbox.bottom ),
-                                ( bbox.right, bbox.top ),
-                                ( bbox.left, bbox.top ),
-                            ], bb_crs)
+        (bbox.left, bbox.top),
+        (bbox.left, bbox.bottom),
+        (bbox.right, bbox.bottom),
+        (bbox.right, bbox.top),
+        (bbox.left, bbox.top),
+    ], bb_crs)
     return poly.to_crs(target_crs)

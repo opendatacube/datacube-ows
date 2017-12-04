@@ -3,13 +3,14 @@ import datacube
 from datacube_wms.wms_cfg import service_cfg, layer_cfg
 from psycopg2.extras import Json
 
+
 def accum_min(a, b):
     if a is None:
         return b
     elif b is None:
         return a
     else:
-        return min(a,b)
+        return min(a, b)
 
 
 def accum_max(a, b):
@@ -18,13 +19,13 @@ def accum_max(a, b):
     elif b is None:
         return a
     else:
-        return max(a,b)
+        return max(a, b)
 
 
 def determine_product_ranges(dc, product_name, time_offset):
     start = datetime.now()
     product = dc.index.products.get_by_name(product_name)
-    print ("Product: ", product_name)
+    print("Product: ", product_name)
     r = {
         "product_id": product.id,
 
@@ -40,8 +41,8 @@ def determine_product_ranges(dc, product_name, time_offset):
     time_set = set()
 
     crsids = service_cfg["published_CRSs"]
-    extents = { crsid: None for crsid in crsids }
-    crses = { crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids }
+    extents = {crsid: None for crsid in crsids}
+    crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
     ds_count = 0
     for ds in dc.find_datasets(product=product_name):
         r["lat"]["min"] = accum_min(r["lat"]["min"], ds.metadata.lat.begin)
@@ -49,7 +50,7 @@ def determine_product_ranges(dc, product_name, time_offset):
         r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
         r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
-        dt = ds.center_time + timedelta(hours = time_offset)
+        dt = ds.center_time + timedelta(hours=time_offset)
         time_set.add(dt.date())
 
         for crsid in crsids:
@@ -65,9 +66,9 @@ def determine_product_ranges(dc, product_name, time_offset):
 
     r["times"] = sorted(time_set)
     r["time_set"] = time_set
-    r["bboxes"] = { crsid: extents[crsid].boundingbox for crsid in crsids }
+    r["bboxes"] = {crsid: extents[crsid].boundingbox for crsid in crsids}
     end = datetime.now()
-    print ("Scanned %d datasets in %d seconds" % (ds_count, (end-start).seconds))
+    print("Scanned %d datasets in %d seconds" % (ds_count, (end - start).seconds))
     return r
 
 
@@ -86,7 +87,7 @@ def get_sqlconn(dc):
 
 def get_ids_in_db(conn):
     results = conn.execute("select id from wms.product_ranges")
-    return [ r["id"] for r in results ]
+    return [r["id"] for r in results]
 
 
 def rng_update(conn, rng):
@@ -106,10 +107,10 @@ def rng_update(conn, rng):
                  rng["lon"]["min"],
                  rng["lon"]["max"],
 
-                 Json([ t.strftime("%Y-%m-%d")  for t in rng["times"] ]),
-                 Json({ crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                        for crsid, bbox in rng["bboxes"].items()
-                        }),
+                 Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
+                 Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
+                       for crsid, bbox in rng["bboxes"].items()
+                       }),
 
                  rng["product_id"],
                  )
@@ -129,11 +130,12 @@ def rng_insert(conn, rng):
                  rng["lon"]["min"],
                  rng["lon"]["max"],
 
-                 Json([ t.strftime("%Y-%m-%d")  for t in rng["times"] ]),
-                 Json({ crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                            for crsid, bbox in rng["bboxes"].items()
-                     })
+                 Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
+                 Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
+                       for crsid, bbox in rng["bboxes"].items()
+                       })
                  )
+
 
 def ranges_equal(r1, rdb):
     if r1["product_id"] != rdb["product_id"]:
@@ -144,7 +146,7 @@ def ranges_equal(r1, rdb):
                 return False
     if len(r1["times"]) != len(rdb["times"]):
         return False
-    for t1,t2 in zip(r1["times"], rdb["times"]):
+    for t1, t2 in zip(r1["times"], rdb["times"]):
         if t1 != t2:
             return False
     if len(r1["bboxes"]) != len(rdb["bboxes"]):
@@ -164,6 +166,7 @@ def ranges_equal(r1, rdb):
     except KeyError:
         return False
     return True
+
 
 def update_all_ranges(dc):
     ranges = determine_ranges(dc)
@@ -188,6 +191,7 @@ def update_all_ranges(dc):
     conn.close()
     return p, u, i
 
+
 def get_ranges(dc, product):
     if isinstance(product, int):
         product_id = product
@@ -200,7 +204,7 @@ def get_ranges(dc, product):
     results = conn.execute("select * from wms.product_ranges where id=%s", product_id)
     for result in results:
         conn.close()
-        times = [ datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"]]
+        times = [datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"]]
         return {
             "product_id": product_id,
             "lat": {
