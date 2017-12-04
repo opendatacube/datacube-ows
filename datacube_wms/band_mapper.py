@@ -47,10 +47,11 @@ class LinearStyleDef(StyleDefBase):
                     and_mask = mask
                 else:
                     and_mask = and_mask & mask
-            if self.pq_mask_invert:
-                data = data.where(~and_mask)
-            else:
-                data = data.where(and_mask)
+            if and_mask is not None:
+                if self.pq_mask_invert:
+                    data = data.where(~and_mask)
+                else:
+                    data = data.where(and_mask)
 
         imgdata = Dataset()
         for imgband, components in self.components.items():
@@ -143,9 +144,9 @@ class HeatMappedStyleDef(StyleDefBase):
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
         for band, map_func in [
-            ("red", hm_index_to_red),
-            ("green", hm_index_to_green),
-            ("blue", hm_index_to_blue),
+                ("red", hm_index_to_red),
+                ("green", hm_index_to_green),
+                ("blue", hm_index_to_blue),
         ]:
             f = numpy.vectorize(
                 hm_index_func_for_range(
@@ -189,9 +190,9 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
         for band, map_func in [
-            ("red", hm_index_to_red),
-            ("green", hm_index_to_green),
-            ("blue", hm_index_to_blue),
+                ("red", hm_index_to_red),
+                ("green", hm_index_to_green),
+                ("blue", hm_index_to_blue),
         ]:
             components = self.components[band]
             component_band_data = None
@@ -211,7 +212,7 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
             )
             hmap_raw_data = f(hm_index_data)
             unclipped_band_data = hmap_raw_data * 255.0 * (
-                    1.0 - self.component_ratio) + self.component_ratio / self.scale_factor * imgband_component_data
+                1.0 - self.component_ratio) + self.component_ratio / self.scale_factor * imgband_component_data
             img_band_data = numpy.clip(unclipped_band_data, 1, 254) + 1
             img_band_data = img_band_data.astype("uint8")
             imgdata[band] = (dims, img_band_data)
