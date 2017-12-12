@@ -123,13 +123,7 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
         <Layer>
             <Title>{{ platform.title }}</Title>
             <Abstract>{{ platform.abstract }}</Abstract>
-            {% for style in platform.styles %}
-            <Style>
-                <Name>{{ style.name }}</Name>
-                <Title>{{ style.title }}</Title>
-                <Abstract>{{ style.abstract }}</Abstract>
-            </Style>
-            {% endfor %}
+
             {% for product in platform.products %}
                 <Layer queryable="1">
                     <Name>{{ product.name }}</Name>
@@ -142,7 +136,7 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
                         <Keyword>{{ product.definition.metadata.instrument.name }}</Keyword>
                         <Keyword>{{ product.product_label }}</Keyword>
                         <Keyword>{{ product.product_type }}</Keyword>
-                        <Keyword>{{ product.product_variant }}</Keyword>
+                        {% if product.product_variant %}<Keyword>{{ product.product_variant }}</Keyword>{% endif %}
                     </KeywordList>
                     <EX_GeographicBoundingBox>
                         <westBoundLongitude>{{ product.ranges.lon.min }}</westBoundLongitude>
@@ -167,7 +161,14 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
                     <Dimension name="time" units="ISO8601">
                         {% for t in product.ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
                     </Dimension>
-                    <!-- TODO: Not sure how to work these out yet, but 
+                    {% for style in product.styles %}
+                        <Style>
+                            <Name>{{ style.name }}</Name>
+                            <Title>{{ style.title }}</Title>
+                            <Abstract>{{ style.abstract }}</Abstract>
+                        </Style>
+                    {% endfor %}
+                    <!-- TODO: Not sure how to work these out yet, but
                                probably desirable.
                     <MinScaleDenominator/>
                     <MaxScaleDenominator/>

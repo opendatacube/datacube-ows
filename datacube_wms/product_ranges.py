@@ -76,7 +76,7 @@ def determine_ranges(dc):
     ranges = []
     for layer in layer_cfg:
         for product_cfg in layer["products"]:
-            ranges.append(determine_product_ranges(dc, product_cfg["name"], product_cfg.get("time_zone", 9)))
+            ranges.append(determine_product_ranges(dc, product_cfg["product_name"], product_cfg.get("time_zone", 9)))
     return ranges
 
 

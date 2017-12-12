@@ -41,21 +41,32 @@ class ProductLayerDef(object):
         self.pq_band = product_cfg.get("pq_band")
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
         self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150, 180, 200])
+        self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
+            self.info_mask = ~0
+            fd = self.pq_product.measurements[self.pq_band]["flags_definition"]
+            for bitname in self.ignore_flags_info:
+                bit = fd[bitname]["bits"]
+                if not isinstance(bit, int):
+                    continue
+                flag = 1 << bit
+                self.info_mask &= ~flag
         else:
             self.pq_product = None
         self.time_zone = product_cfg.get("time_zone", 9)
-
+        self.styles = product_cfg["styles"]
+        self.default_style = product_cfg["default_style"]
+        self.style_index = {s["name"]: StyleDef(self, s) for s in self.styles}
+        self.extent_mask_func = product_cfg["extent_mask_func"]
+        self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
 
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
         self.name = platform_cfg["name"]
         self.title = platform_cfg["title"]
         self.abstract = platform_cfg["abstract"]
-        self.styles = platform_cfg["styles"]
-        self.default_style = platform_cfg["default_style"]
-        self.style_index = {s["name"]: StyleDef(s) for s in self.styles}
+
         self.products = []
         for prod_cfg in platform_cfg["products"]:
             prod = ProductLayerDef(prod_cfg, self, dc=dc)

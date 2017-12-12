@@ -64,15 +64,68 @@ class RGBTileGenerator(TileGenerator):
             return []
         else:
             prod_name = self._product.product_name
-        return _get_datasets(index, self._geobox, prod_name, time, mask=mask, point=point)
+        query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
+        datasets = index.datasets.search_eager(**query.search_terms)
+        datasets.sort(key=lambda d: d.center_time)
+        to_load = []
+        if point:
+            dataset_iter = iter(datasets)
+            for dataset in dataset_iter:
+                if mask:
+                    bbox = dataset.bounds
+                    compare_geometry = bounding_box_to_geom(bbox, dataset.crs, self._geobox.crs)
+                else:
+                    compare_geometry = dataset.extent.to_crs(self._geobox.crs)
+                if compare_geometry.contains(point):
+                    to_load.append(dataset)
+            return to_load
+        dataset_iter = iter(datasets)
+        date_index = {}
+        for dataset in dataset_iter:
+            if mask and self._product.pq_manual_merge:
+                to_load.append(dataset)
+            else:
+                if dataset.extent.to_crs(self._geobox.crs).intersects(self._geobox.extent):
+                    if dataset.center_time in date_index:
+                        date_index[dataset.center_time].append(dataset)
+                    else:
+                        date_index[dataset.center_time] = [dataset]
 
-    def data(self, datasets, mask=False):
-        if isinstance(datasets, xarray.DataArray):
-            sources = datasets
-        else:
-            holder = numpy.empty(shape=tuple(), dtype=object)
-            holder[()] = datasets
-            sources = xarray.DataArray(holder)
+        if mask and self._product.pq_manual_merge:
+            return to_load
+        elif not date_index:
+            return None
+
+        date_extents = {}
+        for dt, dt_dss in date_index.items():
+            geom = None
+            for ds in dt_dss:
+                if geom is None:
+                    geom = ds.extent.to_crs(self._geobox.crs)
+                else:
+                    geom = geom.union(ds.extent.to_crs(self._geobox.crs))
+            if geom.contains(self._geobox.extent):
+                return dt_dss
+            date_extents[dt] = geom
+
+        dates = date_extents.keys()
+
+        biggest_geom_first = sorted(dates, key=lambda x: [date_extents[x].area, x], reverse=True)
+
+        accum_geom = None
+        last_area = 0.0
+        for d in biggest_geom_first:
+            geom = date_extents[d]
+            if accum_geom is None:
+                accum_geom = geom
+                to_load.extend(date_index[d])
+            elif not accum_geom.contains(geom):
+                accum_geom = accum_geom.union(geom)
+                to_load.extend(date_index[d])
+        return to_load
+
+
+    def data(self, datasets, mask=False, manual_merge=False):
         if mask:
             prod = self._product.pq_product
             measurements = [self._set_resampling(prod.measurements[self._product.pq_band])]
@@ -80,68 +133,44 @@ class RGBTileGenerator(TileGenerator):
             prod = self._product.product
             measurements = [self._set_resampling(prod.measurements[name]) for name in self.needed_bands()]
         with datacube.set_options(reproject_threads=1, fast_load=True):
-            return datacube.Datacube.load_data(sources, self._geobox, measurements)
+            if manual_merge:
+                datas = [ ]
+                for i in range(0, len(datasets)):
+                    j = i + 1
+                    holder = numpy.empty(shape=tuple(), dtype=object)
+                    holder[()] = datasets[i:j]
+                    sources = xarray.DataArray(holder)
+                    datas.append(datacube.Datacube.load_data(sources, self._geobox, measurements))
+                merged = None
+                if mask:
+                    band = self._product.pq_band
+                else:
+                    for band in self.needed_bands():
+                        break
+                for d in datas:
+                    extent_mask = self._product.extent_mask_func(d, band)
+                    dm = d.where(extent_mask)
+                    if merged is None:
+                        merged = dm
+                    else:
+                        merged = merged.combine_first(dm)
+                if mask:
+                    merged = merged.astype('uint8', copy=True)
+                    merged[band].attrs = d[band].attrs
+                return merged
+            else:
+                if isinstance(datasets, xarray.DataArray):
+                    sources = datasets
+                else:
+                    holder = numpy.empty(shape=tuple(), dtype=object)
+                    holder[()] = datasets
+                    sources = xarray.DataArray(holder)
+                return datacube.Datacube.load_data(sources, self._geobox, measurements)
 
     def _set_resampling(self, measurement):
         mc = measurement.copy()
         # mc['resampling_method'] = 'cubic'
         return mc
-
-
-def _get_datasets(index, geobox, product, time_, mask=False, point=None):
-    query = datacube.api.query.Query(product=product, geopolygon=geobox.extent, time=time_)
-    datasets = index.datasets.search_eager(**query.search_terms)
-    datasets.sort(key=lambda d: d.center_time)
-    to_load = []
-    if point:
-        dataset_iter = iter(datasets)
-        for dataset in dataset_iter:
-            if mask:
-                bbox = dataset.bounds
-                compare_geometry = bounding_box_to_geom(bbox, dataset.crs, geobox.crs)
-            else:
-                compare_geometry = dataset.extent.to_crs(geobox.crs)
-            if compare_geometry.contains(point):
-                to_load.append(dataset)
-        return to_load
-    dataset_iter = iter(datasets)
-    date_index = {}
-    for dataset in dataset_iter:
-        if dataset.extent.to_crs(geobox.crs).intersects(geobox.extent):
-            if dataset.center_time in date_index:
-                date_index[dataset.center_time].append(dataset)
-            else:
-                date_index[dataset.center_time] = [dataset]
-
-    if not date_index:
-        return None
-
-    date_extents = {}
-    for dt, dt_dss in date_index.items():
-        geom = None
-        for ds in dt_dss:
-            if geom is None:
-                geom = ds.extent.to_crs(geobox.crs)
-            else:
-                geom = geom.union(ds.extent.to_crs(geobox.crs))
-        if geom.contains(geobox.extent):
-            return dt_dss
-        date_extents[dt] = geom
-
-    dates = date_extents.keys()
-
-    biggest_geom_first = sorted(dates, key=lambda x: date_extents[x].area, reverse=True)
-
-    accum_geom = None
-    for d in biggest_geom_first:
-        geom = date_extents[d]
-        if accum_geom is None:
-            accum_geom = geom
-            to_load.extend(date_index[d])
-        elif not accum_geom.contains(geom):
-            accum_geom = accum_geom.union(geom)
-            to_load.extend(date_index[d])
-    return to_load
 
 
 def get_map(args):
@@ -167,8 +196,8 @@ def get_map(args):
         raise WMSException("Multi-layer GetMap requests not supported")
     style_r = styles[0]
     if not style_r:
-        style_r = product.platform.default_style
-    style = product.platform.style_index.get(style_r)
+        style_r = product.default_style
+    style = product.style_index.get(style_r)
     if not style:
         raise WMSException("Style %s is not defined" % style_r,
                            WMSException.STYLE_NOT_DEFINED,
@@ -192,55 +221,53 @@ def get_map(args):
     # Tiling.
     tiler = RGBTileGenerator(product, geobox, time, style=style)
     dc = get_cube()
-    datasets = tiler.datasets(dc.index)
-    if style.pq_mask_flags:
-        pq_datasets = tiler.datasets(dc.index, mask=True)
-    else:
-        pq_datasets = None
-    if not datasets:
-        body = _write_empty(geobox)
-    elif zf < product.min_zoom:
-        # Zoomed out to far to properly render data.
-        # Construct a polygon which is the union of the extents of the matching datasets.
-        extent = None
-        for ds in datasets:
-            if extent:
-                extent = extent.union(ds.extent)
-            else:
-                extent = ds.extent
-        extent = extent.to_crs(geobox.crs)
-
-        body = _write_polygon(geobox, extent, product.zoom_fill)
-    else:
-        masks = []
-        data = tiler.data(datasets)
-        for band in style.needed_bands:
-            extent_mask = (data[band] != data[band].attrs['nodata'])
-        if pq_datasets:
-            # ??????
-            # sources = datacube.Datacube.group_datasets(datasets, datacube.api.query.query_group_by())
-            # pq_sources = datacube.Datacube.group_datasets(pq_datasets, datacube.api.query.query_group_by())
-            # sources, pq_sources = xarray.align(sources, pq_sources)
-
-            pq_data = tiler.data(pq_datasets, mask=True)
-
-            mask = make_mask(pq_data, **style.pq_mask_flags)
-            mask_data = mask.pixelquality
-            masks.append(mask_data)
-
-        if data:
-            body = _write_png(data, style, extent_mask, *masks)
-        else:
+    try:
+        datasets = tiler.datasets(dc.index)
+        if not datasets:
             body = _write_empty(geobox)
-    release_cube(dc)
+        elif zf < product.min_zoom:
+            # Zoomed out to far to properly render data.
+            # Construct a polygon which is the union of the extents of the matching datasets.
+            extent = None
+            for ds in datasets:
+                if extent:
+                    extent = extent.union(ds.extent)
+                else:
+                    extent = ds.extent
+            extent = extent.to_crs(geobox.crs)
+
+            body = _write_polygon(geobox, extent, product.zoom_fill)
+        else:
+            if style.masks:
+                pq_datasets = tiler.datasets(dc.index, mask=True)
+                pq_data = tiler.data(pq_datasets,
+                                     mask=True,
+                                     manual_merge=product.pq_manual_merge)
+            else:
+                pq_datasets = None
+                pq_data = None
+            masks = []
+            data = tiler.data(datasets)
+            for band in style.needed_bands:
+                # extent_mask = (data[band] != data[band].attrs['nodata'])
+                extent_mask = product.extent_mask_func(data, band)
+
+            if data:
+                body = _write_png(data, pq_data, style, extent_mask)
+            else:
+                body = _write_empty(geobox)
+        release_cube(dc)
+    except Exception as e:
+        release_cube(dc)
+        raise e
     return body, 200, resp_headers({"Content-Type": "image/png"})
 
 
-def _write_png(data, style, extent_mask, *masks):
+def _write_png(data, pq_data, style, extent_mask):
     width = data[data.crs.dimensions[1]].size
     height = data[data.crs.dimensions[0]].size
 
-    img_data = style.transform_data(data, extent_mask, *masks)
+    img_data = style.transform_data(data, pq_data, extent_mask)
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -350,99 +377,110 @@ def feature_info(args):
 
     # --- Begin code section requiring datacube.
     dc = get_cube()
-    geo_point = img_coords_to_geopoint(geobox, i, j)
-    datasets = tiler.datasets(dc.index, all_time=True,
-                              point=geo_point)
-    pq_datasets = tiler.datasets(dc.index, mask=True, all_time=True,
-                                 point=geo_point)
+    try:
+        geo_point = img_coords_to_geopoint(geobox, i, j)
+        datasets = tiler.datasets(dc.index, all_time=True,
+                                  point=geo_point)
+        pq_datasets = tiler.datasets(dc.index, mask=True, all_time=False,
+                                     point=geo_point)
 
-    if service_cfg["published_CRSs"][crsid]["geographic"]:
-        h_coord = "longitude"
-        v_coord = "latitude"
-    else:
-        h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
-        v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
-    isel_kwargs = {
-        h_coord: [i],
-        v_coord: [j]
-    }
-    if not datasets:
-        pass
-    else:
-        available_dates = set()
-        for d in datasets:
-            idx_date = (d.center_time + timedelta(hours=product.time_zone)).date()
-            available_dates.add(idx_date)
-            if idx_date == time and "lon" not in feature_json:
-                data = tiler.data([d])
+        if service_cfg["published_CRSs"][crsid]["geographic"]:
+            h_coord = "longitude"
+            v_coord = "latitude"
+        else:
+            h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
+            v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
+        isel_kwargs = {
+            h_coord: [i],
+            v_coord: [j]
+        }
+        if not datasets:
+            pass
+        else:
+            available_dates = set()
+            for d in datasets:
+                idx_date = (d.center_time + timedelta(hours=product.time_zone)).date()
+                available_dates.add(idx_date)
+                if idx_date == time and "lon" not in feature_json:
+                    data = tiler.data([d])
 
-                # Use i,j image coordinates to extract data pixel from dataset, and
-                # convert to lat/long geographic coordinates
-                if service_cfg["published_CRSs"][crsid]["geographic"]:
-                    # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
-                    feature_json["lat"] = data.latitude[j].item()
-                    feature_json["lon"] = data.longitude[i].item()
+                    # Use i,j image coordinates to extract data pixel from dataset, and
+                    # convert to lat/long geographic coordinates
+                    if service_cfg["published_CRSs"][crsid]["geographic"]:
+                        # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
+                        feature_json["lat"] = data.latitude[j].item()
+                        feature_json["lon"] = data.longitude[i].item()
+                        pixel_ds = data.isel(**isel_kwargs)
+                    else:
+                        # Non-geographic coordinate systems need to be projected onto a geographic
+                        # coordinate system.  Why not use EPSG:4326?
+                        # Extract coordinates in CRS
+                        data_x = getattr(data, h_coord)
+                        data_y = getattr(data, v_coord)
+
+                        x = data_x[i].item()
+                        y = data_y[j].item()
+                        pt = geometry.point(x, y, crs)
+
+                        # Project to EPSG:4326
+                        crs_geo = geometry.CRS("EPSG:4326")
+                        ptg = pt.to_crs(crs_geo)
+
+                        # Capture lat/long coordinates
+                        feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+
+                    # Extract data pixel
                     pixel_ds = data.isel(**isel_kwargs)
-                else:
-                    # Non-geographic coordinate systems need to be projected onto a geographic
-                    # coordinate system.  Why not use EPSG:4326?
-                    # Extract coordinates in CRS
-                    data_x = getattr(data, h_coord)
-                    data_y = getattr(data, v_coord)
 
-                    x = data_x[i].item()
-                    y = data_y[j].item()
-                    pt = geometry.point(x, y, crs)
+                    # Get accurate timestamp from dataset
+                    feature_json["time"] = d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
-                    # Project to EPSG:4326
-                    crs_geo = geometry.CRS("EPSG:4326")
-                    ptg = pt.to_crs(crs_geo)
+                    # Collect raw band values for pixel
+                    feature_json["bands"] = {}
+                    for band in tiler.needed_bands():
+                        band_val = pixel_ds[band].item()
+                        if band_val == -999:
+                            feature_json["bands"][band] = "n/a"
+                        else:
+                            feature_json["bands"][band] = pixel_ds[band].item()
 
-                    # Capture lat/long coordinates
-                    feature_json["lon"], feature_json["lat"] = ptg.coords[0]
-
-                # Extract data pixel
-                pixel_ds = data.isel(**isel_kwargs)
-
-                # Get accurate timestamp from dataset
-                feature_json["time"] = d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-
-                # Collect raw band values for pixel
-                feature_json["bands"] = {}
-                for band in tiler.needed_bands():
-                    band_val = pixel_ds[band].item()
-                    if band_val == -999:
-                        feature_json["bands"][band] = "n/a"
+            my_flags = 0
+            pqdi =-1
+            for pqd in pq_datasets:
+                pqdi += 1
+                idx_date = (pqd.center_time + timedelta(hours=product.time_zone)).date()
+                if idx_date == time:
+                    pq_data = tiler.data([pqd], mask=True)
+                    pq_pixel_ds = pq_data.isel(**isel_kwargs)
+                    # PQ flags
+                    m = product.pq_product.measurements[product.pq_band]
+                    flags = pq_pixel_ds[product.pq_band].item()
+                    if not flags & ~product.info_mask:
+                        my_flags = my_flags | flags
                     else:
-                        feature_json["bands"][band] = pixel_ds[band].item()
-
-        my_flags = 0
-        for pqd in pq_datasets:
-            idx_date = (pqd.center_time + timedelta(hours=product.time_zone)).date()
-            if idx_date == time:
-                pq_data = tiler.data([pqd], mask=True)
-                pq_pixel_ds = pq_data.isel(**isel_kwargs)
-                # PQ flags
-                m = product.pq_product.measurements[product.pq_band]
-                flags = pq_pixel_ds[product.pq_band].item()
-                my_flags = flags | flags
-                feature_json["flags"] = {}
-                for mk, mv in m["flags_definition"].items():
-                    bits = mv["bits"]
-                    values = mv["values"]
-                    if not isinstance(bits, int):
                         continue
-                    flag = 1 << bits
-                    if my_flags & flag:
-                        val = values['1']
-                    else:
-                        val = values['0']
-                    feature_json["flags"][mk] = val
+                    feature_json["flags"] = {}
+                    for mk, mv in m["flags_definition"].items():
+                        if mk in product.ignore_flags_info:
+                            continue
+                        bits = mv["bits"]
+                        values = mv["values"]
+                        if not isinstance(bits, int):
+                            continue
+                        flag = 1 << bits
+                        if my_flags & flag:
+                            val = values['1']
+                        else:
+                            val = values['0']
+                        feature_json["flags"][mk] = val
 
-        lads = list(available_dates)
-        lads.sort()
-        feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in lads]
-    release_cube(dc)
+            lads = list(available_dates)
+            lads.sort()
+            feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in lads]
+        release_cube(dc)
+    except Exception as e:
+        release_cube(dc)
+        raise e
     # --- End code section requiring datacube.
 
     result = {
