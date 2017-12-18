@@ -405,6 +405,23 @@ layer_cfg = [
                         "range": [0.0, 1.0],
                     },
                     {
+                        "name": "ndwi_cloudmask",
+                        "title": "NDWI with cloud and cloud-shadow masking",
+                        "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
+                        "heat_mapped": True,
+                        "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
+                        "needed_bands": ["green", "nir"],
+                        "range": [0.0, 1.0],
+                        "pq_masks": [
+                            {
+                                "flags": {
+                                    "cloud_acca": "no_cloud",
+                                    "cloud_fmask": "no_cloud",
+                                },
+                            },
+                        ],
+                    },
+                    {
                         "name": "ndbi",
                         "title": "NDBI",
                         "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",

@@ -9,8 +9,8 @@ def test_get_layers():
 
     assert layers.platforms
     for p in layers:
-        assert p.styles
         assert p.products
         for prd in p.products:
+            assert prd.styles
             assert layers.product_index[prd.name] == prd
             assert prd.title
