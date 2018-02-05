@@ -229,11 +229,16 @@ def get_map(args):
             # Zoomed out to far to properly render data.
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None
+            extent_crs = None
             for ds in datasets:
                 if extent:
-                    extent = extent.union(ds.extent)
+                    new_extent = ds.extent
+                    if new_extent.crs != extent_crs:
+                        new_extent = new_extent.to_crs(extent_crs)
+                    extent = extent.union(new_extent)
                 else:
                     extent = ds.extent
+                    extent_crs = extent.crs
             extent = extent.to_crs(geobox.crs)
 
             body = _write_polygon(geobox, extent, product.zoom_fill)
