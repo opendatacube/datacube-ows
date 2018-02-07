@@ -67,8 +67,10 @@ class RGBTileGenerator(TileGenerator):
         query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
         datasets = index.datasets.search_eager(**query.search_terms)
         datasets.sort(key=lambda d: d.center_time)
+        # Got all matching datasets
         to_load = []
         if point:
+            # Interested in a single point (i.e. GetFeatureInfo)
             dataset_iter = iter(datasets)
             for dataset in dataset_iter:
                 if mask:
@@ -79,37 +81,46 @@ class RGBTileGenerator(TileGenerator):
                 if compare_geometry.contains(point):
                     to_load.append(dataset)
             return to_load
+        # Interested in a larger tile (i.e. GetMap)
+        if not mask and self._product.data_manual_merge:
+            return datasets
+        if mask and self._product.pq_manual_merge:
+            return datasets
         dataset_iter = iter(datasets)
         date_index = {}
         for dataset in dataset_iter:
-            if mask and self._product.pq_manual_merge:
-                to_load.append(dataset)
-            else:
-                if dataset.extent.to_crs(self._geobox.crs).intersects(self._geobox.extent):
-                    if dataset.center_time in date_index:
-                        date_index[dataset.center_time].append(dataset)
-                    else:
-                        date_index[dataset.center_time] = [dataset]
+            # Building a date-index of intersecting datasets
+            if dataset.extent.to_crs(self._geobox.crs).intersects(self._geobox.extent):
+                if dataset.center_time in date_index:
+                    date_index[dataset.center_time].append(dataset)
+                else:
+                    date_index[dataset.center_time] = [dataset]
 
-        if mask and self._product.pq_manual_merge:
-            return to_load
-        elif not date_index:
+        if not date_index:
+            # No datasets intersect geobox
             return None
 
         date_extents = {}
         for dt, dt_dss in date_index.items():
+            # Loop over dates in the date index
+
+            # Build up a net extent of all datasets for this date
             geom = None
             for ds in dt_dss:
                 if geom is None:
                     geom = ds.extent.to_crs(self._geobox.crs)
                 else:
                     geom = geom.union(ds.extent.to_crs(self._geobox.crs))
-            if geom.contains(self._geobox.extent):
+            if not self._product.square_cropped and geom.contains(self._geobox.extent):
+                # This date fully overs the tile bounding box, just return it.
+                # This works fine for data with nice tightly-cropped extents like GA's NBART
+                # But is no good for data with chunky square extents with irregular margins like the raw USGS Level 1 data
                 return dt_dss
             date_extents[dt] = geom
 
         dates = date_extents.keys()
 
+        # Sort by size of geometry (probably pointless for square-cropped)
         biggest_geom_first = sorted(dates, key=lambda x: [date_extents[x].area, x], reverse=True)
 
         accum_geom = None
@@ -252,7 +263,7 @@ def get_map(args):
                 pq_datasets = None
                 pq_data = None
             masks = []
-            data = tiler.data(datasets)
+            data = tiler.data(datasets, manual_merge=product.data_manual_merge)
             for band in style.needed_bands:
                 # extent_mask = (data[band] != data[band].attrs['nodata'])
                 extent_mask = product.extent_mask_func(data, band)

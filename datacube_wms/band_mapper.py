@@ -16,6 +16,9 @@ class StyleDefBase(object):
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
         self.masks = [ StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", []) ]
+        self.needed_bands = set()
+        for band in self.product.always_fetch_bands:
+            self.needed_bands.add(band)
 
     def apply_masks(self, data, pq_data):
         if pq_data:
@@ -39,8 +42,6 @@ class LinearStyleDef(StyleDefBase):
         self.green_components = style_cfg["components"]["green"]
         self.blue_components = style_cfg["components"]["blue"]
         self.scale_factor = style_cfg["scale_factor"]
-        if not hasattr(self, "needed_bands"):
-            self.needed_bands = set()
         for band in self.red_components.keys():
             self.needed_bands.add(band)
         for band in self.green_components.keys():
@@ -138,8 +139,6 @@ def hm_index_func_for_range(func, rmin, rmax, nan_mask=True):
 class HeatMappedStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(HeatMappedStyleDef, self).__init__(product, style_cfg)
-        if not hasattr(self, "needed_bands"):
-            self.needed_bands = set()
         for b in style_cfg["needed_bands"]:
             self.needed_bands.add(b)
         self._index_function = style_cfg["index_function"]

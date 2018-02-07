@@ -42,6 +42,9 @@ class ProductLayerDef(object):
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
         self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150, 180, 200])
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
+        self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
+        self.data_manual_merge = product_cfg.get("data_manual_merge", False)
+
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
             self.info_mask = ~0
