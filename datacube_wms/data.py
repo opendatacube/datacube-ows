@@ -111,10 +111,8 @@ class RGBTileGenerator(TileGenerator):
                     geom = ds.extent.to_crs(self._geobox.crs)
                 else:
                     geom = geom.union(ds.extent.to_crs(self._geobox.crs))
-            if not self._product.square_cropped and geom.contains(self._geobox.extent):
+            if geom.contains(self._geobox.extent):
                 # This date fully overs the tile bounding box, just return it.
-                # This works fine for data with nice tightly-cropped extents like GA's NBART
-                # But is no good for data with chunky square extents with irregular margins like the raw USGS Level 1 data
                 return dt_dss
             date_extents[dt] = geom
 
@@ -254,18 +252,21 @@ def get_map(args):
 
             body = _write_polygon(geobox, extent, product.zoom_fill)
         else:
+            data = tiler.data(datasets, manual_merge=product.data_manual_merge)
             if style.masks:
-                pq_datasets = tiler.datasets(dc.index, mask=True)
-                pq_data = tiler.data(pq_datasets,
+                if product.pq_name == product.name:
+                    pq_data = xarray.Dataset({
+                        product.pq_band: (data[product.pq_band].dims, data[product.pq_band].astype("uint16"))},
+                        coords=data[product.pq_band].coords)
+                    pq_data[product.pq_band].attrs["flags_definition"] = data[product.pq_band].flags_definition
+                else:
+                    pq_datasets = tiler.datasets(dc.index, mask=True)
+                    pq_data = tiler.data(pq_datasets,
                                      mask=True,
                                      manual_merge=product.pq_manual_merge)
             else:
-                pq_datasets = None
                 pq_data = None
-            masks = []
-            data = tiler.data(datasets, manual_merge=product.data_manual_merge)
             for band in style.needed_bands:
-                # extent_mask = (data[band] != data[band].attrs['nodata'])
                 extent_mask = product.extent_mask_func(data, band)
 
             if data:

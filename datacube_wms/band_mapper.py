@@ -21,7 +21,7 @@ class StyleDefBase(object):
             self.needed_bands.add(band)
 
     def apply_masks(self, data, pq_data):
-        if pq_data:
+        if pq_data is not None:
             net_mask = None
             for mask in self.masks:
                 odc_mask = make_mask(pq_data, **mask.flags)
