@@ -420,9 +420,11 @@ def feature_info(args):
             pass
         else:
             available_dates = set()
+            drill = {}
             for d in datasets:
                 idx_date = (d.center_time + timedelta(hours=product.time_zone)).date()
                 available_dates.add(idx_date)
+                pixel_ds = None
                 if idx_date == time and "lon" not in feature_json:
                     data = tiler.data([d])
 
@@ -465,7 +467,21 @@ def feature_info(args):
                             feature_json["bands"][band] = "n/a"
                         else:
                             feature_json["bands"][band] = pixel_ds[band].item()
-
+                if product.band_drill:
+                    if pixel_ds is None:
+                        data = tiler.data([d])
+                        pixel_ds = data.isel(**isel_kwargs)
+                    drill_section = { }
+                    for band in product.band_drill:
+                        band_val = pixel_ds[band].item()
+                        if band_val == -999:
+                            drill_section[band] = "n/a"
+                        else:
+                            drill_section[band] = pixel_ds[band].item()
+                    drill[idx_date.strftime("%Y-%m-%d")] = drill_section
+            if drill:
+                feature_json["time_drill"] = drill
+                feature_json["datasets_read"] = len(datasets)
             my_flags = 0
             pqdi =-1
             for pqd in pq_datasets:
