@@ -135,8 +135,9 @@ layer_cfg = [
                                 "blue": 1.0
                             }
                         },
-                        # Used to clip off very bright areas.
-                        "scale_factor": 12.0
+                        # The raw band value range to be compressed to an 8 bit range for the output image tiles.
+                        # Band values outside this range are clipped to 0 or 255 as appropriate.
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "cloud_masked_rgb",
@@ -162,7 +163,7 @@ layer_cfg = [
                                 },
                             },
                         ],
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "cloud_and_shadow_masked_rgb",
@@ -190,7 +191,7 @@ layer_cfg = [
                                 },
                             },
                         ],
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "extended_rgb",
@@ -208,7 +209,7 @@ layer_cfg = [
                                 "coastal_aerosol": 0.4
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "wideband",
@@ -231,7 +232,7 @@ layer_cfg = [
                                 "coastal_aerosol": 0.255,
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "infra_red",
@@ -248,7 +249,7 @@ layer_cfg = [
                                 "nir": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "coastal_aerosol",
@@ -265,7 +266,7 @@ layer_cfg = [
                                 "coastal_aerosol": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "blue",
@@ -282,7 +283,7 @@ layer_cfg = [
                                 "blue": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "green",
@@ -299,7 +300,7 @@ layer_cfg = [
                                 "green": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "red",
@@ -316,7 +317,7 @@ layer_cfg = [
                                 "red": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "nir",
@@ -333,7 +334,7 @@ layer_cfg = [
                                 "nir": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "swir1",
@@ -350,7 +351,7 @@ layer_cfg = [
                                 "swir1": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "swir2",
@@ -367,7 +368,7 @@ layer_cfg = [
                                 "swir2": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     #
                     # Examples of non-linear heat-mapped styles.
@@ -552,7 +553,7 @@ layer_cfg = [
                                 "blue": 1.0
                             }
                         },
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     },
                     {
                         "name": "rgb_ndvi_cloudmask",
@@ -583,7 +584,7 @@ layer_cfg = [
                                 },
                             },
                         ],
-                        "scale_factor": 12.0
+                        "scale_range": [0.0, 3000.0]
                     }
                 ],
                 # Default style (if request does not specify style)
@@ -740,7 +741,7 @@ to_be_added_to_layer_cfg = {
                     "blue": 1.0
                 }
             },
-            "scale_factor": 12.0
+            "scale_range": [0.0, 3000.0]
         },
         {
             "name": "wideband",
@@ -760,7 +761,7 @@ to_be_added_to_layer_cfg = {
                     "blue": 0.5,
                 }
             },
-            "scale_factor": 12.0
+            "scale_range": [0.0, 3000.0]
         },
         {
             "name": "infra_red",
