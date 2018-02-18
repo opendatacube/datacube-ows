@@ -44,6 +44,7 @@ class ProductLayerDef(object):
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
         self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
+        self.band_drill = product_cfg.get("band_drill", [])
 
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)

@@ -103,6 +103,10 @@ layer_cfg = [
                 # (defaults to empty list)
                 "ignore_info_flags": [],
 
+                # Bands to include in time-dimension "pixel drill".
+                # Don't activate in production unless you really know what you're doing.
+                "band_drill": ["nir", "red", "green", "blue"],
+
                 # Styles.
                 #
                 # See band_mapper.py
