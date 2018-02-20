@@ -43,7 +43,7 @@ class RGBTileGenerator(TileGenerator):
         self._geobox = geobox
 
         start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
-        self._time = [start_time, time + timedelta(days=1)]
+        self._time = [start_time, start_time + timedelta(days=1)]
         self._style = style
 
     def needed_bands(self):
@@ -261,9 +261,12 @@ def get_map(args):
                     pq_data[product.pq_band].attrs["flags_definition"] = data[product.pq_band].flags_definition
                 else:
                     pq_datasets = tiler.datasets(dc.index, mask=True)
-                    pq_data = tiler.data(pq_datasets,
+                    if pq_datasets:
+                        pq_data = tiler.data(pq_datasets,
                                      mask=True,
                                      manual_merge=product.pq_manual_merge)
+                    else:
+                        pq_data = None
             else:
                 pq_data = None
             for band in style.needed_bands:
