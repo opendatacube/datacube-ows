@@ -62,7 +62,11 @@ class ProductLayerDef(object):
         self.styles = product_cfg["styles"]
         self.default_style = product_cfg["default_style"]
         self.style_index = {s["name"]: StyleDef(self, s) for s in self.styles}
-        self.extent_mask_func = product_cfg["extent_mask_func"]
+        try:
+            i = iter(product_cfg["extent_mask_func"])
+            self.extent_mask_func = product_cfg["extent_mask_func"]
+        except TypeError:
+            self.extent_mask_func = [ product_cfg["extent_mask_func"] ]
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
 
 class PlatformLayerDef(object):
