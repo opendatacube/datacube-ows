@@ -157,7 +157,12 @@ class RGBTileGenerator(TileGenerator):
                     for band in self.needed_bands():
                         break
                 for d in datas:
-                    extent_mask = self._product.extent_mask_func(d, band)
+                    extent_mask = None
+                    for f in self._product.extent_mask_func:
+                        if extent_mask is None:
+                            extent_mask = f(d, band)
+                        else:
+                            extent_mask &= f(d, band)
                     dm = d.where(extent_mask)
                     if merged is None:
                         merged = dm
@@ -269,8 +274,13 @@ def get_map(args):
                         pq_data = None
             else:
                 pq_data = None
+            extent_mask = None
             for band in style.needed_bands:
-                extent_mask = product.extent_mask_func(data, band)
+                for f in product.extent_mask_func:
+                    if extent_mask is None:
+                        extent_mask = f(data, band)
+                    else:
+                        extent_mask &= f(data, band)
 
             if data:
                 body = _write_png(data, pq_data, style, extent_mask)
