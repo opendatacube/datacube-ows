@@ -5,7 +5,7 @@ from datacube.utils import geometry
 from flask import render_template
 import math
 
-from datacube_wms.wms_cfg import response_cfg
+from datacube_wms.wms_cfg import response_cfg, service_cfg
 from datacube_wms.wms_layers import get_layers
 
 
@@ -167,3 +167,85 @@ def bounding_box_to_geom(bbox, bb_crs, target_crs):
         (bbox.left, bbox.top),
     ], bb_crs)
     return poly.to_crs(target_crs)
+
+
+class GetParameters(object):
+    def __init__(self, args, layer_arg="layers"):
+        # Version
+        self.version = get_arg(args, "version", "WMS version",
+                               permitted_values=['1.1.1', '1.3.0'])
+        # CRS
+        if self.version == '1.1.1':
+            crs_arg = "srs"
+        else:
+            crs_arg = "crs"
+        self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
+                        errcode=WMSException.INVALID_CRS,
+                        permitted_values=service_cfg["published_CRSs"].keys())
+        self.crs = geometry.CRS(self.crsid)
+        # Layers
+        self.product = self.get_product(args)
+
+        # BBox, height and width parameters
+        self.geobox = _get_geobox(args, self.crs)
+        # Time parameter
+        self.time = get_time(args, self.product)
+        self.method_specific_init(args)
+
+    def method_specific_init(self, args):
+        return
+
+    def get_product(self, args):
+        return get_product_from_arg(args)
+
+
+class GetMapParameters(GetParameters):
+    def method_specific_init(self, args):
+        # Validate Format parameter
+        self.format = get_arg(args, "format", "image format",
+                  errcode=WMSException.INVALID_FORMAT,
+                  lower=True,
+                  permitted_values=["image/png"])
+        # Styles
+        self.styles = args.get("styles", "").split(",")
+        if len(self.styles) != 1:
+            raise WMSException("Multi-layer GetMap requests not supported")
+        style_r = self.styles[0]
+        if not style_r:
+            style_r = self.product.default_style
+        self.style = self.product.style_index.get(style_r)
+        if not self.style:
+            raise WMSException("Style %s is not defined" % style_r,
+                               WMSException.STYLE_NOT_DEFINED,
+                               locator="Style parameter")
+        # Zoom factor
+        self.zf = zoom_factor(args, self.crs)
+
+
+class GetFeatureInfoParameters(GetParameters):
+    def get_product(self, args):
+        return get_product_from_arg(args, "query_layers")
+
+    def method_specific_init(self, args):
+        # Validate Formata parameter
+        self.format = get_arg(args, "info_format", "info format", lower=True,
+                  errcode=WMSException.INVALID_FORMAT,
+                  permitted_values=["application/json"])
+        # Point coords
+        if self.version == "1.1.1":
+            coords = ["x", "y"]
+        else:
+            coords = ["i", "j"]
+        i = args.get(coords[0])
+        j = args.get(coords[1])
+        if i is None:
+            raise WMSException("HorizontalCoordinate not supplied", WMSException.INVALID_POINT,
+                               "%s parameter" % coords[0])
+        if j is None:
+            raise WMSException("Vertical coordinate not supplied", WMSException.INVALID_POINT,
+                               "%s parameter" % coords[0])
+        self.i = int(i)
+        self.j = int(j)
+
+        return
+

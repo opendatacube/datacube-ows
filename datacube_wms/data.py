@@ -1,50 +1,28 @@
-from datetime import timedelta, datetime
 import json
-from skimage.draw import polygon as skimg_polygon
-
-import datacube
+from datetime import timedelta, datetime
 
 import numpy
 import xarray
 from affine import Affine
+from rasterio.io import MemoryFile
+from skimage.draw import polygon as skimg_polygon
 
-from datacube.storage.masking import make_mask, mask_invalid_data
+import datacube
 from datacube.utils import geometry
 
-from datacube_wms.cube_pool import get_cube, release_cube, pool_size
+from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.wms_cfg import service_cfg
-from datacube_wms.wms_utils import get_arg, WMSException, _get_geobox, resp_headers, get_product_from_arg, get_time, \
-    img_coords_to_geopoint, bounding_box_to_geom, zoom_factor
+from datacube_wms.wms_utils import resp_headers, img_coords_to_geopoint, \
+        bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters
 
-# travis can only get earlier version of rasterio which doesn't have MemoryFile, so
-# - tell pylint to ingnore inport error
-# - catch ImportError so pytest doctest don't fall over
-try:
-    from rasterio.io import MemoryFile  # pylint: disable=import-error
-except ImportError:
-    MemoryFile = None
-
-
-class TileGenerator(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def datasets(self, index):
-        pass
-
-    def data(self, datasets):
-        pass
-
-
-class RGBTileGenerator(TileGenerator):
+class DataStacker(object):
     def __init__(self, product, geobox, time, style=None, **kwargs):
-        super(RGBTileGenerator, self).__init__(**kwargs)
+        super(DataStacker, self).__init__(**kwargs)
         self._product = product
         self._geobox = geobox
-
+        self._style = style
         start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
         self._time = [start_time, start_time + timedelta(days=1)]
-        self._style = style
 
     def needed_bands(self):
         if self._style:
@@ -52,53 +30,67 @@ class RGBTileGenerator(TileGenerator):
         else:
             return self._product.product.measurements.keys()
 
+    def point_in_dataset_by_bounds(self, dataset, point):
+        # Return true if dataset contains point
+        compare_geometry = bounding_box_to_geom(dataset.bounds, dataset.crs, self._geobox.crs)
+        return compare_geometry.contains(point)
+
+    def point_in_dataset_by_extent(self, dataset, point):
+        # Return true if dataset contains point
+        compare_geometry = dataset.extent.to_crs(self._geobox.crs)
+        return compare_geometry.contains(point)
+
     def datasets(self, index, mask=False, all_time=False, point=None):
+        # Setup
         if all_time:
+            # Use full available time range
             times = self._product.ranges["times"]
             time = [times[0], times[-1] + timedelta(days=1)]
         else:
             time = self._time
         if mask and self._product.pq_name:
+            # Use PQ product
             prod_name = self._product.pq_name
         elif mask:
+            # No PQ product, so no PQ datasets.
             return []
         else:
+            # Use band product
             prod_name = self._product.product_name
+
+        # ODC Dataset Query
         query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
         datasets = index.datasets.search_eager(**query.search_terms)
+        # And sort by date
         datasets.sort(key=lambda d: d.center_time)
+
         # Got all matching datasets
-        to_load = []
         if point:
             # Interested in a single point (i.e. GetFeatureInfo)
-            dataset_iter = iter(datasets)
-            for dataset in dataset_iter:
-                if mask:
-                    bbox = dataset.bounds
-                    compare_geometry = bounding_box_to_geom(bbox, dataset.crs, self._geobox.crs)
-                else:
-                    compare_geometry = dataset.extent.to_crs(self._geobox.crs)
-                if compare_geometry.contains(point):
-                    to_load.append(dataset)
-            return to_load
+            def filt_func(dataset):
+                # Cleanup Note. Previously by_bounds was used for PQ data (mask==True)
+                return self.point_in_dataset_by_extent(dataset, point)
+            return list(filter(filt_func, iter(datasets)))
+
         # Interested in a larger tile (i.e. GetMap)
+        # If manual merge, do no further filtering of datasets.
         if not mask and self._product.data_manual_merge:
             return datasets
         if mask and self._product.pq_manual_merge:
             return datasets
-        dataset_iter = iter(datasets)
+
+        # Remove un-needed or redundant datasets
         date_index = {}
-        for dataset in dataset_iter:
-            # Building a date-index of intersecting datasets
+        for dataset in iter(datasets):
+            # Build a date-index of intersecting datasets
             if dataset.extent.to_crs(self._geobox.crs).intersects(self._geobox.extent):
                 if dataset.center_time in date_index:
                     date_index[dataset.center_time].append(dataset)
                 else:
                     date_index[dataset.center_time] = [dataset]
-
         if not date_index:
             # No datasets intersect geobox
-            return None
+            return []
 
         date_extents = {}
         for dt, dt_dss in date_index.items():
@@ -118,11 +110,11 @@ class RGBTileGenerator(TileGenerator):
 
         dates = date_extents.keys()
 
-        # Sort by size of geometry (probably pointless for square-cropped)
+        # Sort by size of geometry
         biggest_geom_first = sorted(dates, key=lambda x: [date_extents[x].area, x], reverse=True)
 
         accum_geom = None
-        last_area = 0.0
+        to_load = []
         for d in biggest_geom_first:
             geom = date_extents[d]
             if accum_geom is None:
@@ -133,16 +125,17 @@ class RGBTileGenerator(TileGenerator):
                 to_load.extend(date_index[d])
         return to_load
 
-
     def data(self, datasets, mask=False, manual_merge=False):
         if mask:
             prod = self._product.pq_product
-            measurements = [self._set_resampling(prod.measurements[self._product.pq_band])]
+            measurements = [ prod.measurements[self._product.pq_band].copy() ]
         else:
             prod = self._product.product
-            measurements = [self._set_resampling(prod.measurements[name]) for name in self.needed_bands()]
+            measurements = [ prod.measurements[name].copy() for name in self.needed_bands()]
+
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
+                # manual merge
                 datas = [ ]
                 for i in range(0, len(datasets)):
                     j = i + 1
@@ -173,6 +166,7 @@ class RGBTileGenerator(TileGenerator):
                     merged[band].attrs = d[band].attrs
                 return merged
             else:
+                # Merge performed already by dataset extent
                 if isinstance(datasets, xarray.DataArray):
                     sources = datasets
                 else:
@@ -181,65 +175,19 @@ class RGBTileGenerator(TileGenerator):
                     sources = xarray.DataArray(holder)
                 return datacube.Datacube.load_data(sources, self._geobox, measurements)
 
-    def _set_resampling(self, measurement):
-        mc = measurement.copy()
-        # mc['resampling_method'] = 'cubic'
-        return mc
-
 
 def get_map(args):
-    # Version parameter
-    # GetMap 1.1.1 must be supported for Terria
-    version = get_arg(args, "version", "WMS version",
-                      permitted_values=["1.1.1", "1.3.0"])
-
-    # CRS parameter
-    if version == "1.1.1":
-        crs_arg = "srs"
-    else:
-        crs_arg = "crs"
-    crsid = get_arg(args, crs_arg, "Coordinate Reference System",
-                    errcode=WMSException.INVALID_CRS,
-                    permitted_values=service_cfg["published_CRSs"].keys())
-    crs = geometry.CRS(crsid)
-
-    # Layers and Styles parameters
-    product = get_product_from_arg(args)
-    styles = args.get("styles", "").split(",")
-    if len(styles) != 1:
-        raise WMSException("Multi-layer GetMap requests not supported")
-    style_r = styles[0]
-    if not style_r:
-        style_r = product.default_style
-    style = product.style_index.get(style_r)
-    if not style:
-        raise WMSException("Style %s is not defined" % style_r,
-                           WMSException.STYLE_NOT_DEFINED,
-                           locator="Style parameter")
-
-    # Format parameter
-    fmt = get_arg(args, "format", "image format",
-                  errcode=WMSException.INVALID_FORMAT,
-                  lower=True,
-                  permitted_values=["image/png"])
-
-    # BBox, height and width parameters
-    geobox = _get_geobox(args, crs)
-
-    # Zoom Factor
-    zf = zoom_factor(args, crs)
-
-    # Time parameter
-    time = get_time(args, product)
+    # Parse GET parameters
+    params = GetMapParameters(args)
 
     # Tiling.
-    tiler = RGBTileGenerator(product, geobox, time, style=style)
+    stacker = DataStacker(params.product, params.geobox, params.time, style=params.style)
     dc = get_cube()
     try:
-        datasets = tiler.datasets(dc.index)
+        datasets = stacker.datasets(dc.index)
         if not datasets:
-            body = _write_empty(geobox)
-        elif zf < product.min_zoom:
+            body = _write_empty(params.geobox)
+        elif params.zf < params.product.min_zoom:
             # Zoomed out to far to properly render data.
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None
@@ -253,39 +201,39 @@ def get_map(args):
                 else:
                     extent = ds.extent
                     extent_crs = extent.crs
-            extent = extent.to_crs(geobox.crs)
+            extent = extent.to_crs(params.crs)
 
-            body = _write_polygon(geobox, extent, product.zoom_fill)
+            body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
         else:
-            data = tiler.data(datasets, manual_merge=product.data_manual_merge)
-            if style.masks:
-                if product.pq_name == product.name:
+            data = stacker.data(datasets, manual_merge=params.product.data_manual_merge)
+            if params.style.masks:
+                if params.product.pq_name == params.product.name:
                     pq_data = xarray.Dataset({
-                        product.pq_band: (data[product.pq_band].dims, data[product.pq_band].astype("uint16"))},
-                        coords=data[product.pq_band].coords)
-                    pq_data[product.pq_band].attrs["flags_definition"] = data[product.pq_band].flags_definition
+                        params.product.pq_band: (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))},
+                        coords=data[params.product.pq_band].coords)
+                    pq_data[params.product.pq_band].attrs["flags_definition"] = data[params.product.pq_band].flags_definition
                 else:
-                    pq_datasets = tiler.datasets(dc.index, mask=True)
+                    pq_datasets = stacker.datasets(dc.index, mask=True)
                     if pq_datasets:
-                        pq_data = tiler.data(pq_datasets,
+                        pq_data = stacker.data(pq_datasets,
                                      mask=True,
-                                     manual_merge=product.pq_manual_merge)
+                                     manual_merge=params.product.pq_manual_merge)
                     else:
                         pq_data = None
             else:
                 pq_data = None
             extent_mask = None
-            for band in style.needed_bands:
-                for f in product.extent_mask_func:
+            for band in params.style.needed_bands:
+                for f in params.product.extent_mask_func:
                     if extent_mask is None:
                         extent_mask = f(data, band)
                     else:
                         extent_mask &= f(data, band)
 
             if data:
-                body = _write_png(data, pq_data, style, extent_mask)
+                body = _write_png(data, pq_data, params.style, extent_mask)
             else:
-                body = _write_empty(geobox)
+                body = _write_empty(params.geobox)
         release_cube(dc)
     except Exception as e:
         release_cube(dc)
@@ -364,70 +312,31 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 
 def feature_info(args):
-    # Version parameter
-    version = get_arg(args, "version", "WMS version",
-                      permitted_values=["1.1.1", "1.3.0"])
-
-    # Layer/product
-    product = get_product_from_arg(args, "query_layers")
-
-    fmt = get_arg(args, "info_format", "info format", lower=True, errcode=WMSException.INVALID_FORMAT,
-                  permitted_values=["application/json"])
-
-    # CRS parameter
-    if version == "1.1.1":
-        crs_arg = "srs"
-    else:
-        crs_arg = "crs"
-    crsid = get_arg(args, crs_arg, "Coordinate Reference System",
-                    errcode=WMSException.INVALID_FORMAT,
-                    permitted_values=service_cfg["published_CRSs"].keys())
-    crs = geometry.CRS(crsid)
-
-    # BBox, height and width parameters
-    geobox = _get_geobox(args, crs)
-
-    # Time parameter
-    time = get_time(args, product)
-
-    # Point coords
-    if version == "1.1.1":
-        coords = ["x", "y"]
-    else:
-        coords = ["i", "j"]
-    i = args.get(coords[0])
-    j = args.get(coords[1])
-    if i is None:
-        raise WMSException("HorizontalCoordinate not supplied", WMSException.INVALID_POINT,
-                           "%s parameter" % coords[0])
-    if j is None:
-        raise WMSException("Vertical coordinate not supplied", WMSException.INVALID_POINT,
-                           "%s parameter" % coords[0])
-    i = int(i)
-    j = int(j)
+    # Parse GET parameters
+    params = GetFeatureInfoParameters(args)
 
     # Prepare to extract feature info
-    tiler = RGBTileGenerator(product, geobox, time)
+    tiler = DataStacker(params.product, params.geobox, params.time)
     feature_json = {}
 
     # --- Begin code section requiring datacube.
     dc = get_cube()
     try:
-        geo_point = img_coords_to_geopoint(geobox, i, j)
+        geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
         datasets = tiler.datasets(dc.index, all_time=True,
                                   point=geo_point)
         pq_datasets = tiler.datasets(dc.index, mask=True, all_time=False,
                                      point=geo_point)
 
-        if service_cfg["published_CRSs"][crsid]["geographic"]:
+        if service_cfg["published_CRSs"][params.crsid]["geographic"]:
             h_coord = "longitude"
             v_coord = "latitude"
         else:
-            h_coord = service_cfg["published_CRSs"][crsid]["horizontal_coord"]
-            v_coord = service_cfg["published_CRSs"][crsid]["vertical_coord"]
+            h_coord = service_cfg["published_CRSs"][params.crsid]["horizontal_coord"]
+            v_coord = service_cfg["published_CRSs"][params.crsid]["vertical_coord"]
         isel_kwargs = {
-            h_coord: [i],
-            v_coord: [j]
+            h_coord: [params.i],
+            v_coord: [params.j]
         }
         if not datasets:
             pass
@@ -435,18 +344,18 @@ def feature_info(args):
             available_dates = set()
             drill = {}
             for d in datasets:
-                idx_date = (d.center_time + timedelta(hours=product.time_zone)).date()
+                idx_date = (d.center_time + timedelta(hours=params.product.time_zone)).date()
                 available_dates.add(idx_date)
                 pixel_ds = None
-                if idx_date == time and "lon" not in feature_json:
+                if idx_date == params.time and "lon" not in feature_json:
                     data = tiler.data([d])
 
                     # Use i,j image coordinates to extract data pixel from dataset, and
                     # convert to lat/long geographic coordinates
-                    if service_cfg["published_CRSs"][crsid]["geographic"]:
+                    if service_cfg["published_CRSs"][params.crsid]["geographic"]:
                         # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
-                        feature_json["lat"] = data.latitude[j].item()
-                        feature_json["lon"] = data.longitude[i].item()
+                        feature_json["lat"] = data.latitude[params.j].item()
+                        feature_json["lon"] = data.longitude[params.i].item()
                         pixel_ds = data.isel(**isel_kwargs)
                     else:
                         # Non-geographic coordinate systems need to be projected onto a geographic
@@ -455,9 +364,9 @@ def feature_info(args):
                         data_x = getattr(data, h_coord)
                         data_y = getattr(data, v_coord)
 
-                        x = data_x[i].item()
-                        y = data_y[j].item()
-                        pt = geometry.point(x, y, crs)
+                        x = data_x[params.i].item()
+                        y = data_y[params.j].item()
+                        pt = geometry.point(x, y, params.crs)
 
                         # Project to EPSG:4326
                         crs_geo = geometry.CRS("EPSG:4326")
@@ -480,12 +389,12 @@ def feature_info(args):
                             feature_json["bands"][band] = "n/a"
                         else:
                             feature_json["bands"][band] = pixel_ds[band].item()
-                if product.band_drill:
+                if params.product.band_drill:
                     if pixel_ds is None:
                         data = tiler.data([d])
                         pixel_ds = data.isel(**isel_kwargs)
                     drill_section = { }
-                    for band in product.band_drill:
+                    for band in params.product.band_drill:
                         band_val = pixel_ds[band].item()
                         if band_val == -999:
                             drill_section[band] = "n/a"
@@ -499,20 +408,20 @@ def feature_info(args):
             pqdi =-1
             for pqd in pq_datasets:
                 pqdi += 1
-                idx_date = (pqd.center_time + timedelta(hours=product.time_zone)).date()
-                if idx_date == time:
+                idx_date = (pqd.center_time + timedelta(hours=params.product.time_zone)).date()
+                if idx_date == params.time:
                     pq_data = tiler.data([pqd], mask=True)
                     pq_pixel_ds = pq_data.isel(**isel_kwargs)
                     # PQ flags
-                    m = product.pq_product.measurements[product.pq_band]
-                    flags = pq_pixel_ds[product.pq_band].item()
-                    if not flags & ~product.info_mask:
+                    m = params.product.pq_product.measurements[params.product.pq_band]
+                    flags = pq_pixel_ds[params.product.pq_band].item()
+                    if not flags & ~params.product.info_mask:
                         my_flags = my_flags | flags
                     else:
                         continue
                     feature_json["flags"] = {}
                     for mk, mv in m["flags_definition"].items():
-                        if mk in product.ignore_flags_info:
+                        if mk in params.product.ignore_flags_info:
                             continue
                         bits = mv["bits"]
                         values = mv["values"]
