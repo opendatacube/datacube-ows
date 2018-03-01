@@ -66,7 +66,7 @@ class DataStacker(object):
         offset_aware = False
         offset_naive = False
         for d in datasets:
-            if d.utcoffset is None:
+            if d.center_time.utcoffset is None:
                 offset_naive = True
             else:
                 offset_aware = True
