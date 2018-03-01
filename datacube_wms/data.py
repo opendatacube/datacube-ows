@@ -12,7 +12,7 @@ from datacube.utils import geometry
 
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.wms_cfg import service_cfg
-from datacube_wms.wms_utils import resp_headers, img_coords_to_geopoint, \
+from datacube_wms.wms_utils import resp_headers, img_coords_to_geopoint, int_trim, \
         bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters
 
 class DataStacker(object):
@@ -30,12 +30,13 @@ class DataStacker(object):
         else:
             return self._product.product.measurements.keys()
 
-    def point_in_dataset_by_bounds(self, dataset, point):
+    def point_in_dataset_by_bounds(self, point, dataset):
         # Return true if dataset contains point
+        # Deprecated - prefer point_in_dataset_by_extent
         compare_geometry = bounding_box_to_geom(dataset.bounds, dataset.crs, self._geobox.crs)
         return compare_geometry.contains(point)
 
-    def point_in_dataset_by_extent(self, dataset, point):
+    def point_in_dataset_by_extent(self, point, dataset):
         # Return true if dataset contains point
         compare_geometry = dataset.extent.to_crs(self._geobox.crs)
         return compare_geometry.contains(point)
@@ -64,22 +65,25 @@ class DataStacker(object):
         # And sort by date
         datasets.sort(key=lambda d: d.center_time)
 
-        # Got all matching datasets
         if point:
             # Interested in a single point (i.e. GetFeatureInfo)
             def filt_func(dataset):
-                # Cleanup Note. Previously by_bounds was used for PQ data (mask==True)
-                return self.point_in_dataset_by_extent(dataset, point)
+                # Cleanup Note. Previously by_bounds was used for PQ data
+                return self.point_in_dataset_by_extent(point, dataset)
             return list(filter(filt_func, iter(datasets)))
+        else:
+            # Interested in a larger tile (i.e. GetMap)
+            if not mask and self._product.data_manual_merge:
+                # Band-data manual merge, do no further filtering of datasets.
+                return datasets
+            elif mask and self._product.pq_manual_merge:
+                # PQ manual merge, do no further filtering of datasets.
+                return datasets
+            else:
+                # Remove un-needed or redundant datasets
+                return self.filter_datasets_by_extent(datasets)
 
-        # Interested in a larger tile (i.e. GetMap)
-        # If manual merge, do no further filtering of datasets.
-        if not mask and self._product.data_manual_merge:
-            return datasets
-        if mask and self._product.pq_manual_merge:
-            return datasets
-
-        # Remove un-needed or redundant datasets
+    def filter_datasets_by_extent(self, datasets):
         date_index = {}
         for dataset in iter(datasets):
             # Build a date-index of intersecting datasets
@@ -114,16 +118,16 @@ class DataStacker(object):
         biggest_geom_first = sorted(dates, key=lambda x: [date_extents[x].area, x], reverse=True)
 
         accum_geom = None
-        to_load = []
+        filtered = []
         for d in biggest_geom_first:
             geom = date_extents[d]
             if accum_geom is None:
                 accum_geom = geom
-                to_load.extend(date_index[d])
+                filtered.extend(date_index[d])
             elif not accum_geom.contains(geom):
                 accum_geom = accum_geom.union(geom)
-                to_load.extend(date_index[d])
-        return to_load
+                filtered.extend(date_index[d])
+        return filtered
 
     def data(self, datasets, mask=False, manual_merge=False):
         if mask:
@@ -135,36 +139,7 @@ class DataStacker(object):
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
-                # manual merge
-                datas = [ ]
-                for i in range(0, len(datasets)):
-                    j = i + 1
-                    holder = numpy.empty(shape=tuple(), dtype=object)
-                    holder[()] = datasets[i:j]
-                    sources = xarray.DataArray(holder)
-                    datas.append(datacube.Datacube.load_data(sources, self._geobox, measurements))
-                merged = None
-                if mask:
-                    band = self._product.pq_band
-                else:
-                    for band in self.needed_bands():
-                        break
-                for d in datas:
-                    extent_mask = None
-                    for f in self._product.extent_mask_func:
-                        if extent_mask is None:
-                            extent_mask = f(d, band)
-                        else:
-                            extent_mask &= f(d, band)
-                    dm = d.where(extent_mask)
-                    if merged is None:
-                        merged = dm
-                    else:
-                        merged = merged.combine_first(dm)
-                if mask:
-                    merged = merged.astype('uint8', copy=True)
-                    merged[band].attrs = d[band].attrs
-                return merged
+                return self.manual_data_stack(datasets, measurements, mask)
             else:
                 # Merge performed already by dataset extent
                 if isinstance(datasets, xarray.DataArray):
@@ -175,6 +150,37 @@ class DataStacker(object):
                     sources = xarray.DataArray(holder)
                 return datacube.Datacube.load_data(sources, self._geobox, measurements)
 
+    def manual_data_stack(self, datasets, measurements, mask):
+        # manual merge
+        datas = []
+        for i in range(0, len(datasets)):
+            j = i + 1
+            holder = numpy.empty(shape=tuple(), dtype=object)
+            holder[()] = datasets[i:j]
+            sources = xarray.DataArray(holder)
+            datas.append(datacube.Datacube.load_data(sources, self._geobox, measurements))
+        merged = None
+        if mask:
+            band = self._product.pq_band
+        else:
+            for band in self.needed_bands():
+                break
+        for d in datas:
+            extent_mask = None
+            for f in self._product.extent_mask_func:
+                if extent_mask is None:
+                    extent_mask = f(d, band)
+                else:
+                    extent_mask &= f(d, band)
+            dm = d.where(extent_mask)
+            if merged is None:
+                merged = dm
+            else:
+                merged = merged.combine_first(dm)
+        if mask:
+            merged = merged.astype('uint8', copy=True)
+            merged[band].attrs = d[band].attrs
+        return merged
 
 def get_map(args):
     # Parse GET parameters
@@ -275,10 +281,6 @@ def _write_empty(geobox):
         return memfile.read()
 
 
-def int_trim(val, minval, maxval):
-    return max(min(val, maxval), minval)
-
-
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
@@ -316,16 +318,16 @@ def feature_info(args):
     params = GetFeatureInfoParameters(args)
 
     # Prepare to extract feature info
-    tiler = DataStacker(params.product, params.geobox, params.time)
+    stacker = DataStacker(params.product, params.geobox, params.time)
     feature_json = {}
 
     # --- Begin code section requiring datacube.
     dc = get_cube()
     try:
         geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
-        datasets = tiler.datasets(dc.index, all_time=True,
+        datasets = stacker.datasets(dc.index, all_time=True,
                                   point=geo_point)
-        pq_datasets = tiler.datasets(dc.index, mask=True, all_time=False,
+        pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False,
                                      point=geo_point)
 
         if service_cfg["published_CRSs"][params.crsid]["geographic"]:
@@ -348,7 +350,7 @@ def feature_info(args):
                 available_dates.add(idx_date)
                 pixel_ds = None
                 if idx_date == params.time and "lon" not in feature_json:
-                    data = tiler.data([d])
+                    data = stacker.data([d])
 
                     # Use i,j image coordinates to extract data pixel from dataset, and
                     # convert to lat/long geographic coordinates
@@ -383,7 +385,7 @@ def feature_info(args):
 
                     # Collect raw band values for pixel
                     feature_json["bands"] = {}
-                    for band in tiler.needed_bands():
+                    for band in stacker.needed_bands():
                         band_val = pixel_ds[band].item()
                         if band_val == -999:
                             feature_json["bands"][band] = "n/a"
@@ -391,7 +393,7 @@ def feature_info(args):
                             feature_json["bands"][band] = pixel_ds[band].item()
                 if params.product.band_drill:
                     if pixel_ds is None:
-                        data = tiler.data([d])
+                        data = stacker.data([d])
                         pixel_ds = data.isel(**isel_kwargs)
                     drill_section = { }
                     for band in params.product.band_drill:
@@ -410,7 +412,7 @@ def feature_info(args):
                 pqdi += 1
                 idx_date = (pqd.center_time + timedelta(hours=params.product.time_zone)).date()
                 if idx_date == params.time:
-                    pq_data = tiler.data([pqd], mask=True)
+                    pq_data = stacker.data([pqd], mask=True)
                     pq_pixel_ds = pq_data.isel(**isel_kwargs)
                     # PQ flags
                     m = params.product.pq_product.measurements[params.product.pq_band]

@@ -57,6 +57,10 @@ def _get_geobox(args, crs):
     return geometry.GeoBox(width, height, affine, crs)
 
 
+def int_trim(val, minval, maxval):
+    return max(min(val, maxval), minval)
+
+
 def zoom_factor(args, crs):
     # Determine the geographic "zoom factor" for the request.
     # (Larger zoom factor means deeper zoom.  Smaller zoom factor means larger area.)
