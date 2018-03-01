@@ -105,7 +105,7 @@ layer_cfg = [
 
                 # Bands to include in time-dimension "pixel drill".
                 # Don't activate in production unless you really know what you're doing.
-                "band_drill": ["nir", "red", "green", "blue"],
+                # "band_drill": ["nir", "red", "green", "blue"],
 
                 # Styles.
                 #

@@ -63,6 +63,18 @@ class DataStacker(object):
         query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
         datasets = index.datasets.search_eager(**query.search_terms)
         # And sort by date
+        offset_aware = False
+        offset_naive = False
+        for d in datasets:
+            if d.utcoffset is None:
+                offset_naive = True
+            else:
+                offset_aware = True
+        if offset_naive and offset_aware:
+            msg = ""
+            for ds in datasets:
+                msg += str(ds.id) + ", "
+            raise Exception("Yes we have inconsistent offset state: " + msg)
         datasets.sort(key=lambda d: d.center_time)
 
         if point:
