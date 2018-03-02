@@ -66,3 +66,9 @@ target/
 
 # PyCharm project files
 .idea/
+
+
+# Just for this working directory.
+.gitignore
+wms_cfg.py
+wsgi.py

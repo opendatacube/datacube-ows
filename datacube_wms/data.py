@@ -68,7 +68,7 @@ class DataStacker(object):
         except:
             msg = ""
             for ds in datasets:
-                msg += str(ds.id) + ":" + str(ds.center_time) + str(ds.center_time.utcoffset) + ", "
+                msg += str(ds.id) + ":" + str(ds.center_time) + str(ds.center_time.utcoffset()) + ", "
             raise Exception("Yes we have inconsistent offset state: " + msg)
 
         # datasets.sort(key=lambda d: d.center_time)
