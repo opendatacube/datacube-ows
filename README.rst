@@ -37,8 +37,9 @@ Setup
   script will need to be re-run every time additional datasets are added to
   the Datacube.
 
-* Edit `datacube_wms/wms_cfg.py` as required. If you are using git, you should
-  create a branch first.
+* Edit `datacube_wms/wms_cfg.py` as required (See `datacube_wms/wms_cfg_example.py` for examples).
+  If you are using git, you should either create a branch first, or use `datacube_wms/wms_cfg_local.py` instead.
+  (If it exists, `wms_cfg_local.py` is read in preference to `wms_cfg.py`, but is explicitly ignored by git.)
 
 * Launch flask app using your favorite WSGI server. The following approaches
   have been tested:

@@ -10,7 +10,10 @@ from datacube_wms.wms_utils import resp_headers, WMSException, wms_exception
 
 app = Flask(__name__.split('.')[0])
 
-from datacube_wms.wms_cfg import service_cfg
+try:
+    from datacube_wms.wms_cfg_local import service_cfg
+except:
+        from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.wms_layers import get_layers
 
 

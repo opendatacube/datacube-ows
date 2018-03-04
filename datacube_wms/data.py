@@ -11,7 +11,10 @@ import datacube
 from datacube.utils import geometry
 
 from datacube_wms.cube_pool import get_cube, release_cube
-from datacube_wms.wms_cfg import service_cfg
+try:
+    from datacube_wms.wms_cfg_local import service_cfg
+except:
+    from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.wms_utils import resp_headers, img_coords_to_geopoint, int_trim, \
         bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters
 

@@ -1,4 +1,7 @@
-from datacube_wms.wms_cfg import service_cfg, layer_cfg
+try:
+    from datacube_wms.wms_cfg_local import layer_cfg
+except:
+    from datacube_wms.wms_cfg import layer_cfg
 from datacube_wms.product_ranges import get_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.band_mapper import StyleDef

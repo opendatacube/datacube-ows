@@ -5,7 +5,10 @@ from datacube.utils import geometry
 from flask import render_template
 import math
 
-from datacube_wms.wms_cfg import response_cfg, service_cfg
+try:
+    from datacube_wms.wms_cfg_local import response_cfg, service_cfg
+except:
+    from datacube_wms.wms_cfg import response_cfg, service_cfg
 from datacube_wms.wms_layers import get_layers
 
 
