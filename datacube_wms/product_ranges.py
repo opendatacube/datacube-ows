@@ -88,7 +88,6 @@ def get_sqlconn(dc):
 def get_ids_in_db(conn):
     results = conn.execute("select id from wms.product_ranges")
     ids =  [r["id"] for r in results]
-    print (ids)
     return ids
 
 
