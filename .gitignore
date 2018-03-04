@@ -67,4 +67,5 @@ target/
 # PyCharm project files
 .idea/
 
-
+wsgi_local.py
+wms_cfg_local.py
