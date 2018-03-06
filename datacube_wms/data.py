@@ -16,7 +16,9 @@ try:
 except:
     from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.wms_utils import resp_headers, img_coords_to_geopoint, int_trim, \
-        bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters
+        bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
+        solar_correct_data
+
 
 class DataStacker(object):
     def __init__(self, product, geobox, time, style=None, **kwargs):
@@ -140,7 +142,7 @@ class DataStacker(object):
                 filtered.extend(date_index[d])
         return filtered
 
-    def data(self, datasets, mask=False, manual_merge=False):
+    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False):
         if mask:
             prod = self._product.pq_product
             measurements = [ prod.measurements[self._product.pq_band].copy() ]
@@ -150,7 +152,25 @@ class DataStacker(object):
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
-                return self.manual_data_stack(datasets, measurements, mask)
+                return self.manual_data_stack(datasets, measurements, mask, skip_corrections)
+            elif self._product.solar_correction and not mask and not skip_corrections:
+                # Merge performed already by dataset extent, but we need to
+                # process the data for the datasets individually to do solar correction.
+                merged = None
+                for i in range(0, len(datasets)):
+                    holder = numpy.empty(shape=tuple(), dtype=object)
+                    ds = datasets[i]
+                    holder[()] = [ ds ]
+                    sources = xarray.DataArray(holder)
+                    d = datacube.Datacube.load_data(sources, self._geobox, measurements)
+                    for band in self.needed_bands():
+                        if band != self._product.pq_band:
+                            d[band] = solar_correct_data(d[band], ds)
+                    if merged is None:
+                        merged = d
+                    else:
+                        merged = merged.combine_first(d)
+                return merged
             else:
                 # Merge performed already by dataset extent
                 if isinstance(datasets, xarray.DataArray):
@@ -161,37 +181,41 @@ class DataStacker(object):
                     sources = xarray.DataArray(holder)
                 return datacube.Datacube.load_data(sources, self._geobox, measurements)
 
-    def manual_data_stack(self, datasets, measurements, mask):
+    def manual_data_stack(self, datasets, measurements, mask, skip_corrections):
         # manual merge
-        datas = []
-        for i in range(0, len(datasets)):
-            j = i + 1
-            holder = numpy.empty(shape=tuple(), dtype=object)
-            holder[()] = datasets[i:j]
-            sources = xarray.DataArray(holder)
-            datas.append(datacube.Datacube.load_data(sources, self._geobox, measurements))
         merged = None
         if mask:
-            band = self._product.pq_band
+            bands = [ self._product.pq_band ]
         else:
-            for band in self.needed_bands():
-                break
-        for d in datas:
+            bands = self.needed_bands()
+        for i in range(0, len(datasets)):
+            holder = numpy.empty(shape=tuple(), dtype=object)
+            ds = datasets[i]
+            holder[()] = [ ds ]
+            sources = xarray.DataArray(holder)
+            d = datacube.Datacube.load_data(sources, self._geobox, measurements)
             extent_mask = None
-            for f in self._product.extent_mask_func:
-                if extent_mask is None:
-                    extent_mask = f(d, band)
-                else:
-                    extent_mask &= f(d, band)
+            for band in bands:
+                for f in self._product.extent_mask_func:
+                    if extent_mask is None:
+                        extent_mask = f(d, band)
+                    else:
+                        extent_mask &= f(d, band)
             dm = d.where(extent_mask)
+            if self._product.solar_correction and not mask and not skip_corrections:
+                for band in bands:
+                    if band != self._product.pq_band:
+                        dm[band] = solar_correct_data(dm[band], ds)
             if merged is None:
                 merged = dm
             else:
                 merged = merged.combine_first(dm)
         if mask:
             merged = merged.astype('uint8', copy=True)
-            merged[band].attrs = d[band].attrs
+            for band in bands:
+                merged[band].attrs = d[band].attrs
         return merged
+
 
 def get_map(args):
     # Parse GET parameters
@@ -240,14 +264,15 @@ def get_map(args):
             else:
                 pq_data = None
             extent_mask = None
-            for band in params.style.needed_bands:
-                for f in params.product.extent_mask_func:
-                    if extent_mask is None:
-                        extent_mask = f(data, band)
-                    else:
-                        extent_mask &= f(data, band)
+            if not params.product.data_manual_merge:
+                for band in params.style.needed_bands:
+                    for f in params.product.extent_mask_func:
+                        if extent_mask is None:
+                            extent_mask = f(data, band)
+                        else:
+                            extent_mask &= f(data, band)
 
-            if data:
+            if data is not None:
                 body = _write_png(data, pq_data, params.style, extent_mask)
             else:
                 body = _write_empty(params.geobox)
@@ -361,7 +386,7 @@ def feature_info(args):
                 available_dates.add(idx_date)
                 pixel_ds = None
                 if idx_date == params.time and "lon" not in feature_json:
-                    data = stacker.data([d])
+                    data = stacker.data([d], skip_corrections=True)
 
                     # Use i,j image coordinates to extract data pixel from dataset, and
                     # convert to lat/long geographic coordinates
@@ -404,7 +429,7 @@ def feature_info(args):
                             feature_json["bands"][band] = pixel_ds[band].item()
                 if params.product.band_drill:
                     if pixel_ds is None:
-                        data = stacker.data([d])
+                        data = stacker.data([d], skip_corrections=True)
                         pixel_ds = data.isel(**isel_kwargs)
                     drill_section = { }
                     for band in params.product.band_drill:

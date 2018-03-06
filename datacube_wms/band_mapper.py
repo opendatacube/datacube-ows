@@ -49,7 +49,7 @@ class DynamicRangeCompression(StyleDefBase):
             self.offset = 0.0
     def compress_band(self, imgband_data):
         unclipped= imgband_data * self.gain - self.offset
-        return numpy.clip(unclipped.values, 0, 255)
+        return numpy.clip(unclipped.values, 1, 255)
 
 class LinearStyleDef(DynamicRangeCompression):
     def __init__(self, product, style_cfg):
@@ -73,7 +73,8 @@ class LinearStyleDef(DynamicRangeCompression):
         }
 
     def transform_data(self, data, pq_data, extent_mask):
-        data = data.where(extent_mask)
+        if extent_mask is not None:
+            data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
         imgdata = Dataset()
         for imgband, components in self.components.items():
@@ -177,7 +178,8 @@ class HeatMappedStyleDef(StyleDefBase):
             img_band_raw_data = f(hm_index_data)
             img_band_data = numpy.clip(img_band_raw_data * 255.0, 0, 255).astype("uint8")
             imgdata[band] = (dims, img_band_data)
-        imgdata = imgdata.where(extent_mask)
+        if extent_mask is not None:
+            imgdata = imgdata.where(extent_mask)
         imgdata = self.apply_masks(imgdata, pq_data)
         imgdata = imgdata.astype("uint8")
         return imgdata

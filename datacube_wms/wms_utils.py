@@ -1,4 +1,5 @@
 from datetime import datetime
+from pytz import utc
 
 from affine import Affine
 from datacube.utils import geometry
@@ -255,4 +256,42 @@ class GetFeatureInfoParameters(GetParameters):
         self.j = int(j)
 
         return
+
+# Solar angle correction functions
+
+def declination_rad(dt):
+    # Estimate solar declination from a datetime.  (value returned in radians).
+    # Formula taken from https://en.wikipedia.org/wiki/Position_of_the_Sun#Declination_of_the_Sun_as_seen_from_Earth
+    timedel = dt - datetime(dt.year, 1, 1, 0, 0, 0, tzinfo=utc)
+    day_count = timedel.days + timedel.seconds/(60.0*60.0*24.0)
+    return (-1.0 * math.radians(23.44) * math.cos(2*math.pi/365*(day_count + 10)))
+
+def cosine_of_solar_zenith(lat, lon, utc_dt):
+    # Estimate cosine of solar zenith angle (angle between sun and local zenith) at requested latitude, longitude and datetime.
+    # Formula taken from https://en.wikipedia.org/wiki/Solar_zenith_angle
+    utc_seconds_since_midnight = ((utc_dt.hour * 60) + utc_dt.minute) * 60 + utc_dt.second
+    utc_hour_deg_angle = (utc_seconds_since_midnight / (60*60*24) * 360.0) - 180.0
+    local_hour_deg_angle = utc_hour_deg_angle + lon
+    local_hour_angle_rad = math.radians(local_hour_deg_angle)
+    latitude_rad = math.radians(lat)
+    solar_decl_rad = declination_rad(utc_dt)
+
+    return math.sin(latitude_rad)*math.sin(solar_decl_rad) + math.cos(latitude_rad)*math.cos(solar_decl_rad)*math.cos(local_hour_angle_rad)
+
+def solar_correct_data(data, dataset):
+    # Apply solar angle correction to the data for a dataset.
+    # See for example http://gsp.humboldt.edu/olm_2015/Courses/GSP_216_Online/lesson4-1/radiometric.html
+    native_x = (dataset.bounds.right + dataset.bounds.left)/2.0
+    native_y = (dataset.bounds.top + dataset.bounds.bottom)/2.0
+    pt = geometry.point(native_x, native_y, dataset.crs)
+    crs_geo = geometry.CRS("EPSG:4326")
+    geo_pt = pt.to_crs(crs_geo)
+    data_time = dataset.center_time.astimezone(utc)
+    data_lon, data_lat = geo_pt.coords[0]
+
+    csz = cosine_of_solar_zenith(data_lat, data_lon, data_time)
+
+    return data / csz
+
+
 
