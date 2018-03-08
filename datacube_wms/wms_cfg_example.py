@@ -1,8 +1,11 @@
+import re
 # Static config for the wms metadata.
 
 response_cfg = {
     "Access-Control-Allow-Origin": "*",  # CORS header
 }
+
+s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 
 service_cfg = {
     # Required config
@@ -656,6 +659,8 @@ layer_cfg = [
                 "always_fetch_bands": [ "quality", ],
                 # Apply corrections for solar angle, for "Level 1" products.
                 "apply_solar_corrections": True,
+
+                "sub_product_extractor": lambda ds: int(s3_path_pattern(ds.uris[0]).group("path")),
 
                 # Styles.
                 #
