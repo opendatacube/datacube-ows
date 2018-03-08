@@ -660,7 +660,9 @@ layer_cfg = [
                 # Apply corrections for solar angle, for "Level 1" products.
                 "apply_solar_corrections": True,
 
-                "sub_product_extractor": lambda ds: int(s3_path_pattern(ds.uris[0]).group("path")),
+                # A function that extracts the "sub-product" id (e.g. path number) from a dataset. Function should return a (small) integer
+                # If None or not specified, the product has no sub-layers.
+                "sub_product_extractor": lambda ds: int(s3_path_pattern.search(ds.uris[0]).group("path")),
 
                 # Styles.
                 #

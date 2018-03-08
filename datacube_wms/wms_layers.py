@@ -2,7 +2,7 @@ try:
     from datacube_wms.wms_cfg_local import layer_cfg
 except:
     from datacube_wms.wms_cfg import layer_cfg
-from datacube_wms.product_ranges import get_ranges
+from datacube_wms.product_ranges import get_ranges, get_sub_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.band_mapper import StyleDef
 
@@ -30,6 +30,8 @@ class ProductLayerDef(object):
         self.platform = platform_def
         self.name = product_cfg["name"]
         self.product_name = product_cfg["product_name"]
+        if "__" in self.product_name:
+            raise Exception("Product names cannot have a double underscore '__' in them.")
         self.product_label = product_cfg["label"]
         self.product_type = product_cfg["type"]
         self.product_variant = product_cfg["variant"]
@@ -40,6 +42,7 @@ class ProductLayerDef(object):
                                         self.product_type,
                                         self.product_label)
         self.ranges = get_ranges(dc, self.product)
+        self.sub_ranges = get_sub_ranges(dc, self.product)
         self.pq_name = product_cfg.get("pq_dataset")
         self.pq_band = product_cfg.get("pq_band")
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
@@ -49,6 +52,7 @@ class ProductLayerDef(object):
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
         self.band_drill = product_cfg.get("band_drill", [])
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
+        self.sub_product_extractor = product_cfg.get("sub_product_extractor", None)
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
             self.info_mask = ~0

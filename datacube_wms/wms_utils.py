@@ -110,6 +110,7 @@ def get_product_from_arg(args, argname="layers"):
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
     layer = layers[0]
+    layer = layer.split("__")[0]
     platforms = get_layers()
     product = platforms.product_index.get(layer)
     if not product:
