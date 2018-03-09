@@ -12,7 +12,6 @@ except:
     from datacube_wms.wms_cfg import response_cfg, service_cfg
 from datacube_wms.wms_layers import get_layers
 
-
 def resp_headers(d):
     hdrs = {}
     hdrs.update(response_cfg)
@@ -110,7 +109,8 @@ def get_product_from_arg(args, argname="layers"):
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
     layer = layers[0]
-    layer = layer.split("__")[0]
+    layer_chunks = layer.split("__")
+    layer = layer_chunks[0]
     platforms = get_layers()
     product = platforms.product_index.get(layer)
     if not product:
@@ -137,7 +137,7 @@ def get_arg(args, argname, verbose_name, lower=False,
     return fmt
 
 
-def get_time(args, product):
+def get_time(args, product, raw_product):
     # Time parameter
     times = args.get('time', '').split('/')
     if len(times) > 1:
@@ -146,10 +146,16 @@ def get_time(args, product):
             WMSException.INVALID_DIMENSION_VALUE,
             locator="Time parameter")
     elif not times[0]:
-        raise WMSException(
-            "Time dimension value not supplied",
-            WMSException.MISSING_DIMENSION_VALUE,
-            locator="Time parameter")
+        # default to last available time if not supplied.
+        chunks = raw_product.split("__")
+        if len(chunks) == 1:
+            path = None
+            ranges = product.ranges
+        else:
+            path = int(chunks[1])
+            ranges = product.sub_ranges[path]
+
+        return ranges["times"][-1]
     try:
         time = datetime.strptime(times[0], "%Y-%m-%d").date()
     except ValueError:
@@ -179,7 +185,7 @@ def bounding_box_to_geom(bbox, bb_crs, target_crs):
 
 
 class GetParameters(object):
-    def __init__(self, args, layer_arg="layers"):
+    def __init__(self, args):
         # Version
         self.version = get_arg(args, "version", "WMS version",
                                permitted_values=['1.1.1', '1.3.0'])
@@ -194,11 +200,13 @@ class GetParameters(object):
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)
+        self.raw_product = self.get_raw_product(args)
 
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
         # Time parameter
-        self.time = get_time(args, self.product)
+        self.time = get_time(args, self.product, self.raw_product)
+
         self.method_specific_init(args)
 
     def method_specific_init(self, args):
@@ -206,6 +214,9 @@ class GetParameters(object):
 
     def get_product(self, args):
         return get_product_from_arg(args)
+
+    def get_raw_product(self, args):
+        return args["layers"].split(",")[0]
 
 
 class GetMapParameters(GetParameters):
@@ -235,6 +246,9 @@ class GetFeatureInfoParameters(GetParameters):
     def get_product(self, args):
         return get_product_from_arg(args, "query_layers")
 
+    def get_raw_product(self, args):
+        return args["query_layers"].split(",")[0]
+
     def method_specific_init(self, args):
         # Validate Formata parameter
         self.format = get_arg(args, "info_format", "info format", lower=True,
@@ -257,6 +271,10 @@ class GetFeatureInfoParameters(GetParameters):
         self.j = int(j)
 
         return
+        raise WMSException(
+            "Time dimension value not supplied",
+            WMSException.MISSING_DIMENSION_VALUE,
+            locator="Time parameter")
 
 # Solar angle correction functions
 

@@ -53,6 +53,7 @@ class ProductLayerDef(object):
         self.band_drill = product_cfg.get("band_drill", [])
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
         self.sub_product_extractor = product_cfg.get("sub_product_extractor", None)
+        self.sub_product_label = product_cfg.get("sub_product_label", None)
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
             self.info_mask = ~0

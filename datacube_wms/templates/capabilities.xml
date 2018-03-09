@@ -125,6 +125,11 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
             <Abstract>{{ platform.abstract }}</Abstract>
 
             {% for product in platform.products %}
+                {% if product.sub_ranges %}
+                    <Layer>
+                        <Title>{{ product.title }}</Title>
+                        <Abstract>{{ product.definition.description }}</Abstract>
+                {% endif %}
                 <Layer queryable="1">
                     <Name>{{ product.name }}</Name>
                     <Title>{{ product.title }}</Title>
@@ -168,11 +173,6 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
                             <Abstract>{{ style.abstract }}</Abstract>
                         </Style>
                     {% endfor %}
-                    <!-- TODO: Not sure how to work these out yet, but
-                               probably desirable.
-                    <MinScaleDenominator/>
-                    <MaxScaleDenominator/>
-                    -->
                     <!-- TODO: Populate from config (but OK to ignore for now)
                     <Attribution/>
                     <AuthorityURL/>
@@ -181,6 +181,63 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_2_0.xsd">
                     <FeatureListURL/>
                     -->
                 </Layer>
+                {% if product.sub_ranges %}
+                    <Layer>
+                        <Title>Individual {% if product.sub_product_label %}{{ product.sub_product_label }}{% else %}Swath{% endif %} Sub-Layers</Title>
+                {% endif %}
+                    {% for path, subr in product.sub_ranges.items() %}
+                        <Layer queryable="1">
+                            <Name>{{ product.name }}__{{ path }}</Name>
+                            <Title>{{ product.title }} - {% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}</Title>
+                            <Abstract>{% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}
+                                    {{ product.definition.description }}
+                            </Abstract>
+                            <KeywordList>
+                                <Keyword>Australia</Keyword>
+                                <Keyword>Landsat</Keyword>
+                                <Keyword>{{ product.definition.metadata.platform.code }}</Keyword>
+                                <Keyword>{{ product.definition.metadata.instrument.name }}</Keyword>
+                                <Keyword>{{ product.product_label }}</Keyword>
+                                <Keyword>{{ product.product_type }}</Keyword>
+                                <Keyword>{% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}</Keyword>
+                                {% if product.product_variant %}<Keyword>{{ product.product_variant }}</Keyword>{% endif %}
+                            </KeywordList>
+                            <EX_GeographicBoundingBox>
+                                <westBoundLongitude>{{ subr.lon.min }}</westBoundLongitude>
+                                <eastBoundLongitude>{{ subr.lon.max }}</eastBoundLongitude>
+                                <southBoundLatitude>{{ subr.lat.min }}</southBoundLatitude>
+                                <northBoundLatitude>{{ subr.lat.max }}</northBoundLatitude>
+                            </EX_GeographicBoundingBox>
+                            {% for crsid, bbox in subr.bboxes.items() %}
+                                <BoundingBox CRS="{{ crsid }}"
+                                    {% if bbox.left < bbox.right %}
+                                        minx="{{ bbox.left }}" maxx="{{ bbox.right }}"
+                                    {% else %}
+                                        minx="{{ bbox.right }}" maxx="{{ bbox.left }}"
+                                    {% endif %}
+                                    {% if bbox.bottom < bbox.top %}
+                                        miny="{{ bbox.bottom }}" maxy="{{ bbox.top }}"
+                                    {% else %}
+                                        miny="{{ bbox.top }}" maxy="{{ bbox.bottom }}"
+                                    {% endif %}
+                                />
+                            {% endfor %}
+                            <Dimension name="time" units="ISO8601">
+                                {% for t in subr.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
+                            </Dimension>
+                            {% for style in product.styles %}
+                                <Style>
+                                    <Name>{{ style.name }}</Name>
+                                    <Title>{{ style.title }}</Title>
+                                    <Abstract>{{ style.abstract }}</Abstract>
+                                </Style>
+                            {% endfor %}
+                        </Layer>
+                    {% endfor %}
+                    {% if product.sub_ranges %}
+                        </Layer>
+                    </Layer>
+                    {% endif %}
             {% endfor %}
         </Layer>
         {% endfor %}

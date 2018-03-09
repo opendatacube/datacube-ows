@@ -663,6 +663,9 @@ layer_cfg = [
                 # A function that extracts the "sub-product" id (e.g. path number) from a dataset. Function should return a (small) integer
                 # If None or not specified, the product has no sub-layers.
                 "sub_product_extractor": lambda ds: int(s3_path_pattern.search(ds.uris[0]).group("path")),
+                # A prefix used to describe the sub-layer in the GetCapabilities response.
+                # E.g. sub-layer 109 will be described as "Landsat Path 109"
+                "sub_product_label": "Landsat Path",
 
                 # Styles.
                 #
