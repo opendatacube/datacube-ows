@@ -111,6 +111,23 @@ to multiple web apps using different virtual environments.
 
 * Update the url in service_cfg in `datacube_wms/wms_cfg.py`.
 
+Docker
+-------
+To run this image, use something like: ::
+
+  docker run \
+      --rm \
+      opendatacube/wms \
+      gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_wms:wms
+
+
+The image comes with the standard ODC installed, including the entrypoint that sets the config from the environment.
+
+Additionally, the image includes another flag that can be used to grab a config file from a URL:
+
+* `WMS_CONFIG_URL`
+
+
 Credits
 ---------
 
