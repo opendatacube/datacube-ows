@@ -8,12 +8,9 @@ RUN apt-get update && apt-get install -y \
     wget unzip \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /tmp/code
-RUN wget https://github.com/opendatacube/datacube-wms/archive/master.zip -O /tmp/dashboard.zip \
-    && unzip /tmp/dashboard.zip \
-    && mv /tmp/code/datacube-wms-master /code
-
 WORKDIR /code
+
+ADD . .
 
 RUN python3 setup.py install
 
