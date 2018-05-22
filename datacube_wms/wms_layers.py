@@ -99,8 +99,8 @@ class LayerDefs(object):
             cls._instance = super(LayerDefs, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, platforms_cfg):
-        if not self.initialised:
+    def __init__(self, platforms_cfg, refresh = False):
+        if not self.initialised or refresh:
             self.initialised = True
             self.platforms = []
             self.platform_index = {}
@@ -123,5 +123,5 @@ class LayerDefs(object):
             return self.platform_index[name]
 
 
-def get_layers():
-    return LayerDefs(layer_cfg)
+def get_layers(refresh = False):
+    return LayerDefs(layer_cfg, refresh)
