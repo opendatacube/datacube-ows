@@ -5,6 +5,7 @@ try:
 except:
     from datacube_wms.wms_cfg import service_cfg, layer_cfg
 from psycopg2.extras import Json
+from itertools import zip_longest
 
 
 def accum_min(a, b):
@@ -244,7 +245,7 @@ def ranges_equal(r1, rdb):
                 return False
     if len(r1["times"]) != len(rdb["times"]):
         return False
-    for t1, t2 in zip(r1["times"], rdb["times"]):
+    for t1, t2 in zip_longest(r1["times"], rdb["times"]):
         if t1 != t2:
             return False
     if len(r1["bboxes"]) != len(rdb["bboxes"]):
