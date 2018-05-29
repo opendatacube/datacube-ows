@@ -266,6 +266,52 @@ def ranges_equal(r1, rdb):
         return False
     return True
 
+def update_range(dc, product):
+    def find(list, key, value):
+        for d in list:
+            if d[key] == value:
+                return d
+        return None
+
+    products = [find(p["products"], "product_name", product) for p in layer_cfg]
+    if (products[0] is not None):
+        layer = products[0]
+        product_range = determine_product_ranges(dc,
+                                                 product,
+                                                 layer.get("time_zone", 9),
+                                                 layer.get("sub_product_extractor"))
+        conn = get_sqlconn(dc)
+        txn = conn.begin()
+        ids_in_db = get_ids_in_db(conn)
+        subids_in_db = get_subids_in_db(conn)
+
+        if product_range["product_id"] in ids_in_db:
+            db_range = get_ranges(dc, product_range["product_id"])
+            if ranges_equal(product_range, db_range):
+                print("Ranges equal, not updating")
+            else:
+                rng_update(conn, product_range)
+                print("Updating range")
+        else:
+            rng_insert(conn, product_range)
+            print("Inserting new range")
+
+        if "sub_products" in product_range:
+            for path, subr in product_range["sub_products"].items():
+                db_range = get_ranges(dc, subr["product_id"], path)
+                if (subr["product_id"], path) in subids_in_db:
+                    db_range = get_ranges(dc, subr["product_id"], path)
+                    if ranges_equal(subr, db_range):
+                        pass
+                    else:
+                        rng_update(conn, subr)
+                else:
+                    rng_insert(conn, subr)
+        txn.commit()
+        conn.close()
+    else:
+        print("Could not find product")
+
 
 def update_all_ranges(dc):
     ranges = determine_ranges(dc)
