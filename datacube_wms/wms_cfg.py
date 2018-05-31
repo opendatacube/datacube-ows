@@ -16,6 +16,7 @@ service_cfg = {
         },
         "EPSG:4326": {  # WGS-84
             "geographic": True,
+            "vertical_coord_first": True
         },
         "EPSG:3577": {  # GDA-94, internal representation
             "geographic": False,

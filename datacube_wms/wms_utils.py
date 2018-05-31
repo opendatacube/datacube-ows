@@ -53,7 +53,10 @@ def wms_exception(e, traceback=[]):
 def _get_geobox(args, crs):
     width = int(args['width'])
     height = int(args['height'])
-    minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
+    if service_cfg["published_CRSs"][crs.crs_str].get("vertical_coord_first"):
+        miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
+    else:
+        minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
 
     # miny-maxy for negative scale factor and maxy in the translation, includes inversion of Y axis.
     affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
