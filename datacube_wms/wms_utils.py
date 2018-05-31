@@ -102,8 +102,10 @@ def zoom_factor(args, crs):
 
 
 def img_coords_to_geopoint(geobox, i, j):
-    return geometry.point(geobox.coordinates["x"].values[int(i)],
-                          geobox.coordinates["y"].values[int(j)],
+    h_coord = service_cfg["published_CRSs"][geobox.crs.crs_str].get("horizontal_coord", "longitude")
+    v_coord = service_cfg["published_CRSs"][geobox.crs.crs_str].get("vertical_coord", "latitude")
+    return geometry.point(geobox.coordinates[h_coord].values[int(i)],
+                          geobox.coordinates[v_coord].values[int(j)],
                           geobox.crs)
 
 
