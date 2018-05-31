@@ -320,9 +320,9 @@ def _write_empty(geobox):
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
-        data = numpy.full([geobox.width, geobox.height], fill_value=1, dtype="uint8")
+        data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
     else:
-        data = numpy.zeros([geobox.width, geobox.height], dtype="uint8")
+        data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
         if not geobox_ext.disjoint(polygon):
             intersection = geobox_ext.intersection(polygon)
             if intersection.type == 'Polygon':
