@@ -9,6 +9,7 @@ class StyleMask(object):
         self.flags = flags
         self.invert = invert
 
+
 class StyleDefBase(object):
     def __init__(self, product, style_cfg):
         self.product = product
@@ -19,6 +20,17 @@ class StyleDefBase(object):
         self.needed_bands = set()
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
+
+        # Measurements with aliases keys added
+        self.aliases_measurements = {}
+        for band in self.product.product.measurements:
+            val = self.product.product.measurements[band]
+            # add the band
+            self.aliases_measurements[band] = val
+            # add aliases
+            if val['aliases']:
+                for name in val['aliases']:
+                    self.aliases_measurements[name] = val
 
     def apply_masks(self, data, pq_data):
         if pq_data is not None:
@@ -80,7 +92,9 @@ class LinearStyleDef(DynamicRangeCompression):
         for imgband, components in self.components.items():
             imgband_data = None
             for band, intensity in components.items():
-                imgband_component = data[band] * intensity
+                # We need to map band to component name for aliases
+                band_name = self.aliases_measurements[band]['name']
+                imgband_component = data[band_name] * intensity
                 if imgband_data is not None:
                     imgband_data += imgband_component
                 else:

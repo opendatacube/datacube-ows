@@ -9,6 +9,7 @@ from skimage.draw import polygon as skimg_polygon
 
 import datacube
 from datacube.utils import geometry
+from datacube.db_extent import ExtentIndex
 
 from datacube_wms.cube_pool import get_cube, release_cube
 try:
@@ -28,6 +29,17 @@ class DataStacker(object):
         self._style = style
         start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
         self._time = [start_time, start_time + timedelta(days=1)]
+
+        # Measurements with aliases keys added
+        self.aliases_measurements = {}
+        for band in self._product.product.measurements:
+            val = self._product.product.measurements[band]
+            # add the band
+            self.aliases_measurements[band] = val
+            # add aliases
+            if val['aliases']:
+                for name in val['aliases']:
+                    self.aliases_measurements[name] = val
 
     def needed_bands(self):
         if self._style:
@@ -142,13 +154,19 @@ class DataStacker(object):
                 filtered.extend(date_index[d])
         return filtered
 
+    def _get_product_measurement(self, band):
+        prod = self._product.product
+        if prod.measurements.get(band):
+            return prod.measurements[band]
+        else:
+            return self.aliases_measurements[band]
+
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False):
         if mask:
             prod = self._product.pq_product
-            measurements = [ prod.measurements[self._product.pq_band].copy() ]
+            measurements = [prod.measurements[self._product.pq_band].copy() ]
         else:
-            prod = self._product.product
-            measurements = [ prod.measurements[name].copy() for name in self.needed_bands()]
+            measurements = [self._get_product_measurement(name) for name in self.needed_bands()]
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
@@ -217,76 +235,73 @@ class DataStacker(object):
         return merged
 
 
+def get_extent(product, time, projection):
+    # ToDo: this function must be cached or pre-loaded
+    extent_idx = ExtentIndex(datacube_index=get_cube().index)
+    return extent_idx.get_extent_direct(time, '1D', product_name=product, projection=projection)
+
+
 def get_map(args):
     # Parse GET parameters
     params = GetMapParameters(args)
 
-    # Tiling.
-    stacker = DataStacker(params.product, params.geobox, params.time, style=params.style)
-    dc = get_cube()
-    try:
-        datasets = stacker.datasets(dc.index)
-        if not datasets:
-            body = _write_empty(params.geobox)
-        elif params.zf < params.product.min_zoom:
-            # Zoomed out to far to properly render data.
-            # Construct a polygon which is the union of the extents of the matching datasets.
-            extent = None
-            extent_crs = None
-            for ds in datasets:
-                if extent:
-                    new_extent = ds.extent
-                    if new_extent.crs != extent_crs:
-                        new_extent = new_extent.to_crs(extent_crs)
-                    extent = extent.union(new_extent)
-                else:
-                    extent = ds.extent
-                    extent_crs = extent.crs
-            extent = extent.to_crs(params.crs)
-
-            body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
-        else:
-            data = stacker.data(datasets, manual_merge=params.product.data_manual_merge)
-            if params.style.masks:
-                if params.product.pq_name == params.product.name:
-                    pq_data = xarray.Dataset({
-                        params.product.pq_band: (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))},
-                        coords=data[params.product.pq_band].coords)
-                    pq_data[params.product.pq_band].attrs["flags_definition"] = data[params.product.pq_band].flags_definition
-                else:
-                    pq_datasets = stacker.datasets(dc.index, mask=True)
-                    if pq_datasets:
-                        pq_data = stacker.data(pq_datasets,
-                                     mask=True,
-                                     manual_merge=params.product.pq_manual_merge)
-                    else:
-                        pq_data = None
-            else:
-                pq_data = None
-            extent_mask = None
-            if not params.product.data_manual_merge:
-                for band in params.style.needed_bands:
-                    for f in params.product.extent_mask_func:
-                        if extent_mask is None:
-                            extent_mask = f(data, band)
-                        else:
-                            extent_mask &= f(data, band)
-
-            if data is not None:
-                body = _write_png(data, pq_data, params.style, extent_mask)
-            else:
+    # ToDo: When zoom factor requested is less than the corresponding product zoom factor
+    # we compute the extent within the geobox
+    if params.zf < params.product.min_zoom:
+        # Get the extent for product and time within geobox
+        body = _write_polygon(params.geobox, get_extent(params.product.name, params.time, params.crs.crs_str),
+                              params.product.zoom_fill)
+    else:
+        # Tiling - Other
+        stacker = DataStacker(params.product, params.geobox, params.time, style=params.style)
+        dc = get_cube()
+        try:
+            datasets = stacker.datasets(dc.index)
+            if not datasets:
                 body = _write_empty(params.geobox)
-        release_cube(dc)
-    except Exception as e:
-        release_cube(dc)
-        raise e
+            else:
+                data = stacker.data(datasets, manual_merge=params.product.data_manual_merge)
+                if params.style.masks:
+                    if params.product.pq_name == params.product.name:
+                        pq_data = xarray.Dataset({
+                            params.product.pq_band: (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))},
+                            coords=data[params.product.pq_band].coords)
+                        pq_data[params.product.pq_band].attrs["flags_definition"] = data[params.product.pq_band].flags_definition
+                    else:
+                        pq_datasets = stacker.datasets(dc.index, mask=True)
+                        if pq_datasets:
+                            pq_data = stacker.data(pq_datasets,
+                                         mask=True,
+                                         manual_merge=params.product.pq_manual_merge)
+                        else:
+                            pq_data = None
+                else:
+                    pq_data = None
+                extent_mask = None
+                if not params.product.data_manual_merge:
+                    for band in params.style.needed_bands:
+                        # Get the band name
+                        band_name = stacker.aliases_measurements[band]['name']
+                        for f in params.product.extent_mask_func:
+                            if extent_mask is None:
+                                extent_mask = f(data, band_name)
+                            else:
+                                extent_mask &= f(data, band_name)
+
+                if data is not None:
+                    body = _write_png(data, pq_data, params.style, extent_mask)
+                else:
+                    body = _write_empty(params.geobox)
+            release_cube(dc)
+        except Exception as e:
+            release_cube(dc)
+            raise e
     return body, 200, resp_headers({"Content-Type": "image/png"})
 
 
 def _write_png(data, pq_data, style, extent_mask):
     width = data[data.crs.dimensions[1]].size
     height = data[data.crs.dimensions[0]].size
-
     img_data = style.transform_data(data, pq_data, extent_mask)
 
     with MemoryFile() as memfile:
@@ -321,7 +336,9 @@ def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
         data = numpy.full([geobox.width, geobox.height], fill_value=1, dtype="uint8")
+        print('full geobox')
     else:
+        print('geobox not full')
         data = numpy.zeros([geobox.width, geobox.height], dtype="uint8")
         if not geobox_ext.disjoint(polygon):
             intersection = geobox_ext.intersection(polygon)
@@ -336,6 +353,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
                 rs, cs = skimg_polygon([int_trim(c[1], 0, geobox.height - 1) for c in pixel_coords],
                                        [int_trim(c[0], 0, geobox.width - 1) for c in pixel_coords])
                 data[rs, cs] = 1
+
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=geobox.width,
