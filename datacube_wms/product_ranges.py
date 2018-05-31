@@ -106,7 +106,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
     r["bboxes"] = {crsid: extents[crsid].boundingbox for crsid in crsids}
     if extractor is not None:
         for path in sub_r.keys():
-            sub_r[path]["times"]=sorted(sub_r[path]["time_set"])
+            sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
             sub_r[path]["bboxes"] = {crsid: sub_r[path]["extents"][crsid].boundingbox for crsid in crsids}
             del sub_r[path]["extents"]
         r["sub_products"] = sub_r

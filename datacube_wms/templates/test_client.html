@@ -12,18 +12,18 @@
 </head>
 <body>
 
-<div id="mapid" style="width: 1200px; height: 800px;"></div>
-<div id="timeline" style="width: 1200px; height: 200px;"></div>
+<div id="mapid" style="width: 800px; height: 600px;"></div>
+<div id="timeline" style="width: 800px; height: 200px;"></div>
 <script>
     function formatDate(date) {
-      return date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate();
+      return date.getFullYear() + "-" + (date.getMonth()) + "-" + date.getDate();
     };
     function formatDateRange(start, end) {
         return formatDate(start) + "/" + formatDate(end);
     };
 
-    var start = new Date(2006, 1, 1);
-    var end = new Date(2006, 3, 1);
+    var start = new Date(2013, 3, 19);
+    var end = new Date(2013, 4, 19);
 
     var mymap = L.map('mapid').setView([-35.0, 148.75], 12);
     mbUrl = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png'; 
@@ -31,13 +31,13 @@
     cube = L.tileLayer.wms(
         "{{ url_for('wms_impl') }}",
         {
-            minZoom: 6,
-            maxZoom: 19,
-            layers: "ls5_sr_rgb",
+            minZoom: 1,
+            maxZoom: 1000,
+            layers: "ls8_nbar_scene",
             format: 'image/png',
             transparent: true,
             attribution: "Teh Cube",
-            time: formatDateRange(start, end)
+            time: formatDate(start)
         }
     );
     cube_cir = L.tileLayer.wms(
@@ -79,8 +79,8 @@
         editable: {
             updateTime: true
         },
-        start: new Date(2006, 1, 1),
-        end: new Date()
+        start: new Date(2013, 2, 1),
+        end: new Date(2013, 4, 1)
     };
     var timeline = new vis.Timeline(document.getElementById('timeline'), items, options);
 </script>
