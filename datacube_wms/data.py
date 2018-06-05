@@ -15,9 +15,10 @@ try:
     from datacube_wms.wms_cfg_local import service_cfg
 except:
     from datacube_wms.wms_cfg import service_cfg
-from datacube_wms.wms_utils import resp_headers, img_coords_to_geopoint, int_trim, \
+from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
         bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
         solar_correct_data
+from datacube_wms.ogc_utils import resp_headers
 
 
 class DataStacker(object):
