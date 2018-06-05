@@ -40,7 +40,6 @@ def ogc_impl():
         return e.exception_response()
     except Exception as e:
         tb = sys.exc_info()[2]
-        # TODO: Should return WCSException if that's what service says.
         if service == "WCS":
             eclass = WCS1Exception
         else:
