@@ -25,7 +25,7 @@ class OGCException(Exception):
         })
 
     def exception_response(self, traceback=[]):
-        return (render_template("wms_error.xml",
+        return (render_template("ogc_error.xml",
                                 exception=self,
                                 traceback=traceback,
                                 version=self.version,
@@ -57,14 +57,4 @@ class WCS1Exception(OGCException):
     version = "1.2.0"
     schema_url="http://schemas.opengis.net/wcs/1.0.0/OGC-exception.xsd"
 
-
-def wms_exception(e, traceback=[]):
-    return (render_template("wms_error.xml",
-                            exception=e,
-                            traceback=traceback,
-                            version="1.3.0",
-                            schema_url="http://schemas.opengis.net/wms/1.3.0/exceptions_1_3_0.xsd"),
-            e.http_response,
-            resp_headers({"Content-Type": "application/xml"})
-           )
 

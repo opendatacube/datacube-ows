@@ -383,6 +383,8 @@ def get_ranges(dc, product, path=None):
                 "max": float(result["lon_max"]),
             },
             "times": times,
+            "start_time": times[0],
+            "end_time": times[-1],
             "time_set": set(times),
             "bboxes": result["bboxes"]
         }

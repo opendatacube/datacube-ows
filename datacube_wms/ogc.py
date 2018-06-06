@@ -5,6 +5,7 @@ import traceback
 from flask import Flask, request, render_template
 
 from datacube_wms.wms import handle_wms
+from datacube_wms.wcs import handle_wcs
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
 
 
@@ -32,6 +33,9 @@ def ogc_impl():
         if service == "WMS":
             # WMS operation Map
             return handle_wms(nocase_args)
+        elif service == "WCS":
+            # WMS operation Map
+            return handle_wcs(nocase_args)
         else:
             # Should we return a WMS or WCS exception if there is no service specified?
             # Defaulting to WMS because that's what we already have.

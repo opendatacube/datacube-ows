@@ -36,6 +36,6 @@ def get_capabilities(args):
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
-    return render_template("capabilities.xml", service=service_cfg, platforms=platforms), 200, resp_headers(
+    return render_template("wms_capabilities.xml", service=service_cfg, platforms=platforms), 200, resp_headers(
         {"Content-Type": "application/xml", "Cache-Control": "no-cache", "Cache-Control": "max-age=0"})
 
