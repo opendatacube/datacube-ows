@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding="UTF-8" ?>
+<CoverageDescription
+            version="1.0.0"
+            updateSequence="0"
+            xmlns="http://www.opengis.net/wcs"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlns:gml="http://www.opengis.net/gml"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.0.0/describeCoverage.xsd">
+    {% for product in products %}
+    <CoverageOffering>
+        <name>{{ product.name }}</name>
+        <label>{{ product.title }}</label>
+        <lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
+            <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
+            <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+            <gml:timePosition>{{ product.ranges.start_time.isoformat() }}</gml:timePosition>
+            <gml:timePosition>{{ product.ranges.end_time.isoformat() }}</gml:timePosition>
+        </lonLatEnvelope>
+        <domainSet>
+        </domainSet>
+        <rangeSet>
+            <RangeSet>
+                <name></name>
+                <label></label>
+            </RangeSet>
+        </rangeSet>
+        <supportedCRSs>
+        </supportedCRSs>
+        <supportedFormats>
+            <formats></formats>
+        </supportedFormats>
+    </CoverageOffering>
+    {% endfor %}
+</CoverageDescription>

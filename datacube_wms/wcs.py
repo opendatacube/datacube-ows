@@ -22,6 +22,8 @@ def handle_wcs(nocase_args):
         raise WCS1Exception("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":
         return get_capabilities(nocase_args)
+    elif operation == "DESCRIBECOVERAGE":
+        return desc_coverages(nocase_args)
     else:
         raise WCS1Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
 
@@ -29,8 +31,6 @@ def handle_wcs(nocase_args):
 def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
-    # Extract layer metadata from Datacube.
-    platforms = get_layers(refresh=True)
     section = args.get("section")
     if section:
         section = section.lower()
@@ -48,8 +48,10 @@ def get_capabilities(args):
     elif section == "/wcs_capabilities/contentmetadata":
         show_content_metadata = True
     else:
-        raise WCS1Exception("Invalid section", WCS1Exception.INVALID_PARAMETER_VALUE, locator="Section parameter")
+        raise WCS1Exception("Invalid section: %s" % section, WCS1Exception.INVALID_PARAMETER_VALUE, locator="Section parameter")
 
+    # Extract layer metadata from Datacube.
+    platforms = get_layers(refresh=True)
     return (
             render_template("wcs_capabilities.xml",
                             show_service=show_service,
@@ -63,6 +65,41 @@ def get_capabilities(args):
                     "Cache-Control": "no-cache",
                     "Cache-Control": "max-age=0"
             })
+    )
+
+
+def desc_coverages(args):
+    # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
+    # Extract layer metadata from Datacube.
+    platforms = get_layers(refresh=True)
+
+    coverages = args.get("coverage")
+    products = []
+    if coverages:
+        coverages = coverages.split(",")
+        for c in coverages:
+            p = platforms.product_index.get(c)
+            if p:
+                products.append(p)
+            else:
+                raise WCS1Exception("Invalid coverage: %s" % c,
+                                    WCS1Exception.COVERAGE_NOT_DEFINED,
+                                    locator="Coverage parameter")
+    else:
+        for plat in platforms:
+            for p in plat.products:
+                products.append(p)
+
+    return (
+        render_template("wcs_desc_coverage.xml",
+                        service=service_cfg,
+                        products=products),
+        200,
+        resp_headers({
+            "Content-Type": "application/xml",
+            "Cache-Control": "no-cache",
+            "Cache-Control": "max-age=0"
+        })
     )
 
 
