@@ -2,6 +2,10 @@ try:
     from datacube_wms.wms_cfg_local import layer_cfg
 except:
     from datacube_wms.wms_cfg import layer_cfg
+try:
+    from datacube_wms.wms_cfg_local import service_cfg
+except:
+    from datacube_wms.wms_cfg import service_cfg
 from datacube_wms.product_ranges import get_ranges, get_sub_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.band_mapper import StyleDef
@@ -77,6 +81,16 @@ class ProductLayerDef(object):
             self.extent_mask_func = [ product_cfg["extent_mask_func"] ]
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
 
+        # For WCS
+        self.native_CRS = self.product.definition["storage"]["crs"]
+        svc_cfg = get_service_cfg()
+        if self.native_CRS not in svc_cfg.published_CRSs:
+            raise Exception("Native CRS for product {} ({}) not in published CRSs".format(self.product_name, self.native_CRS))
+        data = dc.load(self.product_name, dask_chunks={})
+        self.grid_high_x = len(data[svc_cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
+        self.grid_high_y = len(data[svc_cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
+
+
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
         self.name = platform_cfg["name"]
@@ -125,3 +139,57 @@ class LayerDefs(object):
 
 def get_layers(refresh = False):
     return LayerDefs(layer_cfg, refresh)
+
+class ServiceCfg(object):
+    _instance = None
+    initialised = False
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(ServiceCfg, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, service_cfg, refresh=False):
+        if not self.initialised or refresh:
+            self.initialised = True
+            self.title = service_cfg["title"]
+            self.url = service_cfg["url"]
+            if not self.url.startswith("http"):
+                raise Exception("URL in service_cfg does not start with http or https.")
+            self.published_CRSs = {}
+            for crs_str, crsdef in service_cfg["published_CRSs"].items():
+                self.published_CRSs[crs_str] = {
+                    "geographic": crsdef["geographic"],
+                    "horizontal_coord": crsdef.get("horizontal_coord", "longititude"),
+                    "vertical_coord": crsdef.get("vertical_coord", "latitude"),
+                    "vertical_coord_first": crsdef.get("vertical_coord_first", False),
+                }
+                if self.published_CRSs[crs_str]["geographic"]:
+                    if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
+                        raise Exception("Published CRS {} is geographic but has a horizontal coordinate that is not 'longitude'".format(crs_str))
+                    if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
+                        raise Exception("Published CRS {} is geographic but has a vertical coordinate that is not 'latitude'".format(crs_str))
+            self.default_geographic_CRS = service_cfg["default_geographic_CRS"]
+            if self.default_geographic_CRS not in self.published_CRSs:
+                raise Exception("Configured default geographic CRS not listed in published CRSs.")
+            if not self.published_CRSs[self.default_geographic_CRS]["geographic"]:
+                raise Exception("Configured default geographic CRS not listed in published CRSs as geographic.")
+
+            self.layer_limit = service_cfg.get("layer_limit", 1)
+            self.max_width = service_cfg.get("max_width", 256)
+            self.max_height = service_cfg.get("max_height", 256)
+
+            self.abstract = service_cfg.get("abstract")
+            self.keywords = service_cfg.get("keywords", [])
+            self.contact_info = service_cfg.get("contact_info", {})
+            self.fees = service_cfg.get("fees", "")
+            self.access_constraints = service_cfg.get("access_constraints", "")
+
+    def __getitem__(self, name):
+        return getattr(self, name)
+
+
+def get_service_cfg(refresh=False):
+    return ServiceCfg(service_cfg, refresh)
+
+

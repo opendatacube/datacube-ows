@@ -21,12 +21,30 @@
 
         <domainSet>
             <spatialDomain>
-                <gml:Envelope>
-                    <gml:pos></gml:pos>
+                <gml:Envelope srsName="{{ service.default_geographic_CRS }}">
+                    <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
+                    <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
                 </gml:Envelope>
+                <gml:RectifiedGrid dimension="2">
+                    <gml:limits>
+                        <gml:GridEnvelope>
+                            <gml:low>0 0</gml:low>
+                            <gml:high>{{ product.grid_high_x }} {{ product.grid_high_y }}</gml:high>
+                        </gml:GridEnvelope>
+                    </gml:limits>
+                    <gml:axisName>{{ service.published_CRSs[product.native_CRS]["horizontal_coord"] }}</gml:axisName>
+                    <gml:axisName>{{ service.published_CRSs[product.native_CRS]["vertical_coord"] }}</gml:axisName>
+                    <gml:origin>
+                        <gml:pos></gml:pos>
+                    </gml:origin>
+                    <gml:offsetVector></gml:offsetVector>
+                    <gml:offsetVector></gml:offsetVector>
+                </gml:RectifiedGrid>
             </spatialDomain>
             <temporalDomain>
-                
+                {% for t in product.ranges.times %}
+                    <gml:timePosition>{{ t.isoformat() }}</gml:timePosition>
+                {%  endfor %}
             </temporalDomain>
         </domainSet>
         <rangeSet>

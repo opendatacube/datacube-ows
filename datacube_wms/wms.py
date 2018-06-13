@@ -8,11 +8,7 @@ from datacube_wms.ogc_utils import resp_headers
 from datacube_wms.ogc_exceptions import WMSException
 
 
-try:
-    from datacube_wms.wms_cfg_local import service_cfg
-except:
-        from datacube_wms.wms_cfg import service_cfg
-from datacube_wms.wms_layers import get_layers
+from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 
 def handle_wms(nocase_args):
@@ -36,6 +32,6 @@ def get_capabilities(args):
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
-    return render_template("wms_capabilities.xml", service=service_cfg, platforms=platforms), 200, resp_headers(
+    return render_template("wms_capabilities.xml", service=get_service_cfg(), platforms=platforms), 200, resp_headers(
         {"Content-Type": "application/xml", "Cache-Control": "no-cache", "Cache-Control": "max-age=0"})
 

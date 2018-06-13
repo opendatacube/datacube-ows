@@ -8,11 +8,7 @@ from datacube_wms.ogc_utils import resp_headers
 from datacube_wms.ogc_exceptions import WCS1Exception
 
 
-try:
-    from datacube_wms.wms_cfg_local import service_cfg
-except:
-    from datacube_wms.wms_cfg import service_cfg
-from datacube_wms.wms_layers import get_layers
+from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 
 def handle_wcs(nocase_args):
@@ -57,7 +53,7 @@ def get_capabilities(args):
                             show_service=show_service,
                             show_capability=show_capability,
                             show_content_metadata=show_content_metadata,
-                            service=service_cfg,
+                            service=get_service_cfg(),
                             platforms=platforms),
             200,
             resp_headers({
@@ -92,7 +88,7 @@ def desc_coverages(args):
 
     return (
         render_template("wcs_desc_coverage.xml",
-                        service=service_cfg,
+                        service=get_service_cfg(),
                         products=products),
         200,
         resp_headers({

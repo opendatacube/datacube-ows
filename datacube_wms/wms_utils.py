@@ -6,10 +6,10 @@ from datacube.utils import geometry
 import math
 
 try:
-    from datacube_wms.wms_cfg_local import response_cfg, service_cfg
+    from datacube_wms.wms_cfg_local import response_cfg
 except:
-    from datacube_wms.wms_cfg import response_cfg, service_cfg
-from datacube_wms.wms_layers import get_layers
+    from datacube_wms.wms_cfg import response_cfg
+from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 from datacube_wms.ogc_exceptions import WMSException
 
@@ -17,7 +17,7 @@ from datacube_wms.ogc_exceptions import WMSException
 def _get_geobox(args, crs):
     width = int(args['width'])
     height = int(args['height'])
-    if service_cfg["published_CRSs"][crs.crs_str].get("vertical_coord_first"):
+    if get_service_cfg().published_CRSs[crs.crs_str]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
     else:
         minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
@@ -66,8 +66,9 @@ def zoom_factor(args, crs):
 
 
 def img_coords_to_geopoint(geobox, i, j):
-    h_coord = service_cfg["published_CRSs"][geobox.crs.crs_str].get("horizontal_coord", "longitude")
-    v_coord = service_cfg["published_CRSs"][geobox.crs.crs_str].get("vertical_coord", "latitude")
+    service_cfg = get_service_cfg()
+    h_coord = service_cfg.published_CRSs[geobox.crs.crs_str]["horizontal_coord"]
+    v_coord = service_cfg.published_CRSs[geobox.crs.crs_str]["vertical_coord"]
     return geometry.point(geobox.coordinates[h_coord].values[int(i)],
                           geobox.coordinates[v_coord].values[int(j)],
                           geobox.crs)
@@ -165,7 +166,7 @@ class GetParameters(object):
             crs_arg = "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                         errcode=WMSException.INVALID_CRS,
-                        permitted_values=service_cfg["published_CRSs"].keys())
+                        permitted_values=get_service_cfg().published_CRSs.keys())
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)
