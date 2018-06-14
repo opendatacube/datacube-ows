@@ -9,7 +9,7 @@ s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 
 service_cfg = {
     # Required config
-    "title": "WMS server for Australian Landsat Datacube",
+    "title": "WMS/WCS server for Australian Landsat Datacube",
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
     "published_CRSs": {
         "EPSG:3857": {  # Web Mercator
@@ -23,10 +23,13 @@ service_cfg = {
         },
         "EPSG:3577": {  # GDA-94, internal representation
             "geographic": False,
-            "horizontal_coord": "easting",
-            "vertical_coord": "northing",
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
         },
     },
+
+    # Must be a geographic CRS in the published_CRSs list.  EPSG:4326 is recommended, but any geographic CRS should work.
+    "default_geographic_CRS": "EPSG:4326",
 
     # Technically optional config, but strongly recommended
     "layer_limit": 1,

@@ -20,10 +20,13 @@ service_cfg = {
         },
         "EPSG:3577": {  # GDA-94, internal representation
             "geographic": False,
-            "horizontal_coord": "easting",
-            "vertical_coord": "northing",
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
         },
     },
+
+    # Must be a geographic CRS in the published_CRSs list.  EPSG:4326 is recommended, but any geographic CRS should work.
+    "default_geographic_CRS": "EPSG:4326",
 
     # Technically optional config, but strongly recommended
     "layer_limit": 1,
