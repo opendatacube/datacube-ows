@@ -35,10 +35,10 @@
                     <gml:axisName>{{ service.published_CRSs[product.native_CRS]["horizontal_coord"] }}</gml:axisName>
                     <gml:axisName>{{ service.published_CRSs[product.native_CRS]["vertical_coord"] }}</gml:axisName>
                     <gml:origin>
-                        <gml:pos></gml:pos>
+                        <gml:pos>{{ product.origin_x }} {{  product.origin_y }}</gml:pos>
                     </gml:origin>
-                    <gml:offsetVector></gml:offsetVector>
-                    <gml:offsetVector></gml:offsetVector>
+                    <gml:offsetVector>{{ product.x_resolution }} 0</gml:offsetVector>
+                    <gml:offsetVector>0 {{ product.y_resolution }}</gml:offsetVector>
                 </gml:RectifiedGrid>
             </spatialDomain>
             <temporalDomain>
@@ -49,15 +49,38 @@
         </domainSet>
         <rangeSet>
             <RangeSet>
-                <name></name>
-                <label></label>
+                <name>Bands</name>
+                <label>Bands/measurements</label>
+                <axisDescription>
+                    <AxisDescription>
+                        <name>measurements</name>
+                        <label>Bands/Channels/Samples</label>
+                        <values>
+                            {% for b in product.bands %}
+                                <singleValue>{{ b }}</singleValue>
+                            {% endfor %}
+                        </values>
+                    </AxisDescription>
+                </axisDescription>
+                <nullValues>
+                    {% for nv in product.nodata_values %}
+                    <singleValue>{{ nv }}</singleValue>
+                    {% endfor %}
+                </nullValues>
             </RangeSet>
         </rangeSet>
         <supportedCRSs>
+            {% for crs in service.published_CRSs %}
+                <requestResponseCRSs>{{ crs }}</requestResponseCRSs>
+            {% endfor %}
+            <nativeCRSs>{{ product.native_CRS }}</nativeCRSs>
         </supportedCRSs>
-        <supportedFormats>
-            <formats></formats>
+        <supportedFormats nativeFormat="GeoTIFF">
+            <formats>GeoTIFF</formats>
         </supportedFormats>
+        <supportedInterpolations default="nearest neighbor">
+            <interpolationMethod>nearest neighbor</interpolationMethod>
+        </supportedInterpolations>
     </CoverageOffering>
     {% endfor %}
 </CoverageDescription>

@@ -89,7 +89,13 @@ class ProductLayerDef(object):
         data = dc.load(self.product_name, dask_chunks={})
         self.grid_high_x = len(data[svc_cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
         self.grid_high_y = len(data[svc_cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
-
+        self.origin_x = data.affine[3]
+        self.origin_y = data.affine[5]
+        self.resolution_x = data.affine[0]
+        self.resolution_y = data.affine[4]
+        bands = dc.list_measurements().ix[self.product_name]
+        self.bands = bands.index.values
+        self.nodata_values = bands['nodata'].values
 
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
@@ -160,7 +166,7 @@ class ServiceCfg(object):
             for crs_str, crsdef in service_cfg["published_CRSs"].items():
                 self.published_CRSs[crs_str] = {
                     "geographic": crsdef["geographic"],
-                    "horizontal_coord": crsdef.get("horizontal_coord", "longititude"),
+                    "horizontal_coord": crsdef.get("horizontal_coord", "longitude"),
                     "vertical_coord": crsdef.get("vertical_coord", "latitude"),
                     "vertical_coord_first": crsdef.get("vertical_coord_first", False),
                 }
