@@ -191,6 +191,9 @@ class ServiceCfg(object):
             self.fees = service_cfg.get("fees", "")
             self.access_constraints = service_cfg.get("access_constraints", "")
 
+            self.wms = service_cfg.get("wms", True)
+            self.wcs = service_cfg.get("wcs", False)
+
     def __getitem__(self, name):
         return getattr(self, name)
 

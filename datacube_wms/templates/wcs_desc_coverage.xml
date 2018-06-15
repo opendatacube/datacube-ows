@@ -43,7 +43,7 @@
             </spatialDomain>
             <temporalDomain>
                 {% for t in product.ranges.times %}
-                    <gml:timePosition>{{ t.isoformat() }}</gml:timePosition>
+                    <gml:timePosition frame="#ISO-8601">{{ t.isoformat() }}</gml:timePosition>
                 {%  endfor %}
             </temporalDomain>
         </domainSet>

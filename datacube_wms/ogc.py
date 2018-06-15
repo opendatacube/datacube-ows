@@ -8,6 +8,8 @@ from datacube_wms.wms import handle_wms
 from datacube_wms.wcs import handle_wcs
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
 
+from datacube_wms.wms_layers import get_service_cfg
+
 
 
 app = Flask(__name__.split('.')[0])
@@ -24,18 +26,24 @@ def lower_get_args():
             d[kl] = v
     return d
 
-
 @app.route('/')
 def ogc_impl():
     nocase_args = lower_get_args()
     service = nocase_args.get("service","").upper()
+    svc_cfg = get_service_cfg()
     try:
         if service == "WMS":
             # WMS operation Map
-            return handle_wms(nocase_args)
+            if svc_cfg.wms:
+                return handle_wms(nocase_args)
+            else:
+                raise WMSException("Invalid service", locator="Service parameter")
         elif service == "WCS":
-            # WMS operation Map
-            return handle_wcs(nocase_args)
+            # WCS operation Map
+            if svc_cfg.wcs:
+                return handle_wcs(nocase_args)
+            else:
+                raise WCS1Exception("Invalid service", locator="Service parameter")
         else:
             # Should we return a WMS or WCS exception if there is no service specified?
             # Defaulting to WMS because that's what we already have.

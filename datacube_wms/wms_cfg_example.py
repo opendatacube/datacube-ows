@@ -31,6 +31,12 @@ service_cfg = {
     # Must be a geographic CRS in the published_CRSs list.  EPSG:4326 is recommended, but any geographic CRS should work.
     "default_geographic_CRS": "EPSG:4326",
 
+    # Support WMS service (defaults to True)
+    "wms": True,
+
+    # Support WCS service (defaults to False)
+    "wcs": True,
+
     # Technically optional config, but strongly recommended
     "layer_limit": 1,
     "max_width": 512,
