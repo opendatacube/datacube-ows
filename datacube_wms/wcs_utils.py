@@ -235,7 +235,9 @@ def get_coverage_data(req):
     dc = get_cube()
     data_array = []
     for t in req.times:
-        time_rng = [t, t + datetime.timedelta(days=1)]
+        t1 = datetime.datetime(t.year, t.month, t.day) - datetime.timedelta(hours=req.product.time_zone)
+        t2 = t1 + datetime.timedelta(days=1)
+        time_rng = [t1, t2]
         time_data = dc.load(time=time_rng,
                             product=req.product_name,
                             latitude=(req.miny, req.maxy),

@@ -6,7 +6,7 @@ from datacube_wms.data import get_map, feature_info
 from datacube_wms.ogc_utils import resp_headers
 
 from datacube_wms.ogc_exceptions import WCS1Exception
-from datacube_wms.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
+from datacube_wms.wcs_utils import WCS1GetCoverageRequest, get_coverage_data, get_tiff
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
