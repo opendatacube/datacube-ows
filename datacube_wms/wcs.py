@@ -6,7 +6,7 @@ from datacube_wms.data import get_map, feature_info
 from datacube_wms.ogc_utils import resp_headers
 
 from datacube_wms.ogc_exceptions import WCS1Exception
-
+from datacube_wms.wcs_utils import WCS1GetCoverageRequest
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
@@ -20,6 +20,8 @@ def handle_wcs(nocase_args):
         return get_capabilities(nocase_args)
     elif operation == "DESCRIBECOVERAGE":
         return desc_coverages(nocase_args)
+    elif operation == "GETCOVERAGE":
+        return get_coverage(nocase_args)
     else:
         raise WCS1Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
 
@@ -99,3 +101,8 @@ def desc_coverages(args):
     )
 
 
+def get_coverage(args):
+    # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
+    req = WCS1GetCoverageRequest(args)
+
+    raise WCS1Exception("GetCoverage not yet implemented")
