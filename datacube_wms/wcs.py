@@ -6,7 +6,7 @@ from datacube_wms.data import get_map, feature_info
 from datacube_wms.ogc_utils import resp_headers
 
 from datacube_wms.ogc_exceptions import WCS1Exception
-from datacube_wms.wcs_utils import WCS1GetCoverageRequest
+from datacube_wms.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
@@ -104,5 +104,12 @@ def desc_coverages(args):
 def get_coverage(args):
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
     req = WCS1GetCoverageRequest(args)
-
+    data = get_coverage_data(req)
+    return (
+            get_tiff(req.product, data, req.response_crsid),
+            200,
+            resp_headers({
+                "Content-Type": "image/geotiff",
+            })
+    )
     raise WCS1Exception("GetCoverage not yet implemented")

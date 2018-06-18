@@ -96,6 +96,7 @@ class ProductLayerDef(object):
         bands = dc.list_measurements().ix[self.product_name]
         self.bands = bands.index.values
         self.nodata_values = bands['nodata'].values
+        self.nodata_dict = { a:b for a,b in zip(self.bands, self.nodata_values)  }
 
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):

@@ -1,7 +1,14 @@
 import datetime
+from collections import OrderedDict
+
+import datacube
+import numpy
+import xarray
 
 from datacube.utils import geometry
+from rasterio import MemoryFile
 
+from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.ogc_exceptions import WCS1Exception
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
@@ -92,7 +99,7 @@ class WCS1GetCoverageRequest(object):
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="TIME parameter"
                         )
-                    self.times.append(t)
+                    self.times.append(time)
                 except ValueError:
                     raise WCS1Exception(
                         "Time value '%s' not a valid ISO-8601 date" % t,
@@ -169,8 +176,8 @@ class WCS1GetCoverageRequest(object):
                 raise WCS1Exception("WIDTH parameter must be a positive integer",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="WIDTH parameter")
-            self.resx = None
-            self.resy = None
+            self.resx = ( self.maxx - self.minx) / self.width
+            self.resy = ( self.maxy - self.miny) / self.height
         elif "resx" in args:
             if "resy" not in args:
                 raise WCS1Exception("RESX parameter supplied without RESY parameter",
@@ -196,8 +203,10 @@ class WCS1GetCoverageRequest(object):
                 raise WCS1Exception("RESY parameter must be a positive number",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESY parameter")
-            self.width = None
-            self.height = None
+            self.width = ( self.maxx - self.minx) / self.resx
+            self.height = ( self.maxy - self.miny) / self.resy
+            self.width = int(self.width + 0.5)
+            self.height = int(self.height + 0.5)
         elif "height" in args:
             raise WCS1Exception("HEIGHT parameter supplied without WIDTH parameter",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
@@ -210,4 +219,118 @@ class WCS1GetCoverageRequest(object):
             raise WCS1Exception("You must specify either the WIDTH/HEIGHT parameters or RESX/RESY",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="RESX/RESY/WIDTH/HEIGHT parameters")
+
+    @property
+    def extent(self):
+        return geometry.polygon([(self.minx, self.miny),
+                                 (self.minx, self.maxy),
+                                 (self.maxx, self.maxy),
+                                 (self.maxx, self.miny),
+                                 (self.minx, self.miny)],
+                                self.request_crs)
+
+# Everything below this point is closely adapted from CEOS django wcs.
+# Will hopefully become more efficient as I better understand what is going on.
+def get_coverage_data(req):
+    dc = get_cube()
+    data_array = []
+    for t in req.times:
+        time_rng = [t, t + datetime.timedelta(days=1)]
+        time_data = dc.load(time=time_rng,
+                            product=req.product_name,
+                            latitude=(req.miny, req.maxy),
+                            longitude=(req.minx, req.maxx),
+                            measurements=req.bands,
+                            resolution=(req.resy, req.resx),
+                            crs = req.request_crsid,
+                            resampling = "nearest"
+                            )
+        if "time" in time_data:  # Why wouldn't it be?
+            # Why take a deep copy, what's wrong with what was passed us?
+            data_array.append(time_data.copy(deep=True))
+    release_cube(dc)
+    data=None
+    if data_array:
+        combined_data = xarray.concat(data_array, 'time')
+        data = combined_data.reindex({'time': sorted(combined_data.time.values)})
+        if data.dims['time'] > 1:  # ??
+            data = data.pipe(create_mosaic, no_data=req.product.nodata_values)
+        # Clear attrs
+        data.attrs = OrderedDict()
+        for band in data:
+            data[band].attrs = OrderedDict()
+        # No idea what this does
+        if 'time' in data:
+            data = data.isel(time=0, drop=True)
+
+    if data is None:
+        # CEOS returns an empty coverage file with full metadata.
+        raise WCS1Exception("Selected parameters return no coverage data", WCS1Exception.INVALID_PARAMETER_VALUE)
+
+    return data
+
+def create_mosaic(dataset_in, no_data=[]):
+    # Copied straight of CEOS.  This looks woefully inefficient
+    # Return a mosaic of the most recent pixel
+
+    dataset_in = dataset_in.copy(deep=True)
+    dataset_out = None
+    time_slices = reversed(range(len(dataset_in.time)))
+    for index in time_slices:
+        dataset_slice = dataset_in.isel(time=index).drop('time')
+        if dataset_out is None:
+            dataset_out = dataset_slice.copy(deep=True)
+        else:
+            for idx, key in enumerate(dataset_in.data_vars):
+                dataset_out[key].values[dataset_out[key].values == no_data[idx]] = dataset_slice[key].values[
+                    dataset_out[key].values == no_data[idx]]
+
+    return dataset_out
+
+def get_tiff(prod, data, response_crs):
+    """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
+
+    supported_dtype_map = {
+        'uint8': 1,
+        'uint16': 2,
+        'int16': 3,
+        'uint32': 4,
+        'int32': 5,
+        'float32': 6,
+        'float64': 7,
+        'complex': 9,
+        'complex64': 10,
+        'complex128': 11,
+    }
+
+    dtype_list = [data[array].dtype for array in data.data_vars]
+    dtype = str(max(dtype_list, key=lambda d: supported_dtype_map[str(d)]))
+
+    data = data.astype(dtype)
+    with MemoryFile() as memfile:
+        with memfile.open(
+                driver="GTiff",
+                width=data.dims['longitude'],
+                height=data.dims['latitude'],
+                count=len(data.data_vars),
+                transform=_get_transform_from_xr(data),
+                crs=response_crs,
+                dtype=dtype) as dst:
+            for idx, band in enumerate(data.data_vars, start=1):
+                dst.write(data[band].values, idx)
+            dst.set_nodatavals(
+                [ prod.nodata_dict[band] if band in prod.nodata_dict else 0 for band in data.data_vars ]
+            )
+        return memfile.read()
+
+
+def _get_transform_from_xr(dataset):
+    """Create a geotransform from an xarray dataset."""
+
+    from rasterio.transform import from_bounds
+    geotransform = from_bounds(dataset.longitude[0], dataset.latitude[-1], dataset.longitude[-1], dataset.latitude[0],
+                               len(dataset.longitude), len(dataset.latitude))
+
+    return geotransform
+
 
