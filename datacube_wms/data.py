@@ -20,19 +20,21 @@ from datacube_wms.ogc_utils import resp_headers
 
 
 class DataStacker(object):
-    def __init__(self, product, geobox, time, style=None, **kwargs):
+    def __init__(self, product, geobox, time, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
         self._geobox = geobox
-        self._style = style
+        if style:
+            self._needed_bands = style.needed_bands
+        elif bands:
+            self._needed_bands = bands
+        else:
+            self._needed_bands = self._product.product.measurements.keys()
         start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
         self._time = [start_time, start_time + timedelta(days=1)]
 
     def needed_bands(self):
-        if self._style:
-            return self._style.needed_bands
-        else:
-            return self._product.product.measurements.keys()
+        return self._needed_bands
 
     def point_in_dataset_by_bounds(self, point, dataset):
         # Return true if dataset contains point

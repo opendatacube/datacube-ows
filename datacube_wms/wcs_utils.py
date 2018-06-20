@@ -4,11 +4,13 @@ from collections import OrderedDict
 import datacube
 import numpy
 import xarray
+from affine import Affine
 
 from datacube.utils import geometry
 from rasterio import MemoryFile
 
 from datacube_wms.cube_pool import get_cube, release_cube
+from datacube_wms.data import DataStacker
 from datacube_wms.ogc_exceptions import WCS1Exception
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
@@ -220,78 +222,45 @@ class WCS1GetCoverageRequest(object):
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="RESX/RESY/WIDTH/HEIGHT parameters")
 
-    @property
-    def extent(self):
-        return geometry.polygon([(self.minx, self.miny),
+        self.extent = geometry.polygon([(self.minx, self.miny),
                                  (self.minx, self.maxy),
                                  (self.maxx, self.maxy),
                                  (self.maxx, self.miny),
                                  (self.minx, self.miny)],
                                 self.request_crs)
 
-# Everything below this point is closely adapted from CEOS django wcs.
-# Will hopefully become more efficient as I better understand what is going on.
+        self.affine = Affine.translation(self.minx, self.maxy) * Affine.scale((self.maxx-self.minx)/self.width, (self.maxy-self.miny)/self.height)
+        self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.request_crs)
+
+
 def get_coverage_data(req):
     dc = get_cube()
-    data_array = []
+    datasets = []
     for t in req.times:
-        t1 = datetime.datetime(t.year, t.month, t.day) - datetime.timedelta(hours=req.product.time_zone)
-        t2 = t1 + datetime.timedelta(days=1)
-        time_rng = [t1, t2]
-        time_data = dc.load(time=time_rng,
-                            product=req.product_name,
-                            latitude=(req.miny, req.maxy),
-                            longitude=(req.minx, req.maxx),
-                            measurements=req.bands,
-                            resolution=(req.resy, req.resx),
-                            crs = req.request_crsid,
-                            resampling = "nearest"
-                            )
-        if "time" in time_data:  # Why wouldn't it be?
-            # Why take a deep copy, what's wrong with what was passed us?
-            data_array.append(time_data.copy(deep=True))
-    release_cube(dc)
-    data=None
-    if data_array:
-        combined_data = xarray.concat(data_array, 'time')
-        data = combined_data.reindex({'time': sorted(combined_data.time.values)})
-        if data.dims['time'] > 1:  # ??
-            data = data.pipe(create_mosaic, no_data=req.product.nodata_values)
-        # Clear attrs
-        data.attrs = OrderedDict()
-        for band in data:
-            data[band].attrs = OrderedDict()
-        # No idea what this does
-        if 'time' in data:
-            data = data.isel(time=0, drop=True)
-
-    if data is None:
-        # CEOS returns an empty coverage file with full metadata.
+        # IF t was passed to the datasets method instead of the stacker
+        # constructor, we could use the one stacker.
+        stacker = DataStacker(req.product,
+                              req.geobox,
+                              t,
+                              bands=req.bands)
+        t_datasets = stacker.datasets(dc.index)
+        if not t_datasets:
+            # No matching data for this date
+            continue
+        datasets.extend(t_datasets)
+    if not datasets:
+        # Ideally return an empty coverage file with full metadata.
         raise WCS1Exception("Selected parameters return no coverage data", WCS1Exception.INVALID_PARAMETER_VALUE)
+    stacker = DataStacker(req.product,
+                          req.geobox,
+                          t,
+                          bands=req.bands)
+    return stacker.data(datasets, manual_merge=req.product.data_manual_merge)
 
-    return data
-
-def create_mosaic(dataset_in, no_data=[]):
-    # Copied straight of CEOS.  This looks woefully inefficient
-    # Return a mosaic of the most recent pixel
-
-    dataset_in = dataset_in.copy(deep=True)
-    dataset_out = None
-    time_slices = reversed(range(len(dataset_in.time)))
-    for index in time_slices:
-        dataset_slice = dataset_in.isel(time=index).drop('time')
-        if dataset_out is None:
-            dataset_out = dataset_slice.copy(deep=True)
-        else:
-            for idx, key in enumerate(dataset_in.data_vars):
-                dataset_out[key].values[dataset_out[key].values == no_data[idx]] = dataset_slice[key].values[
-                    dataset_out[key].values == no_data[idx]]
-
-    return dataset_out
 
 def get_tiff(prod, data, response_crs):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
-
+    # Copied from CEOS.  Does not seem to support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {
         'uint8': 1,
         'uint16': 2,
@@ -328,7 +297,9 @@ def get_tiff(prod, data, response_crs):
 
 def _get_transform_from_xr(dataset):
     """Create a geotransform from an xarray dataset."""
-
+    # Copied from CEOS.
+    # Looks like the rasterio equivalent of a Geobox.
+    # Not sure if this code will work with a non-geographic CRS??
     from rasterio.transform import from_bounds
     geotransform = from_bounds(dataset.longitude[0], dataset.latitude[-1], dataset.longitude[-1], dataset.latitude[0],
                                len(dataset.longitude), len(dataset.latitude))

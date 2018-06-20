@@ -110,6 +110,7 @@ def get_coverage(args):
             200,
             resp_headers({
                 "Content-Type": "image/geotiff",
+                'content-disposition': 'attachment; filename=%s.tiff' % req.product_name
             })
     )
     raise WCS1Exception("GetCoverage not yet implemented")
