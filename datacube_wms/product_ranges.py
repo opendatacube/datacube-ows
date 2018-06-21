@@ -91,7 +91,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
                 ext = ext.to_crs(crs)
             cvx_ext = ext.convex_hull
             if cvx_ext != ext:
-                print ("Dataset", ds.id, "CRS", crsid, "extent is not convex.")
+                print ("WARNING: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
             if extents[crsid] is None:
                 extents[crsid] = cvx_ext
             else:
