@@ -1,7 +1,7 @@
-FROM opendatacube/datacube-core:1.6rc1
+FROM opendatacube/datacube-core:1.5.4
 
 RUN pip3 install \
-    flask scikit-image gunicorn rasterio==1.0a12 \
+    flask scikit-image gunicorn rasterio==1.0a12 boto3 \
     && rm -rf $HOME/.cache/pip
 
 RUN apt-get update && apt-get install -y \
