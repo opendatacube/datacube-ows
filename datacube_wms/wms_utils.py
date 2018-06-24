@@ -18,9 +18,17 @@ def _get_geobox(args, crs):
     width = int(args['width'])
     height = int(args['height'])
     if get_service_cfg().published_CRSs[crs.crs_str]["vertical_coord_first"]:
+def _get_geobox_xy(args, crs):
+    if service_cfg["published_CRSs"][crs.crs_str].get("vertical_coord_first"):
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
     else:
         minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
+    return minx, miny, maxx, maxy
+
+def _get_geobox(args, crs):
+    width = int(args['width'])
+    height = int(args['height'])
+    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
 
     # miny-maxy for negative scale factor and maxy in the translation, includes inversion of Y axis.
     affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
@@ -37,7 +45,7 @@ def zoom_factor(args, crs):
     # Extract request bbox and crs
     width = int(args['width'])
     height = int(args['height'])
-    minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
+    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
     p1 = geometry.point(minx, maxy, crs)
     p2 = geometry.point(minx, miny, crs)
     p3 = geometry.point(maxx, maxy, crs)

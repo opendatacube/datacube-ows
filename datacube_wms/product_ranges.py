@@ -89,15 +89,18 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
             ext = ds.extent
             if ext.crs != crs:
                 ext = ext.to_crs(crs)
+            cvx_ext = ext.convex_hull
+            if cvx_ext != ext:
+                print ("WARNING: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
             if extents[crsid] is None:
-                extents[crsid] = ext
+                extents[crsid] = cvx_ext
             else:
-                extents[crsid] = extents[crsid].union(ext)
+                extents[crsid] = extents[crsid].union(cvx_ext)
             if path is not None:
                 if sub_r[path]["extents"][crsid] is None:
-                    sub_r[path]["extents"][crsid] = ext
+                    sub_r[path]["extents"][crsid] = cvx_ext
                 else:
-                    sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(ext)
+                    sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(cvx_ext)
 
         ds_count += 1
 

@@ -6,6 +6,8 @@ import xarray
 from affine import Affine
 from rasterio.io import MemoryFile
 from skimage.draw import polygon as skimg_polygon
+from itertools import chain
+import re
 
 import datacube
 from datacube.utils import geometry
@@ -350,6 +352,28 @@ def _write_polygon(geobox, polygon, zoom_fill):
         return memfile.read()
 
 
+def get_s3_browser_uris(datasets):
+    uris = [d.uris for d in datasets]
+    uris = list(chain.from_iterable(uris))
+    unique_uris = set(uris)
+
+    # convert to browsable link
+    def convert(uri):
+        regex = re.compile("s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)ARD-METADATA.yaml")
+        uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
+        result = regex.match(uri)
+        if result is not None:
+            new_uri = uri_format.format(bucket=result.group("bucket"),
+                                        prefix=result.group("prefix"))
+        else:
+            new_uri = uri;
+        return new_uri;
+
+    formatted = [convert(uri) for uri in unique_uris]
+
+    return formatted
+
+
 def feature_info(args):
     # Parse GET parameters
     params = GetFeatureInfoParameters(args)
@@ -473,6 +497,7 @@ def feature_info(args):
             lads = list(available_dates)
             lads.sort()
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in lads]
+            feature_json["data_links"] = sorted(get_s3_browser_uris(datasets))
         release_cube(dc)
     except Exception as e:
         release_cube(dc)
