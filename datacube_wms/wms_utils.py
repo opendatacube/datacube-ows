@@ -14,16 +14,13 @@ from datacube_wms.wms_layers import get_layers, get_service_cfg
 from datacube_wms.ogc_exceptions import WMSException
 
 
-def _get_geobox(args, crs):
-    width = int(args['width'])
-    height = int(args['height'])
-    if get_service_cfg().published_CRSs[crs.crs_str]["vertical_coord_first"]:
 def _get_geobox_xy(args, crs):
-    if service_cfg["published_CRSs"][crs.crs_str].get("vertical_coord_first"):
+    if get_service_cfg().published_CRSs[crs.crs_str]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
     else:
         minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
     return minx, miny, maxx, maxy
+
 
 def _get_geobox(args, crs):
     width = int(args['width'])
