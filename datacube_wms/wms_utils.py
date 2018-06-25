@@ -204,8 +204,8 @@ class GetParameters(object):
         else:
             crs_arg = "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
-                        errcode=WMSException.INVALID_CRS,
-                        permitted_values=service_cfg["published_CRSs"].keys())
+                             errcode=WMSException.INVALID_CRS,
+                             permitted_values=service_cfg["published_CRSs"].keys())
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)
@@ -232,9 +232,9 @@ class GetMapParameters(GetParameters):
     def method_specific_init(self, args):
         # Validate Format parameter
         self.format = get_arg(args, "format", "image format",
-                  errcode=WMSException.INVALID_FORMAT,
-                  lower=True,
-                  permitted_values=["image/png"])
+                              errcode=WMSException.INVALID_FORMAT,
+                              lower=True,
+                              permitted_values=["image/png"])
         # Styles
         self.styles = args.get("styles", "").split(",")
         if len(self.styles) != 1:
@@ -261,8 +261,8 @@ class GetFeatureInfoParameters(GetParameters):
     def method_specific_init(self, args):
         # Validate Formata parameter
         self.format = get_arg(args, "info_format", "info format", lower=True,
-                  errcode=WMSException.INVALID_FORMAT,
-                  permitted_values=["application/json"])
+                              errcode=WMSException.INVALID_FORMAT,
+                              permitted_values=["application/json"])
         # Point coords
         if self.version == "1.1.1":
             coords = ["x", "y"]
@@ -320,6 +320,3 @@ def solar_correct_data(data, dataset):
     csz = cosine_of_solar_zenith(data_lat, data_lon, data_time)
 
     return data / csz
-
-
-

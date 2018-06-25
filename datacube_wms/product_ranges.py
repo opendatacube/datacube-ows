@@ -65,7 +65,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
                         "max": None,
                     },
                     "time_set": set(),
-                    "extents": { crsid: None for crsid in crsids }
+                    "extents": {crsid: None for crsid in crsids}
                 }
             sub_r[path]["lat"]["min"] = accum_min(sub_r[path]["lat"]["min"], ds.metadata.lat.begin)
             sub_r[path]["lat"]["max"] = accum_max(sub_r[path]["lat"]["max"], ds.metadata.lat.end)
@@ -91,7 +91,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
                 ext = ext.to_crs(crs)
             cvx_ext = ext.convex_hull
             if cvx_ext != ext:
-                print ("WARNING: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
+                print("WARNING: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
             if extents[crsid] is None:
                 extents[crsid] = cvx_ext
             else:
@@ -109,7 +109,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
     r["bboxes"] = {crsid: extents[crsid].boundingbox for crsid in crsids}
     if extractor is not None:
         for path in sub_r.keys():
-            sub_r[path]["times"]=sorted(sub_r[path]["time_set"])
+            sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
             sub_r[path]["bboxes"] = {crsid: sub_r[path]["extents"][crsid].boundingbox for crsid in crsids}
             del sub_r[path]["extents"]
         r["sub_products"] = sub_r
@@ -122,7 +122,8 @@ def determine_ranges(dc):
     ranges = []
     for layer in layer_cfg:
         for product_cfg in layer["products"]:
-            ranges.append(determine_product_ranges(dc, product_cfg["product_name"], product_cfg.get("time_zone", 9), product_cfg.get("sub_product_extractor")))
+            ranges.append(determine_product_ranges(dc, product_cfg["product_name"], product_cfg.get("time_zone", 9),
+                                                   product_cfg.get("sub_product_extractor")))
     return ranges
 
 
@@ -133,13 +134,14 @@ def get_sqlconn(dc):
 
 def get_ids_in_db(conn):
     results = conn.execute("select id from wms.product_ranges")
-    ids =  [r["id"] for r in results]
+    ids = [r["id"] for r in results]
     return ids
 
 
 def get_subids_in_db(conn):
-    results = conn.execute("select product_id, sub_product_id from wms.sub_product_ranges order by product_id, sub_product_id")
-    ids =  [(r["product_id"], r["sub_product_id"]) for r in results]
+    results = conn.execute("select product_id, sub_product_id from wms.sub_product_ranges order by product_id, "
+                           "sub_product_id")
+    ids = [(r["product_id"], r["sub_product_id"]) for r in results]
     return ids
 
 
@@ -182,15 +184,15 @@ def rng_update(conn, rng):
                   bboxes=%s
             WHERE id=%s
                  """,
-                 rng["lat"]["min"],
-                 rng["lat"]["max"],
-                 rng["lon"]["min"],
-                 rng["lon"]["max"],
+                     rng["lat"]["min"],
+                     rng["lat"]["max"],
+                     rng["lon"]["min"],
+                     rng["lon"]["max"],
 
-                 Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                 Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
+                     Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
+                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
                        for crsid, bbox in rng["bboxes"].items()
-                       }),
+                           }),
                      rng["product_id"],
                      )
 
@@ -233,8 +235,8 @@ def rng_insert(conn, rng):
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
                      Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
                            for crsid, bbox in rng["bboxes"].items()
-                     })
-        )
+                           })
+                     )
 
 
 def ranges_equal(r1, rdb):
@@ -277,7 +279,7 @@ def update_range(dc, product):
         return None
 
     products = [find(p["products"], "product_name", product) for p in layer_cfg]
-    if (products[0] is not None):
+    if products[0] is not None:
         layer = products[0]
         product_range = determine_product_ranges(dc,
                                                  product,
@@ -368,7 +370,8 @@ def get_ranges(dc, product, path=None):
 
     conn = get_sqlconn(dc)
     if path is not None:
-        results = conn.execute("select * from wms.sub_product_ranges where product_id=%s and sub_product_id=%s", product_id, path)
+        results = conn.execute("select * from wms.sub_product_ranges where product_id=%s and sub_product_id=%s",
+                               product_id, path)
     else:
         results = conn.execute("select * from wms.product_ranges where id=%s", product_id)
     for result in results:
@@ -401,4 +404,4 @@ def get_sub_ranges(dc, product):
 
     conn = get_sqlconn(dc)
     results = conn.execute("select sub_product_id from wms.sub_product_ranges where product_id=%s", product_id)
-    return { r["sub_product_id"]: get_ranges(dc, product_id, r["sub_product_id"]) for r in results }
+    return {r["sub_product_id"]: get_ranges(dc, product_id, r["sub_product_id"]) for r in results}

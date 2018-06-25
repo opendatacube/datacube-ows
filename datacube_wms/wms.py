@@ -32,7 +32,7 @@ def lower_get_args():
 @app.route('/')
 def wms_impl():
     nocase_args = lower_get_args()
-    service = nocase_args.get("service","").upper()
+    service = nocase_args.get("service", "").upper()
     operation = nocase_args.get("request", "").upper()
     try:
         if service == "WMS":

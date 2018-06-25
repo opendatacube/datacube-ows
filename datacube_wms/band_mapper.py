@@ -15,7 +15,7 @@ class StyleDefBase(object):
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
-        self.masks = [ StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", []) ]
+        self.masks = [StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", [])]
         self.needed_bands = set()
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
@@ -36,7 +36,7 @@ class StyleDefBase(object):
 
 class DynamicRangeCompression(StyleDefBase):
     def __init__(self, product, style_cfg):
-        super(DynamicRangeCompression,self).__init__(product, style_cfg)
+        super(DynamicRangeCompression, self).__init__(product, style_cfg)
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
             self.scale_min, self.scale_max = style_cfg["scale_range"]
@@ -48,7 +48,7 @@ class DynamicRangeCompression(StyleDefBase):
             self.gain = 1.0 / style_cfg["scale_factor"]
             self.offset = 0.0
     def compress_band(self, imgband_data):
-        unclipped= imgband_data * self.gain - self.offset
+        unclipped = imgband_data * self.gain - self.offset
         return numpy.clip(unclipped.values, 1, 255)
 
 class LinearStyleDef(DynamicRangeCompression):
@@ -221,7 +221,7 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
             hmap_raw_data = f(hm_index_data)
             component_band_data = self.compress_band(component_band_data)
             img_band_data = (hmap_raw_data * 255.0 * ( 1.0 - self.component_ratio)
-                                   + self.component_ratio * component_band_data)
+                             + self.component_ratio * component_band_data)
             imgdata[band] = (dims, img_band_data.astype("uint8"))
         imgdata = imgdata.where(extent_mask)
         imgdata = imgdata.where(hm_mask)

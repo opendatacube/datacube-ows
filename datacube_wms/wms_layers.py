@@ -74,7 +74,7 @@ class ProductLayerDef(object):
             i = iter(product_cfg["extent_mask_func"])
             self.extent_mask_func = product_cfg["extent_mask_func"]
         except TypeError:
-            self.extent_mask_func = [ product_cfg["extent_mask_func"] ]
+            self.extent_mask_func = [product_cfg["extent_mask_func"]]
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
 
 class PlatformLayerDef(object):
@@ -99,7 +99,7 @@ class LayerDefs(object):
             cls._instance = super(LayerDefs, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, platforms_cfg, refresh = False):
+    def __init__(self, platforms_cfg, refresh=False):
         if not self.initialised or refresh:
             self.initialised = True
             self.platforms = []

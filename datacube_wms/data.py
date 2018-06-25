@@ -147,10 +147,10 @@ class DataStacker(object):
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False):
         if mask:
             prod = self._product.pq_product
-            measurements = [ prod.measurements[self._product.pq_band].copy() ]
+            measurements = [prod.measurements[self._product.pq_band].copy()]
         else:
             prod = self._product.product
-            measurements = [ prod.measurements[name].copy() for name in self.needed_bands()]
+            measurements = [prod.measurements[name].copy() for name in self.needed_bands()]
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
@@ -162,7 +162,7 @@ class DataStacker(object):
                 for i in range(0, len(datasets)):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     ds = datasets[i]
-                    holder[()] = [ ds ]
+                    holder[()] = [ds]
                     sources = xarray.DataArray(holder)
                     d = datacube.Datacube.load_data(sources, self._geobox, measurements)
                     for band in self.needed_bands():
@@ -187,13 +187,13 @@ class DataStacker(object):
         # manual merge
         merged = None
         if mask:
-            bands = [ self._product.pq_band ]
+            bands = [self._product.pq_band]
         else:
             bands = self.needed_bands()
         for i in range(0, len(datasets)):
             holder = numpy.empty(shape=tuple(), dtype=object)
             ds = datasets[i]
-            holder[()] = [ ds ]
+            holder[()] = [ds]
             sources = xarray.DataArray(holder)
             d = datacube.Datacube.load_data(sources, self._geobox, measurements)
             extent_mask = None
@@ -252,15 +252,17 @@ def get_map(args):
             if params.style.masks:
                 if params.product.pq_name == params.product.name:
                     pq_data = xarray.Dataset({
-                        params.product.pq_band: (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))},
-                        coords=data[params.product.pq_band].coords)
-                    pq_data[params.product.pq_band].attrs["flags_definition"] = data[params.product.pq_band].flags_definition
+                        params.product.pq_band: (data[params.product.pq_band].dims,
+                                                 data[params.product.pq_band].astype("uint16"))},
+                                             coords=data[params.product.pq_band].coords)
+                    pq_data[params.product.pq_band].attrs["flags_definition"] = \
+                        data[params.product.pq_band].flags_definition
                 else:
                     pq_datasets = stacker.datasets(dc.index, mask=True)
                     if pq_datasets:
                         pq_data = stacker.data(pq_datasets,
-                                     mask=True,
-                                     manual_merge=params.product.pq_manual_merge)
+                                               mask=True,
+                                               manual_merge=params.product.pq_manual_merge)
                     else:
                         pq_data = None
             else:
@@ -328,13 +330,13 @@ def _write_polygon(geobox, polygon, zoom_fill):
         if not geobox_ext.disjoint(polygon):
             intersection = geobox_ext.intersection(polygon)
             if intersection.type == 'Polygon':
-                coordinates_list = [ intersection.json["coordinates"] ]
+                coordinates_list = [intersection.json["coordinates"]]
             elif intersection.type == 'MultiPolygon':
                 coordinates_list = intersection.json["coordinates"]
             else:
                 raise Exception("Unexpected extent/geobox intersection geometry type: %s" % intersection.type)
             for polygon_coords in coordinates_list:
-                pixel_coords = [ ~geobox.transform * coords for coords in polygon_coords[0] ]
+                pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
                 rs, cs = skimg_polygon([int_trim(c[1], 0, geobox.height - 1) for c in pixel_coords],
                                        [int_trim(c[0], 0, geobox.width - 1) for c in pixel_coords])
                 data[rs, cs] = 1
@@ -386,9 +388,9 @@ def feature_info(args):
     try:
         geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
         datasets = stacker.datasets(dc.index, all_time=True,
-                                  point=geo_point)
+                                    point=geo_point)
         pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False,
-                                     point=geo_point)
+                                       point=geo_point)
 
         if service_cfg["published_CRSs"][params.crsid]["geographic"]:
             h_coord = "longitude"
@@ -455,7 +457,7 @@ def feature_info(args):
                     if pixel_ds is None:
                         data = stacker.data([d], skip_corrections=True)
                         pixel_ds = data.isel(**isel_kwargs)
-                    drill_section = { }
+                    drill_section = {}
                     for band in params.product.band_drill:
                         band_val = pixel_ds[band].item()
                         if band_val == -999:
@@ -467,7 +469,7 @@ def feature_info(args):
                 feature_json["time_drill"] = drill
                 feature_json["datasets_read"] = len(datasets)
             my_flags = 0
-            pqdi =-1
+            pqdi = -1
             for pqd in pq_datasets:
                 pqdi += 1
                 idx_date = (pqd.center_time + timedelta(hours=params.product.time_zone)).date()

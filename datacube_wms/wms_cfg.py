@@ -169,7 +169,8 @@ layer_cfg = [
                     {
                         "name": "cloud_and_shadow_masked_rgb",
                         "title": "Simple RGB with cloud and cloud shadow masking",
-                        "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud and cloud shadow masking",
+                        "abstract": "Simple true-colour image, using the red, green and blue bands, "
+                                    "with cloud and cloud shadow masking",
                         "components": {
                             "red": {
                                 "red": 1.0
@@ -376,7 +377,8 @@ layer_cfg = [
                     {
                         "name": "ndvi",
                         "title": "NDVI",
-                        "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+                        "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well "
+                                    "with the existence of vegetation",
                         "heat_mapped": True,
                         "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
                         "needed_bands": ["red", "nir"],
@@ -386,7 +388,8 @@ layer_cfg = [
                     {
                         "name": "ndvi_cloudmask",
                         "title": "NDVI with cloud masking",
-                        "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
+                        "abstract": "Normalised Difference Vegetation Index (with cloud masking) - "
+                                    "a derived index that correlates well with the existence of vegetation",
                         "heat_mapped": True,
                         "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
                         "needed_bands": ["red", "nir"],
@@ -404,7 +407,8 @@ layer_cfg = [
                     {
                         "name": "ndwi",
                         "title": "NDWI",
-                        "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
+                        "abstract": "Normalised Difference Water Index - a derived index that correlates well with "
+                                    "the existence of water",
                         "heat_mapped": True,
                         "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
                         "needed_bands": ["green", "nir"],
@@ -413,7 +417,8 @@ layer_cfg = [
                     {
                         "name": "ndwi_cloudmask",
                         "title": "NDWI with cloud and cloud-shadow masking",
-                        "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
+                        "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - "
+                                    "a derived index that correlates well with the existence of water",
                         "heat_mapped": True,
                         "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
                         "needed_bands": ["green", "nir"],
@@ -430,7 +435,8 @@ layer_cfg = [
                     {
                         "name": "ndbi",
                         "title": "NDBI",
-                        "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
+                        "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the "
+                                    "existence of urbanisation",
                         "heat_mapped": True,
                         "index_function": lambda data: (data["swir2"] - data["nir"]) / (data["swir2"] + data["nir"]),
                         "needed_bands": ["swir2", "nir"],
@@ -536,7 +542,8 @@ layer_cfg = [
                     {
                         "name": "rgb_ndvi",
                         "title": "NDVI plus RGB",
-                        "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
+                        "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that "
+                                    "correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "heat_mapped": True,
                         "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
@@ -559,7 +566,8 @@ layer_cfg = [
                     {
                         "name": "rgb_ndvi_cloudmask",
                         "title": "NDVI plus RGB (Cloud masked)",
-                        "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
+                        "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - "
+                                    "a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "heat_mapped": True,
                         "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
