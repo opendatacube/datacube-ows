@@ -6,6 +6,7 @@ try:
     from datacube_wms.wms_cfg_local import service_cfg
 except:
     from datacube_wms.wms_cfg import service_cfg
+
 from datacube_wms.product_ranges import get_ranges, get_sub_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.band_mapper import StyleDef
@@ -97,6 +98,14 @@ class ProductLayerDef(object):
         self.bands = bands.index.values
         self.nodata_values = bands['nodata'].values
         self.nodata_dict = { a:b for a,b in zip(self.bands, self.nodata_values)  }
+
+    @property
+    def bboxes(self):
+        return {
+            crs_id: { "right": bbox["bottom"], "left": bbox["top"], "top": bbox["left"], "bottom": bbox["right"] } if service_cfg["published_CRSs"][crs_id].get("vertical_coord_first")
+                else { "right": bbox["right"], "left": bbox["left"], "top": bbox["top"], "bottom": bbox["bottom"] }
+            for crs_id, bbox in self.ranges["bboxes"].items()
+        }
 
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
