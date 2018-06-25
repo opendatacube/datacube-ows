@@ -106,11 +106,12 @@ def get_coverage(args):
     req = WCS1GetCoverageRequest(args)
     data = get_coverage_data(req)
     return (
-            get_tiff(req.product, data, req.response_crsid),
+            req.format["renderer"](req.product, data, req.response_crsid),
             200,
             resp_headers({
-                "Content-Type": "image/geotiff",
-                'content-disposition': 'attachment; filename=%s.tiff' % req.product_name
+                "Content-Type": req.format["mime"],
+                'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format["extension"])
             })
     )
-    raise WCS1Exception("GetCoverage not yet implemented")
+
+

@@ -159,6 +159,10 @@ class ServiceCfg(object):
     def __init__(self, service_cfg, refresh=False):
         if not self.initialised or refresh:
             self.initialised = True
+
+            self.wms = service_cfg.get("wms", True)
+            self.wcs = service_cfg.get("wcs", False)
+
             self.title = service_cfg["title"]
             self.url = service_cfg["url"]
             if not self.url.startswith("http"):
@@ -176,13 +180,39 @@ class ServiceCfg(object):
                         raise Exception("Published CRS {} is geographic but has a horizontal coordinate that is not 'longitude'".format(crs_str))
                     if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
                         raise Exception("Published CRS {} is geographic but has a vertical coordinate that is not 'latitude'".format(crs_str))
-            self.default_geographic_CRS = service_cfg["default_geographic_CRS"]
-            if self.default_geographic_CRS not in self.published_CRSs:
-                raise Exception("Configured default geographic CRS not listed in published CRSs.")
-            if not self.published_CRSs[self.default_geographic_CRS]["geographic"]:
-                raise Exception("Configured default geographic CRS not listed in published CRSs as geographic.")
 
-            self.layer_limit = service_cfg.get("layer_limit", 1)
+            if self.wcs:
+                self.default_geographic_CRS = service_cfg["default_geographic_CRS"]
+                if self.default_geographic_CRS not in self.published_CRSs:
+                    raise Exception("Configured default geographic CRS not listed in published CRSs.")
+                if not self.published_CRSs[self.default_geographic_CRS]["geographic"]:
+                    raise Exception("Configured default geographic CRS not listed in published CRSs as geographic.")
+
+                self.wcs_formats = {}
+                for fmt_name, fmt in service_cfg["wcs_formats"].items():
+                    self.wcs_formats[fmt_name] = {
+                        "mime": fmt["mime"],
+                        "extension": fmt["extension"],
+                        "multi-time": fmt["multi-time"],
+                        "name": fmt_name,
+                    }
+                    rpath = fmt["renderer"]
+                    mod, func = rpath.rsplit(".", 1)
+                    _tmp = __import__(mod, globals(), locals(), [ func ], 0)
+                    self.wcs_formats[fmt_name]["renderer"] = getattr(_tmp, func)
+                if not self.wcs_formats:
+                    raise Exception("Must configure at least one wcs format to support WCS.")
+
+                self.native_wcs_format = service_cfg["native_wcs_format"]
+                if self.native_wcs_format not in self.wcs_formats:
+                    raise Exception("Configured native WCS format not a supported format.")
+            else:
+                self.default_geographic_CRS = None
+                self.wcs_formats = {}
+                self.native_wcs_format = None
+
+            # WMS specific config
+            self.layer_limit = 1
             self.max_width = service_cfg.get("max_width", 256)
             self.max_height = service_cfg.get("max_height", 256)
 
@@ -192,8 +222,6 @@ class ServiceCfg(object):
             self.fees = service_cfg.get("fees", "")
             self.access_constraints = service_cfg.get("access_constraints", "")
 
-            self.wms = service_cfg.get("wms", True)
-            self.wcs = service_cfg.get("wcs", False)
 
     def __getitem__(self, name):
         return getattr(self, name)

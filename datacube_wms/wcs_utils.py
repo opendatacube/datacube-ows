@@ -14,6 +14,7 @@ from datacube_wms.data import DataStacker
 from datacube_wms.ogc_exceptions import WCS1Exception
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
+
 class WCS1GetCoverageRequest(object):
     def __init__(self, args):
         self.args = args
@@ -31,6 +32,17 @@ class WCS1GetCoverageRequest(object):
             raise WCS1Exception("Invalid coverage: %s" % self.product_name,
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
                                 locator="COVERAGE parameter")
+
+        # Argument: FORMAT (required)
+        if "format" not in args:
+            raise WCS1Exception("No FORMAT parameter supplied",
+                                WCS1Exception.MISSING_PARAMETER_VALUE,
+                                locator="FORMAT parameter")
+        if args["format"] not in svc_cfg.wcs_formats:
+            raise WCS1Exception("Unsupported format: %s" % args["format"],
+                                WCS1Exception.INVALID_PARAMETER_VALUE,
+                                locator="FORMAT parameter")
+        self.format = svc_cfg.wcs_formats[args["format"]]
 
         # Argument: (request) CRS (required)
         if "crs" not in args:
@@ -110,6 +122,19 @@ class WCS1GetCoverageRequest(object):
                     )
             self.times.sort()
 
+        if len(times) == 0:
+            raise WCS1Exception(
+                "Time value '%s' not a valid ISO-8601 date" % t,
+                WCS1Exception.INVALID_PARAMETER_VALUE,
+                locator="TIME parameter"
+            )
+        elif len(times) > 1 and not self.format["multi-time"]:
+            raise WCS1Exception(
+                "Cannot select more than one time slice with the %s format" % self.format["name"],
+                WCS1Exception.INVALID_PARAMETER_VALUE,
+                locator="TIME and FORMAT parameters"
+            )
+
         # Range constraint parameter: MEASUREMENTS
         # No default is set in the DescribeCoverage, so it is required
         if "measurements" not in args:
@@ -128,17 +153,6 @@ class WCS1GetCoverageRequest(object):
             raise WCS1Exception("No measurements supplied",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="MEASUREMENTS parameter")
-
-        # Argument: FORMAT (required)
-        if "format" not in args:
-            raise WCS1Exception("No FORMAT parameter supplied",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="FORMAT parameter")
-        if args["format"] != "GeoTIFF":
-            raise WCS1Exception("Unsupported format: " % args["format"],
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="FORMAT parameter")
-        self.format = args["format"]
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
@@ -306,4 +320,13 @@ def _get_transform_from_xr(dataset):
 
     return geotransform
 
+
+wcs_formats = {
+    "GeoTIFF": {
+        "renderer": "datacube_wms.wcs_utils.get_tiff",
+        "mime": "image/geotiff",
+        "extension": "tif",
+        "multi-time": False
+    },
+}
 

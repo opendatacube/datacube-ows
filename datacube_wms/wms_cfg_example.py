@@ -8,9 +8,17 @@ response_cfg = {
 s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 
 service_cfg = {
-    # Required config
-    "title": "WMS/WCS server for Australian Landsat Datacube",
+    ## Which web service(s) should be supported by this instance
+    "wcs": True,
+    "wms": True,
+
+    ## Required config for WMS and/or WCS
+    # Service title - appears e.g. in Terria catalog
+    "title": "WMS server for Australian Landsat Datacube",
+    # Service URL.  Should a fully qualified URL
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
+
+    # Supported co-ordinate reference systems
     "published_CRSs": {
         "EPSG:3857": {  # Web Mercator
             "geographic": False,
@@ -28,21 +36,16 @@ service_cfg = {
         },
     },
 
+    ## Required config for WCS
     # Must be a geographic CRS in the published_CRSs list.  EPSG:4326 is recommended, but any geographic CRS should work.
     "default_geographic_CRS": "EPSG:4326",
 
-    # Support WMS service (defaults to True)
-    "wms": True,
-
-    # Support WCS service (defaults to False)
-    "wcs": True,
-
-    # Technically optional config, but strongly recommended
-    "layer_limit": 1,
+    ## Optional config for instances supporting WMS
+    # Max tile height/width.  If not specified, default to 256x256
     "max_width": 512,
     "max_height": 512,
 
-    # Optional config - may be set to blank/empty
+    # Optional config for all services (WMS and/or WCS) - may be set to blank/empty, no defaults
     "abstract": """Historic Landsat imagery for Australia.""",
     "keywords": [
         "landsat",

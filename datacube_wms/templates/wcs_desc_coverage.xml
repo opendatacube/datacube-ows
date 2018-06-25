@@ -75,8 +75,10 @@
             {% endfor %}
             <nativeCRSs>{{ product.native_CRS }}</nativeCRSs>
         </supportedCRSs>
-        <supportedFormats nativeFormat="GeoTIFF">
-            <formats>GeoTIFF</formats>
+        <supportedFormats nativeFormat="{{ service.native_wcs_format }}">
+            {% for fmt in service.wcs_formats %}
+            <formats>{{ fmt }}</formats>
+            {% endfor %}
         </supportedFormats>
         <supportedInterpolations default="nearest neighbor">
             <interpolationMethod>nearest neighbor</interpolationMethod>
