@@ -2,6 +2,8 @@ try:
     from datacube_wms.wms_cfg_local import layer_cfg
 except:
     from datacube_wms.wms_cfg import layer_cfg
+from datacube_wms.wms_cfg import service_cfg
+
 from datacube_wms.product_ranges import get_ranges, get_sub_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.band_mapper import StyleDef
@@ -76,6 +78,13 @@ class ProductLayerDef(object):
         except TypeError:
             self.extent_mask_func = [ product_cfg["extent_mask_func"] ]
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
+    @property
+    def bboxes(self):
+        return {
+            crs_id: { "right": bbox["bottom"], "left": bbox["top"], "top": bbox["left"], "bottom": bbox["right"] } if service_cfg["published_CRSs"][crs_id].get("vertical_coord_first")
+                else { "right": bbox["right"], "left": bbox["left"], "top": bbox["top"], "bottom": bbox["bottom"] }
+            for crs_id, bbox in self.ranges["bboxes"].items()
+        }
 
 class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
