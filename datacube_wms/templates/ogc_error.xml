@@ -1,9 +1,8 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<ServiceExceptionReport version="1.3.0"
+<ServiceExceptionReport version="{{ version }}"
 xmlns="http://www.opengis.net/ogc"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://www.opengis.net/ogc
-http://schemas.opengis.net/wms/1.3.0/exceptions_1_3_0.xsd">
+xsi:schemaLocation="http://www.opengis.net/ogc {{ schema_url }}">
   {% for err in exception.errors %}
     <ServiceException{% if err.code %} code="{{ err.code }}"{% endif %}{% if err.locator %} locator="{{ err.locator }}"{% endif %}>{{ err.msg }}</ServiceException>
   {% endfor %}
