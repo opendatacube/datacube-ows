@@ -263,13 +263,19 @@ def get_coverage_data(req):
             continue
         datasets.extend(t_datasets)
     if not datasets:
-        # Ideally return an empty coverage file with full metadata.
+        # TODO: Return an empty coverage file with full metadata?
         raise WCS1Exception("Selected parameters return no coverage data", WCS1Exception.INVALID_PARAMETER_VALUE)
+
+    # Group by solar day
+    group_by = datacube.api.query.query_group_by(time=req.times, group_by='solar_day')
+    grouped = dc.group_datasets(datasets, group_by)
     stacker = DataStacker(req.product,
                           req.geobox,
                           t,
                           bands=req.bands)
-    return stacker.data(datasets, manual_merge=req.product.data_manual_merge)
+    output = stacker.data(grouped, skip_corrections=True)
+    release_cube(dc)
+    return output
 
 
 def get_tiff(prod, data, response_crs):
@@ -307,6 +313,15 @@ def get_tiff(prod, data, response_crs):
                 [ prod.nodata_dict[band] if band in prod.nodata_dict else 0 for band in data.data_vars ]
             )
         return memfile.read()
+
+
+def get_netcdf(prod, data, response_crs):
+    data.attrs["crs"] = response_crs # geometry.CRS(response_crs)
+    for v in data.data_vars.values():
+        v.attrs["crs"] = response_crs
+        del v.attrs["spectral_definition"]
+    del data["time"].attrs["units"]
+    return data.to_netcdf()
 
 
 def _get_transform_from_xr(dataset):

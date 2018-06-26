@@ -145,7 +145,7 @@ class DataStacker(object):
                 filtered.extend(date_index[d])
         return filtered
 
-    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False):
+    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, **kwargs):
         if mask:
             prod = self._product.pq_product
             measurements = [ prod.measurements[self._product.pq_band].copy() ]
@@ -155,7 +155,7 @@ class DataStacker(object):
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
-                return self.manual_data_stack(datasets, measurements, mask, skip_corrections)
+                return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
             elif self._product.solar_correction and not mask and not skip_corrections:
                 # Merge performed already by dataset extent, but we need to
                 # process the data for the datasets individually to do solar correction.
@@ -165,7 +165,7 @@ class DataStacker(object):
                     ds = datasets[i]
                     holder[()] = [ ds ]
                     sources = xarray.DataArray(holder)
-                    d = datacube.Datacube.load_data(sources, self._geobox, measurements)
+                    d = datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -182,9 +182,9 @@ class DataStacker(object):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     holder[()] = datasets
                     sources = xarray.DataArray(holder)
-                return datacube.Datacube.load_data(sources, self._geobox, measurements)
+                return datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
 
-    def manual_data_stack(self, datasets, measurements, mask, skip_corrections):
+    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
         # manual merge
         merged = None
         if mask:
@@ -196,7 +196,7 @@ class DataStacker(object):
             ds = datasets[i]
             holder[()] = [ ds ]
             sources = xarray.DataArray(holder)
-            d = datacube.Datacube.load_data(sources, self._geobox, measurements)
+            d = datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
