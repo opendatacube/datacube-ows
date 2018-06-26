@@ -53,6 +53,12 @@ service_cfg = {
             # Whether or not the file format supports multiple time slices.
             "multi-time": False
         },
+        "netCDF": {
+            "renderer": "datacube_wms.wcs_utils.get_netcdf",
+            "mime": "application/x-netcdf",
+            "extension": "nc",
+            "multi-time": True,
+        }
     },
     # The native wcs format must be declared in wcs_formats above.
     "native_wcs_format": "GeoTIFF",

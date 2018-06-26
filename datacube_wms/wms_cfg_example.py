@@ -9,6 +9,7 @@ s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 
 service_cfg = {
     ## Which web service(s) should be supported by this instance
+    # Defaults: wms: True, wcs: False
     "wcs": True,
     "wms": True,
 
@@ -39,6 +40,32 @@ service_cfg = {
     ## Required config for WCS
     # Must be a geographic CRS in the published_CRSs list.  EPSG:4326 is recommended, but any geographic CRS should work.
     "default_geographic_CRS": "EPSG:4326",
+
+    # Supported WCS formats
+    "wcs_formats": {
+        # Key is the format name, as used in DescribeCoverage XML
+        "GeoTIFF": {
+            # Renderer is the FQN of a Python function that takes:
+            #   * A ProductLayerDef
+            #   * Some ODC data to be rendered.
+            #   * The CRS to render with
+            "renderer": "datacube_wms.wcs_utils.get_tiff",
+            # The MIME type of the image, as used in the Http Response.
+            "mime": "image/geotiff",
+            # The file extension to add to the filename.
+            "extension": "tif",
+            # Whether or not the file format supports multiple time slices.
+            "multi-time": False
+        },
+        "netCDF": {
+            "renderer": "datacube_wms.wcs_utils.get_netcdf",
+            "mime": "application/x-netcdf",
+            "extension": "nc",
+            "multi-time": True,
+        }
+    },
+    # The native wcs format must be declared in wcs_formats above.
+    "native_wcs_format": "GeoTIFF",
 
     ## Optional config for instances supporting WMS
     # Max tile height/width.  If not specified, default to 256x256
