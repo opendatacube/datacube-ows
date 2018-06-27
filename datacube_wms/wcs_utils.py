@@ -91,68 +91,74 @@ class WCS1GetCoverageRequest(object):
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="BBOX parameter")
 
-        # Argument: TIME (not 100% sure whether strictly required, but
-        #           not clear what it means if missing)
+        # Argument: TIME
         if "time" not in args:
-            raise WCS1Exception("No TIME parameter supplied",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="TIME parameter")
-        # TODO: the min/max/res format option?
-        # It's a bit underspeced. I'm not sure what the "res" would look like.
-        times = args["time"].split(",")
-        self.times = []
-        if times == "now":
-            pass
+            #      CEOS treats no supplied time argument as all time.
+            # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING
+            if self.format["multi-time"]:
+                self.times = self.product.ranges["times"]
+            else:
+                self.times = [ self.product.ranges["times"][-1] ]
         else:
-            for t in times:
-                try:
-                    time = datetime.datetime.strptime(t, "%Y-%m-%d").date()
-                    if time not in self.product.ranges["time_set"]:
+            # TODO: the min/max/res format option?
+            # It's a bit underspeced. I'm not sure what the "res" would look like.
+            times = args["time"].split(",")
+            self.times = []
+            if times == "now":
+                pass
+            else:
+                for t in times:
+                    try:
+                        time = datetime.datetime.strptime(t, "%Y-%m-%d").date()
+                        if time not in self.product.ranges["time_set"]:
+                            raise WCS1Exception(
+                                "Time value '%s' not a valid date for coverage %s" % (t,self.product_name),
+                                WCS1Exception.INVALID_PARAMETER_VALUE,
+                                locator="TIME parameter"
+                            )
+                        self.times.append(time)
+                    except ValueError:
                         raise WCS1Exception(
-                            "Time value '%s' not a valid date for coverage %s" % (t,self.product_name),
+                            "Time value '%s' not a valid ISO-8601 date" % t,
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="TIME parameter"
                         )
-                    self.times.append(time)
-                except ValueError:
-                    raise WCS1Exception(
-                        "Time value '%s' not a valid ISO-8601 date" % t,
-                        WCS1Exception.INVALID_PARAMETER_VALUE,
-                        locator="TIME parameter"
-                    )
-            self.times.sort()
+                self.times.sort()
 
-        if len(times) == 0:
-            raise WCS1Exception(
-                "Time value '%s' not a valid ISO-8601 date" % t,
-                WCS1Exception.INVALID_PARAMETER_VALUE,
-                locator="TIME parameter"
-            )
-        elif len(times) > 1 and not self.format["multi-time"]:
-            raise WCS1Exception(
-                "Cannot select more than one time slice with the %s format" % self.format["name"],
-                WCS1Exception.INVALID_PARAMETER_VALUE,
-                locator="TIME and FORMAT parameters"
-            )
+            if len(times) == 0:
+                raise WCS1Exception(
+                    "Time value '%s' not a valid ISO-8601 date" % t,
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="TIME parameter"
+                )
+            elif len(times) > 1 and not self.format["multi-time"]:
+                raise WCS1Exception(
+                    "Cannot select more than one time slice with the %s format" % self.format["name"],
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="TIME and FORMAT parameters"
+                )
 
         # Range constraint parameter: MEASUREMENTS
         # No default is set in the DescribeCoverage, so it is required
+        # But QGIS wants us to work without one, so let's try picking a reasonable default
         if "measurements" not in args:
-            raise WCS1Exception("No measurements specified",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="MEASUREMENTS parameter")
-        bands = args["measurements"]
-        self.bands = []
-        for b in bands.split(","):
-            if b not in self.product.bands:
-                raise WCS1Exception("Invalid measurement '%s'" % b,
+            if len(self.product.bands) <= 3:
+                self.bands = list(self.product.bands)
+            else:
+                self.bands = list(self.product.bands[0:3])
+        else:
+            bands = args["measurements"]
+            self.bands = []
+            for b in bands.split(","):
+                if b not in self.product.bands:
+                    raise WCS1Exception("Invalid measurement '%s'" % b,
+                                        WCS1Exception.INVALID_PARAMETER_VALUE,
+                                        locator="MEASUREMENTS parameter")
+                self.bands.append(b)
+            if not bands:
+                raise WCS1Exception("No measurements supplied",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="MEASUREMENTS parameter")
-            self.bands.append(b)
-        if not bands:
-            raise WCS1Exception("No measurements supplied",
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="MEASUREMENTS parameter")
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
@@ -264,12 +270,59 @@ def get_coverage_data(req):
         datasets.extend(t_datasets)
     if not datasets:
         # TODO: Return an empty coverage file with full metadata?
-        raise WCS1Exception("Selected parameters return no coverage data", WCS1Exception.INVALID_PARAMETER_VALUE)
+        extents = dc.load(dask_chunks={}, product=req.product, geopolygon=req.geobox.extent, time=stacker._time)
+        svc = get_service_cfg()
+        x_range = (req.minx, req.maxx)
+        y_range = (req.miny, req.maxy)
+        xname = svc.published_CRSs[req.request_crsid]["horizontal_coord"]
+        yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
+        if xname in extents:
+            xvals = extents[xname]
+        else:
+            xvals = numpy.linspace(
+                x_range[0],
+                x_range[1],
+                num=req.width
+            )
+        if yname in extents:
+            yvals = extents[yname]
+        else:
+            yvals = numpy.linspace(
+                y_range[0],
+                y_range[1],
+                num=req.height
+            )
+        if svc.published_CRSs[req.request_crsid]["vertical_coord_first"]:
+            nparrays = {
+                band: ( (yname, xname),
+                        numpy.full( (len(yvals), len(xvals)),
+                                    req.product.nodata_dict[band])
+                        )
+                for band in req.bands
+            }
+        else:
+            nparrays = {
+                band: ( (xname, yname),
+                        numpy.full( (len(xvals), len(yvals)),
+                                    req.product.nodata_dict[band])
+                        )
+                for band in req.bands
+            }
+        data = xarray.Dataset(
+            nparrays,
+            coords={
+                xname: xvals,
+                yname: yvals,
+            }
+        ).astype("int16")
+        release_cube(dc)
+        return data
 
     if req.format["multi-time"]:
         # Group by solar day
         group_by = datacube.api.query.query_group_by(time=req.times, group_by='solar_day')
         datasets = dc.group_datasets(datasets, group_by)
+
     stacker = DataStacker(req.product,
                           req.geobox,
                           t,
@@ -279,7 +332,7 @@ def get_coverage_data(req):
     return output
 
 
-def get_tiff(prod, data, response_crs):
+def get_tiff(req, data):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Copied from CEOS.  Does not seem to support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {
@@ -299,43 +352,48 @@ def get_tiff(prod, data, response_crs):
     dtype = str(max(dtype_list, key=lambda d: supported_dtype_map[str(d)]))
 
     data = data.astype(dtype)
+    svc = get_service_cfg()
+    xname = svc.published_CRSs[req.request_crsid]["horizontal_coord"]
+    yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
     with MemoryFile() as memfile:
         with memfile.open(
                 driver="GTiff",
-                width=data.dims['longitude'],
-                height=data.dims['latitude'],
+                width=data.dims[xname],
+                height=data.dims[yname],
                 count=len(data.data_vars),
-                transform=_get_transform_from_xr(data),
-                crs=response_crs,
+                transform=_get_transform_from_xr(xname, yname, data),
+                crs=req.response_crsid,
                 dtype=dtype) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
             dst.set_nodatavals(
-                [ prod.nodata_dict[band] if band in prod.nodata_dict else 0 for band in data.data_vars ]
+                [ req.product.nodata_dict[band] if band in req.product.nodata_dict else 0 for band in data.data_vars ]
             )
         return memfile.read()
 
 
-def get_netcdf(prod, data, response_crs):
+def get_netcdf(req, data):
     # Cleanup dataset attributes for NetCDF export
-    data.attrs["crs"] = response_crs # geometry.CRS(response_crs)
+    data.attrs["crs"] = req.response_crsid # geometry.CRS(response_crs)
     for v in data.data_vars.values():
-        v.attrs["crs"] = response_crs
-        del v.attrs["spectral_definition"]
-    del data["time"].attrs["units"]
+        v.attrs["crs"] = req.response_crsid
+        if "spectral_definition" in v.attrs:
+            del v.attrs["spectral_definition"]
+    if "time" in data and "units" in data["time"]:
+        del data["time"].attrs["units"]
 
     # And export to NetCDF
     return data.to_netcdf()
 
 
-def _get_transform_from_xr(dataset):
+def _get_transform_from_xr(xname, yname, dataset):
     """Create a geotransform from an xarray dataset."""
-    # Copied from CEOS.
     # Looks like the rasterio equivalent of a Geobox.
-    # Not sure if this code will work with a non-geographic CRS??
+    # Adapted from CEOS to work with non-geographic CRSs
     from rasterio.transform import from_bounds
-    geotransform = from_bounds(dataset.longitude[0], dataset.latitude[-1], dataset.longitude[-1], dataset.latitude[0],
-                               len(dataset.longitude), len(dataset.latitude))
+    geotransform = from_bounds(getattr(dataset,xname)[0], getattr(dataset,yname)[-1],
+                               getattr(dataset,xname)[-1], getattr(dataset,yname)[0],
+                               len(getattr(dataset,xname)), len(getattr(dataset,yname)))
 
     return geotransform
 

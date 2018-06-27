@@ -46,9 +46,8 @@ service_cfg = {
         # Key is the format name, as used in DescribeCoverage XML
         "GeoTIFF": {
             # Renderer is the FQN of a Python function that takes:
-            #   * A ProductLayerDef
+            #   * A WCSRequest object
             #   * Some ODC data to be rendered.
-            #   * The CRS to render with
             "renderer": "datacube_wms.wcs_utils.get_tiff",
             # The MIME type of the image, as used in the Http Response.
             "mime": "image/geotiff",

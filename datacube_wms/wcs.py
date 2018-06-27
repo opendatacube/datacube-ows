@@ -106,7 +106,7 @@ def get_coverage(args):
     req = WCS1GetCoverageRequest(args)
     data = get_coverage_data(req)
     return (
-            req.format["renderer"](req.product, data, req.response_crsid),
+            req.format["renderer"](req, data),
             200,
             resp_headers({
                 "Content-Type": req.format["mime"],
