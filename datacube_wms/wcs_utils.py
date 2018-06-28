@@ -8,6 +8,7 @@ from affine import Affine
 
 from datacube.utils import geometry
 from rasterio import MemoryFile
+from rasterio.enums import ColorInterp
 
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.data import DataStacker
@@ -144,6 +145,8 @@ class WCS1GetCoverageRequest(object):
         if "measurements" not in args:
             if len(self.product.bands) <= 3:
                 self.bands = list(self.product.bands)
+            elif "red" in self.product.bands and "green" in self.product.bands and "blue" in self.product.bands:
+                self.bands = [ "red", "green", "blue" ]
             else:
                 self.bands = list(self.product.bands[0:3])
         else:

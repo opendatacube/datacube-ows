@@ -120,8 +120,8 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
             <label>{{ product.title }}</label>
             <description>{{ product.definition.description }}</description>
             <lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
-                <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
-                <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+                <gml:pos>{{ product.ranges.lat.min }} {{ product.ranges.lon.min }}</gml:pos>
+                <gml:pos>{{ product.ranges.lat.max }} {{ product.ranges.lon.max }}</gml:pos>
                 <gml:timePosition>{{ product.ranges.start_time.isoformat() }}</gml:timePosition>
                 <gml:timePosition>{{ product.ranges.end_time.isoformat() }}</gml:timePosition>
             </lonLatEnvelope>

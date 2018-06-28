@@ -13,8 +13,8 @@
         <label>{{ product.title }}</label>
         <description>{{  product.definition.description }}</description>
         <lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
-            <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
-            <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+            <gml:pos>{{ product.ranges.lat.min }} {{ product.ranges.lon.min }}</gml:pos>
+            <gml:pos>{{ product.ranges.lat.max }} {{ product.ranges.lon.max }}</gml:pos>
             <gml:timePosition>{{ product.ranges.start_time.isoformat() }}</gml:timePosition>
             <gml:timePosition>{{ product.ranges.end_time.isoformat() }}</gml:timePosition>
         </lonLatEnvelope>
@@ -22,8 +22,13 @@
         <domainSet>
             <spatialDomain>
                 <gml:Envelope srsName="{{ service.default_geographic_CRS }}">
+                    {% if service.default_geographic_CRS_def.vertical_coord_first %}
+                    <gml:pos>{{ product.ranges.lat.min }} {{ product.ranges.lon.min }}</gml:pos>
+                    <gml:pos>{{ product.ranges.lat.max }} {{ product.ranges.lon.max }}</gml:pos>
+                    {% else %}
                     <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
                     <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+                    {% endif %}
                 </gml:Envelope>
                 <gml:RectifiedGrid dimension="2">
                     <gml:limits>
@@ -35,7 +40,11 @@
                     <gml:axisName>{{ service.published_CRSs[product.native_CRS]["horizontal_coord"] }}</gml:axisName>
                     <gml:axisName>{{ service.published_CRSs[product.native_CRS]["vertical_coord"] }}</gml:axisName>
                     <gml:origin>
+                        {% if product.native_CRS_def.vertical_coord_first %}
+                        <gml:pos>{{ product.origin_y }} {{  product.origin_x }}</gml:pos>
+                        {% else %}
                         <gml:pos>{{ product.origin_x }} {{  product.origin_y }}</gml:pos>
+                        {% endif %}
                     </gml:origin>
                     <gml:offsetVector>{{ product.x_resolution }} 0</gml:offsetVector>
                     <gml:offsetVector>0 {{ product.y_resolution }}</gml:offsetVector>
