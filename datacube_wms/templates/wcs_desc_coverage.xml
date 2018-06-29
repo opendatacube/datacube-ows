@@ -30,6 +30,7 @@
                     <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
                     {% endif %}
                 </gml:Envelope>
+                {% if product.native_CRS %}
                 <gml:RectifiedGrid dimension="2">
                     <gml:limits>
                         <gml:GridEnvelope>
@@ -49,6 +50,7 @@
                     <gml:offsetVector>{{ product.x_resolution }} 0</gml:offsetVector>
                     <gml:offsetVector>0 {{ product.y_resolution }}</gml:offsetVector>
                 </gml:RectifiedGrid>
+                {% endif %}
             </spatialDomain>
             <temporalDomain>
                 {% for t in product.ranges.times %}
@@ -82,7 +84,9 @@
             {% for crs in service.published_CRSs %}
                 <requestResponseCRSs>{{ crs }}</requestResponseCRSs>
             {% endfor %}
+            {% if product.native_CRS %}
             <nativeCRSs>{{ product.native_CRS }}</nativeCRSs>
+            {% endif %}
         </supportedCRSs>
         <supportedFormats nativeFormat="{{ service.native_wcs_format }}">
             {% for fmt in service.wcs_formats %}
