@@ -321,6 +321,9 @@ def get_coverage_data(req):
         release_cube(dc)
         return data
 
+    if req.product.max_datasets_wcs > 0 and len(datasets) > req.product.max_datasets_wcs:
+        raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time. Please reduce the bounds of your request and try again.")
+
     if req.format["multi-time"]:
         # Group by solar day
         group_by = datacube.api.query.query_group_by(time=req.times, group_by='solar_day')

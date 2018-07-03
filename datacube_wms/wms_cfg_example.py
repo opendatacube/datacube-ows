@@ -131,6 +131,24 @@ layer_cfg = [
                 # Min zoom factor - sets the zoom level where the cutover from indicative polygons
                 # to actual imagery occurs.
                 "min_zoom_factor": 500.0,
+                # Min zoom factor (above) works well for small-tiled requests, (e.g. 256x256 as sent by Terria).
+                # However, for large-tiled requests (e.g. as sent by QGIS), large and intensive queries can still
+                # go through to the datacube.
+                # max_datasets_wms specifies a maximum number of datasets that a GetMap request can retrieve.
+                # Indicatative polygons are displayed if a request exceeds the limits imposed by EITHER max_dataset_wms
+                # OR min_zoom_factor.
+                # max_datasets_wms should be set in conjunction with min_zoom_factor so that Terria style 256x256
+                # tiled requests respond consistently - you never want to see a mixture of photographic tiles and polygon
+                # tiles at a given zoom level.  i.e. max_datasets_wms should be greater than the number of datasets
+                # required for most intensive possible photographic query given the min_zoom_factor.
+                # Note that the ideal value may vary from product to product depending on the size of the dataset
+                # extents for the product.
+                # Defaults to zero, which is interpreted as no dataset limit.
+                # 6 seems to work with a min_zoom_factor of 500.0 for "old-style" Net-CDF albers tiled data.
+                "max_datasets_wms": 6,
+                # max_datasets_wcs is the WCS equivalent of max_datasets_wms.  The main requirement for setting this
+                # value is to avoid gateway timeouts on overly large WCS requests (and reduce server load).
+                "max_datasets_wcs": 16,
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
@@ -1112,6 +1130,24 @@ layer_cfg = [
                 # Min zoom factor - sets the zoom level where the cutover from indicative polygons
                 # to actual imagery occurs.
                 "min_zoom_factor": 500.0,
+                # Min zoom factor (above) works well for small-tiled requests, (e.g. 256x256 as sent by Terria).
+                # However, for large-tiled requests (e.g. as sent by QGIS), large and intensive queries can still
+                # go through to the datacube.
+                # max_datasets_wms specifies a maximum number of datasets that a GetMap request can retrieve.
+                # Indicatative polygons are displayed if a request exceeds the limits imposed by EITHER max_dataset_wms
+                # OR min_zoom_factor.
+                # max_datasets_wms should be set in conjunction with min_zoom_factor so that Terria style 256x256
+                # tiled requests respond consistently - you never want to see a mixture of photographic tiles and polygon
+                # tiles at a given zoom level.  i.e. max_datasets_wms should be greater than the number of datasets
+                # required for most intensive possible photographic query given the min_zoom_factor.
+                # Note that the ideal value may vary from product to product depending on the size of the dataset
+                # extents for the product.
+                # Defaults to zero, which is interpreted as no dataset limit.
+                # 6 seems to work with a min_zoom_factor of 500.0 for "old-style" Net-CDF albers tiled data.
+                "max_datasets_wms": 6,
+                # max_datasets_wcs is the WCS equivalent of max_datasets_wms.  The main requirement for setting this
+                # value is to avoid gateway timeouts on overly large WCS requests (and reduce server load).
+                "max_datasets_wcs": 16,
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [200, 180, 180, 160],

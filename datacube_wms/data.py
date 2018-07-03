@@ -231,7 +231,7 @@ def get_map(args):
         datasets = stacker.datasets(dc.index)
         if not datasets:
             body = _write_empty(params.geobox)
-        elif params.zf < params.product.min_zoom:
+        elif params.zf < params.product.min_zoom or (params.product.max_datasets_wms > 0 and len(datasets) > params.product.max_datasets_wms):
             # Zoomed out to far to properly render data.
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None

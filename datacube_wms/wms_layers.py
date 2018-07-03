@@ -51,6 +51,7 @@ class ProductLayerDef(object):
         self.pq_name = product_cfg.get("pq_dataset")
         self.pq_band = product_cfg.get("pq_band")
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
+        self.max_datasets_wms = product_cfg.get("max_datasets_wms", 0)
         self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150, 180, 200])
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
         self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
@@ -96,6 +97,7 @@ class ProductLayerDef(object):
             self.origin_y = data.affine[5]
             self.resolution_x = data.affine[0]
             self.resolution_y = data.affine[4]
+            self.max_datasets_wcs = product_cfg.get("max_datasets_wcs", 0)
         except:
             self.native_CRS = None
         bands = dc.list_measurements().ix[self.product_name]
