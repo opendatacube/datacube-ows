@@ -33,29 +33,15 @@
                             <gml:high>{{ product.grid_high_x }} {{ product.grid_high_y }}</gml:high>
                         </gml:GridEnvelope>
                     </gml:limits>
-                    {% if product.native_CRS_def["vertical_coord_first"] %}
-                    <gml:axisName>{{ product.native_CRS_def["vertical_coord"] }}</gml:axisName>
-                    <gml:axisName>{{ product.native_CRS_def["horizontal_coord"] }}</gml:axisName>
-                    {% else %}
                     <gml:axisName>{{ product.native_CRS_def["horizontal_coord"] }}</gml:axisName>
                     <gml:axisName>{{ product.native_CRS_def["vertical_coord"] }}</gml:axisName>
-                    {% endif %}
                     <gml:origin srsName="{{ product.native_CRS }}">
                         <gml:pos>
-                            {%  if product.native_CRS_def["vertical_coord_first"] %}
-                                {{ [product.ranges["bboxes"][product.native_CRS]["top"], product.ranges["bboxes"][product.native_CRS]["bottom"]]|min }} {{ [product.ranges["bboxes"][product.native_CRS]["left"], product.ranges["bboxes"][product.native_CRS]["right"]]|min }}
-                            {% else %}
-                                {{ [product.ranges["bboxes"][product.native_CRS]["left"], product.ranges["bboxes"][product.native_CRS]["right"]]|min }} {{ [product.ranges["bboxes"][product.native_CRS]["top"], product.ranges["bboxes"][product.native_CRS]["bottom"]]|min }}
-                            {% endif %}
+                            {{ [product.ranges["bboxes"][product.native_CRS]["left"], product.ranges["bboxes"][product.native_CRS]["right"]]|min }} {{ [product.ranges["bboxes"][product.native_CRS]["top"], product.ranges["bboxes"][product.native_CRS]["bottom"]]|min }}
                         </gml:pos>
                     </gml:origin>
-                    {% if product.native_CRS_def["vertical_coord_first"] %}
-                    <gml:offsetVector>{{ product.resolution_y }} 0</gml:offsetVector>
-                    <gml:offsetVector>0 {{ product.resolution_x }}</gml:offsetVector>
-                    {% else %}
                     <gml:offsetVector>{{ product.resolution_x }} 0</gml:offsetVector>
                     <gml:offsetVector>0 {{ product.resolution_y }}</gml:offsetVector>
-                    {% endif %}
                 </gml:RectifiedGrid>
                 {% endif %}
             </spatialDomain>
