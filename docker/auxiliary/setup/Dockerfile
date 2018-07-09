@@ -21,4 +21,9 @@ COPY assets/setup.sh setup.sh
 WORKDIR /code
 
 COPY assets/main.tf main.tf
+
+# For alternate config without param store
+RUN mkdir setup
+COPY assets/create-db.tf setup/create-db.tf
+
 ENTRYPOINT terraform init -backend-config="bucket=$TF_VAR_state_bucket" -backend-config="key=db-$TF_VAR_cluster-$TF_VAR_database.tfstate" && terraform apply -auto-approve
