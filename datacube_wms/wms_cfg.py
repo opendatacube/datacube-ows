@@ -5,9 +5,17 @@ response_cfg = {
 }
 
 service_cfg = {
-    # Required config
+    ## Which web service(s) should be supported by this instance
+    "wcs": True,
+    "wms": True,
+
+    ## Required config for WMS and/or WCS
+    # Service title - appears e.g. in Terria catalog
     "title": "WMS server for Australian Landsat Datacube",
+    # Service URL.  Should a fully qualified URL
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
+
+    # Supported co-ordinate reference systems
     "published_CRSs": {
         "EPSG:3857": {  # Web Mercator
             "geographic": False,
@@ -20,17 +28,46 @@ service_cfg = {
         },
         "EPSG:3577": {  # GDA-94, internal representation
             "geographic": False,
-            "horizontal_coord": "easting",
-            "vertical_coord": "northing",
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
         },
     },
 
-    # Technically optional config, but strongly recommended
-    "layer_limit": 1,
+    ## Required config for WCS
+    # Must be a geographic CRS in the published_CRSs list.  EPSG:4326 is recommended, but any geographic CRS should work.
+    "default_geographic_CRS": "EPSG:4326",
+
+    # Supported WCS formats
+    "wcs_formats": {
+        # Key is the format name, as used in DescribeCoverage XML
+        "GeoTIFF": {
+            # Renderer is the FQN of a Python function that takes:
+            #   * A WCS Request object
+            #   * Some ODC data to be rendered.
+            "renderer": "datacube_wms.wcs_utils.get_tiff",
+            # The MIME type of the image, as used in the Http Response.
+            "mime": "image/geotiff",
+            # The file extension to add to the filename.
+            "extension": "tif",
+            # Whether or not the file format supports multiple time slices.
+            "multi-time": False
+        },
+        "netCDF": {
+            "renderer": "datacube_wms.wcs_utils.get_netcdf",
+            "mime": "application/x-netcdf",
+            "extension": "nc",
+            "multi-time": True,
+        }
+    },
+    # The native wcs format must be declared in wcs_formats above.
+    "native_wcs_format": "GeoTIFF",
+
+    ## Optional config for instances supporting WMS
+    # Max tile height/width.  If not specified, default to 256x256
     "max_width": 512,
     "max_height": 512,
 
-    # Optional config - may be set to blank/empty
+    # Optional config for all services (WMS and/or WCS) - may be set to blank/empty, no defaults
     "abstract": """Historic Landsat imagery for Australia.""",
     "keywords": [
         "landsat",
@@ -90,6 +127,24 @@ layer_cfg = [
                 # Min zoom factor - sets the zoom level where the cutover from indicative polygons
                 # to actual imagery occurs.
                 "min_zoom_factor": 500.0,
+                # Min zoom factor (above) works well for small-tiled requests, (e.g. 256x256 as sent by Terria).
+                # However, for large-tiled requests (e.g. as sent by QGIS), large and intensive queries can still
+                # go through to the datacube.
+                # max_datasets_wms specifies a maximum number of datasets that a GetMap request can retrieve.
+                # Indicatative polygons are displayed if a request exceeds the limits imposed by EITHER max_dataset_wms
+                # OR min_zoom_factor.
+                # max_datasets_wms should be set in conjunction with min_zoom_factor so that Terria style 256x256
+                # tiled requests respond consistently - you never want to see a mixture of photographic tiles and polygon
+                # tiles at a given zoom level.  i.e. max_datasets_wms should be greater than the number of datasets
+                # required for most intensive possible photographic query given the min_zoom_factor.
+                # Note that the ideal value may vary from product to product depending on the size of the dataset
+                # extents for the product.
+                # Defaults to zero, which is interpreted as no dataset limit.
+                # 6 seems to work with a min_zoom_factor of 500.0 for "old-style" Net-CDF albers tiled data.
+                "max_datasets_wms": 6,
+                # max_datasets_wcs is the WCS equivalent of max_datasets_wms.  The main requirement for setting this
+                # value is to avoid gateway timeouts on overly large WCS requests (and reduce server load).
+                "max_datasets_wcs": 16,
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
@@ -623,6 +678,24 @@ layer_cfg = [
                 # Min zoom factor - sets the zoom level where the cutover from indicative polygons
                 # to actual imagery occurs.
                 "min_zoom_factor": 500.0,
+                # Min zoom factor (above) works well for small-tiled requests, (e.g. 256x256 as sent by Terria).
+                # However, for large-tiled requests (e.g. as sent by QGIS), large and intensive queries can still
+                # go through to the datacube.
+                # max_datasets_wms specifies a maximum number of datasets that a GetMap request can retrieve.
+                # Indicatative polygons are displayed if a request exceeds the limits imposed by EITHER max_dataset_wms
+                # OR min_zoom_factor.
+                # max_datasets_wms should be set in conjunction with min_zoom_factor so that Terria style 256x256
+                # tiled requests respond consistently - you never want to see a mixture of photographic tiles and polygon
+                # tiles at a given zoom level.  i.e. max_datasets_wms should be greater than the number of datasets
+                # required for most intensive possible photographic query given the min_zoom_factor.
+                # Note that the ideal value may vary from product to product depending on the size of the dataset
+                # extents for the product.
+                # Defaults to zero, which is interpreted as no dataset limit.
+                # 6 seems to work with a min_zoom_factor of 500.0 for "old-style" Net-CDF albers tiled data.
+                "max_datasets_wms": 6,
+                # max_datasets_wcs is the WCS equivalent of max_datasets_wms.  The main requirement for setting this
+                # value is to avoid gateway timeouts on overly large WCS requests (and reduce server load).
+                "max_datasets_wcs": 16,
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [200, 180, 180, 160],

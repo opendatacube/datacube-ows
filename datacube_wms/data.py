@@ -13,29 +13,30 @@ import datacube
 from datacube.utils import geometry
 
 from datacube_wms.cube_pool import get_cube, release_cube
-try:
-    from datacube_wms.wms_cfg_local import service_cfg
-except:
-    from datacube_wms.wms_cfg import service_cfg
-from datacube_wms.wms_utils import resp_headers, img_coords_to_geopoint, int_trim, \
+
+from datacube_wms.wms_layers import get_service_cfg
+from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
         bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
         solar_correct_data
+from datacube_wms.ogc_utils import resp_headers
 
 
 class DataStacker(object):
-    def __init__(self, product, geobox, time, style=None, **kwargs):
+    def __init__(self, product, geobox, time, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
         self._geobox = geobox
-        self._style = style
+        if style:
+            self._needed_bands = style.needed_bands
+        elif bands:
+            self._needed_bands = bands
+        else:
+            self._needed_bands = self._product.product.measurements.keys()
         start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
         self._time = [start_time, start_time + timedelta(days=1)]
 
     def needed_bands(self):
-        if self._style:
-            return self._style.needed_bands
-        else:
-            return self._product.product.measurements.keys()
+        return self._needed_bands
 
     def point_in_dataset_by_bounds(self, point, dataset):
         # Return true if dataset contains point
@@ -144,7 +145,7 @@ class DataStacker(object):
                 filtered.extend(date_index[d])
         return filtered
 
-    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False):
+    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, **kwargs):
         if mask:
             prod = self._product.pq_product
             measurements = [prod.measurements[self._product.pq_band].copy()]
@@ -154,7 +155,7 @@ class DataStacker(object):
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
-                return self.manual_data_stack(datasets, measurements, mask, skip_corrections)
+                return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
             elif self._product.solar_correction and not mask and not skip_corrections:
                 # Merge performed already by dataset extent, but we need to
                 # process the data for the datasets individually to do solar correction.
@@ -164,7 +165,7 @@ class DataStacker(object):
                     ds = datasets[i]
                     holder[()] = [ds]
                     sources = xarray.DataArray(holder)
-                    d = datacube.Datacube.load_data(sources, self._geobox, measurements)
+                    d = datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -181,9 +182,9 @@ class DataStacker(object):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     holder[()] = datasets
                     sources = xarray.DataArray(holder)
-                return datacube.Datacube.load_data(sources, self._geobox, measurements)
+                return datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
 
-    def manual_data_stack(self, datasets, measurements, mask, skip_corrections):
+    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
         # manual merge
         merged = None
         if mask:
@@ -195,7 +196,7 @@ class DataStacker(object):
             ds = datasets[i]
             holder[()] = [ds]
             sources = xarray.DataArray(holder)
-            d = datacube.Datacube.load_data(sources, self._geobox, measurements)
+            d = datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -230,7 +231,7 @@ def get_map(args):
         datasets = stacker.datasets(dc.index)
         if not datasets:
             body = _write_empty(params.geobox)
-        elif params.zf < params.product.min_zoom:
+        elif params.zf < params.product.min_zoom or (params.product.max_datasets_wms > 0 and len(datasets) > params.product.max_datasets_wms):
             # Zoomed out to far to properly render data.
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None
@@ -384,6 +385,7 @@ def feature_info(args):
     feature_json = {}
 
     # --- Begin code section requiring datacube.
+    service_cfg = get_service_cfg()
     dc = get_cube()
     try:
         geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
@@ -392,12 +394,8 @@ def feature_info(args):
         pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False,
                                        point=geo_point)
 
-        if service_cfg["published_CRSs"][params.crsid]["geographic"]:
-            h_coord = "longitude"
-            v_coord = "latitude"
-        else:
-            h_coord = service_cfg["published_CRSs"][params.crsid]["horizontal_coord"]
-            v_coord = service_cfg["published_CRSs"][params.crsid]["vertical_coord"]
+        h_coord = service_cfg.published_CRSs[params.crsid]["horizontal_coord"]
+        v_coord = service_cfg.published_CRSs[params.crsid]["vertical_coord"]
         isel_kwargs = {
             h_coord: [params.i],
             v_coord: [params.j]
@@ -416,7 +414,7 @@ def feature_info(args):
 
                     # Use i,j image coordinates to extract data pixel from dataset, and
                     # convert to lat/long geographic coordinates
-                    if service_cfg["published_CRSs"][params.crsid]["geographic"]:
+                    if service_cfg.published_CRSs[params.crsid]["geographic"]:
                         # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
                         feature_json["lat"] = data.latitude[params.j].item()
                         feature_json["lon"] = data.longitude[params.i].item()

@@ -6,6 +6,7 @@ except:
     from datacube_wms.wms_cfg import service_cfg, layer_cfg
 from psycopg2.extras import Json
 from itertools import zip_longest
+from uuid import UUID
 
 
 def accum_min(a, b):
@@ -91,11 +92,19 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
                 ext = ext.to_crs(crs)
             cvx_ext = ext.convex_hull
             if cvx_ext != ext:
-                print("WARNING: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
+                print ("INFO: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
             if extents[crsid] is None:
                 extents[crsid] = cvx_ext
             else:
-                extents[crsid] = extents[crsid].union(cvx_ext)
+                if not extents[crsid].is_valid:
+                    print("WARNING: Extent Union for", ds.id, "CRS", crsid, "is not valid")
+                if not cvx_ext.is_valid:
+                    print("WARNING: Extent for CRS", crsid, "is not valid")
+                union = extents[crsid].union(cvx_ext);
+                if union._geom is not None:
+                    extents[crsid] = union
+                else:
+                    print("WARNING: Dataset", ds.id, "CRS", crsid, "union topology exception, ignoring union")
             if path is not None:
                 if sub_r[path]["extents"][crsid] is None:
                     sub_r[path]["extents"][crsid] = cvx_ext
@@ -389,6 +398,8 @@ def get_ranges(dc, product, path=None):
                 "max": float(result["lon_max"]),
             },
             "times": times,
+            "start_time": times[0],
+            "end_time": times[-1],
             "time_set": set(times),
             "bboxes": result["bboxes"]
         }
