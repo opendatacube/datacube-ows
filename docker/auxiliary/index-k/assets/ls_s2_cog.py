@@ -2,12 +2,8 @@
 from xml.etree import ElementTree
 from pathlib import Path
 import os
-from osgeo import osr
 import dateutil
-from dateutil import parser
-from datetime import timedelta
-import uuid
-import yaml
+import time
 import logging
 import click
 import re
@@ -28,22 +24,26 @@ def get_s3_url(bucket_name, obj_key):
         bucket_name=bucket_name, obj_key=obj_key)
 
 
-def get_metadata_docs(bucket_name, prefix, suffix, unsafe):
+def get_metadata_docs(bucket_name, prefix, suffix, unsafe, index):
     s3 = boto3.resource('s3')
     s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
     bucket = s3.Bucket(bucket_name)
-    logging.info("Bucket : %s prefix: %s ", bucket_name, str(prefix))
+    logging.debug("Bucket : %s prefix: %s ", bucket_name, str(prefix))
     safety = 'safe' if not unsafe else 'unsafe'
+    yaml = YAML(typ=safety, pure = True)
+
     for obj in bucket.objects.filter(Prefix = str(prefix)):
         if obj.key.endswith(suffix):
             obj_key = obj.key
-            logging.info("Processing %s", obj_key)
+            logging.debug("Processing %s", obj_key)
             raw_string = obj.get()['Body'].read().decode('utf8')
-            yaml = YAML(typ=safety, pure = True)
             yaml.default_flow_style = False
             data = yaml.load(raw_string)
-            yield obj_key,data
-            
+            if index.datasets.has(data["id"]):
+                logging.info("Already indexed")
+            else:
+                yield obj_key,data
+   
             
 def make_rules(index):
     all_product_names = [prod.name for prod in index.products.get_all()]
@@ -61,7 +61,7 @@ def archive_dataset(doc, uri, rules, index, sources_policy):
 
     dataset = create_dataset(doc, uri, rules)
     index.datasets.archive(get_ids(dataset))
-    logging.info("Archiving %s and all sources of %s", dataset.id, dataset.id)
+    logging.debug("Archiving %s and all sources of %s", dataset.id, dataset.id)
 
 
 def add_dataset(doc, uri, rules, index, sources_policy):
@@ -72,7 +72,7 @@ def add_dataset(doc, uri, rules, index, sources_policy):
     except changes.DocumentMismatchError as e:
         index.datasets.update(dataset, {tuple(): changes.allow_any})
 
-    logging.info("Indexing %s", uri)
+    logging.debug("Indexing %s", uri)
     return uri
 
 
@@ -80,10 +80,19 @@ def iterate_datasets(bucket_name, config, prefix, suffix, func, unsafe, sources_
     dc=datacube.Datacube(config=config)
     index = dc.index
     rules = make_rules(index)
-    
-    for metadata_path,metadata_doc in get_metadata_docs(bucket_name, prefix, suffix, unsafe):
+
+    start = time.time()
+    counter = 0
+
+    for metadata_path,metadata_doc in get_metadata_docs(bucket_name, prefix, suffix, unsafe, index):
         uri= get_s3_url(bucket_name, metadata_path)
         func(metadata_doc, uri, rules, index, sources_policy)
+
+        counter += 1
+        now = time.time()
+        elapsed = now - start
+        speed = counter / elapsed
+        logging.info('%s records indexed per second', str(speed))
 
 
 @click.command(help= "Enter Bucket name. Optional to enter configuration file to access a different database")
@@ -103,4 +112,5 @@ def main(bucket_name, config, prefix, suffix, archive, unsafe, sources_policy):
 
 if __name__ == "__main__":
     main()
+
 
