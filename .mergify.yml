@@ -1,0 +1,12 @@
+rules:
+  default:
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+      required_status_checks:
+        contexts:
+        - ci/dockercloud (/docker/auxiliary/setup)
+        - ci/dockercloud (/docker/auxiliary/archive)
+        - ci/dockercloud (/docker/auxiliary/index)
+        - continuous-integration/travis-ci
+        - ci/dockercloud
