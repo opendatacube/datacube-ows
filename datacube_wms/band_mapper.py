@@ -1,4 +1,4 @@
-from xarray import Dataset
+from xarray import Dataset, merge
 import numpy
 
 from datacube.storage.masking import make_mask
@@ -51,6 +51,53 @@ class DynamicRangeCompression(StyleDefBase):
         unclipped= imgband_data * self.gain - self.offset
         return numpy.clip(unclipped.values, 1, 255)
 
+class RGBMappedStyleDef(StyleDefBase):
+    def __init__(self, product, style_cfg):
+        super(RGBMappedStyleDef, self).__init__(product, style_cfg)
+        self.value_map = style_cfg["value_map"]
+        for band in self.value_map.keys():
+            self.needed_bands.add(band)
+        
+
+    def transform_data(self, data, pq_data, extent_mask):
+        # extent mask data per band to preseve nodata
+        if extent_mask is not None:
+            for band in data.data_vars:
+                try:
+                    data[band] = data[band].where(extent_mask, other=data[band].attrs['nodata'])
+                except AttributeError:
+                    data[band] = data[band].where(extent_mask)
+
+        data = self.apply_masks(data, pq_data)
+        imgdata = Dataset()
+        for band in self.value_map.keys():
+            band_data = Dataset()
+            for value in self.value_map[band]:
+                color_base = data[band].copy()
+                target = Dataset()
+                flags = value["flags"]
+                rgb = value["values"]
+                for color, intensity in rgb.items():
+                    color_base.data.fill(intensity)
+                    target[color] = color_base.copy()
+
+                bdata = data[band]
+                mask = make_mask(bdata, **flags)
+                masked = target.where(mask)
+
+                if len(band_data.data_vars) == 0:
+                    band_data = masked
+                else:
+                    band_data = merge([band_data, masked])
+
+            if (len(imgdata.data_vars) == 0):
+                imgdata = band_data
+            else:
+                imgdata = merge([imgdata, band_data])
+
+        return imgdata.astype('uint8')
+
+
 class LinearStyleDef(DynamicRangeCompression):
     def __init__(self, product, style_cfg):
         super(LinearStyleDef, self).__init__(product, style_cfg)
@@ -80,7 +127,11 @@ class LinearStyleDef(DynamicRangeCompression):
         for imgband, components in self.components.items():
             imgband_data = None
             for band, intensity in components.items():
-                imgband_component = data[band] * intensity
+                if callable(intensity):
+                    imgband_component = intensity(data[band])
+                else:
+                    imgband_component = data[band] * intensity
+
                 if imgband_data is not None:
                     imgband_data += imgband_component
                 else:
@@ -237,3 +288,5 @@ def StyleDef(product, cfg):
         return HeatMappedStyleDef(product, cfg)
     elif cfg.get("components", False):
         return LinearStyleDef(product, cfg)
+    elif cfg.get("value_map", False):
+        return RGBMappedStyleDef(product, cfg)
