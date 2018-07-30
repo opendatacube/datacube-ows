@@ -83,7 +83,6 @@ class RGBMappedStyleDef(StyleDefBase):
                     c = numpy.full(data[band].shape, intensity)
                     target[color] = DataArray(c, dims=dims, coords=coords)
 
-                
                 mask = make_mask(bdata, **flags)
                 masked = target.where(mask)
 
