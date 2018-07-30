@@ -1,4 +1,4 @@
-from xarray import Dataset, merge
+from xarray import Dataset, DataArray, merge
 import numpy
 
 from datacube.storage.masking import make_mask
@@ -73,15 +73,17 @@ class RGBMappedStyleDef(StyleDefBase):
         for band in self.value_map.keys():
             band_data = Dataset()
             for value in self.value_map[band]:
-                color_base = data[band].copy()
                 target = Dataset()
                 flags = value["flags"]
                 rgb = value["values"]
-                for color, intensity in rgb.items():
-                    color_base.data.fill(intensity)
-                    target[color] = color_base.copy()
-
+                dims = data[band].dims
+                coords = data[band].coords
                 bdata = data[band]
+                for color, intensity in rgb.items():
+                    c = numpy.full(data[band].shape, intensity)
+                    target[color] = DataArray(c, dims=dims, coords=coords)
+
+                
                 mask = make_mask(bdata, **flags)
                 masked = target.where(mask)
 
