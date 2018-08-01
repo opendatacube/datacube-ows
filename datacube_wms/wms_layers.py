@@ -98,9 +98,9 @@ class ProductLayerDef(object):
                 self.origin_y = data.affine[5]
                 self.resolution_x = data.affine[0]
                 self.resolution_y = data.affine[4]
-                self.max_datasets_wcs = product_cfg.get("max_datasets_wcs", 0)
             except:
                 self.native_CRS = None
+            self.max_datasets_wcs = product_cfg.get("max_datasets_wcs", 0)
             bands = dc.list_measurements().ix[self.product_name]
             self.bands = bands.index.values
             self.nodata_values = bands['nodata'].values
