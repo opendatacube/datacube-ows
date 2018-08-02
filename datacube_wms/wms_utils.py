@@ -1,4 +1,5 @@
 from datetime import datetime
+from dateutil.parser import parse
 from pytz import utc
 
 from affine import Affine
@@ -132,7 +133,7 @@ def get_time(args, product, raw_product):
 
         return ranges["times"][-1]
     try:
-        time = datetime.strptime(times[0], "%Y-%m-%d").date()
+        time = parse(times[0]).date()
     except ValueError:
         raise WMSException(
             "Time dimension value '%s' not valid for this layer" % times[0],

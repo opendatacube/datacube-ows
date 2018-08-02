@@ -1,4 +1,5 @@
 import datetime
+from dateutil.parser import parse
 from collections import OrderedDict
 
 import datacube
@@ -110,7 +111,7 @@ class WCS1GetCoverageRequest(object):
             else:
                 for t in times:
                     try:
-                        time = datetime.datetime.strptime(t, "%Y-%m-%d").date()
+                        time = parse(t).date()
                         if time not in self.product.ranges["time_set"]:
                             raise WCS1Exception(
                                 "Time value '%s' not a valid date for coverage %s" % (t,self.product_name),
