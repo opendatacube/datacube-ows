@@ -83,8 +83,10 @@ class WCS1GetCoverageRequest(object):
             raise WCS1Exception("No BBOX parameter supplied",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="BBOX or TIME parameter")
+
+        is_terria = args["referer"] is not None and ("terria" in args["referer"] or "nationalmap" in args["referer"])
         try:
-            if svc_cfg.published_CRSs[self.request_crsid]["vertical_coord_first"]:
+            if svc_cfg.published_CRSs[self.request_crsid]["vertical_coord_first"] and not is_terria:
                 self.miny, self.minx, self.maxy, self.maxx = map(float, args['bbox'].split(','))
             else:
                 self.minx, self.miny, self.maxx, self.maxy = map(float, args['bbox'].split(','))

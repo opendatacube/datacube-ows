@@ -86,20 +86,21 @@ class ProductLayerDef(object):
         # For WCS
         svc_cfg = get_service_cfg()
         if svc_cfg.wcs:
-            try:
-                self.native_CRS = self.product.definition["storage"]["crs"]
-                if self.native_CRS not in svc_cfg.published_CRSs:
-                    raise Exception("Native CRS for product {} ({}) not in published CRSs".format(self.product_name, self.native_CRS))
-                self.native_CRS_def = svc_cfg.published_CRSs[self.native_CRS]
-                data = dc.load(self.product_name, dask_chunks={})
-                self.grid_high_x = len(data[svc_cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
-                self.grid_high_y = len(data[svc_cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
-                self.origin_x = data.affine[3]
-                self.origin_y = data.affine[5]
-                self.resolution_x = data.affine[0]
-                self.resolution_y = data.affine[4]
-            except:
-                self.native_CRS = None
+            if svc_cfg.create_grid:
+                try:
+                    self.native_CRS = self.product.definition["storage"]["crs"]
+                    if self.native_CRS not in svc_cfg.published_CRSs:
+                        raise Exception("Native CRS for product {} ({}) not in published CRSs".format(self.product_name, self.native_CRS))
+                    self.native_CRS_def = svc_cfg.published_CRSs[self.native_CRS]
+                    data = dc.load(self.product_name, dask_chunks={})
+                    self.grid_high_x = len(data[svc_cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
+                    self.grid_high_y = len(data[svc_cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
+                    self.origin_x = data.affine[3]
+                    self.origin_y = data.affine[5]
+                    self.resolution_x = data.affine[0]
+                    self.resolution_y = data.affine[4]
+                except:
+                    self.native_CRS = None
             self.max_datasets_wcs = product_cfg.get("max_datasets_wcs", 0)
             bands = dc.list_measurements().ix[self.product_name]
             self.bands = bands.index.values
@@ -178,6 +179,7 @@ class ServiceCfg(object):
 
             self.wms = service_cfg.get("wms", True)
             self.wcs = service_cfg.get("wcs", False)
+            self.create_grid = service_cfg.get("create_wcs_grid", False)
 
             self.title = service_cfg["title"]
             self.url = service_cfg["url"]
