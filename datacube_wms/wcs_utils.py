@@ -84,7 +84,9 @@ class WCS1GetCoverageRequest(object):
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="BBOX or TIME parameter")
 
-        is_terria = args["referer"] is not None and ("terria" in args["referer"] or "nationalmap" in args["referer"])
+        is_terria = ((args["referer"] is not None and ("terria" in args["referer"] or "nationalmap" in args["referer"])) or
+            (args["origin"] is not None and ("terria" in args["origin"] or "nationalmap" in args["origin"])))
+
         try:
             if svc_cfg.published_CRSs[self.request_crsid]["vertical_coord_first"] and not is_terria:
                 self.miny, self.minx, self.maxy, self.maxx = map(float, args['bbox'].split(','))
@@ -375,7 +377,9 @@ def get_tiff(req, data):
                 dtype=dtype) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
-            dst.set_nodatavals(
+            # As of rasterio 1.0.2 the nodatavals property is not writable
+            # as suggested in the docs, use the deprecated function
+            dst._set_nodatavals(
                 [ req.product.nodata_dict[band] if band in req.product.nodata_dict else 0 for band in data.data_vars ]
             )
         return memfile.read()

@@ -7,7 +7,37 @@ except:
 from psycopg2.extras import Json
 from itertools import zip_longest
 from uuid import UUID
+import json
 
+default_geojson = json.loads('''{
+"type": "Polygon",
+"coordinates": [
+  [
+    [
+      110.91796875,
+      -43.96119063892024
+    ],
+    [
+      158.203125,
+      -43.96119063892024
+    ],
+    [
+      158.203125,
+      -10.660607953624762
+    ],
+    [
+      110.91796875,
+      -10.660607953624762
+    ],
+    [
+      110.91796875,
+      -43.96119063892024
+    ]
+  ]
+]
+}''')
+
+default_geojson_crs = datacube.utils.geometry.CRS('EPSG:4326')
 
 def accum_min(a, b):
     if a is None:
@@ -47,6 +77,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
     time_set = set()
 
     crsids = service_cfg["published_CRSs"]
+    calculate_extent = not service_cfg.get("use_default_extent", False)
     extents = {crsid: None for crsid in crsids}
     crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
     ds_count = 0
@@ -85,33 +116,40 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
         if path is not None:
             sub_r[path]["time_set"].add(dt.date())
 
-        for crsid in crsids:
-            crs = crses[crsid]
-            ext = ds.extent
-            if ext.crs != crs:
-                ext = ext.to_crs(crs)
-            cvx_ext = ext.convex_hull
-            if cvx_ext != ext:
-                print ("INFO: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
-            if extents[crsid] is None:
-                extents[crsid] = cvx_ext
-            else:
-                if not extents[crsid].is_valid:
-                    print("WARNING: Extent Union for", ds.id, "CRS", crsid, "is not valid")
-                if not cvx_ext.is_valid:
-                    print("WARNING: Extent for CRS", crsid, "is not valid")
-                union = extents[crsid].union(cvx_ext);
-                if union._geom is not None:
-                    extents[crsid] = union
+        if calculate_extent and path is not None:
+            for crsid in crsids:
+                crs = crses[crsid]
+                ext = ds.extent
+                if ext.crs != crs:
+                    ext = ext.to_crs(crs)
+                cvx_ext = ext.convex_hull
+                if cvx_ext != ext:
+                    print ("INFO: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
+                if extents[crsid] is None:
+                    extents[crsid] = cvx_ext
                 else:
-                    print("WARNING: Dataset", ds.id, "CRS", crsid, "union topology exception, ignoring union")
-            if path is not None:
-                if sub_r[path]["extents"][crsid] is None:
-                    sub_r[path]["extents"][crsid] = cvx_ext
-                else:
-                    sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(cvx_ext)
+                    if not extents[crsid].is_valid:
+                        print("WARNING: Extent Union for", ds.id, "CRS", crsid, "is not valid")
+                    if not cvx_ext.is_valid:
+                        print("WARNING: Extent for CRS", crsid, "is not valid")
+                    union = extents[crsid].union(cvx_ext);
+                    if union._geom is not None:
+                        extents[crsid] = union
+                    else:
+                        print("WARNING: Dataset", ds.id, "CRS", crsid, "union topology exception, ignoring union")
+                if path is not None:
+                    if sub_r[path]["extents"][crsid] is None:
+                        sub_r[path]["extents"][crsid] = cvx_ext
+                    else:
+                        sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(cvx_ext)
 
         ds_count += 1
+
+    if not calculate_extent and ds_count > 0:
+        for crsid in crsids:
+            crs = crses[crsid]
+            default = datacube.utils.geometry.Geometry(default_geojson, crs=default_geojson_crs)
+            extents[crsid] = default.to_crs(crs)
 
     r["times"] = sorted(time_set)
     r["time_set"] = time_set

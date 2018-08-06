@@ -19,7 +19,7 @@ RUN unzip terraform.zip && \
     terraform -v 
 
 RUN pip3 install \
-    flask scikit-image gunicorn boto3 git+https://github.com/Kirill888/rasterio.git@fix-issue-1350 \
+    flask scikit-image gunicorn boto3 rasterio==1.0.2 \
     && rm -rf $HOME/.cache/pip
 
 WORKDIR /code

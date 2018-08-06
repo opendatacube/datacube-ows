@@ -30,6 +30,7 @@ def lower_get_args():
 def ogc_impl():
     nocase_args = lower_get_args()
     nocase_args['referer'] = request.headers.get('Referer', None)
+    nocase_args['origin']  = request.headers.get('Origin', None)
     service = nocase_args.get("service","").upper()
     svc_cfg = get_service_cfg()
     try:

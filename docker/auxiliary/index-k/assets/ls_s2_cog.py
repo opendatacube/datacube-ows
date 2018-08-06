@@ -1,18 +1,27 @@
+
 # coding: utf-8
 from xml.etree import ElementTree
 from pathlib import Path
 import os
+from osgeo import osr
 import dateutil
-import time
+from dateutil import parser
+from datetime import timedelta
+import uuid
+import yaml
 import logging
 import click
 import re
 import boto3
-from botocore.handlers import disable_signing
 import datacube
-from datacube.scripts.dataset import create_dataset, parse_match_rules_options
+from datacube.index.hl import Doc2Dataset
 from datacube.utils import changes
 from ruamel.yaml import YAML
+
+from multiprocessing import Process, current_process, Queue, Manager, cpu_count
+from time import sleep
+
+GUARDIAN = "GUARDIAN_QUEUE_EMPTY"
 
 def format_obj_key(obj_key):
     obj_key ='/'.join(obj_key.split("/")[:-1])
@@ -23,35 +32,7 @@ def get_s3_url(bucket_name, obj_key):
     return 's3://{bucket_name}/{obj_key}'.format(
         bucket_name=bucket_name, obj_key=obj_key)
 
-
-def get_metadata_docs(bucket_name, prefix, suffix, unsafe, index):
-    s3 = boto3.resource('s3')
-    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
-    bucket = s3.Bucket(bucket_name)
-    logging.debug("Bucket : %s prefix: %s ", bucket_name, str(prefix))
-    safety = 'safe' if not unsafe else 'unsafe'
-    yaml = YAML(typ=safety, pure = True)
-
-    for obj in bucket.objects.filter(Prefix = str(prefix)):
-        if obj.key.endswith(suffix):
-            obj_key = obj.key
-            logging.debug("Processing %s", obj_key)
-            raw_string = obj.get()['Body'].read().decode('utf8')
-            yaml.default_flow_style = False
-            data = yaml.load(raw_string)
-            if index.datasets.has(data["id"]):
-                logging.info("Already indexed")
-            else:
-                yield obj_key,data
-   
-            
-def make_rules(index):
-    all_product_names = [prod.name for prod in index.products.get_all()]
-    rules = parse_match_rules_options(index, None, all_product_names, True)
-    return rules
-
-
-def archive_dataset(doc, uri, rules, index, sources_policy):
+def archive_dataset(doc, uri, index, sources_policy):
     def get_ids(dataset):
         ds = index.datasets.get(dataset.id, include_sources=True)
         for source in ds.sources.values():
@@ -59,40 +40,75 @@ def archive_dataset(doc, uri, rules, index, sources_policy):
         yield dataset.id
 
 
-    dataset = create_dataset(doc, uri, rules)
+    resolver = Doc2Dataset(index)
+    dataset, err  = resolver(doc, uri)
     index.datasets.archive(get_ids(dataset))
-    logging.debug("Archiving %s and all sources of %s", dataset.id, dataset.id)
+    logging.info("Archiving %s and all sources of %s", dataset.id, dataset.id)
 
 
-def add_dataset(doc, uri, rules, index, sources_policy):
-    dataset = create_dataset(doc, uri, rules)
-
+def add_dataset(doc, uri, index, sources_policy):
+    resolver = Doc2Dataset(index)
+    dataset, err  = resolver(doc, uri)
     try:
-        index.datasets.add(dataset, sources_policy=sources_policy) # Source policy to be checked in sentinel 2 datase types 
+        index.datasets.add(dataset, sources_policy=sources_policy) # Source policy to be checked in sentinel 2 datase types
     except changes.DocumentMismatchError as e:
         index.datasets.update(dataset, {tuple(): changes.allow_any})
+    except Exception as e:
+        logging.error("Unhandled exception %s", e)
 
-    logging.debug("Indexing %s", uri)
+    logging.info("Indexing %s", uri)
     return uri
+
+def worker(config, bucket_name, prefix, suffix, func, unsafe, sources_policy, queue):
+    dc=datacube.Datacube(config=config)
+    index = dc.index
+    s3 = boto3.resource("s3")
+    safety = 'safe' if not unsafe else 'unsafe'
+
+    while True:
+        try:
+            key = queue.get_nowait()
+            if key == GUARDIAN:
+                break
+            logging.info("Processing %s %s", key, current_process())
+            obj = s3.Object(bucket_name, key).get(ResponseCacheControl='no-cache')
+            raw_string = obj['Body'].read().decode('utf8')
+            yaml = YAML(typ=safety, pure=True)
+            yaml.default_flow_style = False
+            data = yaml.load(raw_string)
+            uri= get_s3_url(bucket_name, key)
+            logging.info("calling %s", func)
+            func(data, uri, index, sources_policy)
+        except:
+            sleep(0)
+            pass
 
 
 def iterate_datasets(bucket_name, config, prefix, suffix, func, unsafe, sources_policy):
-    dc=datacube.Datacube(config=config)
-    index = dc.index
-    rules = make_rules(index)
+    manager = Manager()
+    queue = manager.Queue()
 
-    start = time.time()
-    counter = 0
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+    logging.info("Bucket : %s prefix: %s ", bucket_name, str(prefix))
+    safety = 'safe' if not unsafe else 'unsafe'
 
-    for metadata_path,metadata_doc in get_metadata_docs(bucket_name, prefix, suffix, unsafe, index):
-        uri= get_s3_url(bucket_name, metadata_path)
-        func(metadata_doc, uri, rules, index, sources_policy)
+    processess = []
+    for i in range(cpu_count()):
+        proc = Process(target=worker, args=(config, bucket_name, prefix, suffix, func, unsafe, sources_policy, queue,))
+        processess.append(proc)
+        proc.start()
 
-        counter += 1
-        now = time.time()
-        elapsed = now - start
-        speed = counter / elapsed
-        logging.info('%s records indexed per second', str(speed))
+    for obj in bucket.objects.filter(Prefix = str(prefix)):
+        if (obj.key.endswith(suffix)):
+            queue.put(obj.key)
+
+    for i in range(cpu_count()):
+        queue.put(GUARDIAN)
+
+    for proc in processess:
+        proc.join()
+
 
 
 @click.command(help= "Enter Bucket name. Optional to enter configuration file to access a different database")
