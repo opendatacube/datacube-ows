@@ -116,7 +116,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
         if path is not None:
             sub_r[path]["time_set"].add(dt.date())
 
-        if calculate_extent and path is not None:
+        if calculate_extent or path is not None:
             for crsid in crsids:
                 crs = crses[crsid]
                 ext = ds.extent
@@ -145,6 +145,7 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
 
         ds_count += 1
 
+    # Default extent usage
     if not calculate_extent and ds_count > 0:
         for crsid in crsids:
             crs = crses[crsid]
