@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     jq \
     awscli \
     curl \
+    libev-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Terraform
@@ -21,10 +22,15 @@ RUN unzip terraform.zip && \
 RUN pip3 install \
     flask \
     scikit-image \
+    gevent \
+    eventlet \
     gunicorn \
+    gunicorn[gevent] \
+    gunicorn[eventlet] \
     boto3 \
     rasterio>=1.0.2 \
     ruamel.yaml \
+    prometheus-client \
     && rm -rf $HOME/.cache/pip
 
 WORKDIR /code
