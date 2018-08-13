@@ -7,7 +7,6 @@ from datacube_wms.ogc_utils import resp_headers
 
 from datacube_wms.ogc_exceptions import WMSException
 
-
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 

@@ -96,6 +96,22 @@ service_cfg = {
     },
     "fees": "",
     "access_constraints": "",
+    # If True this will not calculate spatial extents
+    # in update_ranges.py but will instead use a default
+    # extent covering much of Australia for all
+    # temporal extents
+    # False by default (calculate spatial extents)
+    "use_default_extent": True,
+    # If using s3 as storage setting this true
+    # will create a boto3 session with credentials
+    # for rasterio to use
+    # before making any WMS/WCS requests
+    "preauthenticate_s3": True,
+    # If using GeoTIFFs as storage
+    # this will set the rasterio env
+    # GDAL Config for GTiff Georeferencing
+    # See https://www.gdal.org/frmt_gtiff.html#georeferencing
+    "geotiff_georeference_source": "INTERNAL"
 }
 
 layer_cfg = [

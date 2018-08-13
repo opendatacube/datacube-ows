@@ -13,7 +13,6 @@ from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 def handle_wcs(nocase_args):
     operation = nocase_args.get("request", "").upper()
-    # WMS operation Map
     if not operation:
         raise WCS1Exception("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":

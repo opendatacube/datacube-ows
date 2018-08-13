@@ -240,6 +240,8 @@ class ServiceCfg(object):
             self.contact_info = service_cfg.get("contact_info", {})
             self.fees = service_cfg.get("fees", "")
             self.access_constraints = service_cfg.get("access_constraints", "")
+            self.preauthenticate_s3 = service_cfg.get("preauthenticate_s3", False)
+            self.geotiff_georeference_source = service_cfg.get("geotiff_georeference_source", "PAM,INTERNAL,TABFILE,WORLDFILE,NONE")
 
 
     def __getitem__(self, name):

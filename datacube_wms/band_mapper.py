@@ -275,7 +275,8 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
             img_band_data = (hmap_raw_data * 255.0 * ( 1.0 - self.component_ratio)
                                    + self.component_ratio * component_band_data)
             imgdata[band] = (dims, img_band_data.astype("uint8"))
-        imgdata = imgdata.where(extent_mask)
+        if extent_mask is not None:
+            imgdata = imgdata.where(extent_mask)
         imgdata = imgdata.where(hm_mask)
         imgdata = self.apply_masks(imgdata, pq_data)
         imgdata = imgdata.astype("uint8")
