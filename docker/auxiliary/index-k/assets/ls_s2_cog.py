@@ -19,7 +19,7 @@ from datacube.utils import changes
 from ruamel.yaml import YAML
 
 from multiprocessing import Process, current_process, Queue, Manager, cpu_count
-from time import sleep
+from time import sleep, time
 
 GUARDIAN = "GUARDIAN_QUEUE_EMPTY"
 

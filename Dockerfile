@@ -41,7 +41,7 @@ RUN mkdir -p /code/setup
 WORKDIR /code/setup
 
 COPY docker/auxiliary/setup-k/assets/create-db.sh .
-COPY docker/auxiliary/setup-k/assets/create-db.tf .
+COPY docker/auxiliary/setup-k/assets/drop-db.sh .
 
 # Perform index install
 RUN mkdir -p /code/index/indexing
