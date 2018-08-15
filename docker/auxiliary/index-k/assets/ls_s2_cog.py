@@ -72,10 +72,10 @@ def worker(config, bucket_name, prefix, suffix, func, unsafe, sources_policy, qu
                 break
             logging.info("Processing %s %s", key, current_process())
             obj = s3.Object(bucket_name, key).get(ResponseCacheControl='no-cache')
-            raw_string = obj['Body'].read().decode('utf8')
-            yaml = YAML(typ=safety, pure=True)
+            raw = obj['Body'].read()
+            yaml = YAML(typ=safety, pure=False)
             yaml.default_flow_style = False
-            data = yaml.load(raw_string)
+            data = yaml.load(raw)
             uri= get_s3_url(bucket_name, key)
             logging.info("calling %s", func)
             func(data, uri, index, sources_policy)
