@@ -84,41 +84,40 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
     for ds in dc.find_datasets(product=product_name):
         dt = ds.center_time + timedelta(hours=time_offset)
         time_set.add(dt.date())
-        
-        if extractor is not None:
-            path = extractor(ds)
-            if path not in sub_r:
-                sub_r[path] = {
-                    "product_id": product.id,
-                    "sub_id": path,
-                    "lat": {
-                        "min": None,
-                        "max": None,
-                    },
-                    "lon": {
-                        "min": None,
-                        "max": None,
-                    },
-                    "time_set": set(),
-                    "extents": { crsid: None for crsid in crsids }
-                }
-            sub_r[path]["lat"]["min"] = accum_min(sub_r[path]["lat"]["min"], ds.metadata.lat.begin)
-            sub_r[path]["lat"]["max"] = accum_max(sub_r[path]["lat"]["max"], ds.metadata.lat.end)
-            sub_r[path]["lon"]["min"] = accum_min(sub_r[path]["lon"]["min"], ds.metadata.lon.begin)
-            sub_r[path]["lon"]["max"] = accum_max(sub_r[path]["lon"]["max"], ds.metadata.lon.end)
-        else:
-            path = None
-
-        r["lat"]["min"] = accum_min(r["lat"]["min"], ds.metadata.lat.begin)
-        r["lat"]["max"] = accum_max(r["lat"]["max"], ds.metadata.lat.end)
-        r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
-        r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
-
-
-        if path is not None:
-            sub_r[path]["time_set"].add(dt.date())
-
         if calculate_extent or extractor is not None:
+            if extractor is not None:
+                path = extractor(ds)
+                if path not in sub_r:
+                    sub_r[path] = {
+                        "product_id": product.id,
+                        "sub_id": path,
+                        "lat": {
+                            "min": None,
+                            "max": None,
+                        },
+                        "lon": {
+                            "min": None,
+                            "max": None,
+                        },
+                        "time_set": set(),
+                        "extents": { crsid: None for crsid in crsids }
+                    }
+                sub_r[path]["lat"]["min"] = accum_min(sub_r[path]["lat"]["min"], ds.metadata.lat.begin)
+                sub_r[path]["lat"]["max"] = accum_max(sub_r[path]["lat"]["max"], ds.metadata.lat.end)
+                sub_r[path]["lon"]["min"] = accum_min(sub_r[path]["lon"]["min"], ds.metadata.lon.begin)
+                sub_r[path]["lon"]["max"] = accum_max(sub_r[path]["lon"]["max"], ds.metadata.lon.end)
+            else:
+                path = None
+
+            r["lat"]["min"] = accum_min(r["lat"]["min"], ds.metadata.lat.begin)
+            r["lat"]["max"] = accum_max(r["lat"]["max"], ds.metadata.lat.end)
+            r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
+            r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
+
+
+            if path is not None:
+                sub_r[path]["time_set"].add(dt.date())
+
             for crsid in crsids:
                 crs = crses[crsid]
                 ext = ds.extent
@@ -144,7 +143,6 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
                         sub_r[path]["extents"][crsid] = cvx_ext
                     else:
                         sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(cvx_ext)
-
         ds_count += 1
 
     # Default extent usage

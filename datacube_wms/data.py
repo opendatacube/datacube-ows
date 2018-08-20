@@ -31,69 +31,78 @@ from datacube.drivers import new_datasource
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
 
-
-def _get_measurement(filenames, geobox, output_geobox, no_data, dtype):
-    dest = numpy.full(geobox.shape, no_data, dtype=dtype)
-    with ThreadPoolExecutor(max_workers=(cpu_count() * 2)) as executor:
-        futures = {executor.submit(_calculate_and_load,
-            dest,
-            f,
-            geobox,
-            output_geobox): f for f in filenames}
-        wait(futures)
-        for f in futures:
-            src_transform, src_crs, data = f.result()
-            rio.warp.reproject(data,
-                dest,
-                init_dest_nodata=False,
-                src_nodata=no_data,
-                src_transform=src_transform,
-                src_crs=src_crs,
-                dst_transform=output_geobox.transform,
-                dst_crs=str(output_geobox.crs),
-                resampling=rio.warp.Resampling.nearest)
-    return dest
-
-
+# Do not use this function to load data where accuracy is important
+# may have errors when reprojecting the data
 def _calculate_and_load(destination, filename, geobox, output_geobox):
     with rio.open(filename) as src:
         # calculate out_shape
         # determine if we should load an overview
         scale_affine = (~src.transform * geobox.transform)
-        scale_a = abs(geobox.transform.a / src.transform.a)
-        scale_e = abs(geobox.transform.e / src.transform.e)
-        out_shape = (math.ceil(src.shape[0] / scale_a), math.ceil(src.shape[1] / scale_e))
-        out_shape_affine = Affine((src.transform.a * scale_a),
+        scale_a = abs(math.ceil(geobox.transform.a / src.transform.a))
+        scale_e = abs(math.ceil(geobox.transform.e / src.transform.e))
+        # load a square from the src with a fudge factor
+        # to prevent the output shape from being too small
+        # to be reprojected without gaps
+        scale = max(scale_a, scale_e) + 1
+        out_shape = (math.ceil(src.shape[0] / scale), math.ceil(src.shape[1] / scale))
+        out_shape_affine = Affine(math.ceil((src.transform.a * scale)),
             0,
             src.transform.c,
             0,
-            -abs(src.transform.e * scale_e),
+            -abs(math.ceil(src.transform.e * scale)),
             src.transform.f)
         data = src.read(out_shape=out_shape)
-        return (out_shape_affine, src.crs, data)
+    return (out_shape_affine, src.crs, data)
 
 
-def read_data(datasets, measurements, geobox, output_geobox):
-    all_bands = xarray.Dataset()
-    with ProcessPoolExecutor(max_workers=(cpu_count())) as executor:
-        futures = []
-        for measurement in measurements:
-            filenames = [new_datasource(d, measurement['name']).filename for d in datasets]
-            future = executor.submit(_get_measurement,
-                filenames,
-                geobox,
-                output_geobox,
-                measurement['nodata'],
-                measurement['dtype'])
-            futures.append((measurement, future))
+def _get_measurement(filenames, geobox, output_geobox, no_data, dtype):
+    dest = numpy.full(geobox.shape, no_data, dtype=dtype)
+    with ThreadPoolExecutor(max_workers=cpu_count()) as executor:
+        futures = {executor.submit(_calculate_and_load,
+            dest,
+            f,
+            geobox,
+            output_geobox): f for f in filenames}
+    for f in as_completed(futures):
+        src_transform, src_crs, data = f.result()
+        rio.warp.reproject(data,
+            dest,
+            init_dest_nodata=False,
+            src_nodata=no_data,
+            src_transform=src_transform,
+            src_crs=src_crs,
+            dst_transform=output_geobox.transform,
+            dst_crs=str(output_geobox.crs),
+            resampling=rio.warp.Resampling.nearest)
+    return dest
 
-        for measurement, future in futures:
-            final = xarray.DataArray(future.result(),
-                dims=('x', 'y'),
-                attrs=measurement.dataarray_attrs())
-            all_bands[measurement['name']] = final
-        all_bands.attrs['crs'] = geobox.crs
-    return all_bands
+
+def read_data(datasets, measurements, geobox, output_geobox, use_overviews=False, **kwargs):
+    if use_overviews:
+        all_bands = xarray.Dataset()
+        with ProcessPoolExecutor(max_workers=(cpu_count())) as executor:
+            futures = []
+            for measurement in measurements:
+                filenames = [new_datasource(d, measurement['name']).filename for d in datasets]
+                future = executor.submit(_get_measurement,
+                    filenames,
+                    geobox,
+                    output_geobox,
+                    measurement['nodata'],
+                    measurement['dtype'])
+                futures.append((measurement, future))
+
+            for measurement, future in futures:
+                final = xarray.DataArray(future.result(),
+                    dims=('x', 'y'),
+                    attrs=measurement.dataarray_attrs())
+                all_bands[measurement['name']] = final
+            all_bands.attrs['crs'] = output_geobox.crs
+        return all_bands
+    else:
+        holder[()] = [ datasets ]
+        sources = xarray.DataArray(holder)
+        return datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
 
 
 class DataStacker(object):
@@ -138,7 +147,7 @@ class DataStacker(object):
             prod_name = self._product.product_name
 
         # ODC Dataset Query
-        query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
+        query = datacube.api.query.Query(product=prod_name, geopolygon=self._output_geobox.extent, time=time)
         _LOG.debug("query start", datetime.now().time())
         datasets = index.datasets.search_eager(**query.search_terms)
         _LOG.debug("query stop", datetime.now().time())
@@ -217,7 +226,7 @@ class DataStacker(object):
                 filtered.extend(date_index[d])
         return filtered
 
-    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, decimated=False, **kwargs):
+    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
         if mask:
             prod = self._product.pq_product
             measurements = [ prod.measurements[self._product.pq_band].copy() ]
@@ -227,7 +236,7 @@ class DataStacker(object):
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
-                return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
+                return self.manual_data_stack(datasets, measurements, mask, skip_corrections, use_overviews, **kwargs)
             elif self._product.solar_correction and not mask and not skip_corrections:
                 # Merge performed already by dataset extent, but we need to
                 # process the data for the datasets individually to do solar correction.
@@ -235,9 +244,7 @@ class DataStacker(object):
                 for i in range(0, len(datasets)):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     ds = datasets[i]
-                    holder[()] = [ ds ]
-                    sources = xarray.DataArray(holder)
-                    d = datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
+                    d = read_data(ds, measurements, self._geobox, self._output_geobox, use_overviews, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -254,10 +261,10 @@ class DataStacker(object):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     holder[()] = datasets
                     sources = xarray.DataArray(holder)
-                data = read_data(datasets, measurements, self._geobox, self._output_geobox)
+                data = read_data(datasets, measurements, self._geobox, self._output_geobox, use_overviews, **kwargs)
                 return data
 
-    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
+    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
         # manual merge
         merged = None
         if mask:
@@ -267,9 +274,7 @@ class DataStacker(object):
         for i in range(0, len(datasets)):
             holder = numpy.empty(shape=tuple(), dtype=object)
             ds = datasets[i]
-            holder[()] = [ ds ]
-            sources = xarray.DataArray(holder)
-            d = datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
+            d = read_data(ds, measurements, self._geobox, self._output_geobox, use_overviews, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -298,7 +303,7 @@ def get_map(args):
 
     dc = get_cube()
      # Tiling.
-    stacker = DataStacker(params.product, params.geobox, params.time, style=params.style)
+    stacker = DataStacker(params.product, params.geobox, params.time, native_geobox=params.native_geobox, style=params.style)
     try:
         # print("datasets start", datetime.now().time(), args["requestid"])
         datasets = stacker.datasets(dc.index)
@@ -324,7 +329,7 @@ def get_map(args):
             body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
         else:
             _LOG.debug("load start", datetime.now().time(), args["requestid"])
-            data = stacker.data(datasets, manual_merge=params.product.data_manual_merge)
+            data = stacker.data(datasets, manual_merge=params.product.data_manual_merge, use_overviews=True)
             _LOG.debug("load stop", datetime.now().time(), args["requestid"])
             if params.style.masks:
                 if params.product.pq_name == params.product.name:
@@ -337,7 +342,8 @@ def get_map(args):
                     if pq_datasets:
                         pq_data = stacker.data(pq_datasets,
                                      mask=True,
-                                     manual_merge=params.product.pq_manual_merge)
+                                     manual_merge=params.product.pq_manual_merge,
+                                     use_overviews=True)
                     else:
                         pq_data = None
             else:
