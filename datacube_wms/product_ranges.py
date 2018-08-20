@@ -82,6 +82,9 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
     crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
     ds_count = 0
     for ds in dc.find_datasets(product=product_name):
+        dt = ds.center_time + timedelta(hours=time_offset)
+        time_set.add(dt.date())
+        
         if extractor is not None:
             path = extractor(ds)
             if path not in sub_r:
@@ -111,12 +114,11 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
         r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
         r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
-        dt = ds.center_time + timedelta(hours=time_offset)
-        time_set.add(dt.date())
+
         if path is not None:
             sub_r[path]["time_set"].add(dt.date())
 
-        if calculate_extent or path is not None:
+        if calculate_extent or extractor is not None:
             for crsid in crsids:
                 crs = crses[crsid]
                 ext = ds.extent
