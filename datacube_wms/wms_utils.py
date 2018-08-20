@@ -15,6 +15,27 @@ from datacube_wms.wms_layers import get_layers, get_service_cfg
 from datacube_wms.ogc_exceptions import WMSException
 
 
+def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
+    p1 = geometry.point(minx, maxy, src_crs)
+    p2 = geometry.point(minx, miny, src_crs)
+    p3 = geometry.point(maxx, maxy, src_crs)
+    p4 = geometry.point(maxx, miny, src_crs)
+
+    conv = dst_crs is not None
+    gp1 = p1.to_crs(dst_crs) if conv else p1
+    gp2 = p2.to_crs(dst_crs) if conv else p2
+    gp3 = p3.to_crs(dst_crs) if conv else p3
+    gp4 = p4.to_crs(dst_crs) if conv else p4
+
+    minx = min(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
+    maxx = max(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
+    miny = min(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
+    maxy = max(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
+
+    # miny-maxy for negative scale factor and maxy in the translation, includes inversion of Y axis.
+
+    return minx, miny, maxx, maxy
+
 def _get_geobox_xy(args, crs):
     if get_service_cfg().published_CRSs[crs.crs_str]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
@@ -23,14 +44,27 @@ def _get_geobox_xy(args, crs):
     return minx, miny, maxx, maxy
 
 
-def _get_geobox(args, crs):
+def _get_geobox(args, src_crs, dst_crs=None):
     width = int(args['width'])
     height = int(args['height'])
-    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
+    minx, miny, maxx, maxy = _get_geobox_xy(args, src_crs)
 
-    # miny-maxy for negative scale factor and maxy in the translation, includes inversion of Y axis.
+    if dst_crs is not None:
+        minx, miny, maxx, maxy = _bounding_pts(
+            minx, miny,
+            maxx, maxy,
+            width, height,
+            src_crs, dst_crs=dst_crs
+        )
+
+    out_crs = src_crs if dst_crs is None else dst_crs
     affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
-    return geometry.GeoBox(width, height, affine, crs)
+    return geometry.GeoBox(width, height, affine, out_crs)
+
+def _get_polygon(args, crs):
+    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
+    poly = geometry.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
+    return poly
 
 
 def int_trim(val, minval, maxval):
@@ -44,28 +78,19 @@ def zoom_factor(args, crs):
     width = int(args['width'])
     height = int(args['height'])
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
-    p1 = geometry.point(minx, maxy, crs)
-    p2 = geometry.point(minx, miny, crs)
-    p3 = geometry.point(maxx, maxy, crs)
-    p4 = geometry.point(maxx, miny, crs)
 
     # Project to a geographic coordinate system
     # This is why we can't just use the regular geobox.  The scale needs to be
     # "standardised" in some sense, not dependent on the CRS of the request.
     geo_crs = geometry.CRS("EPSG:4326")
-    gp1 = p1.to_crs(geo_crs)
-    gp2 = p2.to_crs(geo_crs)
-    gp3 = p3.to_crs(geo_crs)
-    gp4 = p4.to_crs(geo_crs)
-
-    minx = min(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
-    maxx = max(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
-    miny = min(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
-    maxy = max(gp1.points[0][1], gp2.points[0][1], gp3.points[0][1], gp4.points[0][1])
-
+    minx, miny, maxx, maxy = _bounding_pts(
+        minx, miny,
+        maxx, maxy,
+        width, height,
+        crs, dst_crs=geo_crs
+    )
     # Create geobox affine transformation (N.B. Don't need an actual Geobox)
     affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
-
     # Zoom factor is the reciprocal of the square root of the transform determinant
     # (The determinant is x scale factor multiplied by the y scale factor)
     return 1.0 / math.sqrt(affine.determinant)
@@ -178,8 +203,11 @@ class GetParameters(object):
         self.product = self.get_product(args)
         self.raw_product = self.get_raw_product(args)
 
+        self.geometry = _get_polygon(args, self.crs)
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
+        # Native CRS geobox
+        self.native_geobox = _get_geobox(args, self.crs, self.product.product.grid_spec.crs)
         # Time parameter
         self.time = get_time(args, self.product, self.raw_product)
 

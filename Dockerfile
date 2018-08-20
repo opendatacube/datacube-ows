@@ -31,6 +31,7 @@ RUN pip3 install \
     rasterio>=1.0.2 \
     ruamel.yaml \
     prometheus-client \
+    flask-request-id-middleware \
     && rm -rf $HOME/.cache/pip
 
 WORKDIR /code

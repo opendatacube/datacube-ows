@@ -92,9 +92,10 @@ def iterate_datasets(bucket_name, config, prefix, suffix, func, unsafe, sources_
     bucket = s3.Bucket(bucket_name)
     logging.info("Bucket : %s prefix: %s ", bucket_name, str(prefix))
     safety = 'safe' if not unsafe else 'unsafe'
+    worker_count = cpu_count() * 2
 
     processess = []
-    for i in range(cpu_count()):
+    for i in range(worker_count):
         proc = Process(target=worker, args=(config, bucket_name, prefix, suffix, func, unsafe, sources_policy, queue,))
         processess.append(proc)
         proc.start()
@@ -103,7 +104,7 @@ def iterate_datasets(bucket_name, config, prefix, suffix, func, unsafe, sources_
         if (obj.key.endswith(suffix)):
             queue.put(obj.key)
 
-    for i in range(cpu_count()):
+    for i in range(worker_count):
         queue.put(GUARDIAN)
 
     for proc in processess:

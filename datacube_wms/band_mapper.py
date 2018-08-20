@@ -3,6 +3,11 @@ import numpy
 
 from datacube.storage.masking import make_mask
 
+import logging
+_LOG = logging.getLogger(__name__)
+
+from datetime import datetime
+
 
 class StyleMask(object):
     def __init__(self, flags, invert=False):
@@ -61,6 +66,7 @@ class RGBMappedStyleDef(StyleDefBase):
 
     def transform_data(self, data, pq_data, extent_mask):
         # extent mask data per band to preseve nodata
+        _LOG.info("transform begin", datetime.now())
         if extent_mask is not None:
             for band in data.data_vars:
                 try:
@@ -68,7 +74,9 @@ class RGBMappedStyleDef(StyleDefBase):
                 except AttributeError:
                     data[band] = data[band].where(extent_mask)
 
+        _LOG.info("extent mask complete", datetime.now())
         data = self.apply_masks(data, pq_data)
+        _LOG.info("mask complete", datetime.now())
         imgdata = Dataset()
         for band in self.value_map.keys():
             band_data = Dataset()

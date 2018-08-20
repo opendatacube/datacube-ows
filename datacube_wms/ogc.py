@@ -3,6 +3,7 @@ import sys
 import traceback
 
 from flask import Flask, request, render_template
+from flask_request_id import RequestID
 import boto3
 import rasterio
 import os
@@ -13,7 +14,11 @@ from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSExceptio
 
 from datacube_wms.wms_layers import get_service_cfg
 
+import logging
+_LOG = logging.getLogger(__name__)
+
 app = Flask(__name__.split('.')[0])
+RequestID(app)
 
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
@@ -44,6 +49,7 @@ def ogc_impl():
     nocase_args = lower_get_args()
     nocase_args['referer'] = request.headers.get('Referer', None)
     nocase_args['origin']  = request.headers.get('Origin', None)
+    nocase_args['requestid'] = request.environ.get("FLASK_REQUEST_ID")
     service = nocase_args.get("service","").upper()
     svc_cfg = get_service_cfg()
 
