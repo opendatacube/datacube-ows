@@ -28,66 +28,91 @@ import math
 from datacube.utils import clamp
 
 from datacube.drivers import new_datasource
+import multiprocessing
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
 
-# Do not use this function to load data where accuracy is important
-# may have errors when reprojecting the data
-def _calculate_and_load(destination, filename, geobox, output_geobox):
+from datacube_wms.rasterio_env import preauthenticate_s3, get_boto_session, get_rio_geotiff_georeference_source
+
+
+# Calculates the approimate output shape and transform
+# for loading data from src into geobox
+# geobox and src must 
+def _calculate_transform(src, geobox):
+    # check if we need to convert geobox to
+    # src's crs
+    dc_crs = geometry.CRS(src.crs.to_string())
+    box = geobox
+    if box.crs != dc_crs:
+        geopolygon  = box.extent
+        transformed = geopolygon.to_crs(dc_crs)
+
+        box = geometry.GeoBox.from_geopolygon(transformed,
+            (box.transform.e, box.transform.a))
+
+    # calculate out_shape
+    # determine if we should load an overview
+    scale_affine = (~src.transform * box.transform)
+    scale_a = abs(math.ceil(box.transform.a / src.transform.a))
+    scale_e = abs(math.ceil(box.transform.e / src.transform.e))
+    # load a square from the src with a fudge factor
+    # to prevent the output shape from being too small
+    # to be reprojected without gaps
+    scale = max(scale_a, scale_e) + 1
+    out_shape = (math.ceil(src.shape[0] / scale), math.ceil(src.shape[1] / scale))
+    out_shape_affine = Affine(math.ceil((src.transform.a * scale)),
+        0,
+        src.transform.c,
+        0,
+        -abs(math.ceil(src.transform.e * scale)),
+        src.transform.f)
+
+    return (out_shape, out_shape_affine)
+
+def _calculate_and_load(destination, filename, geobox):
     with rio.open(filename) as src:
-        # calculate out_shape
-        # determine if we should load an overview
-        scale_affine = (~src.transform * geobox.transform)
-        scale_a = abs(math.ceil(geobox.transform.a / src.transform.a))
-        scale_e = abs(math.ceil(geobox.transform.e / src.transform.e))
-        # load a square from the src with a fudge factor
-        # to prevent the output shape from being too small
-        # to be reprojected without gaps
-        scale = max(scale_a, scale_e) + 1
-        out_shape = (math.ceil(src.shape[0] / scale), math.ceil(src.shape[1] / scale))
-        out_shape_affine = Affine(math.ceil((src.transform.a * scale)),
-            0,
-            src.transform.c,
-            0,
-            -abs(math.ceil(src.transform.e * scale)),
-            src.transform.f)
+        out_shape, out_shape_affine = _calculate_transform(src, geobox)
         data = src.read(out_shape=out_shape)
     return (out_shape_affine, src.crs, data)
 
 
-def _get_measurement(filenames, geobox, output_geobox, no_data, dtype):
+def _get_measurement(filenames, geobox, no_data, dtype):
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
-    with ThreadPoolExecutor(max_workers=cpu_count()) as executor:
-        futures = {executor.submit(_calculate_and_load,
-            dest,
-            f,
-            geobox,
-            output_geobox): f for f in filenames}
-    for f in as_completed(futures):
-        src_transform, src_crs, data = f.result()
-        rio.warp.reproject(data,
-            dest,
-            init_dest_nodata=False,
-            src_nodata=no_data,
-            src_transform=src_transform,
-            src_crs=src_crs,
-            dst_transform=output_geobox.transform,
-            dst_crs=str(output_geobox.crs),
-            resampling=rio.warp.Resampling.nearest)
+    session     = get_boto_session()
+    geotiff_src = get_rio_geotiff_georeference_source()
+    try:
+        with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
+            for f in filenames:
+                src_transform, src_crs, data = _calculate_and_load(dest, f, geobox)
+                rio.warp.reproject(data,
+                    dest,
+                    init_dest_nodata=False,
+                    src_nodata=no_data,
+                    src_transform=src_transform,
+                    src_crs=src_crs,
+                    dst_transform=geobox.transform,
+                    dst_crs=str(geobox.crs),
+                    resampling=rio.warp.Resampling.nearest)
+    except Exception as e:
+        _LOG.error("Error getting measurement! %s", e)
+    
     return dest
 
-
-def read_data(datasets, measurements, geobox, output_geobox, use_overviews=False, **kwargs):
+# Read data for given datasets and mesaurements per the output_geobox
+# If use_overviews is true 
+# Do not use this function to load data where accuracy is important
+# may have errors when reprojecting the data
+def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
     if use_overviews:
         all_bands = xarray.Dataset()
-        with ProcessPoolExecutor(max_workers=(cpu_count())) as executor:
+        with ProcessPoolExecutor(max_workers=cpu_count() * 2) as executor:
             futures = []
             for measurement in measurements:
-                filenames = [new_datasource(d, measurement['name']).filename for d in datasets]
+                # strip duplicate filenames
+                filenames = {new_datasource(d, measurement['name']).filename for d in datasets}
                 future = executor.submit(_get_measurement,
                     filenames,
                     geobox,
-                    output_geobox,
                     measurement['nodata'],
                     measurement['dtype'])
                 futures.append((measurement, future))
@@ -97,20 +122,19 @@ def read_data(datasets, measurements, geobox, output_geobox, use_overviews=False
                     dims=('x', 'y'),
                     attrs=measurement.dataarray_attrs())
                 all_bands[measurement['name']] = final
-            all_bands.attrs['crs'] = output_geobox.crs
+            all_bands.attrs['crs'] = geobox.crs
         return all_bands
     else:
         holder[()] = [ datasets ]
         sources = xarray.DataArray(holder)
-        return datacube.Datacube.load_data(sources, self._geobox, measurements, **kwargs)
+        return datacube.Datacube.load_data(sources, self.geobox, measurements, **kwargs)
 
 
 class DataStacker(object):
-    def __init__(self, product, geobox, time, native_geobox=None, style=None, bands=None, **kwargs):
+    def __init__(self, product, geobox, time, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
-        self._geobox = geobox if native_geobox is None else native_geobox
-        self._output_geobox = geobox
+        self._geobox = geobox
         if style:
             self._needed_bands = style.needed_bands
         elif bands:
@@ -147,7 +171,7 @@ class DataStacker(object):
             prod_name = self._product.product_name
 
         # ODC Dataset Query
-        query = datacube.api.query.Query(product=prod_name, geopolygon=self._output_geobox.extent, time=time)
+        query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
         _LOG.debug("query start", datetime.now().time())
         datasets = index.datasets.search_eager(**query.search_terms)
         _LOG.debug("query stop", datetime.now().time())
@@ -244,7 +268,7 @@ class DataStacker(object):
                 for i in range(0, len(datasets)):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     ds = datasets[i]
-                    d = read_data(ds, measurements, self._geobox, self._output_geobox, use_overviews, **kwargs)
+                    d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -261,7 +285,7 @@ class DataStacker(object):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     holder[()] = datasets
                     sources = xarray.DataArray(holder)
-                data = read_data(datasets, measurements, self._geobox, self._output_geobox, use_overviews, **kwargs)
+                data = read_data(datasets, measurements, self._geobox, use_overviews, **kwargs)
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
@@ -274,7 +298,7 @@ class DataStacker(object):
         for i in range(0, len(datasets)):
             holder = numpy.empty(shape=tuple(), dtype=object)
             ds = datasets[i]
-            d = read_data(ds, measurements, self._geobox, self._output_geobox, use_overviews, **kwargs)
+            d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -303,7 +327,7 @@ def get_map(args):
 
     dc = get_cube()
      # Tiling.
-    stacker = DataStacker(params.product, params.geobox, params.time, native_geobox=params.native_geobox, style=params.style)
+    stacker = DataStacker(params.product, params.geobox, params.time, style=params.style)
     try:
         # print("datasets start", datetime.now().time(), args["requestid"])
         datasets = stacker.datasets(dc.index)

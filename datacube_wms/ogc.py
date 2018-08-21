@@ -24,15 +24,6 @@ if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
     setup_prometheus(app)
 
-# Prefetch boto3 session if enabled
-# creating the s3 resource will force boto3
-# to find and create credentials
-if get_service_cfg().preauthenticate_s3:
-    boto_session = boto3.session.Session(region_name="ap-southeast-2")
-    s3 = boto_session.resource("s3")
-else:
-    boto_session = None
-
 def lower_get_args():
     # Get parameters in WMS are case-insensitive, and intended to be single use.
     # Spec does not specify which instance should be used if a parameter is provided more than once.
@@ -53,25 +44,23 @@ def ogc_impl():
     service = nocase_args.get("service","").upper()
     svc_cfg = get_service_cfg()
 
-    gtiff_georef = svc_cfg.geotiff_georeference_source
     try:
-        with rasterio.Env(session=boto_session, GDAL_GEOREF_SOURCES=gtiff_georef) as rio_env:
-            if service == "WMS":
-                # WMS operation Map
-                if svc_cfg.wms:
-                    return handle_wms(nocase_args)
-                else:
-                    raise WMSException("Invalid service", locator="Service parameter")
-            elif service == "WCS":
-                # WCS operation Map
-                if svc_cfg.wcs:
-                    return handle_wcs(nocase_args)
-                else:
-                    raise WCS1Exception("Invalid service", locator="Service parameter")
+        if service == "WMS":
+            # WMS operation Map
+            if svc_cfg.wms:
+                return handle_wms(nocase_args)
             else:
-                # Should we return a WMS or WCS exception if there is no service specified?
-                # Defaulting to WMS because that's what we already have.
                 raise WMSException("Invalid service", locator="Service parameter")
+        elif service == "WCS":
+            # WCS operation Map
+            if svc_cfg.wcs:
+                return handle_wcs(nocase_args)
+            else:
+                raise WCS1Exception("Invalid service", locator="Service parameter")
+        else:
+            # Should we return a WMS or WCS exception if there is no service specified?
+            # Defaulting to WMS because that's what we already have.
+            raise WMSException("Invalid service", locator="Service parameter")
     except OGCException as e:
         return e.exception_response()
     except Exception as e:

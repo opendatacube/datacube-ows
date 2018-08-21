@@ -206,8 +206,6 @@ class GetParameters(object):
         self.geometry = _get_polygon(args, self.crs)
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
-        # Native CRS geobox
-        self.native_geobox = _get_geobox(args, self.crs, self.product.product.grid_spec.crs)
         # Time parameter
         self.time = get_time(args, self.product, self.raw_product)
 
