@@ -1,6 +1,9 @@
+from __future__ import absolute_import, division, print_function
+
 from datacube_wms.product_ranges import update_all_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 
+# pylint: disable=invalid-name
 if __name__ == "__main__":
     app = "wms_update"
     dc = get_cube(app=app)

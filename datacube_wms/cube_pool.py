@@ -1,8 +1,8 @@
+from __future__ import absolute_import, division, print_function
 from datacube import Datacube
 from threading import Lock
 
-
-class CubePool(object):
+class CubePool():
     _instances = {}
     _cubes = None
     _cubes_lock = None

@@ -1,3 +1,4 @@
+#pylint: skip-file
 # From https://github.com/amitsaha/python-prometheus-demo
 from flask import request, Response
 from prometheus_client import Histogram
@@ -9,9 +10,9 @@ registry = CollectorRegistry()
 multiprocess.MultiProcessCollector(registry)
 
 REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP Request Duration',
-    ['operation', 'service'],
-    registry=registry,
-)
+                             ['operation', 'service'],
+                             registry=registry,
+                            )
 
 def start_timer():
     request.start_time = time.time()
@@ -28,5 +29,3 @@ def setup_prometheus(app):
     @app.route('/metrics')
     def metrics():
         return Response(prometheus_client.generate_latest(registry))
-
-

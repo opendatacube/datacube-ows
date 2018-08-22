@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import, division, print_function
 from flask import render_template
 
 from datacube_wms.ogc_utils import resp_headers
@@ -12,6 +12,7 @@ class OGCException(Exception):
     version = None
     schema_url = None
 
+    # pylint: disable=super-init-not-called
     def __init__(self, msg, code=None, locator=None, http_response=400):
         self.http_response = http_response
         self.errors = []
@@ -24,6 +25,7 @@ class OGCException(Exception):
             "locator": locator
         })
 
+    # pylint: disable=dangerous-default-value
     def exception_response(self, traceback=[]):
         return (render_template("ogc_error.xml",
                                 exception=self,
@@ -32,7 +34,7 @@ class OGCException(Exception):
                                 schema_url=self.schema_url),
                 self.http_response,
                 resp_headers({"Content-Type": "application/xml"})
-                )
+               )
 
 
 class WMSException(OGCException):
@@ -46,7 +48,7 @@ class WMSException(OGCException):
     OPERATION_NOT_SUPPORTED = "OperationNotSupported"
 
     version = "1.3.0"
-    schema_url="http://schemas.opengis.net/wms/1.3.0/exceptions_1_3_0.xsd"
+    schema_url = "http://schemas.opengis.net/wms/1.3.0/exceptions_1_3_0.xsd"
 
 
 class WCS1Exception(OGCException):
@@ -55,6 +57,4 @@ class WCS1Exception(OGCException):
     INVALID_PARAMETER_VALUE = "InvalidParameterValue"
 
     version = "1.2.0"
-    schema_url="http://schemas.opengis.net/wcs/1.0.0/OGC-exception.xsd"
-
-
+    schema_url = "http://schemas.opengis.net/wcs/1.0.0/OGC-exception.xsd"

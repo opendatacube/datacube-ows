@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 import json
 from datetime import timedelta, datetime
 
@@ -21,9 +22,7 @@ from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
         solar_correct_data
 from datacube_wms.ogc_utils import resp_headers
 
-from datetime import datetime
 import logging
-_LOG = logging.getLogger(__name__)
 import math
 from datacube.utils import clamp
 
@@ -34,21 +33,22 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as
 
 from datacube_wms.rasterio_env import preauthenticate_s3, get_boto_session, get_rio_geotiff_georeference_source
 
+_LOG = logging.getLogger(__name__)
 
-# Calculates the approimate output shape and transform
+# Calculates the approximate output shape and transform
 # for loading data from src into geobox
-# geobox and src must 
 def _calculate_transform(src, geobox):
     # check if we need to convert geobox to
     # src's crs
     dc_crs = geometry.CRS(src.crs.to_string())
     box = geobox
     if box.crs != dc_crs:
-        geopolygon  = box.extent
+        geopolygon = box.extent
         transformed = geopolygon.to_crs(dc_crs)
 
         box = geometry.GeoBox.from_geopolygon(transformed,
-            (box.transform.e, box.transform.a))
+                                              (box.transform.e,
+                                               box.transform.a))
 
     # calculate out_shape
     # determine if we should load an overview
@@ -61,11 +61,12 @@ def _calculate_transform(src, geobox):
     scale = max(scale_a, scale_e) + 1
     out_shape = (math.ceil(src.shape[0] / scale), math.ceil(src.shape[1] / scale))
     out_shape_affine = Affine(math.ceil((src.transform.a * scale)),
-        0,
-        src.transform.c,
-        0,
-        -abs(math.ceil(src.transform.e * scale)),
-        src.transform.f)
+                              0,
+                              src.transform.c,
+                              0,
+                              -abs(math.ceil(src.transform.e * scale)),
+                              src.transform.f
+                             )
 
     return (out_shape, out_shape_affine)
 
@@ -78,28 +79,29 @@ def _calculate_and_load(destination, filename, geobox):
 
 def _get_measurement(filenames, geobox, no_data, dtype):
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
-    session     = get_boto_session()
+    session = get_boto_session()
     geotiff_src = get_rio_geotiff_georeference_source()
     try:
         with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
             for f in filenames:
                 src_transform, src_crs, data = _calculate_and_load(dest, f, geobox)
                 rio.warp.reproject(data,
-                    dest,
-                    init_dest_nodata=False,
-                    src_nodata=no_data,
-                    src_transform=src_transform,
-                    src_crs=src_crs,
-                    dst_transform=geobox.transform,
-                    dst_crs=str(geobox.crs),
-                    resampling=rio.warp.Resampling.nearest)
+                                   dest,
+                                   init_dest_nodata=False,
+                                   src_nodata=no_data,
+                                   src_transform=src_transform,
+                                   src_crs=src_crs,
+                                   dst_transform=geobox.transform,
+                                   dst_crs=str(geobox.crs),
+                                   resampling=rio.warp.Resampling.nearest
+                                  )
     except Exception as e:
         _LOG.error("Error getting measurement! %s", e)
-    
+
     return dest
 
 # Read data for given datasets and mesaurements per the output_geobox
-# If use_overviews is true 
+# If use_overviews is true
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
@@ -111,26 +113,29 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
                 # strip duplicate filenames
                 filenames = {new_datasource(d, measurement['name']).filename for d in datasets}
                 future = executor.submit(_get_measurement,
-                    filenames,
-                    geobox,
-                    measurement['nodata'],
-                    measurement['dtype'])
+                                         filenames,
+                                         geobox,
+                                         measurement['nodata'],
+                                         measurement['dtype']
+                                        )
                 futures.append((measurement, future))
 
             for measurement, future in futures:
                 final = xarray.DataArray(future.result(),
-                    dims=('x', 'y'),
-                    attrs=measurement.dataarray_attrs())
+                                         dims=('x', 'y'),
+                                         attrs=measurement.dataarray_attrs()
+                                        )
                 all_bands[measurement['name']] = final
             all_bands.attrs['crs'] = geobox.crs
         return all_bands
     else:
-        holder[()] = [ datasets ]
+        holder = numpy.empty(shape=tuple(), dtype=object)
+        holder[()] = [datasets]
         sources = xarray.DataArray(holder)
-        return datacube.Datacube.load_data(sources, self.geobox, measurements, **kwargs)
+        return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
 
 
-class DataStacker(object):
+class DataStacker():
     def __init__(self, product, geobox, time, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
@@ -172,9 +177,9 @@ class DataStacker(object):
 
         # ODC Dataset Query
         query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
-        _LOG.debug("query start", datetime.now().time())
+        _LOG.debug("query start %s", datetime.now().time())
         datasets = index.datasets.search_eager(**query.search_terms)
-        _LOG.debug("query stop", datetime.now().time())
+        _LOG.debug("query stop %s", datetime.now().time())
         # And sort by date
         try:
             datasets = sorted(datasets, key=lambda d: d.center_time)
@@ -205,6 +210,7 @@ class DataStacker(object):
                 return self.filter_datasets_by_extent(datasets)
 
     def filter_datasets_by_extent(self, datasets):
+        #pylint: disable=too-many-branches
         date_index = {}
         for dataset in iter(datasets):
             # Build a date-index of intersecting datasets
@@ -251,12 +257,13 @@ class DataStacker(object):
         return filtered
 
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
+        #pylint: disable=too-many-locals
         if mask:
             prod = self._product.pq_product
-            measurements = [ prod.measurements[self._product.pq_band].copy() ]
+            measurements = [prod.measurements[self._product.pq_band].copy()]
         else:
             prod = self._product.product
-            measurements = [ prod.measurements[name].copy() for name in self.needed_bands()]
+            measurements = [prod.measurements[name].copy() for name in self.needed_bands()]
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
@@ -289,10 +296,11 @@ class DataStacker(object):
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
+        #pylint: disable=too-many-locals, too-many-branches
         # manual merge
         merged = None
         if mask:
-            bands = [ self._product.pq_band ]
+            bands = [self._product.pq_band]
         else:
             bands = self.needed_bands()
         for i in range(0, len(datasets)):
@@ -322,6 +330,7 @@ class DataStacker(object):
         return merged
 
 def get_map(args):
+    # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetMapParameters(args)
 
@@ -329,12 +338,12 @@ def get_map(args):
      # Tiling.
     stacker = DataStacker(params.product, params.geobox, params.time, style=params.style)
     try:
-        # print("datasets start", datetime.now().time(), args["requestid"])
         datasets = stacker.datasets(dc.index)
-        # print("datasets stop", datetime.now().time(), args["requestid"])
+        zoomed_out = params.zf < params.product.min_zoom
+        too_many_datasets = (params.product.max_datasets_wms > 0 and len(datasets) > params.product.max_datasets_wms)
         if not datasets:
             body = _write_empty(params.geobox)
-        elif params.zf < params.product.min_zoom or (params.product.max_datasets_wms > 0 and len(datasets) > params.product.max_datasets_wms):
+        elif zoomed_out or too_many_datasets:
             # Zoomed out to far to properly render data.
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None
@@ -352,22 +361,24 @@ def get_map(args):
 
             body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
         else:
-            _LOG.debug("load start", datetime.now().time(), args["requestid"])
+            _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             data = stacker.data(datasets, manual_merge=params.product.data_manual_merge, use_overviews=True)
-            _LOG.debug("load stop", datetime.now().time(), args["requestid"])
+            _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             if params.style.masks:
                 if params.product.pq_name == params.product.name:
-                    pq_data = xarray.Dataset({
-                        params.product.pq_band: (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))},
-                        coords=data[params.product.pq_band].coords)
-                    pq_data[params.product.pq_band].attrs["flags_definition"] = data[params.product.pq_band].flags_definition
+                    pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
+                    pq_data = xarray.Dataset({params.product.pq_band: pq_band_data},
+                                             coords=data[params.product.pq_band].coords
+                                            )
+                    flag_def = data[params.product.pq_band].flags_definition
+                    pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
                 else:
                     pq_datasets = stacker.datasets(dc.index, mask=True)
                     if pq_datasets:
                         pq_data = stacker.data(pq_datasets,
-                                     mask=True,
-                                     manual_merge=params.product.pq_manual_merge,
-                                     use_overviews=True)
+                                               mask=True,
+                                               manual_merge=params.product.pq_manual_merge,
+                                               use_overviews=True)
                     else:
                         pq_data = None
             else:
@@ -435,13 +446,13 @@ def _write_polygon(geobox, polygon, zoom_fill):
         if not geobox_ext.disjoint(polygon):
             intersection = geobox_ext.intersection(polygon)
             if intersection.type == 'Polygon':
-                coordinates_list = [ intersection.json["coordinates"] ]
+                coordinates_list = [intersection.json["coordinates"]]
             elif intersection.type == 'MultiPolygon':
                 coordinates_list = intersection.json["coordinates"]
             else:
                 raise Exception("Unexpected extent/geobox intersection geometry type: %s" % intersection.type)
             for polygon_coords in coordinates_list:
-                pixel_coords = [ ~geobox.transform * coords for coords in polygon_coords[0] ]
+                pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
                 rs, cs = skimg_polygon([int_trim(c[1], 0, geobox.height - 1) for c in pixel_coords],
                                        [int_trim(c[0], 0, geobox.width - 1) for c in pixel_coords])
                 data[rs, cs] = 1
@@ -465,15 +476,15 @@ def get_s3_browser_uris(datasets):
 
     # convert to browsable link
     def convert(uri):
-        regex = re.compile("s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)ARD-METADATA.yaml")
+        regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)ARD-METADATA.yaml")
         uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
         result = regex.match(uri)
         if result is not None:
             new_uri = uri_format.format(bucket=result.group("bucket"),
                                         prefix=result.group("prefix"))
         else:
-            new_uri = uri;
-        return new_uri;
+            new_uri = uri
+        return new_uri
 
     formatted = [convert(uri) for uri in unique_uris]
 
@@ -481,6 +492,7 @@ def get_s3_browser_uris(datasets):
 
 
 def feature_info(args):
+    # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetFeatureInfoParameters(args)
 
@@ -493,10 +505,15 @@ def feature_info(args):
     dc = get_cube()
     try:
         geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
-        datasets = stacker.datasets(dc.index, all_time=True,
-                                  point=geo_point)
-        pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False,
-                                     point=geo_point)
+        datasets = stacker.datasets(dc.index,
+                                    all_time=True,
+                                    point=geo_point
+                                   )
+        pq_datasets = stacker.datasets(dc.index,
+                                       mask=True,
+                                       all_time=False,
+                                       point=geo_point
+                                      )
 
         h_coord = service_cfg.published_CRSs[params.crsid]["horizontal_coord"]
         v_coord = service_cfg.published_CRSs[params.crsid]["vertical_coord"]
@@ -559,7 +576,7 @@ def feature_info(args):
                     if pixel_ds is None:
                         data = stacker.data([d], skip_corrections=True)
                         pixel_ds = data.isel(**isel_kwargs)
-                    drill_section = { }
+                    drill_section = {}
                     for band in params.product.band_drill:
                         band_val = pixel_ds[band].item()
                         if band_val == -999:
@@ -571,7 +588,7 @@ def feature_info(args):
                 feature_json["time_drill"] = drill
                 feature_json["datasets_read"] = len(datasets)
             my_flags = 0
-            pqdi =-1
+            pqdi = -1
             for pqd in pq_datasets:
                 pqdi += 1
                 idx_date = (pqd.center_time + timedelta(hours=params.product.time_zone)).date()

@@ -45,24 +45,24 @@ def get_capabilities(args):
     elif section == "/wcs_capabilities/contentmetadata":
         show_content_metadata = True
     else:
-        raise WCS1Exception("Invalid section: %s" % section, WCS1Exception.INVALID_PARAMETER_VALUE, locator="Section parameter")
+        raise WCS1Exception("Invalid section: %s" % section,
+                            WCS1Exception.INVALID_PARAMETER_VALUE,
+                            locator="Section parameter")
 
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
     return (
-            render_template("wcs_capabilities.xml",
-                            show_service=show_service,
-                            show_capability=show_capability,
-                            show_content_metadata=show_content_metadata,
-                            service=get_service_cfg(),
-                            platforms=platforms),
-            200,
-            resp_headers({
-                    "Content-Type": "application/xml",
-                    "Cache-Control": "no-cache",
-                    "Cache-Control": "max-age=0"
-            })
-    )
+        render_template("wcs_capabilities.xml",
+                        show_service=show_service,
+                        show_capability=show_capability,
+                        show_content_metadata=show_content_metadata,
+                        service=get_service_cfg(),
+                        platforms=platforms),
+        200,
+        resp_headers({
+            "Content-Type": "application/xml",
+            "Cache-Control": "no-cache, max-age=0"
+        }))
 
 
 def desc_coverages(args):
@@ -94,8 +94,7 @@ def desc_coverages(args):
         200,
         resp_headers({
             "Content-Type": "application/xml",
-            "Cache-Control": "no-cache",
-            "Cache-Control": "max-age=0"
+            "Cache-Control": "no-cache.max-age=0"
         })
     )
 
@@ -105,12 +104,10 @@ def get_coverage(args):
     req = WCS1GetCoverageRequest(args)
     data = get_coverage_data(req)
     return (
-            req.format["renderer"](req, data),
-            200,
-            resp_headers({
-                "Content-Type": req.format["mime"],
-                'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format["extension"])
-            })
+        req.format["renderer"](req, data),
+        200,
+        resp_headers({
+            "Content-Type": req.format["mime"],
+            'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format["extension"])
+        })
     )
-
-

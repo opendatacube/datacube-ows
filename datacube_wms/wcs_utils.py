@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 import datetime
 from dateutil.parser import parse
 from collections import OrderedDict
@@ -17,7 +19,8 @@ from datacube_wms.ogc_exceptions import WCS1Exception
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 
-class WCS1GetCoverageRequest(object):
+class WCS1GetCoverageRequest():
+    #pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
     def __init__(self, args):
         self.args = args
         layers = get_layers()
@@ -98,7 +101,7 @@ class WCS1GetCoverageRequest(object):
             if self.format["multi-time"]:
                 self.times = self.product.ranges["times"]
             else:
-                self.times = [ self.product.ranges["times"][-1] ]
+                self.times = [self.product.ranges["times"][-1]]
         else:
             # TODO: the min/max/res format option?
             # It's a bit underspeced. I'm not sure what the "res" would look like.
@@ -112,7 +115,7 @@ class WCS1GetCoverageRequest(object):
                         time = parse(t).date()
                         if time not in self.product.ranges["time_set"]:
                             raise WCS1Exception(
-                                "Time value '%s' not a valid date for coverage %s" % (t,self.product_name),
+                                "Time value '%s' not a valid date for coverage %s" % (t, self.product_name),
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="TIME parameter"
                             )
@@ -127,7 +130,7 @@ class WCS1GetCoverageRequest(object):
 
             if len(times) == 0:
                 raise WCS1Exception(
-                    "Time value '%s' not a valid ISO-8601 date" % t,
+                    "No valid ISO-8601 dates",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
                     locator="TIME parameter"
                 )
@@ -145,7 +148,7 @@ class WCS1GetCoverageRequest(object):
             if len(self.product.bands) <= 3:
                 self.bands = list(self.product.bands)
             elif "red" in self.product.bands and "green" in self.product.bands and "blue" in self.product.bands:
-                self.bands = [ "red", "green", "blue" ]
+                self.bands = ["red", "green", "blue"]
             else:
                 self.bands = list(self.product.bands[0:3])
         else:
@@ -185,7 +188,7 @@ class WCS1GetCoverageRequest(object):
                                     WCS1Exception.MISSING_PARAMETER_VALUE,
                                     locator="RESX/RESY/WIDTH/HEIGHT parameters")
             try:
-                self.height=int(args["height"])
+                self.height = int(args["height"])
                 if self.height < 1:
                     raise ValueError()
             except ValueError:
@@ -193,15 +196,15 @@ class WCS1GetCoverageRequest(object):
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="HEIGHT parameter")
             try:
-                self.width=int(args["width"])
+                self.width = int(args["width"])
                 if self.width < 1:
                     raise ValueError()
             except ValueError:
                 raise WCS1Exception("WIDTH parameter must be a positive integer",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="WIDTH parameter")
-            self.resx = ( self.maxx - self.minx) / self.width
-            self.resy = ( self.maxy - self.miny) / self.height
+            self.resx = (self.maxx - self.minx) / self.width
+            self.resy = (self.maxy - self.miny) / self.height
         elif "resx" in args:
             if "resy" not in args:
                 raise WCS1Exception("RESX parameter supplied without RESY parameter",
@@ -227,8 +230,8 @@ class WCS1GetCoverageRequest(object):
                 raise WCS1Exception("RESY parameter must be a positive number",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESY parameter")
-            self.width = ( self.maxx - self.minx) / self.resx
-            self.height = ( self.maxy - self.miny) / self.resy
+            self.width = (self.maxx - self.minx) / self.resx
+            self.height = (self.maxy - self.miny) / self.resy
             self.width = int(self.width + 0.5)
             self.height = int(self.height + 0.5)
         elif "height" in args:
@@ -245,17 +248,21 @@ class WCS1GetCoverageRequest(object):
                                 locator="RESX/RESY/WIDTH/HEIGHT parameters")
 
         self.extent = geometry.polygon([(self.minx, self.miny),
-                                 (self.minx, self.maxy),
-                                 (self.maxx, self.maxy),
-                                 (self.maxx, self.miny),
-                                 (self.minx, self.miny)],
-                                self.request_crs)
+                                        (self.minx, self.maxy),
+                                        (self.maxx, self.maxy),
+                                        (self.maxx, self.miny),
+                                        (self.minx, self.miny)
+                                       ],
+                                       self.request_crs
+                                      )
 
-        self.affine = Affine.translation(self.minx, self.miny) * Affine.scale((self.maxx-self.minx)/self.width, (self.maxy-self.miny)/self.height)
+        self.affine = Affine.translation(self.minx, self.miny) \
+                      * Affine.scale((self.maxx-self.minx)/self.width, (self.maxy-self.miny)/self.height)
         self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.request_crs)
 
 
 def get_coverage_data(req):
+    #pylint: disable=too-many-locals, protected-access
     dc = get_cube()
     datasets = []
     for t in req.times:
@@ -296,18 +303,18 @@ def get_coverage_data(req):
             )
         if svc.published_CRSs[req.request_crsid]["vertical_coord_first"]:
             nparrays = {
-                band: ( (yname, xname),
-                        numpy.full( (len(yvals), len(xvals)),
-                                    req.product.nodata_dict[band])
-                        )
+                band: ((yname, xname),
+                       numpy.full((len(yvals), len(xvals)),
+                                  req.product.nodata_dict[band])
+                      )
                 for band in req.bands
             }
         else:
             nparrays = {
-                band: ( (xname, yname),
-                        numpy.full( (len(xvals), len(yvals)),
-                                    req.product.nodata_dict[band])
-                        )
+                band: ((xname, yname),
+                       numpy.full((len(xvals), len(yvals)),
+                                  req.product.nodata_dict[band])
+                      )
                 for band in req.bands
             }
         data = xarray.Dataset(
@@ -321,7 +328,9 @@ def get_coverage_data(req):
         return data
 
     if req.product.max_datasets_wcs > 0 and len(datasets) > req.product.max_datasets_wcs:
-        raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time. Please reduce the bounds of your request and try again. (max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, len(datasets)))
+        raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
+                            "Please reduce the bounds of your request and try again."
+                            "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, len(datasets)))
 
     if req.format["multi-time"]:
         # Group by solar day
@@ -361,6 +370,7 @@ def get_tiff(req, data):
     xname = svc.published_CRSs[req.request_crsid]["horizontal_coord"]
     yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
     with MemoryFile() as memfile:
+        #pylint: disable=protected-access
         with memfile.open(
                 driver="GTiff",
                 width=data.dims[xname],
@@ -369,12 +379,13 @@ def get_tiff(req, data):
                 transform=_get_transform_from_xr(xname, yname, data),
                 crs=req.response_crsid,
                 dtype=dtype) as dst:
+
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
             # As of rasterio 1.0.2 the nodatavals property is not writable
             # as suggested in the docs, use the deprecated function
             dst._set_nodatavals(
-                [ req.product.nodata_dict[band] if band in req.product.nodata_dict else 0 for band in data.data_vars ]
+                [req.product.nodata_dict[band] if band in req.product.nodata_dict else 0 for band in data.data_vars]
             )
         return memfile.read()
 
@@ -398,13 +409,14 @@ def _get_transform_from_xr(xname, yname, dataset):
     # Looks like the rasterio equivalent of a Geobox.
     # Adapted from CEOS to work with non-geographic CRSs
     from rasterio.transform import from_bounds
-    geotransform = from_bounds(getattr(dataset,xname)[0], getattr(dataset,yname)[0],
-                               getattr(dataset,xname)[-1], getattr(dataset,yname)[-1],
-                               len(getattr(dataset,xname)), len(getattr(dataset,yname)))
+    geotransform = from_bounds(getattr(dataset, xname)[0], getattr(dataset, yname)[0],
+                               getattr(dataset, xname)[-1], getattr(dataset, yname)[-1],
+                               len(getattr(dataset, xname)), len(getattr(dataset, yname)))
 
     return geotransform
 
 
+# pylint: disable=invalid-name
 wcs_formats = {
     "GeoTIFF": {
         "renderer": "datacube_wms.wcs_utils.get_tiff",
@@ -413,4 +425,3 @@ wcs_formats = {
         "multi-time": False
     },
 }
-

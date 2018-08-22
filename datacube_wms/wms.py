@@ -32,5 +32,4 @@ def get_capabilities(args):
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
     return render_template("wms_capabilities.xml", service=get_service_cfg(), platforms=platforms), 200, resp_headers(
-        {"Content-Type": "application/xml", "Cache-Control": "no-cache", "Cache-Control": "max-age=0"})
-
+        {"Content-Type": "application/xml", "Cache-Control": "no-cache,max-age=0"})

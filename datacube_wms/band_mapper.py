@@ -1,26 +1,26 @@
+from __future__ import absolute_import, division, print_function
 from xarray import Dataset, DataArray, merge
 import numpy
 
 from datacube.storage.masking import make_mask
 
 import logging
-_LOG = logging.getLogger(__name__)
-
 from datetime import datetime
 
+_LOG = logging.getLogger(__name__)
 
-class StyleMask(object):
+class StyleMask():
     def __init__(self, flags, invert=False):
         self.flags = flags
         self.invert = invert
 
-class StyleDefBase(object):
+class StyleDefBase():
     def __init__(self, product, style_cfg):
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
-        self.masks = [ StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", []) ]
+        self.masks = [StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", [])]
         self.needed_bands = set()
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
@@ -36,12 +36,12 @@ class StyleDefBase(object):
                 data = data.where(mask_data)
         return data
 
-    def transform_data(self, data, extent_mask, *masks):
+    def transform_data(self, data, pq_data, extent_mask, *masks):
         pass
 
 class DynamicRangeCompression(StyleDefBase):
     def __init__(self, product, style_cfg):
-        super(DynamicRangeCompression,self).__init__(product, style_cfg)
+        super(DynamicRangeCompression, self).__init__(product, style_cfg)
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
             self.scale_min, self.scale_max = style_cfg["scale_range"]
@@ -53,7 +53,7 @@ class DynamicRangeCompression(StyleDefBase):
             self.gain = 1.0 / style_cfg["scale_factor"]
             self.offset = 0.0
     def compress_band(self, imgband_data):
-        unclipped= imgband_data * self.gain - self.offset
+        unclipped = imgband_data * self.gain - self.offset
         return numpy.clip(unclipped.values, 1, 255)
 
 class RGBMappedStyleDef(StyleDefBase):
@@ -62,11 +62,12 @@ class RGBMappedStyleDef(StyleDefBase):
         self.value_map = style_cfg["value_map"]
         for band in self.value_map.keys():
             self.needed_bands.add(band)
-        
 
-    def transform_data(self, data, pq_data, extent_mask):
+
+    def transform_data(self, data, pq_data, extent_mask, *masks):
+        # pylint: disable=too-many-locals
         # extent mask data per band to preseve nodata
-        _LOG.info("transform begin", datetime.now())
+        _LOG.debug("transform begin %s", datetime.now())
         if extent_mask is not None:
             for band in data.data_vars:
                 try:
@@ -74,9 +75,9 @@ class RGBMappedStyleDef(StyleDefBase):
                 except AttributeError:
                     data[band] = data[band].where(extent_mask)
 
-        _LOG.info("extent mask complete", datetime.now())
+        _LOG.debug("extent mask complete %d", datetime.now())
         data = self.apply_masks(data, pq_data)
-        _LOG.info("mask complete", datetime.now())
+        _LOG.debu("mask complete %d", datetime.now())
         imgdata = Dataset()
         for band in self.value_map.keys():
             band_data = Dataset()
@@ -99,7 +100,7 @@ class RGBMappedStyleDef(StyleDefBase):
                 else:
                     band_data = merge([band_data, masked])
 
-            if (len(imgdata.data_vars) == 0):
+            if len(imgdata.data_vars) == 0:
                 imgdata = band_data
             else:
                 imgdata = merge([imgdata, band_data])
@@ -128,7 +129,7 @@ class LinearStyleDef(DynamicRangeCompression):
             "blue": self.blue_components,
         }
 
-    def transform_data(self, data, pq_data, extent_mask):
+    def transform_data(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
@@ -219,7 +220,7 @@ class HeatMappedStyleDef(StyleDefBase):
         self._index_function = style_cfg["index_function"]
         self.range = style_cfg["range"]
 
-    def transform_data(self, data, pq_data, extent_mask):
+    def transform_data(self, data, pq_data, extent_mask, *masks):
         hm_index_data = self._index_function(data)
         dims = data[list(self.needed_bands)[0]].dims
         imgdata = Dataset()
@@ -250,7 +251,8 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         super(HybridStyleDef, self).__init__(product, style_cfg)
         self.component_ratio = style_cfg["component_ratio"]
 
-    def transform_data(self, data, pq_data, extent_mask):
+    def transform_data(self, data, pq_data, extent_mask, *masks):
+        #pylint: disable=too-many-locals
         hm_index_data = self._index_function(data)
         hm_mask = hm_index_data != float("nan")
         data = self.apply_masks(data, pq_data)
@@ -280,8 +282,8 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
             )
             hmap_raw_data = f(hm_index_data)
             component_band_data = self.compress_band(component_band_data)
-            img_band_data = (hmap_raw_data * 255.0 * ( 1.0 - self.component_ratio)
-                                   + self.component_ratio * component_band_data)
+            img_band_data = (hmap_raw_data * 255.0 * (1.0 - self.component_ratio)
+                             + self.component_ratio * component_band_data)
             imgdata[band] = (dims, img_band_data.astype("uint8"))
         if extent_mask is not None:
             imgdata = imgdata.where(extent_mask)
@@ -290,7 +292,7 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         imgdata = imgdata.astype("uint8")
         return imgdata
 
-
+#pylint: disable=invalid-name, inconsistent-return-statements
 def StyleDef(product, cfg):
     if cfg.get("component_ratio", False):
         return HybridStyleDef(product, cfg)

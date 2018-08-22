@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 from datetime import datetime
 from dateutil.parser import parse
 from pytz import utc
@@ -8,7 +10,7 @@ import math
 
 try:
     from datacube_wms.wms_cfg_local import response_cfg
-except:
+except ImportError:
     from datacube_wms.wms_cfg import response_cfg
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
@@ -16,6 +18,7 @@ from datacube_wms.ogc_exceptions import WMSException
 
 
 def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
+    #pylint: disable=too-many-locals
     p1 = geometry.point(minx, maxy, src_crs)
     p2 = geometry.point(minx, miny, src_crs)
     p3 = geometry.point(maxx, maxy, src_crs)
@@ -122,9 +125,10 @@ def get_product_from_arg(args, argname="layers"):
 
 
 def get_arg(args, argname, verbose_name, lower=False,
-            errcode=None, permitted_values=[]):
+            errcode=None, permitted_values=None):
     fmt = args.get(argname, "")
-    if lower: fmt = fmt.lower()
+    if lower:
+        fmt = fmt.lower()
     if not fmt:
         raise WMSException("No %s specified" % verbose_name,
                            errcode,
@@ -185,7 +189,7 @@ def bounding_box_to_geom(bbox, bb_crs, target_crs):
     return poly.to_crs(target_crs)
 
 
-class GetParameters(object):
+class GetParameters():
     def __init__(self, args):
         # Version
         self.version = get_arg(args, "version", "WMS version",
@@ -196,8 +200,8 @@ class GetParameters(object):
         else:
             crs_arg = "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
-                        errcode=WMSException.INVALID_CRS,
-                        permitted_values=get_service_cfg().published_CRSs.keys())
+                             errcode=WMSException.INVALID_CRS,
+                             permitted_values=get_service_cfg().published_CRSs.keys())
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)
@@ -225,9 +229,9 @@ class GetMapParameters(GetParameters):
     def method_specific_init(self, args):
         # Validate Format parameter
         self.format = get_arg(args, "format", "image format",
-                  errcode=WMSException.INVALID_FORMAT,
-                  lower=True,
-                  permitted_values=["image/png"])
+                              errcode=WMSException.INVALID_FORMAT,
+                              lower=True,
+                              permitted_values=["image/png"])
         # Styles
         self.styles = args.get("styles", "").split(",")
         if len(self.styles) != 1:
@@ -254,8 +258,8 @@ class GetFeatureInfoParameters(GetParameters):
     def method_specific_init(self, args):
         # Validate Formata parameter
         self.format = get_arg(args, "info_format", "info format", lower=True,
-                  errcode=WMSException.INVALID_FORMAT,
-                  permitted_values=["application/json"])
+                              errcode=WMSException.INVALID_FORMAT,
+                              permitted_values=["application/json"])
         # Point coords
         if self.version == "1.1.1":
             coords = ["x", "y"]
@@ -272,23 +276,18 @@ class GetFeatureInfoParameters(GetParameters):
         self.i = int(i)
         self.j = int(j)
 
-        return
-        raise WMSException(
-            "Time dimension value not supplied",
-            WMSException.MISSING_DIMENSION_VALUE,
-            locator="Time parameter")
 
 # Solar angle correction functions
-
 def declination_rad(dt):
     # Estimate solar declination from a datetime.  (value returned in radians).
     # Formula taken from https://en.wikipedia.org/wiki/Position_of_the_Sun#Declination_of_the_Sun_as_seen_from_Earth
     timedel = dt - datetime(dt.year, 1, 1, 0, 0, 0, tzinfo=utc)
     day_count = timedel.days + timedel.seconds/(60.0*60.0*24.0)
-    return (-1.0 * math.radians(23.44) * math.cos(2*math.pi/365*(day_count + 10)))
+    return -1.0 * math.radians(23.44) * math.cos(2 * math.pi / 365 * (day_count + 10))
 
 def cosine_of_solar_zenith(lat, lon, utc_dt):
-    # Estimate cosine of solar zenith angle (angle between sun and local zenith) at requested latitude, longitude and datetime.
+    # Estimate cosine of solar zenith angle
+    # (angle between sun and local zenith) at requested latitude, longitude and datetime.
     # Formula taken from https://en.wikipedia.org/wiki/Solar_zenith_angle
     utc_seconds_since_midnight = ((utc_dt.hour * 60) + utc_dt.minute) * 60 + utc_dt.second
     utc_hour_deg_angle = (utc_seconds_since_midnight / (60*60*24) * 360.0) - 180.0
@@ -296,8 +295,9 @@ def cosine_of_solar_zenith(lat, lon, utc_dt):
     local_hour_angle_rad = math.radians(local_hour_deg_angle)
     latitude_rad = math.radians(lat)
     solar_decl_rad = declination_rad(utc_dt)
-
-    return math.sin(latitude_rad)*math.sin(solar_decl_rad) + math.cos(latitude_rad)*math.cos(solar_decl_rad)*math.cos(local_hour_angle_rad)
+    result = math.sin(latitude_rad) * math.sin(solar_decl_rad) \
+             + math.cos(latitude_rad) * math.cos(solar_decl_rad) * math.cos(local_hour_angle_rad)
+    return result
 
 def solar_correct_data(data, dataset):
     # Apply solar angle correction to the data for a dataset.
@@ -313,6 +313,3 @@ def solar_correct_data(data, dataset):
     csz = cosine_of_solar_zenith(data_lat, data_lon, data_time)
 
     return data / csz
-
-
-
