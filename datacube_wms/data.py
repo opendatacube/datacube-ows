@@ -38,40 +38,45 @@ _LOG = logging.getLogger(__name__)
 # Calculates the approximate output shape and transform
 # for loading data from src into geobox
 def _calculate_transform(src, geobox):
-    # check if we need to convert geobox to
-    # src's crs
+
     dc_crs = geometry.CRS(src.crs.to_string())
-    box = geobox
-    if box.crs != dc_crs:
-        geopolygon = box.extent
-        transformed = geopolygon.to_crs(dc_crs)
+    geobox_transform = geobox.transform
 
-        box = geometry.GeoBox.from_geopolygon(transformed,
-                                              (box.transform.e,
-                                               box.transform.a))
+    # Convert geobox transform to
+    # src's crs if needed.
+    # We allow rasterio to calculate resolution of geobox.
+    if geobox.crs != dc_crs:
+        bb = geobox.extent.boundingbox
+        geobox_transform, _, _ = rio.warp.calculate_default_transform(
+            str(geobox.crs),
+            src.crs,
+            geobox.width,
+            geobox.height,
+            left=bb.left,
+            right=bb.right,
+            top=bb.top,
+            bottom=bb.bottom)
 
-    # calculate out_shape
-    # determine if we should load an overview
-    scale_affine = (~src.transform * box.transform)
-    scale_a = abs(math.ceil(box.transform.a / src.transform.a))
-    scale_e = abs(math.ceil(box.transform.e / src.transform.e))
-    # load a square from the src with a fudge factor
-    # to prevent the output shape from being too small
-    # to be reprojected without gaps
-    scale = max(scale_a, scale_e) + 1
+    # Calculate the output shape and corresponding transform
+    # Always round up to ensure we do not miss data
+    scale_affine = (~src.transform * geobox_transform)
+    scale_a = abs(math.ceil(geobox_transform.a / src.transform.a))
+    scale_e = abs(math.ceil(geobox_transform.e / src.transform.e))
+    scale = min(scale_a, scale_e)
+
     out_shape = (math.ceil(src.shape[0] / scale), math.ceil(src.shape[1] / scale))
-    out_shape_affine = Affine(math.ceil((src.transform.a * scale)),
-                              0,
-                              src.transform.c,
-                              0,
-                              -abs(math.ceil(src.transform.e * scale)),
-                              src.transform.f
-                             )
+    out_shape_affine = Affine(
+        (src.transform.a * scale),
+        0,
+        src.transform.c,
+        0,
+        (src.transform.e * scale),
+        src.transform.f)
 
     return (out_shape, out_shape_affine)
 
-def _calculate_and_load(destination, filename, geobox):
-    with rio.open(filename) as src:
+def _calculate_and_load(filename, geobox):
+    with rio.open(filename, sharing=False) as src:
         out_shape, out_shape_affine = _calculate_transform(src, geobox)
         data = src.read(out_shape=out_shape)
     return (out_shape_affine, src.crs, data)
@@ -79,60 +84,63 @@ def _calculate_and_load(destination, filename, geobox):
 
 def _get_measurement(filenames, geobox, no_data, dtype):
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
-    session = get_boto_session()
-    geotiff_src = get_rio_geotiff_georeference_source()
     try:
-        with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
-            for f in filenames:
-                src_transform, src_crs, data = _calculate_and_load(dest, f, geobox)
-                rio.warp.reproject(data,
-                                   dest,
-                                   init_dest_nodata=False,
-                                   src_nodata=no_data,
-                                   src_transform=src_transform,
-                                   src_crs=src_crs,
-                                   dst_transform=geobox.transform,
-                                   dst_crs=str(geobox.crs),
-                                   resampling=rio.warp.Resampling.nearest
-                                  )
+        for f in filenames:
+            src_transform, src_crs, data = _calculate_and_load(f, geobox)
+            rio.warp.reproject(data,
+                   dest,
+                   init_dest_nodata=False,
+                   src_nodata=no_data,
+                   src_transform=src_transform,
+                   src_crs=src_crs,
+                   dst_transform=geobox.transform,
+                   dst_crs=str(geobox.crs),
+                   resampling=rio.warp.Resampling.nearest)
     except Exception as e:
         _LOG.error("Error getting measurement! %s", e)
 
     return dest
+
 
 # Read data for given datasets and mesaurements per the output_geobox
 # If use_overviews is true
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
-    if use_overviews:
-        all_bands = xarray.Dataset()
-        with ProcessPoolExecutor(max_workers=cpu_count() * 2) as executor:
-            futures = []
-            for measurement in measurements:
-                # strip duplicate filenames
-                filenames = {new_datasource(d, measurement['name']).filename for d in datasets}
-                future = executor.submit(_get_measurement,
-                                         filenames,
-                                         geobox,
-                                         measurement['nodata'],
-                                         measurement['dtype']
-                                        )
-                futures.append((measurement, future))
+    session = get_boto_session()
+    geotiff_src = get_rio_geotiff_georeference_source()
+    with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
+        if use_overviews:
+            if not hasattr(datasets, "__iter__"):
+                datasets = [datasets]
+            all_bands = xarray.Dataset()
+            with ThreadPoolExecutor(max_workers=min(len(measurements), cpu_count() * 2)) as executor:
+                futures = dict()
+                for measurement in measurements:
+                    # strip duplicate filenames
+                    filenames = {new_datasource(d, measurement['name']).filename for d in datasets}
+                    future = executor.submit(_get_measurement,
+                                             filenames,
+                                             geobox,
+                                             measurement['nodata'],
+                                             measurement['dtype']
+                                            )
+                    futures[future] = measurement;
 
-            for measurement, future in futures:
-                final = xarray.DataArray(future.result(),
-                                         dims=('x', 'y'),
-                                         attrs=measurement.dataarray_attrs()
-                                        )
-                all_bands[measurement['name']] = final
+                for f in as_completed(futures.keys()):
+                    measurement = futures[f]
+                    final = xarray.DataArray(f.result(),
+                                             dims=('x', 'y'),
+                                             attrs=measurement.dataarray_attrs()
+                                            )
+                    all_bands[measurement['name']] = final
             all_bands.attrs['crs'] = geobox.crs
-        return all_bands
-    else:
-        holder = numpy.empty(shape=tuple(), dtype=object)
-        holder[()] = [datasets]
-        sources = xarray.DataArray(holder)
-        return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
+            return all_bands
+        else:
+            holder = numpy.empty(shape=tuple(), dtype=object)
+            holder[()] = [datasets]
+            sources = xarray.DataArray(holder)
+            return datacube.Datacube.load_data(sources, geobox, measurements, use_threads=True, **kwargs)
 
 
 class DataStacker():
