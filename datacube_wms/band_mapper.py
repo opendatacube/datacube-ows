@@ -77,7 +77,7 @@ class RGBMappedStyleDef(StyleDefBase):
 
         _LOG.debug("extent mask complete %d", datetime.now())
         data = self.apply_masks(data, pq_data)
-        _LOG.debu("mask complete %d", datetime.now())
+        _LOG.debug("mask complete %d", datetime.now())
         imgdata = Dataset()
         for band in self.value_map.keys():
             band_data = Dataset()
