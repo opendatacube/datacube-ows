@@ -590,6 +590,29 @@ def get_ds_count(dc, product):
     count = r[0]
   return count
 
+
+def sort_dates(dc, product):
+  conn = get_sqlconn(dc)
+  txn = conn.begin()
+  conn.execute("""
+    WITH sorted AS (
+      SELECT jsonb_array_elements(dates) AS a
+      FROM wms.product_ranges
+      WHERE id=%(id)s
+      ORDER BY a
+    )
+    UPDATE wms.product_ranges
+    SET
+      dates = (
+        SELECT to_jsonb(array_agg(a))
+        FROM sorted
+      )
+      WHERE id=%(id)s""",
+    {'id': product.id})
+
+  txn.commit()
+  conn.close()
+
 def add_range(dc, product, regrow_bbox=False):
   if isinstance(product, str):
     product = dc.index.products.get_by_name(product)
@@ -628,6 +651,7 @@ def add_range(dc, product, regrow_bbox=False):
     epsg4326)
 
   update_bboxes_from_box(dc, product, box, crses)
+  sort_dates(dc, product)
 
 
 
