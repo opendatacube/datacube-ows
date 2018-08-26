@@ -339,7 +339,7 @@ def get_coverage_data(req):
 
     stacker = DataStacker(req.product,
                           req.geobox,
-                          t,
+                          req.times[0],
                           bands=req.bands)
     output = stacker.data(datasets, skip_corrections=True)
     release_cube(dc)
@@ -370,15 +370,15 @@ def get_tiff(req, data):
     xname = svc.published_CRSs[req.request_crsid]["horizontal_coord"]
     yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
     with MemoryFile() as memfile:
-        #pylint: disable=protected-access
+        #pylint: disable=protected-access, bad-continuation
         with memfile.open(
-                driver="GTiff",
-                width=data.dims[xname],
-                height=data.dims[yname],
-                count=len(data.data_vars),
-                transform=_get_transform_from_xr(xname, yname, data),
-                crs=req.response_crsid,
-                dtype=dtype) as dst:
+            driver="GTiff",
+            width=data.dims[xname],
+            height=data.dims[yname],
+            count=len(data.data_vars),
+            transform=_get_transform_from_xr(xname, yname, data),
+            crs=req.response_crsid,
+            dtype=dtype) as dst:
 
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)

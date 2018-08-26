@@ -1,3 +1,5 @@
+#pylint: skip-file
+
 from __future__ import absolute_import, division, print_function
 
 from datetime import date, datetime, timedelta
@@ -254,7 +256,7 @@ def rng_update(conn, rng):
                        for crsid, bbox in rng["bboxes"].items()
                        }),
                      rng["product_id"],
-                     )
+                    )
 
 
 def rng_insert(conn, rng):
@@ -481,33 +483,34 @@ def get_sub_ranges(dc, product):
 
 
 def insert_bbox_and_date_range(dc, product, bbox, date):
-  conn = get_sqlconn(dc)
-  txn = conn.begin()
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
 
-  conn.execute("""
+    conn.execute("""
         INSERT into wms.product_ranges
             (id,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
         VALUES
             (%s,%s,%s,%s,%s,%s,%s)
              """,
-             product.id,
-             bbox[3],
-             bbox[2],
-             bbox[0],
-             bbox[1],
-             Json([date.strftime("%Y-%m-%d")]),
-             Json("")
-            )
+               product.id,
+               bbox[3],
+               bbox[2],
+               bbox[0],
+               bbox[1],
+               Json([date.strftime("%Y-%m-%d")]),
+               Json("")
+              )
 
-  txn.commit()
-  conn.close()
+    txn.commit()
+    conn.close()
 
 
 def update_bbox_and_date(dc, product, bbox, date):
-  conn = get_sqlconn(dc)
-  txn = conn.begin()
+    # pylint: disable=bad-continuation
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
 
-  conn.execute("""
+    conn.execute("""
     UPDATE wms.product_ranges
     SET
       lat_min=%s,
@@ -522,39 +525,40 @@ def update_bbox_and_date(dc, product, bbox, date):
          bbox[1],
          product.id)
 
-  conn.execute("""
-    UPDATE wms.product_ranges
-    SET
-      dates = dates || %s::jsonb
-    WHERE id=%s
-    AND NOT dates ? %s
-         """,
-         Json([date.strftime("%Y-%m-%d")]),
-         product.id,
-         date.strftime("%Y-%m-%d"))
-  txn.commit()
-  conn.close()
+    conn.execute("""
+      UPDATE wms.product_ranges
+      SET
+        dates = dates || %s::jsonb
+      WHERE id=%s
+      AND NOT dates ? %s
+           """,
+           Json([date.strftime("%Y-%m-%d")]),
+           product.id,
+           date.strftime("%Y-%m-%d"))
+    txn.commit()
+    conn.close()
 
 
 def update_bboxes_from_box(dc, product, box, crses):
-  conn = get_sqlconn(dc)
-  txn = conn.begin()
-  conn.execute("""
-    UPDATE wms.product_ranges
-    SET
-      bboxes = %s::jsonb
-    WHERE id=%s""",
-    Json({crsid: {"top": box.to_crs(crs).boundingbox.top,
-                "bottom": box.to_crs(crs).boundingbox.bottom,
-                "left": box.to_crs(crs).boundingbox.left,
-                "right": box.to_crs(crs).boundingbox.right}
-        for crsid, crs in crses.items()
-       }
-      ),
-    product.id)
+    # pylint: disable=bad-continuation
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
+    conn.execute("""
+      UPDATE wms.product_ranges
+      SET
+        bboxes = %s::jsonb
+      WHERE id=%s""",
+      Json({crsid: {"top": box.to_crs(crs).boundingbox.top,
+                  "bottom": box.to_crs(crs).boundingbox.bottom,
+                  "left": box.to_crs(crs).boundingbox.left,
+                  "right": box.to_crs(crs).boundingbox.right}
+          for crsid, crs in crses.items()
+         }
+        ),
+      product.id)
 
-  txn.commit()
-  conn.close()
+    txn.commit()
+    conn.close()
 
 
 
@@ -562,96 +566,100 @@ def update_bboxes_from_box(dc, product, box, crses):
 # bbox to grow = tuple(left, right, top, bottom)
 # returns tuple(left, right, top, bottom)
 def grow_bounding_box(bbox_to_grow, bbox):
-  # test if the new bbox bounds are greater (relatively, could be min or max)
-  # top is max() from -90 <-> 90
-  # bottom is min() from -90 <-> 90
-  # left is min() from -180 <-> 180
-  # right is max() from -180 <-> 180
+    # test if the new bbox bounds are greater (relatively, could be min or max)
+    # top is max() from -90 <-> 90
+    # bottom is min() from -90 <-> 90
+    # left is min() from -180 <-> 180
+    # right is max() from -180 <-> 180
 
-  left = accum_min(bbox_to_grow[0], bbox.left)
-  right = accum_max(bbox_to_grow[1], bbox.right)
-  top = accum_max(bbox_to_grow[2], bbox.top)
-  bottom = accum_min(bbox_to_grow[3], bbox.bottom)
+    left = accum_min(bbox_to_grow[0], bbox.left)
+    right = accum_max(bbox_to_grow[1], bbox.right)
+    top = accum_max(bbox_to_grow[2], bbox.top)
+    bottom = accum_min(bbox_to_grow[3], bbox.bottom)
 
-  return (left, right, top, bottom)
+    return (left, right, top, bottom)
 
 
 def get_ds_count(dc, product):
-  conn = get_sqlconn(dc)
+    # pylint: disable=bad-continuation
+    conn = get_sqlconn(dc)
 
-  results = conn.execute("""
-    SELECT COUNT(*)
-    FROM agdc.dataset
-    WHERE dataset_type_ref=%s""",
-                       product.id
-                      )
-  conn.close()
-  for r in results:
-    count = r[0]
-  return count
+    results = conn.execute("""
+      SELECT COUNT(*)
+      FROM agdc.dataset
+      WHERE dataset_type_ref=%s""",
+                         product.id
+                        )
+    conn.close()
+    for r in results:
+      count = r[0]
+    return count
 
 
 def sort_dates(dc, product):
-  conn = get_sqlconn(dc)
-  txn = conn.begin()
-  conn.execute("""
-    WITH sorted AS (
-      SELECT jsonb_array_elements(dates) AS a
-      FROM wms.product_ranges
-      WHERE id=%(id)s
-      ORDER BY a
-    )
-    UPDATE wms.product_ranges
-    SET
-      dates = (
-        SELECT to_jsonb(array_agg(a))
-        FROM sorted
+    # pylint: disable=bad-continuation
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
+    conn.execute("""
+      WITH sorted AS (
+        SELECT jsonb_array_elements(dates) AS a
+        FROM wms.product_ranges
+        WHERE id=%(id)s
+        ORDER BY a
       )
-      WHERE id=%(id)s""",
-    {'id': product.id})
+      UPDATE wms.product_ranges
+      SET
+        dates = (
+          SELECT to_jsonb(array_agg(a))
+          FROM sorted
+        )
+        WHERE id=%(id)s""",
+      {'id': product.id})
 
-  txn.commit()
-  conn.close()
+    txn.commit()
+    conn.close()
 
 def add_range(dc, product, regrow_bbox=False):
-  if isinstance(product, str):
-    product = dc.index.products.get_by_name(product)
+    if isinstance(product, str):
+      product = dc.index.products.get_by_name(product)
 
-  epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
-  crsids = service_cfg["published_CRSs"]
-  crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
-  ds_count = 0
-  bbox = (None, None, None, None)
-  total = get_ds_count(dc, product)
-  for d in dc.find_datasets_lazy(product=product.name):
-    # Find existing bbox
-    ranges = get_ranges(dc, product.id, None)
-    action = update_bbox_and_date
-    if ranges is None:
-      bbox_to_grow = (None, None, None, None)
-      action = insert_bbox_and_date_range
-    else:
-      bbox_to_grow = (
-        ranges["lon"]["min"],
-        ranges["lon"]["max"],
-        ranges["lat"]["max"],
-        ranges["lat"]["min"])
+    assert product is not None
 
-    print("Updating Dataset", d.id, "Processed %", (ds_count / total) * 100)
-    bbox_to_grow = grow_bounding_box(bbox_to_grow, d.extent.to_crs(epsg4326).boundingbox)
-    action(dc, product, bbox_to_grow, d.center_time)
-    ds_count += 1
+    epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
+    crsids = service_cfg["published_CRSs"]
+    crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
+    ds_count = 0
+    bbox = (None, None, None, None)
+    total = get_ds_count(dc, product)
+    for d in dc.find_datasets_lazy(product=product.name):
+      # Find existing bbox
+      ranges = get_ranges(dc, product.id, None)
+      action = update_bbox_and_date
+      if ranges is None:
+        bbox_to_grow = (None, None, None, None)
+        action = insert_bbox_and_date_range
+      else:
+        bbox_to_grow = (
+          ranges["lon"]["min"],
+          ranges["lon"]["max"],
+          ranges["lat"]["max"],
+          ranges["lat"]["min"])
 
-  # calculate extents in CRSes and write to DB
-  box = datacube.utils.geometry.box(
-    bbox_to_grow[0],
-    bbox_to_grow[3],
-    bbox_to_grow[1],
-    bbox_to_grow[2],
-    epsg4326)
+      print("Updating Dataset", d.id, "Processed %", (ds_count / total) * 100)
+      bbox_to_grow = grow_bounding_box(bbox_to_grow, d.extent.to_crs(epsg4326).boundingbox)
+      action(dc, product, bbox_to_grow, d.center_time)
+      ds_count += 1
 
-  update_bboxes_from_box(dc, product, box, crses)
-  sort_dates(dc, product)
+    # calculate extents in CRSes and write to DB
+    box = datacube.utils.geometry.box(
+      bbox_to_grow[0],
+      bbox_to_grow[3],
+      bbox_to_grow[1],
+      bbox_to_grow[2],
+      epsg4326)
+
+    update_bboxes_from_box(dc, product, box, crses)
+    sort_dates(dc, product)
 
 
 

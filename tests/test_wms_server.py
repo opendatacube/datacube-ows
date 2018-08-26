@@ -1,4 +1,4 @@
-from datacube_wms import wms
+from datacube_wms import ogc
 
 import pytest
 from pytest_localserver.http import WSGIServer
@@ -24,7 +24,7 @@ def wms_server(request):
         server = generic_obj()
         server.url = external_url
     else:
-        server = WSGIServer(application=wms.app)
+        server = WSGIServer(application=ogc.app)
         server.start()
         request.addfinalizer(server.stop)
 
@@ -40,7 +40,7 @@ def get_xsd(name):
 
 def check_wms_error(url, expected_error_message=None, expected_status_code=400):
     try:
-        resp = request.urlopen(url)
+        resp = request.urlopen(url, timeout=10)
 
         # Should not get here
         assert False
@@ -76,7 +76,7 @@ def test_getcap_badsvc(wms_server):
 
 
 def test_getcap(wms_server):
-    resp = request.urlopen(wms_server.url + "/?request=GetCapabilities&service=WMS")
+    resp = request.urlopen(wms_server.url + "/?request=GetCapabilities&service=WMS", timeout=10)
 
     # Confirm success
     assert resp.code == 200

@@ -190,6 +190,7 @@ def bounding_box_to_geom(bbox, bb_crs, target_crs):
 
 
 class GetParameters():
+    # pylint: disable=dict-keys-not-iterating
     def __init__(self, args):
         # Version
         self.version = get_arg(args, "version", "WMS version",
@@ -216,7 +217,7 @@ class GetParameters():
         self.method_specific_init(args)
 
     def method_specific_init(self, args):
-        return
+        pass
 
     def get_product(self, args):
         return get_product_from_arg(args)

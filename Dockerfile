@@ -1,4 +1,4 @@
-FROM opendatacube/datacube-core:2018-07-26
+FROM opendatacube/datacube-core:1.6.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -32,6 +32,7 @@ RUN pip3 install \
     ruamel.yaml \
     prometheus-client \
     flask-request-id-middleware \
+    pytest-localserver \
     && rm -rf $HOME/.cache/pip
 
 WORKDIR /code

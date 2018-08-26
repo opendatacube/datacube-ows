@@ -60,8 +60,8 @@ def _calculate_transform(src, geobox):
     # Calculate the output shape and corresponding transform
     # Always round up to ensure we do not miss data
     scale_affine = (~src.transform * geobox_transform)
-    scale_a = abs(math.ceil(geobox_transform.a / src.transform.a))
-    scale_e = abs(math.ceil(geobox_transform.e / src.transform.e))
+    scale_a = math.ceil(abs(geobox_transform.a / src.transform.a))
+    scale_e = math.ceil(abs(geobox_transform.e / src.transform.e))
     scale = min(scale_a, scale_e)
 
     out_shape = (math.ceil(src.shape[0] / scale), math.ceil(src.shape[1] / scale))
@@ -83,19 +83,21 @@ def _calculate_and_load(filename, geobox):
 
 
 def _get_measurement(filenames, geobox, no_data, dtype):
+    #pylint: disable=broad-except
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
     try:
         for f in filenames:
             src_transform, src_crs, data = _calculate_and_load(f, geobox)
-            rio.warp.reproject(data,
-                   dest,
-                   init_dest_nodata=False,
-                   src_nodata=no_data,
-                   src_transform=src_transform,
-                   src_crs=src_crs,
-                   dst_transform=geobox.transform,
-                   dst_crs=str(geobox.crs),
-                   resampling=rio.warp.Resampling.nearest)
+            rio.warp.reproject(
+                data,
+                dest,
+                init_dest_nodata=False,
+                src_nodata=no_data,
+                src_transform=src_transform,
+                src_crs=src_crs,
+                dst_transform=geobox.transform,
+                dst_crs=str(geobox.crs),
+                resampling=rio.warp.Resampling.nearest)
     except Exception as e:
         _LOG.error("Error getting measurement! %s", e)
 
@@ -107,6 +109,7 @@ def _get_measurement(filenames, geobox, no_data, dtype):
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
+    #pylint: disable=too-many-locals, dict-keys-not-iterating
     session = get_boto_session()
     geotiff_src = get_rio_geotiff_georeference_source()
     with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
@@ -125,7 +128,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
                                              measurement['nodata'],
                                              measurement['dtype']
                                             )
-                    futures[future] = measurement;
+                    futures[future] = measurement
 
                 for f in as_completed(futures.keys()):
                     measurement = futures[f]
@@ -140,7 +143,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
             holder = numpy.empty(shape=tuple(), dtype=object)
             holder[()] = [datasets]
             sources = xarray.DataArray(holder)
-            return datacube.Datacube.load_data(sources, geobox, measurements, use_threads=True, **kwargs)
+            return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
 
 
 class DataStacker():
@@ -218,7 +221,7 @@ class DataStacker():
                 return self.filter_datasets_by_extent(datasets)
 
     def filter_datasets_by_extent(self, datasets):
-        #pylint: disable=too-many-branches
+        #pylint: disable=too-many-branches, dict-keys-not-iterating
         date_index = {}
         for dataset in iter(datasets):
             # Build a date-index of intersecting datasets
@@ -265,7 +268,7 @@ class DataStacker():
         return filtered
 
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
-        #pylint: disable=too-many-locals
+        #pylint: disable=too-many-locals, consider-using-enumerate
         if mask:
             prod = self._product.pq_product
             measurements = [prod.measurements[self._product.pq_band].copy()]
@@ -304,7 +307,7 @@ class DataStacker():
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
-        #pylint: disable=too-many-locals, too-many-branches
+        #pylint: disable=too-many-locals, too-many-branches, consider-using-enumerate
         # manual merge
         merged = None
         if mask:
