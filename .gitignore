@@ -69,3 +69,5 @@ target/
 
 wsgi_local.py
 wms_cfg_local.py
+
+.DS_Store

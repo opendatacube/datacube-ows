@@ -33,6 +33,7 @@ RUN pip3 install \
     prometheus-client \
     flask-request-id-middleware \
     pytest-localserver \
+    pytest-mock \
     && rm -rf $HOME/.cache/pip
 
 WORKDIR /code
