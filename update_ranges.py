@@ -4,13 +4,13 @@ import click
 
 @click.command()
 @click.option("--product", default=None)
-@click.option("--calculate-extent", default=False)
+@click.option("--calculate-extent", default=True)
 def main(product, calculate_extent):
     dc = Datacube(app="wms_update_ranges")
     if not calculate_extent:
         add_range(dc, product)
         return
-    if (product is not None):
+    if product is not None:
         print("Updating range for: ", product)
         update_range(dc, product)
     else:
