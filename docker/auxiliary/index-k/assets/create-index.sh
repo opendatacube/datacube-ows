@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Init system
 datacube system init --no-init-users 2>&1
 
@@ -14,7 +16,7 @@ function add_products {
 
     for U in "${URLS[@]}"
     do
-        wget -P firsttime/products $U -o $(echo $U | base64).yaml
+        wget $U -O firsttime/products/$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 16).yaml
     done
 
     for file in firsttime/products/*
@@ -35,3 +37,5 @@ PGPASSWORD=$DB_PASSWORD psql \
 
 # Run index
 indexing/update_ranges_wrapper.sh
+
+set +e
