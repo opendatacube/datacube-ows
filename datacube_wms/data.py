@@ -75,19 +75,20 @@ def _calculate_transform(src, geobox):
 
     return (out_shape, out_shape_affine)
 
-def _calculate_and_load(filename, geobox):
+def _calculate_and_load(filename, geobox, band_index):
     with rio.open(filename, sharing=False) as src:
         out_shape, out_shape_affine = _calculate_transform(src, geobox)
-        data = src.read(out_shape=out_shape)
+        data = src.read(out_shape=out_shape, indexes=band_index)
     return (out_shape_affine, src.crs, data)
 
 
-def _get_measurement(filenames, geobox, no_data, dtype):
+def _get_measurement(datasources, geobox, no_data, dtype):
     #pylint: disable=broad-except
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
+    sources = {(d.filename, d.get_bandnumber()) for d in datasources}
     try:
-        for f in filenames:
-            src_transform, src_crs, data = _calculate_and_load(f, geobox)
+        for f, band_index in sources:
+            src_transform, src_crs, data = _calculate_and_load(f, geobox, band_index)
             rio.warp.reproject(
                 data,
                 dest,
@@ -120,10 +121,9 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
             with ThreadPoolExecutor(max_workers=min(len(measurements), cpu_count() * 2)) as executor:
                 futures = dict()
                 for measurement in measurements:
-                    # strip duplicate filenames
-                    filenames = {new_datasource(d, measurement['name']).filename for d in datasets}
+                    datasources = {new_datasource(d, measurement['name']) for d in datasets}
                     future = executor.submit(_get_measurement,
-                                             filenames,
+                                             datasources,
                                              geobox,
                                              measurement['nodata'],
                                              measurement['dtype']
