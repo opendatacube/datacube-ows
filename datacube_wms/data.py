@@ -31,7 +31,7 @@ import multiprocessing
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
 from datacube_wms.rasterio_env import preauthenticate_s3, get_boto_session, get_rio_geotiff_georeference_source
-
+from collections import OrderedDict
 import traceback
 
 _LOG = logging.getLogger(__name__)
@@ -115,11 +115,17 @@ def _get_measurement(datasources, geobox, no_data, dtype):
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
     #pylint: disable=too-many-locals, dict-keys-not-iterating
+    if not hasattr(datasets, "__iter__"):
+        datasets = [datasets]
+    holder = numpy.empty(shape=tuple(), dtype=object)
+    holder[()] = datasets
+    sources = xarray.DataArray(holder)
     if use_overviews:
-        if not hasattr(datasets, "__iter__"):
-            datasets = [datasets]
         all_bands = xarray.Dataset()
-        with ThreadPoolExecutor(max_workers=min(len(measurements), cpu_count() * 2)) as executor:
+        for name, coord in geobox.coordinates.items():
+            all_bands[name] = (name, coord.values, {'units': coord.units})
+
+        with ThreadPoolExecutor(max_workers=min(len(measurements), 1)) as executor:
             futures = dict()
             for measurement in measurements:
                 datasources = {new_datasource(d, measurement['name']) for d in datasets}
@@ -133,17 +139,14 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
 
             for f in as_completed(futures.keys()):
                 measurement = futures[f]
-                final = xarray.DataArray(f.result(),
-                                         dims=('x', 'y'),
-                                         attrs=measurement.dataarray_attrs()
-                                        )
-                all_bands[measurement['name']] = final
+                attrs = measurement.dataarray_attrs()
+                coords = OrderedDict((dim, sources.coords[dim]) for dim in sources.dims)
+                dims = tuple(coords.keys()) + tuple(geobox.dimensions)
+                all_bands[measurement['name']] = (dims, f.result(), measurement.dataarray_attrs())
+
         all_bands.attrs['crs'] = geobox.crs
         return all_bands
     else:
-        holder = numpy.empty(shape=tuple(), dtype=object)
-        holder[()] = [datasets]
-        sources = xarray.DataArray(holder)
         return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
 
 

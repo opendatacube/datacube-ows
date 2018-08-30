@@ -4,7 +4,7 @@ import click
 
 @click.command()
 @click.option("--product", default=None)
-@click.option("--calculate-extent", default=True)
+@click.option("--calculate-extent/--no-calculate-extent", default=True)
 def main(product, calculate_extent):
     dc = Datacube(app="wms_update_ranges")
     if not calculate_extent:
