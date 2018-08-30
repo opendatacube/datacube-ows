@@ -98,7 +98,7 @@ class RGBMappedStyleDef(StyleDefBase):
                 if len(band_data.data_vars) == 0:
                     band_data = masked
                 else:
-                    band_data = merge([band_data, masked])
+                    band_data = band_data.combine_first(masked)
 
             if len(imgdata.data_vars) == 0:
                 imgdata = band_data

@@ -46,7 +46,6 @@ def ogc_impl():
     nocase_args['requestid'] = request.environ.get("FLASK_REQUEST_ID")
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
-
     try:
         if service == "WMS":
             # WMS operation Map

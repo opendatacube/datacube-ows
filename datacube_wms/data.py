@@ -30,8 +30,9 @@ from datacube.drivers import new_datasource
 import multiprocessing
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
-
 from datacube_wms.rasterio_env import preauthenticate_s3, get_boto_session, get_rio_geotiff_georeference_source
+
+import traceback
 
 _LOG = logging.getLogger(__name__)
 
@@ -76,10 +77,13 @@ def _calculate_transform(src, geobox):
     return (out_shape, out_shape_affine)
 
 def _calculate_and_load(filename, geobox, band_index):
-    with rio.open(filename, sharing=False) as src:
-        out_shape, out_shape_affine = _calculate_transform(src, geobox)
-        data = src.read(out_shape=out_shape, indexes=band_index)
-    return (out_shape_affine, src.crs, data)
+    session = get_boto_session()
+    geotiff_src = get_rio_geotiff_georeference_source()
+    with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
+        with rio.open(filename, sharing=False) as src:
+            out_shape, out_shape_affine = _calculate_transform(src, geobox)
+            data = src.read(out_shape=out_shape, indexes=band_index)
+        return (out_shape_affine, src.crs, data)
 
 
 def _get_measurement(datasources, geobox, no_data, dtype):
@@ -100,7 +104,7 @@ def _get_measurement(datasources, geobox, no_data, dtype):
                 dst_crs=str(geobox.crs),
                 resampling=rio.warp.Resampling.nearest)
     except Exception as e:
-        _LOG.error("Error getting measurement! %s", e)
+        _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
 
     return dest
 
@@ -111,39 +115,36 @@ def _get_measurement(datasources, geobox, no_data, dtype):
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
     #pylint: disable=too-many-locals, dict-keys-not-iterating
-    session = get_boto_session()
-    geotiff_src = get_rio_geotiff_georeference_source()
-    with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
-        if use_overviews:
-            if not hasattr(datasets, "__iter__"):
-                datasets = [datasets]
-            all_bands = xarray.Dataset()
-            with ThreadPoolExecutor(max_workers=min(len(measurements), cpu_count() * 2)) as executor:
-                futures = dict()
-                for measurement in measurements:
-                    datasources = {new_datasource(d, measurement['name']) for d in datasets}
-                    future = executor.submit(_get_measurement,
-                                             datasources,
-                                             geobox,
-                                             measurement['nodata'],
-                                             measurement['dtype']
-                                            )
-                    futures[future] = measurement
+    if use_overviews:
+        if not hasattr(datasets, "__iter__"):
+            datasets = [datasets]
+        all_bands = xarray.Dataset()
+        with ThreadPoolExecutor(max_workers=min(len(measurements), cpu_count() * 2)) as executor:
+            futures = dict()
+            for measurement in measurements:
+                datasources = {new_datasource(d, measurement['name']) for d in datasets}
+                future = executor.submit(_get_measurement,
+                                         datasources,
+                                         geobox,
+                                         measurement['nodata'],
+                                         measurement['dtype']
+                                        )
+                futures[future] = measurement
 
-                for f in as_completed(futures.keys()):
-                    measurement = futures[f]
-                    final = xarray.DataArray(f.result(),
-                                             dims=('x', 'y'),
-                                             attrs=measurement.dataarray_attrs()
-                                            )
-                    all_bands[measurement['name']] = final
-            all_bands.attrs['crs'] = geobox.crs
-            return all_bands
-        else:
-            holder = numpy.empty(shape=tuple(), dtype=object)
-            holder[()] = [datasets]
-            sources = xarray.DataArray(holder)
-            return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
+            for f in as_completed(futures.keys()):
+                measurement = futures[f]
+                final = xarray.DataArray(f.result(),
+                                         dims=('x', 'y'),
+                                         attrs=measurement.dataarray_attrs()
+                                        )
+                all_bands[measurement['name']] = final
+        all_bands.attrs['crs'] = geobox.crs
+        return all_bands
+    else:
+        holder = numpy.empty(shape=tuple(), dtype=object)
+        holder[()] = [datasets]
+        sources = xarray.DataArray(holder)
+        return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
 
 
 class DataStacker():
