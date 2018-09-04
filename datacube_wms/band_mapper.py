@@ -160,7 +160,10 @@ class LinearStyleDef(DynamicRangeCompression):
                 else:
                     imgband_data = imgband_component
             dims = imgband_data.dims
-            imgband_data = self.compress_band(imgband_data).astype('uint8')
+            if imgband == "alpha":
+                imgband_data = imgband_data.astype('uint8').values
+            else:
+                imgband_data = self.compress_band(imgband_data).astype('uint8')
             imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
