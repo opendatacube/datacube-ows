@@ -114,6 +114,7 @@ class LinearStyleDef(DynamicRangeCompression):
         self.red_components = style_cfg["components"]["red"]
         self.green_components = style_cfg["components"]["green"]
         self.blue_components = style_cfg["components"]["blue"]
+        self.alpha_components = style_cfg["components"].get("alpha", None);
         for band in self.red_components.keys():
             self.needed_bands.add(band)
         for band in self.green_components.keys():
@@ -121,8 +122,20 @@ class LinearStyleDef(DynamicRangeCompression):
         for band in self.blue_components.keys():
             self.needed_bands.add(band)
 
+        if self.alpha_components is not None:
+            for band in self.alpha_components.keys():
+                self.needed_bands.add(band)
+
     @property
     def components(self):
+        if self.alpha_components is not None:
+            return {
+                "red": self.red_components,
+                "green": self.green_components,
+                "blue": self.blue_components,
+                "alpha": self.alpha_components,
+            }
+
         return {
             "red": self.red_components,
             "green": self.green_components,
@@ -138,7 +151,7 @@ class LinearStyleDef(DynamicRangeCompression):
             imgband_data = None
             for band, intensity in components.items():
                 if callable(intensity):
-                    imgband_component = intensity(data[band])
+                    imgband_component = intensity(data[band], band, imgband)
                 else:
                     imgband_component = data[band] * intensity
 

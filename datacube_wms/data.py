@@ -428,7 +428,7 @@ def _write_png(data, pq_data, style, extent_mask):
         with memfile.open(driver='PNG',
                           width=width,
                           height=height,
-                          count=3,
+                          count=len(img_data.data_vars),
                           transform=Affine.identity(),
                           nodata=0,
                           dtype='uint8') as thing:

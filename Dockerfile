@@ -20,6 +20,7 @@ RUN unzip terraform.zip && \
     terraform -v 
 
 RUN pip3 install \
+    colour \
     flask \
     scikit-image \
     gevent \
@@ -64,10 +65,12 @@ WORKDIR /code/index
 COPY docker/auxiliary/index-k/assets/create-index.sh .
 
 # Archive install
-RUN mkdir -p /code/archive
+RUN mkdir -p /code/archive/archiving
 WORKDIR /code/archive
 
 COPY docker/auxiliary/archive/assets/archive-wrapper.sh .
+
+WORKDIR /code/archive/archiving
 COPY docker/auxiliary/archive/assets/archive.sh .
 COPY docker/auxiliary/index-k/assets/ls_s2_cog.py .
 
