@@ -63,3 +63,37 @@ create table wms.sub_product_ranges (
 
 grant USAGE on schema wms to cube;
 
+CREATE OR REPLACE FUNCTION wms_get_min(integer, text) RETURNS numeric AS $$
+DECLARE
+    ret numeric;
+    ul text[] DEFAULT array_append('{extent, coord, ul}', $2);
+    ur text[] DEFAULT array_append('{extent, coord, ur}', $2);
+    ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
+    lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
+BEGIN
+    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref=$1 )
+    SELECT MIN(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
+           (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
+    INTO ret
+    FROM m;
+    RETURN ret;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION wms_get_max(integer, text) RETURNS numeric AS $$
+DECLARE
+    ret numeric;
+    ul text[] DEFAULT array_append('{extent, coord, ul}', $2);
+    ur text[] DEFAULT array_append('{extent, coord, ur}', $2);
+    ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
+    lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
+BEGIN
+    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref=$1 )
+    SELECT MAX(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
+           (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
+    INTO ret
+    FROM m;
+    RETURN ret;
+END;
+$$ LANGUAGE plpgsql;
+

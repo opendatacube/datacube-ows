@@ -105,6 +105,7 @@ def _get_measurement(datasources, geobox, no_data, dtype):
                 resampling=rio.warp.Resampling.nearest)
     except Exception as e:
         _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
+        raise e
 
     return dest
 
