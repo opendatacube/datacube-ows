@@ -482,47 +482,30 @@ def get_sub_ranges(dc, product):
     return {r["sub_product_id"]: get_ranges(dc, product_id, r["sub_product_id"]) for r in results}
 
 
-def update_bboxes_from_box(dc, product, box, crses):
-    # pylint: disable=bad-continuation
-    conn = get_sqlconn(dc)
-    txn = conn.begin()
-    conn.execute("""
-      UPDATE wms.product_ranges
-      SET
-        bboxes = %s::jsonb
-      WHERE id=%s""",
-      Json({crsid: {"top": box.to_crs(crs).boundingbox.top,
-                  "bottom": box.to_crs(crs).boundingbox.bottom,
-                  "left": box.to_crs(crs).boundingbox.left,
-                  "right": box.to_crs(crs).boundingbox.right}
-          for crsid, crs in crses.items()
-         }
-        ),
-      product.id)
-
-    txn.commit()
-    conn.close()
-
-
-def create_range_entry(dc, product):
+def create_range_entry(dc, product, crses):
   conn = get_sqlconn(dc)
   txn = conn.begin()
   prodid = product.id
+
+  # Attempt to insert row
   conn.execute("""
     INSERT INTO wms.product_ranges
-      (id,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
+    (id,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
     VALUES
-      (%s, wms_get_min(%s, 'lat'), wms_get_max(%s, 'lat'), wms_get_min(%s, 'lon'), wms_get_max(%s, 'lon'), %s, %s)
-       """,
-         prodid,
-         prodid,
-         prodid,
-         prodid,
-         prodid,
-         Json(""),
-         Json("")
-        )
+    (%(p_id)s, 0, 0, 0, 0, %(empty)s, %(empty)s)
+    ON CONFLICT (id) DO NOTHING
+    """,
+    {"p_id": prodid, "empty": Json("")})
 
+  # Update extents
+  conn.execute("""
+    UPDATE wms.product_ranges
+    SET (id,lat_min,lat_max,lon_min,lon_max) =
+    (%(p_id)s, wms_get_min(%(p_id)s, 'lat'), wms_get_max(%(p_id)s, 'lat'), wms_get_min(%(p_id)s, 'lon'), wms_get_max(%(p_id)s, 'lon'))
+    """,
+    {"p_id": prodid})
+
+  # Create sorted list of dates
   conn.execute("""
     WITH sorted
     AS (SELECT to_jsonb(array_agg(dates.d))
@@ -530,16 +513,47 @@ def create_range_entry(dc, product):
         FROM (SELECT DISTINCT to_date(metadata::json->'extent'->>'center_dt', 'YYYY-MM-DD')
               AS d
               FROM agdc.dataset
-              WHERE dataset_type_ref=%s
+              WHERE dataset_type_ref=%(p_id)s
               ORDER BY d) dates)
     UPDATE wms.product_ranges
     SET dates=sorted.dates
     FROM sorted
-    WHERE id=%s;
+    WHERE id=%(p_id)s
     """,
-         prodid,
-         prodid,
-        )
+    {"p_id": prodid})
+
+  # calculate bounding boxes
+  results = list(conn.execute("""
+    SELECT lat_min,lat_max,lon_min,lon_max
+    FROM wms.product_ranges
+    WHERE id=%s
+    """,
+    prodid))
+
+  r = results[0]
+
+  epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
+  box = datacube.utils.geometry.box(
+    float(r[2]),
+    float(r[0]),
+    float(r[3]),
+    float(r[1]),
+    epsg4326)
+
+  conn.execute("""
+    UPDATE wms.product_ranges
+    SET bboxes = %s::jsonb
+    WHERE id=%s
+    """,
+    Json(
+      {crsid: {"top": box.to_crs(crs).boundingbox.top,
+               "bottom": box.to_crs(crs).boundingbox.bottom,
+               "left": box.to_crs(crs).boundingbox.left,
+               "right": box.to_crs(crs).boundingbox.right}
+        for crsid, crs in crses.items()
+       }
+    ),
+    product.id)
 
   txn.commit()
   conn.close()
@@ -550,21 +564,13 @@ def add_range(dc, product):
 
   assert product is not None
 
-  create_range_entry(dc, product)
-
-  result = get_ranges(dc, product)
-
-  epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
   crsids = service_cfg["published_CRSs"]
   crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
+  create_range_entry(dc, product, crses)
 
 
-  # calculate extents in CRSes and write to DB
-  box = datacube.utils.geometry.box(
-    result["lon"]["min"],
-    result["lat"]["min"],
-    result["lon"]["max"],
-    result["lat"]["max"],
-    epsg4326)
+def add_all(dc):
+  for layer in layer_cfg:
+    for product_cfg in layer["products"]:
+      add_range(dc, product_cfg["product_name"])
 
-  update_bboxes_from_box(dc, product, box, crses)
