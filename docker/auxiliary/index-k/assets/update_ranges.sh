@@ -67,6 +67,6 @@ done
 
 # update ranges in wms database
 
-python3 /code/update_ranges.py ${product:+"--product"} ${product:+"$product"}
+python3 /code/update_ranges.py --no-calculate-extent ${product:+"--product"} ${product:+"$product"}
 
 
