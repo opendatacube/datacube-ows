@@ -12,7 +12,8 @@ WORKDIR indexing
 
 COPY assets/update_ranges.sh update_ranges.sh
 COPY assets/update_ranges_wrapper.sh update_ranges_wrapper.sh
-COPY assets/ls_s2_cog.py ls_s2_cog.py
+RUN wget https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/master/scripts/index_from_s3_bucket.py \
+    -O ls_s2_cog.py
 
 WORKDIR ..
 

@@ -30,7 +30,8 @@ from datacube.drivers import new_datasource
 import multiprocessing
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
-from datacube_wms.rasterio_env import preauthenticate_s3, get_boto_session, get_rio_geotiff_georeference_source
+from datacube_wms.rasterio_env import preauthenticate_s3, get_boto_session, \
+    get_rio_geotiff_georeference_source, get_boto_credentials
 from collections import OrderedDict
 import traceback
 
@@ -79,7 +80,10 @@ def _calculate_transform(src, geobox):
 def _calculate_and_load(filename, geobox, band_index):
     session = get_boto_session()
     geotiff_src = get_rio_geotiff_georeference_source()
-    with rio.Env(session=session, GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
+    creds = get_boto_credentials(session)
+    with rio.Env(GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
+        # set the internal rasterio environment credentials
+        rio_env._creds = creds
         with rio.open(filename, sharing=False) as src:
             out_shape, out_shape_affine = _calculate_transform(src, geobox)
             data = src.read(out_shape=out_shape, indexes=band_index)

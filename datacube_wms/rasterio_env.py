@@ -7,35 +7,39 @@ except ImportError:
 
 import boto3
 from os import getenv
+from time import monotonic
 
 __session__ = None
+__session_start__ = None
+MAX_SESSION_TIME = (30 * 60) # Seconds
 
 def preauthenticate_s3():
     return service_cfg.get("preauthenticate_s3", False)
 
 
+# Not thread safe
 def get_boto_session():
     #pylint: disable=global-statement
     global __session__
+    global __session_start__
     if not preauthenticate_s3():
         return None
-    if __session__ is not None:
+    now = monotonic()
+    time_diff = __session_start__ - now
+    if __session__ is None or time_diff > MAX_SESSION_TIME:
+        region = get_boto_region()
+        boto_session = boto3.session.Session(region_name=region)
+        s3 = boto_session.resource("s3")
+
+        __session__ = boto_session
+        __session_start__ = now
+    else:
         return __session__
-
-    region = get_boto_region()
-    boto_session = boto3.session.Session(region_name=region)
-    s3 = boto_session.resource("s3")
-
-    __session__ = boto_session
 
     return __session__
 
-def get_boto_credentials():
-    if not preauthenticate_s3():
-        return None
-
-    region = get_boto_region()
-    boto_session = boto3.session.Session(region_name=region)
+def get_boto_credentials(session):
+    boto_session = session
 
     creds = boto_session.get_credentials()
     credentials = creds.get_frozen_credentials()
