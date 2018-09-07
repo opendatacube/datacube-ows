@@ -73,7 +73,8 @@ COPY docker/auxiliary/archive/assets/archive-wrapper.sh .
 
 WORKDIR /code/archive/archiving
 COPY docker/auxiliary/archive/assets/archive.sh .
-COPY docker/auxiliary/index-k/assets/ls_s2_cog.py .
+RUN wget https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/master/scripts/index_from_s3_bucket.py \
+    -O ls_s2_cog.py
 
 WORKDIR /code
 
