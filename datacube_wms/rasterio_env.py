@@ -10,7 +10,8 @@ from os import getenv
 from time import monotonic
 
 __session__ = None
-__session_start__ = None
+__session_start__ = monotonic()
+__credentials__ = None
 MAX_SESSION_TIME = (30 * 60) # Seconds
 
 def preauthenticate_s3():
@@ -33,17 +34,20 @@ def get_boto_session():
 
         __session__ = boto_session
         __session_start__ = now
-    else:
-        return __session__
 
     return __session__
 
-def get_boto_credentials(session):
-    boto_session = session
-
-    creds = boto_session.get_credentials()
-    credentials = creds.get_frozen_credentials()
-    return credentials
+def get_boto_credentials():
+    global __credentials__
+    if __credentials__ is None:
+        session = get_boto_session()
+        if session is None:
+            return None
+        creds = session.get_credentials()
+        if creds is None:
+            return None
+        __credentials__ = creds.get_frozen_credentials()
+    return __credentials__
 
 def get_boto_region():
     default_region = "ap-southeast-2"
