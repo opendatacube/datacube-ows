@@ -93,8 +93,9 @@ def _get_measurement(datasources, geobox, no_data, dtype):
         geotiff_src = get_rio_geotiff_georeference_source()
         creds = get_boto_credentials()
         with rio.Env(GDAL_GEOREF_SOURCES=geotiff_src,
-                     CPL_VSIL_CURL_ALLOWED_EXTENSIONS='tif',
-                     GDAL_DISABLE_READDIR_ON_OPEN='YES'
+                     CPL_VSIL_CURL_ALLOWED_EXTENSIONS='.tif',
+                     GDAL_DISABLE_READDIR_ON_OPEN='EMPTY_DIR',
+                     GDAL_INGESTED_BYTES_AT_OPEN=32 * 1024,
                      ) as rio_env:
             # set the internal rasterio environment credentials
             if creds is not None:
