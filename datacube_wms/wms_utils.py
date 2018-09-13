@@ -145,7 +145,8 @@ def get_arg(args, argname, verbose_name, lower=False,
 def get_time(args, product, raw_product):
     # Time parameter
     times = args.get('time', '').split('/')
-    if len(times) > 1:
+    # If all times are equal we can proceed
+    if len(set(times)) > 1:
         raise WMSException(
             "Selecting multiple time dimension values not supported",
             WMSException.INVALID_DIMENSION_VALUE,
