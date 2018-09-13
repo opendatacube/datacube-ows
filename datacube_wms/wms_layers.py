@@ -45,6 +45,7 @@ class ProductLayerDef():
         self.product_variant = product_cfg["variant"]
         self.product = dc.index.products.get_by_name(self.product_name)
         self.definition = self.product.definition
+        self.abstract = product_cfg["abstract"] if "abstract" in product_cfg else self.definition['description']
         self.title = "%s %s %s (%s)" % (platform_def.title,
                                         self.product_variant,
                                         self.product_type,
