@@ -259,8 +259,6 @@ class ServiceCfg():
             self.fees = srv_cfg.get("fees", "")
             self.access_constraints = srv_cfg.get("access_constraints", "")
             self.preauthenticate_s3 = srv_cfg.get("preauthenticate_s3", False)
-            self.geotiff_georeference_source = srv_cfg.get("geotiff_georeference_source",
-                                                           "PAM,INTERNAL,TABFILE,WORLDFILE,NONE")
 
 
     def __getitem__(self, name):

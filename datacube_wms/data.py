@@ -31,11 +31,12 @@ import multiprocessing
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
 from datacube_wms.rasterio_env import preauthenticate_s3, \
-    get_rio_geotiff_georeference_source, get_boto_credentials
+    get_gdal_opts, get_boto_credentials
 from collections import OrderedDict
 import traceback
 
 _LOG = logging.getLogger(__name__)
+MAX_WORKERS = 2
 
 # Calculates the approximate output shape and transform
 # for loading data from src into geobox
@@ -89,17 +90,13 @@ def _get_measurement(datasources, geobox, no_data, dtype):
     #pylint: disable=broad-except
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
     sources = {(d.filename, d.get_bandnumber()) for d in datasources}
-    try:
-        geotiff_src = get_rio_geotiff_georeference_source()
-        creds = get_boto_credentials()
-        with rio.Env(GDAL_GEOREF_SOURCES=geotiff_src,
-                     CPL_VSIL_CURL_ALLOWED_EXTENSIONS='.tif',
-                     GDAL_DISABLE_READDIR_ON_OPEN='EMPTY_DIR',
-                     GDAL_INGESTED_BYTES_AT_OPEN=32 * 1024,
-                     ) as rio_env:
-            # set the internal rasterio environment credentials
-            if creds is not None:
-                rio_env._creds = creds
+    gdal_opts = get_gdal_opts()
+    creds = get_boto_credentials()
+    with rio.Env(**gdal_opts) as rio_env:
+        # set the internal rasterio environment credentials
+        if creds is not None:
+            rio_env._creds = creds
+        try:
             for f, band_index in sources:
                 src_transform, src_crs, data = _calculate_and_load(f, geobox, band_index)
                 rio.warp.reproject(
@@ -112,9 +109,9 @@ def _get_measurement(datasources, geobox, no_data, dtype):
                     dst_transform=geobox.transform,
                     dst_crs=str(geobox.crs),
                     resampling=rio.warp.Resampling.nearest)
-    except Exception as e:
-        _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
-        raise e
+        except Exception as e:
+            _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
+            raise e
 
     return dest
 
@@ -135,7 +132,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
         for name, coord in geobox.coordinates.items():
             all_bands[name] = (name, coord.values, {'units': coord.units})
 
-        with ThreadPoolExecutor(max_workers=min(len(measurements), 1)) as executor:
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures = dict()
             for measurement in measurements:
                 datasources = {new_datasource(d, measurement['name']) for d in datasets}

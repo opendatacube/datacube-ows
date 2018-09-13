@@ -14,9 +14,16 @@ __session_start__ = monotonic()
 __credentials__ = None
 MAX_SESSION_TIME = (30 * 60) # Seconds
 
+DEFAULT_GDAL_OPTS = {
+    "VSI_CACHE": True,
+    "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif",
+    "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
+    "GDAL_GEOREF_SOURCES": "INTERNAL",
+    "GDAL_INGESTED_BYTES_AT_OPEN": 32*1024
+}
+
 def preauthenticate_s3():
     return service_cfg.get("preauthenticate_s3", False)
-
 
 # Not thread safe
 def get_boto_session():
@@ -55,5 +62,7 @@ def get_boto_region():
     region = region if region is not None else getenv("AWS_DEFAULT_REGION", default_region)
     return region
 
-def get_rio_geotiff_georeference_source():
-    return service_cfg.get("geotiff_georeference_source", "PAM,INTERNAL,TABFILE,WORLDFILE,NONE")
+
+def get_gdal_opts():
+    gdal_opts = service_cfg.get("gdal_opts", dict())
+    return {**DEFAULT_GDAL_OPTS, **gdal_opts}
