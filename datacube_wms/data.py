@@ -77,17 +77,12 @@ def _calculate_transform(src, geobox):
 
     return (out_shape, out_shape_affine)
 
+
 def _calculate_and_load(filename, geobox, band_index):
-    geotiff_src = get_rio_geotiff_georeference_source()
-    creds = get_boto_credentials()
-    with rio.Env(GDAL_GEOREF_SOURCES=geotiff_src) as rio_env:
-        # set the internal rasterio environment credentials
-        if creds is not None:
-            rio_env._creds = creds
-        with rio.open(filename, sharing=False) as src:
-            out_shape, out_shape_affine = _calculate_transform(src, geobox)
-            data = src.read(out_shape=out_shape, indexes=band_index)
-        return (out_shape_affine, src.crs, data)
+    with rio.open(filename, sharing=False) as src:
+        out_shape, out_shape_affine = _calculate_transform(src, geobox)
+        data = src.read(out_shape=out_shape, indexes=band_index)
+    return (out_shape_affine, src.crs, data)
 
 
 def _get_measurement(datasources, geobox, no_data, dtype):
@@ -95,18 +90,28 @@ def _get_measurement(datasources, geobox, no_data, dtype):
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
     sources = {(d.filename, d.get_bandnumber()) for d in datasources}
     try:
-        for f, band_index in sources:
-            src_transform, src_crs, data = _calculate_and_load(f, geobox, band_index)
-            rio.warp.reproject(
-                data,
-                dest,
-                init_dest_nodata=False,
-                src_nodata=no_data,
-                src_transform=src_transform,
-                src_crs=src_crs,
-                dst_transform=geobox.transform,
-                dst_crs=str(geobox.crs),
-                resampling=rio.warp.Resampling.nearest)
+        geotiff_src = get_rio_geotiff_georeference_source()
+        creds = get_boto_credentials()
+        with rio.Env(GDAL_GEOREF_SOURCES=geotiff_src,
+                     CPL_VSIL_CURL_ALLOWED_EXTENSIONS='.tif',
+                     GDAL_DISABLE_READDIR_ON_OPEN='EMPTY_DIR',
+                     GDAL_INGESTED_BYTES_AT_OPEN=32 * 1024,
+                     ) as rio_env:
+            # set the internal rasterio environment credentials
+            if creds is not None:
+                rio_env._creds = creds
+            for f, band_index in sources:
+                src_transform, src_crs, data = _calculate_and_load(f, geobox, band_index)
+                rio.warp.reproject(
+                    data,
+                    dest,
+                    init_dest_nodata=False,
+                    src_nodata=no_data,
+                    src_transform=src_transform,
+                    src_crs=src_crs,
+                    dst_transform=geobox.transform,
+                    dst_crs=str(geobox.crs),
+                    resampling=rio.warp.Resampling.nearest)
     except Exception as e:
         _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
         raise e
@@ -437,7 +442,6 @@ def _write_png(data, pq_data, style, extent_mask):
                           transform=Affine.identity(),
                           nodata=0,
                           dtype='uint8') as thing:
-            scaled = None
             for idx, band in enumerate(img_data.data_vars, start=1):
                 thing.write_band(idx, img_data[band].values)
 
