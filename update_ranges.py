@@ -8,7 +8,9 @@ import click
 def main(product, calculate_extent):
     dc = Datacube(app="wms_update_ranges")
     if not calculate_extent and product is None:
+        print("Updating range for all, using SQL extent calculation")
         add_all(dc)
+        print("Done")
     elif product is not None:
         print("Updating range for: ", product)
         update_range(dc, product)

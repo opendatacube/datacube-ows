@@ -59,3 +59,5 @@ for folder in $folders; do
         python3 archiving/ls_s2_cog.py ${b} --prefix ${p}/$folder --archive ${suffix:+"--suffix"} ${suffix:+"$suffix"} ${safety:+"--unsafe"}
     fi
 done
+
+python3 /code/update_ranges.py --no-calculate-extent

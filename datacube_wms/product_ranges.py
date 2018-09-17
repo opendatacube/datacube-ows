@@ -515,6 +515,7 @@ def create_range_entry(dc, product, crses):
               AS d
               FROM agdc.dataset
               WHERE dataset_type_ref=%(p_id)s
+              AND archived IS NULL
               ORDER BY d) dates)
     UPDATE wms.product_ranges
     SET dates=sorted.dates
@@ -573,5 +574,7 @@ def add_range(dc, product):
 def add_all(dc):
   for layer in layer_cfg:
     for product_cfg in layer["products"]:
-      add_range(dc, product_cfg["product_name"])
+      product_name = product_cfg["product_name"]
+      print("Adding range for:", product_name)
+      add_range(dc, product_name)
 

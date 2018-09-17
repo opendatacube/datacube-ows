@@ -71,7 +71,7 @@ DECLARE
     ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
     lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
 BEGIN
-    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref=$1 )
+    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref=$1 AND archived IS NULL )
     SELECT MIN(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
            (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
     INTO ret
@@ -88,7 +88,7 @@ DECLARE
     ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
     lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
 BEGIN
-    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref=$1 )
+    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref=$1 AND archived IS NULL )
     SELECT MAX(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
            (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
     INTO ret
