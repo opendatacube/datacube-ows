@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from xarray import Dataset, DataArray, merge
 import numpy
+from colour import Color
 
 from datacube.storage.masking import make_mask
 
@@ -308,6 +309,52 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         imgdata = imgdata.astype("uint8")
         return imgdata
 
+
+class RgbaColorRampDef(StyleDefBase):
+    def __init__(self, product, style_cfg):
+        super(RgbaColorRampDef, self).__init__(product, style_cfg)
+
+        def crack_ramp(ramp):
+            values = []
+            red = []
+            green = []
+            blue = []
+            alpha = []
+            for r in ramp:
+                values.append(float(r["value"]))
+                color = Color(r["color"])
+                red.append(color.red)
+                green.append(color.green)
+                blue.append(color.blue)
+                alpha.append(r.get("alpha", 1.0))
+            
+            return (values, red, green, blue, alpha)
+
+        values, r, g, b, a = crack_ramp(style_cfg["color_ramp"])
+        self.values = values
+        self.components = {
+            "red": r,
+            "green": g,
+            "blue": b,
+            "alpha": a
+        }
+        for band in style_cfg["needed_bands"]:
+            self.needed_bands.add(band)
+
+    def transform_data(self, data, pq_data, extent_mask, *masks):
+        if extent_mask is not None:
+            data = data.where(extent_mask)
+        data = self.apply_masks(data, pq_data)
+        imgdata = Dataset()
+        for data_band in self.needed_bands:
+            d = data[data_band]
+            for band, intensity in self.components.items():
+                imgdata[band] = (d.dims, numpy.interp(d, self.values, intensity))
+                imgdata[band] *= 255
+        imgdata = imgdata.astype("uint8")
+        return imgdata
+
+
 #pylint: disable=invalid-name, inconsistent-return-statements
 def StyleDef(product, cfg):
     if cfg.get("component_ratio", False):
@@ -318,3 +365,5 @@ def StyleDef(product, cfg):
         return LinearStyleDef(product, cfg)
     elif cfg.get("value_map", False):
         return RGBMappedStyleDef(product, cfg)
+    elif cfg.get("color_ramp", False):
+        return RgbaColorRampDef(product, cfg)
