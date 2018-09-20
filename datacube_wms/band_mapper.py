@@ -93,7 +93,19 @@ class RGBMappedStyleDef(StyleDefBase):
                     c = numpy.full(data[band].shape, intensity)
                     target[color] = DataArray(c, dims=dims, coords=coords)
 
-                mask = make_mask(bdata, **flags)
+                if "or" in flags:
+                    fs = flags["or"]
+                    mask = None
+                    for f in fs.items():
+                        f = {f[0]: f[1]}
+                        if mask is None:
+                            mask = make_mask(bdata, **f)
+                        else:
+                            mask |= make_mask(bdata, **f)
+                else:
+                    fs = flags if "and" not in flags else flags["and"]
+                    mask = make_mask(bdata, **fs)
+
                 masked = target.where(mask)
 
                 if len(band_data.data_vars) == 0:
