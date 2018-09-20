@@ -8,12 +8,12 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
 
 {% if show_service %}
 <Service>
-    <name>WCS</name>
-    <label>{{ service.title }}</label>
-    {% if service.abstract %}
     <description>
         {{ service.abstract }}
     </description>
+    <name>WCS</name>
+    <label>{{ service.title }}</label>
+    {% if service.abstract %}
     {% endif %}
     {% if service.keywords %}
     <keywords>
@@ -36,15 +36,6 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
         {% endif %}
         {% if service.contact_info.address or service.contact_info.telephone or service.contact_info.fax or service.contact_info.email %}
         <contactInfo>
-            {% if service.contact_info.address %}
-            <address>
-                <deliveryPoint>{{ service.contact_info.address.address }}</deliveryPoint>
-                <city>{{ service.contact_info.address.city }}</city>
-                <administrativeArea>{{ service.contact_info.address.state }}</administrativeArea>
-                <postalCode>{{ service.contact_info.address.postcode }}</postalCode>
-                <country>{{ service.contact_info.address.country }}</country>
-            </address>
-            {% endif %}
             {% if service.contact_info.telephone or service.contact_info.fax %}
             <phone>
                 {% if service.contact_info.telephone %}
@@ -55,9 +46,18 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
                 {% endif %}
             </phone>
             {% endif %}
-            {% if service.contact_info.email %}
+            {% if service.contact_info.address or service.contact_info.email %}
             <address>
+                {%  if service.contact_info.address %}
+                <deliveryPoint>{{ service.contact_info.address.address }}</deliveryPoint>
+                <city>{{ service.contact_info.address.city }}</city>
+                <administrativeArea>{{ service.contact_info.address.state }}</administrativeArea>
+                <postalCode>{{ service.contact_info.address.postcode }}</postalCode>
+                <country>{{ service.contact_info.address.country }}</country>
+                {%  endif %}
+                {% if service.contact_info.email %}
                 <electronicMailAddress>{{ service.contact_info.email }}</electronicMailAddress>
+                {% endif %}
             </address>
             {% endif %}
         </contactInfo>
@@ -113,9 +113,9 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
 <ContentMetadata>
     {% for platform in platforms %}{% for product in platform.products %}
         <CoverageOfferingBrief>
+            <description>{{ product.definition.description }}</description>
             <name>{{ product.name }}</name>
             <label>{{ product.title }}</label>
-            <description>{{ product.definition.description }}</description>
             <lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
                 <gml:pos dimension="2">{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
                 <gml:pos dimension="2">{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
