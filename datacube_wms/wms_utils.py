@@ -226,6 +226,27 @@ class GetParameters():
     def get_raw_product(self, args):
         return args["layers"].split(",")[0]
 
+class GetLegendGraphicParameters(GetParameters):
+    def method_specific_init(self, args):
+        # Validate Format parameter
+        self.format = get_arg(args, "format", "image format",
+                              errcode=WMSException.INVALID_FORMAT,
+                              lower=True,
+                              permitted_values=["image/png"])
+        # Styles
+        self.styles = args.get("styles", "").split(",")
+        if len(self.styles) != 1:
+            raise WMSException("Multi-layer GetMap requests not supported")
+        style_r = self.styles[0]
+        if not style_r:
+            style_r = self.product.default_style
+        self.style = self.product.style_index.get(style_r)
+        if not self.style:
+            raise WMSException("Style %s is not defined" % style_r,
+                               WMSException.STYLE_NOT_DEFINED,
+                               locator="Style parameter")
+        # Zoom factor
+        self.zf = zoom_factor(args, self.crs)
 
 class GetMapParameters(GetParameters):
     def method_specific_init(self, args):
@@ -315,3 +336,4 @@ def solar_correct_data(data, dataset):
     csz = cosine_of_solar_zenith(data_lat, data_lon, data_time)
 
     return data / csz
+

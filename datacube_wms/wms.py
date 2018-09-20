@@ -9,6 +9,8 @@ from datacube_wms.ogc_exceptions import WMSException
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
+from datacube_wms.legend_generator import legend_graphic
+
 
 def handle_wms(nocase_args):
     operation = nocase_args.get("request", "").upper()
@@ -21,6 +23,8 @@ def handle_wms(nocase_args):
         return get_map(nocase_args)
     elif operation == "GETFEATUREINFO":
         return feature_info(nocase_args)
+    elif operation == "GETLEGENDGRAPHIC":
+        return legend_graphic(nocase_args)
     else:
         raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED,
                            "Request parameter")

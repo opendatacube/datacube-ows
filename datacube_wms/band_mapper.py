@@ -353,18 +353,40 @@ class RgbaColorRampDef(StyleDefBase):
         for band in style_cfg["needed_bands"]:
             self.needed_bands.add(band)
 
+        self.index_function = style_cfg.get("index_function", None)
+
+    def get_value(self, data, values, intensities):
+        return numpy.interp(data, values, intensities)
+
     def transform_data(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
+
+        data_bands = self.needed_bands
+
+        if self.index_function is not None:
+            data_bands = ['index_function']
+            data[data_bands[0]] = (data.dims, self.index_function(data))
+
         imgdata = Dataset()
-        for data_band in self.needed_bands:
+        for data_band in data_bands:
             d = data[data_band]
             for band, intensity in self.components.items():
-                imgdata[band] = (d.dims, numpy.interp(d, self.values, intensity))
+                imgdata[band] = (d.dims, self.get_value(d, self.values, intensity))
                 imgdata[band] *= 255
         imgdata = imgdata.astype("uint8")
         return imgdata
+
+
+    def legend(self):
+        # Use extents of ramp and transform_data based on that
+        # take 100 steps between
+        steps = numpy.linspace(self.values[0], self.values[-1], num=100)
+        # pass all steps through transform data
+        imgdata = Dataset()
+        for band, intensity in self.components.items():
+            imgdata[band] = (steps.dims, get_value(steps, self.values, intensity))
 
 
 #pylint: disable=invalid-name, inconsistent-return-statements
