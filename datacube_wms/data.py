@@ -36,7 +36,11 @@ from collections import OrderedDict
 import traceback
 
 _LOG = logging.getLogger(__name__)
-MAX_WORKERS = 2
+MAX_WORKERS = cpu_count() * 2
+
+
+def _round(x, multiple):
+    return int(multiple * round(float(x) / multiple))
 
 # Calculates the approximate output shape and transform
 # for loading data from src into geobox
@@ -50,7 +54,7 @@ def _calculate_transform(src, geobox):
     # We allow rasterio to calculate resolution of geobox.
     if geobox.crs != dc_crs:
         bb = geobox.extent.boundingbox
-        geobox_transform, _, _ = rio.warp.calculate_default_transform(
+        geobox_transform, geobox_width, geobox_height = rio.warp.calculate_default_transform(
             str(geobox.crs),
             src.crs,
             geobox.width,
@@ -62,27 +66,45 @@ def _calculate_transform(src, geobox):
 
     # Calculate the output shape and corresponding transform
     # Always round up to ensure we do not miss data
-    scale_affine = (~src.transform * geobox_transform)
-    scale_a = math.ceil(abs(geobox_transform.a / src.transform.a))
-    scale_e = math.ceil(abs(geobox_transform.e / src.transform.e))
-    scale = min(scale_a, scale_e)
+    scale_a = math.ceil(geobox_transform.a / src.transform.a)
+    scale_e = math.ceil(geobox_transform.e / src.transform.e)
+    scale = min(abs(scale_a), abs(scale_e))
 
-    out_shape = (math.ceil(src.shape[0] / scale), math.ceil(src.shape[1] / scale))
+    c = src.transform.c
+    f = src.transform.f
+
+    if scale == 1:
+        src_bounds = (src.bounds.left, src.bounds.bottom, src.bounds.right, src.bounds.top)
+        window = rio.windows.from_bounds(*src_bounds, transform=geobox_transform, height=geobox_height, width=geobox_width)
+        window = window.round_offsets().round_shape()
+
+        col_off = window.col_off if window.col_off > 0 else 0
+        row_off = window.row_off if window.row_off > 0 else 0
+        window = rio.windows.Window(col_off, row_off, window.width, window.height)
+        c = src.transform.c + (window.col_off * src.transform.a)
+        f = src.transform.f + (window.row_off * src.transform.e)
+        out_shape = src.shape
+    else:
+        out_shape = (math.ceil(src.shape[0] / abs(scale_a)), math.ceil(src.shape[1] / abs(scale_e)))
+
     out_shape_affine = Affine(
         (src.transform.a * scale),
         0,
-        src.transform.c,
+        c,
         0,
         (src.transform.e * scale),
-        src.transform.f)
+        f)
 
-    return (out_shape, out_shape_affine)
+    return (out_shape, out_shape_affine, window)
 
 
 def _calculate_and_load(filename, geobox, band_index):
     with rio.open(filename, sharing=False) as src:
-        out_shape, out_shape_affine = _calculate_transform(src, geobox)
-        data = src.read(out_shape=out_shape, indexes=band_index)
+        out_shape, out_shape_affine, window = _calculate_transform(src, geobox)
+        if out_shape == src.shape:
+            data = src.read(indexes=band_index, window=window)
+        else:
+            data = src.read(out_shape=out_shape, indexes=band_index)
     return (out_shape_affine, src.crs, data)
 
 
