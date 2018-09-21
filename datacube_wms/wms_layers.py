@@ -77,6 +77,7 @@ class ProductLayerDef():
         else:
             self.pq_product = None
         self.time_zone = product_cfg.get("time_zone", 9)
+        self.legend = product_cfg.get("legend", None)
         self.styles = product_cfg["styles"]
         self.default_style = product_cfg["default_style"]
         self.style_index = {s["name"]: StyleDef(self, s) for s in self.styles}

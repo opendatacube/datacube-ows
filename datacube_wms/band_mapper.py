@@ -374,19 +374,24 @@ class RgbaColorRampDef(StyleDefBase):
             d = data[data_band]
             for band, intensity in self.components.items():
                 imgdata[band] = (d.dims, self.get_value(d, self.values, intensity))
-                imgdata[band] *= 255
+        imgdata *= 255
         imgdata = imgdata.astype("uint8")
         return imgdata
 
 
     def legend(self):
-        # Use extents of ramp and transform_data based on that
-        # take 100 steps between
-        steps = numpy.linspace(self.values[0], self.values[-1], num=100)
-        # pass all steps through transform data
-        imgdata = Dataset()
+        # Create custom cdict for matplotlib colorramp
+        start = self.values[numpy.searchsorted(self.components['alpha'], 1.0)]
+        stop = self.values[-1]
+        cdict = dict()
         for band, intensity in self.components.items():
-            imgdata[band] = (steps.dims, get_value(steps, self.values, intensity))
+            band_list = []
+            for index, v in enumerate(self.values):
+                if v < start:
+                    continue
+                band_list.append((v, intensity[index], intensity[index]))
+            cdict[band] = tuple(band_list)
+        return (start, stop, cdict)
 
 
 #pylint: disable=invalid-name, inconsistent-return-statements

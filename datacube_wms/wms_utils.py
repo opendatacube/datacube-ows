@@ -227,7 +227,9 @@ class GetParameters():
         return args["layers"].split(",")[0]
 
 class GetLegendGraphicParameters(GetParameters):
-    def method_specific_init(self, args):
+    def __init__(self, args):
+        self.product = get_product_from_arg(args, 'layer')
+
         # Validate Format parameter
         self.format = get_arg(args, "format", "image format",
                               errcode=WMSException.INVALID_FORMAT,
@@ -237,16 +239,11 @@ class GetLegendGraphicParameters(GetParameters):
         self.styles = args.get("styles", "").split(",")
         if len(self.styles) != 1:
             raise WMSException("Multi-layer GetMap requests not supported")
-        style_r = self.styles[0]
+        self.style_name = style_r = self.styles[0]
         if not style_r:
             style_r = self.product.default_style
         self.style = self.product.style_index.get(style_r)
-        if not self.style:
-            raise WMSException("Style %s is not defined" % style_r,
-                               WMSException.STYLE_NOT_DEFINED,
-                               locator="Style parameter")
-        # Zoom factor
-        self.zf = zoom_factor(args, self.crs)
+
 
 class GetMapParameters(GetParameters):
     def method_specific_init(self, args):
