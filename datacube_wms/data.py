@@ -72,7 +72,7 @@ def _calculate_transform(src, geobox):
 
     c = src.transform.c
     f = src.transform.f
-
+    window = None
     if scale == 1:
         src_bounds = (src.bounds.left, src.bounds.bottom, src.bounds.right, src.bounds.top)
         window = rio.windows.from_bounds(*src_bounds, transform=geobox_transform, height=geobox_height, width=geobox_width)
