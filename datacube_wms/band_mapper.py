@@ -40,6 +40,9 @@ class StyleDefBase():
     def transform_data(self, data, pq_data, extent_mask, *masks):
         pass
 
+    def legend(self):
+        pass
+
 class DynamicRangeCompression(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(DynamicRangeCompression, self).__init__(product, style_cfg)
@@ -120,6 +123,8 @@ class RGBMappedStyleDef(StyleDefBase):
 
         return imgdata.astype('uint8')
 
+    def legend(self):
+        pass
 
 class LinearStyleDef(DynamicRangeCompression):
     def __init__(self, product, style_cfg):

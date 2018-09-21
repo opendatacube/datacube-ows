@@ -2,6 +2,9 @@ import datacube_wms.band_mapper as mapper
 import logging
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 from datacube_wms.wms_utils import GetLegendGraphicParameters
+import matplotlib
+# Do not use X Server backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import LinearSegmentedColormap
