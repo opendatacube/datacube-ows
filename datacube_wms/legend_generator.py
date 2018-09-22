@@ -2,13 +2,8 @@ import datacube_wms.band_mapper as mapper
 import logging
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 from datacube_wms.wms_utils import GetLegendGraphicParameters
-import matplotlib
-# Do not use X Server backend
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from matplotlib.colors import LinearSegmentedColormap
 import io
+from PIL import Image
 import numpy as np
 from flask import make_response
 
@@ -31,27 +26,15 @@ def legend_graphic(args):
 
 
 def create_legends_from_styles(product, styles):
-    fig = plt.figure(figsize=(5,4))
-    num_styles = len(styles)
-    bdict = dict()
     # Run through all values in style cfg and generate
-    for index, style in enumerate(styles):
-        start, stop, cdict = style.legend()
-        bar = dict()
-        bar['ax'] = fig.add_axes([0.05, index * (1.0 / num_styles) + 0.3, 0.9, 0.15])
+    imgs = [Image.open(io.BytesIO(s.legend())) for s in styles]
 
-        bar['custom_map'] = LinearSegmentedColormap(product.name, cdict)
-
-        bar['color_bar'] = mpl.colorbar.ColorbarBase(
-            bar['ax'],
-            cmap=bar['custom_map'],
-            orientation="horizontal")
-        bar['color_bar'].set_label(style.name)
-        bdict[style.name] = bar
-
+    min_shape = sorted([(np.sum(i.size), i.size ) for i in imgs])[0][1]
+    imgs_comb = np.vstack((np.asarray( i.resize(min_shape)) for i in imgs ))
+    imgs_comb = Image.fromarray(imgs_comb)
     b = io.BytesIO()
-    plt.savefig(b, format='png')
+    imgs_comb.save(b, 'png')
     legend = make_response(b.getvalue())
-    b.close()
     legend.mimetype = 'image/png'
+    b.close()
     return legend

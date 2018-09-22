@@ -8,6 +8,14 @@ from datacube.storage.masking import make_mask
 import logging
 from datetime import datetime
 
+import matplotlib
+# Do not use X Server backend
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.colors import LinearSegmentedColormap
+import io
+
 _LOG = logging.getLogger(__name__)
 
 class StyleMask():
@@ -396,7 +404,24 @@ class RgbaColorRampDef(StyleDefBase):
                     continue
                 band_list.append((v, intensity[index], intensity[index]))
             cdict[band] = tuple(band_list)
-        return (start, stop, cdict)
+
+        bar = dict()
+        fig = plt.figure(figsize=(4,1.25))
+        bar['ax'] = fig.add_axes([0.05, 0.5, 0.9, 0.15])
+
+        bar['custom_map'] = LinearSegmentedColormap(self.product.name, cdict)
+
+        bar['color_bar'] = mpl.colorbar.ColorbarBase(
+            bar['ax'],
+            cmap=bar['custom_map'],
+            orientation="horizontal")
+        bar['color_bar'].set_label(self.name)
+
+        b = io.BytesIO()
+        plt.savefig(b, format='png')
+        data = b.getvalue()
+        b.close()
+        return data
 
 
 #pylint: disable=invalid-name, inconsistent-return-statements
