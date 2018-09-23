@@ -14,7 +14,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.patches as mpatches
 import io
+from textwrap import fill
 
 _LOG = logging.getLogger(__name__)
 
@@ -96,12 +98,13 @@ class RGBMappedStyleDef(StyleDefBase):
             for value in self.value_map[band]:
                 target = Dataset()
                 flags = value["flags"]
-                rgb = value["values"]
+                rgb = Color(value["color"])
                 dims = data[band].dims
                 coords = data[band].coords
                 bdata = data[band]
-                for color, intensity in rgb.items():
-                    c = numpy.full(data[band].shape, intensity)
+                colors = ["red", "green", "blue"]
+                for color in colors:
+                    c = numpy.full(data[band].shape, getattr(rgb, color))
                     target[color] = DataArray(c, dims=dims, coords=coords)
 
                 if "or" in flags:
@@ -132,7 +135,21 @@ class RGBMappedStyleDef(StyleDefBase):
         return imgdata.astype('uint8')
 
     def legend(self):
-        pass
+        patches = []
+        for band in self.value_map.keys():
+            for value in self.value_map[band]:
+                rgb = Color(value["color"])
+                label = fill(value["title"] + " - " + value["abstract"], 30)
+                patch = mpatches.Patch(color=rgb.hex, label=label)
+                patches.append(patch)
+        figure = plt.figure(figsize=(3, 1.25))
+        plt.axis('off')
+        legend = plt.legend(handles=patches, loc='center', frameon=False)
+        b = io.BytesIO()
+        plt.savefig(b, format='png')
+        data = b.getvalue()
+        b.close()
+        return data
 
 class LinearStyleDef(DynamicRangeCompression):
     def __init__(self, product, style_cfg):
@@ -405,17 +422,16 @@ class RgbaColorRampDef(StyleDefBase):
                 band_list.append((v, intensity[index], intensity[index]))
             cdict[band] = tuple(band_list)
 
-        bar = dict()
         fig = plt.figure(figsize=(4,1.25))
-        bar['ax'] = fig.add_axes([0.05, 0.5, 0.9, 0.15])
+        ax = fig.add_axes([0.05, 0.5, 0.9, 0.15])
 
-        bar['custom_map'] = LinearSegmentedColormap(self.product.name, cdict)
+        bcustm_map = LinearSegmentedColormap(self.product.name, cdict)
 
-        bar['color_bar'] = mpl.colorbar.ColorbarBase(
-            bar['ax'],
-            cmap=bar['custom_map'],
+        color_bar = mpl.colorbar.ColorbarBase(
+            ax,
+            cmap=custom_map,
             orientation="horizontal")
-        bar['color_bar'].set_label(self.name)
+        color_bar.set_label(self.name)
 
         b = io.BytesIO()
         plt.savefig(b, format='png')
