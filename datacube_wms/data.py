@@ -36,7 +36,7 @@ from collections import OrderedDict
 import traceback
 
 _LOG = logging.getLogger(__name__)
-MAX_WORKERS = cpu_count() * 2
+MAX_WORKERS = 2
 
 
 def _round(x, multiple):

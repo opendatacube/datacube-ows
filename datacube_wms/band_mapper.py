@@ -408,27 +408,33 @@ class RgbaColorRampDef(StyleDefBase):
 
     def legend(self, bytesio):
         # Create custom cdict for matplotlib colorramp
-        start = self.values[numpy.searchsorted(self.components['alpha'], 1.0)]
-        stop = self.values[-1]
+        # Matplot lib color dicts must start at 0 and end at 1
+        # the bounds must also be 1 greater in length than the color dict
+        start_index = numpy.searchsorted(self.components['alpha'], 1.0)
+        stop_index = -1
+        start = self.values[start_index]
+        stop = self.values[stop_index]
         cdict = dict()
         for band, intensity in self.components.items():
             band_list = []
             for index, v in enumerate(self.values):
                 if v < start:
                     continue
-                band_list.append((v, intensity[index], intensity[index]))
+                if index == start_index and v != 0.0:
+                    v = 0
+                # ensure value is normalized
+                band_list.append((v / stop, intensity[index], intensity[index]))
             cdict[band] = tuple(band_list)
 
         fig = plt.figure(figsize=(4,1.25))
         ax = fig.add_axes([0.05, 0.5, 0.9, 0.15])
 
         custom_map = LinearSegmentedColormap(self.product.name, cdict)
-
         color_bar = mpl.colorbar.ColorbarBase(
             ax,
             cmap=custom_map,
             orientation="horizontal")
-        color_bar.set_label(self.name)
+        color_bar.set_label(self.title)
 
         plt.savefig(bytesio, format='png')
 
