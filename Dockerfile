@@ -4,7 +4,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     python3-matplotlib \
-    python3-pil \
+    python3-pil\
+    libpng-dev \
     wget \
     unzip \
     git \

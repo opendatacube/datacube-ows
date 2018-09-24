@@ -13,6 +13,7 @@ _LOG = logging.getLogger(__name__)
 def legend_graphic(args):
     params = GetLegendGraphicParameters(args)
     svc_cfg = get_service_cfg()
+    img = None
     if not params.style_name:
         product = params.product
         legend_config = product.legend
@@ -27,10 +28,15 @@ def legend_graphic(args):
 
 def create_legends_from_styles(product, styles):
     # Run through all values in style cfg and generate
-    imgs = [Image.open(io.BytesIO(s.legend())) for s in styles]
+    imgs = []
+    for s in styles:
+        bytesio = io.BytesIO()
+        s.legend(bytesio)
+        bytesio.seek(0)
+        imgs.append(Image.open(bytesio))
 
-    min_shape = sorted([(np.sum(i.size), i.size ) for i in imgs])[0][1]
-    imgs_comb = np.vstack((np.asarray( i.resize(min_shape)) for i in imgs ))
+    min_shape = sorted([(np.sum(i.size), i.size) for i in imgs])[0][1]
+    imgs_comb = np.vstack((np.asarray( i.resize(min_shape)) for i in imgs))
     imgs_comb = Image.fromarray(imgs_comb)
     b = io.BytesIO()
     imgs_comb.save(b, 'png')

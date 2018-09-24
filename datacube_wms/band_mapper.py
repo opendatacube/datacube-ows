@@ -50,7 +50,7 @@ class StyleDefBase():
     def transform_data(self, data, pq_data, extent_mask, *masks):
         pass
 
-    def legend(self):
+    def legend(self, bytesio):
         pass
 
 class DynamicRangeCompression(StyleDefBase):
@@ -131,10 +131,10 @@ class RGBMappedStyleDef(StyleDefBase):
                 imgdata = band_data
             else:
                 imgdata = merge([imgdata, band_data])
-
+        imgdata *= 255
         return imgdata.astype('uint8')
 
-    def legend(self):
+    def legend(self, bytesio):
         patches = []
         for band in self.value_map.keys():
             for value in self.value_map[band]:
@@ -145,11 +145,8 @@ class RGBMappedStyleDef(StyleDefBase):
         figure = plt.figure(figsize=(3, 1.25))
         plt.axis('off')
         legend = plt.legend(handles=patches, loc='center', frameon=False)
-        b = io.BytesIO()
-        plt.savefig(b, format='png')
-        data = b.getvalue()
-        b.close()
-        return data
+        plt.savefig(bytesio, format='png')
+
 
 class LinearStyleDef(DynamicRangeCompression):
     def __init__(self, product, style_cfg):
@@ -409,7 +406,7 @@ class RgbaColorRampDef(StyleDefBase):
         return imgdata
 
 
-    def legend(self):
+    def legend(self, bytesio):
         # Create custom cdict for matplotlib colorramp
         start = self.values[numpy.searchsorted(self.components['alpha'], 1.0)]
         stop = self.values[-1]
@@ -425,7 +422,7 @@ class RgbaColorRampDef(StyleDefBase):
         fig = plt.figure(figsize=(4,1.25))
         ax = fig.add_axes([0.05, 0.5, 0.9, 0.15])
 
-        bcustm_map = LinearSegmentedColormap(self.product.name, cdict)
+        custom_map = LinearSegmentedColormap(self.product.name, cdict)
 
         color_bar = mpl.colorbar.ColorbarBase(
             ax,
@@ -433,11 +430,7 @@ class RgbaColorRampDef(StyleDefBase):
             orientation="horizontal")
         color_bar.set_label(self.name)
 
-        b = io.BytesIO()
-        plt.savefig(b, format='png')
-        data = b.getvalue()
-        b.close()
-        return data
+        plt.savefig(bytesio, format='png')
 
 
 #pylint: disable=invalid-name, inconsistent-return-statements
