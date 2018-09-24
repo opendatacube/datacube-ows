@@ -465,18 +465,10 @@ def _write_polygon(geobox, polygon, zoom_fill):
     else:
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
         if not geobox_ext.disjoint(polygon):
-            intersection = geobox_ext.intersection(polygon)
-            if intersection.type == 'Polygon':
-                coordinates_list = [intersection.json["coordinates"]]
-            elif intersection.type == 'MultiPolygon':
-                coordinates_list = intersection.json["coordinates"]
-            else:
-                raise Exception("Unexpected extent/geobox intersection geometry type: %s" % intersection.type)
-            for polygon_coords in coordinates_list:
-                pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
-                rs, cs = skimg_polygon([int_trim(c[1], 0, geobox.height - 1) for c in pixel_coords],
-                                       [int_trim(c[0], 0, geobox.width - 1) for c in pixel_coords])
-                data[rs, cs] = 1
+            ixel_coords = [~geobox.transform * coord  for coord in polygon.json["coordinates"][0]]
+            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords], shape=[geobox.width, geobox.height])
+            data[rs,cs] = 1
+
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=geobox.width,
