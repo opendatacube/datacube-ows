@@ -464,8 +464,14 @@ def _write_polygon(geobox, polygon, zoom_fill):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
     else:
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
-        if not geobox_ext.disjoint(polygon):
-            ixel_coords = [~geobox.transform * coord  for coord in polygon.json["coordinates"][0]]
+        if polygon.type == 'Polygon':
+            coordinates_list = [polygon.json["coordinates"]]
+        elif polygon.type == 'MultiPolygon':
+            coordinates_list = polygon.json["coordinates"]
+        else:
+            raise Exception("Unexpected extent/geobox polygon geometry type: %s" % polygon.type)
+        for polygon_coords in coordinates_list:
+            pixel_coords = [ ~geobox.transform * coords for coords in polygon_coords[0]]
             rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords], shape=[geobox.width, geobox.height])
             data[rs,cs] = 1
 
