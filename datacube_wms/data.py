@@ -36,7 +36,7 @@ from collections import OrderedDict
 import traceback
 
 _LOG = logging.getLogger(__name__)
-MAX_WORKERS = 1
+MAX_WORKERS = cpu_count() * 2
 
 
 def _round(x, multiple):
@@ -160,7 +160,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
         all_bands = xarray.Dataset()
         for name, coord in geobox.coordinates.items():
             all_bands[name] = (name, coord.values, {'units': coord.units})
-
+        workers = MAX_WORKERS if len(datasets) > 20 else 2
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures = dict()
             for measurement in measurements:
