@@ -86,6 +86,18 @@ def _calculate_transform(src, geobox):
         window1 = window.round_offsets(op='ceil').round_shape(op='ceil')
         window2 = window.round_offsets(op='floor').round_shape(op='floor')
         window = rio.windows.union([window1, window2])
+        # if window is out of bounds for source dataset need to make it in bounds
+        col_off = window.col_off if window.col_off >= 0 else 0
+        row_off  = window.row_off  if window.row_off  >= 0 else 0
+
+        col_off = window.col_off if window.col_off < src.shape[0] else src.shape[0] - 1
+        row_off = window.row_off if window.row_off < src.shape[1] else src.shape[1] - 1
+
+        width = window.width if (window.width + col_off) <= src.shape[0] else src.shape[0] - col_off
+        height = window.height if (window.height + row_off) <= src.shape[1] else src.shape[1] - row_off
+
+        window = rio.windows.Window(col_off, row_off, width, height)
+        
         _LOG.debug(src_w, src_s, src_e, src_n, dst_w, dst_s, dst_e, dst_n, str(window) + str(window1) + str(window2))
         c = src.transform.c + (window.col_off * src.transform.a)
         f = src.transform.f + (window.row_off * src.transform.e)
@@ -109,10 +121,13 @@ def _calculate_and_load(filename, geobox, band_index):
     with rio.open(filename, sharing=False) as src:
         out_shape, out_shape_affine, window = _calculate_transform(src, geobox)
         _LOG.debug(str(window))
-        if window is not None and window.width > 0 and window.height > 0:
+        if window is not None and window.col_off >= 0 and window.row_off >= 0 and window.width > 0 and window.height > 0:
             data = src.read(indexes=band_index, window=window)
-        else:
+        elif out_shape[0] > 0 and out_shape[1] > 0:
             data = src.read(out_shape=out_shape, indexes=band_index)
+        else:
+            data = src.read(indexes=band_index)
+            out_shape_affine = src.transform
     return (out_shape_affine, src.crs, data)
 
 
@@ -240,72 +255,7 @@ class DataStacker():
                 msg += str(ds.id) + ":" + str(ds.center_time) + str(ds.center_time.utcoffset()) + ", "
             raise Exception("Yes we have inconsistent offset state: " + msg)
 
-        # datasets.sort(key=lambda d: d.center_time)
-
-        if point:
-            # Interested in a single point (i.e. GetFeatureInfo)
-            def filt_func(dataset):
-                # Cleanup Note. Previously by_bounds was used for PQ data
-                return self.point_in_dataset_by_extent(point, dataset)
-            return list(filter(filt_func, iter(datasets)))
-        else:
-            # Interested in a larger tile (i.e. GetMap)
-            if not mask and self._product.data_manual_merge:
-                # Band-data manual merge, do no further filtering of datasets.
-                return datasets
-            elif mask and self._product.pq_manual_merge:
-                # PQ manual merge, do no further filtering of datasets.
-                return datasets
-            else:
-                # Remove un-needed or redundant datasets
-                return self.filter_datasets_by_extent(datasets)
-
-    def filter_datasets_by_extent(self, datasets):
-        #pylint: disable=too-many-branches, dict-keys-not-iterating
-        date_index = {}
-        for dataset in iter(datasets):
-            # Build a date-index of intersecting datasets
-            if dataset.extent.to_crs(self._geobox.crs).intersects(self._geobox.extent):
-                if dataset.center_time in date_index:
-                    date_index[dataset.center_time].append(dataset)
-                else:
-                    date_index[dataset.center_time] = [dataset]
-        if not date_index:
-            # No datasets intersect geobox
-            return []
-
-        date_extents = {}
-        for dt, dt_dss in date_index.items():
-            # Loop over dates in the date index
-
-            # Build up a net extent of all datasets for this date
-            geom = None
-            for ds in dt_dss:
-                if geom is None:
-                    geom = ds.extent.to_crs(self._geobox.crs)
-                else:
-                    geom = geom.union(ds.extent.to_crs(self._geobox.crs))
-            if geom.contains(self._geobox.extent):
-                # This date fully overs the tile bounding box, just return it.
-                return dt_dss
-            date_extents[dt] = geom
-
-        dates = date_extents.keys()
-
-        # Sort by size of geometry
-        biggest_geom_first = sorted(dates, key=lambda x: [date_extents[x].area, x], reverse=True)
-
-        accum_geom = None
-        filtered = []
-        for d in biggest_geom_first:
-            geom = date_extents[d]
-            if accum_geom is None:
-                accum_geom = geom
-                filtered.extend(date_index[d])
-            elif not accum_geom.contains(geom):
-                accum_geom = accum_geom.union(geom)
-                filtered.extend(date_index[d])
-        return filtered
+        return datasets
 
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
         #pylint: disable=too-many-locals, consider-using-enumerate
