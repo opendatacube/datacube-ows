@@ -32,7 +32,7 @@ RUN pip3 install \
     gunicorn[gevent] \
     gunicorn[eventlet] \
     boto3 \
-    rasterio>=1.0.2 \
+    rasterio==1.0.6 \
     ruamel.yaml \
     prometheus-client \
     flask-request-id-middleware \

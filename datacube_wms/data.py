@@ -36,7 +36,7 @@ from collections import OrderedDict
 import traceback
 
 _LOG = logging.getLogger(__name__)
-MAX_WORKERS = 2
+MAX_WORKERS = 1
 
 
 def _round(x, multiple):
@@ -74,18 +74,25 @@ def _calculate_transform(src, geobox):
     f = src.transform.f
     window = None
     if scale == 1:
-        src_bounds = (src.bounds.left, src.bounds.bottom, src.bounds.right, src.bounds.top)
-        window = rio.windows.from_bounds(*src_bounds, transform=geobox_transform, height=geobox_height, width=geobox_width)
-        window = window.round_offsets().round_shape()
+        src_w, src_s, src_e, src_n = src.bounds
+        dst_w, dst_s, dst_e, dst_n = rio.transform.array_bounds(geobox_height, geobox_width, geobox_transform)
 
-        col_off = window.col_off if window.col_off > 0 else 0
-        row_off = window.row_off if window.row_off > 0 else 0
-        window = rio.windows.Window(col_off, row_off, window.width, window.height)
+        int_w = src_w if src_w > dst_w else dst_w
+        int_e = src_e if src_e < dst_e else dst_e
+        int_s = src_s if src_s > dst_s else dst_s
+        int_n = src_n if src_n < dst_n else dst_n
+
+        window = rio.windows.from_bounds(int_w, int_s, int_e, int_n, transform=src.transform)
+        window1 = window.round_offsets(op='ceil').round_shape(op='ceil')
+        window2 = window.round_offsets(op='floor').round_shape(op='floor')
+        window = rio.windows.union([window1, window2])
+        _LOG.debug(src_w, src_s, src_e, src_n, dst_w, dst_s, dst_e, dst_n, str(window) + str(window1) + str(window2))
         c = src.transform.c + (window.col_off * src.transform.a)
         f = src.transform.f + (window.row_off * src.transform.e)
         out_shape = src.shape
     else:
         out_shape = (math.ceil(src.shape[0] / abs(scale_a)), math.ceil(src.shape[1] / abs(scale_e)))
+
 
     out_shape_affine = Affine(
         (src.transform.a * scale),
@@ -94,14 +101,15 @@ def _calculate_transform(src, geobox):
         0,
         (src.transform.e * scale),
         f)
-
     return (out_shape, out_shape_affine, window)
 
 
 def _calculate_and_load(filename, geobox, band_index):
+    _LOG.debug(filename)
     with rio.open(filename, sharing=False) as src:
         out_shape, out_shape_affine, window = _calculate_transform(src, geobox)
-        if out_shape == src.shape:
+        _LOG.debug(str(window))
+        if window is not None and window.width > 0 and window.height > 0:
             data = src.read(indexes=band_index, window=window)
         else:
             data = src.read(out_shape=out_shape, indexes=band_index)
@@ -134,7 +142,6 @@ def _get_measurement(datasources, geobox, no_data, dtype):
         except Exception as e:
             _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
             raise e
-
     return dest
 
 
