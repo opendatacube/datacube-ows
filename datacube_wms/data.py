@@ -176,7 +176,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
         for name, coord in geobox.coordinates.items():
             all_bands[name] = (name, coord.values, {'units': coord.units})
         workers = MAX_WORKERS if len(datasets) > 20 else 2
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = dict()
             for measurement in measurements:
                 datasources = {new_datasource(d, measurement['name']) for d in datasets}
