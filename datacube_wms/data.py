@@ -4,6 +4,8 @@ from datetime import timedelta, datetime
 
 import numpy
 import xarray
+from dask import delayed
+from dask import array as da
 from affine import Affine
 import rasterio as rio
 from rasterio.io import MemoryFile
@@ -116,33 +118,61 @@ def _calculate_and_load(filename, geobox, band_index):
     return (out_shape_affine, src.crs, data)
 
 
-def _get_measurement(datasources, geobox, no_data, dtype):
-    #pylint: disable=broad-except
-    dest = numpy.full(geobox.shape, no_data, dtype=dtype)
-    sources = {(d.filename, d.get_bandnumber()) for d in datasources}
+def _make_destination(shape, no_data, dtype):
+    return numpy.full(shape, no_data, dtype)
+
+
+def read_from_source(source, geobox, no_data, dtype):
     gdal_opts = get_gdal_opts()
     creds = get_boto_credentials()
     with rio.Env(**gdal_opts) as rio_env:
         # set the internal rasterio environment credentials
         if creds is not None:
             rio_env._creds = creds
+
         try:
-            for f, band_index in sources:
-                src_transform, src_crs, data = _calculate_and_load(f, geobox, band_index)
-                rio.warp.reproject(
-                    data,
-                    dest,
-                    init_dest_nodata=False,
-                    src_nodata=no_data,
-                    src_transform=src_transform,
-                    src_crs=src_crs,
-                    dst_transform=geobox.transform,
-                    dst_crs=str(geobox.crs),
-                    resampling=rio.warp.Resampling.nearest)
+            buffer = numpy.full(geobox.shape, no_data, dtype=dtype)
+
+            src_transform, src_crs, data = _calculate_and_load(source.filename, geobox, source.get_bandnumber())
+            rio.warp.reproject(
+                data,
+                buffer,
+                init_dest_nodata=False,
+                src_nodata=no_data,
+                src_transform=src_transform,
+                src_crs=src_crs,
+                dst_transform=geobox.transform,
+                dst_crs=str(geobox.crs),
+                resampling=rio.warp.Resampling.nearest)
         except Exception as e:
             _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
             raise e
-    return dest
+
+    return buffer
+
+
+def _get_measurement(datasources, geobox, no_data, dtype, fuse_func=None):
+    """ Gets the measurement array of a band of data
+    """
+    # pylint: disable=broad-except, protected-access
+
+    def copyto_fuser(dest, src):
+        """
+        :type dest: numpy.ndarray
+        :type src: numpy.ndarray
+        """
+        where_nodata = (dest == no_data) if not numpy.isnan(no_data) else numpy.isnan(dest)
+        numpy.copyto(dest, src, where=where_nodata)
+        return dest
+
+    fuse_func = fuse_func or copyto_fuser
+    destination = _make_destination(geobox.shape, no_data, dtype)
+
+    for source in datasources:
+        buffer = delayed(read_from_source)(source, geobox, no_data, dtype)
+        destination = delayed(fuse_func)(destination, buffer)
+
+    return da.from_delayed(destination, geobox.shape, dtype)
 
 
 # Read data for given datasets and mesaurements per the output_geobox
@@ -156,32 +186,25 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
     holder = numpy.empty(shape=tuple(), dtype=object)
     holder[()] = datasets
     sources = xarray.DataArray(holder)
-    if use_overviews:
+    if use_overviews and max(*geobox.resolution) > 300:
         all_bands = xarray.Dataset()
         for name, coord in geobox.coordinates.items():
             all_bands[name] = (name, coord.values, {'units': coord.units})
-        workers = MAX_WORKERS if len(datasets) > 20 else 2
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            futures = dict()
-            for measurement in measurements:
-                datasources = {new_datasource(d, measurement['name']) for d in datasets}
-                future = executor.submit(_get_measurement,
-                                         datasources,
-                                         geobox,
-                                         measurement['nodata'],
-                                         measurement['dtype']
-                                        )
-                futures[future] = measurement
 
-            for f in as_completed(futures.keys()):
-                measurement = futures[f]
-                attrs = measurement.dataarray_attrs()
-                coords = OrderedDict((dim, sources.coords[dim]) for dim in sources.dims)
-                dims = tuple(coords.keys()) + tuple(geobox.dimensions)
-                all_bands[measurement['name']] = (dims, f.result(), measurement.dataarray_attrs())
+        for measurement in measurements:
+            datasources = {new_datasource(d, measurement['name']) for d in datasets}
+            data = _get_measurement(datasources,
+                                    geobox,
+                                    measurement['nodata'],
+                                    measurement['dtype']
+                                    )
+            coords = OrderedDict((dim, sources.coords[dim]) for dim in sources.dims)
+            dims = tuple(coords.keys()) + tuple(geobox.dimensions)
+            all_bands[measurement['name']] = (dims, data, measurement.dataarray_attrs())
 
         all_bands.attrs['crs'] = geobox.crs
-        return all_bands
+        all_bands.load()
+        return all_bands.load()
     else:
         return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
 
