@@ -13,6 +13,7 @@ import re
 
 import datacube
 from datacube.utils import geometry
+from datacube.storage.masking import mask_to_dict
 
 from datacube_wms.cube_pool import get_cube, release_cube
 
@@ -97,14 +98,13 @@ def _calculate_transform(src, geobox):
         height = window.height if (window.height + row_off) <= src.shape[1] else src.shape[1] - row_off
 
         window = rio.windows.Window(col_off, row_off, width, height)
-        
+
         _LOG.debug(src_w, src_s, src_e, src_n, dst_w, dst_s, dst_e, dst_n, str(window) + str(window1) + str(window2))
         c = src.transform.c + (window.col_off * src.transform.a)
         f = src.transform.f + (window.row_off * src.transform.e)
         out_shape = src.shape
     else:
         out_shape = (math.ceil(src.shape[0] / abs(scale_a)), math.ceil(src.shape[1] / abs(scale_e)))
-
 
     out_shape_affine = Affine(
         (src.transform.a * scale),
@@ -565,11 +565,15 @@ def feature_info(args):
                     # Collect raw band values for pixel
                     feature_json["bands"] = {}
                     for band in stacker.needed_bands():
-                        band_val = pixel_ds[band].item()
-                        if band_val == -999:
+                        ret_val = band_val = pixel_ds[band].item()
+                        if band_val == pixel_ds[band].nodata:
                             feature_json["bands"][band] = "n/a"
                         else:
-                            feature_json["bands"][band] = pixel_ds[band].item()
+                            if hasattr(pixel_ds[band], 'flags_definition'):
+                                flag_def = pixel_ds[band].flags_definition
+                                flag_dict = mask_to_dict(flag_def, band_val)
+                                ret_val = [flag_def[k]['description'] for k in filter(flag_dict.get, flag_dict)]
+                            feature_json["bands"][band] = ret_val
                 if params.product.band_drill:
                     if pixel_ds is None:
                         data = stacker.data([d], skip_corrections=True)
@@ -577,7 +581,7 @@ def feature_info(args):
                     drill_section = {}
                     for band in params.product.band_drill:
                         band_val = pixel_ds[band].item()
-                        if band_val == -999:
+                        if band_val == pixel_ds[band].nodata:
                             drill_section[band] = "n/a"
                         else:
                             drill_section[band] = pixel_ds[band].item()
