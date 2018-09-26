@@ -134,7 +134,7 @@ def _calculate_and_load(filename, geobox, band_index):
 def _get_measurement(datasources, geobox, no_data, dtype):
     #pylint: disable=broad-except
     dest = numpy.full(geobox.shape, no_data, dtype=dtype)
-    sources = {(d.filename, d.get_bandnumber()) for d in datasources}
+    sources = [(d.filename, d.get_bandnumber()) for d in datasources]
     gdal_opts = get_gdal_opts()
     creds = get_boto_credentials()
     with rio.Env(**gdal_opts) as rio_env:
@@ -171,6 +171,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
     holder = numpy.empty(shape=tuple(), dtype=object)
     holder[()] = datasets
     sources = xarray.DataArray(holder)
+    datasets = sorted(datasets, key=lambda d: d.id)
     if use_overviews:
         all_bands = xarray.Dataset()
         for name, coord in geobox.coordinates.items():
@@ -179,7 +180,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = dict()
             for measurement in measurements:
-                datasources = {new_datasource(d, measurement['name']) for d in datasets}
+                datasources = [new_datasource(d, measurement['name']) for d in datasets]
                 future = executor.submit(_get_measurement,
                                          datasources,
                                          geobox,
