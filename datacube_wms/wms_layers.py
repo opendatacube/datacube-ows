@@ -203,6 +203,7 @@ class ServiceCfg():
             self.url = srv_cfg["url"]
             if not self.url.startswith("http"):
                 raise Exception("URL in service_cfg does not start with http or https.")
+            self.human_url = srv_cfg.get("human_url", self.url)
             self.published_CRSs = {}
             for crs_str, crsdef in srv_cfg["published_CRSs"].items():
                 self.published_CRSs[crs_str] = {
