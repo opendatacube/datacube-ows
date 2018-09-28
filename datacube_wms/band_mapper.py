@@ -443,6 +443,9 @@ class RgbaColorRampDef(StyleDefBase):
 
             for band, blist in bands.items():
                 cdict[band] = tuple(blist)
+
+            if cfg is None:
+                ticks = None
             return (cdict, ticks)
 
         cdict, ticks = create_cdict_ticks(self.components, self.values, self.legend_cfg)
@@ -453,14 +456,18 @@ class RgbaColorRampDef(StyleDefBase):
         color_bar = mpl.colorbar.ColorbarBase(
             ax,
             cmap=custom_map,
-            orientation="horizontal",
-            ticks=list(ticks.keys()))
-        color_bar.set_ticklabels([str(l) for l in ticks.values()])
+            orientation="horizontal")
+
+        if ticks is not None:
+            color_bar.set_ticks(list(ticks.keys()))
+            color_bar.set_ticklabels([str(l) for l in ticks.values()])
 
         title = self.title
+        unit = "unitless"
         if self.legend_cfg is not None:
             unit = self.legend_cfg.get("units", "unitless")
-            title = title + "(" + unit + ")"
+        title = title + "(" + unit + ")"
+
         color_bar.set_label(title)
 
         plt.savefig(bytesio, format='png')
