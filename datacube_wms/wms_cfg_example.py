@@ -19,6 +19,9 @@ service_cfg = {
     "title": "WMS server for Australian Landsat Datacube",
     # Service URL.  Should a fully qualified URL
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
+    # URL that humans can visit to learn more about the WMS or organization
+    # should be fully qualified
+    "human_url": "http://csiro.au"
 
     # Supported co-ordinate reference systems
     "published_CRSs": {
@@ -675,7 +678,79 @@ layer_cfg = [
                             },
                         ],
                         "scale_range": [0.0, 3000.0]
-                    }
+                    },
+                    {
+                        # describes a style which applies an index function to data
+                        # and then styles that data using an rbga color ramp
+                        "name": "ndvi_ramped",
+                        "title": "NDVI - Red, NIR",
+                        "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "needed_bands": ["red", "nir"],
+                        "color_ramp": [
+                            {
+                                # values from this to the next value
+                                # will be ramped linearly from this color to the next
+                                # if alpha changes, the alpha will also be ramped
+                                "value": -1.0, 
+                                "color": "#FFFFFF",
+                                "alpha": 0.0
+                            },
+                            {
+                                "value": -0.0,
+                                "color": "#8F3F20",
+                                "alpha": 0.0
+                            },
+                            {
+                                "value": 0.0,
+                                "color": "#8F3F20",
+                                "alpha": 1.0
+                            },
+                            {
+                                # do not have to defined alpha value
+                                # if no alpha is specified, alpha will default to 1.0
+                                # or max opacity
+                                "value": 0.1,
+                                "color": "#A35F18"
+                            },
+                            {
+                                "value": 0.2,
+                                "color": "#B88512"
+                            },
+                            {
+                                "value": 0.3,
+                                "color": "#CEAC0E"
+                            },
+                            {
+                                "value": 0.4,
+                                "color": "#E5D609"
+                            },
+                            {
+                                "value": 0.5,
+                                "color": "#FFFF0C"
+                            },
+                            {
+                                "value": 0.6,
+                                "color": "#C3DE09"
+                            },
+                            {
+                                "value": 0.7,
+                                "color": "#88B808"
+                            },
+                            {
+                                "value": 0.8,
+                                "color": "#529400"
+                            },
+                            {
+                                "value": 0.9,
+                                "color": "#237100"
+                            },
+                            {
+                                "value": 1.0,
+                                "color": "#114D04"
+                            }
+                        ]
+                    },
                 ],
                 # Default style (if request does not specify style)
                 # MUST be defined in the styles list above.
@@ -1252,7 +1327,224 @@ layer_cfg = [
                 #  not required by the standard.)
                 "default_style": "water_masked",
             },
+                        {
+                # Included as a keyword  for the layer
+                "label": "WOfS_Summary",
+                # Included as a keyword  for the layer
+                "type": "WOfS_Summary",
+                # Included as a keyword  for the layer
+                "variant": "Summary",
+                # The WMS name for the layer
+                "name": "wofs_summary",
+                # The Datacube name for the associated data product
+                "product_name": "wofs_summary",
+                "abstract": "test"
+                # The Datacube name for the associated pixel-quality product (optional)
+                # The name of the associated Datacube pixel-quality product
+                #"pq_dataset": "wofs_albers",
+                # The name of the measurement band for the pixel-quality product
+                # (Only required if pq_dataset is set)
+                #"pq_band": "water",
+                # Min zoom factor - sets the zoom level where the cutover from indicative polygons
+                # to actual imagery occurs.
+                "min_zoom_factor": 5.0,
+                # The fill-colour of the indicative polygons when zoomed out.
+                # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
+                "zoomed_out_fill_colour": [150, 180, 200, 160],
+                # Time Zone.  In hours added to UTC (maybe negative)
+                # Used for rounding off scene times to a date.
+                # 9 is good value for imagery of Australia.
+                "time_zone": 9,
+                # Extent mask function
+                # Determines what portions of dataset is potentially meaningful data.
+                "extent_mask_func": lambda data, band: (data[band] != data[band].attrs['nodata']),
+                # Flags listed here are ignored in GetFeatureInfo requests.
+                # (defaults to empty list)
+                "ignore_info_flags": [],
+                "legend": {
+                    # "url": ""
+                    # the styles to include in a legend for this product
+                    "styles": ["WOfS_frequency"] 
+                },
+                "styles": [
+                    {
+                        "name": "WOfS_frequency",
+                        "title": " Wet and Dry Count",
+                        "abstract": "WOfS summary showing the frequency of Wetness",
+                        "needed_bands": ["frequency"],
+                        "color_ramp": [
+                            {
+                                "value": 0.002,
+                                "color": "#000000",
+                                "alpha": 0.0
+                            },
+                            {
+                                "value": 0.005,
+                                "color": "#8e0101",
+                                "alpha": 0.25
+                            },
+                            {
+                                "value": 0.01,
+                                "color": "#cf2200",
+                                "alpha": 0.75
+                            },
+                            {
+                                "value": 0.02,
+                                "color": "#e38400"
+                            },
+                            {
+                                "value": 0.05,
+                                "color": "#e3df00"
+                            },
+                            {
+                                "value": 0.1,
+                                "color": "#a6e300"
+                            },
+                            {
+                                "value": 0.2,
+                                "color": "#62e300"
+                            },
+                            {
+                                "value": 0.3,
+                                "color": "#00e32d"
+                            },
+                            {
+                                "value": 0.4,
+                                "color": "#00e384"
+                            },
+                            {
+                                "value": 0.5,
+                                "color": "#00e3c8"
+                            },
+                            {
+                                "value": 0.6,
+                                "color": "#00c5e3"
+                            },
+                            {
+                                "value": 0.7,
+                                "color": "#0097e3"
+                            },
+                            {
+                                "value": 0.8,
+                                "color": "#005fe3"
+                            },
+                            {
+                                "value": 0.9,
+                                "color": "#000fe3"
+                            },
+                            {
+                                "value": 1.0,
+                                "color": "#5700e3"
+                            }
+                        ],
+                        # defines the format of the legend generated
+                        # for this style
+                        "legend": {
+                            # appended to the title of the legend
+                            # if missing will use 'unitless'
+                            "units": "%",
+                            # radix places to round tick labels to
+                            # set to 0 for ints
+                            "radix_point": 0,
+                            # values will be scaled by this amount
+                            # to generate tick labels
+                            # e.g. for a percentage stored as 0 - 1.0
+                            # this should be 100
+                            "scale_by": 100.0,
+                            # tick labels will be created for values that
+                            # are modulo 0 by this value
+                            "major_ticks": 0.1
+                        }
+                    },
+                ],
+                # Default style (if request does not specify style)
+                # MUST be defined in the styles list above.
+
+                # (Looks like Terria assumes this is the first style in the list, but this is
+                #  not required by the standard.)
+                "default_style": "WOfS_frequency",
+            },
         ],
+    },
+    {
+        "name": "mangrove_cover",
+        "title": "Mangrove Canopy Cover",
+        "abstract": "",
+        "products": [
+            {
+                "label": "Mangrove Canopy Cover",
+                "abstract": "test",
+                "type": "100km tile",
+                "variant": "25m",
+                "name": "mangrove_cover",
+                "product_name": "mangrove_cover",
+                "min_zoom_factor": 15.0,
+                "zoomed_out_fill_colour": [150, 180, 200, 160],
+                "time_zone": 9,
+                "extent_mask_func": lambda data, band: data["extent"] == 1,
+                "ignore_info_flags": [],
+                "data_manual_merge": False,
+                "always_fetch_bands": ["extent"],
+                "apply_solar_corrections": False,
+                "legend": {
+                    "styles": ["mangrove"]
+                },
+                "styles": [
+                    # Describes a style which uses bitflags
+                    # to create a style
+                    {
+                        "name": "mangrove",
+                        "title": "Mangrove Cover",
+                        "abstract": "",
+                        # Each entry in the value_map dict
+                        # represents a band which is a bitflagged band
+                        "value_map": {
+                            "canopy_cover_class": [
+                                {
+                                    "title": "Woodland",
+                                    "abstract": "(20% - 50% cover)",
+                                    # flags that all must match
+                                    # in order for this style color to apply
+                                    # "and" and "or" flags cannot be mixed
+                                    "flags": {
+                                        "and": {
+                                            "woodland": True
+                                        }
+                                    },
+                                    "color": "#9FFF4C"
+                                },
+                                {
+                                    "title": "Open Forest",
+                                    "abstract": "(50% - 80% cover)",
+                                    # flags that any may match
+                                    # in order for this style color to apply
+                                    # "and" and "or" flags cannot be mixed
+                                    "flags": {
+                                        "or": {
+                                            "open_forest": True
+                                        }
+                                    },
+                                    "color": "#5ECC00"
+                                },
+                                {
+                                    "title": "Closed Forest",
+                                    "abstract": "(>80% cover)",
+                                    "flags": {
+                                        "closed_forest": True
+                                    },
+                                    "color": "#3B7F00"
+                                },
+                            ]
+                        }
+                    }
+                ],
+                # Default style (if request does not specify style)
+                # MUST be defined in the styles list above.
+                # (Looks like Terria assumes this is the first style in the list, but this is
+                #  not required by the standard.)
+                "default_style": "mangrove",
+            },
+        ]
     },
 ]
 
