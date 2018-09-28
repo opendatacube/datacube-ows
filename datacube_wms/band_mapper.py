@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 from xarray import Dataset, DataArray, merge
 import numpy
 from colour import Color
+from collections import defaultdict
 
 from datacube.storage.masking import make_mask
 
@@ -35,6 +36,8 @@ class StyleDefBase():
         self.needed_bands = set()
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
+
+        self.legend_cfg = style_cfg.get("legend", None)
 
     def apply_masks(self, data, pq_data):
         if pq_data is not None:
@@ -409,32 +412,57 @@ class RgbaColorRampDef(StyleDefBase):
     def legend(self, bytesio):
         # Create custom cdict for matplotlib colorramp
         # Matplot lib color dicts must start at 0 and end at 1
-        # the bounds must also be 1 greater in length than the color dict
-        start_index = numpy.searchsorted(self.components['alpha'], 1.0)
-        stop_index = -1
-        start = self.values[start_index]
-        stop = self.values[stop_index]
-        cdict = dict()
-        for band, intensity in self.components.items():
-            band_list = []
-            for index, v in enumerate(self.values):
+        # because of this we normalize the values
+        # Also create tick labels based on configuration
+        # ticks are also normalized between 0 - 1.0
+        # so they are position correctly on the colorbar
+        def create_cdict_ticks(components, values, cfg):
+            start_index = numpy.searchsorted(components['alpha'], 1.0)
+            start = values[start_index]
+            stop = values[-1]
+            ticks = dict()
+            cdict = dict()
+            tick_mod = cfg.get("major_ticks", 1) if cfg is not None else 1
+            tick_scale = cfg.get("scale_by", 1) if cfg is not None else 1
+            places = cfg.get("radix_point", 1) if cfg is not None else 1
+
+            bands = defaultdict(list)
+            for index, v in enumerate(values):
                 if v < start:
                     continue
                 if index == start_index and v != 0.0:
                     v = 0
                 # ensure value is normalized
-                band_list.append((v / stop, intensity[index], intensity[index]))
-            cdict[band] = tuple(band_list)
+                normalized = v / stop
+                if ((v * tick_scale) % (tick_mod * tick_scale) == 0.0):
+                    label = v * tick_scale
+                    label = round(label, places) if places > 0 else int(label)
+                    ticks[normalized] = label
+                for band, intensity in components.items():
+                    
+                    bands[band].append((normalized, intensity[index], intensity[index]))
+
+            for band, blist in bands.items():
+                cdict[band] = tuple(blist)
+            return (cdict, ticks)
+
+        cdict, ticks = create_cdict_ticks(self.components, self.values, self.legend_cfg)
 
         fig = plt.figure(figsize=(4,1.25))
         ax = fig.add_axes([0.05, 0.5, 0.9, 0.15])
-
         custom_map = LinearSegmentedColormap(self.product.name, cdict)
         color_bar = mpl.colorbar.ColorbarBase(
             ax,
             cmap=custom_map,
-            orientation="horizontal")
-        color_bar.set_label(self.title)
+            orientation="horizontal",
+            ticks=list(ticks.keys()))
+        color_bar.set_ticklabels([str(l) for l in ticks.values()])
+
+        title = self.title
+        if self.legend_cfg is not None:
+            unit = self.legend_cfg.get("units", "unitless")
+            title = title + "(" + unit + ")"
+        color_bar.set_label(title)
 
         plt.savefig(bytesio, format='png')
 
