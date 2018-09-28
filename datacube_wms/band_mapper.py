@@ -439,7 +439,6 @@ class RgbaColorRampDef(StyleDefBase):
                     label = round(label, places) if places > 0 else int(label)
                     ticks[normalized] = label
                 for band, intensity in components.items():
-                    
                     bands[band].append((normalized, intensity[index], intensity[index]))
 
             for band, blist in bands.items():

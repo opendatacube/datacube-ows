@@ -278,7 +278,67 @@ class DataStacker():
                 msg += str(ds.id) + ":" + str(ds.center_time) + str(ds.center_time.utcoffset()) + ", "
             raise Exception("Yes we have inconsistent offset state: " + msg)
 
-        return datasets
+        if point:
+            # Interested in a single point (i.e. GetFeatureInfo)
+            def filt_func(dataset):
+                # Cleanup Note. Previously by_bounds was used for PQ data
+                return self.point_in_dataset_by_extent(point, dataset)
+            return list(filter(filt_func, iter(datasets)))
+        else:
+            # Interested in a larger tile (i.e. GetMap)
+            if not mask and self._product.data_manual_merge:
+                # Band-data manual merge, do no further filtering of datasets.
+                return datasets
+            elif mask and self._product.pq_manual_merge:
+                # PQ manual merge, do no further filtering of datasets.
+                return datasets
+            else:
+                # Remove un-needed or redundant datasets
+                return self.filter_datasets_by_extent(datasets)
+
+
+    def filter_datasets_by_extent(self, datasets):
+        #pylint: disable=too-many-branches, dict-keys-not-iterating
+        date_index = {}
+        for dataset in iter(datasets):
+            # Build a date-index of intersecting datasets
+            if dataset.extent.to_crs(self._geobox.crs).intersects(self._geobox.extent):
+                if dataset.center_time in date_index:
+                    date_index[dataset.center_time].append(dataset)
+                else:
+                    date_index[dataset.center_time] = [dataset]
+        if not date_index:
+            # No datasets intersect geobox
+            return []
+        date_extents = {}
+        for dt, dt_dss in date_index.items():
+            # Loop over dates in the date index
+            # Build up a net extent of all datasets for this date
+            geom = None
+            for ds in dt_dss:
+                if geom is None:
+                    geom = ds.extent.to_crs(self._geobox.crs)
+                else:
+                    geom = geom.union(ds.extent.to_crs(self._geobox.crs))
+            if geom.contains(self._geobox.extent):
+                # This date fully overs the tile bounding box, just return it.
+                return dt_dss
+            date_extents[dt] = geom
+        dates = date_extents.keys()
+        # Sort by size of geometry
+        biggest_geom_first = sorted(dates, key=lambda x: [date_extents[x].area, x], reverse=True)
+        accum_geom = None
+        filtered = []
+        for d in biggest_geom_first:
+            geom = date_extents[d]
+            if accum_geom is None:
+                accum_geom = geom
+                filtered.extend(date_index[d])
+            elif not accum_geom.contains(geom):
+                accum_geom = accum_geom.union(geom)
+                filtered.extend(date_index[d])
+        return filtered
+
 
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
         #pylint: disable=too-many-locals, consider-using-enumerate
