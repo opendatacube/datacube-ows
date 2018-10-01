@@ -37,7 +37,7 @@ class StyleDefBase():
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
 
-        self.legend_cfg = style_cfg.get("legend", None)
+        self.legend_cfg = style_cfg.get("legend", dict())
 
     def apply_masks(self, data, pq_data):
         if pq_data is not None:
@@ -372,7 +372,8 @@ class RgbaColorRampDef(StyleDefBase):
             
             return (values, red, green, blue, alpha)
 
-        values, r, g, b, a = crack_ramp(style_cfg["color_ramp"])
+        self.color_ramp = style_cfg["color_ramp"]
+        values, r, g, b, a = crack_ramp(self.color_ramp)
         self.values = values
         self.components = {
             "red": r,
@@ -422,9 +423,10 @@ class RgbaColorRampDef(StyleDefBase):
             stop = values[-1]
             ticks = dict()
             cdict = dict()
-            tick_mod = cfg.get("major_ticks", 1) if cfg is not None else 1
-            tick_scale = cfg.get("scale_by", 1) if cfg is not None else 1
-            places = cfg.get("radix_point", 1) if cfg is not None else 1
+            tick_mod = cfg.get("major_ticks", 1)
+            tick_scale = cfg.get("scale_by", 1)
+            places = cfg.get("radix_point", 1)
+            ramp = cfg.get("ramp")
 
             bands = defaultdict(list)
             for index, v in enumerate(values):
@@ -434,9 +436,18 @@ class RgbaColorRampDef(StyleDefBase):
                     v = 0
                 # ensure value is normalized
                 normalized = v / stop
+                # Apply label is value should be displayed
                 if ((v * tick_scale) % (tick_mod * tick_scale) == 0.0):
                     label = v * tick_scale
                     label = round(label, places) if places > 0 else int(label)
+                    # Apply any custom labelling
+                    custom_legend_cfg = next((item for item in ramp if item['value'] == v), dict()).get("legend", None)
+                    if custom_legend_cfg is not None:
+                        clc = custom_legend_cfg
+                        prefix = clc.get("prefix", "")
+                        l = clc.get("label", label)
+                        suffix = clc.get("suffix", "")
+                        label = f"{prefix}{l}{suffix}"
                     ticks[normalized] = label
                 for band, intensity in components.items():
                     bands[band].append((normalized, intensity[index], intensity[index]))
@@ -448,7 +459,9 @@ class RgbaColorRampDef(StyleDefBase):
                 ticks = None
             return (cdict, ticks)
 
-        cdict, ticks = create_cdict_ticks(self.components, self.values, self.legend_cfg)
+        combined_cfg = self.legend_cfg
+        combined_cfg["ramp"] = self.color_ramp
+        cdict, ticks = create_cdict_ticks(self.components, self.values, combined_cfg)
 
         fig = plt.figure(figsize=(4,1.25))
         ax = fig.add_axes([0.05, 0.5, 0.9, 0.15])
@@ -463,9 +476,7 @@ class RgbaColorRampDef(StyleDefBase):
             color_bar.set_ticklabels([str(l) for l in ticks.values()])
 
         title = self.title
-        unit = "unitless"
-        if self.legend_cfg is not None:
-            unit = self.legend_cfg.get("units", "unitless")
+        unit = self.legend_cfg.get("units", "unitless")
         title = title + "(" + unit + ")"
 
         color_bar.set_label(title)

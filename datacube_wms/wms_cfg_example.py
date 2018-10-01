@@ -1434,7 +1434,17 @@ layer_cfg = [
                             },
                             {
                                 "value": 1.0,
-                                "color": "#5700e3"
+                                "color": "#5700e3",
+                                # If defined this label
+                                # will include a prefix and suffix
+                                # string as shown
+                                # if label is defined, the scaled valued
+                                # will be replaced by that string
+                                "legend": {
+                                    "prefix": ">",
+                                    #"label": "foo"
+                                    "suffix": "<"
+                                }
                             }
                         ],
                         # defines the format of the legend generated
