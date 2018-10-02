@@ -145,7 +145,9 @@ class RGBMappedStyleDef(StyleDefBase):
                 label = fill(value["title"] + " - " + value["abstract"], 30)
                 patch = mpatches.Patch(color=rgb.hex, label=label)
                 patches.append(patch)
-        figure = plt.figure(figsize=(3, 1.25))
+        cfg = self.legend_cfg
+        figure = plt.figure(figsize=(cfg.get("width", 3),
+                                     cfg.get("height", 1.25)))
         plt.axis('off')
         legend = plt.legend(handles=patches, loc='center', frameon=False)
         plt.savefig(bytesio, format='png')
@@ -463,8 +465,10 @@ class RgbaColorRampDef(StyleDefBase):
         combined_cfg["ramp"] = self.color_ramp
         cdict, ticks = create_cdict_ticks(self.components, self.values, combined_cfg)
 
-        fig = plt.figure(figsize=(4,1.25))
-        ax = fig.add_axes([0.05, 0.5, 0.9, 0.15])
+        fig = plt.figure(figsize=(combined_cfg.get("width", 4),
+                                  combined_cfg.get("height", 1.25)))
+        ax_pos = combined_cfg.get("axes_position", [0.05, 0.5, 0.9, 0.15])
+        ax = fig.add_axes(ax_pos)
         custom_map = LinearSegmentedColormap(self.product.name, cdict)
         color_bar = mpl.colorbar.ColorbarBase(
             ax,
