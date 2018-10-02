@@ -457,7 +457,9 @@ class RgbaColorRampDef(StyleDefBase):
             for band, blist in bands.items():
                 cdict[band] = tuple(blist)
 
-            if cfg is None:
+            # if we only have ramp configuration default to
+            # no custom ticks
+            if "ramp" in cfg and len(cfg) == 1:
                 ticks = None
             return (cdict, ticks)
 

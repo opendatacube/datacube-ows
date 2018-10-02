@@ -645,8 +645,8 @@ def feature_info(args):
                     # Get accurate timestamp from dataset
                     feature_json["time"] = d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
-                    # Collect raw band values for pixel
                     feature_json["bands"] = {}
+                    # Collect raw band values for pixel
                     for band in stacker.needed_bands():
                         ret_val = band_val = pixel_ds[band].item()
                         if band_val == pixel_ds[band].nodata:
@@ -658,12 +658,21 @@ def feature_info(args):
                                 ret_val = [flag_def[k]['description'] for k in filter(flag_dict.get, flag_dict)]
                             feature_json["bands"][band] = ret_val
 
-                    feature_json["band_derived"] = {}
                     for k, v in filter(lambda kv: hasattr(kv[1], 'index_function'), params.product.style_index.items()):
+                        if v.index_function is None:
+                            continue
+
                         vals_nodata = [pixel_ds[b] == pixel_ds[b].nodata for b in v.needed_bands]
                         if any(vals_nodata):
                             continue
-                        feature_json["band_derived"][k] = v.index_function(pixel_ds).item()
+
+                        value = v.index_function(pixel_ds).item()
+                        try:
+                            feature_json["band_derived"][k] = value
+                        except KeyError:
+                            feature_json["band_derived"] = {}
+                            feature_json["band_derived"][k] = value
+
                 if params.product.band_drill:
                     if pixel_ds is None:
                         data = stacker.data([d], skip_corrections=True)
