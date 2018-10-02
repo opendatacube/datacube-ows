@@ -21,7 +21,7 @@ service_cfg = {
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
     # URL that humans can visit to learn more about the WMS or organization
     # should be fully qualified
-    "human_url": "http://csiro.au"
+    "human_url": "http://csiro.au",
 
     # Supported co-ordinate reference systems
     "published_CRSs": {
@@ -1338,7 +1338,7 @@ layer_cfg = [
                 "name": "wofs_summary",
                 # The Datacube name for the associated data product
                 "product_name": "wofs_summary",
-                "abstract": "test"
+                "abstract": "test",
                 # The Datacube name for the associated pixel-quality product (optional)
                 # The name of the associated Datacube pixel-quality product
                 #"pq_dataset": "wofs_albers",
