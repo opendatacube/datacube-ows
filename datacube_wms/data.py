@@ -352,6 +352,9 @@ class DataStacker():
                 merged[band].attrs = d[band].attrs
         return merged
 
+def bbox_to_geom(bbox, crs):
+    return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
+
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
@@ -373,15 +376,14 @@ def get_map(args):
             extent_crs = None
             for ds in datasets:
                 if extent:
-                    new_extent = ds.extent
+                    new_extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
                     if new_extent.crs != extent_crs:
                         new_extent = new_extent.to_crs(extent_crs)
                     extent = extent.union(new_extent)
                 else:
-                    extent = ds.extent
+                    extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
                     extent_crs = extent.crs
             extent = extent.to_crs(params.crs)
-
             body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
         else:
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
