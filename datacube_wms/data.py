@@ -207,7 +207,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
             all_bands[name] = (name, coord.values, {'units': coord.units})
 
         for measurement in measurements:
-            datasources = {new_datasource(d, measurement['name']) for d in datasets}
+            datasources = [new_datasource(d, measurement['name']) for d in datasets]
             data = _get_measurement(datasources,
                                     geobox,
                                     measurement['nodata'],
