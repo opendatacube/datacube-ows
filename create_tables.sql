@@ -89,7 +89,7 @@ DECLARE
     lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
 BEGIN
     WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref=$1 AND archived IS NULL )
-    SELECT MAX(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
+    SELECT MAX(GREATEST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
            (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
     INTO ret
     FROM m;
