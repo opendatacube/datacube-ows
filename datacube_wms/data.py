@@ -208,6 +208,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
 
         for measurement in measurements:
             datasources = [new_datasource(d, measurement['name']) for d in datasets]
+            datasources = sorted(datasources, key=lambda x: x._dataset.id)
             data = _get_measurement(datasources,
                                     geobox,
                                     measurement['nodata'],
