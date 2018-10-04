@@ -86,6 +86,7 @@ class ProductLayerDef():
             self.extent_mask_func = product_cfg["extent_mask_func"]
         except TypeError:
             self.extent_mask_func = [product_cfg["extent_mask_func"]]
+        self.fuse_func = product_cfg.get("fuse_func", None)
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
 
         # For WCS

@@ -88,7 +88,7 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
     return da.from_delayed(destination, geobox.shape, dtype)
 
 
-# Read data for given datasets and mesaurements per the output_geobox
+# Read data for given datasets and measurements per the output_geobox
 # If use_overviews is true
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
@@ -111,7 +111,8 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
                                     geobox,
                                     resampling,
                                     measurement['nodata'],
-                                    measurement['dtype']
+                                    measurement['dtype'],
+                                    fuse_func=kwargs.get('fuse_func', None),
                                     )
             coords = OrderedDict((dim, sources.coords[dim]) for dim in sources.dims)
             dims = tuple(coords.keys()) + tuple(geobox.dimensions)
@@ -292,7 +293,10 @@ def get_map(args):
             body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
         else:
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
-            data = stacker.data(datasets, manual_merge=params.product.data_manual_merge, use_overviews=True)
+            data = stacker.data(datasets,
+                                manual_merge=params.product.data_manual_merge,
+                                use_overviews=True,
+                                fuse_func=params.product.fuse_func)
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             if params.style.masks:
                 if params.product.pq_name == params.product.name:
@@ -308,7 +312,8 @@ def get_map(args):
                         pq_data = stacker.data(pq_datasets,
                                                mask=True,
                                                manual_merge=params.product.pq_manual_merge,
-                                               use_overviews=True)
+                                               use_overviews=True,
+                                               fuse_func=params.product.fuse_func)
                     else:
                         pq_data = None
             else:
