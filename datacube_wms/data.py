@@ -197,10 +197,8 @@ class DataStacker():
                 # Merge performed already by dataset extent, but we need to
                 # process the data for the datasets individually to do solar correction.
                 merged = None
-                for i in range(0, len(datasets)):
-                    holder = numpy.empty(shape=tuple(), dtype=object)
-                    ds = datasets[i]
-                    d = read_data(ds, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
+                for ds in datasets:
+                    d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -221,17 +219,15 @@ class DataStacker():
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
-        #pylint: disable=too-many-locals, too-many-branches, consider-using-enumerate
+        #pylint: disable=too-many-locals, too-many-branches
         # manual merge
         merged = None
         if mask:
             bands = [self._product.pq_band]
         else:
             bands = self.needed_bands()
-        for i in range(0, len(datasets)):
-            holder = numpy.empty(shape=tuple(), dtype=object)
-            ds = datasets[i]
-            d = read_data(ds, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
+        for ds in datasets:
+            d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -406,9 +402,10 @@ def get_s3_browser_uris(datasets):
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
+    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)ARD-METADATA.yaml")
+
     # convert to browsable link
     def convert(uri):
-        regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-]+.yaml")
         uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
         result = regex.match(uri)
         if result is not None:

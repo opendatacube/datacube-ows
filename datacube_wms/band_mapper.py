@@ -98,9 +98,9 @@ class RGBMappedStyleDef(StyleDefBase):
         data = self.apply_masks(data, pq_data)
         _LOG.debug("mask complete %d", datetime.now())
         imgdata = Dataset()
-        for band in self.value_map.keys():
+        for band, values in self.value_map.items():
             band_data = Dataset()
-            for value in self.value_map[band]:
+            for value in values:
                 target = Dataset()
                 flags = value["flags"]
                 rgb = Color(value["color"])
