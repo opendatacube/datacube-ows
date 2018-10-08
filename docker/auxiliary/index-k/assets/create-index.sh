@@ -12,7 +12,7 @@ datacube system init --no-init-users 2>&1
 function add_products {
     mkdir -p firsttime/products
 
-    IFS=: read -ra URLS <<< "$PRODUCT_URLS"
+    read -ra URLS <<<"$PRODUCT_URLS"
 
     for U in "${URLS[@]}"
     do
