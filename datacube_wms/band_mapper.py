@@ -19,6 +19,8 @@ import matplotlib.patches as mpatches
 import io
 from textwrap import fill
 
+from math import isclose
+
 _LOG = logging.getLogger(__name__)
 
 class StyleMask():
@@ -439,7 +441,7 @@ class RgbaColorRampDef(StyleDefBase):
                 # ensure value is normalized
                 normalized = v / stop
                 # Apply label is value should be displayed
-                if ((v * tick_scale) % (tick_mod * tick_scale) == 0.0):
+                if isclose((v * tick_scale) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8):
                     label = v * tick_scale
                     label = round(label, places) if places > 0 else int(label)
                     # Apply any custom labelling
