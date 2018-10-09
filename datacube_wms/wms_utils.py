@@ -282,9 +282,9 @@ class GetMapParameters(GetParameters):
 
         # Read Resampling method from config
         self.resampling = Resampling.average
-        layer_name = unquote(get_raw_product(args)
+        layer_name = unquote(self.get_raw_product(args))
         for layer in layer_cfg:
-            if layer["name"] eq layer_name):
+            if layer["name"] == layer_name:
                 if "resampling" in layer:
                     self.resampling = RESAMPLING_METHODS[layer["resampling"].lower()]
                 break

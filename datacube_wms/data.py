@@ -60,8 +60,8 @@ def _read_file(source, geobox, band, resampling):
         if creds is not None:
             rio_env._creds = creds
         # Read our data
-        with rio.open(source.fileneme, sharing=False) as src
-            dst = read_with_reproject(src, geobox, band=source.get_bandnumber(), resampling=resampling))
+        with rio.open(source.filename, sharing=False) as src:
+            dst = read_with_reproject(src, geobox, band=source.get_bandnumber(), resampling=resampling)
     return dst
 
 def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
@@ -82,7 +82,7 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
     destination = _make_destination(geobox.shape, no_data, dtype)
 
     for source in datasources:
-        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), resampling=resampling))
+        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), resampling=resampling)
         destination = delayed(fuse_func)(destination, buffer)
 
     return da.from_delayed(destination, geobox.shape, dtype)
@@ -92,7 +92,7 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
 # If use_overviews is true
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
-def read_data(datasets, measurements, geobox, use_overviews=False, resampling, **kwargs):
+def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
     #pylint: disable=too-many-locals, dict-keys-not-iterating
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
@@ -220,7 +220,7 @@ class DataStacker():
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     holder[()] = datasets
                     sources = xarray.DataArray(holder)
-                data = read_data(datasets, measurements, self._geobox, use_overviews, self._resampling **kwargs)
+                data = read_data(datasets, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
