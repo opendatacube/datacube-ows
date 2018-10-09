@@ -39,7 +39,7 @@ from datacube_wms.rasterio_env import preauthenticate_s3, \
 from collections import OrderedDict
 import traceback
 
-from ._geom.py import read_with_reproject
+from ._geom import read_with_reproject
 
 _LOG = logging.getLogger(__name__)
 MAX_WORKERS = cpu_count() * 2
@@ -50,6 +50,19 @@ def _round(x, multiple):
 
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
+
+def _read_file(source, geobox, band, resampling):
+    # Activate Rasterio
+    gdal_opts = get_gdal_opts()
+    creds = get_boto_credentials()
+    with rio.Env(**gdal_opts) as rio_env:
+        # set the internal rasterio environment credentials
+        if creds is not None:
+            rio_env._creds = creds
+        # Read our data
+        with rio.open(source.fileneme, sharing=False) as src
+            dst = read_with_reproject(src, geobox, band=source.get_bandnumber(), resampling=resampling))
+    return dst
 
 def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
     """ Gets the measurement array of a band of data
@@ -69,16 +82,8 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
     destination = _make_destination(geobox.shape, no_data, dtype)
 
     for source in datasources:
-        # Activate Rasterio
-        gdal_opts = get_gdal_opts()
-        creds = get_boto_credentials()
-        with rio.Env(**gdal_opts) as rio_env:
-            # set the internal rasterio environment credentials
-            if creds is not None:
-                rio_env._creds = creds
-            # Read our data
-            buffer = delayed(read_with_reproject)(source, geobox, band=source.get_bandnumber(), resampling=resampling))
-            destination = delayed(fuse_func)(destination, buffer)
+        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), resampling=resampling))
+        destination = delayed(fuse_func)(destination, buffer)
 
     return da.from_delayed(destination, geobox.shape, dtype)
 
