@@ -39,6 +39,8 @@ from datacube_wms.rasterio_env import preauthenticate_s3, \
 from collections import OrderedDict
 import traceback
 
+from ._geom.py import read_with_reproject
+
 _LOG = logging.getLogger(__name__)
 MAX_WORKERS = cpu_count() * 2
 
@@ -48,48 +50,6 @@ def _round(x, multiple):
 
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
-
-def read_with_reproject(src,
-                        dst_geobox,
-                        band=1,
-                        resampling=None):
-    """ Two stage reproject: scaling read then re-project.
-    src - opened rasterio file handle
-    dst_geobox - GeoBox (from datacube) of the resulting image
-                 crs, transform, shape
-    band       - Which band to read (rasterio, 1-based index)
-    resampling - rasterio resampling enumeation or None for default NN
-    returns:
-       numpy array of the same shape as dst_geobox and the same dtype as src image
-    """
-    from rasterio.warp import reproject
-    import numpy as np
-
-    src_geobox = rio_geobox(src)
-    roi, scale = compute_reproject_roi(src_geobox,
-                                       dst_geobox,
-                                       padding=2,
-                                       align=64)
-
-    ovr_scale = pick_overview(scale, src.overviews(band))
-    ovr_geobox = scaled_down_geobox(src_geobox, ovr_scale)[scaled_down_roi(roi, ovr_scale)]
-
-    ovr_im = src.read(band,
-                      window=w_[roi],
-                      out_shape=ovr_geobox.shape)
-
-    dst = np.empty(dst_geobox.shape, dtype=ovr_im.dtype)
-
-    reproject(ovr_im, dst,
-              src_transform=ovr_geobox.transform,
-              src_crs=src.crs,
-              src_nodata=src.nodata,
-              dst_crs=str(dst_geobox.crs),
-              dst_transform=dst_geobox.transform,
-              dst_nodata=src.nodata,
-              resampling=resampling)
-
-    return dst
 
 def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
     """ Gets the measurement array of a band of data
@@ -109,8 +69,16 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
     destination = _make_destination(geobox.shape, no_data, dtype)
 
     for source in datasources:
-        buffer = delayed(read_with_reproject)(source, geobox, band=source.get_bandnumber(), resampling=resampling))
-        destination = delayed(fuse_func)(destination, buffer)
+        # Activate Rasterio
+        gdal_opts = get_gdal_opts()
+        creds = get_boto_credentials()
+        with rio.Env(**gdal_opts) as rio_env:
+            # set the internal rasterio environment credentials
+            if creds is not None:
+                rio_env._creds = creds
+            # Read our data
+            buffer = delayed(read_with_reproject)(source, geobox, band=source.get_bandnumber(), resampling=resampling))
+            destination = delayed(fuse_func)(destination, buffer)
 
     return da.from_delayed(destination, geobox.shape, dtype)
 
