@@ -344,19 +344,21 @@ def read_with_reproject(src,
                         dst_geobox,
                         band=1,
                         resampling=None):
-    """ Two stage reproject: scaling read then re-project.
+    """Two stage reproject: scaling read then re-project.
 
     src - opened rasterio file handle
 
     dst_geobox - GeoBox (from datacube) of the resulting image
                  crs, transform, shape
 
-    band       - Which band to read (rasterio, 1-based index)
+    band - Which band to read (rasterio, 1-based index), could also be a
+           list/tuple if multiple bands are to be read
 
     resampling - rasterio resampling enumeation or None for default NN
 
     returns:
        numpy array of the same shape as dst_geobox and the same dtype as src image
+
     """
     from rasterio.warp import reproject
     import numpy as np
@@ -367,7 +369,8 @@ def read_with_reproject(src,
                                        padding=2,
                                        align=64)
 
-    ovr_scale = pick_overview(scale, src.overviews(band))
+    overviews = src.overviews(band if isinstance(band, int) else band[0])
+    ovr_scale = pick_overview(scale, overviews)
     if ovr_scale > 1:
         ovr_geobox = scaled_down_geobox(src_geobox, ovr_scale)[scaled_down_roi(roi, ovr_scale)]
     else:
@@ -377,7 +380,7 @@ def read_with_reproject(src,
                       window=w_[roi],
                       out_shape=ovr_geobox.shape)
 
-    dst = np.empty(dst_geobox.shape, dtype=ovr_im.dtype)
+    dst = np.empty(ovr_im.shape[:-2] + dst_geobox.shape, dtype=ovr_im.dtype)
 
     reproject(ovr_im, dst,
               src_transform=ovr_geobox.transform,
