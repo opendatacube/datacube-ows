@@ -66,6 +66,8 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
     start = datetime.now()
     product = dc.index.products.get_by_name(product_name)
     print("Product: ", product_name)
+    if product is None:
+        raise Exception("Product does not exist")
     r = {
         "product_id": product.id,
 
@@ -175,12 +177,15 @@ def determine_ranges(dc):
     ranges = []
     for layer in layer_cfg:
         for product_cfg in layer["products"]:
-            ranges.append(determine_product_ranges(dc,
+            try:
+                ranges.append(determine_product_ranges(dc,
                                                    product_cfg["product_name"],
                                                    product_cfg.get("time_zone", 9),
                                                    product_cfg.get("sub_product_extractor")
                                                   )
                          )
+            except:
+                print ("Product %s does not exist in the datacube" % product_cfg["product_name"])
     return ranges
 
 
