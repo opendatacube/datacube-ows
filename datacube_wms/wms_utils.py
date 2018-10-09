@@ -30,10 +30,6 @@ RESAMPLING_METHODS = {
     'average': Resampling.average,
 }
 
-def _rasterio_resampling_method(resampling):
-    # Converts text based config to resampling method reference
-    return RESAMPLING_METHODS[resampling.lower()]
-
 def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
     #pylint: disable=too-many-locals
     p1 = geometry.point(minx, maxy, src_crs)
@@ -290,7 +286,7 @@ class GetMapParameters(GetParameters):
         for layer in layer_cfg:
             if layer["name"] eq layer_name):
                 if "resampling" in layer:
-                    self.resampling = _rasterio_resampling_method(layer["resampling"])
+                    self.resampling = RESAMPLING_METHODS[layer["resampling"].lower()]
                 break
             
 
