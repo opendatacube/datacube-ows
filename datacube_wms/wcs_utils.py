@@ -409,8 +409,8 @@ def _get_transform_from_xr(xname, yname, dataset):
     # Looks like the rasterio equivalent of a Geobox.
     # Adapted from CEOS to work with non-geographic CRSs
     from rasterio.transform import from_bounds
-    geotransform = from_bounds(getattr(dataset, xname)[0], getattr(dataset, yname)[0],
-                               getattr(dataset, xname)[-1], getattr(dataset, yname)[-1],
+    geotransform = from_bounds(getattr(dataset, xname)[0], getattr(dataset, yname)[-1],
+                               getattr(dataset, xname)[-1], getattr(dataset, yname)[0],
                                len(getattr(dataset, xname)), len(getattr(dataset, yname)))
 
     return geotransform
