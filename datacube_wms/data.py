@@ -370,7 +370,12 @@ def get_map(args):
         too_many_datasets = (params.product.max_datasets_wms > 0 and len(datasets) > params.product.max_datasets_wms)
         if not datasets:
             body = _write_empty(params.geobox)
-        elif zoomed_out or too_many_datasets:
+        elif too_many_datasets:
+            body = _write_polygon(
+                params.geobox,
+                params.geobox.extent,
+                params.product.zoom_fill)
+        elif zoomed_out:
             # Zoomed out to far to properly render data.
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None
