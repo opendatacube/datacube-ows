@@ -38,6 +38,7 @@ RUN pip3 install \
     flask-request-id-middleware \
     pytest-localserver \
     pytest-mock \
+    requests \
     && rm -rf $HOME/.cache/pip
 
 WORKDIR /code
