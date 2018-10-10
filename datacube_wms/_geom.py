@@ -268,6 +268,10 @@ def roi_shape(roi):
     return tuple(slice_dim(s) for s in roi)
 
 
+def roi_is_empty(roi):
+    return any(d <= 0 for d in roi_shape(roi))
+
+
 def pick_overview(scale, overviews):
     prev = 1
     for v in sorted(overviews):
