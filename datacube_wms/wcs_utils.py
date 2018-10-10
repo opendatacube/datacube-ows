@@ -256,10 +256,12 @@ class WCS1GetCoverageRequest():
                                        self.request_crs
                                       )
 
-        self.affine = Affine.translation(self.minx, self.miny) \
-                      * Affine.scale((self.maxx-self.minx)/self.width, (self.maxy-self.miny)/self.height)
+        xscale = (self.maxx - self.minx)/self.width
+        yscale = (self.miny - self.maxy)/self.height
+        trans_aff = Affine.translation(self.minx, self.maxy)
+        scale_aff = Affine.scale(xscale, yscale)
+        self.affine = trans_aff * scale_aff
         self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.request_crs)
-
 
 def get_coverage_data(req):
     #pylint: disable=too-many-locals, protected-access
@@ -279,7 +281,7 @@ def get_coverage_data(req):
         datasets.extend(t_datasets)
     if not datasets:
         # TODO: Return an empty coverage file with full metadata?
-        extents = dc.load(dask_chunks={}, product=req.product, geopolygon=req.geobox.extent, time=stacker._time)
+        extents = dc.load(dask_chunks={}, product=req.product_name, geopolygon=req.geobox.extent, time=stacker._time)
         svc = get_service_cfg()
         x_range = (req.minx, req.maxx)
         y_range = (req.miny, req.maxy)
@@ -369,6 +371,10 @@ def get_tiff(req, data):
     svc = get_service_cfg()
     xname = svc.published_CRSs[req.request_crsid]["horizontal_coord"]
     yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
+    nodata = 0
+    for band in data.data_vars:
+        if band in req.product.nodata_dict:
+            nodata = req.product.nodata_dict[band]
     with MemoryFile() as memfile:
         #pylint: disable=protected-access, bad-continuation
         with memfile.open(
@@ -376,17 +382,15 @@ def get_tiff(req, data):
             width=data.dims[xname],
             height=data.dims[yname],
             count=len(data.data_vars),
-            transform=_get_transform_from_xr(xname, yname, data),
+            transform=req.affine,
             crs=req.response_crsid,
+            nodata=nodata,
+            tiled=True,
+            compress="lzw",
             dtype=dtype) as dst:
 
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
-            # As of rasterio 1.0.2 the nodatavals property is not writable
-            # as suggested in the docs, use the deprecated function
-            dst._set_nodatavals(
-                [req.product.nodata_dict[band] if band in req.product.nodata_dict else 0 for band in data.data_vars]
-            )
         return memfile.read()
 
 
@@ -402,18 +406,6 @@ def get_netcdf(req, data):
 
     # And export to NetCDF
     return data.to_netcdf()
-
-
-def _get_transform_from_xr(xname, yname, dataset):
-    """Create a geotransform from an xarray dataset."""
-    # Looks like the rasterio equivalent of a Geobox.
-    # Adapted from CEOS to work with non-geographic CRSs
-    from rasterio.transform import from_bounds
-    geotransform = from_bounds(getattr(dataset, xname)[0], getattr(dataset, yname)[-1],
-                               getattr(dataset, xname)[-1], getattr(dataset, yname)[0],
-                               len(getattr(dataset, xname)), len(getattr(dataset, yname)))
-
-    return geotransform
 
 
 # pylint: disable=invalid-name
