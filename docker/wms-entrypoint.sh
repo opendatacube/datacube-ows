@@ -3,6 +3,4 @@ set -e
 
 get_wms_config.sh
 
-docker-entrypoint.sh "$@"
-
-
+export GDAL_DATA="$(gdal-config --datadir)"; docker-entrypoint.sh "$@"
