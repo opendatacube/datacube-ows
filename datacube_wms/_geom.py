@@ -363,6 +363,7 @@ def _empty_image(shape, src, band):
 
 def read_with_reproject(src,
                         dst_geobox,
+                        no_data,
                         band=1,
                         resampling=None):
     """Two stage reproject: scaling read then re-project.
@@ -405,14 +406,14 @@ def read_with_reproject(src,
                       out_shape=ovr_geobox.shape)
 
     dst = np.empty(ovr_im.shape[:-2] + dst_geobox.shape, dtype=ovr_im.dtype)
-
+    src_nodata = no_data if src.nodata is None else src.nodata
     reproject(ovr_im, dst,
               src_transform=ovr_geobox.transform,
               src_crs=src.crs,
-              src_nodata=src.nodata,
+              src_nodata=src_nodata,
               dst_crs=str(dst_geobox.crs),
               dst_transform=dst_geobox.transform,
-              dst_nodata=src.nodata,
+              dst_nodata=no_data,
               resampling=resampling)
 
     return dst
