@@ -113,6 +113,7 @@ class ProductLayerDef():
             self.bands = bands.index.values
             self.nodata_values = bands['nodata'].values
             self.nodata_dict = {a:b for a, b in zip(self.bands, self.nodata_values)}
+            self.wcs_sole_time = product_cfg.get("wcs_sole_time")
 
     @property
     def bboxes(self):

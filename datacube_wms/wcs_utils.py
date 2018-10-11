@@ -95,7 +95,9 @@ class WCS1GetCoverageRequest():
                                 locator="BBOX parameter")
 
         # Argument: TIME
-        if "time" not in args:
+        if self.product.wcs_sole_time:
+            self.times = [ parse(self.product.wcs_sole_time).date() ]
+        elif "time" not in args:
             #      CEOS treats no supplied time argument as all time.
             # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING
             if self.format["multi-time"]:
@@ -387,10 +389,15 @@ def get_tiff(req, data):
             nodata=nodata,
             tiled=True,
             compress="lzw",
+            interleave="band",
             dtype=dtype) as dst:
-
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
+                dst.set_band_description(idx, band)
+                dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
+                dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())
+                dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
+                dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
         return memfile.read()
 
 

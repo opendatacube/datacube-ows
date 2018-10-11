@@ -119,8 +119,10 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
             <lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
                 <gml:pos dimension="2">{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
                 <gml:pos dimension="2">{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+                {%  if not product.wcs_sole_time %}
                 <gml:timePosition>{{ product.ranges.start_time.isoformat() }}</gml:timePosition>
                 <gml:timePosition>{{ product.ranges.end_time.isoformat() }}</gml:timePosition>
+                {% endif %}
             </lonLatEnvelope>
         </CoverageOfferingBrief>
     {% endfor %}{% endfor %}
