@@ -199,7 +199,10 @@ layer_cfg = [
                 # Apply corrections for solar angle, for "Level 1" products.
                 # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
                 "apply_solar_corrections": False,
-
+                # If this value is set then WCS works exclusively with the configured
+                # date and advertises no time dimension in GetCapabilities.
+                # Intended mostly for WCS debugging.
+                "wcs_sole_time": "2017-01-01",
                 # Styles.
                 #
                 # See band_mapper.py
