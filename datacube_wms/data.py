@@ -129,11 +129,7 @@ class DataStacker():
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
         self._geobox = geobox
-        if resampling:
-            self._resampling = resampling
-        else:
-            self._resampling = Resampling.nearest
-
+        self._resampling = resampling if resampling is not None else Resampling.nearest
         if style:
             self._needed_bands = style.needed_bands
         elif bands:
@@ -264,7 +260,6 @@ def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetMapParameters(args)
-
     dc = get_cube()
      # Tiling.
     stacker = DataStacker(params.product, params.geobox, params.time, params.resampling, style=params.style)
