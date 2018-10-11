@@ -3,19 +3,32 @@ from __future__ import absolute_import, division, print_function
 from datetime import datetime
 from dateutil.parser import parse
 from pytz import utc
+from urllib.parse import unquote
+try:
+    from rasterio.warp import Resampling
+except ImportError:
+    from rasterio.warp import RESAMPLING as Resampling
 
 from affine import Affine
 from datacube.utils import geometry
 import math
 
 try:
-    from datacube_wms.wms_cfg_local import response_cfg
+    from datacube_wms.wms_cfg_local import response_cfg, layer_cfg
 except ImportError:
-    from datacube_wms.wms_cfg import response_cfg
+    from datacube_wms.wms_cfg import response_cfg, layer_cfg
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 from datacube_wms.ogc_exceptions import WMSException
 
+RESAMPLING_METHODS = {
+    'nearest': Resampling.nearest,
+    'cubic': Resampling.cubic,
+    'bilinear': Resampling.bilinear,
+    'cubic_spline': Resampling.cubic_spline,
+    'lanczos': Resampling.lanczos,
+    'average': Resampling.average,
+}
 
 def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
     #pylint: disable=too-many-locals
@@ -267,6 +280,15 @@ class GetMapParameters(GetParameters):
         # Zoom factor
         self.zf = zoom_factor(args, self.crs)
 
+        # Read Resampling method from config
+        self.resampling = Resampling.average
+        layer_name = unquote(self.get_raw_product(args))
+        for layer in layer_cfg:
+            if layer["name"] == layer_name:
+                if "resampling" in layer:
+                    self.resampling = RESAMPLING_METHODS[layer["resampling"].lower()]
+                break
+            
 
 class GetFeatureInfoParameters(GetParameters):
     def get_product(self, args):

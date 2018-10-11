@@ -9,6 +9,7 @@ from dask import array as da
 from affine import Affine
 import rasterio as rio
 from rasterio.io import MemoryFile
+from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
 from itertools import chain
 import re
@@ -38,6 +39,8 @@ from datacube_wms.rasterio_env import preauthenticate_s3, \
 from collections import OrderedDict
 import traceback
 
+from ._geom import read_with_reproject
+
 _LOG = logging.getLogger(__name__)
 MAX_WORKERS = cpu_count() * 2
 
@@ -45,128 +48,23 @@ MAX_WORKERS = cpu_count() * 2
 def _round(x, multiple):
     return int(multiple * round(float(x) / multiple))
 
-# Calculates the approximate output shape and transform
-# for loading data from src into geobox
-def _calculate_transform(src, geobox):
-
-    dc_crs = geometry.CRS(src.crs.to_string())
-    geobox_transform = geobox.transform
-
-    # Convert geobox transform to
-    # src's crs if needed.
-    # We allow rasterio to calculate resolution of geobox.
-    if geobox.crs != dc_crs:
-        bb = geobox.extent.boundingbox
-        geobox_transform, geobox_width, geobox_height = rio.warp.calculate_default_transform(
-            str(geobox.crs),
-            src.crs,
-            geobox.width,
-            geobox.height,
-            left=bb.left,
-            right=bb.right,
-            top=bb.top,
-            bottom=bb.bottom)
-
-    # Calculate the output shape and corresponding transform
-    # Always round up to ensure we do not miss data
-    scale_a = math.ceil(geobox_transform.a / src.transform.a)
-    scale_e = math.ceil(geobox_transform.e / src.transform.e)
-    scale = min(abs(scale_a), abs(scale_e))
-
-    c = src.transform.c
-    f = src.transform.f
-    window = None
-    if scale == 1:
-        src_w, src_s, src_e, src_n = src.bounds
-        dst_w, dst_s, dst_e, dst_n = rio.transform.array_bounds(geobox_height, geobox_width, geobox_transform)
-
-        int_w = src_w if src_w > dst_w else dst_w
-        int_e = src_e if src_e < dst_e else dst_e
-        int_s = src_s if src_s > dst_s else dst_s
-        int_n = src_n if src_n < dst_n else dst_n
-
-        window = rio.windows.from_bounds(int_w, int_s, int_e, int_n, transform=src.transform)
-        window1 = window.round_offsets(op='ceil').round_shape(op='ceil')
-        window2 = window.round_offsets(op='floor').round_shape(op='floor')
-        window = rio.windows.union([window1, window2])
-        # if window is out of bounds for source dataset need to make it in bounds
-        col_off = window.col_off if window.col_off >= 0 else 0
-        row_off  = window.row_off  if window.row_off  >= 0 else 0
-
-        col_off = window.col_off if window.col_off < src.shape[0] else src.shape[0] - 1
-        row_off = window.row_off if window.row_off < src.shape[1] else src.shape[1] - 1
-
-        width = window.width if (window.width + col_off) <= src.shape[0] else src.shape[0] - col_off
-        height = window.height if (window.height + row_off) <= src.shape[1] else src.shape[1] - row_off
-
-        window = rio.windows.Window(col_off, row_off, width, height)
-
-        _LOG.debug(src_w, src_s, src_e, src_n, dst_w, dst_s, dst_e, dst_n, str(window) + str(window1) + str(window2))
-        c = src.transform.c + (window.col_off * src.transform.a)
-        f = src.transform.f + (window.row_off * src.transform.e)
-        out_shape = src.shape
-    else:
-        out_shape = (math.ceil(src.shape[0] / abs(scale_a)), math.ceil(src.shape[1] / abs(scale_e)))
-
-    out_shape_affine = Affine(
-        (src.transform.a * scale),
-        0,
-        c,
-        0,
-        (src.transform.e * scale),
-        f)
-    return (out_shape, out_shape_affine, window)
-
-
-def _calculate_and_load(filename, geobox, band_index):
-    _LOG.debug(filename)
-    with rio.open(filename, sharing=False) as src:
-        out_shape, out_shape_affine, window = _calculate_transform(src, geobox)
-        _LOG.debug(str(window))
-        if window is not None and window.col_off >= 0 and window.row_off >= 0 and window.width > 0 and window.height > 0:
-            data = src.read(indexes=band_index, window=window)
-        elif out_shape[0] > 0 and out_shape[1] > 0:
-            data = src.read(out_shape=out_shape, indexes=band_index)
-        else:
-            data = src.read(indexes=band_index)
-            out_shape_affine = src.transform
-    return (out_shape_affine, src.crs, data)
-
-
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
 
-
-def read_from_source(source, geobox, no_data, dtype):
+def _read_file(source, geobox, band, no_data, resampling):
+    # Activate Rasterio
     gdal_opts = get_gdal_opts()
     creds = get_boto_credentials()
     with rio.Env(**gdal_opts) as rio_env:
         # set the internal rasterio environment credentials
         if creds is not None:
             rio_env._creds = creds
+        # Read our data
+        with rio.open(source.filename, sharing=False) as src:
+            dst = read_with_reproject(src, geobox, no_data=no_data, band=source.get_bandnumber(), resampling=resampling)
+    return dst
 
-        try:
-            buffer = numpy.full(geobox.shape, no_data, dtype=dtype)
-
-            src_transform, src_crs, data = _calculate_and_load(source.filename, geobox, source.get_bandnumber())
-            rio.warp.reproject(
-                data,
-                buffer,
-                init_dest_nodata=False,
-                src_nodata=no_data,
-                src_transform=src_transform,
-                src_crs=src_crs,
-                dst_transform=geobox.transform,
-                dst_crs=str(geobox.crs),
-                resampling=rio.warp.Resampling.nearest)
-        except Exception as e:
-            _LOG.error("Error getting measurement! %s %s", e, traceback.format_exc())
-            raise e
-
-    return buffer
-
-
-def _get_measurement(datasources, geobox, no_data, dtype, fuse_func=None):
+def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
     """ Gets the measurement array of a band of data
     """
     # pylint: disable=broad-except, protected-access
@@ -184,7 +82,7 @@ def _get_measurement(datasources, geobox, no_data, dtype, fuse_func=None):
     destination = _make_destination(geobox.shape, no_data, dtype)
 
     for source in datasources:
-        buffer = delayed(read_from_source)(source, geobox, no_data, dtype)
+        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), no_data=no_data, resampling=resampling)
         destination = delayed(fuse_func)(destination, buffer)
 
     return da.from_delayed(destination, geobox.shape, dtype)
@@ -194,7 +92,7 @@ def _get_measurement(datasources, geobox, no_data, dtype, fuse_func=None):
 # If use_overviews is true
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
-def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
+def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
     #pylint: disable=too-many-locals, dict-keys-not-iterating
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
@@ -211,6 +109,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
             datasources = sorted(datasources, key=lambda x: x._dataset.id)
             data = _get_measurement(datasources,
                                     geobox,
+                                    resampling,
                                     measurement['nodata'],
                                     measurement['dtype']
                                     )
@@ -226,10 +125,15 @@ def read_data(datasets, measurements, geobox, use_overviews=False, **kwargs):
 
 
 class DataStacker():
-    def __init__(self, product, geobox, time, style=None, bands=None, **kwargs):
+    def __init__(self, product, geobox, time, resampling=None, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
         self._geobox = geobox
+        if resampling:
+            self._resampling = resampling
+        else:
+            self._resampling = Resampling.average
+
         if style:
             self._needed_bands = style.needed_bands
         elif bands:
@@ -299,7 +203,7 @@ class DataStacker():
                 for i in range(0, len(datasets)):
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     ds = datasets[i]
-                    d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
+                    d = read_data(ds, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -316,7 +220,7 @@ class DataStacker():
                     holder = numpy.empty(shape=tuple(), dtype=object)
                     holder[()] = datasets
                     sources = xarray.DataArray(holder)
-                data = read_data(datasets, measurements, self._geobox, use_overviews, **kwargs)
+                data = read_data(datasets, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
@@ -330,7 +234,7 @@ class DataStacker():
         for i in range(0, len(datasets)):
             holder = numpy.empty(shape=tuple(), dtype=object)
             ds = datasets[i]
-            d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
+            d = read_data(ds, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -363,7 +267,7 @@ def get_map(args):
 
     dc = get_cube()
      # Tiling.
-    stacker = DataStacker(params.product, params.geobox, params.time, style=params.style)
+    stacker = DataStacker(params.product, params.geobox, params.time, params.resampling, style=params.style)
     try:
         datasets = stacker.datasets(dc.index)
         zoomed_out = params.zf < params.product.min_zoom
