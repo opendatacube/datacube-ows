@@ -281,7 +281,7 @@ class GetMapParameters(GetParameters):
         self.zf = zoom_factor(args, self.crs)
 
         # Read Resampling method from config
-        self.resampling = Resampling.average
+        self.resampling = Resampling.nearest
         layer_name = unquote(self.get_raw_product(args))
         for layer in layer_cfg:
             if layer["name"] == layer_name:
