@@ -343,7 +343,7 @@ def rio_geobox(src):
                   src.transform,
                   rio_crs_to_odc(src.crs))
 
-def _empty_image(shape, src, band):
+def _empty_image(shape, src, band, no_data=None):
     import numpy as np
     if isinstance(band, int):
         b0 = band - 1
@@ -351,7 +351,7 @@ def _empty_image(shape, src, band):
         b0 = band[0] - 1
         shape = (len(band), *shape)
     dtype = np.dtype(src.dtypes[b0])
-    nodata = src.nodatavals[b0]
+    nodata = no_data if no_data is not None else src.nodatavals[b0]
     if nodata is None:
         nodata = np.nan if dtype.char == 'f' else 0
     if nodata == 0:
@@ -393,7 +393,7 @@ def read_with_reproject(src,
 
     band0 = band if isinstance(band, int) else band[0]
     if roi_is_empty(roi):
-        return _empty_image(dst_geobox.shape, src, band)
+        return _empty_image(dst_geobox.shape, src, band, no_data)
     overviews = src.overviews(band0)
     ovr_scale = pick_overview(scale, overviews)
     if ovr_scale > 1:
@@ -406,7 +406,7 @@ def read_with_reproject(src,
                       out_shape=ovr_geobox.shape)
 
     dst = np.empty(ovr_im.shape[:-2] + dst_geobox.shape, dtype=ovr_im.dtype)
-    src_nodata = no_data if src.nodata is None else src.nodata
+    src_nodata = no_data if src.nodata is None else src.nodatavals[band0 - 1]
     reproject(ovr_im, dst,
               src_transform=ovr_geobox.transform,
               src_crs=src.crs,
