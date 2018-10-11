@@ -132,7 +132,7 @@ class DataStacker():
         if resampling:
             self._resampling = resampling
         else:
-            self._resampling = Resampling.average
+            self._resampling = Resampling.nearest
 
         if style:
             self._needed_bands = style.needed_bands
