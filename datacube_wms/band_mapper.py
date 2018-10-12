@@ -148,6 +148,9 @@ class RGBMappedStyleDef(StyleDefBase):
                 patch = mpatches.Patch(color=rgb.hex, label=label)
                 patches.append(patch)
         cfg = self.legend_cfg
+        plt.rcdefaults()
+        if (combined_cfg.get("rcParams", None) is not None):
+            plt.rcParams.update(combined_cfg.get("rcParams"))
         figure = plt.figure(figsize=(cfg.get("width", 3),
                                      cfg.get("height", 1.25)))
         plt.axis('off')
@@ -421,6 +424,12 @@ class RgbaColorRampDef(StyleDefBase):
         # Also create tick labels based on configuration
         # ticks are also normalized between 0 - 1.0
         # so they are position correctly on the colorbar
+
+        # TODO logic for generating legends should be rationalized
+        # perhaps simply forcing the color ramp to define
+        # what values should be part of the legend
+        # or defining the legend completely in a seperate
+        # object
         def create_cdict_ticks(components, values, cfg):
             start_index = numpy.searchsorted(components['alpha'], 1.0)
             start = values[start_index]
@@ -430,18 +439,26 @@ class RgbaColorRampDef(StyleDefBase):
             tick_mod = cfg.get("major_ticks", 1)
             tick_scale = cfg.get("scale_by", 1)
             places = cfg.get("radix_point", 1)
+            legend_values = cfg.get("legend_values", [])
             ramp = cfg.get("ramp")
 
             bands = defaultdict(list)
             for index, v in enumerate(values):
                 if v < start:
                     continue
-                if index == start_index and v != 0.0:
+                specified_legend_range = (len(legend_values) > 0 and v in legend_values)
+                if not specified_legend_range and index == start_index:
                     v = 0
+                mod_close = isclose((v * tick_scale) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
+                mod_equal = v % tick_mod == 0
+                make_label = specified_legend_range or \
+                    (len(legend_values) == 0 and (mod_close or mod_equal))
+
                 # ensure value is normalized
                 normalized = v / stop
-                # Apply label is value should be displayed
-                if (v % tick_mod) or isclose((v * tick_scale) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8):
+                if index == start_index and v != 0.0:
+                    normalized = 0
+                if make_label:
                     label = v * tick_scale
                     label = round(label, places) if places > 0 else int(label)
                     # Apply any custom labelling
@@ -469,6 +486,9 @@ class RgbaColorRampDef(StyleDefBase):
         combined_cfg["ramp"] = self.color_ramp
         cdict, ticks = create_cdict_ticks(self.components, self.values, combined_cfg)
 
+        plt.rcdefaults()
+        if (combined_cfg.get("rcParams", None) is not None):
+            plt.rcParams.update(combined_cfg.get("rcParams"))
         fig = plt.figure(figsize=(combined_cfg.get("width", 4),
                                   combined_cfg.get("height", 1.25)))
         ax_pos = combined_cfg.get("axes_position", [0.05, 0.5, 0.9, 0.15])
