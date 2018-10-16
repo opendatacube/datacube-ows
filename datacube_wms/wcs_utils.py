@@ -100,10 +100,7 @@ class WCS1GetCoverageRequest():
         elif "time" not in args:
             #      CEOS treats no supplied time argument as all time.
             # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING
-            if self.format["multi-time"]:
-                self.times = self.product.ranges["times"]
-            else:
-                self.times = [self.product.ranges["times"][-1]]
+            self.times = [self.product.ranges["times"][-1]]
         else:
             # TODO: the min/max/res format option?
             # It's a bit underspeced. I'm not sure what the "res" would look like.
@@ -336,7 +333,7 @@ def get_coverage_data(req):
                             "Please reduce the bounds of your request and try again."
                             "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, len(datasets)))
 
-    if req.format["multi-time"]:
+    if req.format["multi-time"] and len(req.times) > 1:
         # Group by solar day
         group_by = datacube.api.query.query_group_by(time=req.times, group_by='solar_day')
         datasets = dc.group_datasets(datasets, group_by)
