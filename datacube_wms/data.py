@@ -418,17 +418,25 @@ def get_s3_browser_uris(datasets):
     return formatted
 
 
+def geobox_is_point(geobox):
+    pts = geobox.extent._geom.GetGeometryRef(0).GetPoints()
+    return pts.count(pts[0]) == len(pts)
+
 def feature_info(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetFeatureInfoParameters(args)
+    feature_json = {}
+
+    geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
     # shrink geobox to point
     # Prepare to extract feature info
-    geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
-    geo_point_geom = bbox_to_geom(geo_point.boundingbox, geo_point.crs)
-    geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(geo_point_geom, params.geobox.resolution, crs=params.geobox.crs)
+    if geobox_is_point(params.geobox):
+        geo_point_geobox = params.geobox
+    else:
+        geo_point_geom = bbox_to_geom(geo_point.boundingbox, geo_point.crs)
+        geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(geo_point_geom, params.geobox.resolution, crs=params.geobox.crs)
     stacker = DataStacker(params.product, geo_point_geobox, params.time)
-    feature_json = {}
 
     # --- Begin code section requiring datacube.
     service_cfg = get_service_cfg()
