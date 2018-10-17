@@ -503,7 +503,7 @@ class RgbaColorRampDef(StyleDefBase):
             color_bar.set_ticks(list(ticks.keys()))
             color_bar.set_ticklabels([str(l) for l in ticks.values()])
 
-        title = self.title
+        title = self.legend_cfg.get("title", self.title)
         unit = self.legend_cfg.get("units", "unitless")
         title = title + "(" + unit + ")"
 
