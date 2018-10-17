@@ -422,16 +422,18 @@ def feature_info(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetFeatureInfoParameters(args)
-
+    # shrink geobox to point
     # Prepare to extract feature info
-    stacker = DataStacker(params.product, params.geobox, params.time)
+    geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
+    geo_point_geom = bbox_to_geom(geo_point.boundingbox, geo_point.crs)
+    geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(geo_point_geom, params.geobox.resolution, crs=params.geobox.crs)
+    stacker = DataStacker(params.product, geo_point_geobox, params.time)
     feature_json = {}
 
     # --- Begin code section requiring datacube.
     service_cfg = get_service_cfg()
     dc = get_cube()
     try:
-        geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
         datasets = stacker.datasets(dc.index,
                                     all_time=True,
                                     point=geo_point
@@ -442,12 +444,14 @@ def feature_info(args):
                                        point=geo_point
                                       )
 
+        # Taking the data as a single point so our indexes into the data should be 0,0
         h_coord = service_cfg.published_CRSs[params.crsid]["horizontal_coord"]
         v_coord = service_cfg.published_CRSs[params.crsid]["vertical_coord"]
         isel_kwargs = {
-            h_coord: [params.i],
-            v_coord: [params.j]
+            h_coord: 0,
+            v_coord: 0
         }
+
         if not datasets:
             pass
         else:
@@ -459,7 +463,6 @@ def feature_info(args):
                 pixel_ds = None
                 if idx_date == params.time and "lon" not in feature_json:
                     data = stacker.data([d], skip_corrections=True)
-
                     # Use i,j image coordinates to extract data pixel from dataset, and
                     # convert to lat/long geographic coordinates
                     if service_cfg.published_CRSs[params.crsid]["geographic"]:
@@ -474,8 +477,9 @@ def feature_info(args):
                         data_x = getattr(data, h_coord)
                         data_y = getattr(data, v_coord)
 
-                        x = data_x[params.i].item()
-                        y = data_y[params.j].item()
+
+                        x = data_x[isel_kwargs[h_coord]].item()
+                        y = data_y[isel_kwargs[v_coord]].item()
                         pt = geometry.point(x, y, params.crs)
 
                         # Project to EPSG:4326
