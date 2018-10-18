@@ -180,6 +180,9 @@ layer_cfg = [
                 # Determines what portions of dataset is potentially meaningful data.
                 # Multiple extent mask functions are supported - see USGS Level 1 example below.
                 "extent_mask_func": lambda data, band: (data[band] != data[band].attrs['nodata']),
+                # Fuse func
+                # Determines how multiple dataset arrays are compressed into a single time array
+                "fuse_func": "datacube_wms.wms_utils.wofls_fuser",
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
                 "ignore_info_flags": [],
