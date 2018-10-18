@@ -12,6 +12,7 @@ except ImportError:
 from affine import Affine
 from datacube.utils import geometry
 import math
+import numpy
 
 try:
     from datacube_wms.wms_cfg_local import response_cfg, layer_cfg
@@ -76,6 +77,7 @@ def _get_geobox(args, src_crs, dst_crs=None):
     out_crs = src_crs if dst_crs is None else dst_crs
     affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
     return geometry.GeoBox(width, height, affine, out_crs)
+
 
 def _get_polygon(args, crs):
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
@@ -327,6 +329,7 @@ def declination_rad(dt):
     day_count = timedel.days + timedel.seconds/(60.0*60.0*24.0)
     return -1.0 * math.radians(23.44) * math.cos(2 * math.pi / 365 * (day_count + 10))
 
+
 def cosine_of_solar_zenith(lat, lon, utc_dt):
     # Estimate cosine of solar zenith angle
     # (angle between sun and local zenith) at requested latitude, longitude and datetime.
@@ -340,6 +343,7 @@ def cosine_of_solar_zenith(lat, lon, utc_dt):
     result = math.sin(latitude_rad) * math.sin(solar_decl_rad) \
              + math.cos(latitude_rad) * math.cos(solar_decl_rad) * math.cos(local_hour_angle_rad)
     return result
+
 
 def solar_correct_data(data, dataset):
     # Apply solar angle correction to the data for a dataset.
@@ -356,3 +360,8 @@ def solar_correct_data(data, dataset):
 
     return data / csz
 
+
+def wofls_fuser(dest, src):
+    where_nodata = (src & 1) == 0
+    numpy.copyto(dest, src, where=where_nodata)
+    return dest
