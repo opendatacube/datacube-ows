@@ -12,6 +12,7 @@ except ImportError:
 from datacube_wms.product_ranges import get_ranges, get_sub_ranges
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.band_mapper import StyleDef
+from datacube_wms.ogc_utils import get_function
 
 
 def accum_min(a, b):
@@ -86,7 +87,7 @@ class ProductLayerDef():
             self.extent_mask_func = product_cfg["extent_mask_func"]
         except TypeError:
             self.extent_mask_func = [product_cfg["extent_mask_func"]]
-        self.fuse_func = product_cfg.get("fuse_func", None)
+        self.fuse_func = get_function(product_cfg.get("fuse_func", None))
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
 
         # For WCS
@@ -237,10 +238,7 @@ class ServiceCfg():
                         "multi-time": fmt["multi-time"],
                         "name": fmt_name,
                     }
-                    rpath = fmt["renderer"]
-                    mod, func = rpath.rsplit(".", 1)
-                    _tmp = __import__(mod, globals(), locals(), [func], 0)
-                    self.wcs_formats[fmt_name]["renderer"] = getattr(_tmp, func)
+                    self.wcs_formats[fmt_name]["renderer"] = get_function(fmt["renderer"])
                 if not self.wcs_formats:
                     raise Exception("Must configure at least one wcs format to support WCS.")
 
