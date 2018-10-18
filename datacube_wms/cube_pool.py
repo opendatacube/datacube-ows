@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+from contextlib import contextmanager
 from datacube import Datacube
 from threading import Lock
 
@@ -58,3 +59,12 @@ def release_cube(cube, app="wms"):
 def pool_size(app="wms"):
     pool = CubePool(app=app)
     return len(pool)
+
+
+@contextmanager
+def cube(app="wms"):
+    dc = get_cube(app)
+    try:
+        yield dc
+    finally:
+        release_cube(dc, app)
