@@ -420,6 +420,41 @@ def get_s3_browser_uris(datasets):
     return formatted
 
 
+def _make_band_dict(pixel_dataset, band_list):
+    band_dict = {}
+    for band in band_list:
+        ret_val = band_val = pixel_dataset[band].item()
+        if band_val == pixel_dataset[band].nodata:
+            band_dict[band] = "n/a"
+        else:
+            if 'flags_definition' in pixel_dataset[band].attrs:
+                flag_def = pixel_dataset[band].attrs['flags_definition']
+                flag_dict = mask_to_dict(flag_def, band_val)
+                ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
+            band_dict[band] = ret_val
+    return band_dict
+
+
+def _make_derived_band_dict(pixel_dataset, style_index):
+    """Creates a dict of values for bands derived by styles.
+    This only works for styles with an `index_function` defined.
+
+    :param xarray.Dataset pixel_dataset: A 1x1 pixel dataset containing band arrays
+    :param dict(str, StyleCfg) style_index: dict of style configuration dicts
+    :return: dict of style names to derived value
+    """
+    derived_band_dict = {}
+    for style_name, style in style_index.items():
+        if not hasattr(style, 'index_function') or style.index_function is None:
+            continue
+
+        if any(pixel_dataset[band] == pixel_dataset[band].nodata for band in style.needed_bands):
+            continue
+
+        derived_band_dict[style_name] = style.index_function(pixel_dataset).item()
+    return derived_band_dict
+
+
 def geobox_is_point(geobox):
     pts = geobox.extent._geom.GetGeometryRef(0).GetPoints()
     return pts.count(pts[0]) == len(pts)
@@ -505,33 +540,11 @@ def feature_info(args):
                     # Get accurate timestamp from dataset
                     feature_json["time"] = d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
-                    feature_json["bands"] = {}
-                    # Collect raw band values for pixel
-                    for band in stacker.needed_bands():
-                        ret_val = band_val = pixel_ds[band].item()
-                        if band_val == pixel_ds[band].nodata:
-                            feature_json["bands"][band] = "n/a"
-                        else:
-                            if hasattr(pixel_ds[band], 'flags_definition'):
-                                flag_def = pixel_ds[band].flags_definition
-                                flag_dict = mask_to_dict(flag_def, band_val)
-                                ret_val = [flag_def[k]['description'] for k in filter(flag_dict.get, flag_dict)]
-                            feature_json["bands"][band] = ret_val
-
-                    for k, v in filter(lambda kv: hasattr(kv[1], 'index_function'), params.product.style_index.items()):
-                        if v.index_function is None:
-                            continue
-
-                        vals_nodata = [pixel_ds[b] == pixel_ds[b].nodata for b in v.needed_bands]
-                        if any(vals_nodata):
-                            continue
-
-                        value = v.index_function(pixel_ds).item()
-                        try:
-                            feature_json["band_derived"][k] = value
-                        except KeyError:
-                            feature_json["band_derived"] = {}
-                            feature_json["band_derived"][k] = value
+                    # Collect raw band values for pixel and derived bands from styles
+                    feature_json["bands"] = _make_band_dict(pixel_ds, stacker.needed_bands())
+                    derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
+                    if derived_band_dict:
+                        feature_json["band_derived"] = derived_band_dict
 
                 if params.product.band_drill:
                     if pixel_ds is None:
