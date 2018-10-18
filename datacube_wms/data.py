@@ -22,8 +22,8 @@ from datacube_wms.cube_pool import get_cube, release_cube
 
 from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
-        bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
-        solar_correct_data
+    bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
+    solar_correct_data
 from datacube_wms.ogc_utils import resp_headers
 
 import logging
@@ -48,8 +48,10 @@ MAX_WORKERS = cpu_count() * 2
 def _round(x, multiple):
     return int(multiple * round(float(x) / multiple))
 
+
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
+
 
 def _read_file(source, geobox, band, no_data, resampling):
     # Activate Rasterio
@@ -63,6 +65,7 @@ def _read_file(source, geobox, band, no_data, resampling):
         with rio.open(source.filename, sharing=False) as src:
             dst = read_with_reproject(src, geobox, no_data=no_data, band=source.get_bandnumber(), resampling=resampling)
     return dst
+
 
 def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
     """ Gets the measurement array of a band of data
@@ -82,7 +85,8 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
     destination = _make_destination(geobox.shape, no_data, dtype)
 
     for source in datasources:
-        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), no_data=no_data, resampling=resampling)
+        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), no_data=no_data,
+                                     resampling=resampling)
         destination = delayed(fuse_func)(destination, buffer)
 
     return da.from_delayed(destination, geobox.shape, dtype)
@@ -93,7 +97,7 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
-    #pylint: disable=too-many-locals, dict-keys-not-iterating
+    # pylint: disable=too-many-locals, dict-keys-not-iterating
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
     holder = numpy.empty(shape=tuple(), dtype=object)
@@ -173,16 +177,13 @@ class DataStacker():
         _LOG.debug("query stop %s", datetime.now().time())
 
         if point:
-            # Interested in a single point (i.e. GetFeatureInfo)
-            def filt_func(dataset):
-                # Cleanup Note. Previously by_bounds was used for PQ data
-                return self.point_in_dataset_by_extent(point, dataset)
-            return list(filter(filt_func, iter(datasets)))
+            # Cleanup Note. Previously by_bounds was used for PQ data
+            datasets = [dataset for dataset in datasets if self.point_in_dataset_by_extent(point, dataset)]
 
         return datasets
 
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
-        #pylint: disable=too-many-locals, consider-using-enumerate
+        # pylint: disable=too-many-locals, consider-using-enumerate
         if mask:
             prod = self._product.pq_product
             measurements = [prod.measurements[self._product.pq_band].copy()]
@@ -219,7 +220,7 @@ class DataStacker():
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
-        #pylint: disable=too-many-locals, too-many-branches
+        # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         merged = None
         if mask:
@@ -250,8 +251,10 @@ class DataStacker():
                 merged[band].attrs = d[band].attrs
         return merged
 
+
 def bbox_to_geom(bbox, crs):
     return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
+
 
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
@@ -299,7 +302,7 @@ def get_map(args):
                     pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
                     pq_data = xarray.Dataset({params.product.pq_band: pq_band_data},
                                              coords=data[params.product.pq_band].coords
-                                            )
+                                             )
                     flag_def = data[params.product.pq_band].flags_definition
                     pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
                 else:
@@ -380,9 +383,10 @@ def _write_polygon(geobox, polygon, zoom_fill):
         else:
             raise Exception("Unexpected extent/geobox polygon geometry type: %s" % polygon.type)
         for polygon_coords in coordinates_list:
-            pixel_coords = [ ~geobox.transform * coords for coords in polygon_coords[0]]
-            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords], shape=[geobox.width, geobox.height])
-            data[rs,cs] = 1
+            pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
+            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords],
+                                   shape=[geobox.width, geobox.height])
+            data[rs, cs] = 1
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -402,7 +406,7 @@ def get_s3_browser_uris(datasets):
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
-    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)ARD-METADATA.yaml")
+    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-]+.yaml")
 
     # convert to browsable link
     def convert(uri):
@@ -558,13 +562,13 @@ def feature_info(args):
                         else:
                             drill_section[band] = pixel_ds[band].item()
                     drill[idx_date.strftime("%Y-%m-%d")] = drill_section
+
             if drill:
                 feature_json["time_drill"] = drill
                 feature_json["datasets_read"] = len(datasets)
+
             my_flags = 0
-            pqdi = -1
             for pqd in pq_datasets:
-                pqdi += 1
                 idx_date = (pqd.center_time + timedelta(hours=params.product.time_zone)).date()
                 if idx_date == params.time:
                     pq_data = stacker.data([pqd], mask=True)
@@ -591,9 +595,7 @@ def feature_info(args):
                             val = values['0']
                         feature_json["flags"][mk] = val
 
-            lads = list(available_dates)
-            lads.sort()
-            feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in lads]
+            feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets))
         release_cube(dc)
     except Exception as e:
