@@ -10,7 +10,7 @@ except ImportError:
     from datacube_wms.wms_cfg import service_cfg
 
 from datacube_wms.product_ranges import get_ranges, get_sub_ranges
-from datacube_wms.cube_pool import get_cube, release_cube
+from datacube_wms.cube_pool import cube
 from datacube_wms.band_mapper import StyleDef
 
 
@@ -133,6 +133,7 @@ class ProductLayerDef():
             for crs_id, bbox in self.ranges["bboxes"].items()
         }
 
+
 class PlatformLayerDef():
     def __init__(self, platform_cfg, prod_idx, dc=None):
         self.name = platform_cfg["name"]
@@ -161,12 +162,11 @@ class LayerDefs():
             self.platforms = []
             self.platform_index = {}
             self.product_index = {}
-            dc = get_cube()
-            for platform_cfg in platforms_cfg:
-                platform = PlatformLayerDef(platform_cfg, self.product_index, dc=dc)
-                self.platforms.append(platform)
-                self.platform_index[platform.name] = platform
-            release_cube(dc)
+            with cube() as dc:
+                for platform_cfg in platforms_cfg:
+                    platform = PlatformLayerDef(platform_cfg, self.product_index, dc=dc)
+                    self.platforms.append(platform)
+                    self.platform_index[platform.name] = platform
 
     def __iter__(self):
         for p in self.platforms:
@@ -181,6 +181,7 @@ class LayerDefs():
 
 def get_layers(refresh=False):
     return LayerDefs(layer_cfg, refresh)
+
 
 class ServiceCfg():
     #pylint: disable=invalid-name, too-many-instance-attributes, too-many-branches
@@ -263,7 +264,6 @@ class ServiceCfg():
             self.fees = srv_cfg.get("fees", "")
             self.access_constraints = srv_cfg.get("access_constraints", "")
             self.preauthenticate_s3 = srv_cfg.get("preauthenticate_s3", False)
-
 
     def __getitem__(self, name):
         return getattr(self, name)

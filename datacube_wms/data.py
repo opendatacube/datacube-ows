@@ -18,7 +18,7 @@ import datacube
 from datacube.utils import geometry
 from datacube.storage.masking import mask_to_dict
 
-from datacube_wms.cube_pool import get_cube, release_cube
+from datacube_wms.cube_pool import cube
 
 from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
@@ -260,10 +260,10 @@ def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetMapParameters(args)
-    dc = get_cube()
-     # Tiling.
-    stacker = DataStacker(params.product, params.geobox, params.time, params.resampling, style=params.style)
-    try:
+
+    with cube() as dc:
+        # Tiling.
+        stacker = DataStacker(params.product, params.geobox, params.time, params.resampling, style=params.style)
         datasets = stacker.datasets(dc.index)
         zoomed_out = params.zf < params.product.min_zoom
         too_many_datasets = (params.product.max_datasets_wms > 0 and len(datasets) > params.product.max_datasets_wms)
@@ -326,10 +326,7 @@ def get_map(args):
                 body = _write_png(data, pq_data, params.style, extent_mask)
             else:
                 body = _write_empty(params.geobox)
-        release_cube(dc)
-    except Exception as e:
-        release_cube(dc)
-        raise e
+
     return body, 200, resp_headers({"Content-Type": "image/png"})
 
 
@@ -440,17 +437,9 @@ def feature_info(args):
 
     # --- Begin code section requiring datacube.
     service_cfg = get_service_cfg()
-    dc = get_cube()
-    try:
-        datasets = stacker.datasets(dc.index,
-                                    all_time=True,
-                                    point=geo_point
-                                   )
-        pq_datasets = stacker.datasets(dc.index,
-                                       mask=True,
-                                       all_time=False,
-                                       point=geo_point
-                                      )
+    with cube() as dc:
+        datasets = stacker.datasets(dc.index, all_time=True, point=geo_point)
+        pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
 
         # Taking the data as a single point so our indexes into the data should be 0,0
         h_coord = service_cfg.published_CRSs[params.crsid]["horizontal_coord"]
@@ -580,10 +569,6 @@ def feature_info(args):
             lads.sort()
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in lads]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets))
-        release_cube(dc)
-    except Exception as e:
-        release_cube(dc)
-        raise e
     # --- End code section requiring datacube.
 
     result = {
