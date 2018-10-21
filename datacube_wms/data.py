@@ -22,8 +22,8 @@ from datacube_wms.cube_pool import cube
 
 from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
-        bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
-        solar_correct_data
+    bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
+    solar_correct_data
 from datacube_wms.ogc_utils import resp_headers
 
 import logging
@@ -48,8 +48,10 @@ MAX_WORKERS = cpu_count() * 2
 def _round(x, multiple):
     return int(multiple * round(float(x) / multiple))
 
+
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
+
 
 def _read_file(source, geobox, band, no_data, resampling):
     # Activate Rasterio
@@ -63,6 +65,7 @@ def _read_file(source, geobox, band, no_data, resampling):
         with rio.open(source.filename, sharing=False) as src:
             dst = read_with_reproject(src, geobox, no_data=no_data, band=source.get_bandnumber(), resampling=resampling)
     return dst
+
 
 def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
     """ Gets the measurement array of a band of data
@@ -82,18 +85,19 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
     destination = _make_destination(geobox.shape, no_data, dtype)
 
     for source in datasources:
-        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), no_data=no_data, resampling=resampling)
+        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), no_data=no_data,
+                                     resampling=resampling)
         destination = delayed(fuse_func)(destination, buffer)
 
     return da.from_delayed(destination, geobox.shape, dtype)
 
 
-# Read data for given datasets and mesaurements per the output_geobox
+# Read data for given datasets and measurements per the output_geobox
 # If use_overviews is true
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
-    #pylint: disable=too-many-locals, dict-keys-not-iterating
+    # pylint: disable=too-many-locals, dict-keys-not-iterating
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
     holder = numpy.empty(shape=tuple(), dtype=object)
@@ -111,7 +115,8 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
                                     geobox,
                                     resampling,
                                     measurement['nodata'],
-                                    measurement['dtype']
+                                    measurement['dtype'],
+                                    fuse_func=kwargs.get('fuse_func', None),
                                     )
             coords = OrderedDict((dim, sources.coords[dim]) for dim in sources.dims)
             dims = tuple(coords.keys()) + tuple(geobox.dimensions)
@@ -172,16 +177,13 @@ class DataStacker():
         _LOG.debug("query stop %s", datetime.now().time())
 
         if point:
-            # Interested in a single point (i.e. GetFeatureInfo)
-            def filt_func(dataset):
-                # Cleanup Note. Previously by_bounds was used for PQ data
-                return self.point_in_dataset_by_extent(point, dataset)
-            return list(filter(filt_func, iter(datasets)))
+            # Cleanup Note. Previously by_bounds was used for PQ data
+            datasets = [dataset for dataset in datasets if self.point_in_dataset_by_extent(point, dataset)]
 
         return datasets
 
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
-        #pylint: disable=too-many-locals, consider-using-enumerate
+        # pylint: disable=too-many-locals, consider-using-enumerate
         if mask:
             prod = self._product.pq_product
             measurements = [prod.measurements[self._product.pq_band].copy()]
@@ -196,10 +198,8 @@ class DataStacker():
                 # Merge performed already by dataset extent, but we need to
                 # process the data for the datasets individually to do solar correction.
                 merged = None
-                for i in range(0, len(datasets)):
-                    holder = numpy.empty(shape=tuple(), dtype=object)
-                    ds = datasets[i]
-                    d = read_data(ds, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
+                for ds in datasets:
+                    d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -220,17 +220,15 @@ class DataStacker():
                 return data
 
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
-        #pylint: disable=too-many-locals, too-many-branches, consider-using-enumerate
+        # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         merged = None
         if mask:
             bands = [self._product.pq_band]
         else:
             bands = self.needed_bands()
-        for i in range(0, len(datasets)):
-            holder = numpy.empty(shape=tuple(), dtype=object)
-            ds = datasets[i]
-            d = read_data(ds, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
+        for ds in datasets:
+            d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -253,8 +251,10 @@ class DataStacker():
                 merged[band].attrs = d[band].attrs
         return merged
 
+
 def bbox_to_geom(bbox, crs):
     return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
+
 
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
@@ -292,14 +292,17 @@ def get_map(args):
             body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
         else:
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
-            data = stacker.data(datasets, manual_merge=params.product.data_manual_merge, use_overviews=True)
+            data = stacker.data(datasets,
+                                manual_merge=params.product.data_manual_merge,
+                                use_overviews=True,
+                                fuse_func=params.product.fuse_func)
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             if params.style.masks:
                 if params.product.pq_name == params.product.name:
                     pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
                     pq_data = xarray.Dataset({params.product.pq_band: pq_band_data},
                                              coords=data[params.product.pq_band].coords
-                                            )
+                                             )
                     flag_def = data[params.product.pq_band].flags_definition
                     pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
                 else:
@@ -308,7 +311,8 @@ def get_map(args):
                         pq_data = stacker.data(pq_datasets,
                                                mask=True,
                                                manual_merge=params.product.pq_manual_merge,
-                                               use_overviews=True)
+                                               use_overviews=True,
+                                               fuse_func=params.product.fuse_func)
                     else:
                         pq_data = None
             else:
@@ -376,9 +380,10 @@ def _write_polygon(geobox, polygon, zoom_fill):
         else:
             raise Exception("Unexpected extent/geobox polygon geometry type: %s" % polygon.type)
         for polygon_coords in coordinates_list:
-            pixel_coords = [ ~geobox.transform * coords for coords in polygon_coords[0]]
-            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords], shape=[geobox.width, geobox.height])
-            data[rs,cs] = 1
+            pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
+            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords],
+                                   shape=[geobox.width, geobox.height])
+            data[rs, cs] = 1
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -398,9 +403,10 @@ def get_s3_browser_uris(datasets):
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
+    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-]+.yaml")
+
     # convert to browsable link
     def convert(uri):
-        regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-]+.yaml")
         uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
         result = regex.match(uri)
         if result is not None:
@@ -413,6 +419,41 @@ def get_s3_browser_uris(datasets):
     formatted = [convert(uri) for uri in unique_uris]
 
     return formatted
+
+
+def _make_band_dict(pixel_dataset, band_list):
+    band_dict = {}
+    for band in band_list:
+        ret_val = band_val = pixel_dataset[band].item()
+        if band_val == pixel_dataset[band].nodata:
+            band_dict[band] = "n/a"
+        else:
+            if 'flags_definition' in pixel_dataset[band].attrs:
+                flag_def = pixel_dataset[band].attrs['flags_definition']
+                flag_dict = mask_to_dict(flag_def, band_val)
+                ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
+            band_dict[band] = ret_val
+    return band_dict
+
+
+def _make_derived_band_dict(pixel_dataset, style_index):
+    """Creates a dict of values for bands derived by styles.
+    This only works for styles with an `index_function` defined.
+
+    :param xarray.Dataset pixel_dataset: A 1x1 pixel dataset containing band arrays
+    :param dict(str, StyleCfg) style_index: dict of style configuration dicts
+    :return: dict of style names to derived value
+    """
+    derived_band_dict = {}
+    for style_name, style in style_index.items():
+        if not hasattr(style, 'index_function') or style.index_function is None:
+            continue
+
+        if any(pixel_dataset[band] == pixel_dataset[band].nodata for band in style.needed_bands):
+            continue
+
+        derived_band_dict[style_name] = style.index_function(pixel_dataset).item()
+    return derived_band_dict
 
 
 def geobox_is_point(geobox):
@@ -492,33 +533,11 @@ def feature_info(args):
                     # Get accurate timestamp from dataset
                     feature_json["time"] = d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
-                    feature_json["bands"] = {}
-                    # Collect raw band values for pixel
-                    for band in stacker.needed_bands():
-                        ret_val = band_val = pixel_ds[band].item()
-                        if band_val == pixel_ds[band].nodata:
-                            feature_json["bands"][band] = "n/a"
-                        else:
-                            if hasattr(pixel_ds[band], 'flags_definition'):
-                                flag_def = pixel_ds[band].flags_definition
-                                flag_dict = mask_to_dict(flag_def, band_val)
-                                ret_val = [flag_def[k]['description'] for k in filter(flag_dict.get, flag_dict)]
-                            feature_json["bands"][band] = ret_val
-
-                    for k, v in filter(lambda kv: hasattr(kv[1], 'index_function'), params.product.style_index.items()):
-                        if v.index_function is None:
-                            continue
-
-                        vals_nodata = [pixel_ds[b] == pixel_ds[b].nodata for b in v.needed_bands]
-                        if any(vals_nodata):
-                            continue
-
-                        value = v.index_function(pixel_ds).item()
-                        try:
-                            feature_json["band_derived"][k] = value
-                        except KeyError:
-                            feature_json["band_derived"] = {}
-                            feature_json["band_derived"][k] = value
+                    # Collect raw band values for pixel and derived bands from styles
+                    feature_json["bands"] = _make_band_dict(pixel_ds, stacker.needed_bands())
+                    derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
+                    if derived_band_dict:
+                        feature_json["band_derived"] = derived_band_dict
 
                 if params.product.band_drill:
                     if pixel_ds is None:
@@ -532,13 +551,13 @@ def feature_info(args):
                         else:
                             drill_section[band] = pixel_ds[band].item()
                     drill[idx_date.strftime("%Y-%m-%d")] = drill_section
+
             if drill:
                 feature_json["time_drill"] = drill
                 feature_json["datasets_read"] = len(datasets)
+
             my_flags = 0
-            pqdi = -1
             for pqd in pq_datasets:
-                pqdi += 1
                 idx_date = (pqd.center_time + timedelta(hours=params.product.time_zone)).date()
                 if idx_date == params.time:
                     pq_data = stacker.data([pqd], mask=True)
@@ -565,9 +584,7 @@ def feature_info(args):
                             val = values['0']
                         feature_json["flags"][mk] = val
 
-            lads = list(available_dates)
-            lads.sort()
-            feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in lads]
+            feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets))
     # --- End code section requiring datacube.
 
