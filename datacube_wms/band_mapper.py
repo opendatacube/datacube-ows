@@ -418,73 +418,67 @@ class RgbaColorRampDef(StyleDefBase):
 
 
     def legend(self, bytesio):
+
+        def custom_label(label, custom_config):
+            prefix = custom_config.get("prefix", "")
+            l = custom_config.get("label", label)
+            suffix = custom_config.get("suffix", "")
+            return f"{prefix}{l}{suffix}"
+
         # Create custom cdict for matplotlib colorramp
         # Matplot lib color dicts must start at 0 and end at 1
         # because of this we normalize the values
         # Also create tick labels based on configuration
         # ticks are also normalized between 0 - 1.0
         # so they are position correctly on the colorbar
+        def create_cdict_ticks(components, cfg):
+            return from_specification(components, cfg)
 
-        # TODO logic for generating legends should be rationalized
-        # perhaps simply forcing the color ramp to define
-        # what values should be part of the legend
-        # or defining the legend completely in a seperate
-        # object
-        def create_cdict_ticks(components, values, cfg):
-            start_index = numpy.searchsorted(components['alpha'], 1.0)
-            start = values[start_index]
-            stop = values[-1]
+
+        def find_clc(ramp, last=False):
+            l = ramp if not last else reversed(ramp)
+            for index, value in enumerate(l):
+                fwd_index = index if not last else (len(ramp) - (index + 1))
+                if "legend" in value:
+                    return fwd_index
+
+
+        # Assumes sorted color ramp values
+        def from_specification(components, cfg):
+            ramp = cfg.get("ramp")
+            start_index = find_clc(ramp)
+            stop_index = find_clc(ramp, last=True)
+            start = ramp[start_index].get("value")
+            stop = ramp[stop_index].get("value")
+            normalize_factor = stop - start
+
             ticks = dict()
             cdict = dict()
-            tick_mod = cfg.get("major_ticks", 1)
-            tick_scale = cfg.get("scale_by", 1)
-            places = cfg.get("radix_point", 1)
-            legend_values = cfg.get("legend_values", [])
-            ramp = cfg.get("ramp")
-
             bands = defaultdict(list)
-            for index, v in enumerate(values):
-                if v < start:
+            for index, ramp_val in enumerate(ramp):
+                if index < start_index or index > stop_index:
                     continue
-                specified_legend_range = (len(legend_values) > 0 and v in legend_values)
-                if not specified_legend_range and index == start_index:
-                    v = 0
-                mod_close = isclose((v * tick_scale) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
-                mod_equal = v % tick_mod == 0
-                make_label = specified_legend_range or \
-                    (len(legend_values) == 0 and (mod_close or mod_equal))
+                value = ramp_val.get("value")
 
-                # ensure value is normalized
-                normalized = v / stop
-                if index == start_index and v != 0.0:
-                    normalized = 0
-                if make_label:
-                    label = v * tick_scale
-                    label = round(label, places) if places > 0 else int(label)
-                    # Apply any custom labelling
-                    custom_legend_cfg = next((item for item in ramp if item['value'] == v), dict()).get("legend", None)
-                    if custom_legend_cfg is not None:
-                        clc = custom_legend_cfg
-                        prefix = clc.get("prefix", "")
-                        l = clc.get("label", label)
-                        suffix = clc.get("suffix", "")
-                        label = f"{prefix}{l}{suffix}"
+                normalized = (value - start) / normalize_factor
+
+                custom_legend_cfg = ramp_val.get("legend", None)
+
+                if custom_legend_cfg is not None:
+                    label = custom_label(value, custom_legend_cfg)
                     ticks[normalized] = label
+
                 for band, intensity in components.items():
                     bands[band].append((normalized, intensity[index], intensity[index]))
 
             for band, blist in bands.items():
                 cdict[band] = tuple(blist)
 
-            # if we only have ramp configuration default to
-            # no custom ticks
-            if "ramp" in cfg and len(cfg) == 1:
-                ticks = None
             return (cdict, ticks)
 
         combined_cfg = self.legend_cfg
         combined_cfg["ramp"] = self.color_ramp
-        cdict, ticks = create_cdict_ticks(self.components, self.values, combined_cfg)
+        cdict, ticks = create_cdict_ticks(self.components, combined_cfg)
 
         plt.rcdefaults()
         if (combined_cfg.get("rcParams", None) is not None):
