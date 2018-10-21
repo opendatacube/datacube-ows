@@ -55,7 +55,7 @@ def _read_file(source, geobox, band, no_data, resampling):
     # Activate Rasterio
     with rio_env():
         # Read our data
-        with rio.open(source.filename, sharing=False) as src:
+        with rio.DatasetReader(rio.path.parse_path(source.filename), sharing=False) as src:
             dst = read_with_reproject(src, geobox,
                                       dst_nodata=no_data,
                                       src_nodata_fallback=no_data,
