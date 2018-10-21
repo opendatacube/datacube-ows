@@ -39,7 +39,7 @@ from datacube_wms.rasterio_env import preauthenticate_s3, \
 from collections import OrderedDict
 import traceback
 
-from ._geom import read_with_reproject
+from dea.geom import read_with_reproject
 
 _LOG = logging.getLogger(__name__)
 MAX_WORKERS = cpu_count() * 2
@@ -63,7 +63,11 @@ def _read_file(source, geobox, band, no_data, resampling):
             rio_env._creds = creds
         # Read our data
         with rio.open(source.filename, sharing=False) as src:
-            dst = read_with_reproject(src, geobox, no_data=no_data, band=source.get_bandnumber(), resampling=resampling)
+            dst = read_with_reproject(src, geobox,
+                                      dst_nodata=no_data,
+                                      src_nodata_fallback=no_data,
+                                      band=source.get_bandnumber(),
+                                      resampling=resampling)
     return dst
 
 
