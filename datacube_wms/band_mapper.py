@@ -432,7 +432,11 @@ class RgbaColorRampDef(StyleDefBase):
         # ticks are also normalized between 0 - 1.0
         # so they are position correctly on the colorbar
         def create_cdict_ticks(components, cfg):
-            return from_specification(components, cfg)
+            generate = cfg.get("major_ticks", None) is not None or \
+               cfg.get("scale_by", None) is not None or \
+               cfg.get("radix_point", 1) is not None
+
+            return from_definition(components, cfg, generate)
 
 
         def find_clc(ramp, last=False):
@@ -443,11 +447,15 @@ class RgbaColorRampDef(StyleDefBase):
                     return fwd_index
 
 
-        # Assumes sorted color ramp values
-        def from_specification(components, cfg):
+        def from_definition(components, cfg, generate):
+            tick_mod = cfg.get("major_ticks", 1)
+            tick_scale = cfg.get("scale_by", 1)
+            places = cfg.get("radix_point", 1)
             ramp = cfg.get("ramp")
-            start_index = find_clc(ramp)
-            stop_index = find_clc(ramp, last=True)
+
+            start_index = find_clc(ramp) if not generate else 0
+            stop_index = find_clc(ramp, last=True) if not generate else (len(ramp) - 1)
+
             start = ramp[start_index].get("value")
             stop = ramp[stop_index].get("value")
             normalize_factor = stop - start
@@ -464,6 +472,16 @@ class RgbaColorRampDef(StyleDefBase):
 
                 custom_legend_cfg = ramp_val.get("legend", None)
 
+                mod_close = False
+                mod_equal = False
+                if generate:
+                    mod_close = isclose((value * tick_scale) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
+                    mod_equal = value % tick_mod == 0
+
+                if mod_close or mod_equal:
+                    label = normalized * tick_scale
+                    label = round(label, places) if places > 0 else int(label)
+
                 if custom_legend_cfg is not None:
                     label = custom_label(value, custom_legend_cfg)
                     ticks[normalized] = label
@@ -474,10 +492,14 @@ class RgbaColorRampDef(StyleDefBase):
             for band, blist in bands.items():
                 cdict[band] = tuple(blist)
 
-            return (cdict, ticks)
+            if len(ticks) == 0:
+                ticks = None
+            return cdict, ticks
+
 
         combined_cfg = self.legend_cfg
         combined_cfg["ramp"] = self.color_ramp
+
         cdict, ticks = create_cdict_ticks(self.components, combined_cfg)
 
         plt.rcdefaults()
