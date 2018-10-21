@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 import json
 from datetime import timedelta, datetime
 
@@ -34,8 +33,7 @@ from datacube.drivers import new_datasource
 import multiprocessing
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
-from datacube_wms.rasterio_env import preauthenticate_s3, \
-    get_gdal_opts, get_boto_credentials
+from .rasterio_env import rio_env
 from collections import OrderedDict
 import traceback
 
@@ -55,12 +53,7 @@ def _make_destination(shape, no_data, dtype):
 
 def _read_file(source, geobox, band, no_data, resampling):
     # Activate Rasterio
-    gdal_opts = get_gdal_opts()
-    creds = get_boto_credentials()
-    with rio.Env(**gdal_opts) as rio_env:
-        # set the internal rasterio environment credentials
-        if creds is not None:
-            rio_env._creds = creds
+    with rio_env():
         # Read our data
         with rio.open(source.filename, sharing=False) as src:
             dst = read_with_reproject(src, geobox,
