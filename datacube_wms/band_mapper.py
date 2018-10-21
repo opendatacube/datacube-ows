@@ -434,7 +434,7 @@ class RgbaColorRampDef(StyleDefBase):
         def create_cdict_ticks(components, cfg):
             generate = cfg.get("major_ticks", None) is not None or \
                cfg.get("scale_by", None) is not None or \
-               cfg.get("radix_point", 1) is not None
+               cfg.get("radix_point", None) is not None
 
             return from_definition(components, cfg, generate)
 
