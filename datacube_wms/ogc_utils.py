@@ -21,7 +21,7 @@ def get_function(func):
     :param func: Either a Callable object or a fully qualified function name str, or None
     :return: a Callable object, or None
     """
-    if not callable(func) or func is not None:
+    if func is not None and not callable(func):
         mod_name, func_name = func.rsplit('.', 1)
         mod = import_module(mod_name)
         func = getattr(mod, func_name)
