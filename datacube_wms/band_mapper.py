@@ -149,7 +149,7 @@ class RGBMappedStyleDef(StyleDefBase):
                 patches.append(patch)
         cfg = self.legend_cfg
         plt.rcdefaults()
-        if (combined_cfg.get("rcParams", None) is not None):
+        if (cfg.get("rcParams", None) is not None):
             plt.rcParams.update(combined_cfg.get("rcParams"))
         figure = plt.figure(figsize=(cfg.get("width", 3),
                                      cfg.get("height", 1.25)))
