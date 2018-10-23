@@ -10,7 +10,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'datacube', 'flask',
+    'datacube', 'flask', 'dea-proto'
 ]
 
 test_requirements = [
@@ -44,5 +44,6 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     test_suite='tests',
-    tests_require=test_requirements
+    tests_require=test_requirements,
+    dependency_links=['git+https://github.com/opendatacube/dea-proto.git@stable#egg=dea-proto-0.1']
 )
