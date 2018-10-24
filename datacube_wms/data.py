@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta, datetime
+from dateutil.parser import parse
 
 import numpy
 import xarray
@@ -26,22 +27,14 @@ from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
 from datacube_wms.ogc_utils import resp_headers
 
 import logging
-import math
-from datacube.utils import clamp
 
 from datacube.drivers import new_datasource
-import multiprocessing
-from multiprocessing import cpu_count
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, as_completed
 from .rasterio_env import rio_env
 from collections import OrderedDict
-import traceback
 
 from dea.geom import read_with_reproject
 
 _LOG = logging.getLogger(__name__)
-MAX_WORKERS = cpu_count() * 2
-
 
 def _round(x, multiple):
     return int(multiple * round(float(x) / multiple))
@@ -457,6 +450,19 @@ def geobox_is_point(geobox):
     pts = geobox.extent._geom.GetGeometryRef(0).GetPoints()
     return pts.count(pts[0]) == len(pts)
 
+
+# Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
+# datacube-core center time accessed through the dataset API is caluclated and may
+# not agree with the metadata document
+def dataset_center_time(dataset):
+    center_time = dataset.center_time
+    try:
+        metadata_time = dataset.metadata_doc['extent']['center_dt']
+        center_time = parse(metadata_time)
+    except KeyError:
+        pass
+    return center_time
+
 def feature_info(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
@@ -493,7 +499,7 @@ def feature_info(args):
             available_dates = set()
             drill = {}
             for d in datasets:
-                idx_date = (d.center_time + timedelta(hours=params.product.time_zone)).date()
+                idx_date = (dataset_center_time(d) + timedelta(hours=params.product.time_zone)).date()
                 available_dates.add(idx_date)
                 pixel_ds = None
                 if idx_date == params.time and "lon" not in feature_json:
