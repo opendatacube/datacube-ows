@@ -393,7 +393,7 @@ def get_s3_browser_uris(datasets):
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
-    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-]+.yaml")
+    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-\.]+.yaml")
 
     # convert to browsable link
     def convert(uri):
@@ -406,7 +406,7 @@ def get_s3_browser_uris(datasets):
             new_uri = uri
         return new_uri
 
-    formatted = [convert(uri) for uri in unique_uris]
+    formatted = {convert(uri) for uri in unique_uris}
 
     return formatted
 
