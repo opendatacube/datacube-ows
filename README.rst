@@ -51,7 +51,7 @@ Flask Dev Server
 
 * Set the `FLASK_APP` environment variable::
 
-        export FLASK_APP=datacube_wms/wms.py
+        export FLASK_APP=datacube_wms/ogc.py
 
 * Run the Flask dev server::
 

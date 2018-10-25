@@ -143,25 +143,20 @@ class DataStacker():
         return compare_geometry.contains(point)
 
     def datasets(self, index, mask=False, all_time=False, point=None):
-        # Setup
-        if all_time:
-            # Use full available time range
-            times = self._product.ranges["times"]
-            time = [times[0], times[-1] + timedelta(days=1)]
-        else:
-            time = self._time
-        if mask and self._product.pq_name:
-            # Use PQ product
-            prod_name = self._product.pq_name
-        elif mask:
-            # No PQ product, so no PQ datasets.
+        # No PQ product, so no PQ datasets.
+        if self._product.pq_name and not mask:
             return []
-        else:
-            # Use band product
-            prod_name = self._product.product_name
+
+        prod_name = self._product.pq_name if mask and self._product.pq_name else self._product.product_name
+        query_args = {
+            "product": prod_name,
+            "geopolygon": self._geobox.extent
+        }
+        if not all_time:
+            query_args["time"] = self._time
 
         # ODC Dataset Query
-        query = datacube.api.query.Query(product=prod_name, geopolygon=self._geobox.extent, time=time)
+        query = datacube.api.query.Query(**query_args)
         _LOG.debug("query start %s", datetime.now().time())
         datasets = index.datasets.search_eager(**query.search_terms)
         _LOG.debug("query stop %s", datetime.now().time())
@@ -475,8 +470,7 @@ def feature_info(args):
     if geobox_is_point(params.geobox):
         geo_point_geobox = params.geobox
     else:
-        geo_point_geom = bbox_to_geom(geo_point.boundingbox, geo_point.crs)
-        geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(geo_point_geom, params.geobox.resolution, crs=params.geobox.crs)
+        geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(geo_point, params.geobox.resolution, crs=params.geobox.crs)
     stacker = DataStacker(params.product, geo_point_geobox, params.time)
 
     # --- Begin code section requiring datacube.
@@ -492,68 +486,58 @@ def feature_info(args):
             h_coord: 0,
             v_coord: 0
         }
-
-        if not datasets:
-            pass
-        else:
-            available_dates = set()
+        if datasets:
+            # Group datasets by time, load only datasets that match the idx_date
+            def idx_date(d): return (dataset_center_time(d) + timedelta(hours=params.product.time_zone)).date()
+            available_dates = {idx_date(d) for d in datasets}
             drill = {}
-            for d in datasets:
-                idx_date = (dataset_center_time(d) + timedelta(hours=params.product.time_zone)).date()
-                available_dates.add(idx_date)
-                pixel_ds = None
-                if idx_date == params.time and "lon" not in feature_json:
+            pixel_ds = None
+            ds_at_time = list(filter(lambda d: idx_date(d) == params.time, datasets))
+            if len(ds_at_time) > 0:
+                data = stacker.data(ds_at_time, skip_corrections=True)
+                pixel_ds = data.isel(**isel_kwargs)
+
+                # Non-geographic coordinate systems need to be projected onto a geographic
+                # coordinate system.  Why not use EPSG:4326?
+                # Extract coordinates in CRS
+                data_x = getattr(data, h_coord)
+                data_y = getattr(data, v_coord)
+
+                x = data_x[isel_kwargs[h_coord]].item()
+                y = data_y[isel_kwargs[v_coord]].item()
+                pt = geometry.point(x, y, params.crs)
+
+                # Project to EPSG:4326
+                crs_geo = geometry.CRS("EPSG:4326")
+                ptg = pt.to_crs(crs_geo)
+
+                # Capture lat/long coordinates
+                feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+
+                # Extract data pixel
+                pixel_ds = data.isel(**isel_kwargs)
+
+                # Get accurate timestamp from dataset
+                feature_json["time"] = dataset_center_time(ds_at_time[0]).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+                # Collect raw band values for pixel and derived bands from styles
+                feature_json["bands"] = _make_band_dict(pixel_ds, stacker.needed_bands())
+                derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
+                if derived_band_dict:
+                    feature_json["band_derived"] = derived_band_dict
+
+            if params.product.band_drill:
+                if pixel_ds is None:
                     data = stacker.data([d], skip_corrections=True)
-                    # Use i,j image coordinates to extract data pixel from dataset, and
-                    # convert to lat/long geographic coordinates
-                    if service_cfg.published_CRSs[params.crsid]["geographic"]:
-                        # Geographic coordinate systems (e.g. EPSG:4326/WGS-84) are already in lat/long
-                        feature_json["lat"] = data.latitude[params.j].item()
-                        feature_json["lon"] = data.longitude[params.i].item()
-                        pixel_ds = data.isel(**isel_kwargs)
-                    else:
-                        # Non-geographic coordinate systems need to be projected onto a geographic
-                        # coordinate system.  Why not use EPSG:4326?
-                        # Extract coordinates in CRS
-                        data_x = getattr(data, h_coord)
-                        data_y = getattr(data, v_coord)
-
-
-                        x = data_x[isel_kwargs[h_coord]].item()
-                        y = data_y[isel_kwargs[v_coord]].item()
-                        pt = geometry.point(x, y, params.crs)
-
-                        # Project to EPSG:4326
-                        crs_geo = geometry.CRS("EPSG:4326")
-                        ptg = pt.to_crs(crs_geo)
-
-                        # Capture lat/long coordinates
-                        feature_json["lon"], feature_json["lat"] = ptg.coords[0]
-
-                    # Extract data pixel
                     pixel_ds = data.isel(**isel_kwargs)
-
-                    # Get accurate timestamp from dataset
-                    feature_json["time"] = d.center_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-
-                    # Collect raw band values for pixel and derived bands from styles
-                    feature_json["bands"] = _make_band_dict(pixel_ds, stacker.needed_bands())
-                    derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
-                    if derived_band_dict:
-                        feature_json["band_derived"] = derived_band_dict
-
-                if params.product.band_drill:
-                    if pixel_ds is None:
-                        data = stacker.data([d], skip_corrections=True)
-                        pixel_ds = data.isel(**isel_kwargs)
-                    drill_section = {}
-                    for band in params.product.band_drill:
-                        band_val = pixel_ds[band].item()
-                        if band_val == pixel_ds[band].nodata:
-                            drill_section[band] = "n/a"
-                        else:
-                            drill_section[band] = pixel_ds[band].item()
-                    drill[idx_date.strftime("%Y-%m-%d")] = drill_section
+                drill_section = {}
+                for band in params.product.band_drill:
+                    band_val = pixel_ds[band].item()
+                    if band_val == pixel_ds[band].nodata:
+                        drill_section[band] = "n/a"
+                    else:
+                        drill_section[band] = pixel_ds[band].item()
+                drill[idx_date.strftime("%Y-%m-%d")] = drill_section
 
             if drill:
                 feature_json["time_drill"] = drill
