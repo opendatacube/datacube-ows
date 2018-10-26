@@ -113,7 +113,6 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
             all_bands[measurement['name']] = (dims, data, measurement.dataarray_attrs())
 
         all_bands.attrs['crs'] = geobox.crs
-        all_bands.load()
         return all_bands.load()
     else:
         return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
