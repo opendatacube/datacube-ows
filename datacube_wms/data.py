@@ -143,7 +143,7 @@ class DataStacker():
 
     def datasets(self, index, mask=False, all_time=False, point=None):
         # No PQ product, so no PQ datasets.
-        if self._product.pq_name and not mask:
+        if not self._product.pq_name and mask:
             return []
 
         prod_name = self._product.pq_name if mask and self._product.pq_name else self._product.product_name
