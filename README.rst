@@ -30,6 +30,10 @@ Setup
 
 * Datacube WMS requires the scikit-image package:  `conda install scikit-image`
 
+* Manually install dea-proto::
+
+    pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=dea-proto[async]'
+
 * Run `create_tables.sql` database script to create schema and tables used
   by WMS server.
 
