@@ -187,11 +187,6 @@ layer_cfg = [
                 # (defaults to empty list)
                 "ignore_info_flags": [],
 
-                # Bands to include in time-dimension "pixel drill".
-                # WARNING: This is highly inefficient in the current datacube architecture.
-                #          Don't activate in production unless you really know what you're doing.
-                # "band_drill": ["nir", "red", "green", "blue"],
-
                 # Set to true if the band product dataset extents include nodata regions.
                 "data_manual_merge": False,
                 # Set to true if the pq product dataset extents include nodata regions.
@@ -798,12 +793,6 @@ layer_cfg = [
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
                 "ignore_info_flags": [],
-
-                # Bands to include in time-dimension "pixel drill".
-                # WARNING: This is highly inefficient in the current datacube architecture.
-                #          Don't activate in production unless you really know what you're doing.
-                # "band_drill": ["nir", "red", "green", "blue"],
-
 
                 # Set to true if the band product dataset extents include nodata regions.
                 "data_manual_merge": True,

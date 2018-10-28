@@ -489,7 +489,6 @@ def feature_info(args):
             # Group datasets by time, load only datasets that match the idx_date
             def idx_date(d): return (dataset_center_time(d) + timedelta(hours=params.product.time_zone)).date()
             available_dates = {idx_date(d) for d in datasets}
-            drill = {}
             pixel_ds = None
             ds_at_time = list(filter(lambda d: idx_date(d) == params.time, datasets))
             if len(ds_at_time) > 0:
@@ -524,23 +523,6 @@ def feature_info(args):
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
                     feature_json["band_derived"] = derived_band_dict
-
-            if params.product.band_drill:
-                if pixel_ds is None:
-                    data = stacker.data([d], skip_corrections=True)
-                    pixel_ds = data.isel(**isel_kwargs)
-                drill_section = {}
-                for band in params.product.band_drill:
-                    band_val = pixel_ds[band].item()
-                    if band_val == pixel_ds[band].nodata:
-                        drill_section[band] = "n/a"
-                    else:
-                        drill_section[band] = pixel_ds[band].item()
-                drill[idx_date.strftime("%Y-%m-%d")] = drill_section
-
-            if drill:
-                feature_json["time_drill"] = drill
-                feature_json["datasets_read"] = len(datasets)
 
             my_flags = 0
             for pqd in pq_datasets:

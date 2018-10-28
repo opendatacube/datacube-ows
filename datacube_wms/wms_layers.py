@@ -61,7 +61,6 @@ class ProductLayerDef():
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
         self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
-        self.band_drill = product_cfg.get("band_drill", [])
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
         self.sub_product_extractor = product_cfg.get("sub_product_extractor", None)
         self.sub_product_label = product_cfg.get("sub_product_label", None)
