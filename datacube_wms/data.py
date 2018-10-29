@@ -29,7 +29,6 @@ from datacube_wms.ogc_utils import resp_headers
 import logging
 
 from datacube.drivers import new_datasource
-from .rasterio_env import rio_env
 from collections import OrderedDict
 
 from dea.geom import read_with_reproject
@@ -45,15 +44,13 @@ def _make_destination(shape, no_data, dtype):
 
 
 def _read_file(source, geobox, band, no_data, resampling):
-    # Activate Rasterio
-    with rio_env():
-        # Read our data
-        with rio.DatasetReader(rio.path.parse_path(source.filename), sharing=False) as src:
-            dst = read_with_reproject(src, geobox,
-                                      dst_nodata=no_data,
-                                      src_nodata_fallback=no_data,
-                                      band=source.get_bandnumber(),
-                                      resampling=resampling)
+    # Read our data
+    with rio.DatasetReader(rio.path.parse_path(source.filename), sharing=False) as src:
+        dst = read_with_reproject(src, geobox,
+                                  dst_nodata=no_data,
+                                  src_nodata_fallback=no_data,
+                                  band=source.get_bandnumber(),
+                                  resampling=resampling)
     return dst
 
 

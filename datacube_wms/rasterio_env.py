@@ -6,7 +6,6 @@ except ImportError:
 from dea.aws.rioenv import setup_local_env, local_env, has_local_env, s3_gdal_opts
 from os import getenv
 
-
 def preauthenticate_s3():
     return service_cfg.get("preauthenticate_s3", False)
 
