@@ -14,6 +14,8 @@ from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSExceptio
 
 from datacube_wms.wms_layers import get_service_cfg
 
+from .rasterio_env import rio_env
+
 import logging
 
 # pylint: disable=invalid-name, broad-except
@@ -46,23 +48,25 @@ def ogc_impl():
     nocase_args['requestid'] = request.environ.get("FLASK_REQUEST_ID")
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
+    # create dummy env if not exists
     try:
-        if service == "WMS":
-            # WMS operation Map
-            if svc_cfg.wms:
-                return handle_wms(nocase_args)
+        with rio_env():
+            if service == "WMS":
+                # WMS operation Map
+                if svc_cfg.wms:
+                    return handle_wms(nocase_args)
+                else:
+                    raise WMSException("Invalid service", locator="Service parameter")
+            elif service == "WCS":
+                # WCS operation Map
+                if svc_cfg.wcs:
+                    return handle_wcs(nocase_args)
+                else:
+                    raise WCS1Exception("Invalid service", locator="Service parameter")
             else:
+                # Should we return a WMS or WCS exception if there is no service specified?
+                # Defaulting to WMS because that's what we already have.
                 raise WMSException("Invalid service", locator="Service parameter")
-        elif service == "WCS":
-            # WCS operation Map
-            if svc_cfg.wcs:
-                return handle_wcs(nocase_args)
-            else:
-                raise WCS1Exception("Invalid service", locator="Service parameter")
-        else:
-            # Should we return a WMS or WCS exception if there is no service specified?
-            # Defaulting to WMS because that's what we already have.
-            raise WMSException("Invalid service", locator="Service parameter")
     except OGCException as e:
         return e.exception_response()
     except Exception as e:
