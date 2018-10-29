@@ -90,9 +90,12 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
     # pylint: disable=too-many-locals, dict-keys-not-iterating
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
-    holder = numpy.empty(shape=tuple(), dtype=object)
-    holder[()] = datasets
-    sources = xarray.DataArray(holder)
+    if isinstance(datasets, xarray.DataArray):
+        sources = datasets
+    else:
+        holder = numpy.empty(shape=tuple(), dtype=object)
+        holder[()] = datasets
+        sources = xarray.DataArray(holder)
     if use_overviews:
         all_bands = xarray.Dataset()
         for name, coord in geobox.coordinates.items():
@@ -193,13 +196,6 @@ class DataStacker():
                         merged = merged.combine_first(d)
                 return merged
             else:
-                # Merge performed already by dataset extent
-                if isinstance(datasets, xarray.DataArray):
-                    sources = datasets
-                else:
-                    holder = numpy.empty(shape=tuple(), dtype=object)
-                    holder[()] = datasets
-                    sources = xarray.DataArray(holder)
                 data = read_data(datasets, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
                 return data
 
