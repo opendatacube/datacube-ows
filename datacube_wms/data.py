@@ -1,6 +1,5 @@
 import json
 from datetime import timedelta, datetime
-from dateutil.parser import parse
 
 import numpy
 import xarray
@@ -24,7 +23,7 @@ from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
     bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
     solar_correct_data
-from datacube_wms.ogc_utils import resp_headers
+from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time
 
 import logging
 
@@ -130,8 +129,7 @@ class DataStacker():
             self._needed_bands = bands
         else:
             self._needed_bands = self._product.product.measurements.keys()
-        start_time = datetime(time.year, time.month, time.day) - timedelta(hours=product.time_zone)
-        self._time = [start_time, start_time + timedelta(days=1)]
+        self._time = local_solar_date_range(geobox, time)
 
     def needed_bands(self):
         return self._needed_bands
@@ -438,18 +436,6 @@ def geobox_is_point(geobox):
     return pts.count(pts[0]) == len(pts)
 
 
-# Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
-# datacube-core center time accessed through the dataset API is caluclated and may
-# not agree with the metadata document
-def dataset_center_time(dataset):
-    center_time = dataset.center_time
-    try:
-        metadata_time = dataset.metadata_doc['extent']['center_dt']
-        center_time = parse(metadata_time)
-    except KeyError:
-        pass
-    return center_time
-
 def feature_info(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
@@ -480,10 +466,9 @@ def feature_info(args):
         }
         if datasets:
             # Group datasets by time, load only datasets that match the idx_date
-            def idx_date(d): return (dataset_center_time(d) + timedelta(hours=params.product.time_zone)).date()
-            available_dates = {idx_date(d) for d in datasets}
+            available_dates = {local_date(d) for d in datasets}
             pixel_ds = None
-            ds_at_time = list(filter(lambda d: idx_date(d) == params.time, datasets))
+            ds_at_time = list(filter(lambda d: local_date(d) == params.time, datasets))
             if len(ds_at_time) > 0:
                 data = stacker.data(ds_at_time, skip_corrections=True)
                 pixel_ds = data.isel(**isel_kwargs)
@@ -519,7 +504,7 @@ def feature_info(args):
 
             my_flags = 0
             for pqd in pq_datasets:
-                idx_date = (pqd.center_time + timedelta(hours=params.product.time_zone)).date()
+                idx_date = dataset_center_time(pqd)
                 if idx_date == params.time:
                     pq_data = stacker.data([pqd], mask=True)
                     pq_pixel_ds = pq_data.isel(**isel_kwargs)

@@ -8,6 +8,7 @@ try:
     from datacube_wms.wms_cfg_local import service_cfg, layer_cfg
 except ImportError:
     from datacube_wms.wms_cfg import service_cfg, layer_cfg
+from datacube_wms.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
 from uuid import UUID
@@ -61,7 +62,7 @@ def accum_max(a, b):
         return max(a, b)
 
 
-def determine_product_ranges(dc, product_name, time_offset, extractor):
+def determine_product_ranges(dc, product_name, extractor):
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements, protected-access
     start = datetime.now()
     product = dc.index.products.get_by_name(product_name)
@@ -89,8 +90,8 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
     crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
     ds_count = 0
     for ds in dc.find_datasets(product=product_name):
-        dt = ds.center_time + timedelta(hours=time_offset)
-        time_set.add(dt.date())
+        local_date = local_date(ds)
+        time_set.add(local_date)
         if calculate_extent or extractor is not None:
             if extractor is not None:
                 path = extractor(ds)
@@ -121,9 +122,8 @@ def determine_product_ranges(dc, product_name, time_offset, extractor):
             r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
             r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
-
             if path is not None:
-                sub_r[path]["time_set"].add(dt.date())
+                sub_r[path]["time_set"].add(local_date)
 
             for crsid in crsids:
                 crs = crses[crsid]
@@ -180,7 +180,6 @@ def determine_ranges(dc):
             try:
                 ranges.append(determine_product_ranges(dc,
                                                    product_cfg["product_name"],
-                                                   product_cfg.get("time_zone", 9),
                                                    product_cfg.get("sub_product_extractor")
                                                   )
                          )
@@ -352,7 +351,6 @@ def update_range(dc, product):
         layer = products[0]
         product_range = determine_product_ranges(dc,
                                                  product,
-                                                 layer.get("time_zone", 9),
                                                  layer.get("sub_product_extractor"))
         conn = get_sqlconn(dc)
         txn = conn.begin()
