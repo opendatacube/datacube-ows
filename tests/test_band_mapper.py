@@ -100,7 +100,7 @@ def test_correct_style_heatmap(product_layer, style_cfg_lin):
 def test_correct_style_linear(product_layer, style_cfg_lin):
     style_def = StyleDef(product_layer, style_cfg_lin)
 
-    assert isinstance(style_def, bm.LinearStyleDef)
+    assert isinstance(style_def, bm.LinearStyleDef  )
 
 def test_correct_style_map(product_layer, style_cfg_map):
     style_def = StyleDef(product_layer, style_cfg_map)
@@ -112,7 +112,7 @@ def test_correct_style_ramp(product_layer, style_cfg_ramp):
 
     assert isinstance(style_def, bm.RgbaColorRampDef)
 
-def test_dynamic_range_compression_(product_layer, style_cfg_lin):
+def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     style_cfg_lin["scale_range"] = [-3000, 3000]
 
     style_def = StyleDef(product_layer, style_cfg_lin)
@@ -130,3 +130,17 @@ def test_dynamic_range_compression_(product_layer, style_cfg_lin):
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
     assert compressed[2] == 255
+
+def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
+    del style_cfg_lin["scale_range"]
+    style_cfg_lin["scale_factor"] = 2.5
+
+    style_def = StyleDef(product_layer, style_cfg_lin)
+
+    assert style_def.scale_min == 0.0
+    assert style_def.scale_max == 637.5
+
+    band = np.zeros(3)
+    band[0] = -3000
+    band[1] = 0
+    band[2] = 3000

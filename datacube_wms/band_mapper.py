@@ -64,13 +64,9 @@ class DynamicRangeCompression(StyleDefBase):
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
             self.scale_min, self.scale_max = style_cfg["scale_range"]
-            self.gain = 255.0/(self.scale_max - self.scale_min)
-            self.offset = self.gain * self.scale_min
         else:
             self.scale_min = 0.0
             self.scale_max = 255.0 * style_cfg["scale_factor"]
-            self.gain = 1.0 / style_cfg["scale_factor"]
-            self.offset = 0.0
 
     def compress_band(self, imgband_data):
         normalized = (imgband_data - self.scale_min) / (self.scale_max - self.scale_min)

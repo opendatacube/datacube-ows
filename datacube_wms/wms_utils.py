@@ -365,3 +365,9 @@ def wofls_fuser(dest, src):
     where_nodata = (src & 1) == 0
     numpy.copyto(dest, src, where=where_nodata)
     return dest
+
+def item_fuser(dest, src):
+    where_combined = numpy.isnan(dest) | (dest == -6666.)
+    numpy.copyto(dest, src, where=where_combined)
+    return dest
+    
