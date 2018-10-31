@@ -22,21 +22,21 @@ class CubePool():
 
     def get_cube(self):
         self._cubes_lock.acquire()
-        for cube, assigned in self._cubes.items():
+        for c, assigned in self._cubes.items():
             if not assigned:
-                self._cubes[cube] = True
+                self._cubes[c] = True
                 self._cubes_lock.release()
-                return cube
-        cube = self._new_cube()
-        self._cubes[cube] = True
+                return c
+        c = self._new_cube()
+        self._cubes[c] = True
         self._cubes_lock.release()
-        return cube
+        return c
 
-    def release_cube(self, cube):
-        if cube not in self._cubes:
+    def release_cube(self, c):
+        if c not in self._cubes:
             raise Exception("Cannot release non-pool datacube.")
         self._cubes_lock.acquire()
-        self._cubes[cube] = False
+        self._cubes[c] = False
         self._cubes_lock.release()
 
     def _new_cube(self):
@@ -51,9 +51,9 @@ def get_cube(app="wms"):
     return pool.get_cube()
 
 
-def release_cube(cube, app="wms"):
+def release_cube(c, app="wms"):
     pool = CubePool(app=app)
-    return pool.release_cube(cube)
+    return pool.release_cube(c)
 
 
 def pool_size(app="wms"):

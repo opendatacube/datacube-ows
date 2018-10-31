@@ -8,6 +8,6 @@ pylint -j 2 --reports no datacube_wms
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
-# pytest -v -r sx --cov datacube_wms --doctest-ignore-import-errors --durations=5 datacube_wms tests
+python3 -m pytest tests/ --ignore tests/test_wms_server.py --ignore tests/test_layers.py
 
 set +x

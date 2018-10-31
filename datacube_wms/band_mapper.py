@@ -9,11 +9,11 @@ from datacube.storage.masking import make_mask
 import logging
 from datetime import datetime
 
+# pylint: disable=wrong-import-position
 import matplotlib
 # Do not use X Server backend
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as mpatches
 import io
@@ -64,16 +64,13 @@ class DynamicRangeCompression(StyleDefBase):
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
             self.scale_min, self.scale_max = style_cfg["scale_range"]
-            self.gain = 255.0/(self.scale_max - self.scale_min)
-            self.offset = self.gain * self.scale_min
         else:
             self.scale_min = 0.0
             self.scale_max = 255.0 * style_cfg["scale_factor"]
-            self.gain = 1.0 / style_cfg["scale_factor"]
-            self.offset = 0.0
+
     def compress_band(self, imgband_data):
-        unclipped = imgband_data * self.gain - self.offset
-        return numpy.clip(unclipped.values, 1, 255)
+        normalized = (imgband_data - self.scale_min) / (self.scale_max - self.scale_min)
+        return normalized * 255
 
 class RGBMappedStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
@@ -84,7 +81,7 @@ class RGBMappedStyleDef(StyleDefBase):
 
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
-        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-locals, too-many-branches
         # extent mask data per band to preseve nodata
         _LOG.debug("transform begin %s", datetime.now())
         if extent_mask is not None:
@@ -151,8 +148,8 @@ class RGBMappedStyleDef(StyleDefBase):
                     patches.append(patch)
         cfg = self.legend_cfg
         plt.rcdefaults()
-        if (cfg.get("rcParams", None) is not None):
-            plt.rcParams.update(combined_cfg.get("rcParams"))
+        if cfg.get("rcParams", None) is not None:
+            plt.rcParams.update(cfg.get("rcParams"))
         figure = plt.figure(figsize=(cfg.get("width", 3),
                                      cfg.get("height", 1.25)))
         plt.axis('off')
@@ -166,7 +163,7 @@ class LinearStyleDef(DynamicRangeCompression):
         self.red_components = style_cfg["components"]["red"]
         self.green_components = style_cfg["components"]["green"]
         self.blue_components = style_cfg["components"]["blue"]
-        self.alpha_components = style_cfg["components"].get("alpha", None);
+        self.alpha_components = style_cfg["components"].get("alpha", None)
         for band in self.red_components.keys():
             self.needed_bands.add(band)
         for band in self.green_components.keys():
@@ -378,7 +375,7 @@ class RgbaColorRampDef(StyleDefBase):
                 green.append(color.green)
                 blue.append(color.blue)
                 alpha.append(r.get("alpha", 1.0))
-            
+
             return (values, red, green, blue, alpha)
 
         self.color_ramp = style_cfg["color_ramp"]
@@ -420,7 +417,7 @@ class RgbaColorRampDef(StyleDefBase):
 
 
     def legend(self, bytesio):
-
+        #pylint: disable=too-many-locals, too-many-statements
         def custom_label(label, custom_config):
             prefix = custom_config.get("prefix", "")
             l = custom_config.get("label", label)
@@ -506,14 +503,14 @@ class RgbaColorRampDef(StyleDefBase):
         cdict, ticks = create_cdict_ticks(self.components, combined_cfg)
 
         plt.rcdefaults()
-        if (combined_cfg.get("rcParams", None) is not None):
+        if combined_cfg.get("rcParams", None) is not None:
             plt.rcParams.update(combined_cfg.get("rcParams"))
         fig = plt.figure(figsize=(combined_cfg.get("width", 4),
                                   combined_cfg.get("height", 1.25)))
         ax_pos = combined_cfg.get("axes_position", [0.05, 0.5, 0.9, 0.15])
         ax = fig.add_axes(ax_pos)
         custom_map = LinearSegmentedColormap(self.product.name, cdict)
-        color_bar = mpl.colorbar.ColorbarBase(
+        color_bar = matplotlib.colorbar.ColorbarBase(
             ax,
             cmap=custom_map,
             orientation="horizontal")
