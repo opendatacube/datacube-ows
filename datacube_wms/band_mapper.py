@@ -71,9 +71,10 @@ class DynamicRangeCompression(StyleDefBase):
             self.scale_max = 255.0 * style_cfg["scale_factor"]
             self.gain = 1.0 / style_cfg["scale_factor"]
             self.offset = 0.0
+
     def compress_band(self, imgband_data):
-        unclipped = imgband_data * self.gain - self.offset
-        return numpy.clip(unclipped.values, 1, 255)
+        normalized = (imgband_data - self.scale_min) / (self.scale_max - self.scale_min)
+        return normalized * 255
 
 class RGBMappedStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
