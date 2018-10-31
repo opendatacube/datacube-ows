@@ -35,10 +35,6 @@ from dea.geom import read_with_reproject
 
 _LOG = logging.getLogger(__name__)
 
-def _round(x, multiple):
-    return int(multiple * round(float(x) / multiple))
-
-
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
 
