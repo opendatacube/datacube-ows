@@ -143,10 +143,12 @@ class RGBMappedStyleDef(StyleDefBase):
         patches = []
         for band in self.value_map.keys():
             for value in self.value_map[band]:
-                rgb = Color(value["color"])
-                label = fill(value["title"] + " - " + value["abstract"], 30)
-                patch = mpatches.Patch(color=rgb.hex, label=label)
-                patches.append(patch)
+                # only include values that have a title set
+                if "title" in value and "abstract" in value and "color" in value and value["title"]:
+                    rgb = Color(value["color"])
+                    label = fill(value["title"] + " - " + value["abstract"], 30)
+                    patch = mpatches.Patch(color=rgb.hex, label=label)
+                    patches.append(patch)
         cfg = self.legend_cfg
         plt.rcdefaults()
         if (cfg.get("rcParams", None) is not None):
