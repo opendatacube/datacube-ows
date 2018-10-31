@@ -14,6 +14,10 @@ from datacube_wms.cube_pool import cube
 from datacube_wms.band_mapper import StyleDef
 from datacube_wms.ogc_utils import get_function
 
+import logging
+
+_LOG = logging.getLogger(__name__)
+
 
 def accum_min(a, b):
     if a is None:
@@ -45,6 +49,8 @@ class ProductLayerDef():
         self.product_type = product_cfg["type"]
         self.product_variant = product_cfg["variant"]
         self.product = dc.index.products.get_by_name(self.product_name)
+        if self.product == None:
+            raise Exception(f"Could not find product {self.product_name} in datacube")
         self.definition = self.product.definition
         self.abstract = product_cfg["abstract"] if "abstract" in product_cfg else self.definition['description']
         self.title = "%s %s %s (%s)" % (platform_def.title,
@@ -52,6 +58,8 @@ class ProductLayerDef():
                                         self.product_type,
                                         self.product_label)
         self.ranges = get_ranges(dc, self.product)
+        if self.ranges is None:
+            raise Exception(f"Could not find ranges for {self.product_name} in database")
         self.sub_ranges = get_sub_ranges(dc, self.product)
         self.pq_name = product_cfg.get("pq_dataset")
         self.pq_band = product_cfg.get("pq_band")
@@ -143,9 +151,12 @@ class PlatformLayerDef():
 
         self.products = []
         for prod_cfg in platform_cfg["products"]:
-            prod = ProductLayerDef(prod_cfg, self, dc=dc)
-            self.products.append(prod)
-            prod_idx[prod.name] = prod
+            try:
+                prod = ProductLayerDef(prod_cfg, self, dc=dc)
+                self.products.append(prod)
+                prod_idx[prod.name] = prod
+            except Exception as e:
+                _LOG.error(f"Could not load layer: {str(e)}")
 
 
 class LayerDefs():
