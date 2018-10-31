@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import json
 from datetime import timedelta, datetime
 from dateutil.parser import parse
@@ -80,7 +82,7 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
 def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
-    # pylint: disable=too-many-locals, dict-keys-not-iterating
+    # pylint: disable=too-many-locals, dict-keys-not-iterating, protected-access
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
     if isinstance(datasets, xarray.DataArray):
@@ -430,6 +432,7 @@ def _make_derived_band_dict(pixel_dataset, style_index):
 
 
 def geobox_is_point(geobox):
+    #pylint: disable=protected-access
     pts = geobox.extent._geom.GetGeometryRef(0).GetPoints()
     return pts.count(pts[0]) == len(pts)
 
@@ -458,7 +461,8 @@ def feature_info(args):
     if geobox_is_point(params.geobox):
         geo_point_geobox = params.geobox
     else:
-        geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(geo_point, params.geobox.resolution, crs=params.geobox.crs)
+        geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(
+            geo_point, params.geobox.resolution, crs=params.geobox.crs)
     stacker = DataStacker(params.product, geo_point_geobox, params.time)
 
     # --- Begin code section requiring datacube.
@@ -476,7 +480,8 @@ def feature_info(args):
         }
         if datasets:
             # Group datasets by time, load only datasets that match the idx_date
-            def idx_date(d): return (dataset_center_time(d) + timedelta(hours=params.product.time_zone)).date()
+            def idx_date(d):
+                return (dataset_center_time(d) + timedelta(hours=params.product.time_zone)).date()
             available_dates = {idx_date(d) for d in datasets}
             pixel_ds = None
             ds_at_time = list(filter(lambda d: idx_date(d) == params.time, datasets))

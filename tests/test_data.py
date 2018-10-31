@@ -53,7 +53,7 @@ def test_get_measurement():
         def __init__(self, band=1):
             self.band = band
         def get_bandnumber(self):
-            return band
+            return self.band
 
     def fake_delayed(some_callable):
         return some_callable
@@ -77,12 +77,18 @@ def test_get_measurement():
     assert (result == 0).all()
     assert result.shape == (256, 256)
 
-    # # Test fuse funcing
-    # sources = [ fakesource(1), fakesource(2) ]
+    # Test fuse funcing
+    sources = [ fakesource(1), fakesource(2) ]
+    gb = fakegeobox((16,16))
 
-    # def fake_read_file2(source, geobox, band, no_data, resampling):
-    #     if source.get_bandnumber() == 1:
-    #         return
-    #     else:
-    #         return
-    #     return np.zeros(geobox.shape).astype("int16")
+    def fake_read_file2(source, geobox, band, no_data, resampling):
+        if source.get_bandnumber() == 1:
+            return np.full((16,16), np.nan)
+        else:
+            return np.full((16,16), 1., "float64")
+
+    with patch('datacube_wms.data._read_file', new_callable=lambda: fake_read_file2) as rf, patch('datacube_wms.data.da', new_callable=fake_as_delayed) as da, patch('datacube_wms.data.delayed', new_callable=lambda: fake_delayed) as delayed:
+        result = datacube_wms.data._get_measurement(sources, gb, None, np.nan, "float64", fuse_func=None)
+
+    assert (result == 1.).all()
+    assert result.shape == (16,16)

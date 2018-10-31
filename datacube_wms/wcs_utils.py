@@ -96,7 +96,7 @@ class WCS1GetCoverageRequest():
 
         # Argument: TIME
         if self.product.wcs_sole_time:
-            self.times = [ parse(self.product.wcs_sole_time).date() ]
+            self.times = [parse(self.product.wcs_sole_time).date()]
         elif "time" not in args:
             #      CEOS treats no supplied time argument as all time.
             # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING

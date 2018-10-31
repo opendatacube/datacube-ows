@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 try:
     from datacube_wms.wms_cfg_local import service_cfg
 except ImportError:
