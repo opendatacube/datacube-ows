@@ -106,11 +106,6 @@ service_cfg = {
     # temporal extents
     # False by default (calculate spatial extents)
     "use_default_extent": True,
-    # If using s3 as storage setting this true
-    # will create a boto3 session with credentials
-    # for rasterio to use
-    # before making any WMS/WCS requests
-    "preauthenticate_s3": True,
     # If using GeoTIFFs as storage
     # this will set the rasterio env
     # GDAL Config for GTiff Georeferencing

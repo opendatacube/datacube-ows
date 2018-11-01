@@ -272,7 +272,6 @@ class ServiceCfg():
             self.contact_info = srv_cfg.get("contact_info", {})
             self.fees = srv_cfg.get("fees", "")
             self.access_constraints = srv_cfg.get("access_constraints", "")
-            self.preauthenticate_s3 = srv_cfg.get("preauthenticate_s3", False)
 
     def __getitem__(self, name):
         return getattr(self, name)
