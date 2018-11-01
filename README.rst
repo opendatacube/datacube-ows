@@ -47,8 +47,8 @@ Setup
 
 * If you are accessing data on AWS S3 and running `datacube_wms` on Ubuntu you may encounter errors with `GetMap` similar to: `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`. If this occurs run the following commands::
 
-  mkdir -p /etc/pki/tls/certs
-  ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt;
+    mkdir -p /etc/pki/tls/certs
+    ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
 
 * Launch flask app using your favorite WSGI server. The following approaches
   have been tested:
