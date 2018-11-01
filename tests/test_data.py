@@ -92,3 +92,80 @@ def test_get_measurement():
 
     assert (result == 1.).all()
     assert result.shape == (16,16)
+
+    # Test custom fuse func
+    sources = [ fakesource(1), fakesource(2) ]
+
+    def fake_read_file3(source, geobox, band, no_data, resampling):
+        if source.get_bandnumber() == 1:
+            return np.full((16,16), 56)
+        else:
+            return np.full((16,16), 20)
+
+    def fake_fuse(dest, src):
+        where_src_56 = (src == 56)
+        np.copyto(dest, src, where=where_src_56)
+
+    with patch('datacube_wms.data._read_file', new_callable=lambda: fake_read_file3) as rf, patch('datacube_wms.data.da', new_callable=fake_as_delayed) as da, patch('datacube_wms.data.delayed', new_callable=lambda: fake_delayed) as delayed:
+        result = datacube_wms.data._get_measurement(sources, gb, None, -1, "int16", fuse_func=None)
+
+    assert (result == 56).all()
+    assert result.shape == (16,16)
+
+@patch('datacube_wms.data.new_datasource')
+@patch('xarray.Dataset')
+def test_read_data(dataset, new_datasource):
+
+    class fake_coords:
+        def __init__(self):
+            self.values = 1
+            self.units = "m"
+
+    class fakegeobox:
+        def __init__(self):
+            self.dimensions = ["hello"]
+            self.crs = "EPSG:3577"
+            self.coordinates = {
+                "hello": fake_coords()
+            }
+
+    class fake_measurement:
+        def __init__(self, name, nodata, dtype):
+            self.name = name
+            self.nodata = nodata
+            self.dtype = dtype
+
+        def dataarray_attrs(self):
+            return None
+
+        def __getitem__(self, item):
+            return getattr(self, item)
+
+    class fake_dataset:
+        def __init__(self):
+            self.id = 1
+
+    class fake_datasource:
+        def __init__(self):
+            self._dataset = fake_dataset()
+
+    # Test overviews / no overviews
+
+    datasets = [ fake_dataset() ]
+    measurements = [ fake_measurement("test", -1, "int16") ]
+    geobox = fakegeobox()
+    with patch('datacube.Datacube.load_data') as load_data, patch('datacube_wms.data._get_measurement') as get_measurement:
+        datacube_wms.data.read_data(datasets, measurements, geobox, use_overviews=False)
+
+        assert load_data.called
+        assert not get_measurement.called
+
+    with patch('datacube.Datacube.load_data') as load_data, patch('datacube_wms.data._get_measurement') as get_measurement:
+        datacube_wms.data.read_data(datasets, measurements, geobox, use_overviews=True)
+
+        assert not load_data.called
+        assert get_measurement.called
+
+
+
+
