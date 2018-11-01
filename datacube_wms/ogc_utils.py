@@ -61,3 +61,9 @@ def get_function(func):
         func = getattr(mod, func_name)
         assert callable(func)
     return func
+
+# Exceptions raised when attempting to create a
+# product layer form a bad config or without correct
+# product range
+class ProductLayerException(Exception):
+    pass

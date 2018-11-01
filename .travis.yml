@@ -22,5 +22,3 @@ before_install:
 script:
   # Ensure we are running against the correct python version
   - docker run opendatacube/wms /bin/sh -c "./check-code.sh"
-  - docker run -v /var/run/docker.sock:/var/run/docker.sock opendatacube/wms-test /bin/bash -c "pushd tests/integration; ./run_integration_test.sh geomedian.sh geomedian_cfg.py"
-

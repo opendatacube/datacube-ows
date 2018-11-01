@@ -1,14 +1,13 @@
+from __future__ import absolute_import
 try:
     from datacube_wms.wms_cfg_local import service_cfg
 except ImportError:
     from datacube_wms.wms_cfg import service_cfg
 
-from dea.aws.rioenv import setup_local_env, local_env, has_local_env, s3_gdal_opts
+from dea.aws.rioenv import s3_gdal_opts
+from rasterio.session import AWSSession
+from rasterio.env import Env
 from os import getenv
-
-def preauthenticate_s3():
-    return service_cfg.get("preauthenticate_s3", False)
-
 
 def get_boto_region():
     default_region = "ap-southeast-2"
@@ -25,8 +24,4 @@ def get_gdal_opts():
 
 
 def rio_env():
-    if has_local_env():
-        return local_env()
-    else:
-        return setup_local_env(region_name=get_boto_region(),
-                               **get_gdal_opts())
+    return Env(**get_gdal_opts())

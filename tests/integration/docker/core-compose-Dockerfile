@@ -1,8 +1,0 @@
-FROM opendatacube/wms
-
-RUN apt-get update && apt-get install -y postgresql-client wget netcat && wget https://raw.githubusercontent.com/eficode/wait-for/master/wait-for
-RUN chmod +x ./wait-for
-
-RUN mkdir -p /opt/populate && mkdir -p /opt/wms_cfgs
-COPY populate /opt/populate
-COPY config /opt/wms_cfgs

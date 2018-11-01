@@ -241,7 +241,7 @@ class GetParameters():
     def get_raw_product(self, args):
         return args["layers"].split(",")[0]
 
-class GetLegendGraphicParameters(GetParameters):
+class GetLegendGraphicParameters():
     def __init__(self, args):
         self.product = get_product_from_arg(args, 'layer')
 
@@ -290,7 +290,7 @@ class GetMapParameters(GetParameters):
                 if "resampling" in layer:
                     self.resampling = RESAMPLING_METHODS[layer["resampling"].lower()]
                 break
-            
+
 
 class GetFeatureInfoParameters(GetParameters):
     def get_product(self, args):
@@ -364,4 +364,9 @@ def solar_correct_data(data, dataset):
 def wofls_fuser(dest, src):
     where_nodata = (src & 1) == 0
     numpy.copyto(dest, src, where=where_nodata)
+    return dest
+
+def item_fuser(dest, src):
+    where_combined = numpy.isnan(dest) | (dest == -6666.)
+    numpy.copyto(dest, src, where=where_combined)
     return dest

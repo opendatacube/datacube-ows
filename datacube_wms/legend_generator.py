@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import datacube_wms.band_mapper as mapper
 import logging
 from datacube_wms.wms_layers import get_service_cfg, get_layers
@@ -41,7 +43,7 @@ def create_legends_from_styles(product, styles):
         imgs.append(Image.open(bytesio))
 
     min_shape = sorted([(np.sum(i.size), i.size) for i in imgs])[0][1]
-    imgs_comb = np.vstack((np.asarray( i.resize(min_shape)) for i in imgs))
+    imgs_comb = np.vstack((np.asarray(i.resize(min_shape)) for i in imgs))
     imgs_comb = Image.fromarray(imgs_comb)
     b = io.BytesIO()
     imgs_comb.save(b, 'png')
