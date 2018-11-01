@@ -167,10 +167,6 @@ layer_cfg = [
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
-                # Time Zone.  In hours added to UTC (maybe negative)
-                # Used for rounding off scene times to a date.
-                # 9 is good value for imagery of Australia.
-                "time_zone": 9,
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
                 # Multiple extent mask functions are supported - see USGS Level 1 example below.
@@ -774,10 +770,6 @@ layer_cfg = [
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
-                # Time Zone.  In hours added to UTC (maybe negative)
-                # Used for rounding off scene times to a date.
-                # 9 is good value for imagery of Australia.
-                "time_zone": 9,
                 # Extent mask functions
                 # Determines what portions of dataset is potentially meaningful data.
                 # Multiple extent mask functions are required for this data.
@@ -1233,10 +1225,6 @@ layer_cfg = [
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [200, 180, 180, 160],
-                # Time Zone.  In hours added to UTC (maybe negative)
-                # Used for rounding off scene times to a date.
-                # 9 is good value for imagery of Australia.
-                "time_zone": 9,
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
                 "extent_mask_func": lambda data, band: (~data[band] & data[band].attrs['nodata']),
@@ -1341,10 +1329,6 @@ layer_cfg = [
                 # The fill-colour of the indicative polygons when zoomed out.
                 # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
-                # Time Zone.  In hours added to UTC (maybe negative)
-                # Used for rounding off scene times to a date.
-                # 9 is good value for imagery of Australia.
-                "time_zone": 9,
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
                 "extent_mask_func": lambda data, band: (data[band] != data[band].attrs['nodata']),
@@ -1480,7 +1464,6 @@ layer_cfg = [
                 "product_name": "mangrove_cover",
                 "min_zoom_factor": 15.0,
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
-                "time_zone": 9,
                 "extent_mask_func": lambda data, band: data["extent"] == 1,
                 "ignore_info_flags": [],
                 "data_manual_merge": False,
