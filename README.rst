@@ -45,6 +45,11 @@ Setup
   If you are using git, you should either create a branch first, or use `datacube_wms/wms_cfg_local.py` instead.
   (If it exists, `wms_cfg_local.py` is read in preference to `wms_cfg.py`, but is explicitly ignored by git.)
 
+* If you are accessing data on AWS S3 and running `datacube_wms` on Ubuntu you may encounter errors with `GetMap` similar to: `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`. If this occurs run the following commands::
+
+  mkdir -p /etc/pki/tls/certs
+  ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt;
+
 * Launch flask app using your favorite WSGI server. The following approaches
   have been tested:
 
@@ -130,7 +135,6 @@ The image comes with the standard ODC installed, including the entrypoint that s
 Additionally, the image includes another flag that can be used to grab a config file from a URL:
 
 * `WMS_CONFIG_URL`
-
 
 Credits
 ---------
