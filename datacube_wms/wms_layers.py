@@ -67,6 +67,7 @@ class ProductLayerDef():
         self.max_datasets_wms = product_cfg.get("max_datasets_wms", 0)
         self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150, 180, 200])
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
+        self.feature_info_include_utc_dates = product_cfg.get("feature_info_include_utc_dates", False)
         self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
