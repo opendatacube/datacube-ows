@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import datacube_wms.band_mapper as mapper
 import logging
-from datacube_wms.wms_layers import get_service_cfg, get_layers
+from datacube_wms.wms_layers import get_layers
 from datacube_wms.wms_utils import GetLegendGraphicParameters
 import io
 from PIL import Image
@@ -15,7 +15,6 @@ _LOG = logging.getLogger(__name__)
 
 def legend_graphic(args):
     params = GetLegendGraphicParameters(args)
-    svc_cfg = get_service_cfg()
     img = None
     if not params.style_name:
         product = params.product
@@ -29,11 +28,11 @@ def legend_graphic(args):
                     img.mimetype = 'image/png'
             else:
                 styles = [product.style_index[s] for s in legend_config.get('styles', [])]
-                img = create_legends_from_styles(product, styles)
+                img = create_legends_from_styles(styles)
     return img
 
 
-def create_legends_from_styles(product, styles):
+def create_legends_from_styles(styles):
     # Run through all values in style cfg and generate
     imgs = []
     for s in styles:
