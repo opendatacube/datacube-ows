@@ -533,7 +533,8 @@ def feature_info(args):
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets))
             if params.product.feature_info_include_utc_dates:
-                feature_json["data_available_for_utc_dates"] = sorted(d.center_time.strftime("%Y-%m-%d") for d in datasets)
+                feature_json["data_available_for_utc_dates"] = sorted(
+                    d.center_time.strftime("%Y-%m-%d") for d in datasets)
     # --- End code section requiring datacube.
 
     result = {
