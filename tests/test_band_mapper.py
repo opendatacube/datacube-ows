@@ -131,6 +131,25 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     assert compressed[1] == 255 / 2
     assert compressed[2] == 255
 
+def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin):
+    style_cfg_lin["scale_range"] = [-3000, 3000]
+
+    style_def = StyleDef(product_layer, style_cfg_lin)
+
+    assert style_def.scale_min == -3000
+    assert style_def.scale_max == 3000
+
+    band = np.zeros(3)
+    band[0] = -3001
+    band[1] = 0
+    band[2] = 3001
+
+    compressed = style_def.compress_band(band)
+
+    assert compressed[0] == 0
+    assert compressed[1] == 255 / 2
+    assert compressed[2] == 255
+
 def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
     del style_cfg_lin["scale_range"]
     style_cfg_lin["scale_factor"] = 2.5
