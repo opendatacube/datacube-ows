@@ -177,7 +177,9 @@ layer_cfg = [
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
                 "ignore_info_flags": [],
-
+                # Include an additional list of utc dates in the WMS Get Feature Info
+                # HACK: only used for GSKY non-solar day lookup
+                "feature_info_include_utc_dates": True,
                 # Set to true if the band product dataset extents include nodata regions.
                 "data_manual_merge": False,
                 # Set to true if the pq product dataset extents include nodata regions.

@@ -468,7 +468,7 @@ def feature_info(args):
             # Group datasets by time, load only datasets that match the idx_date
             available_dates = {local_date(d) for d in datasets}
             pixel_ds = None
-            ds_at_time = list(filter(lambda d: local_date(d) == params.time, datasets))
+            ds_at_time = [ds for ds in datasets if local_date(ds) == params.time]
             if len(ds_at_time) > 0:
                 data = stacker.data(ds_at_time, skip_corrections=True)
                 pixel_ds = data.isel(**isel_kwargs)
@@ -532,6 +532,9 @@ def feature_info(args):
 
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets))
+            if params.product.feature_info_include_utc_dates:
+                feature_json["data_available_for_utc_dates"] = sorted(
+                    d.center_time.strftime("%Y-%m-%d") for d in datasets)
     # --- End code section requiring datacube.
 
     result = {
