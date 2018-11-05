@@ -70,10 +70,10 @@ def ogc_impl():
                 # parameter.
                 # This is a quick hack to fix #64.  Service and operation routing could be
                 # handled more elegantly.
-                request = nocase_args.get("request", "").upper()
-                if request in wms_requests:
+                op = nocase_args.get("request", "").upper()
+                if op in wms_requests:
                     return handle_wms(nocase_args)
-                elif request in wcs_requests:
+                elif op in wcs_requests:
                     return handle_wcs(nocase_args)
                 else:
                     # Should we return a WMS or WCS exception if there is no service specified?
