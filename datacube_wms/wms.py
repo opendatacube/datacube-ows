@@ -12,6 +12,9 @@ from datacube_wms.wms_layers import get_layers, get_service_cfg
 from datacube_wms.legend_generator import legend_graphic
 
 
+wms_requests = ( "GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
+
+
 def handle_wms(nocase_args):
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map

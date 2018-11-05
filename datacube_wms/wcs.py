@@ -11,6 +11,8 @@ from datacube_wms.wcs_utils import WCS1GetCoverageRequest, get_coverage_data, ge
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 
+wcs_requests = ("DESCRIBECOVERAGE", "GETCOVERAGE")
+
 def handle_wcs(nocase_args):
     operation = nocase_args.get("request", "").upper()
     if not operation:

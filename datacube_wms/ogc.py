@@ -8,8 +8,8 @@ import boto3
 import rasterio
 import os
 
-from datacube_wms.wms import handle_wms
-from datacube_wms.wcs import handle_wcs
+from datacube_wms.wms import handle_wms, wms_requests
+from datacube_wms.wcs import handle_wcs, wcs_requests
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
 
 from datacube_wms.wms_layers import get_service_cfg
@@ -64,9 +64,21 @@ def ogc_impl():
                 else:
                     raise WCS1Exception("Invalid service", locator="Service parameter")
             else:
-                # Should we return a WMS or WCS exception if there is no service specified?
-                # Defaulting to WMS because that's what we already have.
-                raise WMSException("Invalid service", locator="Service parameter")
+                # service argument is only required (in fact only defined) by OGC for
+                # GetCapabilities requests.  As long as we are persisting with a single
+                # routing end point for all services, we must derive the service from the request
+                # parameter.
+                # This is a quick hack to fix #64.  Service and operation routing could be
+                # handled more elegantly.
+                request = nocase_args.get("request", "").upper()
+                if request in wms_requests:
+                    return handle_wms(nocase_args)
+                elif request in wcs_requests:
+                    return handle_wcs(nocase_args)
+                else:
+                    # Should we return a WMS or WCS exception if there is no service specified?
+                    # Defaulting to WMS because that's what we already have.
+                    raise WMSException("Invalid service and/or request", locator="Service and request parameters")
     except OGCException as e:
         return e.exception_response()
     except Exception as e:
