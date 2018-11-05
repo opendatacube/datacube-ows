@@ -8,8 +8,8 @@ import boto3
 import rasterio
 import os
 
-from datacube_wms.wms import handle_wms, wms_requests
-from datacube_wms.wcs import handle_wcs, wcs_requests
+from datacube_wms.wms import handle_wms, WMS_REQUESTS
+from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
 
 from datacube_wms.wms_layers import get_service_cfg
@@ -42,6 +42,7 @@ def lower_get_args():
 
 @app.route('/')
 def ogc_impl():
+    #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
     nocase_args['referer'] = request.headers.get('Referer', None)
     nocase_args['origin'] = request.headers.get('Origin', None)
@@ -71,9 +72,9 @@ def ogc_impl():
                 # This is a quick hack to fix #64.  Service and operation routing could be
                 # handled more elegantly.
                 op = nocase_args.get("request", "").upper()
-                if op in wms_requests:
+                if op in WMS_REQUESTS:
                     return handle_wms(nocase_args)
-                elif op in wcs_requests:
+                elif op in WCS_REQUESTS:
                     return handle_wcs(nocase_args)
                 else:
                     # Should we return a WMS or WCS exception if there is no service specified?
