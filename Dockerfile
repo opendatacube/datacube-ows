@@ -44,7 +44,7 @@ RUN python3 setup.py install
 
 COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
 COPY docker/get_wms_config.sh /usr/local/bin/get_wms_config.sh
-COPY update-and-reload.sh /user/local/bin/update-and-reload.sh
+COPY docker/update-and-reload.sh /usr/local/bin/update-and-reload.sh
 
 # Perform setup install
 RUN mkdir -p /code/setup
