@@ -16,17 +16,26 @@
             <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
             <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
             {% if not product.wcs_sole_time %}
-            <gml:timePosition>{{ product.ranges.start_time.isoformat() }}</gml:timePosition>
-            <gml:timePosition>{{ product.ranges.end_time.isoformat() }}</gml:timePosition>
+            <gml:timePosition>{{ product.ranges.start_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
+            <gml:timePosition>{{ product.ranges.end_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
             {% endif %}
         </lonLatEnvelope>
 
         <domainSet>
             <spatialDomain>
-                <gml:Envelope srsName="{{ service.default_geographic_CRS }}">
-                    <gml:pos dimension="2">{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
-                    <gml:pos dimension="2">{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
-                </gml:Envelope>
+                {% if not product.wcs_sole_time %}
+                    <gml:EnvelopeWithTimePeriod srsName="{{ service.default_geographic_CRS }}">
+                        <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
+                        <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+                        <gml:timePosition>{{ product.ranges.start_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
+                        <gml:timePosition>{{ product.ranges.end_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
+                    </gml:EnvelopeWithTimePeriod>
+                {% else %}
+                    <gml:Envelope srsName="{{ service.default_geographic_CRS }}">
+                        <gml:pos dimension="2">{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
+                        <gml:pos dimension="2">{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+                    </gml:Envelope>
+                {% endif %}
                 {% if product.native_CRS %}
                 <gml:RectifiedGrid srsName="{{ product.native_CRS }}" dimension="2">
                     <gml:limits>
@@ -42,18 +51,36 @@
                             {{ [product.ranges["bboxes"][product.native_CRS]["left"], product.ranges["bboxes"][product.native_CRS]["right"]]|min }} {{ [product.ranges["bboxes"][product.native_CRS]["top"], product.ranges["bboxes"][product.native_CRS]["bottom"]]|min }}
                         </gml:pos>
                     </gml:origin>
-                    <gml:offsetVector>{{ product.resolution_x }} 0</gml:offsetVector>
-                    <gml:offsetVector>0 {{ product.resolution_y }}</gml:offsetVector>
+                    <gml:offsetVector>{{ product.resolution_x }} 0.0</gml:offsetVector>
+                    <gml:offsetVector>0.0 {{ product.resolution_y }}</gml:offsetVector>
                 </gml:RectifiedGrid>
+                {% else %}
+                    <gml:RectifiedGrid srsName="EPSG:3577" dimension="2">
+                        <gml:limits>
+                            <gml:GridEnvelope>
+                                <gml:low>0 0</gml:low>
+                                <gml:high>188804 164575</gml:high>
+                            </gml:GridEnvelope>
+                        </gml:limits>
+                        <gml:axisName>x</gml:axisName>
+                        <gml:axisName>y</gml:axisName>
+                        <gml:origin>
+                            <gml:pos>
+                                -2083052.7983727155 -5063148.378770097
+                            </gml:pos>
+                        </gml:origin>
+                        <gml:offsetVector>25.0 0.0</gml:offsetVector>
+                        <gml:offsetVector>0.0 -25.0</gml:offsetVector>
+                    </gml:RectifiedGrid>
                 {% endif %}
             </spatialDomain>
             {% if not product.wcs_sole_time %}
             <temporalDomain>
                 {% for t in product.ranges.times %}
-                    <gml:timePosition frame="#ISO-8601">{{ t.isoformat() }}</gml:timePosition>
+                    <gml:timePosition>{{ t.isoformat() }}T00:00:00.000Z</gml:timePosition>
                 {%  endfor %}
             </temporalDomain>
-            {%  endif %} %}
+            {% endif %}
         </domainSet>
         <rangeSet>
             <RangeSet>

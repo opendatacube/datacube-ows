@@ -103,6 +103,8 @@ class ProductLayerDef():
             if svc_cfg.create_grid:
                 try:
                     self.native_CRS = self.product.definition["storage"]["crs"]
+                    if not self.native_CRS:
+                        self.native_CRS = product_cfg.get("native_wcs_crs")
                     if self.native_CRS not in svc_cfg.published_CRSs:
                         raise Exception(
                             "Native CRS for product {} ({}) not in published CRSs".format(self.product_name,
