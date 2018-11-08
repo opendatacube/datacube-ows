@@ -28,3 +28,14 @@ def test_get_service_base_url():
     ret = datacube_wms.ogc_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"
 
+    #include path
+    allowed_urls = ["https://foo.bar.baz", "https://foo.bar.baz/wms/"]
+    request_url = "https://foo.bar.baz/wms/"
+    ret = datacube_wms.ogc_utils.get_service_base_url(allowed_urls, request_url)
+    assert ret == "https://foo.bar.baz/wms"
+
+
+def test_parse_for_base_url():
+    url = "https://hello.world.bar:8000/wms/?CheckSomething"
+    ret = datacube_wms.ogc_utils.parse_for_base_url(url)
+    assert ret == "hello.world.bar:8000/wms"
