@@ -45,7 +45,8 @@ def get_capabilities(args):
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
     service_cfg = get_service_cfg()
-    base_url = get_service_base_url(service_cfg.allowed_urls, args['url_root'])
+    url = args.get('Host', args['url_root'])
+    base_url = get_service_base_url(service_cfg.allowed_urls, url)
     return (
         render_template(
             "wms_capabilities.xml",

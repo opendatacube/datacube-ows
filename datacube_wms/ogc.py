@@ -8,6 +8,7 @@ import boto3
 import rasterio
 import os
 
+from datacube_wms.ogc_utils import capture_headers
 from datacube_wms.wms import handle_wms, WMS_REQUESTS
 from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
@@ -44,10 +45,7 @@ def lower_get_args():
 def ogc_impl():
     #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
-    nocase_args['referer'] = request.headers.get('Referer', None)
-    nocase_args['origin'] = request.headers.get('Origin', None)
-    nocase_args['requestid'] = request.environ.get("FLASK_REQUEST_ID")
-    nocase_args['url_root'] = request.url_root
+    nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
     # create dummy env if not exists
