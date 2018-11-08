@@ -47,6 +47,7 @@ def ogc_impl():
     nocase_args['referer'] = request.headers.get('Referer', None)
     nocase_args['origin'] = request.headers.get('Origin', None)
     nocase_args['requestid'] = request.environ.get("FLASK_REQUEST_ID")
+    nocase_args['url_root'] = request.url_root
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
     # create dummy env if not exists

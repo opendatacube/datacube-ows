@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from flask import render_template
 
 from datacube_wms.data import get_map, feature_info
-from datacube_wms.ogc_utils import resp_headers
+from datacube_wms.ogc_utils import resp_headers, get_service_base_url
 
 from datacube_wms.ogc_exceptions import WCS1Exception
 from datacube_wms.wcs_utils import WCS1GetCoverageRequest, get_coverage_data, get_tiff
@@ -53,13 +53,16 @@ def get_capabilities(args):
 
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
+    service_cfg = get_service_cfg()
+    base_url = get_service_base_url(service_cfg.allowed_urls, args['url_root'])
     return (
         render_template("wcs_capabilities.xml",
                         show_service=show_service,
                         show_capability=show_capability,
                         show_content_metadata=show_content_metadata,
-                        service=get_service_cfg(),
-                        platforms=platforms),
+                        service=service_cfg,
+                        platforms=platforms,
+                        base_url=base_url),
         200,
         resp_headers({
             "Content-Type": "application/xml",

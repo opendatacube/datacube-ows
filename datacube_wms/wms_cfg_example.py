@@ -18,6 +18,8 @@ service_cfg = {
     # Service title - appears e.g. in Terria catalog
     "title": "WMS server for Australian Landsat Datacube",
     # Service URL.  Should a fully qualified URL
+    # Can also be a list of URLs that the service can return
+    # in the GetCapabilities document based on the requesting url
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
     # URL that humans can visit to learn more about the WMS or organization
     # should be fully qualified
