@@ -13,7 +13,7 @@ def main(product, calculate_extent):
         print("Done")
     elif product is not None:
         print("Updating range for: ", product)
-        update_range(dc, product)
+        add_range(dc, product)
     else:
         print ("Updating ranges for all layers/products")
         p, u, i, sp, su, si = update_all_ranges(dc)
