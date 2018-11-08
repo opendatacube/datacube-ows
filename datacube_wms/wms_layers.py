@@ -216,6 +216,11 @@ class ServiceCfg():
 
             self.title = srv_cfg["title"]
             self.url = srv_cfg["url"]
+            # For services that can be accessed through
+            # multiple domain names
+            self.allowed_urls = self.url
+            if isinstance(self.url, list):
+                self.url = self.allowed_urls[0]
             if not self.url.startswith("http"):
                 raise Exception("URL in service_cfg does not start with http or https.")
             self.human_url = srv_cfg.get("human_url", self.url)

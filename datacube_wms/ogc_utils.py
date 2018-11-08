@@ -62,6 +62,16 @@ def get_function(func):
         assert callable(func)
     return func
 
+
+def get_service_base_url(allowed_urls, request_url):
+    if not isinstance(allowed_urls, list):
+        return allowed_urls
+    request_url = request_url.rstrip("/")
+    allowed_urls = [u.rstrip("/") for u in allowed_urls]
+    url = request_url if request_url in allowed_urls else allowed_urls[0]
+    return url
+
+
 # Exceptions raised when attempting to create a
 # product layer form a bad config or without correct
 # product range

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from flask import render_template
 
 from datacube_wms.data import get_map, feature_info
-from datacube_wms.ogc_utils import resp_headers
+from datacube_wms.ogc_utils import resp_headers, get_service_base_url
 
 from datacube_wms.ogc_exceptions import WMSException
 
@@ -44,5 +44,16 @@ def get_capabilities(args):
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
-    return render_template("wms_capabilities.xml", service=get_service_cfg(), platforms=platforms), 200, resp_headers(
-        {"Content-Type": "application/xml", "Cache-Control": "no-cache,max-age=0"})
+    service_cfg = get_service_cfg()
+    base_url = get_service_base_url(service_cfg.allowed_urls, args['url_root'])
+    return (
+        render_template(
+            "wms_capabilities.xml",
+            service=service_cfg,
+            platforms=platforms,
+            base_url=base_url),
+        200,
+        resp_headers(
+            {"Content-Type": "application/xml", "Cache-Control": "no-cache,max-age=0"}
+        )
+    )
