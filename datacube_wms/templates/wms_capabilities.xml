@@ -120,6 +120,7 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
         <CRS>{{ crs }}</CRS>
         {% endfor %}
         {% for platform in platforms %}
+        {% if platform.products %}
         <Layer>
             <Title>{{ platform.title }}</Title>
             <Abstract>{{ platform.abstract }}</Abstract>
@@ -243,6 +244,7 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
                     {% endif %}
             {% endfor %}
         </Layer>
+        {% endif %}
         {% endfor %}
     </Layer>
 </Capability>
