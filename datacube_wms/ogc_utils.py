@@ -74,7 +74,11 @@ def get_service_base_url(allowed_urls, request_url):
         return allowed_urls
     parsed_request_url = parse_for_base_url(request_url)
     parsed_allowed_urls = [parse_for_base_url(u) for u in allowed_urls]
-    url = request_url if parsed_request_url in parsed_allowed_urls else allowed_urls[0]
+    try:
+        idx = parsed_allowed_urls.index(parsed_request_url)
+    except ValueError:
+        idx = None
+    url = allowed_urls[idx] if idx is not None else allowed_urls[0]
     # template includes tailing /, strip any trail slash here to avoid duplicates
     url = url.rstrip("/")
     return url
