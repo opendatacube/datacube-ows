@@ -1,24 +1,20 @@
 dist: trusty
 sudo: required  # Use the new travis docker based infrastructure
-
 services:
   - docker
-
 git:
   # We need a deeper depth for 'git descibe' to ensure
   # we can reach the last tagged version.
   depth: 99999
-
 language: python
 python:
 # We don't use the travis python, but we will use it for the build matrix
   - "3.6"
-
-before_install:
-  # Create a database for the integration tests.
-  - docker build -t opendatacube/wms .
-  - docker build -t opendatacube/wms-test -f Dockerfile.travis .
-
-script:
-  # Ensure we are running against the correct python version
-  - docker run opendatacube/wms /bin/sh -c "./check-code.sh"
+jobs:
+  include:
+    - stage: test
+      script: 
+        - docker build -t opendatacube/wms .
+        - docker run opendatacube/wms /bin/sh -c "./check-code.sh"
+notifications:
+  webhooks: https://kjlmpl7vn6.execute-api.ap-southeast-2.amazonaws.com/default/
