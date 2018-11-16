@@ -34,6 +34,7 @@ RUN pip3 install \
     pytest-mock \
     requests \
     watchdog \
+    aiobotocore \
     && rm -rf $HOME/.cache/pip
 
 WORKDIR /code
