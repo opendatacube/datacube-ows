@@ -21,5 +21,11 @@ jobs:
         - ifconfig
         # ens4 is specific to Travis Xenial should be changed if moving to another OS / CI provider
         - "wget https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64 && chmod +x clair-scanner_linux_amd64 && ./clair-scanner_linux_amd64 --threshold='High' --report='clair-scan.json' --ip $(ifconfig ens4 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}') --reportAll=false opendatacube/wms:latest"
+    - stage: build
+      if: branch = master
+      script:
+        - docker build -t opendatacube/wms:$(git describe --tags) .
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker push opendatacube/wms:$(git describe --tags)
 notifications:
   webhooks: https://4q9hixv4pd.execute-api.ap-southeast-2.amazonaws.com/alpha/travis
