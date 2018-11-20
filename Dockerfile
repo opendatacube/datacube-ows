@@ -16,30 +16,12 @@ RUN apt-get update && apt-get install -y \
     libev-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install \
-    colour \
-    flask \
-    scikit-image \
-    gevent \
-    eventlet \
-    gunicorn \
-    gunicorn[gevent] \
-    gunicorn[eventlet] \
-    boto3 \
-    rasterio==1.0.9 \
-    ruamel.yaml \
-    prometheus-client \
-    flask-request-id-middleware \
-    pytest-localserver \
-    pytest-mock \
-    requests \
-    watchdog \
-    aiobotocore \
-    && rm -rf $HOME/.cache/pip
-
 WORKDIR /code
 
 ADD . .
+
+RUN pip3 install -r requirements.txt \
+    && rm -rf $HOME/.cache/pip
 
 RUN python3 setup.py install
 
