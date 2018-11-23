@@ -212,6 +212,7 @@ class ServiceCfg():
 
             self.wms = srv_cfg.get("wms", True)
             self.wcs = srv_cfg.get("wcs", False)
+            self.wmts = srv_cfg.get("wmts", False)
             self.create_grid = srv_cfg.get("create_wcs_grid", False)
 
             self.title = srv_cfg["title"]

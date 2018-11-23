@@ -1,0 +1,330 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<Capabilities version="1.0.0"
+xmlns="http://www.opengis.net/wmts/1.0"
+xmlns:ows="http://www.opengis.net/ows/1.1"
+xmlns:xlink="http://www.w3.org/1999/xlink"
+xmlns:gml="http://www.opengis.net/gml"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd">
+
+{% if show_service_id %}
+    <ows.ServiceIdentification>
+        <ows:Title>{{ service.title }}</ows:Title>
+        {% if service.abstract %}
+        <ows:Abstract>
+            {{ service.abstract }}
+        </ows:Abstract>
+        {% endif %}
+        {% if service.keywords %}
+        <ows:Keywords>
+            {% for kw in service.keywords %}
+            <ows:Keyword>{{ kw }}</ows:Keyword>
+            {% endfor %}
+        </ows:Keywords>
+        {% endif %}
+        <ows:ServiceType>OGC WMTS</ows:ServiceType>
+        <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
+        <ows:Fees>{% if service.fees %}{{ service.fees }}{% else %}none{% endif %}</ows:Fees>
+        <ows:AccessConstraints>{% if service.access_constraints %}{{ service.access_constraints }}{% else %}none{% endif %}</ows:AccessConstraints>
+    </ows.ServiceIdentification>
+{% endif %}
+
+{% if show_service_provider %}
+    <ows:ServiceProvider>
+        {% if service.contact_info %}
+        {% if service.contact_info.organisation %}
+        <ows:ProviderName>{{ service.contact_info.organisation }}</ows:ProviderName>
+        {% endif %}
+        {% if service.human_url %}
+        <ows:ProviderSite xlink:href="{{ service.human_url }}"/>
+        {% endif %}
+        <ows:ServiceContact>
+            {% if service.contact_info.person %}
+            <ows:IndividualName>{{ service.contact_info.person }}</ows:IndividualName>
+            {% endif %}
+            {% if service.contact_info.position %}
+            <ows:PositionName>{{ service.contact_info.position }}</ows:PositionName>
+            {% endif %}
+            {% if service.contact_info.address or service.contact_info.telephone or service.contact_info.fax or service.contact_info.email %}
+            <ows:ContactInfo>
+                {% if service.contact_info.telephone or service.contact_info.fax %}
+                <ows:Phone>
+                    {% if service.contact_info.telephone %}
+                    <ows:Voice>{{ service.contact_info.telephone }}</ows:Voice>
+                    {% endif %}
+                    {% if service.contact_info.fax %}
+                    <ows:Facsimile>{{ service.contact_info.fax }}</ows:Facsimile>
+                    {% endif %}
+                </ows:Phone>
+                {% endif %}
+                {% if service.contact_info.address or service.contact_info.email %}
+                <ows:Address>
+                    {%  if service.contact_info.address %}
+                    <ows:DeliveryPoint>{{ service.contact_info.address.address }}</ows:DeliveryPoint>
+                    <ows:City>{{ service.contact_info.address.city }}</ows:City>
+                    <ows:AdministrativeArea>{{ service.contact_info.address.state }}</ows:AdministrativeArea>
+                    <ows:PostalCode>{{ service.contact_info.address.postcode }}</ows:PostalCode>
+                    <ows:Country>{{ service.contact_info.address.country }}</ows:Country>
+                    {%  endif %}
+                    {% if service.contact_info.email %}
+                    <ows:ElectronicMailAddress>{{ service.contact_info.email }}</ows:ElectronicMailAddress>
+                    {% endif %}
+                </ows:Address>
+                {% endif %}
+            </ows:ContactInfo>
+            {% endif %}
+        </ows:ServiceContact>
+        {% endif %}
+    </ows:ServiceProvider>
+{% endif %}
+
+{% if show_ops_metadata %}
+    <ows:OperationsMetadata>
+        <ows:Operation name="GetCapabilities">
+            <ows:DCP>
+                <ows:HTTP>
+                    <ows:Get xlink:href="{{ base_url }}">
+                        <ows:Constraint name="GetEncoding">
+                            <ows:AllowedValues>
+                                <ows:Value>KVP</ows:Value>
+                            </ows:AllowedValues>
+                        </ows:Constraint>
+                    </ows:Get>
+                </ows:HTTP>
+            </ows:DCP>
+        </ows:Operation>
+        <ows:Operation name="GetTile">
+            <ows:DCP>
+                <ows:HTTP>
+                    <ows:Get xlink:href="{{ base_url }}">
+                        <ows:Constraint name="GetEncoding">
+                            <ows:AllowedValues>
+                                <ows:Value>KVP</ows:Value>
+                            </ows:AllowedValues>
+                        </ows:Constraint>
+                    </ows:Get>
+                </ows:HTTP>
+            </ows:DCP>
+        </ows:Operation>
+        <ows:Operation name="GetFeatureInfo">
+            <ows:DCP>
+                <ows:HTTP>
+                    <ows:Get xlink:href="{{ base_url }}">
+                        <ows:Constraint name="GetEncoding">
+                            <ows:AllowedValues>
+                                <ows:Value>KVP</ows:Value>
+                            </ows:AllowedValues>
+                        </ows:Constraint>
+                    </ows:Get>
+                </ows:HTTP>
+            </ows:DCP>
+        </ows:Operation>
+    </ows:OperationsMetadata>
+{% endif %}
+
+{% if show_contents %}
+    <Contents>
+        {% for platform in platforms %}{% for product in platform.products %}
+        <Layer>
+            <ows:Title>{{ product.title }}</ows:Title>
+            <ows:Abstract>{{ product.abstract }}</ows:Abstract>
+            <ows:WGS84BoundingBox>
+                <ows:LowerCorner>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</ows:LowerCorner>
+                <ows:UpperCorner>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</ows:UpperCorner>
+            </ows:WGS84BoundingBox>
+            <ows:Identifier>{{ product.name }}</ows:Identifier>
+            {% for style in product.styles %}
+            <Style{% if loop.first %} isDefault="true"{% endif %}>
+                <ows:Identifier>{{ style.name }}</ows:Identifier>
+                <ows:Title>{{ style.title }}</ows:Title>
+                <ows:Abstract>{{ style.abstract }}</ows:Abstract>
+            </Style>
+            {% endfor %}
+            <Format>image/png</Format>
+            <InfoFormat>application/json</InfoFormat>
+            <Dimension>
+                <ows:Identifier>Time</ows:Identifier>
+                <ows:Title>Date</ows:Title>
+                {% for t in product.ranges.times %}
+                <Value>{{ t }}</Value>
+                {% endfor %}
+            </Dimension>
+            <TileMatrixSetLink>
+                <TileMatrixSet>WholeWorld_WebMercator</TileMatrixSet>
+            </TileMatrixSetLink>
+        </Layer>
+        {% endfor %}{% endfor %}
+        <TileMatrixSet>
+            <ows:Identifier>WholeWorld_WebMercator</ows:Identifier>
+            <ows:SupportedCRS>urn:ogc:def:crs:EPSG::3857</ows:SupportedCRS>
+            <WellKnownScaleSet>urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible</WellKnownScaleSet>
+            <TileMatrix>
+                <ows:Identifier>0</ows:Identifier>
+                <ScaleDenominator>559082264.0287178</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>1</MatrixWidth>
+                <MatrixHeight>1</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>1</ows:Identifier>
+                <ScaleDenominator>279541132.0143589</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>2</MatrixWidth>
+                <MatrixHeight>2</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>2</ows:Identifier>
+                <ScaleDenominator>139770566.0071794</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>4</MatrixWidth>
+                <MatrixHeight>4</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>3</ows:Identifier>
+                <ScaleDenominator>69885283.00358972</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>8</MatrixWidth>
+                <MatrixHeight>8</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>4</ows:Identifier>
+                <ScaleDenominator>34942641.50179486</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>16</MatrixWidth>
+                <MatrixHeight>16</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>5</ows:Identifier>
+                <ScaleDenominator>17471320.75089743</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>32</MatrixWidth>
+                <MatrixHeight>32</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>6</ows:Identifier>
+                <ScaleDenominator>8735660.375448715</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>64</MatrixWidth>
+                <MatrixHeight>64</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>7</ows:Identifier>
+                <ScaleDenominator>4367830.187724357</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>128</MatrixWidth>
+                <MatrixHeight>128</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>8</ows:Identifier>
+                <ScaleDenominator>2183915.093862179</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>256</MatrixWidth>
+                <MatrixHeight>256</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>9</ows:Identifier>
+                <ScaleDenominator>1091957.546931089</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>512</MatrixWidth>
+                <MatrixHeight>512</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>10</ows:Identifier>
+                <ScaleDenominator>545978.7734655447</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>1024</MatrixWidth>
+                <MatrixHeight>1024</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>11</ows:Identifier>
+                <ScaleDenominator>272989.3867327723</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>2048</MatrixWidth>
+                <MatrixHeight>2048</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>12</ows:Identifier>
+                <ScaleDenominator>136494.6933663862</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>4096</MatrixWidth>
+                <MatrixHeight>4096</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>13</ows:Identifier>
+                <ScaleDenominator>68247.34668319309</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>8192</MatrixWidth>
+                <MatrixHeight>8192</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>14</ows:Identifier>
+                <ScaleDenominator>34123.67334159654</ScaleDenominator>
+                <TopLeftCorner>-20037508.3427892 20037508.3427892</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>16384</MatrixWidth>
+                <MatrixHeight>16384</MatrixHeight>
+            </TileMatrix>
+        </TileMatrixSet>
+    </Contents>
+{% endif %}
+
+{% if show_themes %}
+    <Themes>
+        <Theme>
+            <ows:Title>{{ service.title }}</ows:Title>
+            {% if service.abstract %}
+            <ows:Abstract>
+                {{ service.abstract }}
+            </ows:Abstract>
+            {% endif %}
+            <ows:Identifier>main_menu</ows:Identifier>
+            {% for platform in platforms %}
+            {% if platform.products %}
+            <Theme>
+                <ows:Title>{{ platform.title }}</ows:Title>
+                <ows:Abstract>{{ platform.abstract }}</ows:Abstract>
+                <ows:Identifier>{{ platform.name }}</ows:Identifier>
+                {% for product in platform.products %}
+                <Theme>
+                    <ows:Title>{{ product.title }}</ows:Title>
+                    <ows:Identifier>{{ product.name }}</ows:Identifier>
+                    <ows:Abstract>{{ product.abstract }}</ows:Abstract>
+                    <LayerRef>{{ product.name }}</LayerRef>
+                </Theme>
+                {% endfor %}
+            </Theme>
+            {% endif %}
+            {% endfor %}
+        </Theme>
+    </Themes>
+{% endif %}
+</Capabilities>

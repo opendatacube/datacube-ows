@@ -11,6 +11,7 @@ import os
 from datacube_wms.ogc_utils import capture_headers
 from datacube_wms.wms import handle_wms, WMS_REQUESTS
 from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
+from datacube_wms.wmts import handle_wmts, WMTS_REQUESTS
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
 
 from datacube_wms.wms_layers import get_service_cfg
@@ -61,6 +62,12 @@ def ogc_impl():
                 # WCS operation Map
                 if svc_cfg.wcs:
                     return handle_wcs(nocase_args)
+                else:
+                    raise WCS1Exception("Invalid service", locator="Service parameter")
+            elif service == "WMTS":
+                # WMTS operation Map
+                if svc_cfg.wmts:
+                    return handle_wmts(nocase_args)
                 else:
                     raise WCS1Exception("Invalid service", locator="Service parameter")
             else:

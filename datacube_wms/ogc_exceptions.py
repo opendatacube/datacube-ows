@@ -50,6 +50,10 @@ class WMSException(OGCException):
     version = "1.3.0"
     schema_url = "http://schemas.opengis.net/wms/1.3.0/exceptions_1_3_0.xsd"
 
+class WMTSException(WMSException):
+    version = "1.0.0"
+    schema_url = "http://schemas.opengis.net/wmts/1.0.0/exceptions_1_0_0.xsd"
+
 
 class WCS1Exception(OGCException):
     COVERAGE_NOT_DEFINED = "CoverageNotDefined"

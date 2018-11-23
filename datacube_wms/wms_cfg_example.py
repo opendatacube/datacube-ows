@@ -13,6 +13,7 @@ service_cfg = {
     # Defaults: wms: True, wcs: False
     "wcs": True,
     "wms": True,
+    "wmts": True,
 
     ## Required config for WMS and/or WCS
     # Service title - appears e.g. in Terria catalog
