@@ -2,10 +2,10 @@ from __future__ import absolute_import, division, print_function
 
 from flask import render_template
 
-from datacube_wms.data import get_map, feature_info
+from datacube_wms.data import get_map
 from datacube_wms.ogc_utils import resp_headers, get_service_base_url
 
-from datacube_wms.ogc_exceptions import WMTSException
+from datacube_wms.ogc_exceptions import WMSException, WMTSException
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
@@ -22,10 +22,30 @@ def handle_wmts(nocase_args):
         raise WMTSException("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":
         return get_capabilities(nocase_args)
+    elif operation == "GETTILE":
+        return get_tile(nocase_args)
     else:
         raise WMTSException("Unrecognised operation: %s" % operation, WMTSException.OPERATION_NOT_SUPPORTED,
                            "Request parameter")
 
+
+WebMercScaleSet = [
+     559082264.0287178,
+     279541132.0143589,
+     139770566.0071794,
+     69885283.00358972,
+     34942641.50179486,
+     17471320.75089743,
+     8735660.375448715,
+     4367830.187724357,
+     2183915.093862179,
+     1091957.546931089,
+     545978.7734655447,
+     272989.3867327723,
+     136494.6933663862,
+     68247.34668319309,
+     34123.67334159654,
+]
 
 def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
@@ -82,9 +102,80 @@ def get_capabilities(args):
             show_service_provider = show_service_provider,
             show_ops_metadata = show_ops_metadata,
             show_contents = show_contents,
-            show_themes = show_themes),
+            show_themes = show_themes,
+            webmerc_ss = WebMercScaleSet),
         200,
         resp_headers(
             {"Content-Type": "application/xml", "Cache-Control": "no-cache,max-age=0"}
         )
     )
+
+
+def get_tile(args):
+    layer = args.get("layer")
+    style = args.get("style")
+    format = args.get("format")
+    time = args.get("time", "")
+    tileMatrixSet = args.get("tilematrixset")
+    tileMatrix = args.get("tilematrix")
+    row = args.get("tilerow")
+    col = args.get("tilecol")
+
+    wms_args = {
+        "version": "1.3.0",
+        "service": "WMS",
+        "request": "GetMap",
+        "styles": style,
+        "layers": layer,
+        "time": time,
+        "width": 256,
+        "height": 256,
+        "format": format,
+        "exceptions": "application/vnd.ogc.se_xml",
+        "crs": "EPSG:3857",
+        "requestid": args["requestid"]
+    }
+
+    if tileMatrixSet != "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible":
+        raise WMTSException("Invalid Tile Matrix Set: " + tileMatrixSet)
+
+    try:
+        tileMatrix = int(tileMatrix)
+        if tileMatrix < 0 or tileMatrix >= len(WebMercScaleSet):
+            raise WMTSException("Invalid Tile Matrix: " + tileMatrix)
+    except ValueError:
+        raise WMTSException("Invalid Tile Matrix: " + tileMatrix)
+    try:
+        row = int(row)
+    except ValueError:
+        raise WMTSException("Invalid Tile Row: " + row)
+    try:
+        col = int(col)
+    except ValueError:
+        raise WMTSException("Invalid Tile Col: " + col)
+
+    matrix_size = 2 ** tileMatrix
+    tileMatrixMinX=-20037508.3427892
+    tileMatrixMaxY=20037508.3427892
+
+    tileSpan = WebMercScaleSet[tileMatrix] * 0.00028 * 256
+
+    leftX = col * tileSpan + tileMatrixMinX
+    upperY = tileMatrixMaxY - row * tileSpan
+    rightX = (col + 1) * tileSpan + tileMatrixMinX
+    lowerY = tileMatrixMaxY - (row + 1) * tileSpan
+
+    wms_args["bbox"] = "%f,%f,%f,%f" % (
+        leftX, lowerY, rightX, upperY
+    )
+    try:
+        return get_map(wms_args)
+    except WMSException as wmse:
+        first_error = wmse.errors[0]
+        e = WMTSException(first_error["msg"],
+                            code=first_error["code"],
+                            locator=first_error["locator"],
+                            http_response=wmse.http_response)
+        for error in wmse.errors[1:]:
+            e.add_error(error["msg"], code=error["code"], locator=error["locator"])
+        raise e
