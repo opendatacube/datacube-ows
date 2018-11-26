@@ -138,6 +138,8 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
                 <ows:Identifier>{{ style.name }}</ows:Identifier>
                 <ows:Title>{{ style.title }}</ows:Title>
                 <ows:Abstract>{{ style.abstract }}</ows:Abstract>
+                <LegendURL format="image/png"
+                        xlink:href="{{ base_url }}/legend/{{ product.name }}/{{ style.name }}/legend.png"/>
             </Style>
             {% endfor %}
             <Format>image/png</Format>
