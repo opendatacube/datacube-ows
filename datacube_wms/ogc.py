@@ -2,18 +2,17 @@ from __future__ import absolute_import, division, print_function
 import sys
 import traceback
 
-from flask import Flask, request, render_template
+from flask import Flask, request
 from flask_request_id import RequestID
-import boto3
-import rasterio
 import os
 
-from datacube_wms.ogc_utils import capture_headers
+from datacube_wms.legend_generator import create_legend_for_style
+from datacube_wms.ogc_utils import capture_headers, resp_headers
 from datacube_wms.wms import handle_wms, WMS_REQUESTS
 from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
 
-from datacube_wms.wms_layers import get_service_cfg
+from datacube_wms.wms_layers import get_service_cfg, get_layers
 
 from .rasterio_env import rio_env
 
@@ -89,3 +88,15 @@ def ogc_impl():
             eclass = WMSException
         ogc_e = eclass("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+
+
+@app.route("/legend/<string:layer>/<string:style>/legend.png")
+def legend(layer, style):
+    platforms = get_layers()
+    product = platforms.product_index.get(layer)
+    if not product:
+        return ("Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"}))
+    img = create_legend_for_style(product, style)
+    if not img:
+        return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
+    return img
