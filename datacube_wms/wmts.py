@@ -2,18 +2,16 @@ from __future__ import absolute_import, division, print_function
 
 from flask import render_template
 
-from datacube_wms.data import get_map
+from datacube_wms.data import get_map, feature_info
 from datacube_wms.ogc_utils import resp_headers, get_service_base_url
 
 from datacube_wms.ogc_exceptions import WMSException, WMTSException
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
-from datacube_wms.legend_generator import legend_graphic
 
-# TODO: method names that overlap with WMS.
-WMTS_REQUESTS = ("GETTILE", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
-
+# NB. No need to disambiguate method names shared with WMS because WMTS requires
+# a "SERVICE" parameter with every request.
 
 def handle_wmts(nocase_args):
     operation = nocase_args.get("request", "").upper()
@@ -24,10 +22,16 @@ def handle_wmts(nocase_args):
         return get_capabilities(nocase_args)
     elif operation == "GETTILE":
         return get_tile(nocase_args)
+    elif operation == "GETFEATUREINFO":
+        return get_feature_info(nocase_args)
     else:
         raise WMTSException("Unrecognised operation: %s" % operation, WMTSException.OPERATION_NOT_SUPPORTED,
                            "Request parameter")
 
+# Scale denominators for WebMercator QuadTree Scale Set, starting from zoom level 0.
+# Currently goes to zoom level 14, where the pixel size at the equator is ~10m (i.e. Sentinel2 resolution)
+# Taken from the WMTS 1.0.0 spec, Annex E.4
+# Don't even think about changing these numbers unless you really, really know what you are doing.
 
 WebMercScaleSet = [
      559082264.0287178,
@@ -110,8 +114,7 @@ def get_capabilities(args):
         )
     )
 
-
-def get_tile(args):
+def wmts_args_to_wms(args):
     layer = args.get("layer")
     style = args.get("style")
     format = args.get("format")
@@ -168,6 +171,18 @@ def get_tile(args):
     wms_args["bbox"] = "%f,%f,%f,%f" % (
         leftX, lowerY, rightX, upperY
     )
+
+    # GetFeatureInfo only args
+    if "i" in args:
+        wms_args["i"] = args["i"]
+        wms_args["j"] = args.get("j", "")
+        wms_args["info_format"] = args.get("infoformat", "")
+
+    return wms_args
+
+def get_tile(args):
+    wms_args = wmts_args_to_wms(args)
+
     try:
         return get_map(wms_args)
     except WMSException as wmse:
@@ -179,3 +194,21 @@ def get_tile(args):
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
         raise e
+
+def get_feature_info(args):
+    wms_args = wmts_args_to_wms(args)
+    wms_args["query_layers"] = wms_args["layers"]
+
+    try:
+        return feature_info(wms_args)
+    except WMSException as wmse:
+        first_error = wmse.errors[0]
+        e = WMTSException(first_error["msg"],
+                          code=first_error["code"],
+                          locator=first_error["locator"],
+                          http_response=wmse.http_response)
+        for error in wmse.errors[1:]:
+            e.add_error(error["msg"], code=error["code"], locator=error["locator"])
+        raise e
+
+
