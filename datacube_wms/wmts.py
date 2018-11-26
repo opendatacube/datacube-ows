@@ -117,7 +117,7 @@ def get_capabilities(args):
 def wmts_args_to_wms(args):
     layer = args.get("layer")
     style = args.get("style")
-    format = args.get("format")
+    format_ = args.get("format")
     time = args.get("time", "")
     tileMatrixSet = args.get("tilematrixset")
     tileMatrix = args.get("tilematrix")
@@ -133,7 +133,7 @@ def wmts_args_to_wms(args):
         "time": time,
         "width": 256,
         "height": 256,
-        "format": format,
+        "format": format_,
         "exceptions": "application/vnd.ogc.se_xml",
         "crs": "EPSG:3857",
         "requestid": args["requestid"]
