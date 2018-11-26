@@ -10,7 +10,8 @@ from datacube_wms.legend_generator import create_legend_for_style
 from datacube_wms.ogc_utils import capture_headers, resp_headers
 from datacube_wms.wms import handle_wms, WMS_REQUESTS
 from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
-from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
+from datacube_wms.wmts import handle_wmts
+from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
@@ -62,6 +63,13 @@ def ogc_impl():
                     return handle_wcs(nocase_args)
                 else:
                     raise WCS1Exception("Invalid service", locator="Service parameter")
+            elif service == "WMTS":
+                # WMTS operation Map
+                # Note that SERVICE is a required parameter for all operations in WMTS
+                if svc_cfg.wmts:
+                    return handle_wmts(nocase_args)
+                else:
+                    raise WMTSException("Invalid service", locator="Service parameter")
             else:
                 # service argument is only required (in fact only defined) by OGC for
                 # GetCapabilities requests.  As long as we are persisting with a single

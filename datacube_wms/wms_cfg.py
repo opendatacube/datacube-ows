@@ -8,6 +8,7 @@ service_cfg = {
     ## Which web service(s) should be supported by this instance
     "wcs": True,
     "wms": True,
+    "wmts": True,
 
     ## Required config for WMS and/or WCS
     # Service title - appears e.g. in Terria catalog
