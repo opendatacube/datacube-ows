@@ -28,5 +28,3 @@ jobs:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         - docker push opendatacube/wms:$(git describe --tags | awk -F'[-.]' '{print $1"."$2"."$3+1"-unstable."$4"."$5}')
         - docker push opendatacube/wms:latest
-notifications:
-  webhooks: https://4q9hixv4pd.execute-api.ap-southeast-2.amazonaws.com/alpha/travis
