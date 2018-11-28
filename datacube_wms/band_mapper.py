@@ -23,12 +23,12 @@ from math import isclose
 
 _LOG = logging.getLogger(__name__)
 
-class StyleMask():
+class StyleMask(object):
     def __init__(self, flags, invert=False):
         self.flags = flags
         self.invert = invert
 
-class StyleDefBase():
+class StyleDefBase(object):
     def __init__(self, product, style_cfg):
         self.product = product
         self.name = style_cfg["name"]
@@ -78,7 +78,7 @@ class RGBMappedStyleDef(StyleDefBase):
         super(RGBMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
         for band in self.value_map.keys():
-            self.needed_bands.add(band)
+            self.needed_bands.add(self.product.band_idx.band(band))
 
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
@@ -96,7 +96,8 @@ class RGBMappedStyleDef(StyleDefBase):
         data = self.apply_masks(data, pq_data)
         _LOG.debug("mask complete %d", datetime.now())
         imgdata = Dataset()
-        for band, values in self.value_map.items():
+        for cfg_band, values in self.value_map.items():
+            band = self.product.band_idx.band(cfg_band)
             band_data = Dataset()
             for value in values:
                 target = Dataset()
@@ -161,10 +162,10 @@ class RGBMappedStyleDef(StyleDefBase):
 class LinearStyleDef(DynamicRangeCompression):
     def __init__(self, product, style_cfg):
         super(LinearStyleDef, self).__init__(product, style_cfg)
-        self.red_components = style_cfg["components"]["red"]
-        self.green_components = style_cfg["components"]["green"]
-        self.blue_components = style_cfg["components"]["blue"]
-        self.alpha_components = style_cfg["components"].get("alpha", None)
+        self.red_components = self.dealias_components(style_cfg["components"]["red"])
+        self.green_components = self.dealias_components(style_cfg["components"]["green"])
+        self.blue_components = self.dealias_components(style_cfg["components"]["blue"])
+        self.alpha_components = self.dealias_components(style_cfg["components"].get("alpha", None))
         for band in self.red_components.keys():
             self.needed_bands.add(band)
         for band in self.green_components.keys():
@@ -175,6 +176,12 @@ class LinearStyleDef(DynamicRangeCompression):
         if self.alpha_components is not None:
             for band in self.alpha_components.keys():
                 self.needed_bands.add(band)
+
+    def dealias_components(self, comp_in):
+        if comp_in is None:
+            return None
+        else:
+            return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() }
 
     @property
     def components(self):
@@ -278,11 +285,12 @@ def hm_index_func_for_range(func, rmin, rmax, nan_mask=True):
     return hm_index_func
 
 
+# TODO HeatMapped Styles are deprecated and will be removed - Use RGBa Colour Ramp Styles instead
 class HeatMappedStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(HeatMappedStyleDef, self).__init__(product, style_cfg)
         for b in style_cfg["needed_bands"]:
-            self.needed_bands.add(b)
+            self.needed_bands.add(self.product.band_idx.band(b))
         self._index_function = style_cfg["index_function"]
         self.range = style_cfg["range"]
 
@@ -312,6 +320,7 @@ class HeatMappedStyleDef(StyleDefBase):
         return imgdata
 
 
+# TODO Hybrid Styles should be removed or converted to share code with RGBa Colour Ramp Styles instead of HeatMaps.
 class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
     def __init__(self, product, style_cfg):
         super(HybridStyleDef, self).__init__(product, style_cfg)
@@ -389,7 +398,7 @@ class RgbaColorRampDef(StyleDefBase):
             "alpha": a
         }
         for band in style_cfg["needed_bands"]:
-            self.needed_bands.add(band)
+            self.needed_bands.add(self.product.band_idx.band(band))
 
         self.index_function = style_cfg.get("index_function", None)
 

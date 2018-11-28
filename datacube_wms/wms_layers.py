@@ -43,11 +43,13 @@ class BandIndex(object):
         self.product_name = product.name
         self.native_bands = dc.list_measurements().ix[self.product_name]
         if band_cfg is None:
-            band_cfg = {}
+            self.band_cfg = {}
             for b in self.native_bands.index:
-                band_cfg[b] = []
+                self.band_cfg[b] = []
+        else:
+            self.band_cfg = band_cfg
         self._idx = {}
-        for b, aliases in band_cfg.items():
+        for b, aliases in self.band_cfg.items():
             if b not in self.native_bands.index:
                 raise ProductLayerException(f"Unknown band: {b}")
             if b in self._idx:
@@ -62,6 +64,7 @@ class BandIndex(object):
         if name_alias not in self._idx:
             raise ProductLayerException(f"Unknown band name/alias: {name_alias}")
         return self._idx[name_alias]
+
 
 
 class ProductLayerDef(object):
@@ -97,7 +100,10 @@ class ProductLayerDef(object):
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
         self.feature_info_include_utc_dates = product_cfg.get("feature_info_include_utc_dates", False)
         self.feature_info_include_custom = product_cfg.get("feature_info_include_custom", None)
-        self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
+        raw_always_fetch_bands = product_cfg.get("always_fetch_bands", [])
+        self.always_fetch_bands = []
+        for b in raw_always_fetch_bands:
+            self.always_fetch_bands.append(self.band_idx.band(b))
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
         self.sub_product_extractor = product_cfg.get("sub_product_extractor", None)
