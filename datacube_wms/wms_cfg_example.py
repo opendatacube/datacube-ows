@@ -150,6 +150,19 @@ layer_cfg = [
                 # The name of the measurement band for the pixel-quality product
                 # (Only required if pq_dataset is set)
                 "pq_band": "pixelquality",
+                # Supported bands, mapping native band names to a list of possible aliases. Aliases must be unique for the product.
+                # Band aliases can be used anywhere in the configuration that refers to bands by name (the native name can also be used).
+                # Bands NOT listed here will not be included in the GetFeatureInfo output and cannot be referenced elsewhere in the configuration.
+                # If not specified for a product, defaults to all available bands, using only their native names.
+                "bands": {
+                    "red": ["crimson"],
+                    "green": [],
+                    "blue": [ "azure" ],
+                    "nir": [ "near_infrared" ],
+                    "swir1": [ "shortwave_infrared_1", "near_shortwave_infrared" ],
+                    "swir2": [ "shortwave_infrared_2", "far_shortwave_infrared" ],
+                    "coastal_aerosol": [ "far_blue" ],
+                },
                 # Min zoom factor - sets the zoom level where the cutover from indicative polygons
                 # to actual imagery occurs.
                 "min_zoom_factor": 500.0,

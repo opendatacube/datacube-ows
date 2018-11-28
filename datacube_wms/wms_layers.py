@@ -37,7 +37,34 @@ def accum_max(a, b):
         return max(a, b)
 
 
-class ProductLayerDef():
+class BandIndex(object):
+    def __init__(self, product, band_cfg, dc):
+        self.product = product
+        self.product_name = product.name
+        self.native_bands = dc.list_measurements().ix[self.product_name]
+        if band_cfg is None:
+            band_cfg = {}
+            for b in self.native_bands.index:
+                band_cfg[b] = []
+        self._idx = {}
+        for b, aliases in band_cfg.items():
+            if b not in self.native_bands.index:
+                raise ProductLayerException(f"Unknown band: {b}")
+            if b in self._idx:
+                raise ProductLayerException(f"Duplicate band name/alias: {b}")
+            self._idx[b] = b
+            for a in aliases:
+                if a in self._idx:
+                    raise ProductLayerException(f"Duplicate band name/alias: {a}")
+                self._idx[a] = b
+
+    def band(self, name_alias):
+        if name_alias not in self._idx:
+            raise ProductLayerException(f"Unknown band name/alias: {name_alias}")
+        return self._idx[name_alias]
+
+
+class ProductLayerDef(object):
     #pylint: disable=invalid-name, too-many-instance-attributes, bare-except, too-many-statements
     def __init__(self, product_cfg, platform_def, dc):
         self.platform = platform_def
@@ -51,6 +78,7 @@ class ProductLayerDef():
         self.product = dc.index.products.get_by_name(self.product_name)
         if self.product is None:
             raise ProductLayerException(f"Could not find product {self.product_name} in datacube")
+        self.band_idx = BandIndex(self.product, product_cfg.get("bands"), dc)
         self.definition = self.product.definition
         self.abstract = product_cfg["abstract"] if "abstract" in product_cfg else self.definition['description']
         self.title = "%s %s %s (%s)" % (platform_def.title,
@@ -144,7 +172,7 @@ class ProductLayerDef():
         }
 
 
-class PlatformLayerDef():
+class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
         self.name = platform_cfg["name"]
         self.title = platform_cfg["title"]
@@ -160,7 +188,7 @@ class PlatformLayerDef():
                 _LOG.error("Could not load layer: %s", str(e))
 
 
-class LayerDefs():
+class LayerDefs(object):
     _instance = None
     initialised = False
 
@@ -196,7 +224,7 @@ def get_layers(refresh=False):
     return LayerDefs(layer_cfg, refresh)
 
 
-class ServiceCfg():
+class ServiceCfg(object):
     #pylint: disable=invalid-name, too-many-instance-attributes, too-many-branches
     _instance = None
     initialised = False
