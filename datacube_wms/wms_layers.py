@@ -65,6 +65,12 @@ class BandIndex(object):
             raise ProductLayerException(f"Unknown band name/alias: {name_alias}")
         return self._idx[name_alias]
 
+    def band_label(self, name_alias):
+        name = self.band(name_alias)
+        if self.band_cfg[name]:
+            return self.band_cfg[name][0]
+        else:
+            return name
 
 
 class ProductLayerDef(object):

@@ -124,9 +124,9 @@ class DataStacker():
         if style:
             self._needed_bands = style.needed_bands
         elif bands:
-            self._needed_bands = bands
+            self._needed_bands = [ self._product.band_idx.band(b) for b in bands ]
         else:
-            self._needed_bands = self._product.product.measurements.keys()
+            self._needed_bands = self._product.band_idx.native_bands.index
         self._time = local_solar_date_range(geobox, time)
 
     def needed_bands(self):
@@ -394,18 +394,19 @@ def get_s3_browser_uris(datasets):
     return formatted
 
 
-def _make_band_dict(pixel_dataset, band_list):
+def _make_band_dict(prod_cfg, pixel_dataset, band_list):
     band_dict = {}
     for band in band_list:
+        band_lbl = prod_cfg.band_idx.band_label(band)
         ret_val = band_val = pixel_dataset[band].item()
         if band_val == pixel_dataset[band].nodata or numpy.isnan(band_val):
-            band_dict[band] = "n/a"
+            band_dict[band_lbl] = "n/a"
         else:
             if 'flags_definition' in pixel_dataset[band].attrs:
                 flag_def = pixel_dataset[band].attrs['flags_definition']
                 flag_dict = mask_to_dict(flag_def, band_val)
                 ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
-            band_dict[band] = ret_val
+            band_dict[band_lbl] = ret_val
     return band_dict
 
 
@@ -498,7 +499,7 @@ def feature_info(args):
                 feature_json["time"] = dataset_center_time(ds_at_time[0]).strftime("%Y-%m-%d %H:%M:%S UTC")
 
                 # Collect raw band values for pixel and derived bands from styles
-                feature_json["bands"] = _make_band_dict(pixel_ds, stacker.needed_bands())
+                feature_json["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
                     feature_json["band_derived"] = derived_band_dict
