@@ -18,15 +18,14 @@ jobs:
         - docker run opendatacube/wms:latest /bin/sh -c "./check-code.sh"
         - ifconfig
     - stage: build
-      if: branch = master
+      if: branch = master OR tag IS present
       script:
         - docker run -d --name clair_db arminc/clair-db:latest
         - docker run -p 6060:6060 --link clair_db:postgres -d --name clair arminc/clair-local-scan:v2.0.5
-        - docker build -t opendatacube/wms:$(git describe --tags | awk -F'[-.]' '{print $1"."$2"."$3+1"-unstable."$4"."$5}') -t opendatacube/wms:latest .
+        - export WMS_TAG=$(git describe --tags | awk -F'[-.]' '{if ($4!="" && $5!="") print $1"."$2"."$3+1"-unstable."$4"."$5; else print $1"."$2"."$3;}')
+        - docker build -t opendatacube/wms:$WMS_TAG -t opendatacube/wms:latest .
         # ens4 is specific to Travis Xenial should be changed if moving to another OS / CI provider
         - "wget https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64 && chmod +x clair-scanner_linux_amd64 && ./clair-scanner_linux_amd64 --threshold='High' --report='clair-scan.json' --ip $(ifconfig ens4 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}') --reportAll=false opendatacube/wms:latest"
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-        - docker push opendatacube/wms:$(git describe --tags | awk -F'[-.]' '{print $1"."$2"."$3+1"-unstable."$4"."$5}')
+        - docker push opendatacube/wms:$WMS_TAG
         - docker push opendatacube/wms:latest
-notifications:
-  webhooks: https://4q9hixv4pd.execute-api.ap-southeast-2.amazonaws.com/alpha/travis
