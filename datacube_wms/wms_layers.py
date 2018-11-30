@@ -49,6 +49,7 @@ class BandIndex(object):
         else:
             self.band_cfg = band_cfg
         self._idx = {}
+        self._nodata_vals = {}
         for b, aliases in self.band_cfg.items():
             if b not in self.native_bands.index:
                 raise ProductLayerException(f"Unknown band: {b}")
@@ -59,6 +60,7 @@ class BandIndex(object):
                 if a in self._idx:
                     raise ProductLayerException(f"Duplicate band name/alias: {a}")
                 self._idx[a] = b
+            self._nodata_vals[b] = self.native_bands['nodata'][b]
 
     def band(self, name_alias):
         if name_alias not in self._idx:
@@ -71,6 +73,16 @@ class BandIndex(object):
             return self.band_cfg[name][0]
         else:
             return name
+
+    def nodata_val(self, name_alias):
+        name = self.band(name_alias)
+        return self._nodata_vals[name]
+
+    def band_labels(self):
+        return [ self.band_label(b) for b in self.native_bands.index ]
+
+    def band_nodata_vals(self):
+        return [ self.nodata_val(b) for b in self.native_bands.index ]
 
 
 class ProductLayerDef(object):
@@ -164,6 +176,7 @@ class ProductLayerDef(object):
             self.nodata_values = bands['nodata'].values
             self.nodata_dict = {a:b for a, b in zip(self.bands, self.nodata_values)}
             self.wcs_sole_time = product_cfg.get("wcs_sole_time")
+            self.wcs_default_bands = [ self.band_idx.band(b) for b in product_cfg["wcs_default_bands"] ]
 
     @property
     def bboxes(self):

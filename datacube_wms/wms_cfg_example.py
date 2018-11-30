@@ -154,7 +154,7 @@ layer_cfg = [
                 # 2. Band aliases can be used anywhere in the configuration that refers to bands by name.
                 # 3. The native band name MAY be explicitly declared as an alias for the band, but are always treated as
                 # a valid alias.
-                # 4. The band labels used in GetFeatureInfo responses will be the first declared alias (or the native name
+                # 4. The band labels used in GetFeatureInfo and WCS responses will be the first declared alias (or the native name
                 # if no aliases are declared.)
                 # 5. Bands NOT listed here will not be included in the GetFeatureInfo output and cannot be referenced
                 # elsewhere in the configuration.
@@ -219,6 +219,12 @@ layer_cfg = [
                 # date and advertises no time dimension in GetCapabilities.
                 # Intended mostly for WCS debugging.
                 "wcs_sole_time": "2017-01-01",
+                # The default bands for a WCS request.
+                # 1. Must be provided if WCS is activated.
+                # 2. Must contain at least one band.
+                # 3. All bands must exist
+                # 4. Bands may be referred to by either native name or alias
+                "wcs_default_bands": [ "red", "green", "azure" ],
                 # Styles.
                 #
                 # See band_mapper.py
