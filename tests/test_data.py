@@ -166,6 +166,66 @@ def test_read_data(dataset, new_datasource):
         assert not load_data.called
         assert get_measurement.called
 
+def test_make_derived_band_dict_nan():
+    class fake_data:
+        def __init__(self):
+            self.nodata = np.nan
+        def item(self):
+            return np.nan
 
+    class fake_dataset:
+        def __getitem__(self, key):
+            return fake_data()
+
+    class fake_style:
+        def __init__(self):
+            self.needed_bands = ["test"]
+            self.index_function = lambda x: fake_data()
+
+    style_dict = {
+        "fake": fake_style()
+    }
+
+    band_dict = datacube_wms.data._make_derived_band_dict(fake_dataset(), style_dict)
+    assert band_dict["fake"] == "n/a"
+
+def test_make_derived_band_dict_not_nan():
+    class fake_data:
+        def __init__(self):
+            self.nodata = -6666
+        def item(self):
+            return 10.10
+
+    class fake_dataset:
+        def __getitem__(self, key):
+            return fake_data()
+
+    class fake_style:
+        def __init__(self):
+            self.needed_bands = ["test"]
+            self.index_function = lambda x: fake_data()
+
+    style_dict = {
+        "fake": fake_style()
+    }
+
+    band_dict = datacube_wms.data._make_derived_band_dict(fake_dataset(), style_dict)
+    assert band_dict["fake"] == 10.10
+
+def test_make_band_dict_nan():
+    class fake_data:
+        def __init__(self):
+            self.nodata = np.nan
+        def item(self):
+            return np.nan
+
+    class fake_dataset:
+        def __getitem__(self, key):
+            return fake_data()
+
+    bands = ["fake"]
+
+    band_dict = datacube_wms.data._make_band_dict(fake_dataset(), bands)
+    assert band_dict["fake"] == "n/a"
 
 

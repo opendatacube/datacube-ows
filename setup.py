@@ -45,5 +45,5 @@ setup(
     ],
     test_suite='tests',
     tests_require=test_requirements,
-    dependency_links=['git+https://github.com/opendatacube/dea-proto.git@stable#egg=dea-proto-0.1']
+    dependency_links=['git+https://github.com/opendatacube/dea-proto.git@stable#egg=dea-proto-0.2']
 )

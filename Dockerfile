@@ -16,33 +16,18 @@ RUN apt-get update && apt-get install -y \
     libev-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install \
-    colour \
-    flask \
-    scikit-image \
-    gevent \
-    eventlet \
-    gunicorn \
-    gunicorn[gevent] \
-    gunicorn[eventlet] \
-    boto3 \
-    rasterio==1.0.9 \
-    ruamel.yaml \
-    prometheus-client \
-    flask-request-id-middleware \
-    pytest-localserver \
-    pytest-mock \
-    requests \
-    && rm -rf $HOME/.cache/pip
-
 WORKDIR /code
 
 ADD . .
+
+RUN pip3 install -r requirements.txt \
+    && rm -rf $HOME/.cache/pip
 
 RUN python3 setup.py install
 
 COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
 COPY docker/get_wms_config.sh /usr/local/bin/get_wms_config.sh
+COPY docker/update-and-reload.sh /usr/local/bin/update-and-reload.sh
 
 # Perform setup install
 RUN mkdir -p /code/setup
@@ -76,4 +61,4 @@ WORKDIR /code
 
 ENTRYPOINT ["wms-entrypoint.sh"]
 
-CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms:wms
+CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms:wms --pid=gunicorn.pid

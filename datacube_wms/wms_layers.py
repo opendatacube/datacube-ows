@@ -68,6 +68,7 @@ class ProductLayerDef():
         self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150, 180, 200])
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
         self.feature_info_include_utc_dates = product_cfg.get("feature_info_include_utc_dates", False)
+        self.feature_info_include_custom = product_cfg.get("feature_info_include_custom", None)
         self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
@@ -213,10 +214,16 @@ class ServiceCfg():
 
             self.wms = srv_cfg.get("wms", True)
             self.wcs = srv_cfg.get("wcs", False)
+            self.wmts = srv_cfg.get("wmts", False)
             self.create_grid = srv_cfg.get("create_wcs_grid", False)
 
             self.title = srv_cfg["title"]
             self.url = srv_cfg["url"]
+            # For services that can be accessed through
+            # multiple domain names
+            self.allowed_urls = self.url
+            if isinstance(self.url, list):
+                self.url = self.allowed_urls[0]
             if not self.url.startswith("http"):
                 raise Exception("URL in service_cfg does not start with http or https.")
             self.human_url = srv_cfg.get("human_url", self.url)

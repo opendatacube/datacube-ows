@@ -62,7 +62,9 @@ do
     else
         suffix_string="${suffixes[$i]}"
     fi
-    python3 indexing/ls_s2_cog.py "$b" --prefix "${prefixes[$i]}" ${suffix_string:+"--suffix"} ${suffix_string:+"$suffix_string"} ${safety_arg:+"$safety_arg"}
+    s3-find "s3://${b}/${prefixes[$i]}" ${suffix_string:+"*$suffix_string"} | \
+    s3-to-tar | \
+    dc-index-from-tar
 done
 
 # update ranges in wms database

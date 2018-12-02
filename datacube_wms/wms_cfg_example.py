@@ -10,14 +10,21 @@ s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 
 service_cfg = {
     ## Which web service(s) should be supported by this instance
-    # Defaults: wms: True, wcs: False
+    # Defaults: wms: True, wcs: False, wmts: False
+    # Notes:
+    #   WMTS support is implemented as a thin proxy to WMS. Some corners of the spec are interpreted
+    #   somewhat loosely. In particular exception documents are directly translated from the underlying
+    #   WMS error and are unlikely to be fully compliant with the WMTS standard.
     "wcs": True,
     "wms": True,
+    "wmts": True,
 
     ## Required config for WMS and/or WCS
     # Service title - appears e.g. in Terria catalog
     "title": "WMS server for Australian Landsat Datacube",
     # Service URL.  Should a fully qualified URL
+    # Can also be a list of URLs that the service can return
+    # in the GetCapabilities document based on the requesting url
     "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
     # URL that humans can visit to learn more about the WMS or organization
     # should be fully qualified

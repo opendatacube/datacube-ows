@@ -563,6 +563,20 @@ def create_range_entry(dc, product, crses):
   txn.commit()
   conn.close()
 
+
+def check_datasets_exist(dc, product):
+  conn = get_sqlconn(dc)
+  txn = conn.begin()
+  prodid = product.id
+
+  results = conn.execute("""
+    SELECT COUNT(*)
+    FROM agdc.dataset
+    WHERE dataset_type_ref=%s AND archived IS NULL""",
+    prodid)
+
+  return list(results)[0][0] > 0
+
 def add_range(dc, product):
   if isinstance(product, str):
     product = dc.index.products.get_by_name(product)
@@ -571,7 +585,11 @@ def add_range(dc, product):
 
   crsids = service_cfg["published_CRSs"]
   crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
-  create_range_entry(dc, product, crses)
+  if check_datasets_exist(dc, product):
+    create_range_entry(dc, product, crses)
+  else:
+    print("Could not find any datasets for: ", product.name)
+
 
 
 def add_all(dc):

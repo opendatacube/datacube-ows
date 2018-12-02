@@ -1,34 +1,36 @@
 ===============================
-datacube-wms
+datacube-ows
 ===============================
 
-.. image:: https://img.shields.io/travis/opendatacube/datacube-wms.svg
-        :target: https://travis-ci.org/opendatacube/datacube-wms
+.. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
+        :target: https://travis-ci.org/opendatacube/datacube-ows
 
 Datacube Web Map Service
 
 
 * Free software: Apache Software License 2.0
-* Documentation: https://datacube-wms.readthedocs.io.
+* Documentation: https://datacube-ows.readthedocs.io.
 
 
 Features
 --------
 
-* TODO
+* Leverages the power of the Open Data Cube, including support for COGs on S3.
+* Supports WMS and WMTS.
+* Experimental support for WCS.
 
 Setup
 -----
 
 * Follow datacube installation instructions
 
-* The Datacube WMS requires a more recent version of rasterio than is
-  currently packaged with conda.  Run the following commands::
+* Make sure you are using the conda-forge channel.
+    Run the following commands::
 
-      conda config --prepend channels conda-forge/label/dev
+      conda config --prepend channels conda-forge
       conda update --all
 
-* Datacube WMS requires the scikit-image package:  `conda install scikit-image`
+* Datacube OWS requires the scikit-image package:  `conda install scikit-image`
 
 * Manually install dea-proto::
 
@@ -37,13 +39,13 @@ Setup
 * Run `create_tables.sql` database script to create schema and tables used
   by WMS server.
 
+* Edit `datacube_ows/wms_cfg.py` as required (See `datacube_ows/wms_cfg_example.py` for examples).
+  If you are using git, you should either create a branch first, or use `datacube_ows/wms_cfg_local.py` instead.
+  (If it exists, `wms_cfg_local.py` is read in preference to `wms_cfg.py`, but is explicitly ignored by git.)
+
 * Run `python update_ranges.py` (in the Datacube Conda environment).  This
   script will need to be re-run every time additional datasets are added to
   the Datacube.
-
-* Edit `datacube_wms/wms_cfg.py` as required (See `datacube_wms/wms_cfg_example.py` for examples).
-  If you are using git, you should either create a branch first, or use `datacube_wms/wms_cfg_local.py` instead.
-  (If it exists, `wms_cfg_local.py` is read in preference to `wms_cfg.py`, but is explicitly ignored by git.)
 
 * If you are accessing data on AWS S3 and running `datacube_wms` on Ubuntu you may encounter errors with `GetMap` similar to: `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`. If this occurs run the following commands::
 
@@ -60,7 +62,7 @@ Flask Dev Server
 
 * Set the `FLASK_APP` environment variable::
 
-        export FLASK_APP=datacube_wms/ogc.py
+        export FLASK_APP=datacube_ows/ogc.py
 
 * Run the Flask dev server::
 
@@ -72,7 +74,7 @@ Flask Dev Server
         flask run --host=0.0.0.0
 
 Apache2 mod_wsgi
----------------
+----------------
 
 Getting mod_wsgi to work with a Conda virtual environment is not trivial. The
 following steps worked for me, but will not support connecting your web server
@@ -102,12 +104,12 @@ to multiple web apps using different virtual environments.
 * Add the following to your Apache config (inside the
   appropriate `VirtualHost` section)::
 
-        WSGIDaemonProcess datacube_wms processes=20 threads=1 user=uuu group=ggg maximum-requests=10000
-        WSGIScriptAlias /datacube_wms /path/to/source_code/wms/datacube_wms/wsgi.py
-        <Location /datacube_wms>
-                WSGIProcessGroup datacube_wms
+        WSGIDaemonProcess datacube_ows processes=20 threads=1 user=uuu group=ggg maximum-requests=10000
+        WSGIScriptAlias /datacube_ows /path/to/source_code/datacube-ows/datacube_wms/wsgi.py
+        <Location /datacube_ows>
+                WSGIProcessGroup datacube_ows
         </Location>
-        <Directory /path/to/source_code/wms/datacube_wms>
+        <Directory /path/to/source_code/datacube-ows/datacube_ows>
                 <Files wsgi.py>
                         AllowOverride None
                         Require all granted

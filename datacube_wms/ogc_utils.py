@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 from importlib import import_module
 from datetime import timedelta, datetime
 from dateutil.parser import parse
+from urllib.parse import urlparse
 try:
     from datacube_wms.wms_cfg_local import service_cfg, layer_cfg, response_cfg
 except ImportError:
@@ -61,6 +62,37 @@ def get_function(func):
         func = getattr(mod, func_name)
         assert callable(func)
     return func
+
+def parse_for_base_url(url):
+    parsed = urlparse(url)
+    parsed = (parsed.netloc + parsed.path).rstrip("/")
+    return parsed
+
+
+def get_service_base_url(allowed_urls, request_url):
+    if not isinstance(allowed_urls, list):
+        return allowed_urls
+    parsed_request_url = parse_for_base_url(request_url)
+    parsed_allowed_urls = [parse_for_base_url(u) for u in allowed_urls]
+    try:
+        idx = parsed_allowed_urls.index(parsed_request_url)
+    except ValueError:
+        idx = None
+    url = allowed_urls[idx] if idx is not None else allowed_urls[0]
+    # template includes tailing /, strip any trail slash here to avoid duplicates
+    url = url.rstrip("/")
+    return url
+
+
+# Collects additional headers from flask request objects
+def capture_headers(request, args_dict):
+    args_dict['referer'] = request.headers.get('Referer', None)
+    args_dict['origin'] = request.headers.get('Origin', None)
+    args_dict['requestid'] = request.environ.get("FLASK_REQUEST_ID")
+    args_dict['host'] = request.headers.get('Host', None)
+    args_dict['url_root'] = request.url_root
+
+    return args_dict
 
 # Exceptions raised when attempting to create a
 # product layer form a bad config or without correct

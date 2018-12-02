@@ -9,10 +9,12 @@ gunicorn
 gunicorn[gevent]
 gunicorn[eventlet]
 boto3
-rasterio==1.0.9
+rasterio>=1.0.9
 ruamel.yaml
 prometheus-client
 flask-request-id-middleware
 pytest-localserver
 pytest-mock
 requests
+watchdog
+aiobotocore

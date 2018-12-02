@@ -2,17 +2,18 @@ from __future__ import absolute_import, division, print_function
 import sys
 import traceback
 
-from flask import Flask, request, render_template
+from flask import Flask, request
 from flask_request_id import RequestID
-import boto3
-import rasterio
 import os
 
-from datacube_wms.wms import handle_wms, wms_requests
-from datacube_wms.wcs import handle_wcs, wcs_requests
-from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException
+from datacube_wms.legend_generator import create_legend_for_style
+from datacube_wms.ogc_utils import capture_headers, resp_headers
+from datacube_wms.wms import handle_wms, WMS_REQUESTS
+from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
+from datacube_wms.wmts import handle_wmts
+from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
 
-from datacube_wms.wms_layers import get_service_cfg
+from datacube_wms.wms_layers import get_service_cfg, get_layers
 
 from .rasterio_env import rio_env
 
@@ -42,10 +43,9 @@ def lower_get_args():
 
 @app.route('/')
 def ogc_impl():
+    #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
-    nocase_args['referer'] = request.headers.get('Referer', None)
-    nocase_args['origin'] = request.headers.get('Origin', None)
-    nocase_args['requestid'] = request.environ.get("FLASK_REQUEST_ID")
+    nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
     # create dummy env if not exists
@@ -63,6 +63,13 @@ def ogc_impl():
                     return handle_wcs(nocase_args)
                 else:
                     raise WCS1Exception("Invalid service", locator="Service parameter")
+            elif service == "WMTS":
+                # WMTS operation Map
+                # Note that SERVICE is a required parameter for all operations in WMTS
+                if svc_cfg.wmts:
+                    return handle_wmts(nocase_args)
+                else:
+                    raise WMTSException("Invalid service", locator="Service parameter")
             else:
                 # service argument is only required (in fact only defined) by OGC for
                 # GetCapabilities requests.  As long as we are persisting with a single
@@ -71,9 +78,9 @@ def ogc_impl():
                 # This is a quick hack to fix #64.  Service and operation routing could be
                 # handled more elegantly.
                 op = nocase_args.get("request", "").upper()
-                if op in wms_requests:
+                if op in WMS_REQUESTS:
                     return handle_wms(nocase_args)
-                elif op in wcs_requests:
+                elif op in WCS_REQUESTS:
                     return handle_wcs(nocase_args)
                 else:
                     # Should we return a WMS or WCS exception if there is no service specified?
@@ -89,3 +96,15 @@ def ogc_impl():
             eclass = WMSException
         ogc_e = eclass("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+
+
+@app.route("/legend/<string:layer>/<string:style>/legend.png")
+def legend(layer, style):
+    platforms = get_layers()
+    product = platforms.product_index.get(layer)
+    if not product:
+        return ("Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"}))
+    img = create_legend_for_style(product, style)
+    if not img:
+        return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
+    return img

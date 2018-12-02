@@ -398,7 +398,7 @@ def _make_band_dict(pixel_dataset, band_list):
     band_dict = {}
     for band in band_list:
         ret_val = band_val = pixel_dataset[band].item()
-        if band_val == pixel_dataset[band].nodata:
+        if band_val == pixel_dataset[band].nodata or numpy.isnan(band_val):
             band_dict[band] = "n/a"
         else:
             if 'flags_definition' in pixel_dataset[band].attrs:
@@ -425,7 +425,8 @@ def _make_derived_band_dict(pixel_dataset, style_index):
         if any(pixel_dataset[band] == pixel_dataset[band].nodata for band in style.needed_bands):
             continue
 
-        derived_band_dict[style_name] = style.index_function(pixel_dataset).item()
+        value = style.index_function(pixel_dataset).item()
+        derived_band_dict[style_name] = value if not numpy.isnan(value) else "n/a"
     return derived_band_dict
 
 
@@ -501,6 +502,9 @@ def feature_info(args):
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
                     feature_json["band_derived"] = derived_band_dict
+                if callable(params.product.feature_info_include_custom):
+                    additional_data = params.product.feature_info_include_custom(feature_json["bands"])
+                    feature_json.update(additional_data)
 
             my_flags = 0
             for pqd in pq_datasets:

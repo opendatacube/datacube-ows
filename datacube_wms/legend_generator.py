@@ -32,6 +32,13 @@ def legend_graphic(args):
     return img
 
 
+def create_legend_for_style(product, style_name):
+    if not product.legend or style_name not in product.legend:
+        return None
+    style = product.style_index[style_name]
+    return create_legends_from_styles([style])
+
+
 def create_legends_from_styles(styles):
     # Run through all values in style cfg and generate
     imgs = []
@@ -50,3 +57,4 @@ def create_legends_from_styles(styles):
     legend.mimetype = 'image/png'
     b.close()
     return legend
+
