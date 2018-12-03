@@ -18,7 +18,7 @@ jobs:
         - docker run opendatacube/wms:latest /bin/sh -c "./check-code.sh"
         - ifconfig
     - stage: build
-      if: branch = master OR tag IS present
+      if: branch = master
       script:
         - docker run -d --name clair_db arminc/clair-db:latest
         - docker run -p 6060:6060 --link clair_db:postgres -d --name clair arminc/clair-local-scan:v2.0.5
