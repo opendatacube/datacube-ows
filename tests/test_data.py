@@ -5,6 +5,7 @@ from datacube_wms.data import get_s3_browser_uris
 import pytest
 
 from unittest.mock import patch, MagicMock
+from tests.test_band_mapper import product_layer
 
 import numpy as np
 
@@ -212,7 +213,7 @@ def test_make_derived_band_dict_not_nan():
     band_dict = datacube_wms.data._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == 10.10
 
-def test_make_band_dict_nan():
+def test_make_band_dict_nan(product_layer):
     class fake_data:
         def __init__(self):
             self.nodata = np.nan
@@ -225,7 +226,7 @@ def test_make_band_dict_nan():
 
     bands = ["fake"]
 
-    band_dict = datacube_wms.data._make_band_dict(fake_dataset(), bands)
+    band_dict = datacube_wms.data._make_band_dict(product_layer, fake_dataset(), bands)
     assert band_dict["fake"] == "n/a"
 
 
