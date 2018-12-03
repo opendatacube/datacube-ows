@@ -22,10 +22,9 @@ service_cfg = {
     ## Required config for WMS and/or WCS
     # Service title - appears e.g. in Terria catalog
     "title": "WMS server for Australian Landsat Datacube",
-    # Service URL.  Should a fully qualified URL
-    # Can also be a list of URLs that the service can return
+    # Service URL.  Should a fully qualified URL or a list of fully qualified URLs that the service can return
     # in the GetCapabilities document based on the requesting url
-    "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
+    "url": [ "http://9xjfk12.nexus.csiro.au/datacube_wms", "http://alternateurl.nexus.csiro.au/datacube_wms" ],
     # URL that humans can visit to learn more about the WMS or organization
     # should be fully qualified
     "human_url": "http://csiro.au",
@@ -150,6 +149,25 @@ layer_cfg = [
                 # The name of the measurement band for the pixel-quality product
                 # (Only required if pq_dataset is set)
                 "pq_band": "pixelquality",
+                # Supported bands, mapping native band names to a list of possible aliases.
+                # 1. Aliases must be unique for the product.
+                # 2. Band aliases can be used anywhere in the configuration that refers to bands by name.
+                # 3. The native band name MAY be explicitly declared as an alias for the band, but are always treated as
+                # a valid alias.
+                # 4. The band labels used in GetFeatureInfo and WCS responses will be the first declared alias (or the native name
+                # if no aliases are declared.)
+                # 5. Bands NOT listed here will not be included in the GetFeatureInfo output and cannot be referenced
+                # elsewhere in the configuration.
+                # 6. If not specified for a product, defaults to all available bands, using only their native names.
+                "bands": {
+                    "red": ["crimson"],
+                    "green": [],
+                    "blue": [ "azure" ],
+                    "nir": [ "near_infrared" ],
+                    "swir1": [ "shortwave_infrared_1", "near_shortwave_infrared" ],
+                    "swir2": [ "shortwave_infrared_2", "far_shortwave_infrared" ],
+                    "coastal_aerosol": [ "far_blue" ],
+                },
                 # Min zoom factor - sets the zoom level where the cutover from indicative polygons
                 # to actual imagery occurs.
                 "min_zoom_factor": 500.0,
@@ -201,6 +219,12 @@ layer_cfg = [
                 # date and advertises no time dimension in GetCapabilities.
                 # Intended mostly for WCS debugging.
                 "wcs_sole_time": "2017-01-01",
+                # The default bands for a WCS request.
+                # 1. Must be provided if WCS is activated.
+                # 2. Must contain at least one band.
+                # 3. All bands must exist
+                # 4. Bands may be referred to by either native name or alias
+                "wcs_default_bands": [ "red", "green", "azure" ],
                 # Styles.
                 #
                 # See band_mapper.py
@@ -219,8 +243,10 @@ layer_cfg = [
                         "title": "Simple RGB",
                         "abstract": "Simple true-colour image, using the red, green and blue bands",
                         "components": {
+                            # The component keys MUST be "red", "green" and "blue" (and optionally "alpha")
                             "red": {
-                                "red": 1.0
+                                # Band aliases may be used here.
+                                "crimson": 1.0
                             },
                             "green": {
                                 "green": 1.0
@@ -471,7 +497,9 @@ layer_cfg = [
                         "title": "NDVI",
                         "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
                         "heat_mapped": True,
+                        # Note that lambdas CANNOT use band aliases - they MUST use the native band name
                         "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        # Band aliases can be used here.
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],

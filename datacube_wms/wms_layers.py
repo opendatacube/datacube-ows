@@ -37,7 +37,55 @@ def accum_max(a, b):
         return max(a, b)
 
 
-class ProductLayerDef():
+class BandIndex(object):
+    def __init__(self, product, band_cfg, dc):
+        self.product = product
+        self.product_name = product.name
+        self.native_bands = dc.list_measurements().ix[self.product_name]
+        if band_cfg is None:
+            self.band_cfg = {}
+            for b in self.native_bands.index:
+                self.band_cfg[b] = []
+        else:
+            self.band_cfg = band_cfg
+        self._idx = {}
+        self._nodata_vals = {}
+        for b, aliases in self.band_cfg.items():
+            if b not in self.native_bands.index:
+                raise ProductLayerException(f"Unknown band: {b}")
+            if b in self._idx:
+                raise ProductLayerException(f"Duplicate band name/alias: {b}")
+            self._idx[b] = b
+            for a in aliases:
+                if a in self._idx:
+                    raise ProductLayerException(f"Duplicate band name/alias: {a}")
+                self._idx[a] = b
+            self._nodata_vals[b] = self.native_bands['nodata'][b]
+
+    def band(self, name_alias):
+        if name_alias not in self._idx:
+            raise ProductLayerException(f"Unknown band name/alias: {name_alias}")
+        return self._idx[name_alias]
+
+    def band_label(self, name_alias):
+        name = self.band(name_alias)
+        if self.band_cfg[name]:
+            return self.band_cfg[name][0]
+        else:
+            return name
+
+    def nodata_val(self, name_alias):
+        name = self.band(name_alias)
+        return self._nodata_vals[name]
+
+    def band_labels(self):
+        return [ self.band_label(b) for b in self.native_bands.index ]
+
+    def band_nodata_vals(self):
+        return [ self.nodata_val(b) for b in self.native_bands.index ]
+
+
+class ProductLayerDef(object):
     #pylint: disable=invalid-name, too-many-instance-attributes, bare-except, too-many-statements
     def __init__(self, product_cfg, platform_def, dc):
         self.platform = platform_def
@@ -51,6 +99,7 @@ class ProductLayerDef():
         self.product = dc.index.products.get_by_name(self.product_name)
         if self.product is None:
             raise ProductLayerException(f"Could not find product {self.product_name} in datacube")
+        self.band_idx = BandIndex(self.product, product_cfg.get("bands"), dc)
         self.definition = self.product.definition
         self.abstract = product_cfg["abstract"] if "abstract" in product_cfg else self.definition['description']
         self.title = "%s %s %s (%s)" % (platform_def.title,
@@ -69,7 +118,10 @@ class ProductLayerDef():
         self.ignore_flags_info = product_cfg.get("ignore_flags_info", [])
         self.feature_info_include_utc_dates = product_cfg.get("feature_info_include_utc_dates", False)
         self.feature_info_include_custom = product_cfg.get("feature_info_include_custom", None)
-        self.always_fetch_bands = product_cfg.get("always_fetch_bands", [])
+        raw_always_fetch_bands = product_cfg.get("always_fetch_bands", [])
+        self.always_fetch_bands = []
+        for b in raw_always_fetch_bands:
+            self.always_fetch_bands.append(self.band_idx.band(b))
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
         self.sub_product_extractor = product_cfg.get("sub_product_extractor", None)
@@ -124,6 +176,7 @@ class ProductLayerDef():
             self.nodata_values = bands['nodata'].values
             self.nodata_dict = {a:b for a, b in zip(self.bands, self.nodata_values)}
             self.wcs_sole_time = product_cfg.get("wcs_sole_time")
+            self.wcs_default_bands = [ self.band_idx.band(b) for b in product_cfg["wcs_default_bands"] ]
 
     @property
     def bboxes(self):
@@ -144,7 +197,7 @@ class ProductLayerDef():
         }
 
 
-class PlatformLayerDef():
+class PlatformLayerDef(object):
     def __init__(self, platform_cfg, prod_idx, dc=None):
         self.name = platform_cfg["name"]
         self.title = platform_cfg["title"]
@@ -160,7 +213,7 @@ class PlatformLayerDef():
                 _LOG.error("Could not load layer: %s", str(e))
 
 
-class LayerDefs():
+class LayerDefs(object):
     _instance = None
     initialised = False
 
@@ -196,7 +249,7 @@ def get_layers(refresh=False):
     return LayerDefs(layer_cfg, refresh)
 
 
-class ServiceCfg():
+class ServiceCfg(object):
     #pylint: disable=invalid-name, too-many-instance-attributes, too-many-branches
     _instance = None
     initialised = False
