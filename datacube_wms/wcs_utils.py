@@ -144,9 +144,7 @@ class WCS1GetCoverageRequest():
         # Range constraint parameter: MEASUREMENTS
         # No default is set in the DescribeCoverage, so it is required
         # But QGIS wants us to work without one, so take default from config
-        if "measurements" not in args:
-            self.bands = self.product.wcs_default_bands
-        else:
+        if "measurements" in args:
             bands = args["measurements"]
             self.bands = []
             for b in bands.split(","):
@@ -160,6 +158,22 @@ class WCS1GetCoverageRequest():
                 raise WCS1Exception("No measurements supplied",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="MEASUREMENTS parameter")
+        elif "styles" in args and args["styles"]:
+            # Use style bands.
+            # Non-standard protocol extension.
+            #
+            # As we have correlated WCS and WMS service implementations,
+            # we can accept a style from WMS, and return the bands used for it.
+            styles = args["styles"].split(",")
+            if len(styles) != 1:
+                raise WCS1Exception("Multiple style parameters not supported")
+            style = self.product.style_index.get(styles[0])
+            if style:
+                self.bands = style.needed_bands
+            else:
+                self.bands = self.product.wcs_default_bands
+        else:
+            self.bands = self.product.wcs_default_bands
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
