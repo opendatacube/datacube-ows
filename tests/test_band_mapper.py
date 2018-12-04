@@ -1,7 +1,7 @@
 import datacube_wms.band_mapper as bm
 from datacube_wms.band_mapper import StyleDef
 
-from datacube_wms.wms_layers import ProductLayerDef
+from datacube_wms.wms_layers import BandIndex, ProductLayerDef
 
 import pytest
 
@@ -13,6 +13,22 @@ def product_layer():
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.always_fetch_bands = ["red", "green", "blue"]
+    product_layer.band_idx = BandIndex.__new__(BandIndex)
+    product_layer.band_idx.band_cfg = {
+        "red": [ "crimson", "foo", ],
+        "green": [ ],
+        "blue": [ "azure" ],
+        "fake": []
+    }
+    product_layer.band_idx._idx = {
+        "red": "red",
+        "crimson": "red",
+        "foo": "red",
+        "green": "green",
+        "blue": "blue",
+        "azure": "red",
+        "fake": "fake",
+    }
     return product_layer
 
 

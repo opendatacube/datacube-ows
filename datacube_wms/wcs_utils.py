@@ -16,6 +16,7 @@ from rasterio.enums import ColorInterp
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.data import DataStacker
 from datacube_wms.ogc_exceptions import WCS1Exception
+from datacube_wms.ogc_utils import ProductLayerException
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 
@@ -142,27 +143,37 @@ class WCS1GetCoverageRequest():
 
         # Range constraint parameter: MEASUREMENTS
         # No default is set in the DescribeCoverage, so it is required
-        # But QGIS wants us to work without one, so let's try picking a reasonable default
-        if "measurements" not in args:
-            if len(self.product.bands) <= 3:
-                self.bands = list(self.product.bands)
-            elif "red" in self.product.bands and "green" in self.product.bands and "blue" in self.product.bands:
-                self.bands = ["red", "green", "blue"]
-            else:
-                self.bands = list(self.product.bands[0:3])
-        else:
+        # But QGIS wants us to work without one, so take default from config
+        if "measurements" in args:
             bands = args["measurements"]
             self.bands = []
             for b in bands.split(","):
-                if b not in self.product.bands:
+                try:
+                    self.bands.append(self.product.band_idx.band(b))
+                except ProductLayerException:
                     raise WCS1Exception("Invalid measurement '%s'" % b,
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
                                         locator="MEASUREMENTS parameter")
-                self.bands.append(b)
             if not bands:
                 raise WCS1Exception("No measurements supplied",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="MEASUREMENTS parameter")
+        elif "styles" in args and args["styles"]:
+            # Use style bands.
+            # Non-standard protocol extension.
+            #
+            # As we have correlated WCS and WMS service implementations,
+            # we can accept a style from WMS, and return the bands used for it.
+            styles = args["styles"].split(",")
+            if len(styles) != 1:
+                raise WCS1Exception("Multiple style parameters not supported")
+            style = self.product.style_index.get(styles[0])
+            if style:
+                self.bands = style.needed_bands
+            else:
+                self.bands = self.product.wcs_default_bands
+        else:
+            self.bands = self.product.wcs_default_bands
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
@@ -372,8 +383,7 @@ def get_tiff(req, data):
     yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
     nodata = 0
     for band in data.data_vars:
-        if band in req.product.nodata_dict:
-            nodata = req.product.nodata_dict[band]
+        nodata = req.product.band_idx.nodata_val(band)
     with MemoryFile() as memfile:
         #pylint: disable=protected-access, bad-continuation
         with memfile.open(
@@ -390,7 +400,7 @@ def get_tiff(req, data):
             dtype=dtype) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
-                dst.set_band_description(idx, band)
+                dst.set_band_description(idx, req.product.band_idx.band_label(band))
                 dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
                 dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())
                 dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
@@ -411,13 +421,3 @@ def get_netcdf(req, data):
     # And export to NetCDF
     return data.to_netcdf()
 
-
-# pylint: disable=invalid-name
-wcs_formats = {
-    "GeoTIFF": {
-        "renderer": "datacube_wms.wcs_utils.get_tiff",
-        "mime": "image/geotiff",
-        "extension": "tif",
-        "multi-time": False
-    },
-}
