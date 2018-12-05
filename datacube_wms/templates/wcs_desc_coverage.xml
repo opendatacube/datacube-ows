@@ -64,14 +64,14 @@
                         <name>measurements</name>
                         <label>Bands/Channels/Samples</label>
                         <values>
-                            {% for b in product.band_idx.band_labels %}
+                            {% for b in product.band_idx.band_labels() %}
                                 <singleValue>{{ b }}</singleValue>
                             {% endfor %}
                         </values>
                     </AxisDescription>
                 </axisDescription>
                 <nullValues>
-                    {% for nv in product.band_idx.band_nodata_vals %}
+                    {% for nv in product.band_idx.band_nodata_vals() %}
                     <singleValue>{{ nv }}</singleValue>
                     {% endfor %}
                 </nullValues>
