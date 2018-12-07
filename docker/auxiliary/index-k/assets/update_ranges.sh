@@ -63,12 +63,10 @@ do
         suffix_string="${suffixes[$i]}"
     fi
     s3-find "s3://${b}/${prefixes[$i]}" ${suffix_string:+"*$suffix_string"} | \
-    s3-to-tar | \
-    dc-index-from-tar
+    s3-yaml-to-json | \
+    dc-index-from-json
 done
 
 # update ranges in wms database
 
 python3 /code/update_ranges.py --no-calculate-extent ${product:+"--product"} ${product:+"$product"}
-
-

@@ -25,7 +25,8 @@ from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
     bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
     solar_correct_data
-from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time
+from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
+    ProductLayerException
 
 import logging
 
@@ -397,16 +398,19 @@ def get_s3_browser_uris(datasets):
 def _make_band_dict(prod_cfg, pixel_dataset, band_list):
     band_dict = {}
     for band in band_list:
-        band_lbl = prod_cfg.band_idx.band_label(band)
-        ret_val = band_val = pixel_dataset[band].item()
-        if band_val == pixel_dataset[band].nodata or numpy.isnan(band_val):
-            band_dict[band_lbl] = "n/a"
-        else:
-            if 'flags_definition' in pixel_dataset[band].attrs:
-                flag_def = pixel_dataset[band].attrs['flags_definition']
-                flag_dict = mask_to_dict(flag_def, band_val)
-                ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
-            band_dict[band_lbl] = ret_val
+        try:
+            band_lbl = prod_cfg.band_idx.band_label(band)
+            ret_val = band_val = pixel_dataset[band].item()
+            if band_val == pixel_dataset[band].nodata or numpy.isnan(band_val):
+                band_dict[band_lbl] = "n/a"
+            else:
+                if 'flags_definition' in pixel_dataset[band].attrs:
+                    flag_def = pixel_dataset[band].attrs['flags_definition']
+                    flag_dict = mask_to_dict(flag_def, band_val)
+                    ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
+                band_dict[band_lbl] = ret_val
+        except ProductLayerException:
+            pass
     return band_dict
 
 
