@@ -286,7 +286,7 @@ def get_map(args):
                                                mask=True,
                                                manual_merge=params.product.pq_manual_merge,
                                                use_overviews=True,
-                                               fuse_func=params.product.fuse_func)
+                                               fuse_func=params.product.pq_fuse_func)
                     else:
                         pq_data = None
             else:
