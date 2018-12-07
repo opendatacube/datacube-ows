@@ -280,7 +280,7 @@ def get_map(args):
                     flag_def = data[params.product.pq_band].flags_definition
                     pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
                 else:
-                    pq_datasets = stacker.datasets(dc.index, mask=True)
+                    pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time)
                     if pq_datasets:
                         pq_data = stacker.data(pq_datasets,
                                                mask=True,
