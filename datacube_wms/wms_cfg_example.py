@@ -199,6 +199,13 @@ layer_cfg = [
                 # Fuse func
                 # Determines how multiple dataset arrays are compressed into a single time array
                 "fuse_func": "datacube_wms.wms_utils.wofls_fuser",
+                # PQ Fuse func
+                # Determines how multiple dataset arrays are compressed into a single time array for the PQ layer
+                "pq_fuse_func": "datacube.helpers.ga_pq_fuser",
+                # PQ Ignore time
+                # Doesn't use the time from the data to find a corresponding mask layer
+                # Used when you have a mask layer that doesn't have time
+                "pq_ignore_time": True,
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
                 "ignore_info_flags": [],
