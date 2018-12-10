@@ -49,7 +49,11 @@ class StyleDefBase(object):
                 mask_data = getattr(odc_mask, self.product.pq_band)
                 if mask.invert:
                     mask_data = ~mask_data
-                data = data.where(mask_data)
+                for band in data.data_vars:
+                    try:
+                        data[band] = data[band].where(mask_data, other=data[band].attrs['nodata'])
+                    except (AttributeError, KeyError):
+                        data[band] = data[band].where(mask_data)
         return data
 
     def transform_data(self, data, pq_data, extent_mask, *masks):

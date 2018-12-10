@@ -148,7 +148,9 @@ class ProductLayerDef(object):
         except TypeError:
             self.extent_mask_func = [product_cfg["extent_mask_func"]]
         self.fuse_func = get_function(product_cfg.get("fuse_func", None))
+        self.pq_fuse_func = get_function(product_cfg.get("pq_fuse_func", self.fuse_func))
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
+        self.pq_ignore_time = product_cfg.get("pq_ignore_time", False)
 
         # For WCS
         svc_cfg = get_service_cfg()
