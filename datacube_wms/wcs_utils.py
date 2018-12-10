@@ -291,7 +291,7 @@ def get_coverage_data(req):
         datasets.extend(t_datasets)
     if not datasets:
         # TODO: Return an empty coverage file with full metadata?
-        extents = dc.load(dask_chunks={}, product=req.product_name, geopolygon=req.geobox.extent, time=stacker._time)
+        extents = dc.load(dask_chunks={}, product=req.product.product.name, geopolygon=req.geobox.extent, time=stacker._time)
         svc = get_service_cfg()
         x_range = (req.minx, req.maxx)
         y_range = (req.miny, req.maxy)
