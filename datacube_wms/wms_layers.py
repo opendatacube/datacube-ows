@@ -162,8 +162,7 @@ class ProductLayerDef(object):
             if not self.native_CRS:
                 self.native_CRS = product_cfg.get("native_wcs_crs")
             if self.native_CRS not in svc_cfg.published_CRSs:
-                logging.warning("Native CRS for product {} ({}) not in published CRSs".format(self.product_name,
-                                                                                  self.native_CRS))
+                logging.warning("Native CRS for product %s (%s) not in published CRSs", self.product_name, self.native_CRS)
                 self.native_CRS = None
             if self.native_CRS:
                 self.native_CRS_def = svc_cfg.published_CRSs[self.native_CRS]
