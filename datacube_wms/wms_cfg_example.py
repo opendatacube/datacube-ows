@@ -225,6 +225,13 @@ layer_cfg = [
                 # 3. All bands must exist
                 # 4. Bands may be referred to by either native name or alias
                 "wcs_default_bands": [ "red", "green", "azure" ],
+                # The "native" CRS for WCS.
+                # Can be omitted if the product has a single native CRS, as this will be used in preference.
+                "native_wcs_crs": "EPSG:3577",
+                # The resolution (x,y) for WCS.
+                # This is the number of CRS units (e.g. degrees, metres) per pixel in the horizontal and vertical
+                # directions for the native resolution.  E.g. for a EPSG:3577  (25.0,25.0) for Landsat-8 and (10.0,10.0 for Sentinel-2)
+                "native_wcs_resolution": [ 25.0, 25.0 ],
                 # Styles.
                 #
                 # See band_mapper.py

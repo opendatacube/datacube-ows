@@ -79,10 +79,10 @@ class BandIndex(object):
         return self._nodata_vals[name]
 
     def band_labels(self):
-        return [ self.band_label(b) for b in self.native_bands.index ]
+        return [ self.band_label(b) for b in self.native_bands.index if b in self.band_cfg ]
 
     def band_nodata_vals(self):
-        return [ self.nodata_val(b) for b in self.native_bands.index ]
+        return [ self.nodata_val(b) for b in self.native_bands.index if b in self.band_cfg ]
 
 
 class ProductLayerDef(object):
@@ -153,25 +153,33 @@ class ProductLayerDef(object):
         # For WCS
         svc_cfg = get_service_cfg()
         if svc_cfg.wcs:
-            if svc_cfg.create_grid:
-                try:
-                    self.native_CRS = self.product.definition["storage"]["crs"]
-                    if not self.native_CRS:
-                        self.native_CRS = product_cfg.get("native_wcs_crs")
-                    if self.native_CRS not in svc_cfg.published_CRSs:
-                        raise Exception(
-                            "Native CRS for product {} ({}) not in published CRSs".format(self.product_name,
-                                                                                          self.native_CRS))
-                    self.native_CRS_def = svc_cfg.published_CRSs[self.native_CRS]
-                    data = dc.load(self.product_name, dask_chunks={})
-                    self.grid_high_x = len(data[svc_cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
-                    self.grid_high_y = len(data[svc_cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
-                    self.origin_x = data.affine[3]
-                    self.origin_y = data.affine[5]
-                    self.resolution_x = data.affine[0]
-                    self.resolution_y = data.affine[4]
-                except:
-                    self.native_CRS = None
+            try:
+                self.native_CRS = self.product.definition["storage"]["crs"]
+            except KeyError:
+                self.native_CRS = None
+            if not self.native_CRS:
+                self.native_CRS = product_cfg.get("native_wcs_crs")
+            if self.native_CRS not in svc_cfg.published_CRSs:
+                logging.warning("Native CRS for product {} ({}) not in published CRSs".format(self.product_name,
+                                                                                  self.native_CRS))
+                self.native_CRS = None
+            if self.native_CRS:
+                self.native_CRS_def = svc_cfg.published_CRSs[self.native_CRS]
+            if svc_cfg.create_grid and not svc_cfg.dummy_grid and self.native_CRS:
+                data = dc.load(self.product_name, dask_chunks={})
+                self.grid_high_x = len(data[svc_cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
+                self.grid_high_y = len(data[svc_cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
+                self.origin_x = data.affine[3]
+                self.origin_y = data.affine[5]
+                self.resolution_x = data.affine[0]
+                self.resolution_y = data.affine[4]
+            elif not svc_cfg.dummy_grid and self.native_CRS:
+                native_bounding_box = self.bboxes[self.native_CRS]
+                self.origin_x = native_bounding_box["left"]
+                self.origin_y = native_bounding_box["bottom"]
+                self.resolution_x, self.resolution_y = product_cfg.get("native_wcs_resolution", [25.0, 25.0])
+                self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
+                self.grid_high_y = int((native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
             self.max_datasets_wcs = product_cfg.get("max_datasets_wcs", 0)
             bands = dc.list_measurements().ix[self.product_name]
             self.bands = bands.index.values
@@ -269,6 +277,7 @@ class ServiceCfg(object):
             self.wcs = srv_cfg.get("wcs", False)
             self.wmts = srv_cfg.get("wmts", False)
             self.create_grid = srv_cfg.get("create_wcs_grid", False)
+            self.dummy_grid = srv_cfg.get("dummy_wcs_grid", False)
 
             self.title = srv_cfg["title"]
             self.url = srv_cfg["url"]
@@ -282,11 +291,16 @@ class ServiceCfg(object):
             self.human_url = srv_cfg.get("human_url", self.url)
             self.published_CRSs = {}
             for crs_str, crsdef in srv_cfg["published_CRSs"].items():
+                if crs_str.startswith("EPSG:"):
+                    gml_name="http://www.opengis.net/def/crs/EPSG/0/" + crs_str[5:]
+                else:
+                    gml_name = crs_str
                 self.published_CRSs[crs_str] = {
                     "geographic": crsdef["geographic"],
                     "horizontal_coord": crsdef.get("horizontal_coord", "longitude"),
                     "vertical_coord": crsdef.get("vertical_coord", "latitude"),
                     "vertical_coord_first": crsdef.get("vertical_coord_first", False),
+                    "gml_name": gml_name
                 }
                 if self.published_CRSs[crs_str]["geographic"]:
                     if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":

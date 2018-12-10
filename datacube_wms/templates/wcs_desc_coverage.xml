@@ -36,7 +36,8 @@
                         <gml:pos dimension="2">{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
                     </gml:Envelope>
                 {% endif %}
-                {% if product.native_CRS %}
+                {% if product.grid_high_x %}
+                <!-- Real RectifiedGrid section -->
                 <gml:RectifiedGrid srsName="{{ product.native_CRS }}" dimension="2">
                     <gml:limits>
                         <gml:GridEnvelope>
@@ -55,6 +56,7 @@
                     <gml:offsetVector>0.0 {{ product.resolution_y }}</gml:offsetVector>
                 </gml:RectifiedGrid>
                 {% else %}
+                    <!-- Dummy RectifiedGrid section -->
                     <gml:RectifiedGrid srsName="EPSG:3577" dimension="2">
                         <gml:limits>
                             <gml:GridEnvelope>
@@ -70,7 +72,7 @@
                             </gml:pos>
                         </gml:origin>
                         <gml:offsetVector>25.0 0.0</gml:offsetVector>
-                        <gml:offsetVector>0.0 -25.0</gml:offsetVector>
+                        <gml:offsetVector>0.0 25.0</gml:offsetVector>
                     </gml:RectifiedGrid>
                 {% endif %}
             </spatialDomain>
