@@ -83,10 +83,11 @@ class RGBAMappedStyleDef(StyleDefBase):
 
     @staticmethod
     def reint(data):
-        attrs = data.attrs
-        data = data.astype("int")
-        data.attrs = attrs
-        return data
+        inted = data.astype("int")
+        if hasattr(data, "attrs"):
+            attrs = data.attrs
+            inted.attrs = attrs
+        return inted
 
     @staticmethod
     def create_colordata(data, rgb, alpha, mask):
