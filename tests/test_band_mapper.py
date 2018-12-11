@@ -207,7 +207,7 @@ def test_correct_style_linear(product_layer, style_cfg_lin):
 def test_correct_style_map(product_layer, style_cfg_map):
     style_def = StyleDef(product_layer, style_cfg_map)
 
-    assert isinstance(style_def, bm.RGBMappedStyleDef)
+    assert isinstance(style_def, bm.RGBAMappedStyleDef)
 
 def test_alpha_style_map(
     product_layer_alpha_map,

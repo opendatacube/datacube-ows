@@ -77,9 +77,9 @@ class DynamicRangeCompression(StyleDefBase):
         normalized = (clipped - self.scale_min) / (self.scale_max - self.scale_min)
         return normalized * 255
 
-class RGBMappedStyleDef(StyleDefBase):
+class RGBAMappedStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
-        super(RGBMappedStyleDef, self).__init__(product, style_cfg)
+        super(RGBAMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
         for band in self.value_map.keys():
             self.needed_bands.add(self.product.band_idx.band(band))
@@ -553,6 +553,6 @@ def StyleDef(product, cfg):
     elif cfg.get("components", False):
         return LinearStyleDef(product, cfg)
     elif cfg.get("value_map", False):
-        return RGBMappedStyleDef(product, cfg)
+        return RGBAMappedStyleDef(product, cfg)
     elif cfg.get("color_ramp", False):
         return RgbaColorRampDef(product, cfg)
