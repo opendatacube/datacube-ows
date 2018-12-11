@@ -50,10 +50,7 @@ class StyleDefBase(object):
                 if mask.invert:
                     mask_data = ~mask_data
                 for band in data.data_vars:
-                    try:
-                        data[band] = data[band].where(mask_data, other=data[band].attrs['nodata'])
-                    except (AttributeError, KeyError):
-                        data[band] = data[band].where(mask_data)
+                    data[band] = data[band].where(mask_data)
         return data
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
@@ -111,6 +108,10 @@ class RGBAMappedStyleDef(StyleDefBase):
                 dims = data[band].dims
                 coords = data[band].coords
                 bdata = data[band]
+                if bdata.dtype.kind == 'f':
+                    # Convert back to int for bitmasking
+                    bdata = bdata.astype('int')
+                    bdata.attrs = data[band].attrs
                 colors = ["red", "green", "blue", "alpha"]
                 for color in colors:
                     val = alpha if color == "alpha" else getattr(rgb, color)
@@ -130,7 +131,7 @@ class RGBAMappedStyleDef(StyleDefBase):
                     fs = flags if "and" not in flags else flags["and"]
                     mask = make_mask(bdata, **fs)
 
-                masked = target.where(mask)
+                masked = target.where(mask).where(numpy.isfinite(data[band]))  # remask
 
                 if len(band_data.data_vars) == 0:
                     band_data = masked
