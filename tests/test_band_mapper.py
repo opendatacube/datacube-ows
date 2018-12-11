@@ -3,6 +3,9 @@ from datacube_wms.band_mapper import StyleDef
 
 from datacube_wms.wms_layers import BandIndex, ProductLayerDef
 
+from xarray import DataArray, Dataset
+from unittest.mock import patch
+
 import pytest
 
 import numpy as np
@@ -84,6 +87,89 @@ def style_cfg_map():
     return cfg
 
 @pytest.fixture
+def product_layer_alpha_map():
+    product_layer = ProductLayerDef.__new__(ProductLayerDef)
+    product_layer.name = "test_product"
+    product_layer.pq_band = "test_band"
+    product_layer.always_fetch_bands = ["foo"]
+    product_layer.band_idx = BandIndex.__new__(BandIndex)
+    product_layer.band_idx.band_cfg = {
+        "foo": ["foo"]
+    }
+    product_layer.band_idx._idx = {
+        "foo": "foo"
+    }
+    return product_layer
+
+@pytest.fixture
+def style_cfg_map_alpha_1():
+    cfg = {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["foo"],
+        "value_map": {
+            "foo": [
+                {
+                    "title": "Transparent",
+                    "abstract": "A Transparent Value",
+                    "flags": {
+                        "bar": True,
+                    },
+                    "color": "#000000",
+                    "alpha": 0.0
+                }
+            ]
+        }
+    }
+    return cfg
+
+@pytest.fixture
+def style_cfg_map_alpha_2():
+    cfg = {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["foo"],
+        "value_map": {
+            "foo": [
+                {
+                    "title": "Semi-Transparent",
+                    "abstract": "A Semi-Transparent Value",
+                    "flags": {
+                        "bar": False,
+                    },
+                    "color": "#000000",
+                    "alpha": 0.5
+                }
+            ]
+        }
+    }
+    return cfg
+
+@pytest.fixture
+def style_cfg_map_alpha_3():
+    cfg = {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["foo"],
+        "value_map": {
+            "foo": [
+                {
+                    "title": "Non-Transparent",
+                    "abstract": "A Non-Transparent Value",
+                    "flags": {
+                        "bar": False,
+                    },
+                    "color": "#000000",
+                }
+            ]
+        }
+    }
+    return cfg
+
+@pytest.fixture
 def style_cfg_ramp():
     cfg = {
         "name": "test_style",
@@ -121,7 +207,40 @@ def test_correct_style_linear(product_layer, style_cfg_lin):
 def test_correct_style_map(product_layer, style_cfg_map):
     style_def = StyleDef(product_layer, style_cfg_map)
 
-    assert isinstance(style_def, bm.RGBMappedStyleDef)
+    assert isinstance(style_def, bm.RGBAMappedStyleDef)
+
+def test_alpha_style_map(
+    product_layer_alpha_map,
+    style_cfg_map_alpha_1,
+    style_cfg_map_alpha_2,
+    style_cfg_map_alpha_3):
+
+    def fake_make_mask(data, **kwargs):
+        return data
+
+    band = np.array([True, True, True])
+    da = DataArray(band, name='foo')
+    ds = Dataset(data_vars={'foo': da})
+
+    with patch('datacube_wms.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+        style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
+        
+        result = style_def.transform_data(ds, None, None)
+        alpha_channel = result["alpha"].values
+        assert (alpha_channel == 0).all()
+
+        style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
+
+        result = style_def.transform_data(ds, None, None)
+        alpha_channel = result["alpha"].values
+        assert (alpha_channel == 127).all()
+
+        style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
+
+        result = style_def.transform_data(ds, None, None)
+        alpha_channel = result["alpha"].values
+        assert (alpha_channel == 255).all()
+
 
 def test_correct_style_ramp(product_layer, style_cfg_ramp):
     style_def = StyleDef(product_layer, style_cfg_ramp)

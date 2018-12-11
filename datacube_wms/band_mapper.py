@@ -77,9 +77,9 @@ class DynamicRangeCompression(StyleDefBase):
         normalized = (clipped - self.scale_min) / (self.scale_max - self.scale_min)
         return normalized * 255
 
-class RGBMappedStyleDef(StyleDefBase):
+class RGBAMappedStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
-        super(RGBMappedStyleDef, self).__init__(product, style_cfg)
+        super(RGBAMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
         for band in self.value_map.keys():
             self.needed_bands.add(self.product.band_idx.band(band))
@@ -107,12 +107,14 @@ class RGBMappedStyleDef(StyleDefBase):
                 target = Dataset()
                 flags = value["flags"]
                 rgb = Color(value["color"])
+                alpha = value.get("alpha", 1.0)
                 dims = data[band].dims
                 coords = data[band].coords
                 bdata = data[band]
-                colors = ["red", "green", "blue"]
+                colors = ["red", "green", "blue", "alpha"]
                 for color in colors:
-                    c = numpy.full(data[band].shape, getattr(rgb, color))
+                    val = alpha if color == "alpha" else getattr(rgb, color)
+                    c = numpy.full(data[band].shape, val)
                     target[color] = DataArray(c, dims=dims, coords=coords)
 
                 if "or" in flags:
@@ -551,6 +553,6 @@ def StyleDef(product, cfg):
     elif cfg.get("components", False):
         return LinearStyleDef(product, cfg)
     elif cfg.get("value_map", False):
-        return RGBMappedStyleDef(product, cfg)
+        return RGBAMappedStyleDef(product, cfg)
     elif cfg.get("color_ramp", False):
         return RgbaColorRampDef(product, cfg)
