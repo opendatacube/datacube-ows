@@ -68,6 +68,7 @@ def determine_product_ranges(dc, product_name, extractor):
     product = dc.index.products.get_by_name(product_name)
     print("Product: ", product_name)
     if product is None:
+        print ("Product does not exist!")
         raise Exception("Product does not exist")
     r = {
         "product_id": product.id,
@@ -83,13 +84,14 @@ def determine_product_ranges(dc, product_name, extractor):
     }
     sub_r = {}
     time_set = set()
-
+    print ("OK, Let's do it")
     crsids = service_cfg["published_CRSs"]
     calculate_extent = not service_cfg.get("use_default_extent", False)
     extents = {crsid: None for crsid in crsids}
     crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
     ds_count = 0
     for ds in dc.find_datasets(product=product_name):
+        print("Processing a dataset", ds.id)
         local_date = local_date(ds)
         time_set.add(local_date)
         if calculate_extent or extractor is not None:
@@ -126,6 +128,7 @@ def determine_product_ranges(dc, product_name, extractor):
                 sub_r[path]["time_set"].add(local_date)
 
             for crsid in crsids:
+                print("Working with CRS", crsid)
                 crs = crses[crsid]
                 ext = ds.extent
                 if ext.crs != crs:
