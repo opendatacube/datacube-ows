@@ -298,3 +298,153 @@ def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
     band[0] = -3000
     band[1] = 0
     band[2] = 3000
+
+@pytest.fixture
+def product_layer_mask_map():
+    product_layer = ProductLayerDef.__new__(ProductLayerDef)
+    product_layer.name = "test_product"
+    product_layer.pq_band = None
+    product_layer.always_fetch_bands = ["foo"]
+    product_layer.band_idx = BandIndex.__new__(BandIndex)
+    product_layer.band_idx.band_cfg = {
+        "foo": ["foo"]
+    }
+    product_layer.band_idx._idx = {
+        "foo": "foo"
+    }
+    return product_layer
+
+@pytest.fixture
+def style_cfg_map_mask():
+    cfg = {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["foo"],
+        "value_map": {
+            "foo": [
+                {
+                    "title": "Non-Transparent",
+                    "abstract": "A Non-Transparent Value",
+                    "flags": {
+                        "bar": 1,
+                    },
+                    "color": "#111111",
+                    "mask": True
+                },
+                {
+                    "title": "Non-Transparent",
+                    "abstract": "A Non-Transparent Value",
+                    "flags": {
+                        "bar": 2,
+                    },
+                    "color": "#FFFFFF",
+                },
+                {
+                    "title": "Non-Transparent",
+                    "abstract": "A Non-Transparent Value",
+                    "flags": {
+                        "bar": 1,
+                    },
+                    "color": "#111111",
+                }
+            ]
+        }
+    }
+    return cfg
+
+def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
+    def fake_make_mask(data, **kwargs):
+        val = kwargs["bar"]
+        return data == val
+
+
+    band = np.array([0, 0, 1, 1, 2, 2])
+    da = DataArray(band, name='foo')
+    ds = Dataset(data_vars={'foo': da})
+
+    with patch('datacube_wms.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+        style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
+        data = style_def.transform_data(ds, None, None)
+        r = data["red"]
+        g = data["green"]
+        b = data["blue"]
+        a = data["alpha"]
+
+        assert (r[2:3:1] == 0)
+        assert (g[2:3:1] == 0)
+        assert (b[2:3:1] == 0)
+        assert (a[2:3:1] == 0)
+        assert (r[4:5:1] == 255)
+        assert (g[4:5:1] == 255)
+        assert (b[4:5:1] == 255)
+        assert (a[4:5:1] == 255)
+
+
+def test_reint():
+    from datacube_wms.band_mapper import RGBAMappedStyleDef
+
+    band = np.array([0., 0., 1., 1., 2., 2.])
+    da = DataArray(band, name='foo')
+
+    assert (band.dtype.kind == "f")
+    data = RGBAMappedStyleDef.reint(band)
+    assert (data.dtype.kind == "i")
+
+    assert (da.dtype.kind == "f")
+    data = RGBAMappedStyleDef.reint(da)
+    assert (data.dtype.kind == "i")
+
+    data = RGBAMappedStyleDef.reint(data)
+    assert (data.dtype.kind == "i")
+
+def test_createcolordata():
+    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from colour import Color
+
+    band = np.array([0, 0, 1, 1, 2, 2])
+    da = DataArray(band, name='foo')
+    rgb = Color("#FFFFFF")
+
+    data = RGBAMappedStyleDef.create_colordata(da, rgb, 1.0, (band >= 0))
+    assert (data == 1.0).all()
+
+def test_createcolordata_alpha():
+    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from colour import Color
+
+    band = np.array([0, 0, 1, 1, 2, 2])
+    da = DataArray(band, name='foo')
+    rgb = Color("#FFFFFF")
+
+    data = RGBAMappedStyleDef.create_colordata(da, rgb, 0.0, (band >= 0))
+    assert (data["alpha"] == 0).all()
+
+def test_createcolordata_mask():
+    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from colour import Color
+
+    band = np.array([0, 0, 1, 1, 2, 2])
+    da = DataArray(band, name='foo')
+    rgb = Color("#FFFFFF")
+
+    data = RGBAMappedStyleDef.create_colordata(da, rgb, 0.0, (band > 0))
+    assert (np.isnan(data["red"][0:1:1])).all()
+    assert (np.isfinite(data["red"][2:5:1])).all()
+
+def test_createcolordata_remask():
+    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from colour import Color
+
+    band = np.array([0, 0, 1, 1, np.nan, np.nan])
+    da = DataArray(band, name='foo')
+    rgb = Color("#FFFFFF")
+
+    data = RGBAMappedStyleDef.create_colordata(da, rgb, 0.0, np.array([True, True, True, True, True, True]))
+    assert (np.isfinite(data["red"][0:3:1])).all()
+    assert (np.isnan(data["red"][4:5:1])).all()
+    
+    
+
+
+
