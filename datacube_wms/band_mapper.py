@@ -107,12 +107,14 @@ class RGBMappedStyleDef(StyleDefBase):
                 target = Dataset()
                 flags = value["flags"]
                 rgb = Color(value["color"])
+                alpha = value.get("alpha", 1.0)
                 dims = data[band].dims
                 coords = data[band].coords
                 bdata = data[band]
-                colors = ["red", "green", "blue"]
+                colors = ["red", "green", "blue", "alpha"]
                 for color in colors:
-                    c = numpy.full(data[band].shape, getattr(rgb, color))
+                    val = alpha if color == "alpha" else getattr(rgb, color)
+                    c = numpy.full(data[band].shape, val)
                     target[color] = DataArray(c, dims=dims, coords=coords)
 
                 if "or" in flags:
