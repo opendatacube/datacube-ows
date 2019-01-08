@@ -19,16 +19,16 @@ test_requirements = [
 ]
 
 setup(
-    name='datacube_wms',
-    version='0.1.1',
-    description="Datacube Web Map Service",
+    name='datacube_ows',
+    version='0.2.0',
+    description="Datacube Open Web Services",
     long_description=readme + '\n\n' + history,
     author="Open Data Cube",
     author_email='earth.observation@ga.gov.au',
     url='https://github.com/opendatacube/datacube-wms',
     entry_points={
         'console_scripts': [
-            'datacube-wms=datacube_wms.wms_wsgi.__main__:main'
+            'datacube-ows=datacube_ows.wms_wsgi.__main__:main'
         ]
     },
     packages=find_packages(),
@@ -36,7 +36,7 @@ setup(
     install_requires=requirements,
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='datacube, wms',
+    keywords='datacube, wms, wcs',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
