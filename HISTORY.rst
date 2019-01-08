@@ -6,3 +6,9 @@ History
 ------------------
 
 * First release on PyPI.
+
+0.2.0 (2019-01-09)
+------------------
+
+* Establishing proper versioning
+* WMS, WMTS, WCS support

@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use datacube-wms in a project::
+To use datacube-ows in a project::
 
     import datacube_wms

@@ -1,4 +1,4 @@
-Welcome to datacube-wms's documentation!
+Welcome to datacube-ows's documentation!
 ======================================
 
 Contents:

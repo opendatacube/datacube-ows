@@ -19,6 +19,15 @@ Features
 * Supports WMS and WMTS.
 * Experimental support for WCS.
 
+Note on Naming
+--------------
+
+This project originally supported WMS only and was known as "datacube_wms".
+
+There are still a number of file and object names in the codebase that
+include the substring "wms" although they are actually more general.
+These names will be updated to "ows" as time permits.
+
 Setup
 -----
 

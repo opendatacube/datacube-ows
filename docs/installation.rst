@@ -4,48 +4,43 @@
 Installation
 ============
 
+Datacube core
+-------------
+
+datacube-ows depends on `datacube-core`_.  Ensure you have a
+working version of the OpenDatacube (including ingested data products)
+before attempting to install and configure datacube-ows.
 
 Stable release
 --------------
 
-To install datacube-wms, run this command in your terminal:
-
-.. code-block:: console
-
-    $ pip install datacube_wms
-
-This is the preferred method to install datacube-wms, as it will always install the most recent stable release. 
-
-If you don't have `pip`_ installed, this `Python installation guide`_ can guide
-you through the process.
-
-.. _pip: https://pip.pypa.io
-.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
-
+datacube-ows is not currently being released to PyPI.
 
 From sources
 ------------
 
-The sources for datacube-wms can be downloaded from the `Github repo`_.
+The sources for datacube-ows can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/v0lat1le/datacube_wms
+    $ git clone git://github.com/opendatacube/datacube-ows
 
-Or download the `tarball`_:
-
-.. code-block:: console
-
-    $ curl  -OL https://github.com/v0lat1le/datacube_wms/tarball/master
-
-Once you have a copy of the source, you can install it with:
+Or download the `zip`_:
 
 .. code-block:: console
 
-    $ python setup.py install
+    $ curl  -OL https://github.com/opendatacube/datacube-ows/archive/master.zip
+
+Once you have a copy of the source, you need to create a local version
+of the config file, and edit it to reflect your requirements.
+
+.. code-block:: console
+
+    $ cp datacube_wms/wms_cfg_example.py datacube_wms/wms_cfg_local.py
 
 
-.. _Github repo: https://github.com/v0lat1le/datacube_wms
-.. _tarball: https://github.com/v0lat1le/datacube_wms/tarball/master
+.. _datacube-core: https://datacube-core.readthedocs.io/en/latest/
+.. _Github repo: https://github.com/opendatacube/datacube-ows
+.. _zip: https://github.com/opendatacube/datacube-ows/archive/master.zip
