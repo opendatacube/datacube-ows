@@ -50,10 +50,7 @@ class StyleDefBase(object):
                 if mask.invert:
                     mask_data = ~mask_data
                 for band in data.data_vars:
-                    try:
-                        data[band] = data[band].where(mask_data, other=data[band].attrs['nodata'])
-                    except (AttributeError, KeyError):
-                        data[band] = data[band].where(mask_data)
+                    data[band] = data[band].where(mask_data)
         return data
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
@@ -84,6 +81,41 @@ class RGBAMappedStyleDef(StyleDefBase):
         for band in self.value_map.keys():
             self.needed_bands.add(self.product.band_idx.band(band))
 
+    @staticmethod
+    def reint(data):
+        inted = data.astype("int")
+        if hasattr(data, "attrs"):
+            attrs = data.attrs
+            inted.attrs = attrs
+        return inted
+
+    @staticmethod
+    def create_colordata(data, rgb, alpha, mask):
+        target = Dataset()
+        colors = ["red", "green", "blue", "alpha"]
+        for color in colors:
+            val = alpha if color == "alpha" else getattr(rgb, color)
+            c = numpy.full(data.shape, val)
+            target[color] = DataArray(c, dims=data.dims, coords=data.coords)
+        masked = target.where(mask).where(numpy.isfinite(data))  # remask
+        return masked
+
+    @staticmethod
+    def create_mask(data, flags):
+        if "or" in flags:
+            fs = flags["or"]
+            mask = None
+            for f in fs.items():
+                f = {f[0]: f[1]}
+                if mask is None:
+                    mask = make_mask(data, **f)
+                else:
+                    mask |= make_mask(data, **f)
+        else:
+            fs = flags if "and" not in flags else flags["and"]
+            mask = make_mask(data, **fs)
+        return mask
+
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
         # pylint: disable=too-many-locals, too-many-branches
@@ -101,46 +133,32 @@ class RGBAMappedStyleDef(StyleDefBase):
         _LOG.debug("mask complete %d", datetime.now())
         imgdata = Dataset()
         for cfg_band, values in self.value_map.items():
+            # Run through each item
             band = self.product.band_idx.band(cfg_band)
             band_data = Dataset()
+            bdata = data[band]
+            if bdata.dtype.kind == 'f':
+                # Convert back to int for bitmasking
+                bdata = RGBAMappedStyleDef.reint(bdata)
             for value in values:
-                target = Dataset()
                 flags = value["flags"]
                 rgb = Color(value["color"])
                 alpha = value.get("alpha", 1.0)
-                dims = data[band].dims
-                coords = data[band].coords
-                bdata = data[band]
-                colors = ["red", "green", "blue", "alpha"]
-                for color in colors:
-                    val = alpha if color == "alpha" else getattr(rgb, color)
-                    c = numpy.full(data[band].shape, val)
-                    target[color] = DataArray(c, dims=dims, coords=coords)
+                mask_source_band = value.get("mask", False)
 
-                if "or" in flags:
-                    fs = flags["or"]
-                    mask = None
-                    for f in fs.items():
-                        f = {f[0]: f[1]}
-                        if mask is None:
-                            mask = make_mask(bdata, **f)
-                        else:
-                            mask |= make_mask(bdata, **f)
+                mask = RGBAMappedStyleDef.create_mask(bdata, flags)
+
+                if mask_source_band:
+                    # disable checking on the use of ~mask
+                    # pylint: disable=invalid-unary-operand-type
+                    bdata = bdata.where(~mask)
+                    bdata = RGBAMappedStyleDef.reint(bdata)
                 else:
-                    fs = flags if "and" not in flags else flags["and"]
-                    mask = make_mask(bdata, **fs)
+                    masked = RGBAMappedStyleDef.create_colordata(bdata, rgb, alpha, mask)
+                    band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
 
-                masked = target.where(mask)
+            imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
 
-                if len(band_data.data_vars) == 0:
-                    band_data = masked
-                else:
-                    band_data = band_data.combine_first(masked)
-
-            if len(imgdata.data_vars) == 0:
-                imgdata = band_data
-            else:
-                imgdata = merge([imgdata, band_data])
         imgdata *= 255
         return imgdata.astype('uint8')
 

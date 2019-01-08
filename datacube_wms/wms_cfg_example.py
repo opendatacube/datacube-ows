@@ -1545,7 +1545,12 @@ layer_cfg = [
                                             "woodland": True
                                         }
                                     },
-                                    "color": "#9FFF4C"
+                                    "color": "#9FFF4C",
+                                    # If specified as True (defaults to False)
+                                    # Any areas which match this flag set
+                                    # will be masked out completely, similar to using an extent
+                                    # mask function or pq masking
+                                    "mask": True
                                 },
                                 {
                                     "title": "Open Forest",
@@ -1558,7 +1563,10 @@ layer_cfg = [
                                             "open_forest": True
                                         }
                                     },
-                                    "color": "#5ECC00"
+                                    "color": "#5ECC00",
+                                    # Can set an optional alpha value (0.0 - 1.0) for these colors
+                                    # will default to 1.0 (fully opaque)
+                                    "alpha": 0.5
                                 },
                                 {
                                     "title": "Closed Forest",
