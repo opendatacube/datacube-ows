@@ -12,7 +12,7 @@ boto3
 rasterio>=1.0.9
 ruamel.yaml
 prometheus-client
-flask-request-id-middleware
+flask-log-request-id
 pytest-localserver
 pytest-mock
 requests

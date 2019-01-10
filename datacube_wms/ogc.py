@@ -2,8 +2,10 @@ from __future__ import absolute_import, division, print_function
 import sys
 import traceback
 
-from flask import Flask, request
-from flask_request_id import RequestID
+from time import monotonic
+
+from flask import Flask, request, g
+from flask_log_request_id import RequestID, RequestIDLogFilter, current_request_id
 import os
 
 from datacube_wms.legend_generator import create_legend_for_style
@@ -15,16 +17,28 @@ from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSExceptio
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
+from datacube_wms.utils import time_call
+
 from .rasterio_env import rio_env
 
 import logging
 
 # pylint: disable=invalid-name, broad-except
 
-_LOG = logging.getLogger(__name__)
-
 app = Flask(__name__.split('.')[0])
 RequestID(app)
+
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
+handler.addFilter(RequestIDLogFilter())
+_LOG = logging.getLogger()
+_LOG.addHandler(handler)
+
+# If invoked using Gunicorn, link our root logger to the gunicorn logger
+# this will mean the root logs will be captured and managed by the gunicorn logger
+# allowing you to set the gunicorn log directories and levels for logs
+# produced by this application
+_LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
@@ -41,6 +55,7 @@ def lower_get_args():
             d[kl] = v
     return d
 
+
 @app.route('/')
 def ogc_impl():
     #pylint: disable=too-many-branches
@@ -48,6 +63,7 @@ def ogc_impl():
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
+
     # create dummy env if not exists
     try:
         with rio_env():
@@ -108,3 +124,18 @@ def legend(layer, style):
     if not img:
         return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
     return img
+
+@app.after_request
+def append_request_id(response):
+    response.headers.add("X-REQUEST-ID", current_request_id())
+    return response
+
+@app.before_request
+def start_timer():
+    g.ogc_start_time = monotonic()
+
+@app.after_request
+def log_time_and_request_response(response):
+    time_taken = int((monotonic() - g.ogc_start_time) * 1000)
+    _LOG.info("request: %s returned status: %d and took: %d ms", request.url, response.status_code, time_taken)
+    return response
