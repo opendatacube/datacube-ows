@@ -39,14 +39,14 @@ and "help wanted" is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-datacube-wms could always use more documentation, whether as part of the
-official datacube-wms docs, in docstrings, or even on the web in blog posts,
+datacube-ows could always use more documentation, whether as part of the
+official datacube-ows docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/v0lat1le/datacube_wms/issues.
+The best way to send feedback is to file an issue at https://github.com/opendatacube/datacube-ows/issues .
 
 If you are proposing a feature:
 
