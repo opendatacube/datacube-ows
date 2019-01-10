@@ -9,7 +9,7 @@ def log_call(func):
     @wraps(func)
     def log_wrapper(*args, **kwargs):
         _LOG = logging.getLogger()
-        _LOG.debug(f"{func.__name__} - {args} - {kwargs}")
+        _LOG.debug("%s args: %s kwargs: %s", func.__name__, args, kwargs)
         return func(*args, **kwargs)
     return log_wrapper
 
@@ -20,6 +20,6 @@ def time_call(func):
         result = func(*args, **kwargs)
         stop = monotonic()
         _LOG = logging.getLogger()
-        _LOG.debug(f"{func.__name__} took: {int((stop - start) * 1000)}ms")
+        _LOG.debug("%s took: %d ms", func.__name__, int((stop - start) * 1000))
         return result
     return timing_wrapper

@@ -58,7 +58,7 @@ def ogc_impl():
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
 
-    logging.info(f"Request: {nocase_args}")
+    logging.info("Request: %s", nocase_args)
 
     # create dummy env if not exists
     try:
