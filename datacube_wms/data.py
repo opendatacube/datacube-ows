@@ -28,6 +28,8 @@ from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
 from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
     ProductLayerException
 
+from datacube_wms.utils import log_call
+
 import logging
 
 from datacube.drivers import new_datasource
@@ -40,7 +42,7 @@ _LOG = logging.getLogger(__name__)
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
 
-
+@log_call
 def _read_file(source, geobox, band, no_data, resampling):
     # Read our data
     with rio.DatasetReader(rio.path.parse_path(source.filename), sharing=False) as src:
@@ -52,6 +54,7 @@ def _read_file(source, geobox, band, no_data, resampling):
     return dst
 
 
+@log_call
 def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
     """ Gets the measurement array of a band of data
     """
@@ -81,6 +84,7 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
 # If use_overviews is true
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
+@log_call
 def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
     # pylint: disable=too-many-locals, dict-keys-not-iterating, protected-access
     if not hasattr(datasets, "__iter__"):
@@ -117,6 +121,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
 
 
 class DataStacker():
+    @log_call
     def __init__(self, product, geobox, time, resampling=None, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
@@ -230,6 +235,7 @@ def bbox_to_geom(bbox, crs):
     return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
 
 
+@log_call
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
@@ -308,6 +314,7 @@ def get_map(args):
     return body, 200, resp_headers({"Content-Type": "image/png"})
 
 
+@log_call
 def _write_png(data, pq_data, style, extent_mask):
     width = data[data.crs.dimensions[1]].size
     height = data[data.crs.dimensions[0]].size
@@ -328,6 +335,7 @@ def _write_png(data, pq_data, style, extent_mask):
         return memfile.read()
 
 
+@log_call
 def _write_empty(geobox):
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -341,6 +349,7 @@ def _write_empty(geobox):
         return memfile.read()
 
 
+@log_call
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
@@ -372,6 +381,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
         return memfile.read()
 
 
+@log_call
 def get_s3_browser_uris(datasets):
     uris = [d.uris for d in datasets]
     uris = list(chain.from_iterable(uris))
@@ -395,6 +405,7 @@ def get_s3_browser_uris(datasets):
     return formatted
 
 
+@log_call
 def _make_band_dict(prod_cfg, pixel_dataset, band_list):
     band_dict = {}
     for band in band_list:
@@ -414,6 +425,7 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list):
     return band_dict
 
 
+@log_call
 def _make_derived_band_dict(pixel_dataset, style_index):
     """Creates a dict of values for bands derived by styles.
     This only works for styles with an `index_function` defined.
@@ -435,12 +447,14 @@ def _make_derived_band_dict(pixel_dataset, style_index):
     return derived_band_dict
 
 
+@log_call
 def geobox_is_point(geobox):
     #pylint: disable=protected-access
     pts = geobox.extent._geom.GetGeometryRef(0).GetPoints()
     return pts.count(pts[0]) == len(pts)
 
 
+@log_call
 def feature_info(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters

@@ -3,7 +3,7 @@ import sys
 import traceback
 
 from flask import Flask, request
-from flask_request_id import RequestID
+from flask_log_request_id import RequestID, RequestIDLogFilter, current_request_id
 import os
 
 from datacube_wms.legend_generator import create_legend_for_style
@@ -15,16 +15,23 @@ from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSExceptio
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
+from datacube_wms.utils import time_call
+
 from .rasterio_env import rio_env
 
 import logging
 
 # pylint: disable=invalid-name, broad-except
 
-_LOG = logging.getLogger(__name__)
-
 app = Flask(__name__.split('.')[0])
 RequestID(app)
+
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(request_id)s [%(levelname)s]: %(message)s"))
+handler.addFilter(RequestIDLogFilter())
+_LOG = logging.getLogger()
+_LOG.addHandler(handler)
+_LOG.setLevel("DEBUG")
 
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
@@ -41,13 +48,18 @@ def lower_get_args():
             d[kl] = v
     return d
 
+
 @app.route('/')
+@time_call
 def ogc_impl():
     #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
+
+    logging.info(f"Request: {nocase_args}")
+
     # create dummy env if not exists
     try:
         with rio_env():
@@ -108,3 +120,8 @@ def legend(layer, style):
     if not img:
         return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
     return img
+
+@app.after_request
+def append_request_id(response):
+    response.headers.add("X-REQUEST-ID", current_request_id())
+    return response
