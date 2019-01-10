@@ -29,10 +29,16 @@ app = Flask(__name__.split('.')[0])
 RequestID(app)
 
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s:%(request_id)s:[%(levelname)s]: %(message)s"))
+handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
 handler.addFilter(RequestIDLogFilter())
 _LOG = logging.getLogger()
 _LOG.addHandler(handler)
+
+# If invoked using Gunicorn, link our root logger to the gunicorn logger
+# this will mean the root logs will be captured and managed by the gunicorn logger
+# allowing you to set the gunicorn log directories and levels for logs
+# produced by this application
+_LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
