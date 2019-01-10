@@ -29,11 +29,10 @@ app = Flask(__name__.split('.')[0])
 RequestID(app)
 
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(request_id)s [%(levelname)s]: %(message)s"))
+handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s:%(request_id)s:[%(levelname)s]: %(message)s"))
 handler.addFilter(RequestIDLogFilter())
 _LOG = logging.getLogger()
 _LOG.addHandler(handler)
-_LOG.setLevel("DEBUG")
 
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
