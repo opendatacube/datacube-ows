@@ -2,7 +2,9 @@ from __future__ import absolute_import, division, print_function
 import sys
 import traceback
 
-from flask import Flask, request
+from time import monotonic
+
+from flask import Flask, request, g
 from flask_log_request_id import RequestID, RequestIDLogFilter, current_request_id
 import os
 
@@ -50,15 +52,12 @@ def lower_get_args():
 
 
 @app.route('/')
-@time_call
 def ogc_impl():
     #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
     svc_cfg = get_service_cfg()
-
-    logging.info("Request: %s", nocase_args)
 
     # create dummy env if not exists
     try:
@@ -124,4 +123,14 @@ def legend(layer, style):
 @app.after_request
 def append_request_id(response):
     response.headers.add("X-REQUEST-ID", current_request_id())
+    return response
+
+@app.before_request
+def start_timer():
+    g.ogc_start_time = monotonic()
+
+@app.after_request
+def log_time_and_request_response(response):
+    time_taken = int((monotonic() - g.ogc_start_time) * 1000)
+    _LOG.info("request: %s returned status: %d and took: %d ms", request.url, response.status_code, time_taken)
     return response
