@@ -143,6 +143,7 @@ class DataStacker():
         compare_geometry = dataset.extent.to_crs(self._geobox.crs)
         return compare_geometry.contains(point)
 
+    @log_call
     def datasets(self, index, mask=False, all_time=False, point=None):
         # No PQ product, so no PQ datasets.
         if not self._product.pq_name and mask:
@@ -168,6 +169,7 @@ class DataStacker():
 
         return datasets
 
+    @log_call
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
         # pylint: disable=too-many-locals, consider-using-enumerate
         if mask:
@@ -198,6 +200,7 @@ class DataStacker():
                 data = read_data(datasets, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
                 return data
 
+    @log_call
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge

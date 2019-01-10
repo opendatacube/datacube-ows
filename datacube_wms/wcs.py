@@ -10,9 +10,12 @@ from datacube_wms.wcs_utils import WCS1GetCoverageRequest, get_coverage_data, ge
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
+from datacube_wms.utils import log_call
+
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
+@log_call
 def handle_wcs(nocase_args):
     operation = nocase_args.get("request", "").upper()
     if not operation:
@@ -27,6 +30,7 @@ def handle_wcs(nocase_args):
         raise WCS1Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
 
 
+@log_call
 def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
@@ -71,6 +75,7 @@ def get_capabilities(args):
         }))
 
 
+@log_call
 def desc_coverages(args):
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
@@ -105,6 +110,7 @@ def desc_coverages(args):
     )
 
 
+@log_call
 def get_coverage(args):
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
     req = WCS1GetCoverageRequest(args)
