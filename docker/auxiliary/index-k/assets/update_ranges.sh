@@ -14,7 +14,7 @@
 
 usage() { echo "Usage: $0 -p <prefix> -b <bucket> [-s <suffix>] [-y UNSAFE]" 1>&2; exit 1; }
 
-while getopts ":p:b:s:" o; do
+while getopts ":p:b:s:y:d:" o; do
     case "${o}" in
         p)
             prefix=${OPTARG}
@@ -41,6 +41,7 @@ fi
 
 IFS=' ' read -r -a prefixes <<< "$prefix"
 IFS=' ' read -r -a suffixes <<< "$suffix"
+IFS=' ' read -r -a products <<< "$product"
 first_suffix="${suffixes[0]}"
 safety_arg=""
 
@@ -69,4 +70,15 @@ done
 
 # update ranges in wms database
 
-python3 /code/update_ranges.py --no-calculate-extent ${product:+"--product"} ${product:+"$product"}
+if [ -z "$product" ]
+then
+    python3 /code/update_ranges.py --no-calculate-extent
+else
+
+    for i in "${!products[@]}"
+    do
+        python3 /code/update_ranges.py --no-calculate-extent --product "${products[$i]}"
+    done
+fi
+
+#python3 /code/update_ranges.py --no-calculate-extent ${product:+"--product"} ${product:+"$product"}
