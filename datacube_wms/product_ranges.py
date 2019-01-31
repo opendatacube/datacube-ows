@@ -569,7 +569,6 @@ def create_range_entry(dc, product, crses):
 
 def check_datasets_exist(dc, product):
   conn = get_sqlconn(dc)
-  txn = conn.begin()
   prodid = product.id
 
   results = conn.execute("""
@@ -577,6 +576,8 @@ def check_datasets_exist(dc, product):
     FROM agdc.dataset
     WHERE dataset_type_ref=%s AND archived IS NULL""",
     prodid)
+
+  conn.close()
 
   return list(results)[0][0] > 0
 
