@@ -9,10 +9,12 @@ try:
 except ImportError:
     from datacube_wms.wms_cfg import service_cfg
 
+from collections.abc import Mapping
+
 from datacube_wms.product_ranges import get_ranges, get_sub_ranges
 from datacube_wms.cube_pool import cube
 from datacube_wms.band_mapper import StyleDef
-from datacube_wms.ogc_utils import get_function, ProductLayerException
+from datacube_wms.ogc_utils import get_function, ProductLayerException, FunctionWrapper
 
 import logging
 
@@ -79,14 +81,14 @@ class BandIndex(object):
         return self._nodata_vals[name]
 
     def band_labels(self):
-        return [ self.band_label(b) for b in self.native_bands.index if b in self.band_cfg ]
+        return [self.band_label(b) for b in self.native_bands.index if b in self.band_cfg]
 
     def band_nodata_vals(self):
-        return [ self.nodata_val(b) for b in self.native_bands.index if b in self.band_cfg ]
+        return [self.nodata_val(b) for b in self.native_bands.index if b in self.band_cfg]
 
 
 class ProductLayerDef(object):
-    #pylint: disable=invalid-name, too-many-instance-attributes, bare-except, too-many-statements
+    # pylint: disable=invalid-name, too-many-instance-attributes, bare-except, too-many-statements
     def __init__(self, product_cfg, platform_def, dc):
         self.platform = platform_def
         self.name = product_cfg["name"]
@@ -124,7 +126,10 @@ class ProductLayerDef(object):
             self.always_fetch_bands.append(self.band_idx.band(b))
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
-        self.sub_product_extractor = product_cfg.get("sub_product_extractor", None)
+        if "sub_product_extractor" in product_cfg:
+            self.sub_product_extractor = FunctionWrapper(product_cfg["sub_product_extractor"])
+        else:
+            self.sub_product_extractor = None
         self.sub_product_label = product_cfg.get("sub_product_label", None)
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
@@ -142,13 +147,24 @@ class ProductLayerDef(object):
         self.styles = product_cfg["styles"]
         self.default_style = product_cfg["default_style"]
         self.style_index = {s["name"]: StyleDef(self, s) for s in self.styles}
-        try:
-            i = iter(product_cfg["extent_mask_func"])
-            self.extent_mask_func = product_cfg["extent_mask_func"]
-        except TypeError:
-            self.extent_mask_func = [product_cfg["extent_mask_func"]]
-        self.fuse_func = get_function(product_cfg.get("fuse_func", None))
-        self.pq_fuse_func = get_function(product_cfg.get("pq_fuse_func", self.fuse_func))
+
+        if (isinstance(product_cfg["extent_mask_func"], Mapping)
+                or callable(product_cfg["extent_mask_func"])
+                or isinstance(product_cfg["extent_mask_func"], str)
+        ):
+            # Single extent mask function.
+            self.extent_mask_func = [FunctionWrapper(self, product_cfg["extent_mask_func"])]
+        else:
+            # Multiple extent mask functions.
+            self.extent_mask_func = list([FunctionWrapper(f_cfg) for f_cfg in product_cfg["extent_mask_func"]])
+        if "fuse_func" in product_cfg:
+            self.fuse_func = FunctionWrapper(product_cfg["fuse_func"])
+        else:
+            self.fuse_func = None
+        if "pq_fuse_func" in product_cfg:
+            self.pq_fuse_func = FunctionWrapper(product_cfg["pq_fuse_func"])
+        else:
+            self.pq_fuse_func = None
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
         self.pq_ignore_time = product_cfg.get("pq_ignore_time", False)
 
@@ -162,7 +178,8 @@ class ProductLayerDef(object):
             if not self.native_CRS:
                 self.native_CRS = product_cfg.get("native_wcs_crs")
             if self.native_CRS not in svc_cfg.published_CRSs:
-                logging.warning("Native CRS for product %s (%s) not in published CRSs", self.product_name, self.native_CRS)
+                logging.warning("Native CRS for product %s (%s) not in published CRSs", self.product_name,
+                                self.native_CRS)
                 self.native_CRS = None
             if self.native_CRS:
                 self.native_CRS_def = svc_cfg.published_CRSs[self.native_CRS]
@@ -185,9 +202,9 @@ class ProductLayerDef(object):
             bands = dc.list_measurements().ix[self.product_name]
             self.bands = bands.index.values
             self.nodata_values = bands['nodata'].values
-            self.nodata_dict = {a:b for a, b in zip(self.bands, self.nodata_values)}
+            self.nodata_dict = {a: b for a, b in zip(self.bands, self.nodata_values)}
             self.wcs_sole_time = product_cfg.get("wcs_sole_time")
-            self.wcs_default_bands = [ self.band_idx.band(b) for b in product_cfg["wcs_default_bands"] ]
+            self.wcs_default_bands = [self.band_idx.band(b) for b in product_cfg["wcs_default_bands"]]
 
     @property
     def bboxes(self):
@@ -196,14 +213,14 @@ class ProductLayerDef(object):
                      "left": bbox["top"],
                      "top": bbox["left"],
                      "bottom": bbox["right"]
-                    } \
-                    if service_cfg["published_CRSs"][crs_id].get("vertical_coord_first") \
-                    else \
-                    {"right": bbox["right"],
-                     "left": bbox["left"],
-                     "top": bbox["top"],
-                     "bottom": bbox["bottom"]
-                    }
+                     } \
+                if service_cfg["published_CRSs"][crs_id].get("vertical_coord_first") \
+                else \
+                {"right": bbox["right"],
+                 "left": bbox["left"],
+                 "top": bbox["top"],
+                 "bottom": bbox["bottom"]
+                 }
             for crs_id, bbox in self.ranges["bboxes"].items()
         }
 
@@ -261,7 +278,7 @@ def get_layers(refresh=False):
 
 
 class ServiceCfg(object):
-    #pylint: disable=invalid-name, too-many-instance-attributes, too-many-branches
+    # pylint: disable=invalid-name, too-many-instance-attributes, too-many-branches
     _instance = None
     initialised = False
 
@@ -293,7 +310,7 @@ class ServiceCfg(object):
             self.published_CRSs = {}
             for crs_str, crsdef in srv_cfg["published_CRSs"].items():
                 if crs_str.startswith("EPSG:"):
-                    gml_name="http://www.opengis.net/def/crs/EPSG/0/" + crs_str[5:]
+                    gml_name = "http://www.opengis.net/def/crs/EPSG/0/" + crs_str[5:]
                 else:
                     gml_name = crs_str
                 self.published_CRSs[crs_str] = {

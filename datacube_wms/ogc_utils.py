@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+import re
 from importlib import import_module
+from itertools import chain
 from datetime import timedelta, datetime
 from dateutil.parser import parse
 from urllib.parse import urlparse
@@ -95,7 +97,80 @@ def capture_headers(request, args_dict):
     return args_dict
 
 # Exceptions raised when attempting to create a
-# product layer form a bad config or without correct
+# product layer from a bad config or without correct
 # product range
 class ProductLayerException(Exception):
     pass
+
+
+# Function wrapper for configurable functional elements
+
+class FunctionWrapper(object):
+    def __init__(self,  product_cfg, func_cfg):
+        if callable(func_cfg):
+            self._func = func_cfg
+            self._args = []
+            self._kwargs = {}
+            self.product_cfg = None
+        elif isinstance(func_cfg, str):
+            self._func = get_function(func_cfg)
+            self._args = []
+            self._kwargs = {}
+            self.product_cfg = None
+        else:
+            self._func = get_function(func_cfg["function"])
+            self._args = func_cfg.get("args", [])
+            self._kwargs = func_cfg.get("kwargs", {})
+            if func_cfg.get("pass_product_cfg", False):
+                self.product_cfg = product_cfg
+            else:
+                self.product_cfg = None
+
+    def __call__(self, *args, **kwargs):
+        if args and self._args:
+            calling_args = chain(args, self._args)
+        elif args:
+            calling_args = args
+        else:
+            calling_args = self._args
+        if kwargs and self._kwargs:
+            calling_kwargs = self._kwargs.copy()
+            calling_kwargs.update(kwargs)
+        elif kwargs:
+            calling_kwargs = kwargs
+        else:
+            calling_kwargs = self._kwargs
+
+        if self.product_cfg:
+            calling_kwargs["product_cfg"] = self.product_cfg
+
+
+        return self._func(*calling_args, **calling_kwargs)
+
+
+# Extent Mask Functions
+
+def mask_by_val(data, band):
+    return data[band] != data[band].attrs['nodata']
+
+
+def mask_by_bitflag(data, band):
+    return ~data[band] & data[band].attrs['nodata']
+
+
+def mask_by_quality(data, band):
+    return data["quality"] != 1
+
+
+def mask_by_extent_flag(data, band):
+    return data["extent"] == 1
+
+# Sub-product extractors
+
+ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
+
+
+def ls8_subproduct(ds):
+    return int(ls8_s3_path_pattern.search(ds.uris[0]).group("path"))
+
+

@@ -195,12 +195,33 @@ layer_cfg = [
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
                 # Multiple extent mask functions are supported - see USGS Level 1 example below.
-                "extent_mask_func": lambda data, band: (data[band] != data[band].attrs['nodata']),
+                #
+                # Three formats are supported:
+                # 1. A function object or lambda
+                #    e.g. "extent_mask_func": lambda data, band: (data[band] != data[band].attrs['nodata']),
+                #
+                # 2. A string containing a fully qualified path to a python function (e.g. as shown below)
+                #
+                # 3. A dict containing the following elements:
+                #    a) "function" (required): A string containing the fully qualified path to a python function
+                #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
+                #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
+                #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
+                #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
+                #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+                #       to band names.
+                #
+                # The function is assumed to take two arguments, data (an xarray Dataset) and band (a band name).  (Plus any additional
+                # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
+                #
+                "extent_mask_func": "datacube_wms.ogc_utils.mask_by_val",
                 # Fuse func
                 # Determines how multiple dataset arrays are compressed into a single time array
+                # All the formats described above for "extent_mask_func" are supported here as well.
                 "fuse_func": "datacube_wms.wms_utils.wofls_fuser",
                 # PQ Fuse func
                 # Determines how multiple dataset arrays are compressed into a single time array for the PQ layer
+                # All the formats described above for "extent_mask_func" are supported here as well.
                 "pq_fuse_func": "datacube.helpers.ga_pq_fuser",
                 # PQ Ignore time
                 # Doesn't use the time from the data to find a corresponding mask layer
@@ -511,8 +532,36 @@ layer_cfg = [
                         "title": "NDVI",
                         "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
                         "heat_mapped": True,
-                        # Note that lambdas CANNOT use band aliases - they MUST use the native band name
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        # The index function is continuous value from which the heat map is derived.
+                        #
+                        # Three formats are supported:
+                        # 1. A function object or lambda
+                        #    e.g. "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        #    Note that lambdas CANNOT use band aliases - they MUST use the native band name
+                        #
+                        # 2. A string containing a fully qualified path to a python function
+                        #    e.g. "index_function": "datacube_wms.ogc_utils.not_a_real_function_name",
+                        #
+                        # 3. A dict containing the following elements:
+                        #    a) "function" (required): A string containing the fully qualified path to a python function
+                        #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
+                        #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
+                        #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
+                        #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
+                        #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+                        #       to band names.
+                        #
+                        # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
+                        # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
+                        #
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         # Band aliases can be used here.
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
@@ -523,7 +572,14 @@ layer_cfg = [
                         "title": "NDVI with cloud masking",
                         "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
@@ -541,7 +597,14 @@ layer_cfg = [
                         "title": "NDWI",
                         "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "green",
+                                "band2": "nir"
+                            }
+                        },
                         "needed_bands": ["green", "nir"],
                         "range": [0.0, 1.0],
                     },
@@ -550,7 +613,14 @@ layer_cfg = [
                         "title": "NDWI with cloud and cloud-shadow masking",
                         "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "green",
+                                "band2": "nir"
+                            }
+                        },
                         "needed_bands": ["green", "nir"],
                         "range": [0.0, 1.0],
                         "pq_masks": [
@@ -567,7 +637,14 @@ layer_cfg = [
                         "title": "NDBI",
                         "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["swir2"] - data["nir"]) / (data["swir2"] + data["nir"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "swir2",
+                                "band2": "nir"
+                            }
+                        },
                         "needed_bands": ["swir2", "nir"],
                         "range": [0.0, 1.0],
                     },
@@ -578,7 +655,14 @@ layer_cfg = [
                         "title": "Cloud Mask",
                         "abstract": "Highlight pixels with cloud.",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.1,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.1"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         # Mask flags normally describe which areas SHOULD be shown.
@@ -604,7 +688,14 @@ layer_cfg = [
                         "title": "Cloud and Shadow Mask",
                         "abstract": "Highlight pixels with cloud or cloud shadow.",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.6,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.6"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         "pq_masks": [
@@ -624,7 +715,14 @@ layer_cfg = [
                         "title": "Cloud acca Mask",
                         "abstract": "Highlight pixels with cloud.",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.4,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.4"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         "pq_masks": [
@@ -640,7 +738,14 @@ layer_cfg = [
                         "title": "Cloud fmask Mask",
                         "abstract": "Highlight pixels with cloud.",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.8,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.8"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         "pq_masks": [
@@ -656,7 +761,14 @@ layer_cfg = [
                         "title": "Contiguous Data Mask",
                         "abstract": "Highlight pixels with non-contiguous data",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.3,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.3"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         "pq_masks": [
@@ -674,7 +786,14 @@ layer_cfg = [
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
@@ -697,7 +816,14 @@ layer_cfg = [
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
@@ -728,7 +854,14 @@ layer_cfg = [
                         "name": "ndvi_ramped",
                         "title": "NDVI - Red, NIR",
                         "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         "color_ramp": [
                             {
@@ -825,8 +958,8 @@ layer_cfg = [
                 # Determines what portions of dataset is potentially meaningful data.
                 # Multiple extent mask functions are required for this data.
                 "extent_mask_func": [
-                    lambda data, band: data["quality"] != 1,
-                    lambda data, band: data[band] != data[band].attrs['nodata'],
+                    "datacube_wms.ogc_utils.mask_by_quality",
+                    "datacube_wms.ogc_utils.mask_by_val",
                 ],
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
@@ -844,7 +977,9 @@ layer_cfg = [
 
                 # A function that extracts the "sub-product" id (e.g. path number) from a dataset. Function should return a (small) integer
                 # If None or not specified, the product has no sub-layers.
-                "sub_product_extractor": lambda ds: int(s3_path_pattern.search(ds.uris[0]).group("path")),
+                # All the formats supported for extent_mask_func as described above are supported here as well.
+                # The function is assumed to take a datacube dataset object and return a sub-product id.
+                "sub_product_extractor": "datacube_wms.ogc_utils.ls8_subproduct",
                 # A prefix used to describe the sub-layer in the GetCapabilities response.
                 # E.g. sub-layer 109 will be described as "Landsat Path 109"
                 "sub_product_label": "Landsat Path",
@@ -1090,7 +1225,14 @@ layer_cfg = [
                         "title": "NDVI",
                         "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
@@ -1100,7 +1242,14 @@ layer_cfg = [
                         "title": "NDVI with cloud masking",
                         "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
@@ -1117,7 +1266,14 @@ layer_cfg = [
                         "title": "NDWI",
                         "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "green",
+                                "band2": "nir"
+                            }
+                        },
                         "needed_bands": ["green", "nir"],
                         "range": [0.0, 1.0],
                     },
@@ -1126,7 +1282,14 @@ layer_cfg = [
                         "title": "NDWI with cloud and cloud-shadow masking",
                         "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["green"] - data["nir"]) / (data["nir"] + data["green"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "green",
+                                "band2": "nir"
+                            }
+                        },
                         "needed_bands": ["green", "nir"],
                         "range": [0.0, 1.0],
                         "pq_masks": [
@@ -1142,7 +1305,14 @@ layer_cfg = [
                         "title": "NDBI",
                         "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["swir2"] - data["nir"]) / (data["swir2"] + data["nir"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "swir2",
+                                "band2": "nir"
+                            }
+                        },
                         "needed_bands": ["swir2", "nir"],
                         "range": [0.0, 1.0],
                     },
@@ -1153,7 +1323,14 @@ layer_cfg = [
                         "title": "Cloud Mask",
                         "abstract": "Highlight pixels with cloud.",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.1,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.1"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         # Mask flags normally describe which areas SHOULD be shown.
@@ -1180,7 +1357,14 @@ layer_cfg = [
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
@@ -1203,7 +1387,14 @@ layer_cfg = [
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "heat_mapped": True,
-                        "index_function": lambda data: (data["nir"] - data["red"]) / (data["nir"] + data["red"]),
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.norm_diff",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band1": "nir",
+                                "band2": "red"
+                            }
+                        },
                         "needed_bands": ["red", "nir"],
                         # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
@@ -1278,7 +1469,7 @@ layer_cfg = [
                 "zoomed_out_fill_colour": [200, 180, 180, 160],
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
-                "extent_mask_func": lambda data, band: (~data[band] & data[band].attrs['nodata']),
+                "extent_mask_func": "datacube_wms.ogc_utils.mask_by_bitflag",
                 # When pq_manual_merge is set to true, individual PQ datasets
                 # are masked against the extent_mask_func individually before
                 # merging into a single DataArray.  Carries a performance
@@ -1309,7 +1500,14 @@ layer_cfg = [
                         "title": "Water (masked)",
                         "abstract": "Water, with clouds, terrain shadows, etc. masked",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.25,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.25"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         # Invert True: Show if no flags match (Hide if any match)
@@ -1336,7 +1534,14 @@ layer_cfg = [
                         "title": "Water (unmasked)",
                         "abstract": "Simple water data, no masking",
                         "heat_mapped": True,
-                        "index_function": lambda data: data["red"] * 0.0 + 0.25,
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.constant",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "red",
+                                "const": "0.25"
+                            }
+                        },
                         "needed_bands": ["red"],
                         "range": [0.0, 1.0],
                         # Invert True: Show if no flags match
@@ -1356,7 +1561,7 @@ layer_cfg = [
                 #  not required by the standard.)
                 "default_style": "water_masked",
             },
-                        {
+            {
                 # Included as a keyword  for the layer
                 "label": "WOfS_Summary",
                 # Included as a keyword  for the layer
@@ -1382,7 +1587,7 @@ layer_cfg = [
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
-                "extent_mask_func": lambda data, band: (data[band] != data[band].attrs['nodata']),
+                "extent_mask_func": "datacube_wms.ogc_utils.mask_by_val",
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
                 "ignore_info_flags": [],
@@ -1397,6 +1602,13 @@ layer_cfg = [
                         "title": " Wet and Dry Count",
                         "abstract": "WOfS summary showing the frequency of Wetness",
                         "needed_bands": ["frequency"],
+                        "index_function": {
+                            "function": "datacube_wms.band_utils.single_band",
+                            "pass_product_cfg": True,
+                            "kwargs": {
+                                "band": "frequency",
+                            }
+                        },
                         "color_ramp": [
                             {
                                 "value": 0.002,
@@ -1515,7 +1727,7 @@ layer_cfg = [
                 "product_name": "mangrove_cover",
                 "min_zoom_factor": 15.0,
                 "zoomed_out_fill_colour": [150, 180, 200, 160],
-                "extent_mask_func": lambda data, band: data["extent"] == 1,
+                "extent_mask_func": "datacube_wms.ogc_utils.mask_by_extent_flag",
                 "ignore_info_flags": [],
                 "data_manual_merge": False,
                 "always_fetch_bands": ["extent"],

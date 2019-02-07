@@ -16,17 +16,21 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as mpatches
-import io
 from textwrap import fill
 
 from math import isclose
 
+from datacube_wms.ogc_utils import FunctionWrapper
+
+
 _LOG = logging.getLogger(__name__)
+
 
 class StyleMask(object):
     def __init__(self, flags, invert=False):
         self.flags = flags
         self.invert = invert
+
 
 class StyleDefBase(object):
     def __init__(self, product, style_cfg):
@@ -315,7 +319,7 @@ class HeatMappedStyleDef(StyleDefBase):
         super(HeatMappedStyleDef, self).__init__(product, style_cfg)
         for b in style_cfg["needed_bands"]:
             self.needed_bands.add(self.product.band_idx.band(b))
-        self._index_function = style_cfg["index_function"]
+        self._index_function = FunctionWrapper(self.product, style_cfg["index_function"])
         self.range = style_cfg["range"]
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
@@ -424,7 +428,10 @@ class RgbaColorRampDef(StyleDefBase):
         for band in style_cfg["needed_bands"]:
             self.needed_bands.add(self.product.band_idx.band(band))
 
-        self.index_function = style_cfg.get("index_function", None)
+        if "index_function" in style_cfg:
+            self.index_function = FunctionWrapper(self.product, style_cfg["index_function"])
+        else:
+            self.index_function = None
 
     def get_value(self, data, values, intensities):
         return numpy.interp(data, values, intensities)
