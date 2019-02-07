@@ -1,3 +1,5 @@
+from __future__ import division
+
 # Style index functions
 
 def norm_diff(data, band1, band2, product_cfg=None):
