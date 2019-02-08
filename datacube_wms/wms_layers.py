@@ -127,7 +127,7 @@ class ProductLayerDef(object):
         self.data_manual_merge = product_cfg.get("data_manual_merge", False)
         self.solar_correction = product_cfg.get("apply_solar_corrections", False)
         if "sub_product_extractor" in product_cfg:
-            self.sub_product_extractor = FunctionWrapper(product_cfg["sub_product_extractor"])
+            self.sub_product_extractor = FunctionWrapper(self, product_cfg["sub_product_extractor"])
         else:
             self.sub_product_extractor = None
         self.sub_product_label = product_cfg.get("sub_product_label", None)
@@ -156,13 +156,13 @@ class ProductLayerDef(object):
             self.extent_mask_func = [FunctionWrapper(self, product_cfg["extent_mask_func"])]
         else:
             # Multiple extent mask functions.
-            self.extent_mask_func = list([FunctionWrapper(f_cfg) for f_cfg in product_cfg["extent_mask_func"]])
+            self.extent_mask_func = list([FunctionWrapper(self, f_cfg) for f_cfg in product_cfg["extent_mask_func"]])
         if "fuse_func" in product_cfg:
-            self.fuse_func = FunctionWrapper(product_cfg["fuse_func"])
+            self.fuse_func = FunctionWrapper(self, product_cfg["fuse_func"])
         else:
             self.fuse_func = None
         if "pq_fuse_func" in product_cfg:
-            self.pq_fuse_func = FunctionWrapper(product_cfg["pq_fuse_func"])
+            self.pq_fuse_func = FunctionWrapper(self, product_cfg["pq_fuse_func"])
         else:
             self.pq_fuse_func = None
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
