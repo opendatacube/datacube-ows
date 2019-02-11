@@ -35,3 +35,17 @@ def single_band(data, band, product_cfg=None):
         b = band
     return data[b]
 
+
+def band_quotient(data, band1, band2, product_cfg=None):
+    if product_cfg:
+        b1=product_cfg.band_idx.band(band1)
+        b2=product_cfg.band_idx.band(band2)
+    else:
+        b1 = band1
+        b2 = band2
+    return data[band1] / data[band2]
+
+
+def band_quotient_sum(data, band1a, band1b, band2a, band2b, product_cfg=None):
+    return band_quotient(data, band1a, band1b, product_cfg) + band_quotient(data, band2a, band2b, product_cfg)
+

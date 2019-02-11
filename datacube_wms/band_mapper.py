@@ -396,6 +396,53 @@ class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
         return imgdata
 
 
+unscaled_default_ramp = [
+    {
+        "value": -0.0,
+        "color": "#000080",
+        "alpha": 0.0
+    },
+    {
+        "value": 0.0,
+        "color": "#000080",
+    },
+    {
+        "value": 0.1,
+        "color": "#0000FF",
+    },
+    {
+        "value": 0.3,
+        "color": "#00FFFF",
+    },
+    {
+        "value": 0.5,
+        "color": "#00FF00",
+    },
+    {
+        "value": 0.7,
+        "color": "#FFFF00",
+    },
+    {
+        "value": 0.9,
+        "color": "#FF0000",
+    },
+    {
+        "value": 1.0,
+        "color": "#800000",
+    },
+]
+
+
+def scale_unscaled_ramp(rmin, rmax, unscaled):
+    return [
+        {
+            "value": (rmax - rmin)*u["value"] + rmin,
+            "color": u["color"],
+            "alpha": u.get("alpha", 1.0)
+        } for u in unscaled
+    ]
+
+
 class RgbaColorRampDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(RgbaColorRampDef, self).__init__(product, style_cfg)
@@ -416,7 +463,13 @@ class RgbaColorRampDef(StyleDefBase):
 
             return (values, red, green, blue, alpha)
 
-        self.color_ramp = style_cfg["color_ramp"]
+        if "color_ramp" in style_cfg:
+            self.color_ramp = style_cfg["color_ramp"]
+        else:
+            rmin, rmax = style_cfg["range"]
+            self.color_ramp = scale_unscaled_ramp(
+                    rmin, rmax,
+                    unscaled_default_ramp)
         values, r, g, b, a = crack_ramp(self.color_ramp)
         self.values = values
         self.components = {
@@ -573,11 +626,11 @@ class RgbaColorRampDef(StyleDefBase):
 def StyleDef(product, cfg):
     if cfg.get("component_ratio", False):
         return HybridStyleDef(product, cfg)
-    if cfg.get("heat_mapped", False):
+    elif cfg.get("heat_mapped", False):
         return HeatMappedStyleDef(product, cfg)
     elif cfg.get("components", False):
         return LinearStyleDef(product, cfg)
     elif cfg.get("value_map", False):
         return RGBAMappedStyleDef(product, cfg)
-    elif cfg.get("color_ramp", False):
+    elif cfg.get("color_ramp", False) or cfg.get("range", False):
         return RgbaColorRampDef(product, cfg)

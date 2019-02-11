@@ -531,7 +531,6 @@ layer_cfg = [
                         "name": "ndvi",
                         "title": "NDVI",
                         "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-                        "heat_mapped": True,
                         # The index function is continuous value from which the heat map is derived.
                         #
                         # Three formats are supported:
@@ -571,7 +570,6 @@ layer_cfg = [
                         "name": "ndvi_cloudmask",
                         "title": "NDVI with cloud masking",
                         "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -596,7 +594,6 @@ layer_cfg = [
                         "name": "ndwi",
                         "title": "NDWI",
                         "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -612,7 +609,6 @@ layer_cfg = [
                         "name": "ndwi_cloudmask",
                         "title": "NDWI with cloud and cloud-shadow masking",
                         "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -636,7 +632,6 @@ layer_cfg = [
                         "name": "ndbi",
                         "title": "NDBI",
                         "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -654,7 +649,6 @@ layer_cfg = [
                         "name": "cloud_mask",
                         "title": "Cloud Mask",
                         "abstract": "Highlight pixels with cloud.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -687,7 +681,6 @@ layer_cfg = [
                         "name": "cloud_and_shadow_mask",
                         "title": "Cloud and Shadow Mask",
                         "abstract": "Highlight pixels with cloud or cloud shadow.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -1499,7 +1492,6 @@ layer_cfg = [
                         "name": "water_masked",
                         "title": "Water (masked)",
                         "abstract": "Water, with clouds, terrain shadows, etc. masked",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -1533,7 +1525,6 @@ layer_cfg = [
                         "name": "water",
                         "title": "Water (unmasked)",
                         "abstract": "Simple water data, no masking",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
