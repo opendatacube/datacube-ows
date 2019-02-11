@@ -6,7 +6,6 @@ response_cfg = {
     "Access-Control-Allow-Origin": "*",  # CORS header
 }
 
-s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 
 service_cfg = {
     ## Which web service(s) should be supported by this instance
@@ -310,6 +309,7 @@ layer_cfg = [
                             }
                         },
                         # PQ masking example
+                        # All pixels where any of the listed flags are true are masked out.
                         "pq_masks": [
                             {
                                 "flags": {
@@ -526,7 +526,7 @@ layer_cfg = [
                         "scale_range": [0.0, 3000.0]
                     },
                     #
-                    # Examples of non-linear heat-mapped styles.
+                    # Examples of non-linear colour-ramped styles.
                     {
                         "name": "ndvi",
                         "title": "NDVI",
@@ -563,8 +563,68 @@ layer_cfg = [
                         },
                         # Band aliases can be used here.
                         "needed_bands": ["red", "nir"],
-                        # Areas where the index_function returns outside the range are masked.
-                        "range": [0.0, 1.0],
+                        # The color ramp. Values between specified entries have both their alphas and colours
+                        # interpolated.
+                        "color_ramp": [
+                            # Any value less than the first entry will have colour and alpha of the first entry.
+                            # (i.e. in this example all negative values will be fully transparent (alpha=0.0).)
+                            {
+                                "value": -0.0,
+                                "color": "#8F3F20",
+                                "alpha": 0.0
+                            },
+                            {
+                                "value": 0.0,
+                                "color": "#8F3F20",
+                                "alpha": 1.0
+                            },
+                            {
+                                # do not have to defined alpha value
+                                # if no alpha is specified, alpha will default to 1.0
+                                # or max opacity
+                                "value": 0.1,
+                                "color": "#A35F18"
+                            },
+                            {
+                                "value": 0.2,
+                                "color": "#B88512"
+                            },
+                            {
+                                "value": 0.3,
+                                "color": "#CEAC0E"
+                            },
+                            {
+                                "value": 0.4,
+                                "color": "#E5D609"
+                            },
+                            {
+                                "value": 0.5,
+                                "color": "#FFFF0C"
+                            },
+                            {
+                                "value": 0.6,
+                                "color": "#C3DE09"
+                            },
+                            {
+                                "value": 0.7,
+                                "color": "#88B808"
+                            },
+                            {
+                                "value": 0.8,
+                                "color": "#529400"
+                            },
+                            {
+                                "value": 0.9,
+                                "color": "#237100"
+                            },
+                            # Values greater than the last entry will use the colour and alpha of the last entry.
+                            # (N.B. This will not happen for this example because it is normalised so that 1.0 is
+                            # maximum possible value.)
+                            {
+                                "value": 1.0,
+                                "color": "#114D04"
+                            }
+                        ]
                     },
                     {
                         "name": "ndvi_cloudmask",
@@ -579,7 +639,11 @@ layer_cfg = [
                             }
                         },
                         "needed_bands": ["red", "nir"],
-                        # Areas where the index_function returns outside the range are masked.
+                        # If a "range" is supplied instead of a "color_ramp", a default color ramp is used.
+                        # Areas where the index_function returns less the lower range limit are transparent.
+                        # Areas where the index_function returns within the range limits are mapped to a
+                        # simple heat map ranging from dark blue, through blue, green, yellow, orange, and red to dark red.
+                        # Areas where the index_function returns greater than the upper range limit are displayed as dark red.
                         "range": [0.0, 1.0],
                         "pq_masks": [
                             {
@@ -644,7 +708,9 @@ layer_cfg = [
                         "range": [0.0, 1.0],
                     },
                     # Mask layers - examples of how to display raw pixel quality data.
-                    # This works by creatively mis-using the Heatmap style class.
+                    # This works by creatively mis-using the colormap styles.
+                    # The index function returns a constant, so the output is a flat single colour, masked by the
+                    # relevant pixel quality flags.
                     {
                         "name": "cloud_mask",
                         "title": "Cloud Mask",
@@ -707,7 +773,6 @@ layer_cfg = [
                         "name": "cloud_acca",
                         "title": "Cloud acca Mask",
                         "abstract": "Highlight pixels with cloud.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -730,7 +795,6 @@ layer_cfg = [
                         "name": "cloud_fmask",
                         "title": "Cloud fmask Mask",
                         "abstract": "Highlight pixels with cloud.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -753,7 +817,6 @@ layer_cfg = [
                         "name": "contiguous_mask",
                         "title": "Contiguous Data Mask",
                         "abstract": "Highlight pixels with non-contiguous data",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -772,7 +835,8 @@ layer_cfg = [
                             },
                         ],
                     },
-                    # Hybrid style - mixes a linear mapping and a heat mapped index
+                    # Hybrid style - mixes a linear mapping and an old-style heat mapped index style
+                    # Deprecated as old-style heat-mapped index styles are deprecated.
                     {
                         "name": "rgb_ndvi",
                         "title": "NDVI plus RGB",
@@ -841,85 +905,6 @@ layer_cfg = [
                         ],
                         "scale_range": [0.0, 3000.0]
                     },
-                    {
-                        # describes a style which applies an index function to data
-                        # and then styles that data using an rbga color ramp
-                        "name": "ndvi_ramped",
-                        "title": "NDVI - Red, NIR",
-                        "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-                        "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
-                            "pass_product_cfg": True,
-                            "kwargs": {
-                                "band1": "nir",
-                                "band2": "red"
-                            }
-                        },
-                        "needed_bands": ["red", "nir"],
-                        "color_ramp": [
-                            {
-                                # values from this to the next value
-                                # will be ramped linearly from this color to the next
-                                # if alpha changes, the alpha will also be ramped
-                                "value": -1.0, 
-                                "color": "#FFFFFF",
-                                "alpha": 0.0
-                            },
-                            {
-                                "value": -0.0,
-                                "color": "#8F3F20",
-                                "alpha": 0.0
-                            },
-                            {
-                                "value": 0.0,
-                                "color": "#8F3F20",
-                                "alpha": 1.0
-                            },
-                            {
-                                # do not have to defined alpha value
-                                # if no alpha is specified, alpha will default to 1.0
-                                # or max opacity
-                                "value": 0.1,
-                                "color": "#A35F18"
-                            },
-                            {
-                                "value": 0.2,
-                                "color": "#B88512"
-                            },
-                            {
-                                "value": 0.3,
-                                "color": "#CEAC0E"
-                            },
-                            {
-                                "value": 0.4,
-                                "color": "#E5D609"
-                            },
-                            {
-                                "value": 0.5,
-                                "color": "#FFFF0C"
-                            },
-                            {
-                                "value": 0.6,
-                                "color": "#C3DE09"
-                            },
-                            {
-                                "value": 0.7,
-                                "color": "#88B808"
-                            },
-                            {
-                                "value": 0.8,
-                                "color": "#529400"
-                            },
-                            {
-                                "value": 0.9,
-                                "color": "#237100"
-                            },
-                            {
-                                "value": 1.0,
-                                "color": "#114D04"
-                            }
-                        ]
-                    },
                 ],
                 # Default style (if request does not specify style)
                 # MUST be defined in the styles list above.
@@ -957,6 +942,12 @@ layer_cfg = [
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
                 "ignore_info_flags": [],
+                # Include legends for listed styles.  Note that only style types that support
+                # legends should be included (i.e. colour ramped styles.)
+                "legend": {
+                    # the styles to include in a legend for this product
+                    "styles": ["ndvi", "ndwi", "ndbi"]
+                },
 
                 # Set to true if the band product dataset extents include nodata regions.
                 "data_manual_merge": True,
@@ -1217,7 +1208,6 @@ layer_cfg = [
                         "name": "ndvi",
                         "title": "NDVI",
                         "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -1234,7 +1224,6 @@ layer_cfg = [
                         "name": "ndvi_cloudmask",
                         "title": "NDVI with cloud masking",
                         "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -1258,7 +1247,6 @@ layer_cfg = [
                         "name": "ndwi",
                         "title": "NDWI",
                         "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -1274,7 +1262,6 @@ layer_cfg = [
                         "name": "ndwi_cloudmask",
                         "title": "NDWI with cloud and cloud-shadow masking",
                         "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -1297,7 +1284,6 @@ layer_cfg = [
                         "name": "ndbi",
                         "title": "NDBI",
                         "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -1315,7 +1301,6 @@ layer_cfg = [
                         "name": "cloud_mask",
                         "title": "Cloud Mask",
                         "abstract": "Highlight pixels with cloud.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
