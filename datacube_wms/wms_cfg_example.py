@@ -835,14 +835,14 @@ layer_cfg = [
                             },
                         ],
                     },
-                    # Hybrid style - mixes a linear mapping and an old-style heat mapped index style
-                    # Deprecated as old-style heat-mapped index styles are deprecated.
+                    # Hybrid style - blends a linear mapping and an colour-ramped index style
+                    # There is no scientific justification for these styles, I just think they look cool.  :)
                     {
                         "name": "rgb_ndvi",
                         "title": "NDVI plus RGB",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
+                        # Mixing ration between linear components and colour ramped index. 1.0 is fully linear components, 0.0 is fully colour ramp.
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -852,7 +852,6 @@ layer_cfg = [
                             }
                         },
                         "needed_bands": ["red", "nir"],
-                        # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
                         "components": {
                             "red": {
@@ -872,7 +871,6 @@ layer_cfg = [
                         "title": "NDVI plus RGB (Cloud masked)",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -882,7 +880,6 @@ layer_cfg = [
                             }
                         },
                         "needed_bands": ["red", "nir"],
-                        # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
                         "components": {
                             "red": {
@@ -1328,13 +1325,13 @@ layer_cfg = [
                             },
                         ],
                     },
-                    # Hybrid style - mixes a linear mapping and a heat mapped index
+                    # Hybrid style - blends a linear mapping and an colour-ramped index style
+                    # There is no scientific justification for these styles, I just think they look cool.  :)
                     {
                         "name": "rgb_ndvi",
                         "title": "NDVI plus RGB",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -1344,7 +1341,6 @@ layer_cfg = [
                             }
                         },
                         "needed_bands": ["red", "nir"],
-                        # Areas where the index_function returns outside the range are masked.
                         "range": [0.0, 1.0],
                         "components": {
                             "red": {
@@ -1364,7 +1360,6 @@ layer_cfg = [
                         "title": "NDVI plus RGB (Cloud masked)",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,

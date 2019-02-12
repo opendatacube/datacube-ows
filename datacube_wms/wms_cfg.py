@@ -669,7 +669,6 @@ layer_cfg = [
                         "title": "NDVI plus RGB",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -699,7 +698,6 @@ layer_cfg = [
                         "title": "NDVI plus RGB (Cloud masked)",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,

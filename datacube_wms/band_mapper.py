@@ -212,7 +212,7 @@ class LinearStyleDef(DynamicRangeCompression):
             return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() }
 
     @property
-    def components(self):
+    def rgb_components(self):
         if self.alpha_components is not None:
             return {
                 "red": self.red_components,
@@ -232,7 +232,7 @@ class LinearStyleDef(DynamicRangeCompression):
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
         imgdata = Dataset()
-        for imgband, components in self.components.items():
+        for imgband, components in self.rgb_components.items():
             imgband_data = None
             for band, intensity in components.items():
                 if callable(intensity):
@@ -250,149 +250,6 @@ class LinearStyleDef(DynamicRangeCompression):
             else:
                 imgband_data = self.compress_band(imgband_data).astype('uint8')
             imgdata[imgband] = (dims, imgband_data)
-        return imgdata
-
-
-def hm_index_to_blue(val, rmin, rmax, nan_mask=True):
-    scaled = (val - rmin) / (rmax - rmin)
-    if scaled < 0.0:
-        if nan_mask:
-            return float("nan")
-        else:
-            return 0.0
-    elif scaled > 0.5:
-        return 0.0
-    elif scaled < 0.1:
-        return 0.5 + scaled * 5.0
-    elif scaled > 0.3:
-        return 2.5 - scaled * 5.0
-    else:
-        return 1.0
-
-
-def hm_index_to_green(val, rmin, rmax, nan_mask=True):
-    scaled = (val - rmin) / (rmax - rmin)
-    if scaled < 0.0:
-        if nan_mask:
-            return float("nan")
-        else:
-            return 0.0
-    elif scaled > 0.9:
-        return 0.0
-    elif scaled < 0.1:
-        return 0.0
-    elif scaled < 0.3:
-        return -0.5 + scaled * 5.0
-    elif scaled > 0.7:
-        return 4.5 - scaled * 5.0
-    else:
-        return 1.0
-
-
-def hm_index_to_red(val, rmin, rmax, nan_mask=True):
-    scaled = (val - rmin) / (rmax - rmin)
-    if scaled < 0.0:
-        if nan_mask:
-            return float("nan")
-        else:
-            return 0.0
-    elif scaled < 0.5:
-        return 0.0
-    elif scaled < 0.7:
-        return -2.5 + scaled * 5.0
-    elif scaled > 0.9:
-        return 5.5 - scaled * 5.0
-    else:
-        return 1.0
-
-
-def hm_index_func_for_range(func, rmin, rmax, nan_mask=True):
-    def hm_index_func(val):
-        return func(val, rmin, rmax, nan_mask=nan_mask)
-
-    return hm_index_func
-
-
-# TODO HeatMapped Styles are deprecated and will be removed - Use RGBa Colour Ramp Styles instead
-class HeatMappedStyleDef(StyleDefBase):
-    def __init__(self, product, style_cfg):
-        super(HeatMappedStyleDef, self).__init__(product, style_cfg)
-        for b in style_cfg["needed_bands"]:
-            self.needed_bands.add(self.product.band_idx.band(b))
-        self._index_function = FunctionWrapper(self.product, style_cfg["index_function"])
-        self.range = style_cfg["range"]
-
-    def transform_data(self, data, pq_data, extent_mask, *masks):
-        hm_index_data = self._index_function(data)
-        dims = data[list(self.needed_bands)[0]].dims
-        imgdata = Dataset()
-        for band, map_func in [
-                ("red", hm_index_to_red),
-                ("green", hm_index_to_green),
-                ("blue", hm_index_to_blue),
-        ]:
-            f = numpy.vectorize(
-                hm_index_func_for_range(
-                    map_func,
-                    self.range[0],
-                    self.range[1]
-                )
-            )
-            img_band_raw_data = f(hm_index_data)
-            img_band_data = numpy.clip(img_band_raw_data * 255.0, 0, 255).astype("uint8")
-            imgdata[band] = (dims, img_band_data)
-        if extent_mask is not None:
-            imgdata = imgdata.where(extent_mask)
-        imgdata = self.apply_masks(imgdata, pq_data)
-        imgdata = imgdata.astype("uint8")
-        return imgdata
-
-
-# TODO Hybrid Styles should be removed or converted to share code with RGBa Colour Ramp Styles instead of HeatMaps.
-class HybridStyleDef(HeatMappedStyleDef, LinearStyleDef):
-    def __init__(self, product, style_cfg):
-        super(HybridStyleDef, self).__init__(product, style_cfg)
-        self.component_ratio = style_cfg["component_ratio"]
-
-    def transform_data(self, data, pq_data, extent_mask, *masks):
-        #pylint: disable=too-many-locals
-        hm_index_data = self._index_function(data)
-        hm_mask = hm_index_data != float("nan")
-        data = self.apply_masks(data, pq_data)
-
-        dims = data[list(self.needed_bands)[0]].dims
-        imgdata = Dataset()
-        for band, map_func in [
-                ("red", hm_index_to_red),
-                ("green", hm_index_to_green),
-                ("blue", hm_index_to_blue),
-        ]:
-            components = self.components[band]
-            component_band_data = None
-            for c_band, c_intensity in components.items():
-                imgband_component_data = data[c_band] * c_intensity
-                if component_band_data is not None:
-                    component_band_data += imgband_component_data
-                else:
-                    component_band_data = imgband_component_data
-            f = numpy.vectorize(
-                hm_index_func_for_range(
-                    map_func,
-                    self.range[0],
-                    self.range[1],
-                    nan_mask=False
-                )
-            )
-            hmap_raw_data = f(hm_index_data)
-            component_band_data = self.compress_band(component_band_data)
-            img_band_data = (hmap_raw_data * 255.0 * (1.0 - self.component_ratio)
-                             + self.component_ratio * component_band_data)
-            imgdata[band] = (dims, img_band_data.astype("uint8"))
-        if extent_mask is not None:
-            imgdata = imgdata.where(extent_mask)
-        imgdata = imgdata.where(hm_mask)
-        imgdata = self.apply_masks(imgdata, pq_data)
-        imgdata = imgdata.astype("uint8")
         return imgdata
 
 
@@ -622,12 +479,53 @@ class RgbaColorRampDef(StyleDefBase):
         plt.savefig(bytesio, format='png')
 
 
+class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
+    def __init__(self, product, style_cfg):
+        super(HybridStyleDef, self).__init__(product, style_cfg)
+        self.component_ratio = style_cfg["component_ratio"]
+
+    def transform_data(self, data, pq_data, extent_mask, *masks):
+        #pylint: disable=too-many-locals
+        if extent_mask is not None:
+            data = data.where(extent_mask)
+        data = self.apply_masks(data, pq_data)
+
+        data_bands = self.needed_bands
+
+        if self.index_function is not None:
+            data_bands = ['index_function']
+            data[data_bands[0]] = (data.dims, self.index_function(data))
+        imgdata = Dataset()
+        for data_band in data_bands:
+            d = data[data_band]
+            for band, intensity in self.components.items():
+                rampdata = self.get_value(d, self.values, intensity)
+                component_band_data = None
+                if band in self.rgb_components:
+                    for c_band, c_intensity in self.rgb_components[band].items():
+                        if callable(c_intensity):
+                            imgband_component_data = c_intensity(data[c_band], c_band, band)
+                        else:
+                            imgband_component_data = data[c_band] * c_intensity
+                        if component_band_data is not None:
+                            component_band_data += imgband_component_data
+                        else:
+                            component_band_data = imgband_component_data
+                        if band != "alpha":
+                            component_band_data = self.compress_band(component_band_data)
+                    img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
+                                     + self.component_ratio * component_band_data)
+                else:
+                    img_band_data = rampdata * 255.0
+                imgdata[band] = (d.dims, img_band_data.astype("uint8"))
+
+        return imgdata
+
+
 #pylint: disable=invalid-name, inconsistent-return-statements
 def StyleDef(product, cfg):
-    if cfg.get("component_ratio", False):
+    if "component_ratio" in cfg:
         return HybridStyleDef(product, cfg)
-    elif cfg.get("heat_mapped", False):
-        return HeatMappedStyleDef(product, cfg)
     elif cfg.get("components", False):
         return LinearStyleDef(product, cfg)
     elif cfg.get("value_map", False):
