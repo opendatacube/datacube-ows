@@ -83,7 +83,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
         <ows:Operation name="GetCapabilities">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Get xlink:href="{{ base_url }}">
+                    <ows:Get xlink:href="{{ base_url }}/wmts?">
                         <ows:Constraint name="GetEncoding">
                             <ows:AllowedValues>
                                 <ows:Value>KVP</ows:Value>
@@ -96,7 +96,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
         <ows:Operation name="GetTile">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Get xlink:href="{{ base_url }}">
+                    <ows:Get xlink:href="{{ base_url }}/wmts?">
                         <ows:Constraint name="GetEncoding">
                             <ows:AllowedValues>
                                 <ows:Value>KVP</ows:Value>
@@ -109,7 +109,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
         <ows:Operation name="GetFeatureInfo">
             <ows:DCP>
                 <ows:HTTP>
-                    <ows:Get xlink:href="{{ base_url }}">
+                    <ows:Get xlink:href="{{ base_url }}/wmts?">
                         <ows:Constraint name="GetEncoding">
                             <ows:AllowedValues>
                                 <ows:Value>KVP</ows:Value>

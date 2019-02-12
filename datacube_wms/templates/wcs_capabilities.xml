@@ -77,7 +77,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
                 <HTTP>
                     <Get>
                         <OnlineResource xlink:type="simple"
-                                        xlink:href="{{ base_url }}/?" />
+                                        xlink:href="{{ base_url }}/wcs?" />
                     </Get>
                 </HTTP>
             </DCPType>
@@ -87,7 +87,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
                 <HTTP>
                     <Get>
                         <OnlineResource xlink:type="simple"
-                                        xlink:href="{{ base_url }}/?" />
+                                        xlink:href="{{ base_url }}/wcs?" />
                     </Get>
                 </HTTP>
             </DCPType>
@@ -97,7 +97,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
                 <HTTP>
                     <Get>
                         <OnlineResource xlink:type="simple"
-                                        xlink:href="{{ base_url }}/?" />
+                                        xlink:href="{{ base_url }}/wcs?" />
                     </Get>
                 </HTTP>
             </DCPType>
