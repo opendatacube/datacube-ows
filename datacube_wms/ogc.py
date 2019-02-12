@@ -94,9 +94,9 @@ def ogc_impl():
                 # This is a quick hack to fix #64.  Service and operation routing could be
                 # handled more elegantly.
                 op = nocase_args.get("request", "").upper()
-                if op in WMS_REQUESTS:
+                if op in WMS_REQUESTS and svc_cfg.wms:
                     return handle_wms(nocase_args)
-                elif op in WCS_REQUESTS:
+                elif op in WCS_REQUESTS and svc_cfg.wcs:
                     return handle_wcs(nocase_args)
                 else:
                     # Should we return a WMS or WCS exception if there is no service specified?
@@ -111,6 +111,87 @@ def ogc_impl():
         else:
             eclass = WMSException
         ogc_e = eclass("Unexpected server error: %s" % str(e), http_response=500)
+        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+
+
+@app.route('/wms')
+def ogc_wms_impl():
+    #pylint: disable=too-many-branches
+    nocase_args = lower_get_args()
+    nocase_args = capture_headers(request, nocase_args)
+    service = nocase_args.get("service", "").upper()
+    svc_cfg = get_service_cfg()
+
+    # create dummy env if not exists
+    try:
+        with rio_env():
+            if service == "WMS" or service is None:
+                # WMS operation Map
+                if svc_cfg.wms:
+                    return handle_wms(nocase_args)
+                else:
+                    raise WMSException("Invalid service", locator="Service parameter")
+            else:
+                raise WMSException("Invalid service and/or request", locator="Service and request parameters")
+    except OGCException as e:
+        return e.exception_response()
+    except Exception as e:
+        tb = sys.exc_info()[2]
+        ogc_e = WMSException("Unexpected server error: %s" % str(e), http_response=500)
+        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+
+
+@app.route('/wmts')
+def ogc_wmts_impl():
+    #pylint: disable=too-many-branches
+    nocase_args = lower_get_args()
+    nocase_args = capture_headers(request, nocase_args)
+    service = nocase_args.get("service", "").upper()
+    svc_cfg = get_service_cfg()
+
+    # create dummy env if not exists
+    try:
+        with rio_env():
+            if service == "WMTS" or service is None:
+                # WMTS operation Map
+                if svc_cfg.wmts:
+                    return handle_wmts(nocase_args)
+                else:
+                    raise WMTSException("Invalid service", locator="Service parameter")
+            else:
+                raise WMTSException("Invalid service and/or request", locator="Service and request parameters")
+    except OGCException as e:
+        return e.exception_response()
+    except Exception as e:
+        tb = sys.exc_info()[2]
+        ogc_e = WMTSException("Unexpected server error: %s" % str(e), http_response=500)
+        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+
+
+@app.route('/wcs')
+def ogc_wcs_impl():
+    #pylint: disable=too-many-branches
+    nocase_args = lower_get_args()
+    nocase_args = capture_headers(request, nocase_args)
+    service = nocase_args.get("service", "").upper()
+    svc_cfg = get_service_cfg()
+
+    # create dummy env if not exists
+    try:
+        with rio_env():
+            if service == "WCS" or service is None:
+                # WCS operation Map
+                if svc_cfg.wcs:
+                    return handle_wcs(nocase_args)
+                else:
+                    raise WCS1Exception("Invalid service", locator="Service parameter")
+            else:
+                raise WCS1Exception("Invalid service and/or request", locator="Service and request parameters")
+    except OGCException as e:
+        return e.exception_response()
+    except Exception as e:
+        tb = sys.exc_info()[2]
+        ogc_e = WCS1Exception("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
