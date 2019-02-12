@@ -426,7 +426,6 @@ layer_cfg = [
                         "name": "ndvi",
                         "title": "NDVI",
                         "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-                        "heat_mapped": True,
                         # The index function is continuous value from which the heat map is derived.
                         #
                         # Three formats are supported:
@@ -465,7 +464,6 @@ layer_cfg = [
                         "name": "ndvi_cloudmask",
                         "title": "NDVI with cloud masking",
                         "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -490,7 +488,6 @@ layer_cfg = [
                         "name": "ndwi",
                         "title": "NDWI",
                         "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -506,7 +503,6 @@ layer_cfg = [
                         "name": "ndwi_cloudmask",
                         "title": "NDWI with cloud and cloud-shadow masking",
                         "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -530,7 +526,6 @@ layer_cfg = [
                         "name": "ndbi",
                         "title": "NDBI",
                         "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -548,7 +543,6 @@ layer_cfg = [
                         "name": "cloud_mask",
                         "title": "Cloud Mask",
                         "abstract": "Highlight pixels with cloud.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -581,7 +575,6 @@ layer_cfg = [
                         "name": "cloud_and_shadow_mask",
                         "title": "Cloud and Shadow Mask",
                         "abstract": "Highlight pixels with cloud or cloud shadow.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -608,7 +601,6 @@ layer_cfg = [
                         "name": "cloud_acca",
                         "title": "Cloud acca Mask",
                         "abstract": "Highlight pixels with cloud.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -631,7 +623,6 @@ layer_cfg = [
                         "name": "cloud_fmask",
                         "title": "Cloud fmask Mask",
                         "abstract": "Highlight pixels with cloud.",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -654,7 +645,6 @@ layer_cfg = [
                         "name": "contiguous_mask",
                         "title": "Contiguous Data Mask",
                         "abstract": "Highlight pixels with non-contiguous data",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -679,7 +669,6 @@ layer_cfg = [
                         "title": "NDVI plus RGB",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -709,7 +698,6 @@ layer_cfg = [
                         "title": "NDVI plus RGB (Cloud masked)",
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.norm_diff",
                             "pass_product_cfg": True,
@@ -823,7 +811,6 @@ layer_cfg = [
                         "name": "water_masked",
                         "title": "Water (masked)",
                         "abstract": "Water, with clouds, terrain shadows, etc. masked",
-                        "heat_mapped": True,
                         "index_function": {
                                               "function": "datacube_wms.band_utils.constant",
                                               "pass_product_cfg": True,
@@ -857,7 +844,6 @@ layer_cfg = [
                         "name": "water",
                         "title": "Water (unmasked)",
                         "abstract": "Simple water data, no masking",
-                        "heat_mapped": True,
                         "index_function": {
                             "function": "datacube_wms.band_utils.constant",
                             "pass_product_cfg": True,
@@ -889,183 +875,3 @@ layer_cfg = [
     },
 ]
 
-to_be_added_to_layer_cfg = {
-    "name": "LANDSAT_7",
-    "title": "Landsat 7",
-    "abstract": "Images from the Landsat 7 satellite",
-
-    "products": [
-        {
-            "label": "NBAR-T",
-            "type": "surface reflectance",
-            "variant": "terrain corrected",
-            "name": "ls7_nbart_albers",
-            "product_name": "ls7_nbart_albers",
-            "pq_dataset": "ls7_pq_albers",
-            "pq_band": "pixelquality",
-            "pq_mask_flags": {
-                "contiguous": True
-            },
-            "min_zoom_factor": 500.0
-        },
-    ],
-    "styles": [
-        {
-            "name": "simple_rgb",
-            "title": "Simple RGB",
-            "abstract": "Simple true-colour image, using the red, green and blue bands",
-            "components": {
-                "red": {
-                    "red": 1.0
-                },
-                "green": {
-                    "green": 1.0
-                },
-                "blue": {
-                    "blue": 1.0
-                }
-            },
-            "scale_range": [0.0, 3000.0]
-        },
-        {
-            "name": "wideband",
-            "title": "Wideband false-colour",
-            "abstract": "False-colour image, incorporating all available spectral bands",
-            "components": {
-                "red": {
-                    "swir2": 0.5,
-                    "swir1": 0.5,
-                },
-                "green": {
-                    "nir": 0.5,
-                    "red": 0.5,
-                },
-                "blue": {
-                    "green": 0.5,
-                    "blue": 0.5,
-                }
-            },
-            "scale_range": [0.0, 3000.0]
-        },
-        {
-            "name": "infra_red",
-            "title": "False colour multi-band infra-red",
-            "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
-            "components": {
-                "red": {
-                    "swir1": 1.0
-                },
-                "green": {
-                    "swir2": 1.0
-                },
-                "blue": {
-                    "nir": 1.0
-                }
-            },
-            "scale_factor": 12.0
-        },
-        {
-            "name": "blue",
-            "title": "Spectral band 1 - Blue",
-            "abstract": "Blue band, approximately 450nm to 520nm",
-            "components": {
-                "red": {
-                    "blue": 1.0
-                },
-                "green": {
-                    "blue": 1.0
-                },
-                "blue": {
-                    "blue": 1.0
-                }
-            },
-            "scale_factor": 12.0
-        },
-        {
-            "name": "green",
-            "title": "Spectral band 2 - Green",
-            "abstract": "Green band, approximately 530nm to 610nm",
-            "components": {
-                "red": {
-                    "green": 1.0
-                },
-                "green": {
-                    "green": 1.0
-                },
-                "blue": {
-                    "green": 1.0
-                }
-            },
-            "scale_factor": 12.0
-        },
-        {
-            "name": "red",
-            "title": "Spectral band 3 - Red",
-            "abstract": "Red band, roughly 630nm to 690nm",
-            "components": {
-                "red": {
-                    "red": 1.0
-                },
-                "green": {
-                    "red": 1.0
-                },
-                "blue": {
-                    "red": 1.0
-                }
-            },
-            "scale_factor": 12.0
-        },
-        {
-            "name": "nir",
-            "title": "Spectral band 4 - Near infra-red",
-            "abstract": "Near infra-red band, roughly 780nm to 840nm",
-            "components": {
-                "red": {
-                    "nir": 1.0
-                },
-                "green": {
-                    "nir": 1.0
-                },
-                "blue": {
-                    "nir": 1.0
-                }
-            },
-            "scale_factor": 12.0
-        },
-        {
-            "name": "swir1",
-            "title": "Spectral band 5 - Short wave infra-red 1",
-            "abstract": "Short wave infra-red band 1, roughly 1550nm to 1750nm",
-            "components": {
-                "red": {
-                    "swir1": 1.0
-                },
-                "green": {
-                    "swir1": 1.0
-                },
-                "blue": {
-                    "swir1": 1.0
-                }
-            },
-            "scale_factor": 12.0
-        },
-        {
-            "name": "swir2",
-            "title": "Spectral band 6 - Short wave infra-red 2",
-            "abstract": "Short wave infra-red band 2, roughly 2090nm to 2220nm",
-            "components": {
-                "red": {
-                    "swir2": 1.0
-                },
-                "green": {
-                    "swir2": 1.0
-                },
-                "blue": {
-                    "swir2": 1.0
-                }
-            },
-            "scale_factor": 12.0
-        }
-    ],
-    "default_style": "simple_rgb",
-}

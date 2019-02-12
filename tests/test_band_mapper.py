@@ -191,14 +191,6 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
 
     assert isinstance(style_def, bm.HybridStyleDef)
 
-def test_correct_style_heatmap(product_layer, style_cfg_lin):
-    style_cfg_lin["heat_mapped"] = 1.0
-    style_cfg_lin["range"] = [1, 2]
-    style_cfg_lin["index_function"] = lambda x: x
-    style_def = StyleDef(product_layer, style_cfg_lin)
-
-    assert isinstance(style_def, bm.HeatMappedStyleDef)
-
 def test_correct_style_linear(product_layer, style_cfg_lin):
     style_def = StyleDef(product_layer, style_cfg_lin)
 
