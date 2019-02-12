@@ -253,7 +253,7 @@ class LinearStyleDef(DynamicRangeCompression):
         return imgdata
 
 
-unscaled_default_ramp = [
+UNSCALED_DEFAULT_RAMP = [
     {
         "value": -0.0,
         "color": "#000080",
@@ -326,7 +326,7 @@ class RgbaColorRampDef(StyleDefBase):
             rmin, rmax = style_cfg["range"]
             self.color_ramp = scale_unscaled_ramp(
                     rmin, rmax,
-                    unscaled_default_ramp)
+                    UNSCALED_DEFAULT_RAMP)
         values, r, g, b, a = crack_ramp(self.color_ramp)
         self.values = values
         self.components = {
