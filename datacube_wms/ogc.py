@@ -77,6 +77,8 @@ class SupportedSvc(object):
         for v in reversed(self.versions):
             if rv_parts >= v.version_parts:
                 return v
+        # The constructor asserted that self.versions is not empty, so this is safe.
+        #pylint: disable=undefined-loop-variable
         return v
 
     def activated(self):
