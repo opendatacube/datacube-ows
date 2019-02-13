@@ -44,6 +44,59 @@ if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
     setup_prometheus(app)
 
+
+class SupportedSvcVersion(object):
+    def __init__(self, service, version, router, exception_class):
+        self.service = service.lower()
+        self.service_upper = service.upper()
+        self.version = version
+        self.version_parts = version.split(".")
+        assert len(self.version_parts) == 3
+        self.router = router
+        self.exception_class = exception_class
+
+
+class SupportedSvc(object):
+    def __init__(self, versions, default_exception_class=None):
+        self.versions = sorted(versions, key=lambda x: x.version_parts)
+        assert len(self.versions) > 0
+        self.service = self.versions[0].service
+        self.service_upper = self.versions[0].service_upper
+        assert self.service.upper() == self.service_upper
+        assert self.service == self.service_upper.lower()
+        for v in self.versions[1:]:
+            assert v.service == self.service
+            assert v.service_upper == self.service_upper
+        if default_exception_class:
+            self.default_exception_class = default_exception_class
+        else:
+            self.default_exception_class = self.versions[0].exception_class
+
+    def negotiated_version(self, request_version):
+        rv_parts = request_version.split(".")
+        for v in reversed(self.versions):
+            if rv_parts >= v.version_parts:
+                return v
+        return v
+
+    def activated(self):
+        svc_cfg = get_service_cfg()
+        return getattr(svc_cfg, self.service)
+
+
+OWS_SUPPORTED = {
+    "wms": SupportedSvc([
+        SupportedSvcVersion("wms", "1.3.0", handle_wms, WMSException),
+    ]),
+    "wmts": SupportedSvc([
+        SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException),
+    ]),
+    "wcs": SupportedSvc([
+        SupportedSvcVersion("wcs", "1.0.0", handle_wcs, WCS1Exception),
+    ]),
+}
+
+
 def lower_get_args():
     # Get parameters in WMS are case-insensitive, and intended to be single use.
     # Spec does not specify which instance should be used if a parameter is provided more than once.
@@ -62,76 +115,27 @@ def ogc_impl():
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
-    svc_cfg = get_service_cfg()
+    if service:
+        return ogc_svc_impl(service.lower())
 
+    svc_cfg = get_service_cfg()
     # create dummy env if not exists
     try:
         with rio_env():
-            if service == "WMS":
-                # WMS operation Map
-                if svc_cfg.wms:
-                    return handle_wms(nocase_args)
-                else:
-                    raise WMSException("Invalid service", locator="Service parameter")
-            elif service == "WCS":
-                # WCS operation Map
-                if svc_cfg.wcs:
-                    return handle_wcs(nocase_args)
-                else:
-                    raise WCS1Exception("Invalid service", locator="Service parameter")
-            elif service == "WMTS":
-                # WMTS operation Map
-                # Note that SERVICE is a required parameter for all operations in WMTS
-                if svc_cfg.wmts:
-                    return handle_wmts(nocase_args)
-                else:
-                    raise WMTSException("Invalid service", locator="Service parameter")
+            # service argument is only required (in fact only defined) by OGC for
+            # GetCapabilities requests.  As long as we are persisting with a single
+            # routing end point for all services, we must derive the service from the request
+            # parameter.
+            # This is a quick hack to fix #64.  Service and operation routing could be
+            # handled more elegantly.
+            op = nocase_args.get("request", "").upper()
+            if op in WMS_REQUESTS:
+                return ogc_svc_impl("wms")
+            elif op in WCS_REQUESTS:
+                return ogc_svc_impl("wcs")
             else:
-                # service argument is only required (in fact only defined) by OGC for
-                # GetCapabilities requests.  As long as we are persisting with a single
-                # routing end point for all services, we must derive the service from the request
-                # parameter.
-                # This is a quick hack to fix #64.  Service and operation routing could be
-                # handled more elegantly.
-                op = nocase_args.get("request", "").upper()
-                if op in WMS_REQUESTS and svc_cfg.wms:
-                    return handle_wms(nocase_args)
-                elif op in WCS_REQUESTS and svc_cfg.wcs:
-                    return handle_wcs(nocase_args)
-                else:
-                    # Should we return a WMS or WCS exception if there is no service specified?
-                    # Defaulting to WMS because that's what we already have.
-                    raise WMSException("Invalid service and/or request", locator="Service and request parameters")
-    except OGCException as e:
-        return e.exception_response()
-    except Exception as e:
-        tb = sys.exc_info()[2]
-        if service == "WCS":
-            eclass = WCS1Exception
-        else:
-            eclass = WMSException
-        ogc_e = eclass("Unexpected server error: %s" % str(e), http_response=500)
-        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
-
-
-@app.route('/wms')
-def ogc_wms_impl():
-    #pylint: disable=too-many-branches
-    nocase_args = lower_get_args()
-    nocase_args = capture_headers(request, nocase_args)
-    service = nocase_args.get("service", "").upper()
-    svc_cfg = get_service_cfg()
-
-    # create dummy env if not exists
-    try:
-        with rio_env():
-            if service == "WMS" or service is None:
-                # WMS operation Map
-                if svc_cfg.wms:
-                    return handle_wms(nocase_args)
-                else:
-                    raise WMSException("Invalid service", locator="Service parameter")
-            else:
+                # Should we return a WMS or WCS exception if there is no service specified?
+                # Defaulting to WMS because that's what we already have.
                 raise WMSException("Invalid service and/or request", locator="Service and request parameters")
     except OGCException as e:
         return e.exception_response()
@@ -141,58 +145,50 @@ def ogc_wms_impl():
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
-@app.route('/wmts')
-def ogc_wmts_impl():
-    #pylint: disable=too-many-branches
+def ogc_svc_impl(svc):
+    svc_support = OWS_SUPPORTED[svc]
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
-    service = nocase_args.get("service", "").upper()
-    svc_cfg = get_service_cfg()
+    service = nocase_args.get("service", svc).upper()
+
+    # Is service activated in config?
+    if not svc_support.activated():
+        raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
+
+    # Does service match path (if supplied)
+    if service != svc_support.service_upper:
+        raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
+
+    version = nocase_args.get("version")
+    if not version:
+        raise svc_support.default_exception_class("No protocol version supplied", locator="Version parameter")
+    version_support = svc_support.negotiated_version(version)
 
     # create dummy env if not exists
     try:
         with rio_env():
-            if service == "WMTS" or service is None:
-                # WMTS operation Map
-                if svc_cfg.wmts:
-                    return handle_wmts(nocase_args)
-                else:
-                    raise WMTSException("Invalid service", locator="Service parameter")
-            else:
-                raise WMTSException("Invalid service and/or request", locator="Service and request parameters")
+            return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
     except Exception as e:
         tb = sys.exc_info()[2]
-        ogc_e = WMTSException("Unexpected server error: %s" % str(e), http_response=500)
+        ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+
+
+@app.route('/wms')
+def ogc_wms_impl():
+    return ogc_svc_impl("wms")
+
+
+@app.route('/wmts')
+def ogc_wmts_impl():
+    return ogc_svc_impl("wmts")
 
 
 @app.route('/wcs')
 def ogc_wcs_impl():
-    #pylint: disable=too-many-branches
-    nocase_args = lower_get_args()
-    nocase_args = capture_headers(request, nocase_args)
-    service = nocase_args.get("service", "").upper()
-    svc_cfg = get_service_cfg()
-
-    # create dummy env if not exists
-    try:
-        with rio_env():
-            if service == "WCS" or service is None:
-                # WCS operation Map
-                if svc_cfg.wcs:
-                    return handle_wcs(nocase_args)
-                else:
-                    raise WCS1Exception("Invalid service", locator="Service parameter")
-            else:
-                raise WCS1Exception("Invalid service and/or request", locator="Service and request parameters")
-    except OGCException as e:
-        return e.exception_response()
-    except Exception as e:
-        tb = sys.exc_info()[2]
-        ogc_e = WCS1Exception("Unexpected server error: %s" % str(e), http_response=500)
-        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+    return ogc_svc_impl("wcs")
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
