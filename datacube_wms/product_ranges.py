@@ -475,6 +475,47 @@ def get_ranges(dc, product, path=None):
         }
 
 
+def merge_ranges(r1, r2):
+    product_ids = []
+    if isinstance(r1["product_id"], str):
+        product_ids.append(r1["product_id"])
+    else:
+        product_ids.extend(r1["product_id"])
+    if isinstance(r2["product_id"], str):
+        product_ids.append(r2["product_id"])
+    else:
+        product_ids.extend(r2["product_id"])
+    if r1["path"] != r2["path"]:
+        raise Exception("Cannot merge ranges with different paths")
+    time_set = r1["time_set"] | r2["time_set"]
+    times = sorted(list(time_set))
+    return {
+        "product_id": product_ids,
+        "path": r1["path"],
+        "lat": {
+            "min": min(r1["lat"]["min"], r2["lat"]["min"]),
+            "max": max(r1["lat"]["max"], r2["lat"]["max"]),
+        },
+        "lon": {
+            "min": min(r1["lon"]["min"], r2["lon"]["min"]),
+            "max": max(r1["lon"]["max"], r2["lon"]["max"]),
+        },
+        "times": times,
+        "start_time": times[0],
+        "end_time": times[-1],
+        "time_set": time_set,
+        "bboxes": {
+            crs: {
+                "top": max(r1["boxes"]["top"], r2["bboxes"]["top"]),
+                "bottom": min(r1["boxes"]["bottom"], r2["bboxes"]["bottom"]),
+                "right": max(r1["boxes"]["right"], r2["bboxes"]["right"]),
+                "left": min(r1["boxes"]["left"], r2["bboxes"]["left"]),
+            }
+            for crs in r1["boxes"].keys()
+        }
+    }
+
+
 def get_sub_ranges(dc, product):
     if isinstance(product, int):
         product_id = product

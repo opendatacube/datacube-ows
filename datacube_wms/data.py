@@ -149,19 +149,36 @@ class DataStacker():
         if not self._product.pq_name and mask:
             return []
 
-        prod_name = self._product.pq_name if mask and self._product.pq_name else self._product.product_name
-        query_args = {
-            "product": prod_name,
-            "geopolygon": self._geobox.extent
-        }
+        if self._product.multi_product:
+            prod_name = self._product.product_names
+            query_args = {
+                "geopolygon": self._geobox.extent
+            }
+        else:
+            prod_name = self._product.pq_name if mask and self._product.pq_name else self._product.product_name
+            query_args = {
+                "product": prod_name,
+                "geopolygon": self._geobox.extent
+            }
         if not all_time:
             query_args["time"] = self._time
 
         # ODC Dataset Query
-        query = datacube.api.query.Query(**query_args)
-        _LOG.debug("query start %s", datetime.now().time())
-        datasets = index.datasets.search_eager(**query.search_terms)
-        _LOG.debug("query stop %s", datetime.now().time())
+        if self._product.multi_product:
+            queries = []
+            for pn in prod_name:
+                query_args["product"] = pn
+                queries.append(datacube.api.query.Query(**query_args))
+            _LOG.debug("query start %s", datetime.now().time())
+            datasets = []
+            for q in queries:
+                datasets.extend(index.datasets.search_eager(**q.search_terms))
+            _LOG.debug("query stop %s", datetime.now().time())
+        else:
+            query = datacube.api.query.Query(**query_args)
+            _LOG.debug("query start %s", datetime.now().time())
+            datasets = index.datasets.search_eager(**query.search_terms)
+            _LOG.debug("query stop %s", datetime.now().time())
 
         if point:
             # Cleanup Note. Previously by_bounds was used for PQ data
@@ -505,6 +522,9 @@ def feature_info(args):
                 x = data_x[isel_kwargs[h_coord]].item()
                 y = data_y[isel_kwargs[v_coord]].item()
                 pt = geometry.point(x, y, params.crs)
+
+                if params.product.multi_product:
+                    feature_json["source_product"] = "%s (%s)" % (ds_at_time[0].type.name, ds_at_time[0].metadata_doc["platform"]["code"])
 
                 # Project to EPSG:4326
                 crs_geo = geometry.CRS("EPSG:4326")
