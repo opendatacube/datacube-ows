@@ -11,7 +11,7 @@ except ImportError:
 
 from collections.abc import Mapping
 
-from datacube_wms.product_ranges import get_ranges, get_sub_ranges
+from datacube_wms.product_ranges import get_ranges, get_sub_ranges, merge_ranges
 from datacube_wms.cube_pool import cube
 from datacube_wms.band_mapper import StyleDef
 from datacube_wms.ogc_utils import get_function, ProductLayerException, FunctionWrapper
@@ -92,15 +92,26 @@ class ProductLayerDef(object):
     def __init__(self, product_cfg, platform_def, dc):
         self.platform = platform_def
         self.name = product_cfg["name"]
-        self.product_name = product_cfg["product_name"]
-        if "__" in self.product_name:
-            raise ProductLayerException("Product names cannot have a double underscore '__' in them.")
+        self.multi_product = product_cfg.get("multi_product", False)
+        if self.multi_product:
+            self.product_names = product_cfg["product_name"]
+            self.product_name = product_cfg["product_name"][0]
+        else:
+            self.product_name = product_cfg["product_name"]
+            self.product_names = [ self.product_name ]
+        for prod_name in self.product_names:
+            if "__" in prod_name:
+                raise ProductLayerException("Product names cannot have a double underscore '__' in them.")
         self.product_label = product_cfg["label"]
         self.product_type = product_cfg["type"]
         self.product_variant = product_cfg["variant"]
-        self.product = dc.index.products.get_by_name(self.product_name)
-        if self.product is None:
-            raise ProductLayerException(f"Could not find product {self.product_name} in datacube")
+        self.products = []
+        for pn in self.product_names:
+            product = dc.index.products.get_by_name(pn)
+            if product is None:
+                raise ProductLayerException(f"Could not find product {pn} in datacube")
+            self.products.append(product)
+        self.product = self.products[0]
         self.band_idx = BandIndex(self.product, product_cfg.get("bands"), dc)
         self.definition = self.product.definition
         self.abstract = product_cfg["abstract"] if "abstract" in product_cfg else self.definition['description']
@@ -108,10 +119,18 @@ class ProductLayerDef(object):
                                         self.product_variant,
                                         self.product_type,
                                         self.product_label)
+        self.ranges = None
+        for p in self.products:
+            if self.ranges is None:
+                self.ranges = self.ranges
+            else:
+                self.ranges = merge_ranges(self.ranges, get_ranges(dc, p))
         self.ranges = get_ranges(dc, self.product)
         if self.ranges is None:
             raise ProductLayerException(f"Could not find ranges for {self.product_name} in database")
+        # TODO: subranges not supported with multi-product
         self.sub_ranges = get_sub_ranges(dc, self.product)
+        # TODO separate PQ dataset not supported with multi-product
         self.pq_name = product_cfg.get("pq_dataset")
         self.pq_band = product_cfg.get("pq_band")
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)

@@ -1685,6 +1685,93 @@ layer_cfg = [
         ],
     },
     {
+        "name": "sentinel2",
+        "title": "Sentinel-2",
+        "abstract": "Near Real-Time images from Sentinel-2 satellites",
+        "products": [
+            # Multi-product example.
+            #
+            # Combines Sentinel 2A and 2B products into a single OWS layer.
+            # Assumes that member products do not overlap in space-time and have identical bands.
+            # (i.e. pretty specialised for the Sentinel-2 use case.  Could in theory be used for something
+            # like Landsat 7 and 8, but only if the Landsat-8-only coastal_aerosol band is excluded.)
+            #
+            # The following functionality is not yet supported for multi-products: separate PQ products and
+            # path-number sub-layers.
+            {
+                "label": "sentinel-2 (a and b) nrt (s3)",
+                "type": "surface reflectance",
+                "variant": "near real time",
+                "name": "sentinel2_nrt",
+                # Multi-product defaults to False
+                "multi_product": True,
+                # If multi-product is true, then supply a list of product names for product_name
+                "product_name": ["s2a_nrt_granule", "s2b_nrt_granule"],
+                "bands": {
+                    "nbar_coastal_aerosol": [],
+                    "nbar_blue": [],
+                    "nbar_green": [],
+                    "nbar_red": [],
+                    "nbar_red_edge_1": [],
+                    "nbar_red_edge_2": [],
+                    "nbar_red_edge_3": [],
+                    "nbar_nir_1":  [ "nbar_near_infrared_1" ],
+                    "nbar_nir_2":  [ "nbar_near_infrared_2" ],
+                    "nbar_swir_2": [ "nbar_shortwave_infrared_2" ],
+                    "nbar_swir_3": [ "nbar_shortwave_infrared_3" ],
+                    "nbart_coastal_aerosol": [],
+                    "nbart_blue": [],
+                    "nbart_green": [],
+                    "nbart_red": [],
+                    "nbart_red_edge_1": [],
+                    "nbart_red_edge_2": [],
+                    "nbart_red_edge_3": [],
+                    "nbart_nir_1":  [ "nbart_near_infrared_1" ],
+                    "nbart_nir_2":  [ "nbart_near_infrared_2" ],
+                    "nbart_swir_2": [ "nbart_shortwave_infrared_2" ],
+                    "nbart_swir_3": [ "nbart_shortwave_infrared_3" ],
+                },
+                "min_zoom_factor": 15.0,
+                "max_datasets_wms": 12,
+                "max_datasets_wcs": 32,
+                "native_wcs_crs": "epsg:3577",
+                "native_wcs_resolution": [ 10.0, 10.0 ],
+                "zoomed_out_fill_colour": [200, 180, 150, 160],
+                "time_zone": 9,
+                "extent_mask_func": "datacube_wms.ogc_utils.mask_by_val",
+                "ignore_info_flags": [],
+                "data_manual_merge": false,
+                "pq_manual_merge": false,
+                "always_fetch_bands": [],
+                "apply_solar_corrections": false,
+                "wcs_default_bands": [ "nbart_red", "nbart_green", "nbart_blue" ],
+                "legend": {
+                    "styles": [],
+                },
+                "styles": [
+                    {
+                        "name": "nbar_rgb",
+                        "title": "nbar rgb",
+                        "abstract": "true-colour image, using the red, green and blue bands without terrain correction",
+                        "components": {
+                            "red": {
+                                "nbar_red": 1.0
+                            },
+                            "green": {
+                                "nbar_green": 1.0
+                            },
+                            "blue": {
+                                "nbar_blue": 1.0
+                            }
+                        },
+                        "scale_range": [100.0, 3200.0]
+                    },
+                ],
+                "default_style": "nbar_rgb",
+            },
+        ],
+    },
+    {
         "name": "mangrove_cover",
         "title": "Mangrove Canopy Cover",
         "abstract": "",
