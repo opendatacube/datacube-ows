@@ -180,6 +180,9 @@ def determine_ranges(dc):
     ranges = []
     for layer in layer_cfg:
         for product_cfg in layer["products"]:
+            if product_cfg.get("multi_product", False):
+                print("Skipping multi_product", product_cfg["name"])
+                continue
             try:
                 ranges.append(determine_product_ranges(dc,
                                                    product_cfg["product_name"],
@@ -623,24 +626,27 @@ def check_datasets_exist(dc, product):
   return list(results)[0][0] > 0
 
 def add_range(dc, product):
-  if isinstance(product, str):
-    product = dc.index.products.get_by_name(product)
+    if isinstance(product, str):
+        product = dc.index.products.get_by_name(product)
 
-  assert product is not None
 
-  crsids = service_cfg["published_CRSs"]
-  crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
-  if check_datasets_exist(dc, product):
-    create_range_entry(dc, product, crses)
-  else:
-    print("Could not find any datasets for: ", product.name)
+    assert product is not None
 
+    crsids = service_cfg["published_CRSs"]
+    crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
+    if check_datasets_exist(dc, product):
+        create_range_entry(dc, product, crses)
+    else:
+        print("Could not find any datasets for: ", product.name)
 
 
 def add_all(dc):
-  for layer in layer_cfg:
-    for product_cfg in layer["products"]:
-      product_name = product_cfg["product_name"]
-      print("Adding range for:", product_name)
-      add_range(dc, product_name)
+    for layer in layer_cfg:
+        for product_cfg in layer["products"]:
+            product_name = product_cfg["product_name"]
+            if product_cfg.get("multi_product", False):
+                print("Skipping multi_product:", product_cfg["name"])
+            else:
+                print("Adding range for:", product_name)
+                add_range(dc, product_name)
 
