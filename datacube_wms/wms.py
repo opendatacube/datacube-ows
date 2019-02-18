@@ -12,9 +12,12 @@ from datacube_wms.wms_layers import get_layers, get_service_cfg
 from datacube_wms.legend_generator import legend_graphic
 from datacube_wms.utils import log_call
 
+from opencensus.trace import tracer as tracer_module
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
+
+tracer = tracer_module.Tracer()
 
 @log_call
 def handle_wms(nocase_args):
@@ -23,13 +26,17 @@ def handle_wms(nocase_args):
     if not operation:
         raise WMSException("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":
-        return get_capabilities(nocase_args)
+        with tracer.span(name="get_capabilities"):
+            return get_capabilities(nocase_args)
     elif operation == "GETMAP":
-        return get_map(nocase_args)
+        with tracer.span(name="get_map"):
+            return get_map(nocase_args)
     elif operation == "GETFEATUREINFO":
-        return feature_info(nocase_args)
+        with tracer.span(name="feature_info"):
+            return feature_info(nocase_args)
     elif operation == "GETLEGENDGRAPHIC":
-        response = legend_graphic(nocase_args)
+        with tracer.span(name="legend_graphic"):
+            response = legend_graphic(nocase_args)
         if response is None:
             raise WMSException("Operation GetLegendGraphic not supported for this product and style",
                                WMSException.OPERATION_NOT_SUPPORTED,

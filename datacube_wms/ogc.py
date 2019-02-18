@@ -23,10 +23,20 @@ from .rasterio_env import rio_env
 
 import logging
 
+from opencensus.trace import tracer as tracer_module
+from opencensus.trace import config_integration
+from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
+
+integration = ['sqlalchemy']
+
+config_integration.trace_integrations(integration)
+
 # pylint: disable=invalid-name, broad-except
 
 app = Flask(__name__.split('.')[0])
 RequestID(app)
+middleware = FlaskMiddleware(app)
+
 
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
@@ -110,6 +120,7 @@ def lower_get_args():
             d[kl] = v
     return d
 
+tracer = tracer_module.Tracer()
 
 @app.route('/')
 def ogc_impl():
