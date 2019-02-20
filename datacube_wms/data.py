@@ -100,9 +100,9 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
         for name, coord in geobox.coordinates.items():
             all_bands[name] = (name, coord.values, {'units': coord.units})
 
+        datasets = sorted(datasets, key=lambda x: x.id)
         for measurement in measurements:
             datasources = [new_datasource(d, measurement['name']) for d in datasets]
-            datasources = sorted(datasources, key=lambda x: x._dataset.id)
             data = _get_measurement(datasources,
                                     geobox,
                                     resampling,
