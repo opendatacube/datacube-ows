@@ -4,10 +4,8 @@ from __future__ import absolute_import, division, print_function
 
 from datetime import date, datetime, timedelta
 import datacube
-try:
-    from datacube_wms.wms_cfg_local import service_cfg, layer_cfg
-except ImportError:
-    from datacube_wms.wms_cfg import service_cfg, layer_cfg
+
+from datacube_wms.wms_layers import get_service_cfg, get_layers
 from datacube_wms.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
@@ -62,6 +60,14 @@ def accum_max(a, b):
         return max(a, b)
 
 
+def get_crsids(svc=None):
+    if not svc:
+        svc = get_service_cfg()
+    return svc.published_CRSs.keys()
+
+def get_crses(svc=None):
+    return  {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(svc)}
+
 def determine_product_ranges(dc, product_name, extractor):
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements, protected-access
     start = datetime.now()
@@ -84,11 +90,12 @@ def determine_product_ranges(dc, product_name, extractor):
     }
     sub_r = {}
     time_set = set()
+    svc = get_service_cfg()
     print ("OK, Let's do it")
-    crsids = service_cfg["published_CRSs"]
-    calculate_extent = not service_cfg.get("use_default_extent", False)
+    crsids = get_crsids(svc)
+    calculate_extent = not svc.use_default_extent
     extents = {crsid: None for crsid in crsids}
-    crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
+    crses = get_crses(svc)
     ds_count = 0
     for ds in dc.find_datasets(product=product_name):
         print("Processing a dataset", ds.id)
@@ -178,19 +185,19 @@ def determine_product_ranges(dc, product_name, extractor):
 
 def determine_ranges(dc):
     ranges = []
-    for layer in layer_cfg:
-        for product_cfg in layer["products"]:
-            if product_cfg.get("multi_product", False):
-                print("Skipping multi_product", product_cfg["name"])
+    for layer in get_layers():
+        for product_cfg in layer.products:
+            if product_cfg.multi_product:
+                print("Skipping multi_product", product_cfg.name)
                 continue
             try:
                 ranges.append(determine_product_ranges(dc,
-                                                   product_cfg["product_name"],
-                                                   product_cfg.get("sub_product_extractor")
+                                                   product_cfg.product_name,
+                                                   product_cfg.sub_product_extractor
                                                   )
                          )
             except:
-                print ("Product %s does not exist in the datacube" % product_cfg["product_name"])
+                print ("Product %s does not exist in the datacube" % product_cfg.product_name)
     return ranges
 
 
@@ -352,7 +359,7 @@ def update_range(dc, product):
                 return d
         return None
 
-    products = [find(p["products"], "product_name", product) for p in layer_cfg]
+    products = [find(p["products"], "product_name", product) for p in get_layers()]
     if products[0] is not None:
         layer = products[0]
         product_range = determine_product_ranges(dc,
@@ -532,6 +539,90 @@ def get_sub_ranges(dc, product):
     return {r["sub_product_id"]: get_ranges(dc, product_id, r["sub_product_id"]) for r in results}
 
 
+
+def create_multiprod_range_entry(dc, product, crses):
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
+    prodids = [ p.id for p in product.products ]
+    wms_name = product.name
+
+    # Attempt to insert row
+    conn.execute("""
+        INSERT INTO wms.multiproduct_ranges
+        (wms_product_name,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
+        VALUES
+        (%(p_id)s, 0, 0, 0, 0, %(empty)s, %(empty)s)
+        ON CONFLICT (wms_product_name) DO NOTHING
+        """,
+                 {"p_id": wms_name, "empty": Json("")})
+
+    # Update extents
+    conn.execute("""
+        UPDATE wms.multiproduct_ranges
+        SET (lat_min,lat_max,lon_min,lon_max) =
+        (wms_get_min(%(p_prodids)s, 'lat'), wms_get_max(%(p_prodids)s, 'lat'), wms_get_min(%(p_prodids)s, 'lon'), wms_get_max(%(p_prodids)s, 'lon'))
+        WHERE wms_product_name=%(p_id)s
+        """,
+                 {"p_id": wms_name, "p_prodids": prodids})
+
+    # Create sorted list of dates
+    conn.execute("""
+        WITH sorted
+        AS (SELECT to_jsonb(array_agg(dates.d))
+            AS dates
+            FROM (SELECT DISTINCT to_date(metadata::json->'extent'->>'center_dt', 'YYYY-MM-DD')
+                  AS d
+                  FROM agdc.dataset
+                  WHERE dataset_type_ref = any (%(p_prodids)s)
+                  AND archived IS NULL
+                  ORDER BY d) dates)
+        UPDATE wms.multiproduct_ranges
+        SET dates=sorted.dates
+        FROM sorted
+        WHERE wms_product_name=%(p_id)s
+        """,
+                 {"p_id": wms_name, "p_prodids": prodids})
+
+    # calculate bounding boxes
+    results = list(conn.execute("""
+        SELECT lat_min,lat_max,lon_min,lon_max
+        FROM wms.multiproduct_ranges
+        WHERE wms_product_name=%(p_id)s
+        """,
+        {"p_id": wms_name} ))
+
+    r = results[0]
+
+    epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
+    box = datacube.utils.geometry.box(
+        float(r[2]),
+        float(r[0]),
+        float(r[3]),
+        float(r[1]),
+        epsg4326)
+
+    conn.execute("""
+        UPDATE wms.multiproduct_ranges
+        SET bboxes = %s::jsonb
+        WHERE wms_product_name=%s
+        """,
+        Json(
+            {
+                crsid: {"top": box.to_crs(crs).boundingbox.top,
+                     "bottom": box.to_crs(crs).boundingbox.bottom,
+                     "left": box.to_crs(crs).boundingbox.left,
+                     "right": box.to_crs(crs).boundingbox.right
+                } for crsid, crs in crses.items()
+            }
+        ),
+        wms_name
+    )
+
+    txn.commit()
+    conn.close()
+    return
+
+
 def create_range_entry(dc, product, crses):
   conn = get_sqlconn(dc)
   txn = conn.begin()
@@ -551,10 +642,10 @@ def create_range_entry(dc, product, crses):
   conn.execute("""
     UPDATE wms.product_ranges
     SET (lat_min,lat_max,lon_min,lon_max) =
-    (wms_get_min(%(p_id)s, 'lat'), wms_get_max(%(p_id)s, 'lat'), wms_get_min(%(p_id)s, 'lon'), wms_get_max(%(p_id)s, 'lon'))
+    (wms_get_min(%(p_idarr)s, 'lat'), wms_get_max(%(p_id)s, 'lat'), wms_get_min(%(p_id)s, 'lon'), wms_get_max(%(p_id)s, 'lon'))
     WHERE id=%(p_id)s
     """,
-    {"p_id": prodid})
+    {"p_id": prodid, "p_idarr": [ prodid ]})
 
   # Create sorted list of dates
   conn.execute("""
@@ -625,28 +716,53 @@ def check_datasets_exist(dc, product):
 
   return list(results)[0][0] > 0
 
-def add_range(dc, product):
+
+def add_product_range(dc, product):
     if isinstance(product, str):
         product = dc.index.products.get_by_name(product)
 
 
     assert product is not None
 
-    crsids = service_cfg["published_CRSs"]
-    crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
     if check_datasets_exist(dc, product):
-        create_range_entry(dc, product, crses)
+        create_range_entry(dc, product, get_crses())
     else:
         print("Could not find any datasets for: ", product.name)
 
 
+def add_multiproduct_range(dc, product, follow_dependencies=True, calc_extents=False):
+    if isinstance(product, str):
+        product = get_layers().product_index.get(product)
+
+    assert product is not None
+
+    if follow_dependencies:
+        for product_name in product.product_names:
+            dc_prod = dc.index.products.get_by_name(product)
+            if calc_extents:
+                # TODO
+                pass
+            else:
+                add_product_range(dc, dc_prod)
+                if not check_datasets_exist(dc, dc_prod):
+                    print("Could not find any datasets for: ", product_name)
+
+    # Actually merge and store!
+    create_multiprod_range_entry(dc, product, get_crses())
+
+
 def add_all(dc):
-    for layer in layer_cfg:
-        for product_cfg in layer["products"]:
-            product_name = product_cfg["product_name"]
-            if product_cfg.get("multi_product", False):
-                print("Skipping multi_product:", product_cfg["name"])
+    multi_products = set()
+    for layer in get_layers():
+        for product_cfg in layer.products:
+            product_name = product_cfg.product_name
+            if product_cfg.multi_product:
+                multi_products.add(product_cfg)
             else:
                 print("Adding range for:", product_name)
-                add_range(dc, product_name)
+                add_product_range(dc, product_name)
+
+    for p in multi_products:
+        print("Adding multiproduct range for:", p.name)
+        add_multiproduct_range(dc, p, follow_dependencies=False)
 

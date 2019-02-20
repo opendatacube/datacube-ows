@@ -11,7 +11,6 @@ except ImportError:
 
 from collections.abc import Mapping
 
-from datacube_wms.product_ranges import get_ranges, get_sub_ranges, merge_ranges
 from datacube_wms.cube_pool import cube
 from datacube_wms.band_mapper import StyleDef
 from datacube_wms.ogc_utils import get_function, ProductLayerException, FunctionWrapper
@@ -119,6 +118,7 @@ class ProductLayerDef(object):
                                         self.product_variant,
                                         self.product_type,
                                         self.product_label)
+        from datacube_wms.product_ranges import get_ranges, get_sub_ranges, merge_ranges
         self.ranges = None
         for p in self.products:
             if self.ranges is None:

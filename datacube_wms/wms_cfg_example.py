@@ -1740,10 +1740,10 @@ layer_cfg = [
                 "time_zone": 9,
                 "extent_mask_func": "datacube_wms.ogc_utils.mask_by_val",
                 "ignore_info_flags": [],
-                "data_manual_merge": false,
-                "pq_manual_merge": false,
+                "data_manual_merge": False,
+                "pq_manual_merge": False,
                 "always_fetch_bands": [],
-                "apply_solar_corrections": false,
+                "apply_solar_corrections": False,
                 "wcs_default_bands": [ "nbart_red", "nbart_green", "nbart_blue" ],
                 "legend": {
                     "styles": [],
