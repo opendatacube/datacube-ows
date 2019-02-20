@@ -17,6 +17,7 @@ import re
 
 import datacube
 from datacube.utils import geometry
+from datacube.storage import BandInfo
 from datacube.storage.masking import mask_to_dict
 
 from datacube_wms.cube_pool import cube
@@ -101,7 +102,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
             all_bands[name] = (name, coord.values, {'units': coord.units})
 
         for measurement in measurements:
-            datasources = [new_datasource(d, measurement['name']) for d in datasets]
+            datasources = [new_datasource(BandInfo(d, measurement['name'])) for d in datasets]
             datasources = sorted(datasources, key=lambda x: x._dataset.id)
             data = _get_measurement(datasources,
                                     geobox,
