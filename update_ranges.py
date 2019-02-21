@@ -1,16 +1,26 @@
-from datacube_wms.product_ranges import update_all_ranges, get_sqlconn, add_product_range, add_multiproduct_range, add_all
+from datacube_wms.product_ranges import update_all_ranges, get_sqlconn, add_product_range, add_multiproduct_range, add_all, update_range
 from datacube import Datacube
 import click
 
 @click.command()
-@click.option("--product", default=None)
-@click.option("--multiproduct", default=None)
-@click.option("--calculate-extent/--no-calculate-extent", default=True)
-@click.option("--schema", is_flag=True, default=False)
+@click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema.")
+@click.option("--product", default=None, help="The name of a datacube product.")
+@click.option("--multiproduct", default=None, help="The name of OWS multi-product." )
+@click.option("--calculate-extent/--no-calculate-extent", default=True, help="no-calculate-extent uses database queries to maximise efficiency. calculate-extent calculates ranges directly and is the default.")
 def main(product, multiproduct, calculate_extent, schema):
+    """Manage datacube-ows range tables.
+
+    A valid invocation should specify at most one of '--product', '--multiproduct' or '--schema'.
+    If neither of these options are specified, then the ranges for all products and multiproducts
+    are updated.
+    """
     if product and multiproduct:
         print("Sorry, you specified both a product and multiproduct.  One at a time, please.")
         return 1
+    elif schema and (product or multiproduct):
+        print("Sorry, cannot update the schema and ranges in the same invocation.")
+        return 1
+
     dc = Datacube(app="wms_update_ranges")
     if schema:
         print("Checking schema....")
@@ -31,26 +41,40 @@ def main(product, multiproduct, calculate_extent, schema):
     else:
         if product:
             print("Updating range for: ", product)
-            # TODO: update_all_ranges for one product.
-            print("Done")
+            p, u, i, sp, su, si = update_range(product, multi=False)
+            if u:
+                print("Ranges updated for", product)
+            elif i:
+                print("New ranges inserted for", product)
+            else:
+                print("Ranges up to date for", product)
+            if sp or su or si:
+                print ("Updated ranges for %d existing sub-products and inserted ranges for %d new sub-products (%d existing sub-products unchanged)" % (su, si, sp))
         elif multiproduct:
             print("Updating range for: ", multiproduct)
-            # TODO: update_all_ranges for one multiproduct.
-            print("Done")
+            p, u, i = update_range(product, multi=True)
+            if u:
+                print("Merged ranges updated for", product)
+            elif i:
+                print("Merged ranges inserted for", product)
+            else:
+                print("Merged ranges up to date for", product)
         else:
             print ("Updating ranges for all layers/products")
-            p, u, i, sp, su, si = update_all_ranges(dc)
+            p, u, i, sp, su, si, mp, mu, mi = update_all_ranges(dc)
             print ("Updated ranges for %d existing layers/products and inserted ranges for %d new layers/products (%d existing layers/products unchanged)" % (u, i, p))
             if sp or su or si:
                 print ("Updated ranges for %d existing sub-products and inserted ranges for %d new sub-products (%d existing sub-products unchanged)" % (su, si, sp))
+            if mp or mu or mi:
+                print ("Updated ranges for %d existing multi-products and inserted ranges for %d new multi-products (%d existing multi-products unchanged)" % (su, si, sp))
     return 0
 
 
 def create_schema(dc):
     commands = [
-        ("Creating wms schema", "create schema if not exists wms"),
+        ("Creating/replacing wms schema", "create schema if not exists wms"),
 
-        ("Creating product ranges table", """
+        ("Creating/replacing product ranges table", """
             create table if not exists wms.product_ranges (
                 id smallint not null primary key references agdc.dataset_type (id),
 
@@ -63,7 +87,7 @@ def create_schema(dc):
 
                 bboxes jsonb not null)
         """),
-        ("Creating sub-product ranges table", """
+        ("Creating/replacing sub-product ranges table", """
             create table if not exists wms.sub_product_ranges (
                 product_id smallint not null references agdc.dataset_type (id),
                 sub_product_id smallint not null,
@@ -75,7 +99,7 @@ def create_schema(dc):
                 bboxes jsonb not null,
                 constraint pk_sub_product_ranges primary key (product_id, sub_product_id) )
         """),
-        ("Creating multi-product ranges table", """
+        ("Creating/replacing multi-product ranges table", """
             create table if not exists wms.multiproduct_ranges (
                 wms_product_name varchar(128) not null primary key,
                 lat_min decimal not null,
@@ -88,7 +112,7 @@ def create_schema(dc):
         ("Granting schema permissions", "grant USAGE on schema wms to cube"),
 
         # Functions
-        ("Creating wms_get_min() function", """
+        ("Creating/replacing wms_get_min() function", """
             CREATE OR REPLACE FUNCTION wms_get_min(integer[], text) RETURNS numeric AS $$
             DECLARE
                 ret numeric;
@@ -106,7 +130,7 @@ def create_schema(dc):
             END;
             $$ LANGUAGE plpgsql;
         """),
-        ("Creating wms_get_max() function", """
+        ("Creating/replacing wms_get_max() function", """
             CREATE OR REPLACE FUNCTION wms_get_max(integer[], text) RETURNS numeric AS $$
             DECLARE
                 ret numeric;

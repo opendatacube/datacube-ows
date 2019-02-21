@@ -119,17 +119,11 @@ class ProductLayerDef(object):
                                         self.product_type,
                                         self.product_label)
         from datacube_wms.product_ranges import get_ranges, get_sub_ranges, merge_ranges
-        self.ranges = None
-        for p in self.products:
-            if self.ranges is None:
-                self.ranges = self.ranges
-            else:
-                self.ranges = merge_ranges(self.ranges, get_ranges(dc, p))
-        self.ranges = get_ranges(dc, self.product)
+        self.ranges = get_ranges(dc, self)
         if self.ranges is None:
             raise ProductLayerException(f"Could not find ranges for {self.product_name} in database")
         # TODO: subranges not supported with multi-product
-        self.sub_ranges = get_sub_ranges(dc, self.product)
+        self.sub_ranges = get_sub_ranges(dc, self)
         # TODO separate PQ dataset not supported with multi-product
         self.pq_name = product_cfg.get("pq_dataset")
         self.pq_band = product_cfg.get("pq_band")
@@ -315,6 +309,7 @@ class ServiceCfg(object):
             self.wmts = srv_cfg.get("wmts", False)
             self.create_grid = srv_cfg.get("create_wcs_grid", False)
             self.dummy_grid = srv_cfg.get("dummy_wcs_grid", False)
+            self.use_default_extent = srv_cfg.get("use_default_extent", False)
 
             self.title = srv_cfg["title"]
             self.url = srv_cfg["url"]
