@@ -65,8 +65,21 @@ def get_crsids(svc=None):
         svc = get_service_cfg()
     return svc.published_CRSs.keys()
 
+
 def get_crses(svc=None):
     return  {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(svc)}
+
+
+def jsonise_bbox(bbox):
+    if isinstance(bbox, dict):
+        return bbox
+    else:
+        return {
+            "top": bbox.top,
+            "bottom": bbox.bottom,
+            "left": bbox.left,
+            "right": bbox.right,
+        }
 
 def determine_product_ranges(dc, dc_product, extractor):
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements, protected-access
@@ -163,11 +176,11 @@ def determine_product_ranges(dc, dc_product, extractor):
 
     r["times"] = sorted(time_set)
     r["time_set"] = time_set
-    r["bboxes"] = {crsid: extents[crsid].boundingbox for crsid in crsids}
+    r["bboxes"] = { crsid: jsonise_bbox(extents[crsid].boundingbox) for crsid in crsids }
     if extractor is not None:
         for path in sub_r.keys():
             sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
-            sub_r[path]["bboxes"] = {crsid: sub_r[path]["extents"][crsid].boundingbox for crsid in crsids}
+            sub_r[path]["bboxes"] = {crsid: jsonise_bbox(sub_r[path]["extents"][crsid].boundingbox) for crsid in crsids}
             del sub_r[path]["extents"]
         r["sub_products"] = sub_r
     end = datetime.now()
@@ -219,9 +232,7 @@ def rng_update(conn, rng, product, path=None):
                          rng["lon"]["min"],
                          rng["lon"]["max"],
                          Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                         Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                               for crsid, bbox in rng["bboxes"].items()
-                               }),
+                         Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                          product.name)
             return
         product = product.product
@@ -244,9 +255,7 @@ def rng_update(conn, rng, product, path=None):
                      rng["lon"]["max"],
 
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                           for crsid, bbox in rng["bboxes"].items()
-                           }),
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                      product.id,
                      path
                      )
@@ -268,9 +277,7 @@ def rng_update(conn, rng, product, path=None):
                  rng["lon"]["max"],
 
                  Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                 Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                       for crsid, bbox in rng["bboxes"].items()
-                       }),
+                 Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                      product.id
                     )
 
@@ -293,9 +300,7 @@ def rng_insert(conn, rng, product, path=None):
                      rng["lon"]["max"],
 
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                           for crsid, bbox in rng["bboxes"].items()
-                           })
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                      )
             return
         product = product.product
@@ -315,9 +320,7 @@ def rng_insert(conn, rng, product, path=None):
                      rng["lon"]["max"],
 
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                           for crsid, bbox in rng["bboxes"].items()
-                           })
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                      )
     else:
         conn.execute("""
@@ -334,9 +337,7 @@ def rng_insert(conn, rng, product, path=None):
                      rng["lon"]["max"],
 
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                           for crsid, bbox in rng["bboxes"].items()
-                          })
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                     )
 
 
@@ -357,20 +358,20 @@ def ranges_equal(r1, rdb):
         for cs in r1["bboxes"].keys():
             bb1 = r1["bboxes"][cs]
             bb2 = rdb["bboxes"][cs]
-            if abs(bb1.top - float(bb2["top"])) > 1e-12:
+            if abs(bb1["top"] - float(bb2["top"])) > 1e-12:
                 return False
-            if abs(bb1.bottom - float(bb2["bottom"])) > 1e-12:
+            if abs(bb1["bottom"] - float(bb2["bottom"])) > 1e-12:
                 return False
-            if abs(bb1.left - float(bb2["left"])) > 1e-12:
+            if abs(bb1["left"] - float(bb2["left"])) > 1e-12:
                 return False
-            if abs(bb1.right - float(bb2["right"])) > 1e-12:
+            if abs(bb1["right"] - float(bb2["right"])) > 1e-12:
                 return False
     except KeyError:
         return False
     return True
 
 
-def update_range(dc, product, multi=False):
+def update_range(dc, product, multi=False, follow_dependencies=True):
     if multi:
         product = get_layers().product_index.get(product)
     else:
@@ -380,7 +381,7 @@ def update_range(dc, product, multi=False):
         raise Exception("Requested product not found.")
 
     if multi:
-        return update_multi_range(dc, product)
+        return update_multi_range(dc, product, follow_dependencies=follow_dependencies)
     else:
         return update_single_range(dc, product)
 
@@ -585,12 +586,12 @@ def merge_ranges(r1, r2):
         "time_set": time_set,
         "bboxes": {
             crs: {
-                "top": max(r1["boxes"]["top"], r2["bboxes"]["top"]),
-                "bottom": min(r1["boxes"]["bottom"], r2["bboxes"]["bottom"]),
-                "right": max(r1["boxes"]["right"], r2["bboxes"]["right"]),
-                "left": min(r1["boxes"]["left"], r2["bboxes"]["left"]),
+                "top": max(r1["bboxes"][crs]["top"], r2["bboxes"][crs]["top"]),
+                "bottom": min(r1["bboxes"][crs]["bottom"], r2["bboxes"][crs]["bottom"]),
+                "right": max(r1["bboxes"][crs]["right"], r2["bboxes"][crs]["right"]),
+                "left": min(r1["bboxes"][crs]["left"], r2["bboxes"][crs]["left"]),
             }
-            for crs in r1["boxes"].keys()
+            for crs in r1["bboxes"].keys()
         }
     }
 
@@ -667,15 +668,7 @@ def create_multiprod_range_entry(dc, product, crses):
         SET bboxes = %s::jsonb
         WHERE wms_product_name=%s
         """,
-        Json(
-            {
-                crsid: {"top": box.to_crs(crs).boundingbox.top,
-                     "bottom": box.to_crs(crs).boundingbox.bottom,
-                     "left": box.to_crs(crs).boundingbox.left,
-                     "right": box.to_crs(crs).boundingbox.right
-                } for crsid, crs in crses.items()
-            }
-        ),
+        Json(jsonise_bbox(box.to_crs(crs).boundingbox)),
         wms_name
     )
 

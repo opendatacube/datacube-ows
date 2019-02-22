@@ -6,8 +6,9 @@ import click
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema.")
 @click.option("--product", default=None, help="The name of a datacube product.")
 @click.option("--multiproduct", default=None, help="The name of OWS multi-product." )
+@click.option("--merge-only/--no-merge-only", default=False, help="When used with the multiproduct and calculate-extent options, the ranges for underlying datacube products are not updated.")
 @click.option("--calculate-extent/--no-calculate-extent", default=True, help="no-calculate-extent uses database queries to maximise efficiency. calculate-extent calculates ranges directly and is the default.")
-def main(product, multiproduct, calculate_extent, schema):
+def main(product, multiproduct, merge_only, calculate_extent, schema):
     """Manage datacube-ows range tables.
 
     A valid invocation should specify at most one of '--product', '--multiproduct' or '--schema'.
@@ -41,7 +42,7 @@ def main(product, multiproduct, calculate_extent, schema):
     else:
         if product:
             print("Updating range for: ", product)
-            p, u, i, sp, su, si = update_range(product, multi=False)
+            p, u, i, sp, su, si = update_range(dc, product, multi=False)
             if u:
                 print("Ranges updated for", product)
             elif i:
@@ -52,13 +53,13 @@ def main(product, multiproduct, calculate_extent, schema):
                 print ("Updated ranges for %d existing sub-products and inserted ranges for %d new sub-products (%d existing sub-products unchanged)" % (su, si, sp))
         elif multiproduct:
             print("Updating range for: ", multiproduct)
-            p, u, i = update_range(product, multi=True)
+            p, u, i = update_range(dc, multiproduct, multi=True, follow_dependencies=not merge_only)
             if u:
-                print("Merged ranges updated for", product)
+                print("Merged ranges updated for", multiproduct)
             elif i:
-                print("Merged ranges inserted for", product)
+                print("Merged ranges inserted for", multiproduct)
             else:
-                print("Merged ranges up to date for", product)
+                print("Merged ranges up to date for", multiproduct)
         else:
             print ("Updating ranges for all layers/products")
             p, u, i, sp, su, si, mp, mu, mi = update_all_ranges(dc)
