@@ -4,10 +4,8 @@ from __future__ import absolute_import, division, print_function
 
 from datetime import date, datetime, timedelta
 import datacube
-try:
-    from datacube_wms.wms_cfg_local import service_cfg, layer_cfg
-except ImportError:
-    from datacube_wms.wms_cfg import service_cfg, layer_cfg
+
+from datacube_wms.wms_layers import get_service_cfg, get_layers, ProductLayerDef
 from datacube_wms.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
@@ -62,17 +60,32 @@ def accum_max(a, b):
         return max(a, b)
 
 
-def determine_product_ranges(dc, product_name, extractor):
+def get_crsids(svc=None):
+    if not svc:
+        svc = get_service_cfg()
+    return svc.published_CRSs.keys()
+
+
+def get_crses(svc=None):
+    return  {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(svc)}
+
+
+def jsonise_bbox(bbox):
+    if isinstance(bbox, dict):
+        return bbox
+    else:
+        return {
+            "top": bbox.top,
+            "bottom": bbox.bottom,
+            "left": bbox.left,
+            "right": bbox.right,
+        }
+
+def determine_product_ranges(dc, dc_product, extractor):
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements, protected-access
     start = datetime.now()
-    product = dc.index.products.get_by_name(product_name)
-    print("Product: ", product_name)
-    if product is None:
-        print ("Product does not exist!")
-        raise Exception("Product does not exist")
+    print("Product: ", dc_product.name)
     r = {
-        "product_id": product.id,
-
         "lat": {
             "min": None,
             "max": None
@@ -84,23 +97,22 @@ def determine_product_ranges(dc, product_name, extractor):
     }
     sub_r = {}
     time_set = set()
+    svc = get_service_cfg()
     print ("OK, Let's do it")
-    crsids = service_cfg["published_CRSs"]
-    calculate_extent = not service_cfg.get("use_default_extent", False)
+    crsids = get_crsids(svc)
+    calculate_extent = not svc.use_default_extent
     extents = {crsid: None for crsid in crsids}
-    crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
+    crses = get_crses(svc)
     ds_count = 0
-    for ds in dc.find_datasets(product=product_name):
+    for ds in dc.find_datasets(product=dc_product.name):
         print("Processing a dataset", ds.id)
-        local_date = local_date(ds)
-        time_set.add(local_date)
+        loc_date = local_date(ds)
+        time_set.add(loc_date)
         if calculate_extent or extractor is not None:
             if extractor is not None:
                 path = extractor(ds)
                 if path not in sub_r:
                     sub_r[path] = {
-                        "product_id": product.id,
-                        "sub_id": path,
                         "lat": {
                             "min": None,
                             "max": None,
@@ -125,7 +137,7 @@ def determine_product_ranges(dc, product_name, extractor):
             r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
             if path is not None:
-                sub_r[path]["time_set"].add(local_date)
+                sub_r[path]["time_set"].add(loc_date)
 
             for crsid in crsids:
                 print("Working with CRS", crsid)
@@ -164,11 +176,11 @@ def determine_product_ranges(dc, product_name, extractor):
 
     r["times"] = sorted(time_set)
     r["time_set"] = time_set
-    r["bboxes"] = {crsid: extents[crsid].boundingbox for crsid in crsids}
+    r["bboxes"] = { crsid: jsonise_bbox(extents[crsid].boundingbox) for crsid in crsids }
     if extractor is not None:
         for path in sub_r.keys():
             sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
-            sub_r[path]["bboxes"] = {crsid: sub_r[path]["extents"][crsid].boundingbox for crsid in crsids}
+            sub_r[path]["bboxes"] = {crsid: jsonise_bbox(sub_r[path]["extents"][crsid].boundingbox) for crsid in crsids}
             del sub_r[path]["extents"]
         r["sub_products"] = sub_r
     end = datetime.now()
@@ -176,27 +188,8 @@ def determine_product_ranges(dc, product_name, extractor):
     return r
 
 
-def determine_ranges(dc):
-    ranges = []
-    for layer in layer_cfg:
-        for product_cfg in layer["products"]:
-            if product_cfg.get("multi_product", False):
-                print("Skipping multi_product", product_cfg["name"])
-                continue
-            try:
-                ranges.append(determine_product_ranges(dc,
-                                                   product_cfg["product_name"],
-                                                   product_cfg.get("sub_product_extractor")
-                                                  )
-                         )
-            except:
-                print ("Product %s does not exist in the datacube" % product_cfg["product_name"])
-    return ranges
-
-
 def get_sqlconn(dc):
     # pylint: disable=protected-access
-    # TODO: Is this the really the best way to obtain an SQL connection?
     return dc.index._db._engine.connect()
 
 
@@ -206,19 +199,44 @@ def get_ids_in_db(conn):
     return ids
 
 
-def get_subids_in_db(conn):
+def get_product_paths_in_db(conn, dc_product):
     results = conn.execute("""
-        SELECT product_id, sub_product_id
+        SELECT sub_product_id
         FROM wms.sub_product_ranges
-        ORDER BY product_id, sub_product_id"""
-                          )
-    ids = [(r["product_id"], r["sub_product_id"]) for r in results]
+        WHERE product_id = %s
+        ORDER BY product_id, sub_product_id""",
+                           dc_product.id
+                           )
+    ids = { r["sub_product_id"] for r in results }
     return ids
 
 
-def rng_update(conn, rng):
+def rng_update(conn, rng, product, path=None):
     # pylint: disable=bad-continuation
-    if rng.get("sub_id"):
+    if isinstance(product, ProductLayerDef):
+        if product.multi_product:
+            assert path is None
+            conn.execute("""
+            UPDATE wms.multiproduct_ranges
+            SET
+                  lat_min=%s,
+                  lat_max=%s,
+                  lon_min=%s,
+                  lon_max=%s,   
+                  dates=%s,
+                  bboxes=%s
+            WHERE wms_product_name=%s
+            """,
+                         rng["lat"]["min"],
+                         rng["lat"]["max"],
+                         rng["lon"]["min"],
+                         rng["lon"]["max"],
+                         Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
+                         Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
+                         product.name)
+            return
+        product = product.product
+    if path is not None:
         conn.execute("""
             UPDATE wms.sub_product_ranges
             SET
@@ -237,13 +255,10 @@ def rng_update(conn, rng):
                      rng["lon"]["max"],
 
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                           for crsid, bbox in rng["bboxes"].items()
-                           }),
-                     rng["product_id"],
-                     rng["sub_id"],
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
+                     product.id,
+                     path
                      )
-
     else:
         conn.execute("""
             UPDATE wms.product_ranges
@@ -262,24 +277,22 @@ def rng_update(conn, rng):
                  rng["lon"]["max"],
 
                  Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                 Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                       for crsid, bbox in rng["bboxes"].items()
-                       }),
-                     rng["product_id"],
+                 Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
+                     product.id
                     )
 
 
-def rng_insert(conn, rng):
+def rng_insert(conn, rng, product, path=None):
     # pylint: disable=bad-continuation
-    if rng.get("sub_id"):
-        conn.execute("""
-                INSERT into wms.sub_product_ranges
-                    (product_id, sub_product_id,  lat_min,lat_max,lon_min,lon_max,   dates,bboxes)
+    if isinstance(product, ProductLayerDef):
+        if product.multi_product:
+            conn.execute("""
+                INSERT into wms.multiproduct_ranges
+                    (wms_product_name,  lat_min,lat_max,lon_min,lon_max,   dates,bboxes)
                 VALUES
                     (%s,%s,   %s,%s,%s,%s,    %s,%s)
                      """,
-                     rng["product_id"],
-                     rng["sub_id"],
+                     product.name,
 
                      rng["lat"]["min"],
                      rng["lat"]["max"],
@@ -287,9 +300,27 @@ def rng_insert(conn, rng):
                      rng["lon"]["max"],
 
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                           for crsid, bbox in rng["bboxes"].items()
-                           })
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
+                     )
+            return
+        product = product.product
+    if path is not None:
+        conn.execute("""
+                INSERT into wms.sub_product_ranges
+                    (product_id, sub_product_id,  lat_min,lat_max,lon_min,lon_max,   dates,bboxes)
+                VALUES
+                    (%s,%s,   %s,%s,%s,%s,    %s,%s)
+                     """,
+                     product.id,
+                     path,
+
+                     rng["lat"]["min"],
+                     rng["lat"]["max"],
+                     rng["lon"]["min"],
+                     rng["lon"]["max"],
+
+                     Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                      )
     else:
         conn.execute("""
@@ -298,7 +329,7 @@ def rng_insert(conn, rng):
                 VALUES
                     (%s,   %s,%s,%s,%s,    %s,%s)
                      """,
-                     rng["product_id"],
+                     product.id,
 
                      rng["lat"]["min"],
                      rng["lat"]["max"],
@@ -306,18 +337,12 @@ def rng_insert(conn, rng):
                      rng["lon"]["max"],
 
                      Json([t.strftime("%Y-%m-%d") for t in rng["times"]]),
-                     Json({crsid: {"top": bbox.top, "bottom": bbox.bottom, "left": bbox.left, "right": bbox.right}
-                           for crsid, bbox in rng["bboxes"].items()
-                          })
+                     Json({crsid: jsonise_bbox(bbox) for crsid, bbox in rng["bboxes"].items() }),
                     )
 
 
 def ranges_equal(r1, rdb):
     # pylint: disable=too-many-branches
-    if r1["product_id"] != rdb["product_id"]:
-        return False
-    if r1.get("sub_id") != rdb.get("sub_product_id"):
-        return False
     for coord in ("lat", "lon"):
         for ext in ("max", "min"):
             if abs(r1[coord][ext] - rdb[coord][ext]) > 1e-12:
@@ -333,135 +358,195 @@ def ranges_equal(r1, rdb):
         for cs in r1["bboxes"].keys():
             bb1 = r1["bboxes"][cs]
             bb2 = rdb["bboxes"][cs]
-            if abs(bb1.top - float(bb2["top"])) > 1e-12:
+            if abs(bb1["top"] - float(bb2["top"])) > 1e-12:
                 return False
-            if abs(bb1.bottom - float(bb2["bottom"])) > 1e-12:
+            if abs(bb1["bottom"] - float(bb2["bottom"])) > 1e-12:
                 return False
-            if abs(bb1.left - float(bb2["left"])) > 1e-12:
+            if abs(bb1["left"] - float(bb2["left"])) > 1e-12:
                 return False
-            if abs(bb1.right - float(bb2["right"])) > 1e-12:
+            if abs(bb1["right"] - float(bb2["right"])) > 1e-12:
                 return False
     except KeyError:
         return False
     return True
 
-def update_range(dc, product):
-    def find(ds, key, value):
-        for d in ds:
-            if d[key] == value:
-                return d
-        return None
 
-    products = [find(p["products"], "product_name", product) for p in layer_cfg]
-    if products[0] is not None:
-        layer = products[0]
-        product_range = determine_product_ranges(dc,
-                                                 product,
-                                                 layer.get("sub_product_extractor"))
-        conn = get_sqlconn(dc)
-        txn = conn.begin()
-        ids_in_db = get_ids_in_db(conn)
-        subids_in_db = get_subids_in_db(conn)
-
-        if product_range["product_id"] in ids_in_db:
-            db_range = get_ranges(dc, product_range["product_id"])
-            if ranges_equal(product_range, db_range):
-                print("Ranges equal, not updating")
-            else:
-                rng_update(conn, product_range)
-                print("Updating range")
-        else:
-            rng_insert(conn, product_range)
-            print("Inserting new range")
-
-        if "sub_products" in product_range:
-            for path, subr in product_range["sub_products"].items():
-                db_range = get_ranges(dc, subr["product_id"], path)
-                if (subr["product_id"], path) in subids_in_db:
-                    db_range = get_ranges(dc, subr["product_id"], path)
-                    if ranges_equal(subr, db_range):
-                        pass
-                    else:
-                        rng_update(conn, subr)
-                else:
-                    rng_insert(conn, subr)
-        txn.commit()
-        conn.close()
+def update_range(dc, product, multi=False, follow_dependencies=True):
+    if multi:
+        product = get_layers().product_index.get(product)
     else:
-        print("Could not find product")
+        product = dc.index.products.get_by_name(product)
+
+    if product is None:
+        raise Exception("Requested product not found.")
+
+    if multi:
+        return update_multi_range(dc, product, follow_dependencies=follow_dependencies)
+    else:
+        return update_single_range(dc, product)
+
+
+def update_single_range(dc, product):
+    if isinstance(product, ProductLayerDef):
+        assert not product.multi_product
+        dc_product = product.product
+        extractor  = product.sub_product_extractor
+    else:
+        dc_product = product
+        extractor = None
+
+    product_range = determine_product_ranges(dc,
+                                             dc_product,
+                                             extractor)
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
+    db_range = get_ranges(dc, dc_product, is_dc_product=True)
+    subids_in_db = get_product_paths_in_db(conn, dc_product)
+
+    ok = 0
+    ins = 0
+    upd = 0
+    if db_range:
+        if ranges_equal(product_range, db_range):
+            print("Ranges equal, not updating")
+            ok = 1
+        else:
+            rng_update(conn, product_range, dc_product)
+            print("Updating range")
+            upd = 1
+    else:
+        rng_insert(conn, product_range, dc_product)
+        print("Inserting new range")
+        ins = 1
+
+    sok = 0
+    sins = 0
+    supd = 0
+    if "sub_products" in product_range:
+        for path, subr in product_range["sub_products"].items():
+            if path in subids_in_db:
+                db_range = get_ranges(dc, dc_product, path, is_dc_product=True)
+                if ranges_equal(subr, db_range):
+                    sok += 1
+                else:
+                    rng_update(conn, subr, dc_product, path)
+                    supd += 1
+            else:
+                rng_insert(conn, subr, dc_product, path)
+                sins += 1
+    txn.commit()
+    conn.close()
+
+    return (ok, upd, ins, sok, supd, sins)
+
+
+def update_multi_range(dc, product, follow_dependencies=True):
+    assert product.multi_product
+
+    if follow_dependencies:
+        for dc_product in product.products:
+            update_single_range(dc, dc_product)
+
+    mp_ranges = None
+    for p in product.products:
+        mp_ranges = merge_ranges(mp_ranges, get_ranges(dc, p, is_dc_product=True))
+
+
+    db_range = get_ranges(dc, product)
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
+
+    ok = 0
+    ins = 0
+    upd = 0
+    if db_range:
+        if ranges_equal(mp_ranges, db_range):
+            print("Ranges equal, not updating")
+            ok = 1
+        else:
+            rng_update(conn, mp_ranges, product)
+            print("Updating range")
+            upd = 1
+    else:
+        rng_insert(conn, mp_ranges, product)
+        print("Inserting new range")
+        ins = 1
+
+
+    txn.commit()
+    conn.close()
+    return (ok, upd, ins)
 
 
 def update_all_ranges(dc):
-    ranges = determine_ranges(dc)
-    conn = get_sqlconn(dc)
-    txn = conn.begin()
-    ids_in_db = get_ids_in_db(conn)
-    subids_in_db = get_subids_in_db(conn)
     i = 0
     u = 0
     p = 0
     si = 0
     su = 0
     sp = 0
-    for prod_ranges in ranges:
-        if prod_ranges["product_id"] in ids_in_db:
-            db_ranges = get_ranges(dc, prod_ranges["product_id"])
-            if ranges_equal(prod_ranges, db_ranges):
-                p += 1
+    mi = 0
+    mu = 0
+    mp = 0
+
+    multiproducts = set()
+
+    for layer in get_layers():
+        for prod in layer.products:
+            if prod.multi_product:
+                multiproducts.add(prod)
             else:
-                rng_update(conn, prod_ranges)
-                u += 1
-        else:
-            rng_insert(conn, prod_ranges)
-            i += 1
-        if "sub_products" in prod_ranges:
-            for path, subr in prod_ranges["sub_products"].items():
-                db_ranges = get_ranges(dc, subr["product_id"], path)
-                if (subr["product_id"], path) in subids_in_db:
-                    db_ranges = get_ranges(dc, subr["product_id"], path)
-                    if ranges_equal(subr, db_ranges):
-                        sp += 1
-                    else:
-                        rng_update(conn, subr)
-                        su += 1
-                else:
-                    rng_insert(conn, subr)
-                    si += 1
+                stats = update_single_range(dc, prod)
+                p  += stats[0]
+                u  += stats[1]
+                i  += stats[2]
+                sp += stats[3]
+                su += stats[4]
+                si += stats[5]
 
-    txn.commit()
-    conn.close()
-    return p, u, i, sp, su, si
+    for mprod in multiproducts:
+        stats = update_multi_range(dc, mprod, follow_dependencies=False)
+        mp += stats[0]
+        mu += stats[1]
+        mi += stats[2]
+
+    return p, u, i, sp, su, si, mp, mu, mi
 
 
-def get_ranges(dc, product, path=None):
-    if isinstance(product, int):
-        product_id = product
-    else:
-        if isinstance(product, str):
-            product = dc.index.products.get_by_name(product)
-        product_id = product.id
-
+def get_ranges(dc, product, path=None, is_dc_product=False):
     conn = get_sqlconn(dc)
-    if path is not None:
+    if not is_dc_product and product.multi_product:
+        if path is not None:
+            raise Exception("Combining subproducts and multiproducts is not yet supported")
         results = conn.execute("""
             SELECT *
-            FROM wms.sub_product_ranges 
-            WHERE product_id=%s and sub_product_id=%s""",
-                               product_id, path
+            FROM wms.multiproduct_ranges
+            WHERE wms_product_name=%s""",
+                               product.name
                               )
     else:
-        results = conn.execute("""
-            SELECT *
-            FROM wms.product_ranges
-            WHERE id=%s""",
-                               product_id
-                              )
+        if is_dc_product:
+            prod_id = product.id
+        else:
+            prod_id = product.product.id
+        if path is not None:
+            results = conn.execute("""
+                SELECT *
+                FROM wms.sub_product_ranges 
+                WHERE product_id=%s and sub_product_id=%s""",
+                                   prod_id, path
+                                  )
+        else:
+            results = conn.execute("""
+                SELECT *
+                FROM wms.product_ranges
+                WHERE id=%s""",
+                                   prod_id
+                                  )
     for result in results:
         conn.close()
         times = [datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"]]
         return {
-            "product_id": product_id,
-            "path": path,
             "lat": {
                 "min": float(result["lat_min"]),
                 "max": float(result["lat_max"]),
@@ -476,25 +561,17 @@ def get_ranges(dc, product, path=None):
             "time_set": set(times),
             "bboxes": result["bboxes"]
         }
+    return None
 
 
 def merge_ranges(r1, r2):
-    product_ids = []
-    if isinstance(r1["product_id"], str):
-        product_ids.append(r1["product_id"])
-    else:
-        product_ids.extend(r1["product_id"])
-    if isinstance(r2["product_id"], str):
-        product_ids.append(r2["product_id"])
-    else:
-        product_ids.extend(r2["product_id"])
-    if r1["path"] != r2["path"]:
-        raise Exception("Cannot merge ranges with different paths")
+    if r1 is None:
+        return r2
+    elif r2 is None:
+        return r1
     time_set = r1["time_set"] | r2["time_set"]
     times = sorted(list(time_set))
     return {
-        "product_id": product_ids,
-        "path": r1["path"],
         "lat": {
             "min": min(r1["lat"]["min"], r2["lat"]["min"]),
             "max": max(r1["lat"]["max"], r2["lat"]["max"]),
@@ -509,27 +586,95 @@ def merge_ranges(r1, r2):
         "time_set": time_set,
         "bboxes": {
             crs: {
-                "top": max(r1["boxes"]["top"], r2["bboxes"]["top"]),
-                "bottom": min(r1["boxes"]["bottom"], r2["bboxes"]["bottom"]),
-                "right": max(r1["boxes"]["right"], r2["bboxes"]["right"]),
-                "left": min(r1["boxes"]["left"], r2["bboxes"]["left"]),
+                "top": max(r1["bboxes"][crs]["top"], r2["bboxes"][crs]["top"]),
+                "bottom": min(r1["bboxes"][crs]["bottom"], r2["bboxes"][crs]["bottom"]),
+                "right": max(r1["bboxes"][crs]["right"], r2["bboxes"][crs]["right"]),
+                "left": min(r1["bboxes"][crs]["left"], r2["bboxes"][crs]["left"]),
             }
-            for crs in r1["boxes"].keys()
+            for crs in r1["bboxes"].keys()
         }
     }
 
 
 def get_sub_ranges(dc, product):
-    if isinstance(product, int):
-        product_id = product
-    else:
-        if isinstance(product, str):
-            product = dc.index.products.get_by_name(product)
-        product_id = product.id
-
     conn = get_sqlconn(dc)
-    results = conn.execute("select sub_product_id from wms.sub_product_ranges where product_id=%s", product_id)
-    return {r["sub_product_id"]: get_ranges(dc, product_id, r["sub_product_id"]) for r in results}
+    results = conn.execute("select sub_product_id from wms.sub_product_ranges where product_id=%s", product.product.id)
+    return {r["sub_product_id"]: get_ranges(dc, product.product.id, r["sub_product_id"]) for r in results}
+
+
+def create_multiprod_range_entry(dc, product, crses):
+    conn = get_sqlconn(dc)
+    txn = conn.begin()
+    prodids = [ p.id for p in product.products ]
+    wms_name = product.name
+
+    # Attempt to insert row
+    conn.execute("""
+        INSERT INTO wms.multiproduct_ranges
+        (wms_product_name,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
+        VALUES
+        (%(p_id)s, 0, 0, 0, 0, %(empty)s, %(empty)s)
+        ON CONFLICT (wms_product_name) DO NOTHING
+        """,
+                 {"p_id": wms_name, "empty": Json("")})
+
+    # Update extents
+    conn.execute("""
+        UPDATE wms.multiproduct_ranges
+        SET (lat_min,lat_max,lon_min,lon_max) =
+        (wms_get_min(%(p_prodids)s, 'lat'), wms_get_max(%(p_prodids)s, 'lat'), wms_get_min(%(p_prodids)s, 'lon'), wms_get_max(%(p_prodids)s, 'lon'))
+        WHERE wms_product_name=%(p_id)s
+        """,
+                 {"p_id": wms_name, "p_prodids": prodids})
+
+    # Create sorted list of dates
+    conn.execute("""
+        WITH sorted
+        AS (SELECT to_jsonb(array_agg(dates.d))
+            AS dates
+            FROM (SELECT DISTINCT to_date(metadata::json->'extent'->>'center_dt', 'YYYY-MM-DD')
+                  AS d
+                  FROM agdc.dataset
+                  WHERE dataset_type_ref = any (%(p_prodids)s)
+                  AND archived IS NULL
+                  ORDER BY d) dates)
+        UPDATE wms.multiproduct_ranges
+        SET dates=sorted.dates
+        FROM sorted
+        WHERE wms_product_name=%(p_id)s
+        """,
+                 {"p_id": wms_name, "p_prodids": prodids})
+
+    # calculate bounding boxes
+    results = list(conn.execute("""
+        SELECT lat_min,lat_max,lon_min,lon_max
+        FROM wms.multiproduct_ranges
+        WHERE wms_product_name=%(p_id)s
+        """,
+        {"p_id": wms_name} ))
+
+    r = results[0]
+
+    epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
+    box = datacube.utils.geometry.box(
+        float(r[2]),
+        float(r[0]),
+        float(r[3]),
+        float(r[1]),
+        epsg4326)
+
+    conn.execute("""
+        UPDATE wms.multiproduct_ranges
+        SET bboxes = %s::jsonb
+        WHERE wms_product_name=%s
+        """,
+        Json(jsonise_bbox(box.to_crs(crs).boundingbox)),
+        wms_name
+    )
+
+    txn.commit()
+    conn.close()
+    return
 
 
 def create_range_entry(dc, product, crses):
@@ -551,10 +696,10 @@ def create_range_entry(dc, product, crses):
   conn.execute("""
     UPDATE wms.product_ranges
     SET (lat_min,lat_max,lon_min,lon_max) =
-    (wms_get_min(%(p_id)s, 'lat'), wms_get_max(%(p_id)s, 'lat'), wms_get_min(%(p_id)s, 'lon'), wms_get_max(%(p_id)s, 'lon'))
+    (wms_get_min(%(p_idarr)s, 'lat'), wms_get_max(%(p_id)s, 'lat'), wms_get_min(%(p_id)s, 'lon'), wms_get_max(%(p_id)s, 'lon'))
     WHERE id=%(p_id)s
     """,
-    {"p_id": prodid})
+    {"p_id": prodid, "p_idarr": [ prodid ]})
 
   # Create sorted list of dates
   conn.execute("""
@@ -625,28 +770,49 @@ def check_datasets_exist(dc, product):
 
   return list(results)[0][0] > 0
 
-def add_range(dc, product):
+
+def add_product_range(dc, product):
     if isinstance(product, str):
         product = dc.index.products.get_by_name(product)
 
 
     assert product is not None
 
-    crsids = service_cfg["published_CRSs"]
-    crses = {crsid: datacube.utils.geometry.CRS(crsid) for crsid in crsids}
     if check_datasets_exist(dc, product):
-        create_range_entry(dc, product, crses)
+        create_range_entry(dc, product, get_crses())
     else:
         print("Could not find any datasets for: ", product.name)
 
 
+def add_multiproduct_range(dc, product, follow_dependencies=True):
+    if isinstance(product, str):
+        product = get_layers().product_index.get(product)
+
+    assert product is not None
+
+    if follow_dependencies:
+        for product_name in product.product_names:
+            dc_prod = dc.index.products.get_by_name(product)
+            add_product_range(dc, dc_prod)
+            if not check_datasets_exist(dc, dc_prod):
+                print("Could not find any datasets for: ", product_name)
+
+    # Actually merge and store!
+    create_multiprod_range_entry(dc, product, get_crses())
+
+
 def add_all(dc):
-    for layer in layer_cfg:
-        for product_cfg in layer["products"]:
-            product_name = product_cfg["product_name"]
-            if product_cfg.get("multi_product", False):
-                print("Skipping multi_product:", product_cfg["name"])
+    multi_products = set()
+    for layer in get_layers():
+        for product_cfg in layer.products:
+            product_name = product_cfg.product_name
+            if product_cfg.multi_product:
+                multi_products.add(product_cfg)
             else:
                 print("Adding range for:", product_name)
-                add_range(dc, product_name)
+                add_product_range(dc, product_name)
+
+    for p in multi_products:
+        print("Adding multiproduct range for:", p.name)
+        add_multiproduct_range(dc, p, follow_dependencies=False)
 
