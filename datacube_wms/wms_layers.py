@@ -121,7 +121,10 @@ class ProductLayerDef(object):
         from datacube_wms.product_ranges import get_ranges, get_sub_ranges, merge_ranges
         self.ranges = get_ranges(dc, self)
         if self.ranges is None:
-            raise ProductLayerException(f"Could not find ranges for {self.product_name} in database")
+            if self.multi_product:
+                print(f"Warning: Ranges for multi-product {self.name} not yet in database")
+            else:
+                print(f"Warning: Ranges for product {self.product_name} not yet in database")
         # TODO: subranges not supported with multi-product
         self.sub_ranges = get_sub_ranges(dc, self)
         # TODO separate PQ dataset not supported with multi-product
