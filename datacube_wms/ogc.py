@@ -17,8 +17,6 @@ from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSExceptio
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
-from datacube_wms.utils import time_call
-
 from .rasterio_env import rio_env
 
 import logging
@@ -159,37 +157,38 @@ def ogc_impl():
 
 
 def ogc_svc_impl(svc):
-    svc_support = OWS_SUPPORTED[svc]
-    nocase_args = lower_get_args()
-    nocase_args = capture_headers(request, nocase_args)
-    service = nocase_args.get("service", svc).upper()
+    with tracer.span(name=svc):
+        svc_support = OWS_SUPPORTED[svc]
+        nocase_args = lower_get_args()
+        nocase_args = capture_headers(request, nocase_args)
+        service = nocase_args.get("service", svc).upper()
 
-    # Is service activated in config?
-    try:
-        if not svc_support.activated():
-            raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
+        # Is service activated in config?
+        try:
+            if not svc_support.activated():
+                raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
 
-        # Does service match path (if supplied)
-        if service != svc_support.service_upper:
-            raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
+            # Does service match path (if supplied)
+            if service != svc_support.service_upper:
+                raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
 
-        version = nocase_args.get("version")
-        if not version:
-            raise svc_support.default_exception_class("No protocol version supplied", locator="Version parameter")
-        version_support = svc_support.negotiated_version(version)
-    except OGCException as e:
-        return e.exception_response()
+            version = nocase_args.get("version")
+            if not version:
+                raise svc_support.default_exception_class("No protocol version supplied", locator="Version parameter")
+            version_support = svc_support.negotiated_version(version)
+        except OGCException as e:
+            return e.exception_response()
 
-    try:
-        # create dummy env if not exists
-        with rio_env():
-            return version_support.router(nocase_args)
-    except OGCException as e:
-        return e.exception_response()
-    except Exception as e:
-        tb = sys.exc_info()[2]
-        ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
-        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+        try:
+            # create dummy env if not exists
+            with rio_env():
+                return version_support.router(nocase_args)
+        except OGCException as e:
+            return e.exception_response()
+        except Exception as e:
+            tb = sys.exc_info()[2]
+            ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
+            return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
 @app.route('/wms')
