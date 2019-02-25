@@ -290,7 +290,7 @@ def rng_insert(conn, rng, product, path=None):
                 INSERT into wms.multiproduct_ranges
                     (wms_product_name,  lat_min,lat_max,lon_min,lon_max,   dates,bboxes)
                 VALUES
-                    (%s,%s,   %s,%s,%s,%s,    %s,%s)
+                    (%s, %s,%s,%s,%s,    %s,%s)
                      """,
                      product.name,
 
@@ -663,13 +663,14 @@ def create_multiprod_range_entry(dc, product, crses):
         float(r[1]),
         epsg4326)
 
+    svc = get_service_cfg()
     conn.execute("""
         UPDATE wms.multiproduct_ranges
         SET bboxes = %s::jsonb
         WHERE wms_product_name=%s
         """,
-        Json(jsonise_bbox(box.to_crs(crs).boundingbox)),
-        wms_name
+                 { crs: Json(jsonise_bbox(box.to_crs(crs).boundingbox)) for crs in get_crsids(svc) },
+                 wms_name
     )
 
     txn.commit()
