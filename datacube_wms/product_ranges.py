@@ -669,7 +669,7 @@ def create_multiprod_range_entry(dc, product, crses):
         SET bboxes = %s::jsonb
         WHERE wms_product_name=%s
         """,
-                 { crs: Json(jsonise_bbox(box.to_crs(crs).boundingbox)) for crs in get_crsids(svc) },
+                 { crsid: Json(jsonise_bbox(box.to_crs(crs).boundingbox)) for crsid, crs in get_crses(svc).items() },
                  wms_name
     )
 
