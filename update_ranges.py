@@ -1,14 +1,16 @@
 from datacube_wms.product_ranges import update_all_ranges, get_sqlconn, add_product_range, add_multiproduct_range, add_all, update_range
 from datacube import Datacube
+from psycopg2.sql import SQL, Identifier
 import click
 
 @click.command()
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema.")
+@click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--product", default=None, help="The name of a datacube product.")
 @click.option("--multiproduct", default=None, help="The name of OWS multi-product." )
 @click.option("--merge-only/--no-merge-only", default=False, help="When used with the multiproduct and calculate-extent options, the ranges for underlying datacube products are not updated.")
 @click.option("--calculate-extent/--no-calculate-extent", default=True, help="no-calculate-extent uses database queries to maximise efficiency. calculate-extent calculates ranges directly and is the default.")
-def main(product, multiproduct, merge_only, calculate_extent, schema):
+def main(product, multiproduct, merge_only, calculate_extent, schema, role):
     """Manage datacube-ows range tables.
 
     A valid invocation should specify at most one of '--product', '--multiproduct' or '--schema'.
@@ -21,12 +23,15 @@ def main(product, multiproduct, merge_only, calculate_extent, schema):
     elif schema and (product or multiproduct):
         print("Sorry, cannot update the schema and ranges in the same invocation.")
         return 1
+    elif schema and not role:
+        print("Sorry, cannot update schema without specifying a role")
+        return 1
 
     dc = Datacube(app="wms_update_ranges")
     if schema:
         print("Checking schema....")
         print("Creating or replacing WMS database schema...")
-        create_schema(dc)
+        create_schema(dc, role)
         print("Done")
     elif not calculate_extent:
         if product:
@@ -71,7 +76,7 @@ def main(product, multiproduct, merge_only, calculate_extent, schema):
     return 0
 
 
-def create_schema(dc):
+def create_schema(dc, role):
     commands = [
         ("Creating/replacing wms schema", "create schema if not exists wms"),
 
@@ -110,8 +115,6 @@ def create_schema(dc):
                 dates jsonb not null,
                 bboxes jsonb not null)
         """),
-        ("Granting schema permissions", "grant USAGE on schema wms to cube"),
-
         # Functions
         ("Creating/replacing wms_get_min() function", """
             CREATE OR REPLACE FUNCTION wms_get_min(integer[], text) RETURNS numeric AS $$
@@ -155,6 +158,14 @@ def create_schema(dc):
     for msg, sql in commands:
         print(msg)
         conn.execute(sql)
+
+    # Add user based on param
+    # use psycopg2 directly to get proper psql
+    # quoting on the role name identifier
+    print("Granting usage on schema")
+    q = SQL("GRANT USAGE ON SCHEMA wms TO {}").format(Identifier(role))
+    with conn.connection.cursor() as psycopg2connection:
+        psycopg2connection.execute(q)
     conn.close()
 
     return
