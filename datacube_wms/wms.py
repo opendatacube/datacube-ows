@@ -18,7 +18,7 @@ import os
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
 tracer = None
-if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", False)):
+if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", "False")):
     tracer = tracer_module.Tracer(exporter=get_jaeger_exporter())
 
 @log_call

@@ -23,6 +23,9 @@ ADD . .
 RUN pip3 install -r requirements.txt \
     && rm -rf $HOME/.cache/pip
 
+RUN pip3 install -r requirements-opencensus.txt \
+    && rm -rf $HOME/.cache/pip
+
 RUN pip3 install git+https://github.com/opendatacube/dea-proto.git@2da959d3747e4bb0db8025407220bb2589bbee10 \
     && rm -rf $HOME/.cache/pip
 

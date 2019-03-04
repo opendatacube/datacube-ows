@@ -18,4 +18,3 @@ pytest-mock
 requests
 watchdog
 aiohttp
-thrift

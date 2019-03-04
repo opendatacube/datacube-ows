@@ -28,7 +28,7 @@ app = Flask(__name__.split('.')[0])
 RequestID(app)
 
 tracer = None
-if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", False)):
+if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", "False")):
     from opencensus.trace import tracer as tracer_module
     from opencensus.trace import config_integration
     from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
