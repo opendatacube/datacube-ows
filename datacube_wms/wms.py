@@ -10,14 +10,16 @@ from datacube_wms.ogc_exceptions import WMSException
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 from datacube_wms.legend_generator import legend_graphic
-from datacube_wms.utils import log_call
+from datacube_wms.utils import log_call, get_jaeger_exporter, opencensus_trace_call
 
 from opencensus.trace import tracer as tracer_module
+import os
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
-
-tracer = tracer_module.Tracer()
+tracer = None
+if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", False)):
+    tracer = tracer_module.Tracer(exporter=get_jaeger_exporter())
 
 @log_call
 def handle_wms(nocase_args):
@@ -26,17 +28,13 @@ def handle_wms(nocase_args):
     if not operation:
         raise WMSException("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":
-        with tracer.span(name="get_capabilities"):
-            return get_capabilities(nocase_args)
+        return get_capabilities(nocase_args)
     elif operation == "GETMAP":
-        with tracer.span(name="get_map"):
-            return get_map(nocase_args)
+        return get_map(nocase_args)
     elif operation == "GETFEATUREINFO":
-        with tracer.span(name="feature_info"):
-            return feature_info(nocase_args)
+        return feature_info(nocase_args)
     elif operation == "GETLEGENDGRAPHIC":
-        with tracer.span(name="legend_graphic"):
-            response = legend_graphic(nocase_args)
+        response = legend_graphic(nocase_args)
         if response is None:
             raise WMSException("Operation GetLegendGraphic not supported for this product and style",
                                WMSException.OPERATION_NOT_SUPPORTED,
@@ -49,6 +47,7 @@ def handle_wms(nocase_args):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary

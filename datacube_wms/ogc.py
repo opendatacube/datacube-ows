@@ -14,6 +14,7 @@ from datacube_wms.wms import handle_wms, WMS_REQUESTS
 from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
 from datacube_wms.wmts import handle_wmts
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
+from datacube_wms.utils import opencensus_trace_call, get_jaeger_exporter
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
@@ -21,19 +22,21 @@ from .rasterio_env import rio_env
 
 import logging
 
-from opencensus.trace import tracer as tracer_module
-from opencensus.trace import config_integration
-from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
-
-integration = ['sqlalchemy']
-
-config_integration.trace_integrations(integration)
-
 # pylint: disable=invalid-name, broad-except
 
 app = Flask(__name__.split('.')[0])
 RequestID(app)
-middleware = FlaskMiddleware(app)
+
+tracer = None
+if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", False)):
+    from opencensus.trace import tracer as tracer_module
+    from opencensus.trace import config_integration
+    from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
+    jaegerExporter = get_jaeger_exporter()
+    tracer = tracer_module.Tracer(exporter=jaegerExporter)
+    integration = ['sqlalchemy']
+    config_integration.trace_integrations(integration, tracer=tracer)
+    middleware = FlaskMiddleware(app, exporter=jaegerExporter)    
 
 
 handler = logging.StreamHandler()
@@ -118,8 +121,6 @@ def lower_get_args():
             d[kl] = v
     return d
 
-tracer = tracer_module.Tracer()
-
 @app.route('/')
 def ogc_impl():
     #pylint: disable=too-many-branches
@@ -129,7 +130,6 @@ def ogc_impl():
     if service:
         return ogc_svc_impl(service.lower())
 
-    svc_cfg = get_service_cfg()
     # create dummy env if not exists
     try:
         with rio_env():
@@ -156,39 +156,39 @@ def ogc_impl():
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
+@opencensus_trace_call(tracer=tracer)
 def ogc_svc_impl(svc):
-    with tracer.span(name=svc):
-        svc_support = OWS_SUPPORTED[svc]
-        nocase_args = lower_get_args()
-        nocase_args = capture_headers(request, nocase_args)
-        service = nocase_args.get("service", svc).upper()
+    svc_support = OWS_SUPPORTED[svc]
+    nocase_args = lower_get_args()
+    nocase_args = capture_headers(request, nocase_args)
+    service = nocase_args.get("service", svc).upper()
 
-        # Is service activated in config?
-        try:
-            if not svc_support.activated():
-                raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
+    # Is service activated in config?
+    try:
+        if not svc_support.activated():
+            raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
 
-            # Does service match path (if supplied)
-            if service != svc_support.service_upper:
-                raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
+        # Does service match path (if supplied)
+        if service != svc_support.service_upper:
+            raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
 
-            version = nocase_args.get("version")
-            if not version:
-                raise svc_support.default_exception_class("No protocol version supplied", locator="Version parameter")
-            version_support = svc_support.negotiated_version(version)
-        except OGCException as e:
-            return e.exception_response()
+        version = nocase_args.get("version")
+        if not version:
+            raise svc_support.default_exception_class("No protocol version supplied", locator="Version parameter")
+        version_support = svc_support.negotiated_version(version)
+    except OGCException as e:
+        return e.exception_response()
 
-        try:
-            # create dummy env if not exists
-            with rio_env():
-                return version_support.router(nocase_args)
-        except OGCException as e:
-            return e.exception_response()
-        except Exception as e:
-            tb = sys.exc_info()[2]
-            ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
-            return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+    try:
+        # create dummy env if not exists
+        with rio_env():
+            return version_support.router(nocase_args)
+    except OGCException as e:
+        return e.exception_response()
+    except Exception as e:
+        tb = sys.exc_info()[2]
+        ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
+        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
 @app.route('/wms')
