@@ -14,10 +14,9 @@ from datacube_wms.wms import handle_wms, WMS_REQUESTS
 from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
 from datacube_wms.wmts import handle_wmts
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
+from datacube_wms.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
-
-from datacube_wms.utils import time_call
 
 from .rasterio_env import rio_env
 
@@ -27,6 +26,17 @@ import logging
 
 app = Flask(__name__.split('.')[0])
 RequestID(app)
+
+tracer = None
+if opencensus_tracing_enabled():
+    from opencensus.trace import config_integration
+    from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
+    tracer = get_opencensus_tracer()
+    integration = ['sqlalchemy']
+    config_integration.trace_integrations(integration, tracer=tracer)
+    jaegerExporter = get_jaeger_exporter()
+    middleware = FlaskMiddleware(app, exporter=jaegerExporter)    
+
 
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
@@ -110,7 +120,6 @@ def lower_get_args():
             d[kl] = v
     return d
 
-
 @app.route('/')
 def ogc_impl():
     #pylint: disable=too-many-branches
@@ -120,7 +129,6 @@ def ogc_impl():
     if service:
         return ogc_svc_impl(service.lower())
 
-    svc_cfg = get_service_cfg()
     # create dummy env if not exists
     try:
         with rio_env():
@@ -147,6 +155,7 @@ def ogc_impl():
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
+@opencensus_trace_call(tracer=tracer)
 def ogc_svc_impl(svc):
     svc_support = OWS_SUPPORTED[svc]
     nocase_args = lower_get_args()

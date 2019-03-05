@@ -4,6 +4,7 @@ from functools import wraps
 
 import logging
 from time import monotonic
+import os
 
 def log_call(func):
     @wraps(func)
@@ -23,3 +24,61 @@ def time_call(func):
         _LOG.debug("%s took: %d ms", func.__name__, int((stop - start) * 1000))
         return result
     return timing_wrapper
+
+def opencensus_tracing_enabled():
+    return os.getenv("OPENCENSUS_TRACING_ENABLED", "false").lower() == "true"
+
+
+def opencensus_trace_call(tracer=None, name=""):
+    def decorator(func):
+        @wraps(func)
+        def opencensus_wrapper(*args, **kwargs):
+            span_name = name if name else func.__name__
+            with tracer.span(name=span_name):
+                return func(*args, **kwargs)
+        if tracer is None:
+            return func
+        else:
+            return opencensus_wrapper
+
+    return decorator
+
+def get_jaeger_exporter():
+    from opencensus.trace.exporters.jaeger_exporter import JaegerExporter
+
+    if not opencensus_tracing_enabled():
+        return None
+
+    je = JaegerExporter(service_name=os.getenv("JAEGER_SERVICE_NAME", "OGC Web Services"),
+                        host_name=os.getenv("JAEGER_HOST_NAME"),
+                        port=os.getenv("JAEGER_PORT"),
+                        endpoint=os.getenv("JAEGER_ENDPOINT"),
+                        agent_host_name=os.getenv("JAEGER_HOST_NAME"),
+                        agent_port=os.getenv("JAEGER_PORT"),
+                        agent_endpoint=os.getenv("JAEGER_ENDPOINT"))
+    return je
+
+def get_opencensus_sampler():
+    from opencensus.trace.samplers import probability, always_on
+
+    sample_rate = int(os.getenv("OPENCENSUS_SAMPLE_RATE", "100"))
+
+    if not sample_rate < 100 and not sample_rate > 0:
+        return always_on.AlwaysOnSampler
+    else:
+        return probability.ProbabilitySampler(rate=(sample_rate / 100.0))
+
+
+def get_opencensus_tracer():
+    if not opencensus_tracing_enabled():
+        return None
+
+    from opencensus.trace import tracer as tracer_module
+    jaegerExporter = get_jaeger_exporter()
+    sampler = get_opencensus_sampler()
+    tracer = tracer_module.Tracer(exporter=jaegerExporter, sampler=sampler)
+
+    return tracer
+
+
+
