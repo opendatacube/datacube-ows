@@ -10,16 +10,11 @@ from datacube_wms.ogc_exceptions import WMSException
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 from datacube_wms.legend_generator import legend_graphic
-from datacube_wms.utils import log_call, get_jaeger_exporter, opencensus_trace_call
-
-from opencensus.trace import tracer as tracer_module
-import os
+from datacube_wms.utils import log_call, get_opencensus_tracer, opencensus_trace_call
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
-tracer = None
-if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", "False")):
-    tracer = tracer_module.Tracer(exporter=get_jaeger_exporter())
+tracer = get_opencensus_tracer()
 
 @log_call
 def handle_wms(nocase_args):

@@ -14,7 +14,7 @@ from datacube_wms.wms import handle_wms, WMS_REQUESTS
 from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
 from datacube_wms.wmts import handle_wmts
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
-from datacube_wms.utils import opencensus_trace_call, get_jaeger_exporter
+from datacube_wms.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
@@ -28,14 +28,13 @@ app = Flask(__name__.split('.')[0])
 RequestID(app)
 
 tracer = None
-if bool(os.getenv("OPENCENSUS_TRACING_ENABLED", "False")):
-    from opencensus.trace import tracer as tracer_module
+if opencensus_tracing_enabled():
     from opencensus.trace import config_integration
     from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
-    jaegerExporter = get_jaeger_exporter()
-    tracer = tracer_module.Tracer(exporter=jaegerExporter)
+    tracer = get_opencensus_tracer()
     integration = ['sqlalchemy']
     config_integration.trace_integrations(integration, tracer=tracer)
+    jaegerExporter = get_jaeger_exporter()
     middleware = FlaskMiddleware(app, exporter=jaegerExporter)    
 
 
