@@ -122,9 +122,9 @@ class ProductLayerDef(object):
         self.ranges = get_ranges(dc, self)
         if self.ranges is None:
             if self.multi_product:
-                print(f"Warning: Ranges for multi-product {self.name} not yet in database")
+                raise ProductLayerException(f"Warning: Ranges for multi-product {self.name} not yet in database")
             else:
-                print(f"Warning: Ranges for product {self.product_name} not yet in database")
+                raise ProductLayerException(f"Could not find ranges for {self.product_name} in database")
         # TODO: subranges not supported with multi-product
         self.sub_ranges = get_sub_ranges(dc, self)
         # TODO separate PQ dataset not supported with multi-product
@@ -149,6 +149,8 @@ class ProductLayerDef(object):
         self.sub_product_label = product_cfg.get("sub_product_label", None)
         if self.pq_name:
             self.pq_product = dc.index.products.get_by_name(self.pq_name)
+            if self.pq_product is None:
+                raise ProductLayerException(f"Could not find pq_product {self.pq_name} for {self.product_name} in database")
             self.info_mask = ~0
             fd = self.pq_product.measurements[self.pq_band]["flags_definition"]
             for bitname in self.ignore_flags_info:
