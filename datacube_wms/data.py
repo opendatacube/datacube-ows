@@ -37,12 +37,17 @@ from collections import OrderedDict
 
 from dea.geom import read_with_reproject
 
+from datacube_wms.utils import get_opencensus_tracer, opencensus_trace_call
+
 _LOG = logging.getLogger(__name__)
+
+tracer = get_opencensus_tracer()
 
 def _make_destination(shape, no_data, dtype):
     return numpy.full(shape, no_data, dtype)
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def _read_file(source, geobox, band, no_data, resampling):
     # Read our data
     with rio.DatasetReader(rio.path.parse_path(source.filename), sharing=False) as src:
@@ -55,6 +60,7 @@ def _read_file(source, geobox, band, no_data, resampling):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
     """ Gets the measurement array of a band of data
     """
@@ -85,6 +91,7 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
 # Do not use this function to load data where accuracy is important
 # may have errors when reprojecting the data
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
     # pylint: disable=too-many-locals, dict-keys-not-iterating, protected-access
     if not hasattr(datasets, "__iter__"):
@@ -144,6 +151,7 @@ class DataStacker():
         return compare_geometry.contains(point)
 
     @log_call
+    @opencensus_trace_call(tracer=tracer)
     def datasets(self, index, mask=False, all_time=False, point=None):
         # No PQ product, so no PQ datasets.
         if not self._product.pq_name and mask:
@@ -187,6 +195,7 @@ class DataStacker():
         return datasets
 
     @log_call
+    @opencensus_trace_call(tracer=tracer)
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
         # pylint: disable=too-many-locals, consider-using-enumerate
         if mask:
@@ -218,6 +227,7 @@ class DataStacker():
                 return data
 
     @log_call
+    @opencensus_trace_call(tracer=tracer)
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
@@ -256,6 +266,7 @@ def bbox_to_geom(bbox, crs):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
@@ -335,6 +346,7 @@ def get_map(args):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def _write_png(data, pq_data, style, extent_mask):
     width = data[data.crs.dimensions[1]].size
     height = data[data.crs.dimensions[0]].size
@@ -356,6 +368,7 @@ def _write_png(data, pq_data, style, extent_mask):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def _write_empty(geobox):
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -370,6 +383,7 @@ def _write_empty(geobox):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
@@ -402,6 +416,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def get_s3_browser_uris(datasets):
     uris = [d.uris for d in datasets]
     uris = list(chain.from_iterable(uris))
@@ -426,6 +441,7 @@ def get_s3_browser_uris(datasets):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def _make_band_dict(prod_cfg, pixel_dataset, band_list):
     band_dict = {}
     for band in band_list:
@@ -446,6 +462,7 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def _make_derived_band_dict(pixel_dataset, style_index):
     """Creates a dict of values for bands derived by styles.
     This only works for styles with an `index_function` defined.
@@ -475,6 +492,7 @@ def geobox_is_point(geobox):
 
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def feature_info(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters

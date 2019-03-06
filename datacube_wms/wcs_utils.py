@@ -18,10 +18,13 @@ from datacube_wms.data import DataStacker
 from datacube_wms.ogc_exceptions import WCS1Exception
 from datacube_wms.ogc_utils import ProductLayerException
 from datacube_wms.wms_layers import get_layers, get_service_cfg
+from datacube_wms.utils import log_call, opencensus_trace_call, get_opencensus_tracer
 
+tracer = get_opencensus_tracer()
 
 class WCS1GetCoverageRequest():
     #pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
+    @opencensus_trace_call(tracer=tracer)
     def __init__(self, args):
         self.args = args
         layers = get_layers()
@@ -273,6 +276,7 @@ class WCS1GetCoverageRequest():
         self.affine = trans_aff * scale_aff
         self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.request_crs)
 
+@opencensus_trace_call(tracer=tracer)
 def get_coverage_data(req):
     #pylint: disable=too-many-locals, protected-access
     dc = get_cube()
@@ -357,7 +361,7 @@ def get_coverage_data(req):
     release_cube(dc)
     return output
 
-
+@opencensus_trace_call(tracer=tracer)
 def get_tiff(req, data):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Copied from CEOS.  Does not seem to support multi-time dimension data - is this even possible in GeoTiff?
@@ -408,6 +412,7 @@ def get_tiff(req, data):
         return memfile.read()
 
 
+@opencensus_trace_call(tracer=tracer)
 def get_netcdf(req, data):
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid # geometry.CRS(response_crs)

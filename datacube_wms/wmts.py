@@ -9,12 +9,15 @@ from datacube_wms.ogc_exceptions import WMSException, WMTSException
 
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
-from datacube_wms.utils import log_call
+from datacube_wms.utils import log_call, opencensus_trace_call, get_opencensus_tracer
+
+tracer = get_opencensus_tracer()
 
 # NB. No need to disambiguate method names shared with WMS because WMTS requires
 # a "SERVICE" parameter with every request.
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def handle_wmts(nocase_args):
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
@@ -54,6 +57,7 @@ WebMercScaleSet = [
 ]
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.0.0 exists at this stage, so no version negotiation is necessary
@@ -118,6 +122,7 @@ def get_capabilities(args):
     )
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def wmts_args_to_wms(args):
     layer = args.get("layer")
     style = args.get("style")
@@ -185,6 +190,7 @@ def wmts_args_to_wms(args):
     return wms_args
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def get_tile(args):
     wms_args = wmts_args_to_wms(args)
 
@@ -201,6 +207,7 @@ def get_tile(args):
         raise e
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def get_feature_info(args):
     wms_args = wmts_args_to_wms(args)
     wms_args["query_layers"] = wms_args["layers"]

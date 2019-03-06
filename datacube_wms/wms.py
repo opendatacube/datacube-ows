@@ -17,6 +17,7 @@ WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 tracer = get_opencensus_tracer()
 
 @log_call
+@opencensus_trace_call(tracer=tracer)
 def handle_wms(nocase_args):
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
