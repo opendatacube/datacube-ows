@@ -55,18 +55,18 @@ def get_jaeger_exporter():
 
     hostname = os.getenv("JAEGER_HOSTNAME")
     if hostname is not None:
-        opts["host_name"] = hostname
+        # opts["host_name"] = hostname
         opts["agent_host_name"] = hostname
 
     port = os.getenv("JAEGER_PORT")
     if port is not None:
         port = int(port)
-        opts["port"] = port
+        # opts["port"] = port
         opts["agent_port"] = port
 
     endpoint = os.getenv("JAEGER_ENDPOINT")
     if endpoint is not None:
-        opts["endpoint"] = endpoint
+        # opts["endpoint"] = endpoint
         opts["agent_endpoint"] = endpoint
 
     return JaegerExporter(**opts)
