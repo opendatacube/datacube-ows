@@ -49,14 +49,27 @@ def get_jaeger_exporter():
     if not opencensus_tracing_enabled():
         return None
 
-    je = JaegerExporter(service_name=os.getenv("JAEGER_SERVICE_NAME", "OGC Web Services"),
-                        host_name=os.getenv("JAEGER_HOST_NAME"),
-                        port=os.getenv("JAEGER_PORT"),
-                        endpoint=os.getenv("JAEGER_ENDPOINT"),
-                        agent_host_name=os.getenv("JAEGER_HOST_NAME"),
-                        agent_port=os.getenv("JAEGER_PORT"),
-                        agent_endpoint=os.getenv("JAEGER_ENDPOINT"))
-    return je
+    opts = {
+        "service_name": os.getenv("JAEGER_SERVICE_NAME", "OGC Web Services")
+    }
+
+    hostname = os.getenv("JAEGER_HOSTNAME")
+    if hostname is not None:
+        opts["host_name"] = hostname
+        opts["agent_host_name"] = hostname
+
+    port = os.getenv("JAEGER_PORT")
+    if port is not None:
+        port = int(port)
+        opts["port"] = port
+        opts["agent_port"] = port
+
+    endpoint = os.getenv("JAEGER_ENDPOINT")
+    if endpoint is not None:
+        opts["endpoint"] = endpoint
+        opts["agent_endpoint"] = endpoint
+
+    return JaegerExporter(**opts)
 
 def get_opencensus_sampler():
     from opencensus.trace.samplers import probability, always_on
