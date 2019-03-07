@@ -35,6 +35,12 @@ def opencensus_trace_call(tracer=None, name=""):
         def opencensus_wrapper(*args, **kwargs):
             span_name = name if name else func.__name__
             with tracer.span(name=span_name):
+                tracer.add_attribute_to_current_span(
+                    "{}.args".format(span_name),
+                    str(args))
+                tracer.add_attribute_to_current_span(
+                    "{}.kwargs".format(span_name),
+                    str(kwargs))
                 return func(*args, **kwargs)
         if tracer is None:
             return func
