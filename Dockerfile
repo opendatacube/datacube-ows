@@ -20,13 +20,17 @@ WORKDIR /code
 
 ADD . .
 
+RUN pip3 install --upgrade pip \
+    && rm -rf $HOME/.cache/pip
+
 RUN pip3 install -r requirements.txt \
     && rm -rf $HOME/.cache/pip
 
 RUN pip3 install -r requirements-opencensus.txt \
     && rm -rf $HOME/.cache/pip
 
-RUN python3 setup.py install
+RUN pip3 install . \
+  && rm -rf $HOME/.cache/pip
 
 COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
 COPY docker/get_wms_config.sh /usr/local/bin/get_wms_config.sh
