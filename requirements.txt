@@ -17,4 +17,3 @@ pytest-localserver
 pytest-mock
 requests
 watchdog
-aiohttp
