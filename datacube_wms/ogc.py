@@ -30,7 +30,7 @@ RequestID(app)
 tracer = None
 if opencensus_tracing_enabled():
     from opencensus.trace import config_integration
-    from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
+    from opencensus.ext.flask.flask_middleware import FlaskMiddleware
     tracer = get_opencensus_tracer()
     integration = ['sqlalchemy']
     config_integration.trace_integrations(integration, tracer=tracer)

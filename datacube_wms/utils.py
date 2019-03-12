@@ -50,7 +50,7 @@ def opencensus_trace_call(tracer=None, name=""):
     return decorator
 
 def get_jaeger_exporter():
-    from opencensus.trace.exporters.jaeger_exporter import JaegerExporter
+    from opencensus.ext.jaeger import trace_exporter
 
     if not opencensus_tracing_enabled():
         return None
@@ -75,7 +75,7 @@ def get_jaeger_exporter():
         # opts["endpoint"] = endpoint
         opts["agent_endpoint"] = endpoint
 
-    return JaegerExporter(**opts)
+    return trace_exporter(**opts)
 
 def get_opencensus_sampler():
     from opencensus.trace.samplers import probability, always_on
