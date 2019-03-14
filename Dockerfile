@@ -26,8 +26,8 @@ RUN pip3 install --upgrade pip \
 RUN pip3 install -r requirements.txt \
     && rm -rf $HOME/.cache/pip
 
-RUN pip3 install -r requirements-opencensus.txt \
-    && rm -rf $HOME/.cache/pip
+# RUN pip3 install -r requirements-opencensus.txt \
+#     && rm -rf $HOME/.cache/pip
 
 RUN pip3 install . \
   && rm -rf $HOME/.cache/pip
