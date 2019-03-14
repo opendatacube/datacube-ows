@@ -148,7 +148,7 @@ def wmts_args_to_wms(args):
         "requestid": args["requestid"]
     }
 
-    if tileMatrixSet != "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible":
+    if tileMatrixSet not in ("urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible", "WholeWorld_WebMercator"):
         raise WMTSException("Invalid Tile Matrix Set: " + tileMatrixSet)
 
     try:
