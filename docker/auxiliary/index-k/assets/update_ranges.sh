@@ -8,13 +8,15 @@
 #        -s suffix for search (optional). If multiple use space separated list enclosed in quotes
 #                                         If multiple must be same length as prefix list,
 #                                         if only one provided, suffix will be applied to ALL prefixes
-#        -y UNSAFE: If set script will use unsafe YAML reading. Only set if you fully trust source
+#        -y skip check for full depth to scan the path in S3
 #        -d product to update in database (optional)
+#        -l Set if to ignore lineage
+#
 # e.g. ./update_ranges -b dea-public-data -p "L2/sentinel-2-nrt/S2MSIARD/2018 L2/sentinel-2-nrt/2017"
 
 usage() { echo "Usage: $0 -p <prefix> -b <bucket> [-s <suffix>] [-y UNSAFE]" 1>&2; exit 1; }
 
-while getopts ":p:b:s:y:d:" o; do
+while getopts ":p:b:s:y:d:l:" o; do
     case "${o}" in
         p)
             prefix=${OPTARG}
@@ -31,6 +33,9 @@ while getopts ":p:b:s:y:d:" o; do
         d)
             product=${OPTARG}
             ;;
+        l)
+            lineage=${OPTARG}
+            ;;
     esac
 done
 shift $((OPTIND-1))
@@ -45,18 +50,25 @@ IFS=' ' read -r -a products <<< "$product"
 first_suffix="${suffixes[0]}"
 safety_arg=""
 
-if [ "$safety" == "UNSAFE" ]
+if [ "$safety" == "SAFE" ]
 then
-    safety_arg="--unsafe"
+    safety_arg="--skip-check"
 fi
 
 # index new datasets
 # prepare script will add new records to the database
 for i in "${!prefixes[@]}"
 do
-    s3-find "s3://${b}/${prefixes[$i]}" | \
-    s3-to-tar | \
-    dc-index-from-tar
+    if [ -z "$lineage" ]
+    then
+        s3-find $safety_arg "s3://${b}/${prefixes[$i]}" | \
+        s3-to-tar | \
+        dc-index-from-tar
+    else
+        s3-find $safety_arg "s3://${b}/${prefixes[$i]}" | \
+        s3-to-tar | \
+        dc-index-from-tar --ignore-lineage
+    fi
 done
 
 # update ranges in wms database
