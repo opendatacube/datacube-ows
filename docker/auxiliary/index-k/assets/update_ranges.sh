@@ -56,7 +56,7 @@ for i in "${!prefixes[@]}"
 do
     s3-find "s3://${b}/${prefixes[$i]}" | \
     s3-to-tar | \
-    dc-index-from-tar --env ows
+    dc-index-from-tar
 done
 
 # update ranges in wms database
