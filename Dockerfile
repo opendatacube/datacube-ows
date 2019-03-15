@@ -28,6 +28,15 @@ RUN pip3 install -r requirements.txt \
     
 RUN pip3 install git+https://github.com/opendatacube/dea-proto.git@02b531d3cba9dad3bcccce44e90628bf69fef5b4 \
     && rm -rf $HOME/.cache/pip
+    
+RUN pip install -U 'aiobotocore[awscli,boto3]' \
+    && rm -rf $HOME/.cache/pip
+    
+RUN pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=odc_apps_cloud&subdirectory=apps/cloud' \
+    && rm -rf $HOME/.cache/pip
+
+RUN pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=odc_apps_dc_tools&subdirectory=apps/dc_tools'  \
+    && rm -rf $HOME/.cache/pip
 
 # RUN pip3 install -r requirements-opencensus.txt \
 #     && rm -rf $HOME/.cache/pip
