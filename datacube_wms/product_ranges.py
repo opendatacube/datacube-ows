@@ -697,7 +697,7 @@ def create_range_entry(dc, product, crses):
   conn.execute("""
     UPDATE wms.product_ranges
     SET (lat_min,lat_max,lon_min,lon_max) =
-    (wms_get_min(%(p_idarr)s, 'lat'), wms_get_max(%(p_id)s, 'lat'), wms_get_min(%(p_id)s, 'lon'), wms_get_max(%(p_id)s, 'lon'))
+    (wms_get_min(%(p_idarr)s, 'lat'), wms_get_max(%(p_idarr)s, 'lat'), wms_get_min(%(p_idarr)s, 'lon'), wms_get_max(%(p_idarr)s, 'lon'))
     WHERE id=%(p_id)s
     """,
     {"p_id": prodid, "p_idarr": [ prodid ]})
