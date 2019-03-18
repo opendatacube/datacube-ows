@@ -122,9 +122,9 @@ class ProductLayerDef(object):
         self.ranges = get_ranges(dc, self)
         if self.ranges is None:
             if self.multi_product:
-                raise ProductLayerException(f"Warning: Ranges for multi-product {self.name} not yet in database")
+                print(f"Warning: Ranges for multi-product {self.name} not yet in database")
             else:
-                raise ProductLayerException(f"Could not find ranges for {self.product_name} in database")
+                print(f"Could not find ranges for {self.product_name} in database")
         # TODO: subranges not supported with multi-product
         self.sub_ranges = get_sub_ranges(dc, self)
         # TODO separate PQ dataset not supported with multi-product
@@ -209,7 +209,7 @@ class ProductLayerDef(object):
                 self.origin_y = data.affine[5]
                 self.resolution_x = data.affine[0]
                 self.resolution_y = data.affine[4]
-            elif not svc_cfg.dummy_grid and self.native_CRS:
+            elif not svc_cfg.dummy_grid and self.native_CRS and self.ranges is not None:
                 native_bounding_box = self.bboxes[self.native_CRS]
                 self.origin_x = native_bounding_box["left"]
                 self.origin_y = native_bounding_box["bottom"]
@@ -226,6 +226,8 @@ class ProductLayerDef(object):
 
     @property
     def bboxes(self):
+        if self.ranges is None:
+            return dict()
         return {
             crs_id: {"right": bbox["bottom"],
                      "left": bbox["top"],

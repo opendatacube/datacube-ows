@@ -120,147 +120,150 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
         <CRS>{{ crs }}</CRS>
         {% endfor %}
         {% for platform in platforms %}
-        {% if platform.products %}
+        {% for product in platform.products %}
+        {% if product.ranges %}
+        {% set iterated = false %}
+        {% if not iterated %}
         <Layer>
             <Title>{{ platform.title }}</Title>
             <Abstract>{{ platform.abstract }}</Abstract>
-
-            {% for product in platform.products %}
-                {% if product.sub_ranges %}
-                    <Layer>
-                        <Title>{{ product.title }}</Title>
-                        <Abstract>{{ product.definition.description }}</Abstract>
-                {% endif %}
-                <Layer queryable="1">
-                    <Name>{{ product.name }}</Name>
+        {% endif %}
+        {% set iterated = true %}
+            {% if product.sub_ranges %}
+                <Layer>
                     <Title>{{ product.title }}</Title>
-                    <Abstract>{{ product.abstract }}</Abstract>
-                    <KeywordList>
-                        <Keyword>Australia</Keyword>
-                        {% if product.definition.metadata.platform %}
-                        <Keyword>{{ product.definition.metadata.platform.code }}</Keyword>
-                        {% endif %}
-                        {% if product.definition.metadata.instrument %}
-                        <Keyword>{{ product.definition.metadata.instrument.name }}</Keyword>
-                        {% endif %}
-                        <Keyword>{{ product.product_label }}</Keyword>
-                        <Keyword>{{ product.product_type }}</Keyword>
-                        {% if product.product_variant %}<Keyword>{{ product.product_variant }}</Keyword>{% endif %}
-                    </KeywordList>
-                    <EX_GeographicBoundingBox>
-                        <westBoundLongitude>{{ product.ranges.lon.min }}</westBoundLongitude>
-                        <eastBoundLongitude>{{ product.ranges.lon.max }}</eastBoundLongitude>
-                        <southBoundLatitude>{{ product.ranges.lat.min }}</southBoundLatitude>
-                        <northBoundLatitude>{{ product.ranges.lat.max }}</northBoundLatitude>
-                    </EX_GeographicBoundingBox>
-                    {% for crsid, bbox in product.bboxes.items() %}
-                    <BoundingBox CRS="{{ crsid }}"
-                            {% if bbox.left < bbox.right %}
-                            minx="{{ bbox.left }}" maxx="{{ bbox.right }}"
-                            {% else %}
-                            minx="{{ bbox.right }}" maxx="{{ bbox.left }}"
-                            {% endif %}
-                            {% if bbox.bottom < bbox.top %}
-                            miny="{{ bbox.bottom }}" maxy="{{ bbox.top }}"
-                            {% else %}
-                            miny="{{ bbox.top }}" maxy="{{ bbox.bottom }}"
-                            {% endif %}
-                    />
-                    {% endfor %}
-                    <Dimension name="time" units="ISO8601">
-                        {% for t in product.ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
-                    </Dimension>
-                    {% for style in product.styles %}
-                        <Style>
-                            <Name>{{ style.name }}</Name>
-                            <Title>{{ style.title }}</Title>
-                            <Abstract>{{ style.abstract }}</Abstract>
-                            {% if product.legend and style.name in product.legend %}
-                            <LegendURL>
-                                <Format>image/png</Format>
-                                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                xlink:type="simple"
-                                                xlink:href="{{ base_url }}/legend/{{ product.name }}/{{ style.name }}/legend.png"/>
-                            </LegendURL>
-                            {% endif %}
-                        </Style>
-                    {% endfor %}
-                    <!-- TODO: Populate from config (but OK to ignore for now)
-                    <Attribution/>
-                    <AuthorityURL/>
-                    <Identifier/>
-                    <DataURL/>
-                    <FeatureListURL/>
-                    -->
-                </Layer>
-                {% if product.sub_ranges %}
-                    <Layer>
-                        <Title>Individual {% if product.sub_product_label %}{{ product.sub_product_label }}{% else %}Swath{% endif %} Sub-Layers</Title>
-                {% endif %}
-                    {% for path, subr in product.sub_ranges.items() %}
-                        <Layer queryable="1">
-                            <Name>{{ product.name }}__{{ path }}</Name>
-                            <Title>{{ product.title }} - {% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}</Title>
-                            <Abstract>{% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}
-                                    {{ product.definition.description }}
-                            </Abstract>
-                            <KeywordList>
-                                <Keyword>Australia</Keyword>
-                                <Keyword>Landsat</Keyword>
-                                <Keyword>{{ product.definition.metadata.platform.code }}</Keyword>
-                                <Keyword>{{ product.definition.metadata.instrument.name }}</Keyword>
-                                <Keyword>{{ product.product_label }}</Keyword>
-                                <Keyword>{{ product.product_type }}</Keyword>
-                                <Keyword>{% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}</Keyword>
-                                {% if product.product_variant %}<Keyword>{{ product.product_variant }}</Keyword>{% endif %}
-                            </KeywordList>
-                            <EX_GeographicBoundingBox>
-                                <westBoundLongitude>{{ subr.lon.min }}</westBoundLongitude>
-                                <eastBoundLongitude>{{ subr.lon.max }}</eastBoundLongitude>
-                                <southBoundLatitude>{{ subr.lat.min }}</southBoundLatitude>
-                                <northBoundLatitude>{{ subr.lat.max }}</northBoundLatitude>
-                            </EX_GeographicBoundingBox>
-                            {% for crsid, bbox in subr.bboxes.items() %}
-                                <BoundingBox CRS="{{ crsid }}"
-                                    {% if bbox.left < bbox.right %}
-                                        minx="{{ bbox.left }}" maxx="{{ bbox.right }}"
-                                    {% else %}
-                                        minx="{{ bbox.right }}" maxx="{{ bbox.left }}"
-                                    {% endif %}
-                                    {% if bbox.bottom < bbox.top %}
-                                        miny="{{ bbox.bottom }}" maxy="{{ bbox.top }}"
-                                    {% else %}
-                                        miny="{{ bbox.top }}" maxy="{{ bbox.bottom }}"
-                                    {% endif %}
-                                />
-                            {% endfor %}
-                            <Dimension name="time" units="ISO8601">
-                                {% for t in subr.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
-                            </Dimension>
-                            {% for style in product.styles %}
-                                <Style>
-                                    <Name>{{ style.name }}</Name>
-                                    <Title>{{ style.title }}</Title>
-                                    <Abstract>{{ style.abstract }}</Abstract>
-                                    {% if product.legend and style.name in product.legend %}
-                                    <LegendURL>
-                                        <Format>image/png</Format>
-                                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                        xlink:type="simple"
-                                                        xlink:href="{{ base_url }}/legend/{{ product.name }}/{{ style.name }}/legend.png"/>
-                                    </LegendURL>
-                                    {% endif %}
-                                </Style>
-                            {% endfor %}
-                        </Layer>
-                    {% endfor %}
-                    {% if product.sub_ranges %}
-                        </Layer>
-                    </Layer>
+                    <Abstract>{{ product.definition.description }}</Abstract>
+            {% endif %}
+            <Layer queryable="1">
+                <Name>{{ product.name }}</Name>
+                <Title>{{ product.title }}</Title>
+                <Abstract>{{ product.abstract }}</Abstract>
+                <KeywordList>
+                    <Keyword>Australia</Keyword>
+                    {% if product.definition.metadata.platform %}
+                    <Keyword>{{ product.definition.metadata.platform.code }}</Keyword>
                     {% endif %}
-            {% endfor %}
+                    {% if product.definition.metadata.instrument %}
+                    <Keyword>{{ product.definition.metadata.instrument.name }}</Keyword>
+                    {% endif %}
+                    <Keyword>{{ product.product_label }}</Keyword>
+                    <Keyword>{{ product.product_type }}</Keyword>
+                    {% if product.product_variant %}<Keyword>{{ product.product_variant }}</Keyword>{% endif %}
+                </KeywordList>
+                <EX_GeographicBoundingBox>
+                    <westBoundLongitude>{{ product.ranges.lon.min }}</westBoundLongitude>
+                    <eastBoundLongitude>{{ product.ranges.lon.max }}</eastBoundLongitude>
+                    <southBoundLatitude>{{ product.ranges.lat.min }}</southBoundLatitude>
+                    <northBoundLatitude>{{ product.ranges.lat.max }}</northBoundLatitude>
+                </EX_GeographicBoundingBox>
+                {% for crsid, bbox in product.bboxes.items() %}
+                <BoundingBox CRS="{{ crsid }}"
+                        {% if bbox.left < bbox.right %}
+                        minx="{{ bbox.left }}" maxx="{{ bbox.right }}"
+                        {% else %}
+                        minx="{{ bbox.right }}" maxx="{{ bbox.left }}"
+                        {% endif %}
+                        {% if bbox.bottom < bbox.top %}
+                        miny="{{ bbox.bottom }}" maxy="{{ bbox.top }}"
+                        {% else %}
+                        miny="{{ bbox.top }}" maxy="{{ bbox.bottom }}"
+                        {% endif %}
+                />
+                {% endfor %}
+                <Dimension name="time" units="ISO8601">
+                    {% for t in product.ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
+                </Dimension>
+                {% for style in product.styles %}
+                    <Style>
+                        <Name>{{ style.name }}</Name>
+                        <Title>{{ style.title }}</Title>
+                        <Abstract>{{ style.abstract }}</Abstract>
+                        {% if product.legend and style.name in product.legend %}
+                        <LegendURL>
+                            <Format>image/png</Format>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                            xlink:type="simple"
+                                            xlink:href="{{ base_url }}/legend/{{ product.name }}/{{ style.name }}/legend.png"/>
+                        </LegendURL>
+                        {% endif %}
+                    </Style>
+                {% endfor %}
+                <!-- TODO: Populate from config (but OK to ignore for now)
+                <Attribution/>
+                <AuthorityURL/>
+                <Identifier/>
+                <DataURL/>
+                <FeatureListURL/>
+                -->
+            </Layer>
+            {% if product.sub_ranges %}
+                <Layer>
+                    <Title>Individual {% if product.sub_product_label %}{{ product.sub_product_label }}{% else %}Swath{% endif %} Sub-Layers</Title>
+            {% endif %}
+                {% for path, subr in product.sub_ranges.items() %}
+                    <Layer queryable="1">
+                        <Name>{{ product.name }}__{{ path }}</Name>
+                        <Title>{{ product.title }} - {% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}</Title>
+                        <Abstract>{% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}
+                                {{ product.definition.description }}
+                        </Abstract>
+                        <KeywordList>
+                            <Keyword>Australia</Keyword>
+                            <Keyword>Landsat</Keyword>
+                            <Keyword>{{ product.definition.metadata.platform.code }}</Keyword>
+                            <Keyword>{{ product.definition.metadata.instrument.name }}</Keyword>
+                            <Keyword>{{ product.product_label }}</Keyword>
+                            <Keyword>{{ product.product_type }}</Keyword>
+                            <Keyword>{% if product.sub_product_label %}{{ product.sub_product_label }} {% endif %}{{ path }}</Keyword>
+                            {% if product.product_variant %}<Keyword>{{ product.product_variant }}</Keyword>{% endif %}
+                        </KeywordList>
+                        <EX_GeographicBoundingBox>
+                            <westBoundLongitude>{{ subr.lon.min }}</westBoundLongitude>
+                            <eastBoundLongitude>{{ subr.lon.max }}</eastBoundLongitude>
+                            <southBoundLatitude>{{ subr.lat.min }}</southBoundLatitude>
+                            <northBoundLatitude>{{ subr.lat.max }}</northBoundLatitude>
+                        </EX_GeographicBoundingBox>
+                        {% for crsid, bbox in subr.bboxes.items() %}
+                            <BoundingBox CRS="{{ crsid }}"
+                                {% if bbox.left < bbox.right %}
+                                    minx="{{ bbox.left }}" maxx="{{ bbox.right }}"
+                                {% else %}
+                                    minx="{{ bbox.right }}" maxx="{{ bbox.left }}"
+                                {% endif %}
+                                {% if bbox.bottom < bbox.top %}
+                                    miny="{{ bbox.bottom }}" maxy="{{ bbox.top }}"
+                                {% else %}
+                                    miny="{{ bbox.top }}" maxy="{{ bbox.bottom }}"
+                                {% endif %}
+                            />
+                        {% endfor %}
+                        <Dimension name="time" units="ISO8601">
+                            {% for t in subr.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
+                        </Dimension>
+                        {% for style in product.styles %}
+                            <Style>
+                                <Name>{{ style.name }}</Name>
+                                <Title>{{ style.title }}</Title>
+                                <Abstract>{{ style.abstract }}</Abstract>
+                                {% if product.legend and style.name in product.legend %}
+                                <LegendURL>
+                                    <Format>image/png</Format>
+                                    <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                    xlink:type="simple"
+                                                    xlink:href="{{ base_url }}/legend/{{ product.name }}/{{ style.name }}/legend.png"/>
+                                </LegendURL>
+                                {% endif %}
+                            </Style>
+                        {% endfor %}
+                    </Layer>
+                {% endfor %}
+                {% if product.sub_ranges %}
+                    </Layer>
+                </Layer>
+                {% endif %}
         </Layer>
         {% endif %}
+        {% endfor %}
         {% endfor %}
     </Layer>
 </Capability>

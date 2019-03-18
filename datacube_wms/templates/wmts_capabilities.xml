@@ -125,6 +125,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
 {% if show_contents %}
     <Contents>
         {% for platform in platforms %}{% for product in platform.products %}
+        {% if product.ranges %}
         <Layer>
             <ows:Title>{{ product.title }}</ows:Title>
             <ows:Abstract>{{ product.abstract }}</ows:Abstract>
@@ -155,6 +156,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
                 <TileMatrixSet>WholeWorld_WebMercator</TileMatrixSet>
             </TileMatrixSetLink>
         </Layer>
+        {% endif %}
         {% endfor %}{% endfor %}
         <TileMatrixSet>
             <ows:Identifier>WholeWorld_WebMercator</ows:Identifier>
