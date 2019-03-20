@@ -793,7 +793,7 @@ def add_multiproduct_range(dc, product, follow_dependencies=True):
 
     if follow_dependencies:
         for product_name in product.product_names:
-            dc_prod = dc.index.products.get_by_name(product)
+            dc_prod = dc.index.products.get_by_name(product_name)
             add_product_range(dc, dc_prod)
             if not check_datasets_exist(dc, dc_prod):
                 print("Could not find any datasets for: ", product_name)
