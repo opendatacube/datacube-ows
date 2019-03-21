@@ -155,7 +155,7 @@ class ProductLayerDef(object):
             self.pq_names = product_cfg.get("pq_dataset")
         else:
             self.pq_names = [ product_cfg.get("pq_dataset") ]
-        self.pq_name = self.pq_names[0]
+        self.pq_name = self.pq_names[0] if self.pq_names is not None and len(self.pq_names) > 0 else None
         self.pq_band = product_cfg.get("pq_band")
 
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
@@ -177,11 +177,13 @@ class ProductLayerDef(object):
         self.sub_product_label = product_cfg.get("sub_product_label", None)
 
         self.pq_products = []
-        for pqn in self.pq_names:
-            pq_product = dc.index.products.get_by_name(pqn)
-            if pq_product is None:
-                raise ProductLayerException(f"Could not find pq_product {pqn} for {self.name} in database")
-            self.pq_products.append(pq_product)
+        if self.pq_names:
+            for pqn in self.pq_names:
+                if pqn is not None:
+                    pq_product = dc.index.products.get_by_name(pqn)
+                    if pq_product is None:
+                        raise ProductLayerException(f"Could not find pq_product {pqn} for {self.name} in database")
+                    self.pq_products.append(pq_product)
         self.info_mask = ~0
         if self.pq_products:
             self.pq_product = self.pq_products[0]
