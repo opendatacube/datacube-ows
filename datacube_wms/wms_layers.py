@@ -127,9 +127,13 @@ class ProductLayerDef(object):
                 print(f"Could not find ranges for {self.product_name} in database")
         # TODO: subranges not supported with multi-product
         self.sub_ranges = get_sub_ranges(dc, self)
-        # TODO separate PQ dataset not supported with multi-product
-        self.pq_name = product_cfg.get("pq_dataset")
+        if self.multi_product:
+            self.pq_names = product_cfg.get("pq_dataset")
+        else:
+            self.pq_names = [ product_cfg.get("pq_dataset") ]
+        self.pq_name = self.pq_names[0]
         self.pq_band = product_cfg.get("pq_band")
+
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
         self.max_datasets_wms = product_cfg.get("max_datasets_wms", 0)
         self.zoom_fill = product_cfg.get("zoomed_out_fill_colour", [150, 180, 200])
@@ -147,11 +151,16 @@ class ProductLayerDef(object):
         else:
             self.sub_product_extractor = None
         self.sub_product_label = product_cfg.get("sub_product_label", None)
-        if self.pq_name:
-            self.pq_product = dc.index.products.get_by_name(self.pq_name)
-            if self.pq_product is None:
-                raise ProductLayerException(f"Could not find pq_product {self.pq_name} for {self.product_name} in database")
-            self.info_mask = ~0
+
+        self.pq_products = []
+        for pqn in self.pq_names:
+            pq_product = dc.index.products.get_by_name(pqn)
+            if pq_product is None:
+                raise ProductLayerException(f"Could not find pq_product {pqn} for {self.name} in database")
+            self.pq_products.append(pq_product)
+        self.info_mask = ~0
+        if self.pq_products:
+            self.pq_product = self.pq_products[0]
             fd = self.pq_product.measurements[self.pq_band]["flags_definition"]
             for bitname in self.ignore_flags_info:
                 bit = fd[bitname]["bits"]
@@ -161,6 +170,7 @@ class ProductLayerDef(object):
                 self.info_mask &= ~flag
         else:
             self.pq_product = None
+
         self.legend = product_cfg.get("legend", None)
         self.styles = product_cfg["styles"]
         self.default_style = product_cfg["default_style"]
