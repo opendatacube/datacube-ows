@@ -131,7 +131,7 @@ class ProductLayerDef(object):
             self.pq_names = product_cfg.get("pq_dataset")
         else:
             self.pq_names = [ product_cfg.get("pq_dataset") ]
-        self.pq_name = self.pq_names[0]
+        self.pq_name = self.pq_names[0] if len(self.pq_names) > 0 else None
         self.pq_band = product_cfg.get("pq_band")
 
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
