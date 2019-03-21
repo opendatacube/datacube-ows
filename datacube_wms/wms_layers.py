@@ -153,11 +153,12 @@ class ProductLayerDef(object):
         self.sub_product_label = product_cfg.get("sub_product_label", None)
 
         self.pq_products = []
-        for pqn in self.pq_names:
-            pq_product = dc.index.products.get_by_name(pqn)
-            if pq_product is None:
-                raise ProductLayerException(f"Could not find pq_product {pqn} for {self.name} in database")
-            self.pq_products.append(pq_product)
+        if self.pq_names:
+            for pqn in self.pq_names:
+                pq_product = dc.index.products.get_by_name(pqn)
+                if pq_product is None:
+                    raise ProductLayerException(f"Could not find pq_product {pqn} for {self.name} in database")
+                self.pq_products.append(pq_product)
         self.info_mask = ~0
         if self.pq_products:
             self.pq_product = self.pq_products[0]
