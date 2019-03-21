@@ -158,7 +158,7 @@ class DataStacker():
             return []
 
         if self._product.multi_product:
-            prod_name = self._product.product_names
+            prod_name = self._product.pq_names if mask and self._product.pq_name else self._product.product_names
             query_args = {
                 "geopolygon": self._geobox.extent
             }

@@ -1,4 +1,5 @@
 import re
+
 # Static config for the wms metadata.
 # pylint: skip-file
 
@@ -1696,16 +1697,21 @@ layer_cfg = [
             # (i.e. pretty specialised for the Sentinel-2 use case.  Could in theory be used for something
             # like Landsat 7 and 8, but only if the Landsat-8-only coastal_aerosol band is excluded.)
             #
-            # The following functionality is not yet supported for multi-products: separate PQ products and
-            # path-number sub-layers.
+            # The following functionality is not yet supported for multi-products: path-number sub-layers.
             {
                 "label": "sentinel-2 (a and b) nrt (s3)",
                 "type": "surface reflectance",
                 "variant": "near real time",
                 "name": "sentinel2_nrt",
-                # Multi-product defaults to False
+                # Multi_product defaults to False
                 "multi_product": True,
-                # If multi-product is true, then supply a list of product names for product_name
+                # If multi_product is true, then supply a list of product names for product_name
+                #
+                # N.B. This example does not use a separate PQ product. For multi-products that do
+                # require a separate PQ product, the "pq_dataset" field should also be a list of datasets,
+                # of the same length as the product_name list, with each PQ dataset in the position
+                # corresponding to the related product_name.  Other PQ related config items remain
+                # as described above, and are assumed to be the same for all listed PQ datasets.
                 "product_name": ["s2a_nrt_granule", "s2b_nrt_granule"],
                 "bands": {
                     "nbar_coastal_aerosol": [],
