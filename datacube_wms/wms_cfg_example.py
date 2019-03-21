@@ -910,6 +910,27 @@ layer_cfg = [
                 # (Looks like Terria assumes this is the first style in the list, but this is
                 #  not required by the standard.)
                 "default_style": "simple_rgb",
+
+                # Attribution.  This entire section is optional.  If not provided, no attribution is published
+                #               for this layer.
+                "attribution": {
+                    # Attribution must contain at least one of ("title", "url" and "logo")
+                    # A human readable title for the attribution - e.g. the name of the attributed organisation
+                    "title": "Digital Earth Australia",
+                    # The associated - e.g. URL for the attributed organisation
+                    "url": "http://www.ga.gov.au/dea",
+                    # Logo image - e.g. for the attributed organisation
+                    "logo": {
+                        # Image width in pixels (optional)
+                        "width": 370,
+                        # Image height in pixels (optional)
+                        "height": 73,
+                        # URL for the logo image. (required if logo specified)
+                        "url": "https://www.ga.gov.au/__data/assets/image/0011/61589/GA-DEA-Logo-Inline-370x73.png",
+                        # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+                        "format": "image/png",
+                    }
+                }
             },
             {
                 # Example for USGS Level 1 Cloud-Optimised GeoTiffs in the AWS PDS.

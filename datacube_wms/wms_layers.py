@@ -196,6 +196,8 @@ class ProductLayerDef(object):
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
         self.pq_ignore_time = product_cfg.get("pq_ignore_time", False)
 
+        self.attribution = product_cfg.get("attribution")
+
         # For WCS
         svc_cfg = get_service_cfg()
         if svc_cfg.wcs:
