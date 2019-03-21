@@ -116,7 +116,27 @@ service_cfg = {
     # this will set the rasterio env
     # GDAL Config for GTiff Georeferencing
     # See https://www.gdal.org/frmt_gtiff.html#georeferencing
-    "geotiff_georeference_source": "INTERNAL"
+    "geotiff_georeference_source": "INTERNAL",
+    # Attribution.  This entire section is optional.  If provided, it is taken as the
+    #               default attribution for any layer that does not override it.
+    "attribution": {
+        # Attribution must contain at least one of ("title", "url" and "logo")
+        # A human readable title for the attribution - e.g. the name of the attributed organisation
+        "title": "Digital Earth Australia",
+        # The associated - e.g. URL for the attributed organisation
+        "url": "http://www.ga.gov.au/dea",
+        # Logo image - e.g. for the attributed organisation
+        "logo": {
+            # Image width in pixels (optional)
+            "width": 370,
+            # Image height in pixels (optional)
+            "height": 73,
+            # URL for the logo image. (required if logo specified)
+            "url": "https://www.ga.gov.au/__data/assets/image/0011/61589/GA-DEA-Logo-Inline-370x73.png",
+            # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+            "format": "image/png",
+        }
+    }
 }
 
 layer_cfg = [
@@ -127,6 +147,28 @@ layer_cfg = [
         "name": "LANDSAT_8",
         "title": "Landsat 8",
         "abstract": "Images from the Landsat 8 satellite",
+
+        # Attribution.  This entire section is optional.  If provided, it overrides any
+        #               attribution defined in the service_cfg for all layers under this
+        #               platform that do not define their own attribution.
+        "attribution": {
+            # Attribution must contain at least one of ("title", "url" and "logo")
+            # A human readable title for the attribution - e.g. the name of the attributed organisation
+            "title": "Digital Earth Australia",
+            # The associated - e.g. URL for the attributed organisation
+            "url": "http://www.ga.gov.au/dea",
+            # Logo image - e.g. for the attributed organisation
+            "logo": {
+                # Image width in pixels (optional)
+                "width": 370,
+                # Image height in pixels (optional)
+                "height": 73,
+                # URL for the logo image. (required if logo specified)
+                "url": "https://www.ga.gov.au/__data/assets/image/0011/61589/GA-DEA-Logo-Inline-370x73.png",
+                # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+                "format": "image/png",
+            }
+        },
 
         # Products available for this platform.
         # For each product, the "name" is the Datacube name, and the label is used
@@ -911,8 +953,9 @@ layer_cfg = [
                 #  not required by the standard.)
                 "default_style": "simple_rgb",
 
-                # Attribution.  This entire section is optional.  If not provided, no attribution is published
-                #               for this layer.
+                # Attribution.  This entire section is optional.  If not provided, the default attribution
+                #               from the parent platform or the service config is used.
+                #               If no attribution is defined at any level, no attribution will be published.
                 "attribution": {
                     # Attribution must contain at least one of ("title", "url" and "logo")
                     # A human readable title for the attribution - e.g. the name of the attributed organisation
