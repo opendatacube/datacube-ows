@@ -225,9 +225,14 @@ class ProductLayerDef(object):
         self.attribution = AttributionCfg.parse(product_cfg.get("attribution"))
         if not self.attribution:
             self.attribution = platform_def.attribution
+        self.identifiers = product_cfg.get("identifiers", {})
+        svc_cfg = get_service_cfg()
+
+        for auth in self.identifiers.keys():
+            if auth not in svc_cfg.authorities:
+                raise ProductLayerException("Identifier with non-declared authority: %s" % repr(auth))
 
         # For WCS
-        svc_cfg = get_service_cfg()
         if svc_cfg.wcs:
             try:
                 self.native_CRS = self.product.definition["storage"]["crs"]
@@ -301,6 +306,7 @@ class PlatformLayerDef(object):
                 self.products.append(prod)
                 layer_defs.product_index[prod.name] = prod
             except ProductLayerException as e:
+                print("Oi:", str(e))
                 _LOG.error("Could not load layer: %s", str(e))
 
 
@@ -434,6 +440,7 @@ class ServiceCfg(object):
             self.access_constraints = srv_cfg.get("access_constraints", "")
 
             self.attribution = AttributionCfg.parse(srv_cfg.get("attribution"))
+            self.authorities = srv_cfg.get("authorities", {})
 
     def __getitem__(self, name):
         return getattr(self, name)

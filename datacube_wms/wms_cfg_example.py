@@ -136,6 +136,14 @@ service_cfg = {
             # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
             "format": "image/png",
         }
+    },
+    # These define the AuthorityURLs.  They represent the authorities that define the layer "Identifiers" below.
+    # The spec allows AuthorityURLs to be defined anywhere on the Layer heirarchy, but datacube_ows treats them
+    # as global entities.
+    "authorities": {
+        # The authorities dictionary maps names to authority urls.
+        "dea": "https://www.ga.gov.au",
+        "idrus": "https://www.identifiers-r-us.com",
     }
 }
 
@@ -302,6 +310,14 @@ layer_cfg = [
                 # This is the number of CRS units (e.g. degrees, metres) per pixel in the horizontal and vertical
                 # directions for the native resolution.  E.g. for a EPSG:3577  (25.0,25.0) for Landsat-8 and (10.0,10.0 for Sentinel-2)
                 "native_wcs_resolution": [ 25.0, 25.0 ],
+                # The Identifiers section declares authoritative identifiers for the layer, and is optional
+                "identifiers": {
+                    # Each key of the identifiers dictionary must match a name from the authorities dictionary
+                    # in the service config.  The values are the identifiers defined for this layer by that
+                    # authority.
+                    "dea": "ls8_ard",
+                    "idsrus": "1234245::0054450::GSH::34567-splunge"
+                },
                 # Styles.
                 #
                 # See band_mapper.py
