@@ -221,10 +221,24 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
                 {% for auth, id in product.identifiers.items() %}
                 <Identifier authority="{{ auth }}">{{ id }}</Identifier>
                 {% endfor %}
-                <!-- TODO: Populate from config (but OK to ignore for now)
-                <DataURL/>
-                <FeatureListURL/>
-                -->
+                {% for u in product.data_urls %}
+                    <DataURL>
+                        <Format>{{ u.format }}</Format>
+                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                        xlink:type="simple"
+                                        xlink:href="{{ u.url }}"
+                        />
+                    </DataURL>
+                {% endfor %}
+                {% for u in product.feature_list_urls %}
+                <FeatureListURL>
+                    <Format>{{ u.format }}</Format>
+                    <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                    xlink:type="simple"
+                                    xlink:href="{{ u.url }}"
+                    />
+                </FeatureListURL>
+                {% endfor %}
             </Layer>
             {% if product.sub_ranges %}
                 <Layer>

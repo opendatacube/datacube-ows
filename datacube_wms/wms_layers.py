@@ -110,6 +110,18 @@ class AttributionCfg(object):
             return cls(cfg)
 
 
+class SuppURL(object):
+    @classmethod
+    def parse_list(cls, cfg):
+        if not cfg:
+            return []
+        return [ cls(u) for u in cfg ]
+
+    def __init__(self, cfg):
+        self.url = cfg["url"]
+        self.format = cfg["format"]
+
+
 class ProductLayerDef(object):
     # pylint: disable=invalid-name, too-many-instance-attributes, bare-except, too-many-statements
     def __init__(self, product_cfg, platform_def, dc):
@@ -232,6 +244,9 @@ class ProductLayerDef(object):
             if auth not in svc_cfg.authorities:
                 raise ProductLayerException("Identifier with non-declared authority: %s" % repr(auth))
 
+        self.feature_list_urls = SuppURL.parse_list(product_cfg.get("feature_list_urls"))
+        self.data_urls = SuppURL.parse_list(product_cfg.get("data_urls"))
+
         # For WCS
         if svc_cfg.wcs:
             try:
@@ -306,7 +321,6 @@ class PlatformLayerDef(object):
                 self.products.append(prod)
                 layer_defs.product_index[prod.name] = prod
             except ProductLayerException as e:
-                print("Oi:", str(e))
                 _LOG.error("Could not load layer: %s", str(e))
 
 

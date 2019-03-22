@@ -318,6 +318,26 @@ layer_cfg = [
                     "dea": "ls8_ard",
                     "idsrus": "1234245::0054450::GSH::34567-splunge"
                 },
+                # FeatureListURLs and DataURLs are optional.
+                # Multiple of each may be defined per product.
+                # FeatureListURLs point to "a list of the features represented in a Layer".
+                # DataURLs "offer a link to the underlying data represented by a particular layer"
+                "feature_list_urls": [
+                    {
+                        "url": "http://domain.tld/path/to/page.html",
+                        "format": "text/html"
+                    },
+                    {
+                        "url": "http://another-domain.tld/path/to/image.png",
+                        "format": "image/png"
+                    }
+                ],
+                "data_urls": [
+                    {
+                        "url": "http://abc.xyz/data-link.xml",
+                        "format": "application/xml"
+                    }
+                ],
                 # Styles.
                 #
                 # See band_mapper.py
