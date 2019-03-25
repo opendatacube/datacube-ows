@@ -83,6 +83,8 @@ class SupportedSvc(object):
             self.default_exception_class = self.versions[0].exception_class
 
     def negotiated_version(self, request_version):
+        if not request_version:
+            return self.versions[-1]
         rv_parts = request_version.split(".")
         for v in reversed(self.versions):
             if rv_parts >= v.version_parts:
@@ -172,8 +174,6 @@ def ogc_svc_impl(svc):
             raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
 
         version = nocase_args.get("version")
-        if not version:
-            raise svc_support.default_exception_class("No protocol version supplied", locator="Version parameter")
         version_support = svc_support.negotiated_version(version)
     except OGCException as e:
         return e.exception_response()

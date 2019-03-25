@@ -116,7 +116,35 @@ service_cfg = {
     # this will set the rasterio env
     # GDAL Config for GTiff Georeferencing
     # See https://www.gdal.org/frmt_gtiff.html#georeferencing
-    "geotiff_georeference_source": "INTERNAL"
+    "geotiff_georeference_source": "INTERNAL",
+    # Attribution.  This entire section is optional.  If provided, it is taken as the
+    #               default attribution for any layer that does not override it.
+    "attribution": {
+        # Attribution must contain at least one of ("title", "url" and "logo")
+        # A human readable title for the attribution - e.g. the name of the attributed organisation
+        "title": "Digital Earth Australia",
+        # The associated - e.g. URL for the attributed organisation
+        "url": "http://www.ga.gov.au/dea",
+        # Logo image - e.g. for the attributed organisation
+        "logo": {
+            # Image width in pixels (optional)
+            "width": 370,
+            # Image height in pixels (optional)
+            "height": 73,
+            # URL for the logo image. (required if logo specified)
+            "url": "https://www.ga.gov.au/__data/assets/image/0011/61589/GA-DEA-Logo-Inline-370x73.png",
+            # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+            "format": "image/png",
+        }
+    },
+    # These define the AuthorityURLs.  They represent the authorities that define the layer "Identifiers" below.
+    # The spec allows AuthorityURLs to be defined anywhere on the Layer heirarchy, but datacube_ows treats them
+    # as global entities.
+    "authorities": {
+        # The authorities dictionary maps names to authority urls.
+        "dea": "https://www.ga.gov.au",
+        "idrus": "https://www.identifiers-r-us.com",
+    }
 }
 
 layer_cfg = [
@@ -127,6 +155,28 @@ layer_cfg = [
         "name": "LANDSAT_8",
         "title": "Landsat 8",
         "abstract": "Images from the Landsat 8 satellite",
+
+        # Attribution.  This entire section is optional.  If provided, it overrides any
+        #               attribution defined in the service_cfg for all layers under this
+        #               platform that do not define their own attribution.
+        "attribution": {
+            # Attribution must contain at least one of ("title", "url" and "logo")
+            # A human readable title for the attribution - e.g. the name of the attributed organisation
+            "title": "Digital Earth Australia",
+            # The associated - e.g. URL for the attributed organisation
+            "url": "http://www.ga.gov.au/dea",
+            # Logo image - e.g. for the attributed organisation
+            "logo": {
+                # Image width in pixels (optional)
+                "width": 370,
+                # Image height in pixels (optional)
+                "height": 73,
+                # URL for the logo image. (required if logo specified)
+                "url": "https://www.ga.gov.au/__data/assets/image/0011/61589/GA-DEA-Logo-Inline-370x73.png",
+                # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+                "format": "image/png",
+            }
+        },
 
         # Products available for this platform.
         # For each product, the "name" is the Datacube name, and the label is used
@@ -260,6 +310,34 @@ layer_cfg = [
                 # This is the number of CRS units (e.g. degrees, metres) per pixel in the horizontal and vertical
                 # directions for the native resolution.  E.g. for a EPSG:3577  (25.0,25.0) for Landsat-8 and (10.0,10.0 for Sentinel-2)
                 "native_wcs_resolution": [ 25.0, 25.0 ],
+                # The Identifiers section declares authoritative identifiers for the layer, and is optional
+                "identifiers": {
+                    # Each key of the identifiers dictionary must match a name from the authorities dictionary
+                    # in the service config.  The values are the identifiers defined for this layer by that
+                    # authority.
+                    "dea": "ls8_ard",
+                    "idsrus": "1234245::0054450::GSH::34567-splunge"
+                },
+                # FeatureListURLs and DataURLs are optional.
+                # Multiple of each may be defined per product.
+                # FeatureListURLs point to "a list of the features represented in a Layer".
+                # DataURLs "offer a link to the underlying data represented by a particular layer"
+                "feature_list_urls": [
+                    {
+                        "url": "http://domain.tld/path/to/page.html",
+                        "format": "text/html"
+                    },
+                    {
+                        "url": "http://another-domain.tld/path/to/image.png",
+                        "format": "image/png"
+                    }
+                ],
+                "data_urls": [
+                    {
+                        "url": "http://abc.xyz/data-link.xml",
+                        "format": "application/xml"
+                    }
+                ],
                 # Styles.
                 #
                 # See band_mapper.py
@@ -910,6 +988,28 @@ layer_cfg = [
                 # (Looks like Terria assumes this is the first style in the list, but this is
                 #  not required by the standard.)
                 "default_style": "simple_rgb",
+
+                # Attribution.  This entire section is optional.  If not provided, the default attribution
+                #               from the parent platform or the service config is used.
+                #               If no attribution is defined at any level, no attribution will be published.
+                "attribution": {
+                    # Attribution must contain at least one of ("title", "url" and "logo")
+                    # A human readable title for the attribution - e.g. the name of the attributed organisation
+                    "title": "Digital Earth Australia",
+                    # The associated - e.g. URL for the attributed organisation
+                    "url": "http://www.ga.gov.au/dea",
+                    # Logo image - e.g. for the attributed organisation
+                    "logo": {
+                        # Image width in pixels (optional)
+                        "width": 370,
+                        # Image height in pixels (optional)
+                        "height": 73,
+                        # URL for the logo image. (required if logo specified)
+                        "url": "https://www.ga.gov.au/__data/assets/image/0011/61589/GA-DEA-Logo-Inline-370x73.png",
+                        # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+                        "format": "image/png",
+                    }
+                }
             },
             {
                 # Example for USGS Level 1 Cloud-Optimised GeoTiffs in the AWS PDS.

@@ -86,6 +86,42 @@ class BandIndex(object):
         return [self.nodata_val(b) for b in self.native_bands.index if b in self.band_cfg]
 
 
+class AttributionCfg(object):
+    def __init__(self, cfg):
+        self.title = cfg.get("title")
+        self.url = cfg.get("url")
+        logo = cfg.get("logo")
+        if not logo:
+            self.logo_width = None
+            self.logo_height = None
+            self.logo_url = None
+            self.logo_fmt = None
+        else:
+            self.logo_width = logo.get("width")
+            self.logo_height = logo.get("height")
+            self.logo_url = logo.get("url")
+            self.logo_fmt = logo.get("format")
+
+    @classmethod
+    def parse(cls, cfg):
+        if not cfg:
+            return None
+        else:
+            return cls(cfg)
+
+
+class SuppURL(object):
+    @classmethod
+    def parse_list(cls, cfg):
+        if not cfg:
+            return []
+        return [ cls(u) for u in cfg ]
+
+    def __init__(self, cfg):
+        self.url = cfg["url"]
+        self.format = cfg["format"]
+
+
 class ProductLayerDef(object):
     # pylint: disable=invalid-name, too-many-instance-attributes, bare-except, too-many-statements
     def __init__(self, product_cfg, platform_def, dc):
@@ -198,8 +234,20 @@ class ProductLayerDef(object):
         self.pq_manual_merge = product_cfg.get("pq_manual_merge", False)
         self.pq_ignore_time = product_cfg.get("pq_ignore_time", False)
 
-        # For WCS
+        self.attribution = AttributionCfg.parse(product_cfg.get("attribution"))
+        if not self.attribution:
+            self.attribution = platform_def.attribution
+        self.identifiers = product_cfg.get("identifiers", {})
         svc_cfg = get_service_cfg()
+
+        for auth in self.identifiers.keys():
+            if auth not in svc_cfg.authorities:
+                raise ProductLayerException("Identifier with non-declared authority: %s" % repr(auth))
+
+        self.feature_list_urls = SuppURL.parse_list(product_cfg.get("feature_list_urls"))
+        self.data_urls = SuppURL.parse_list(product_cfg.get("data_urls"))
+
+        # For WCS
         if svc_cfg.wcs:
             try:
                 self.native_CRS = self.product.definition["storage"]["crs"]
@@ -258,17 +306,20 @@ class ProductLayerDef(object):
 
 
 class PlatformLayerDef(object):
-    def __init__(self, platform_cfg, prod_idx, dc=None):
+    def __init__(self, platform_cfg, layer_defs, dc=None):
         self.name = platform_cfg["name"]
         self.title = platform_cfg["title"]
         self.abstract = platform_cfg["abstract"]
 
+        self.attribution = AttributionCfg.parse(platform_cfg.get("attribution"))
+        if not self.attribution:
+            self.attribution = layer_defs.attribution
         self.products = []
         for prod_cfg in platform_cfg["products"]:
             try:
                 prod = ProductLayerDef(prod_cfg, self, dc=dc)
                 self.products.append(prod)
-                prod_idx[prod.name] = prod
+                layer_defs.product_index[prod.name] = prod
             except ProductLayerException as e:
                 _LOG.error("Could not load layer: %s", str(e))
 
@@ -288,9 +339,11 @@ class LayerDefs(object):
             self.platforms = []
             self.platform_index = {}
             self.product_index = {}
+            svc_cfg = get_service_cfg()
+            self.attribution = svc_cfg.attribution
             with cube() as dc:
                 for platform_cfg in platforms_cfg:
-                    platform = PlatformLayerDef(platform_cfg, self.product_index, dc=dc)
+                    platform = PlatformLayerDef(platform_cfg, self, dc=dc)
                     self.platforms.append(platform)
                     self.platform_index[platform.name] = platform
 
@@ -399,6 +452,9 @@ class ServiceCfg(object):
             self.contact_info = srv_cfg.get("contact_info", {})
             self.fees = srv_cfg.get("fees", "")
             self.access_constraints = srv_cfg.get("access_constraints", "")
+
+            self.attribution = AttributionCfg.parse(srv_cfg.get("attribution"))
+            self.authorities = srv_cfg.get("authorities", {})
 
     def __getitem__(self, name):
         return getattr(self, name)
