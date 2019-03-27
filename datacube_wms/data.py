@@ -427,10 +427,14 @@ def get_s3_browser_uris(datasets):
     # convert to browsable link
     def convert(uri):
         uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
-        result = regex.match(uri)
+        uri_format_prod = "https://data.dea.ga.gov.au/?prefix={prefix}"
+        result = regex.match(uri) 
         if result is not None:
-            new_uri = uri_format.format(bucket=result.group("bucket"),
-                                        prefix=result.group("prefix"))
+            if result.group("bucket")=="dea-public-data":
+                new_uri = uri_format_prod.format(prefix=result.group("prefix"))
+            else:
+                new_uri = uri_format.format(bucket=result.group("bucket"),
+                                            prefix=result.group("prefix"))
         else:
             new_uri = uri
         return new_uri
