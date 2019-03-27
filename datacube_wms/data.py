@@ -337,10 +337,11 @@ def get_map(args):
                         else:
                             extent_mask &= f(data, band)
 
-            if data is not None:
-                body = _write_png(data, pq_data, params.style, extent_mask)
-            else:
+            if data is None or (params.style.masks and pq_data is None):
                 body = _write_empty(params.geobox)
+            else:
+                body = _write_png(data, pq_data, params.style, extent_mask)
+                
 
     return body, 200, resp_headers({"Content-Type": "image/png"})
 
