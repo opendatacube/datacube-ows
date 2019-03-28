@@ -29,9 +29,9 @@ service_cfg = {
     # should be fully qualified
     "human_url": "http://csiro.au",
     # Provide S3 data URL for data_links in GetFeatureinfo
-    "s3_url": "https://data.dea.ga.gov.au",
+    "s3_url": "http://data.au",
     # Provide S3 bucket name for data_links in GetFeatureinfo    
-    "s3_bucket": "dea-public-data",
+    "s3_bucket": "s3_bucket_name",
     # Supported co-ordinate reference systems
     "published_CRSs": {
         "EPSG:3857": {  # Web Mercator
