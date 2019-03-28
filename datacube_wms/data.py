@@ -417,7 +417,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def get_s3_browser_uris(datasets, s3url=False, s3bucket=False):
+def get_s3_browser_uris(datasets, s3url="", s3bucket=""):
     uris = [d.uris for d in datasets]
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
