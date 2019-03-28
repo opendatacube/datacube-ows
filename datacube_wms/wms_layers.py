@@ -385,6 +385,8 @@ class ServiceCfg(object):
 
             self.title = srv_cfg["title"]
             self.url = srv_cfg["url"]
+            self.s3_bucket = srv_cfg.get("s3_bucket", False)
+            self.s3_url = srv_cfg.get("s3_url", False)
             # For services that can be accessed through
             # multiple domain names
             self.allowed_urls = self.url

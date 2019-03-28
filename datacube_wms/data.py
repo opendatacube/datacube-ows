@@ -417,7 +417,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def get_s3_browser_uris(datasets):
+def get_s3_browser_uris(datasets, s3url=False, s3bucket=False):
     uris = [d.uris for d in datasets]
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
@@ -427,10 +427,10 @@ def get_s3_browser_uris(datasets):
     # convert to browsable link
     def convert(uri):
         uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
-        uri_format_prod = "https://data.dea.ga.gov.au/?prefix={prefix}"
+        uri_format_prod = str(s3url) + "/?prefix={prefix}"
         result = regex.match(uri) 
         if result is not None:
-            if result.group("bucket")=="dea-public-data":
+            if result.group("bucket") == str(s3bucket):
                 new_uri = uri_format_prod.format(prefix=result.group("prefix"))
             else:
                 new_uri = uri_format.format(bucket=result.group("bucket"),
@@ -522,6 +522,8 @@ def feature_info(args):
         # Taking the data as a single point so our indexes into the data should be 0,0
         h_coord = service_cfg.published_CRSs[params.crsid]["horizontal_coord"]
         v_coord = service_cfg.published_CRSs[params.crsid]["vertical_coord"]
+        s3_bucket = service_cfg.s3_bucket
+        s3_url = service_cfg.s3_url
         isel_kwargs = {
             h_coord: 0,
             v_coord: 0
@@ -599,7 +601,7 @@ def feature_info(args):
                         feature_json["flags"][mk] = val
 
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
-            feature_json["data_links"] = sorted(get_s3_browser_uris(datasets))
+            feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
             if params.product.feature_info_include_utc_dates:
                 feature_json["data_available_for_utc_dates"] = sorted(
                     d.center_time.strftime("%Y-%m-%d") for d in datasets)
