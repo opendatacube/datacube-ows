@@ -17,8 +17,8 @@ def legend_graphic(args):
     params = GetLegendGraphicParameters(args)
     img = None
     product = params.product
-    legend_config = product.legend
     style = params.style_name
+    legend_config = getattr(product, 'legend', None)
     if legend_config is not None:
         if legend_config.get('url', None):
             img_url = legend_config.get('url')
