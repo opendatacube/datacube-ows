@@ -16,24 +16,24 @@ _LOG = logging.getLogger(__name__)
 def legend_graphic(args):
     params = GetLegendGraphicParameters(args)
     img = None
-    if not params.style_name:
-        product = params.product
-        legend_config = product.legend
-        if legend_config is not None:
-            if legend_config.get('url', None):
-                img_url = legend_config.get('url')
-                r = requests.get(img_url, timeout=1)
-                if r.status_code == 200 and r.headers['content-type'] == 'image/png':
-                    img = make_response(r.content)
-                    img.mimetype = 'image/png'
-            else:
-                styles = [product.style_index[s] for s in legend_config.get('styles', [])]
-                img = create_legends_from_styles(styles)
+    product = params.product
+    style = params.style_name
+    legend_config = getattr(product, 'legend', None)
+    if legend_config is not None:
+        if legend_config.get('url', None):
+            img_url = legend_config.get('url')
+            r = requests.get(img_url, timeout=1)
+            if r.status_code == 200 and r.headers['content-type'] == 'image/png':
+                img = make_response(r.content)
+                img.mimetype = 'image/png'
+        else:
+            styles = [product.style_index[s] for s in legend_config.get('styles', []) if not style or s == style]
+            img = create_legends_from_styles(styles)
     return img
 
 
 def create_legend_for_style(product, style_name):
-    if not product.legend or style_name not in product.legend:
+    if not product.legend or style_name not in product.legend.get('styles', product.legend):
         return None
     style = product.style_index[style_name]
     return create_legends_from_styles([style])
