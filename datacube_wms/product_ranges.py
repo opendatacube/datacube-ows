@@ -546,6 +546,8 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
     for result in results:
         conn.close()
         times = [datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"]]
+        if not times:
+            return None
         return {
             "lat": {
                 "min": float(result["lat_min"]),

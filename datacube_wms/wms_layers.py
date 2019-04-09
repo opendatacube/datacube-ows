@@ -158,9 +158,9 @@ class ProductLayerDef(object):
         self.ranges = get_ranges(dc, self)
         if self.ranges is None:
             if self.multi_product:
-                print(f"Warning: Ranges for multi-product {self.name} not yet in database")
+                raise ProductLayerException(f"Warning: Ranges for multi-product {self.name} not yet in database")
             else:
-                print(f"Could not find ranges for {self.product_name} in database")
+                raise ProductLayerException(f"Could not find ranges for {self.product_name} in database")
         # TODO: subranges not supported with multi-product
         self.sub_ranges = get_sub_ranges(dc, self)
         if self.multi_product:
