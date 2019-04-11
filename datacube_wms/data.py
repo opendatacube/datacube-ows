@@ -50,7 +50,8 @@ def _make_destination(shape, no_data, dtype):
 @opencensus_trace_call(tracer=tracer)
 def _read_file(source, geobox, band, no_data, resampling):
     # Read our data
-    with rio.DatasetReader(rio.path.parse_path(source.filename), sharing=False) as src:
+
+    with rio.open(source.filename, sharing=False) as src:
         dst = read_with_reproject(src, geobox,
                                   dst_nodata=no_data,
                                   src_nodata_fallback=no_data,
@@ -79,11 +80,11 @@ def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=
     destination = _make_destination(geobox.shape, no_data, dtype)
 
     for source in datasources:
-        buffer = delayed(_read_file)(source, geobox, band=source.get_bandnumber(), no_data=no_data,
+        buffer = _read_file(source, geobox, band=source.get_bandnumber(), no_data=no_data,
                                      resampling=resampling)
-        destination = delayed(fuse_func)(destination, buffer)
+        destination = fuse_func(destination, buffer)
 
-    return da.from_delayed(destination, geobox.shape, dtype)
+    return destination
 
 
 # Read data for given datasets and measurements per the output_geobox
@@ -122,7 +123,7 @@ def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Re
             all_bands[measurement['name']] = (dims, data, measurement.dataarray_attrs())
 
         all_bands.attrs['crs'] = geobox.crs
-        return all_bands.load()
+        return all_bands
     else:
         return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
 

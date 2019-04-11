@@ -5,7 +5,6 @@ except ImportError:
     from datacube_wms.wms_cfg import service_cfg
 
 from dea.aws.rioenv import s3_gdal_opts
-from rasterio.session import AWSSession
 from rasterio.env import Env
 from os import getenv
 
@@ -20,6 +19,7 @@ def get_gdal_opts():
     gdal_opts_cfg = service_cfg.get("gdal_opts", dict())
     return s3_gdal_opts(max_header_sz_kb=32,
                         GDAL_GEOREF_SOURCES='INTERNAL',
+                        CPL_VSIL_CURL_ALLOWED_EXTENSIONS='tif,tiff',
                         **gdal_opts_cfg)
 
 
