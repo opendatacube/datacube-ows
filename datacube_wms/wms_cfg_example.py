@@ -706,7 +706,12 @@ layer_cfg = [
                                 "value": 1.0,
                                 "color": "#114D04"
                             }
-                        ]
+                        ],
+                        "legend": {
+                            # Instead of using the generated color ramp legend for the style, a URL to a PNG file can
+                            # be used instead.
+                            "url": "http://example.com/custom_style_image.png"
+                        }
                     },
                     {
                         "name": "ndvi_cloudmask",
