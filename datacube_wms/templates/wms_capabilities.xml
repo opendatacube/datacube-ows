@@ -109,16 +109,19 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
         <Format>XML</Format>
     </Exception>
 
-    <Layer>
+    <Layer>{# Start Top Level Layer #}
         <Title>{{ service.title }}</Title>
+
         {% if service.abstract %}
         <Abstract>
             {{ service.abstract }}
         </Abstract>
         {% endif %}
+
         {% for crs in service.published_CRSs.keys() %}
         <CRS>{{ crs }}</CRS>
         {% endfor %}
+
         {% for name, url in service.authorities.items() %}
         <AuthorityURL name="{{ name }}">
             <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -126,21 +129,21 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
                             xlink:href="{{ url }}"/>
         </AuthorityURL>
         {%  endfor %}
+
         {% for platform in platforms %}
-        {% for product in platform.products %}
-        {% if product.ranges %}
-        {% set iterated = false %}
-        {% if not iterated %}
-        <Layer>
+        <Layer>{# Start Platform Layer #}
             <Title>{{ platform.title }}</Title>
             <Abstract>{{ platform.abstract }}</Abstract>
-        {% endif %}
-        {% set iterated = true %}
+
+            {% for product in platform.products if product.ranges %}
+
+            {# If the product has sub-ranges, push it one folder deeper #}
             {% if product.sub_ranges %}
                 <Layer>
                     <Title>{{ product.title }}</Title>
                     <Abstract>{{ product.definition.description }}</Abstract>
             {% endif %}
+
             <Layer queryable="1">
                 <Name>{{ product.name }}</Name>
                 <Title>{{ product.title }}</Title>
@@ -240,10 +243,11 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
                 </FeatureListURL>
                 {% endfor %}
             </Layer>
+            {# End Product Layer #}
+
             {% if product.sub_ranges %}
                 <Layer>
                     <Title>Individual {% if product.sub_product_label %}{{ product.sub_product_label }}{% else %}Swath{% endif %} Sub-Layers</Title>
-            {% endif %}
                 {% for path, subr in product.sub_ranges.items() %}
                     <Layer queryable="1">
                         <Name>{{ product.name }}__{{ path }}</Name>
@@ -301,14 +305,21 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
                         {% endfor %}
                     </Layer>
                 {% endfor %}
-                {% if product.sub_ranges %}
-                    </Layer>
                 </Layer>
-                {% endif %}
-        </Layer>
-        {% endif %}
+            {% endif %}
+
+            {% if product.sub_ranges %}
+                {# Close Product/Subproduct parent Layer #}
+                </Layer>
+            {% endif %}
+
+        {% else %}{# No product layers with ranges defined, display a dummy folder#}
+            <Layer>
+                <Title>NO VALID LAYERS TO DISPLAY</Title>
+            </Layer>
         {% endfor %}
-        {% endfor %}
-    </Layer>
+        </Layer>{# End Platform Level #}
+    {% endfor %}
+    </Layer>{# End Top Level #}
 </Capability>
 </WMS_Capabilities>
