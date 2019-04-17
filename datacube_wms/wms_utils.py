@@ -257,7 +257,7 @@ def parse_wms_time_strings(parts):
         return fuzzy_end - start + a_tiny_bit, end
     if isinstance(end, relativedelta):
         return start, start + end - a_tiny_bit
-    return start, end - a_tiny_bit
+    return start, end
 
 
 def bounding_box_to_geom(bbox, bb_crs, target_crs):
