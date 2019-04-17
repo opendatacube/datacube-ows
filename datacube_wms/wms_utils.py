@@ -190,18 +190,13 @@ def get_time(args, product, raw_product):
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
 
     # If all times are equal we can proceed
-    if len(set(times)) > 1:
+    if len(times) > 1:
         start, end = parse_wms_time_strings(times)
         start, end = start.date(), end.date()
         matching_times = [t for t in product.ranges['times'] if start <= t <= end]
-        if len(matching_times) == 1:
+        if matching_times:
+            # default to the first matching time
             return matching_times[0]
-        elif len(matching_times) > 1:
-            # We could default to first time instead?
-            raise WMSException(
-                "Selecting multiple time dimension values not supported",
-                WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
         else:
             raise WMSException(
                 "Time dimension range '%s'-'%s' not valid for this layer" % (start, end),
@@ -262,7 +257,7 @@ def parse_wms_time_strings(parts):
         return fuzzy_end - start + a_tiny_bit, end
     if isinstance(end, relativedelta):
         return start, start + end - a_tiny_bit
-    return start, end
+    return start, end - a_tiny_bit
 
 
 def bounding_box_to_geom(bbox, bb_crs, target_crs):
