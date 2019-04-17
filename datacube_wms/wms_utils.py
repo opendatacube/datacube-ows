@@ -1,9 +1,16 @@
 from __future__ import absolute_import, division, print_function
 
+try:
+    import regex as re
+except ImportError:
+    import re
+
 from datetime import datetime
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 from pytz import utc
 from urllib.parse import unquote
+
 try:
     from rasterio.warp import Resampling
 except ImportError:
@@ -31,8 +38,9 @@ RESAMPLING_METHODS = {
     'average': Resampling.average,
 }
 
+
 def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
-    #pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals
     p1 = geometry.point(minx, maxy, src_crs)
     p2 = geometry.point(minx, miny, src_crs)
     p3 = geometry.point(maxx, maxy, src_crs)
@@ -52,6 +60,7 @@ def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
     # miny-maxy for negative scale factor and maxy in the translation, includes inversion of Y axis.
 
     return minx, miny, maxx, maxy
+
 
 def _get_geobox_xy(args, crs):
     if get_service_cfg().published_CRSs[crs.crs_str]["vertical_coord_first"]:
@@ -157,26 +166,48 @@ def get_arg(args, argname, verbose_name, lower=False,
     return fmt
 
 
+def get_times_for_product(product, raw_product):
+    chunks = raw_product.split("__")
+    if len(chunks) == 1:
+        ranges = product.ranges
+    else:
+        path = int(chunks[1])
+        ranges = product.sub_ranges[path]
+    return ranges['times']
+
+
 def get_time(args, product, raw_product):
     # Time parameter
-    times = args.get('time', '').split('/')
-    # If all times are equal we can proceed
-    if len(set(times)) > 1:
+    times = args.get('time', '')
+    if times.find(',') != -1:
         raise WMSException(
-            "Selecting multiple time dimension values not supported",
+            "Selecting a list of time dimension values not supported",
             WMSException.INVALID_DIMENSION_VALUE,
             locator="Time parameter")
+
+    times = times.split('/')
+    # If all times are equal we can proceed
+    if len(set(times)) > 1:
+        start, end = parse_wms_time_strings(times)
+        start, end = start.date(), end.date()
+        matching_times = [t for t in product.ranges['times'] if start <= t <= end]
+        if len(matching_times) == 1:
+            return matching_times[0]
+        elif len(matching_times) > 1:
+            # We could default to first time instead?
+            raise WMSException(
+                "Selecting multiple time dimension values not supported",
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
+        else:
+            raise WMSException(
+                "Time dimension range '%s'-'%s' not valid for this layer" % (start, end),
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
     elif not times[0]:
         # default to last available time if not supplied.
-        chunks = raw_product.split("__")
-        if len(chunks) == 1:
-            path = None
-            ranges = product.ranges
-        else:
-            path = int(chunks[1])
-            ranges = product.sub_ranges[path]
-
-        return ranges["times"][-1]
+        product_times = get_times_for_product(product, raw_product)
+        return product_times[-1]
     try:
         time = parse(times[0]).date()
     except ValueError:
@@ -185,13 +216,45 @@ def get_time(args, product, raw_product):
             WMSException.INVALID_DIMENSION_VALUE,
             locator="Time parameter")
 
-    # Validate time paramter for requested layer.
+    # Validate time parameter for requested layer.
     if time not in product.ranges["time_set"]:
         raise WMSException(
             "Time dimension value '%s' not valid for this layer" % times[0],
             WMSException.INVALID_DIMENSION_VALUE,
             locator="Time parameter")
     return time
+
+
+def parse_time_delta(delta_str):
+    pattern = (r'P((?P<years>\d+)Y)?((?P<months>\d+)M)?((?P<days>\d+)D)?'
+               r'(T(((?P<hours>\d+)H)?((?P<minutes>\d+)M)?((?P<seconds>\d+)S)?)?)?')
+    parts = re.search(pattern, delta_str).groupdict()
+    return relativedelta(**{k: float(v) for k, v in parts.items() if v is not None})
+
+
+def parse_wms_time_string(t):
+    if t.upper() == 'PRESENT':
+        return datetime.utcnow()
+    elif t.startswith('P'):
+        return parse_time_delta(t)
+    else:
+        return parse(t)
+
+
+def parse_wms_time_strings(parts):
+    start = parse_wms_time_string(parts[0])
+    end = parse_wms_time_string(parts[-1])
+
+    if isinstance(start, relativedelta):
+        if isinstance(end, relativedelta):
+            raise WMSException(
+                "Could not understand time value '%s'" %parts,
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
+        return end - start, end
+    if isinstance(end, relativedelta):
+        return start, start + end
+    return start, end
 
 
 def bounding_box_to_geom(bbox, bb_crs, target_crs):
@@ -240,6 +303,7 @@ class GetParameters():
 
     def get_raw_product(self, args):
         return args["layers"].split(",")[0]
+
 
 class GetLegendGraphicParameters():
     def __init__(self, args):
@@ -326,7 +390,7 @@ def declination_rad(dt):
     # Estimate solar declination from a datetime.  (value returned in radians).
     # Formula taken from https://en.wikipedia.org/wiki/Position_of_the_Sun#Declination_of_the_Sun_as_seen_from_Earth
     timedel = dt - datetime(dt.year, 1, 1, 0, 0, 0, tzinfo=utc)
-    day_count = timedel.days + timedel.seconds/(60.0*60.0*24.0)
+    day_count = timedel.days + timedel.seconds / (60.0 * 60.0 * 24.0)
     return -1.0 * math.radians(23.44) * math.cos(2 * math.pi / 365 * (day_count + 10))
 
 
@@ -335,7 +399,7 @@ def cosine_of_solar_zenith(lat, lon, utc_dt):
     # (angle between sun and local zenith) at requested latitude, longitude and datetime.
     # Formula taken from https://en.wikipedia.org/wiki/Solar_zenith_angle
     utc_seconds_since_midnight = ((utc_dt.hour * 60) + utc_dt.minute) * 60 + utc_dt.second
-    utc_hour_deg_angle = (utc_seconds_since_midnight / (60*60*24) * 360.0) - 180.0
+    utc_hour_deg_angle = (utc_seconds_since_midnight / (60 * 60 * 24) * 360.0) - 180.0
     local_hour_deg_angle = utc_hour_deg_angle + lon
     local_hour_angle_rad = math.radians(local_hour_deg_angle)
     latitude_rad = math.radians(lat)
@@ -348,8 +412,8 @@ def cosine_of_solar_zenith(lat, lon, utc_dt):
 def solar_correct_data(data, dataset):
     # Apply solar angle correction to the data for a dataset.
     # See for example http://gsp.humboldt.edu/olm_2015/Courses/GSP_216_Online/lesson4-1/radiometric.html
-    native_x = (dataset.bounds.right + dataset.bounds.left)/2.0
-    native_y = (dataset.bounds.top + dataset.bounds.bottom)/2.0
+    native_x = (dataset.bounds.right + dataset.bounds.left) / 2.0
+    native_y = (dataset.bounds.top + dataset.bounds.bottom) / 2.0
     pt = geometry.point(native_x, native_y, dataset.crs)
     crs_geo = geometry.CRS("EPSG:4326")
     geo_pt = pt.to_crs(crs_geo)
@@ -365,6 +429,7 @@ def wofls_fuser(dest, src):
     where_nodata = (src & 1) == 0
     numpy.copyto(dest, src, where=where_nodata)
     return dest
+
 
 def item_fuser(dest, src):
     where_combined = numpy.isnan(dest) | (dest == -6666.)
