@@ -17,9 +17,10 @@ def test_parse_time_delta():
 def test_parse_wms_time_string():
     import datetime
     tests = {
-        '2018-01-10/2019-01-10': (datetime.datetime(2018, 1, 10, 0, 0), datetime.datetime(2019, 1, 10, 0, 0)),
-        '2018-01-10/P5D': (datetime.datetime(2018, 1, 10, 0, 0), datetime.datetime(2018, 1, 15, 0, 0)),
-        'P1M/2018-01-10': (datetime.datetime(2017, 12, 10, 0, 0), datetime.datetime(2018, 1, 10, 0, 0))
+        '2018-01-10/2019-01-10': (datetime.datetime(2018, 1, 10, 0, 0), datetime.datetime(2019, 1, 10, 23, 23, 59)),
+        '2000/P1Y': (datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2000, 12, 31, 23, 59, 59, 999999)),
+        '2018-01-10/P5D': (datetime.datetime(2018, 1, 10, 0, 0), datetime.datetime(2018, 1, 14, 23, 59, 59, 999999)),
+        'P1M/2018-01-10': (datetime.datetime(2017, 12, 10, 0, 0, 0, 1), datetime.datetime(2018, 1, 10, 23, 23, 59)),
     }
 
     for value, result in tests.items():

@@ -232,18 +232,22 @@ def parse_time_delta(delta_str):
     return relativedelta(**{k: float(v) for k, v in parts.items() if v is not None})
 
 
-def parse_wms_time_string(t):
+def parse_wms_time_string(t, start=True):
     if t.upper() == 'PRESENT':
         return datetime.utcnow()
     elif t.startswith('P'):
         return parse_time_delta(t)
     else:
-        return parse(t)
+        default = datetime(1970, 1, 1) if start else datetime(1970, 12, 31, 23, 23, 59, 999999)  # default year ignored
+        return parse(t, default=default)
 
 
 def parse_wms_time_strings(parts):
     start = parse_wms_time_string(parts[0])
-    end = parse_wms_time_string(parts[-1])
+    end = parse_wms_time_string(parts[-1], start=False)
+
+    a_tiny_bit = relativedelta(microseconds=1)
+    # Follows GeoServer https://docs.geoserver.org/stable/en/user/services/wms/time.html#reduced-accuracy-times
 
     if isinstance(start, relativedelta):
         if isinstance(end, relativedelta):
@@ -251,9 +255,10 @@ def parse_wms_time_strings(parts):
                 "Could not understand time value '%s'" %parts,
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-        return end - start, end
+        fuzzy_end=parse_wms_time_string(parts[-1], start=True)
+        return fuzzy_end - start + a_tiny_bit, end
     if isinstance(end, relativedelta):
-        return start, start + end
+        return start, start + end - a_tiny_bit
     return start, end
 
 
