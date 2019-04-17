@@ -24,11 +24,11 @@ def test_parse_wms_time_strings():
     }
 
     for value, result in tests.items():
-        assert result == datacube_wms.wms_utils.parse_wms_time_strings(value)
+        assert result == datacube_wms.wms_utils.parse_wms_time_strings(value.split('/'))
 
 
 def test_parse_wms_time_strings_with_present():
     import datetime
-    start, end = datacube_wms.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT')
+    start, end = datacube_wms.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
     assert start == datetime.datetime(2018, 1, 10, 0, 0)
     assert (datetime.utcnow() - end).total_seconds() < 60
