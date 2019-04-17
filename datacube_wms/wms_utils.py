@@ -186,6 +186,9 @@ def get_time(args, product, raw_product):
             locator="Time parameter")
 
     times = times.split('/')
+    # Time range handling follows the implementation described by GeoServer
+    # https://docs.geoserver.org/stable/en/user/services/wms/time.html
+
     # If all times are equal we can proceed
     if len(set(times)) > 1:
         start, end = parse_wms_time_strings(times)
