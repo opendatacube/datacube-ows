@@ -43,10 +43,16 @@ def create_legends_from_styles(styles):
     # Run through all values in style cfg and generate
     imgs = []
     for s in styles:
-        bytesio = io.BytesIO()
-        s.legend(bytesio)
-        bytesio.seek(0)
-        imgs.append(Image.open(bytesio))
+        url = s.legend_override_with_url()
+        if url:
+            img = get_image_from_url(url)
+            if img:
+                imgs.append(img)
+        else:
+            bytesio = io.BytesIO()
+            s.legend(bytesio)
+            bytesio.seek(0)
+            imgs.append(Image.open(bytesio))
 
     min_shape = sorted([(np.sum(i.size), i.size) for i in imgs])[0][1]
     imgs_comb = np.vstack((np.asarray(i.resize(min_shape)) for i in imgs))
@@ -58,3 +64,12 @@ def create_legends_from_styles(styles):
     b.close()
     return legend
 
+
+def get_image_from_url(url):
+    r = requests.get(url, timeout=1)
+    if r.status_code == 200 and r.headers['content-type'] == 'image/png':
+        bytesio = io.BytesIO()
+        bytesio.write(r.content)
+        bytesio.seek(0)
+        return Image.open(bytesio)
+    return None
