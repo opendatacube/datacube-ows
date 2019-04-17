@@ -15,12 +15,12 @@ def test_parse_time_delta():
 
 
 def test_parse_wms_time_strings():
-    import datetime
+    import datetime as dt
     tests = {
-        '2018-01-10/2019-01-10': (datetime.datetime(2018, 1, 10, 0, 0), datetime.datetime(2019, 1, 10, 23, 23, 59)),
-        '2000/P1Y': (datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2000, 12, 31, 23, 59, 59, 999999)),
-        '2018-01-10/P5D': (datetime.datetime(2018, 1, 10, 0, 0), datetime.datetime(2018, 1, 14, 23, 59, 59, 999999)),
-        'P1M/2018-01-10': (datetime.datetime(2017, 12, 10, 0, 0, 0, 1), datetime.datetime(2018, 1, 10, 23, 23, 59)),
+        '2018-01-10/2019-01-10': (dt.datetime(2018, 1, 10, 0, 0), dt.datetime(2019, 1, 10, 23, 23, 59, 999999)),
+        '2000/P1Y': (dt.datetime(2000, 1, 1, 0, 0), dt.datetime(2000, 12, 31, 23, 59, 59, 999999)),
+        '2018-01-10/P5D': (dt.datetime(2018, 1, 10, 0, 0), dt.datetime(2018, 1, 14, 23, 59, 59, 999999)),
+        'P1M/2018-01-10': (dt.datetime(2017, 12, 10, 0, 0, 0, 1), dt.datetime(2018, 1, 10, 23, 23, 59, 999999)),
     }
 
     for value, result in tests.items():
@@ -28,7 +28,7 @@ def test_parse_wms_time_strings():
 
 
 def test_parse_wms_time_strings_with_present():
-    import datetime
+    import datetime as dt
     start, end = datacube_wms.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
-    assert start == datetime.datetime(2018, 1, 10, 0, 0)
-    assert (datetime.utcnow() - end).total_seconds() < 60
+    assert start == dt.datetime(2018, 1, 10, 0, 0)
+    assert (dt.datetime.utcnow() - end).total_seconds() < 60
