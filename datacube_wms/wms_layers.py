@@ -322,6 +322,7 @@ class PlatformLayerDef(object):
                 layer_defs.product_index[prod.name] = prod
             except ProductLayerException as e:
                 _LOG.error("Could not load layer: %s", str(e))
+        self.valid_products = [product for product in self.products if product.ranges]
 
 
 class LayerDefs(object):

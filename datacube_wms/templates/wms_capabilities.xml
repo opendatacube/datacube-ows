@@ -130,7 +130,7 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
         </AuthorityURL>
         {%  endfor %}
 
-        {% for platform in platforms %}
+        {% for platform in platforms if platform.valid_products %}
         <Layer>{# Start Platform Layer #}
             <Title>{{ platform.title }}</Title>
             <Abstract>{{ platform.abstract }}</Abstract>
@@ -322,11 +322,6 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
                 {# Close Product/Subproduct parent Layer #}
                 </Layer>
             {% endif %}
-
-        {% else %}{# No product layers with ranges defined, display a dummy folder#}
-            <Layer>
-                <Title>NO VALID LAYERS TO DISPLAY</Title>
-            </Layer>
         {% endfor %}
         </Layer>{# End Platform Level #}
     {% endfor %}
