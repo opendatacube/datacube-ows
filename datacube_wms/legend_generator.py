@@ -26,9 +26,13 @@ def legend_graphic(args):
             if r.status_code == 200 and r.headers['content-type'] == 'image/png':
                 img = make_response(r.content)
                 img.mimetype = 'image/png'
-        else:
-            styles = [product.style_index[s] for s in legend_config.get('styles', []) if not style or s == style]
-            img = create_legends_from_styles(styles)
+        elif legend_config.get('styles', []):
+            if style in legend_config.get('styles', []):
+                img = create_legends_from_styles([style])
+            elif set(legend_config.get('styles', [])) == set(product.style_index.keys()):
+                # We want all the styles, and all the styles have legends
+                styles = [product.style_index[s] for s in legend_config.get('styles', [])]
+                img = create_legends_from_styles(styles)
     return img
 
 
