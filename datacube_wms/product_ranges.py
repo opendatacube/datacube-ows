@@ -607,8 +607,12 @@ def get_sub_ranges(dc, product):
 def create_multiprod_range_entry(dc, product, crses):
     conn = get_sqlconn(dc)
     txn = conn.begin()
-    prodids = [ p.id for p in product.products ]
-    wms_name = product.name
+    if isinstance(product, dict):
+        prodids = [p.id for p in product["products"]]
+        wms_name = product["name"]
+    else:
+        prodids = [ p.id for p in product.products ]
+        wms_name = product.name
 
     # Attempt to insert row
     conn.execute("""
@@ -802,6 +806,23 @@ def add_multiproduct_range(dc, product, follow_dependencies=True):
 
     # Actually merge and store!
     create_multiprod_range_entry(dc, product, get_crses())
+
+
+# add product ranges providing the wms multi-product name
+def add_multiproduct_range_wms(dc, product, multiproduct, follow_dependencies=True):
+
+    assert product is not None
+    prod_index = []
+    if follow_dependencies:
+        for product_name in product:
+            dc_prod = dc.index.products.get_by_name(product_name)
+            add_product_range(dc, dc_prod)
+            prod_index.append(dc_prod)
+            if not check_datasets_exist(dc, dc_prod):
+                print("Could not find any datasets for: ", product_name)
+    wms_product = {"name": multiproduct, "products": prod_index}
+    # Actually merge and store!
+    create_multiprod_range_entry(dc, wms_product, get_crses())
 
 
 def add_all(dc):
