@@ -56,7 +56,7 @@ Setup
   script will need to be re-run every time additional datasets are added to
   the Datacube.
 
-* If you are accessing data on AWS S3 and running `datacube_wms` on Ubuntu you may encounter errors with `GetMap` similar to: `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`. If this occurs run the following commands::
+* If you are accessing data on AWS S3 and running `datacube_ows` on Ubuntu you may encounter errors with `GetMap` similar to: `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`. If this occurs run the following commands::
 
     mkdir -p /etc/pki/tls/certs
     ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
@@ -71,7 +71,7 @@ Flask Dev Server
 
 * Set the `FLASK_APP` environment variable::
 
-        export FLASK_APP=datacube_ows/ogc.py
+        export FLASK_APP=datacube_wms/ogc.py
 
 * Run the Flask dev server::
 
@@ -118,7 +118,7 @@ to multiple web apps using different virtual environments.
         <Location /datacube_ows>
                 WSGIProcessGroup datacube_ows
         </Location>
-        <Directory /path/to/source_code/datacube-ows/datacube_ows>
+        <Directory /path/to/source_code/datacube-ows/datacube_wms>
                 <Files wsgi.py>
                         AllowOverride None
                         Require all granted
