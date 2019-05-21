@@ -28,7 +28,10 @@ service_cfg = {
     # URL that humans can visit to learn more about the WMS or organization
     # should be fully qualified
     "human_url": "http://csiro.au",
-
+    # Provide S3 data URL for data_links in GetFeatureinfo
+    "s3_url": "http://data.au",
+    # Provide S3 bucket name for data_links in GetFeatureinfo    
+    "s3_bucket": "s3_bucket_name",
     # Supported co-ordinate reference systems
     "published_CRSs": {
         "EPSG:3857": {  # Web Mercator
@@ -703,7 +706,12 @@ layer_cfg = [
                                 "value": 1.0,
                                 "color": "#114D04"
                             }
-                        ]
+                        ],
+                        "legend": {
+                            # Instead of using the generated color ramp legend for the style, a URL to a PNG file can
+                            # be used instead.
+                            "url": "http://example.com/custom_style_image.png"
+                        }
                     },
                     {
                         "name": "ndvi_cloudmask",

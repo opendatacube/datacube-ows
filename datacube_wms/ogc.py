@@ -179,9 +179,7 @@ def ogc_svc_impl(svc):
         return e.exception_response()
 
     try:
-        # create dummy env if not exists
-        with rio_env():
-            return version_support.router(nocase_args)
+        return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
     except Exception as e:

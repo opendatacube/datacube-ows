@@ -322,6 +322,7 @@ class PlatformLayerDef(object):
                 layer_defs.product_index[prod.name] = prod
             except ProductLayerException as e:
                 _LOG.error("Could not load layer: %s", str(e))
+        self.valid_products = [product for product in self.products if product.ranges]
 
 
 class LayerDefs(object):
@@ -385,6 +386,8 @@ class ServiceCfg(object):
 
             self.title = srv_cfg["title"]
             self.url = srv_cfg["url"]
+            self.s3_bucket = srv_cfg.get("s3_bucket", "")
+            self.s3_url = srv_cfg.get("s3_url", "")
             # For services that can be accessed through
             # multiple domain names
             self.allowed_urls = self.url

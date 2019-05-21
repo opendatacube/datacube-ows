@@ -63,6 +63,10 @@ class StyleDefBase(object):
     def legend(self, bytesio):
         pass
 
+    def legend_override_with_url(self):
+        return self.legend_cfg.get('url', None)
+
+
 class DynamicRangeCompression(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(DynamicRangeCompression, self).__init__(product, style_cfg)
