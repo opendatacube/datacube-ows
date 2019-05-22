@@ -80,4 +80,4 @@ WORKDIR /code
 
 ENTRYPOINT ["wms-entrypoint.sh"]
 
-CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms:wms --pid=gunicorn.pid
+CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms.wsgi --pid=gunicorn.pid
