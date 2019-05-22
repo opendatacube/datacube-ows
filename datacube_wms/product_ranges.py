@@ -177,6 +177,7 @@ def determine_product_ranges(dc, dc_product, extractor):
     r["times"] = sorted(time_set)
     r["time_set"] = time_set
     r["bboxes"] = { crsid: jsonise_bbox(extents[crsid].boundingbox) for crsid in crsids }
+    print("LATS: ", r["lat"], " LONS: ", r["lon"])
     if extractor is not None:
         for path in sub_r.keys():
             sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
