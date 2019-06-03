@@ -68,13 +68,15 @@ def test_read_data(dataset):
         def __init__(self):
             self.center_time = datetime.utcnow()
             self.id = 1
+            self.metadata = dict()
 
     datasets = [ fake_dataset() ]
     measurements = [ fake_measurement("test", -1, "int16") ]
     geobox = fakegeobox()
-    with patch('datacube.Datacube.load_data') as load_data:
+    with patch('datacube.Datacube.load_data') as load_data, patch('datacube.api.query.solar_day') as solar_day:
         datacube_wms.data.read_data(datasets, measurements, geobox)
         assert load_data.called
+        assert solar_day.called
 
 def test_make_derived_band_dict_nan():
     class fake_data:

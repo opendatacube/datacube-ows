@@ -16,7 +16,6 @@ import datacube
 from datacube.utils import geometry
 from datacube.storage.masking import mask_to_dict
 from datacube.utils.rio import set_default_rio_config
-from datacube.api.query import query_group_by
 
 from datacube_wms.cube_pool import cube
 
@@ -43,11 +42,14 @@ def read_data(datasets, measurements, geobox, resampling=Resampling.nearest, **k
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
 
-    datasets = datacube.Datacube.group_datasets(datasets, query_group_by())
+    datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
     set_default_rio_config(aws=dict(aws_unsigned=True), 
                            cloud_defaults=True)
-    data = datacube.Datacube.load_data(datasets, geobox, measurements=measurements, **kwargs)
-
+    data = datacube.Datacube.load_data(
+        datasets,
+        geobox,
+        measurements=measurements,
+        fuse_func=kwargs.get('fuse_func', None))
     # maintain compatibility with functions not expecting the data to have a time dimension
     return data.squeeze(dim='time', drop=True)
 
