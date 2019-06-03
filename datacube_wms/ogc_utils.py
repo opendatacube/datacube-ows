@@ -7,9 +7,9 @@ from datetime import timedelta, datetime
 from dateutil.parser import parse
 from urllib.parse import urlparse
 try:
-    from datacube_wms.wms_cfg_local import service_cfg, layer_cfg, response_cfg
+    from datacube_wms.wms_cfg_local import response_cfg
 except ImportError:
-    from datacube_wms.wms_cfg import service_cfg, layer_cfg, response_cfg
+    from datacube_wms.wms_cfg import response_cfg
 
 
 # Use metadata time if possible as this is what WMS uses to calculate it's temporal extents

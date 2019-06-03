@@ -156,13 +156,13 @@ def test_read_data(dataset, new_datasource):
     measurements = [ fake_measurement("test", -1, "int16") ]
     geobox = fakegeobox()
     with patch('datacube.Datacube.load_data') as load_data, patch('datacube_wms.data._get_measurement') as get_measurement:
-        datacube_wms.data.read_data(datasets, measurements, geobox, use_overviews=False)
+        datacube_wms.data.read_data(datasets, measurements, geobox)
 
         assert load_data.called
         assert not get_measurement.called
 
     with patch('datacube.Datacube.load_data') as load_data, patch('datacube_wms.data._get_measurement') as get_measurement:
-        datacube_wms.data.read_data(datasets, measurements, geobox, use_overviews=True)
+        datacube_wms.data.read_data(datasets, measurements, geobox)
 
         assert not load_data.called
         assert get_measurement.called

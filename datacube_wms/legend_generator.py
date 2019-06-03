@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
-import datacube_wms.band_mapper as mapper
 import logging
-from datacube_wms.wms_layers import get_layers
 from datacube_wms.wms_utils import GetLegendGraphicParameters
 import io
 from PIL import Image
