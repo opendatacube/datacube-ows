@@ -126,7 +126,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
                 {% endif %}
             </lonLatEnvelope>
         </CoverageOfferingBrief>
-    {% end if %}
+    {% endif %}
     {% endfor %}{% endfor %}
 </ContentMetadata>
 {% endif %}
