@@ -1,6 +1,6 @@
-import datacube_wms.data
+import datacube_ows.data
 
-from datacube_wms.data import get_s3_browser_uris
+from datacube_ows.data import get_s3_browser_uris
 
 import pytest
 
@@ -74,7 +74,7 @@ def test_read_data(dataset):
     measurements = [ fake_measurement("test", -1, "int16") ]
     geobox = fakegeobox()
     with patch('datacube.Datacube.load_data') as load_data, patch('datacube.api.query.solar_day') as solar_day:
-        datacube_wms.data.read_data(datasets, measurements, geobox)
+        datacube_ows.data.read_data(datasets, measurements, geobox)
         assert load_data.called
         assert solar_day.called
 
@@ -98,7 +98,7 @@ def test_make_derived_band_dict_nan():
         "fake": fake_style()
     }
 
-    band_dict = datacube_wms.data._make_derived_band_dict(fake_dataset(), style_dict)
+    band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == "n/a"
 
 def test_make_derived_band_dict_not_nan():
@@ -121,7 +121,7 @@ def test_make_derived_band_dict_not_nan():
         "fake": fake_style()
     }
 
-    band_dict = datacube_wms.data._make_derived_band_dict(fake_dataset(), style_dict)
+    band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == 10.10
 
 def test_make_band_dict_nan(product_layer):
@@ -137,7 +137,7 @@ def test_make_band_dict_nan(product_layer):
 
     bands = ["fake"]
 
-    band_dict = datacube_wms.data._make_band_dict(product_layer, fake_dataset(), bands)
+    band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset(), bands)
     assert band_dict["fake"] == "n/a"
 
 

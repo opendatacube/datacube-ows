@@ -14,7 +14,7 @@ service_cfg = {
     # Service title - appears e.g. in Terria catalog
     "title": "WMS server for Australian Landsat Datacube",
     # Service URL.  Should a fully qualified URL
-    "url": "http://9xjfk12.nexus.csiro.au/datacube_wms",
+    "url": "http://9xjfk12.nexus.csiro.au/datacube_ows",
 
     # Supported co-ordinate reference systems
     "published_CRSs": {
@@ -45,7 +45,7 @@ service_cfg = {
             # Renderer is the FQN of a Python function that takes:
             #   * A WCS Request object
             #   * Some ODC data to be rendered.
-            "renderer": "datacube_wms.wcs_utils.get_tiff",
+            "renderer": "datacube_ows.wcs_utils.get_tiff",
             # The MIME type of the image, as used in the Http Response.
             "mime": "image/geotiff",
             # The file extension to add to the filename.
@@ -54,7 +54,7 @@ service_cfg = {
             "multi-time": False
         },
         "netCDF": {
-            "renderer": "datacube_wms.wcs_utils.get_netcdf",
+            "renderer": "datacube_ows.wcs_utils.get_netcdf",
             "mime": "application/x-netcdf",
             "extension": "nc",
             "multi-time": True,
@@ -152,7 +152,7 @@ layer_cfg = [
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
                 # "extent_mask_func": lambda data, band: (data[band] != data[band].attrs['nodata']),
-                "extent_mask_func": "datacube_wms.ogc_utils.mask_by_val",
+                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                 # Flags listed here are ignored in GetFeatureInfo requests.
                 # (defaults to empty list)
                 "ignore_info_flags": [],
@@ -434,7 +434,7 @@ layer_cfg = [
                         #    Note that lambdas CANNOT use band aliases - they MUST use the native band name
                         #
                         # 2. A string containing a fully qualified path to a python function
-                        #    e.g. "index_function": "datacube_wms.ogc_utils.not_a_real_function_name",
+                        #    e.g. "index_function": "datacube_ows.ogc_utils.not_a_real_function_name",
                         #
                         # 3. A dict containing the following elements:
                         #    a) "function" (required): A string containing the fully qualified path to a python function
@@ -449,7 +449,7 @@ layer_cfg = [
                         # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
                         #
                         "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
+                            "function": "datacube_ows.band_utils.norm_diff",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band1": "nir",
@@ -465,7 +465,7 @@ layer_cfg = [
                         "title": "NDVI with cloud masking",
                         "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
+                            "function": "datacube_ows.band_utils.norm_diff",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band1": "nir",
@@ -489,7 +489,7 @@ layer_cfg = [
                         "title": "NDWI",
                         "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
+                            "function": "datacube_ows.band_utils.norm_diff",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band1": "green",
@@ -504,7 +504,7 @@ layer_cfg = [
                         "title": "NDWI with cloud and cloud-shadow masking",
                         "abstract": "Normalised Difference Water Index (with cloud and cloud-shadow masking) - a derived index that correlates well with the existence of water",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
+                            "function": "datacube_ows.band_utils.norm_diff",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band1": "green",
@@ -527,7 +527,7 @@ layer_cfg = [
                         "title": "NDBI",
                         "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
+                            "function": "datacube_ows.band_utils.norm_diff",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band1": "swir2",
@@ -544,7 +544,7 @@ layer_cfg = [
                         "title": "Cloud Mask",
                         "abstract": "Highlight pixels with cloud.",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.constant",
+                            "function": "datacube_ows.band_utils.constant",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band": "red",
@@ -576,7 +576,7 @@ layer_cfg = [
                         "title": "Cloud and Shadow Mask",
                         "abstract": "Highlight pixels with cloud or cloud shadow.",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.constant",
+                            "function": "datacube_ows.band_utils.constant",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band": "red",
@@ -602,7 +602,7 @@ layer_cfg = [
                         "title": "Cloud acca Mask",
                         "abstract": "Highlight pixels with cloud.",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.constant",
+                            "function": "datacube_ows.band_utils.constant",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band": "red",
@@ -624,7 +624,7 @@ layer_cfg = [
                         "title": "Cloud fmask Mask",
                         "abstract": "Highlight pixels with cloud.",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.constant",
+                            "function": "datacube_ows.band_utils.constant",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band": "red",
@@ -646,7 +646,7 @@ layer_cfg = [
                         "title": "Contiguous Data Mask",
                         "abstract": "Highlight pixels with non-contiguous data",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.constant",
+                            "function": "datacube_ows.band_utils.constant",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band": "red",
@@ -670,7 +670,7 @@ layer_cfg = [
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
+                            "function": "datacube_ows.band_utils.norm_diff",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band1": "nir",
@@ -699,7 +699,7 @@ layer_cfg = [
                         "abstract": "Normalised Difference Vegetation Index (blended with RGB and cloud masked) - a derived index that correlates well with the existence of vegetation",
                         "component_ratio": 0.6,
                         "index_function": {
-                            "function": "datacube_wms.band_utils.norm_diff",
+                            "function": "datacube_ows.band_utils.norm_diff",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band1": "nir",
@@ -781,7 +781,7 @@ layer_cfg = [
                 "zoomed_out_fill_colour": [200, 180, 180, 160],
                 # Extent mask function
                 # Determines what portions of dataset is potentially meaningful data.
-                "extent_mask_func": "datacube_wms.ogc_utils.mask_by_bitflag",
+                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_bitflag",
                 # When pq_manual_merge is set to true, individual PQ datasets
                 # are masked against the extent_mask_func individually before
                 # merging into a single DataArray.  Carries a performance
@@ -812,7 +812,7 @@ layer_cfg = [
                         "title": "Water (masked)",
                         "abstract": "Water, with clouds, terrain shadows, etc. masked",
                         "index_function": {
-                                              "function": "datacube_wms.band_utils.constant",
+                                              "function": "datacube_ows.band_utils.constant",
                                               "pass_product_cfg": True,
                                               "kwargs": {
                                                   "band": "red",
@@ -845,7 +845,7 @@ layer_cfg = [
                         "title": "Water (unmasked)",
                         "abstract": "Simple water data, no masking",
                         "index_function": {
-                            "function": "datacube_wms.band_utils.constant",
+                            "function": "datacube_ows.band_utils.constant",
                             "pass_product_cfg": True,
                             "kwargs": {
                                 "band": "red",

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import logging
-from datacube_wms.wms_utils import GetLegendGraphicParameters
+from datacube_ows.wms_utils import GetLegendGraphicParameters
 import io
 from PIL import Image
 import numpy as np

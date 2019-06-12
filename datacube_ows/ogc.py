@@ -8,15 +8,15 @@ from flask import Flask, request, g
 from flask_log_request_id import RequestID, RequestIDLogFilter, current_request_id
 import os
 
-from datacube_wms.legend_generator import create_legend_for_style
-from datacube_wms.ogc_utils import capture_headers, resp_headers
-from datacube_wms.wms import handle_wms, WMS_REQUESTS
-from datacube_wms.wcs import handle_wcs, WCS_REQUESTS
-from datacube_wms.wmts import handle_wmts
-from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
-from datacube_wms.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
+from datacube_ows.legend_generator import create_legend_for_style
+from datacube_ows.ogc_utils import capture_headers, resp_headers
+from datacube_ows.wms import handle_wms, WMS_REQUESTS
+from datacube_ows.wcs import handle_wcs, WCS_REQUESTS
+from datacube_ows.wmts import handle_wmts
+from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
+from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 
-from datacube_wms.wms_layers import get_service_cfg, get_layers
+from datacube_ows.ows_configuration import get_service_cfg, get_layers
 
 import logging
 
@@ -49,7 +49,7 @@ _LOG.addHandler(handler)
 _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 
 if os.environ.get("prometheus_multiproc_dir", False):
-    from datacube_wms.metrics.prometheus import setup_prometheus
+    from datacube_ows.metrics.prometheus import setup_prometheus
     setup_prometheus(app)
 
 

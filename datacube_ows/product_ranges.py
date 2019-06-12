@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function
 from datetime import date, datetime, timedelta
 import datacube
 
-from datacube_wms.wms_layers import get_service_cfg, get_layers, ProductLayerDef
-from datacube_wms.ogc_utils import local_date
+from datacube_ows.ows_configuration import get_service_cfg, get_layers, ProductLayerDef
+from datacube_ows.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
 from uuid import UUID

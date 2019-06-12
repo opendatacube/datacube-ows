@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from flask import render_template
 
-from datacube_wms.ogc_utils import resp_headers
+from datacube_ows.ogc_utils import resp_headers
 
 
 class OGCException(Exception):

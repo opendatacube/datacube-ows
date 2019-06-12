@@ -10,12 +10,12 @@ from affine import Affine
 from datacube.utils import geometry
 from rasterio import MemoryFile
 
-from datacube_wms.cube_pool import get_cube, release_cube
-from datacube_wms.data import DataStacker
-from datacube_wms.ogc_exceptions import WCS1Exception
-from datacube_wms.ogc_utils import ProductLayerException
-from datacube_wms.wms_layers import get_layers, get_service_cfg
-from datacube_wms.utils import opencensus_trace_call, get_opencensus_tracer
+from datacube_ows.cube_pool import get_cube, release_cube
+from datacube_ows.data import DataStacker
+from datacube_ows.ogc_exceptions import WCS1Exception
+from datacube_ows.ogc_utils import ProductLayerException
+from datacube_ows.ows_configuration import get_layers, get_service_cfg
+from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
 
 tracer = get_opencensus_tracer()
 

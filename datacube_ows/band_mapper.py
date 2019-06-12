@@ -20,7 +20,7 @@ from textwrap import fill
 
 from math import isclose
 
-from datacube_wms.ogc_utils import FunctionWrapper
+from datacube_ows.ogc_utils import FunctionWrapper
 
 
 _LOG = logging.getLogger(__name__)

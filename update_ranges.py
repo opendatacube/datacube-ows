@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from datacube_wms.product_ranges import update_all_ranges, get_sqlconn, add_product_range, add_multiproduct_range, add_all, update_range
+from datacube_ows.product_ranges import update_all_ranges, get_sqlconn, add_product_range, add_multiproduct_range, add_all, update_range
 from datacube import Datacube
 from psycopg2.sql import SQL, Identifier
 import click

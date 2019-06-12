@@ -2,15 +2,15 @@ from __future__ import absolute_import, division, print_function
 
 from flask import render_template
 
-from datacube_wms.data import get_map, feature_info
-from datacube_wms.ogc_utils import resp_headers, get_service_base_url
+from datacube_ows.data import get_map, feature_info
+from datacube_ows.ogc_utils import resp_headers, get_service_base_url
 
-from datacube_wms.ogc_exceptions import WMSException
+from datacube_ows.ogc_exceptions import WMSException
 
-from datacube_wms.wms_layers import get_layers, get_service_cfg
+from datacube_ows.ows_configuration import get_layers, get_service_cfg
 
-from datacube_wms.legend_generator import legend_graphic
-from datacube_wms.utils import log_call, get_opencensus_tracer, opencensus_trace_call
+from datacube_ows.legend_generator import legend_graphic
+from datacube_ows.utils import log_call, get_opencensus_tracer, opencensus_trace_call
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 

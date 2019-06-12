@@ -1,7 +1,7 @@
-import datacube_wms.band_mapper as bm
-from datacube_wms.band_mapper import StyleDef
+import datacube_ows.band_mapper as bm
+from datacube_ows.band_mapper import StyleDef
 
-from datacube_wms.wms_layers import BandIndex, ProductLayerDef
+from datacube_ows.ows_configuration import BandIndex, ProductLayerDef
 
 from xarray import DataArray, Dataset
 from unittest.mock import patch
@@ -214,7 +214,7 @@ def test_alpha_style_map(
     da = DataArray(band, name='foo')
     ds = Dataset(data_vars={'foo': da})
 
-    with patch('datacube_wms.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+    with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
         result = style_def.transform_data(ds, None, None)
@@ -355,7 +355,7 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
     da = DataArray(band, name='foo')
     ds = Dataset(data_vars={'foo': da})
 
-    with patch('datacube_wms.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+    with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
         data = style_def.transform_data(ds, None, None)
         r = data["red"]
@@ -374,7 +374,7 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
 
 def test_reint():
-    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from datacube_ows.band_mapper import RGBAMappedStyleDef
 
     band = np.array([0., 0., 1., 1., 2., 2.])
     da = DataArray(band, name='foo')
@@ -391,7 +391,7 @@ def test_reint():
     assert (data.dtype.kind == "i")
 
 def test_createcolordata():
-    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from datacube_ows.band_mapper import RGBAMappedStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, 2, 2])
@@ -402,7 +402,7 @@ def test_createcolordata():
     assert (data == 1.0).all()
 
 def test_createcolordata_alpha():
-    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from datacube_ows.band_mapper import RGBAMappedStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, 2, 2])
@@ -413,7 +413,7 @@ def test_createcolordata_alpha():
     assert (data["alpha"] == 0).all()
 
 def test_createcolordata_mask():
-    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from datacube_ows.band_mapper import RGBAMappedStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, 2, 2])
@@ -425,7 +425,7 @@ def test_createcolordata_mask():
     assert (np.isfinite(data["red"][2:5:1])).all()
 
 def test_createcolordata_remask():
-    from datacube_wms.band_mapper import RGBAMappedStyleDef
+    from datacube_ows.band_mapper import RGBAMappedStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, np.nan, np.nan])

@@ -1,4 +1,4 @@
-import datacube_wms.wms_utils
+import datacube_ows.wms_utils
 
 
 def test_parse_time_delta():
@@ -11,7 +11,7 @@ def test_parse_time_delta():
     }
     for td, td_str_list in tests.items():
         for td_str in td_str_list:
-            assert td == datacube_wms.wms_utils.parse_time_delta(td_str)
+            assert td == datacube_ows.wms_utils.parse_time_delta(td_str)
 
 
 def test_parse_wms_time_strings():
@@ -24,11 +24,11 @@ def test_parse_wms_time_strings():
     }
 
     for value, result in tests.items():
-        assert result == datacube_wms.wms_utils.parse_wms_time_strings(value.split('/'))
+        assert result == datacube_ows.wms_utils.parse_wms_time_strings(value.split('/'))
 
 
 def test_parse_wms_time_strings_with_present():
     import datetime as dt
-    start, end = datacube_wms.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
+    start, end = datacube_ows.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
     assert start == dt.datetime(2018, 1, 10, 0, 0)
     assert (dt.datetime.utcnow() - end).total_seconds() < 60

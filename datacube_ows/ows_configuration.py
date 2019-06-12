@@ -1,19 +1,25 @@
-from __future__ import absolute_import, division, print_function
+#
+#  Note this is NOT the configuration file!
+#
+#  This is a Python module containing the classes and functions used to load and parse configuration files.
+#
+#  Refer to the documentation for information on how to configure datacube_ows.
+#
 
 try:
-    from datacube_wms.wms_cfg_local import layer_cfg
+    from datacube_ows.wms_cfg_local import layer_cfg
 except ImportError:
-    from datacube_wms.wms_cfg import layer_cfg
+    from datacube_ows.wms_cfg import layer_cfg
 try:
-    from datacube_wms.wms_cfg_local import service_cfg
+    from datacube_ows.wms_cfg_local import service_cfg
 except ImportError:
-    from datacube_wms.wms_cfg import service_cfg
+    from datacube_ows.wms_cfg import service_cfg
 
 from collections.abc import Mapping
 
-from datacube_wms.cube_pool import cube
-from datacube_wms.band_mapper import StyleDef
-from datacube_wms.ogc_utils import get_function, ProductLayerException, FunctionWrapper
+from datacube_ows.cube_pool import cube
+from datacube_ows.band_mapper import StyleDef
+from datacube_ows.ogc_utils import get_function, ProductLayerException, FunctionWrapper
 
 import logging
 
@@ -154,7 +160,7 @@ class ProductLayerDef(object):
                                         self.product_variant,
                                         self.product_type,
                                         self.product_label)
-        from datacube_wms.product_ranges import get_ranges, get_sub_ranges, merge_ranges
+        from datacube_ows.product_ranges import get_ranges, get_sub_ranges, merge_ranges
         self.ranges = get_ranges(dc, self)
         if self.ranges is None:
             if self.multi_product:

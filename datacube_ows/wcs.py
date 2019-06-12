@@ -2,14 +2,14 @@ from __future__ import absolute_import, division, print_function
 
 from flask import render_template
 
-from datacube_wms.ogc_utils import resp_headers, get_service_base_url
+from datacube_ows.ogc_utils import resp_headers, get_service_base_url
 
-from datacube_wms.ogc_exceptions import WCS1Exception
-from datacube_wms.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
+from datacube_ows.ogc_exceptions import WCS1Exception
+from datacube_ows.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
 
-from datacube_wms.wms_layers import get_layers, get_service_cfg
+from datacube_ows.ows_configuration import get_layers, get_service_cfg
 
-from datacube_wms.utils import log_call, opencensus_trace_call, get_opencensus_tracer
+from datacube_ows.utils import log_call, opencensus_trace_call, get_opencensus_tracer
 
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")

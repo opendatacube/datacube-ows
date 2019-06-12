@@ -17,19 +17,19 @@ from datacube.utils import geometry
 from datacube.storage.masking import mask_to_dict
 from datacube.utils.rio import set_default_rio_config
 
-from datacube_wms.cube_pool import cube
+from datacube_ows.cube_pool import cube
 
-from datacube_wms.wms_layers import get_service_cfg
-from datacube_wms.wms_utils import img_coords_to_geopoint , GetMapParameters, \
+from datacube_ows.ows_configuration import get_service_cfg
+from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
-from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
+from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
     ProductLayerException
 
-from datacube_wms.utils import log_call
+from datacube_ows.utils import log_call
 
 import logging
 
-from datacube_wms.utils import get_opencensus_tracer, opencensus_trace_call
+from datacube_ows.utils import get_opencensus_tracer, opencensus_trace_call
 
 _LOG = logging.getLogger(__name__)
 

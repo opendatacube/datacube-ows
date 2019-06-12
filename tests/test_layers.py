@@ -1,4 +1,4 @@
-from datacube_wms.wms_layers import get_layers
+from datacube_ows.ows_configuration import get_layers
 
 import datacube
 import pytest
