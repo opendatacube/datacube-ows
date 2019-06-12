@@ -81,6 +81,9 @@ WORKDIR /code
 # Create owsuser directory using root access
 RUN mkdir -p "$HOME"/owsuser
 
+# Create a new .datacube.conf file in owsuser home directory
+RUN echo "[datacube]" > "$HOME/owsuser/.datacube.conf"
+
 # Provide access to owsuser
 RUN chown owsuser "$HOME"/owsuser
 
