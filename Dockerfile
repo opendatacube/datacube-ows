@@ -81,6 +81,7 @@ WORKDIR /code
 USER owsuser
 
 # Create a new .datacube.conf file in owsuser home directory
+RUN mkdir -p "$HOME"
 RUN echo "[datacube]" > "$HOME/.datacube.conf"
 ENTRYPOINT ["wms-entrypoint.sh"]
 
