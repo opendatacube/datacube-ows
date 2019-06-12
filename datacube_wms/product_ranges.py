@@ -177,6 +177,7 @@ def determine_product_ranges(dc, dc_product, extractor):
     r["times"] = sorted(time_set)
     r["time_set"] = time_set
     r["bboxes"] = { crsid: jsonise_bbox(extents[crsid].boundingbox) for crsid in crsids }
+    print("LATS: ", r["lat"], " LONS: ", r["lon"])
     if extractor is not None:
         for path in sub_r.keys():
             sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
@@ -708,12 +709,22 @@ def create_range_entry(dc, product, crses):
     """,
     {"p_id": prodid, "p_idarr": [ prodid ]})
 
+  # Set default timezone
+  conn.execute("""
+    set timezone to 'Etc/UTC'
+  """)
+
   # Create sorted list of dates
   conn.execute("""
     WITH sorted
     AS (SELECT to_jsonb(array_agg(dates.d))
         AS dates
-        FROM (SELECT DISTINCT to_date(metadata::json->'extent'->>'center_dt', 'YYYY-MM-DD')
+        FROM (SELECT DISTINCT 
+               date(to_timestamp(metadata -> 'extent' ->> 'center_dt', 'YYYY-MM-DDTHH:MI:SS.MSZ') AT TIME ZONE 'UTC' +
+                (least(to_number(metadata -> 'extent' -> 'coord' -> 'll' ->> 'lon', '9999.9999999999999999999999999999999999'),
+                to_number(metadata -> 'extent' -> 'coord' -> 'ul' ->> 'lon', '9999.9999999999999999999999999999999999')) +
+                greatest(to_number(metadata -> 'extent' -> 'coord' -> 'lr' ->> 'lon', '9999.9999999999999999999999999999999999'),
+                to_number(metadata -> 'extent' -> 'coord' -> 'ur' ->> 'lon', '9999.9999999999999999999999999999999999'))) / 30.0 * interval '1 hour')
               AS d
               FROM agdc.dataset
               WHERE dataset_type_ref=%(p_id)s
