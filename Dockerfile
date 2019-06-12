@@ -81,6 +81,8 @@ WORKDIR /code
 # Run container as an owsuser instead as root user
 USER owsuser
 
+WORKDIR "$HOME"
+
 # Create owsuser directory using root access
 RUN mkdir -p "$HOME"/owsuser
 
