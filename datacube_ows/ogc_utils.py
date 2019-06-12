@@ -6,11 +6,15 @@ from itertools import chain
 from datetime import timedelta, datetime
 from dateutil.parser import parse
 from urllib.parse import urlparse
+from timezonefinder import TimezoneFinder
+from datacube.utils import geometry
+from pytz import timezone, utc
 try:
     from datacube_ows.wms_cfg_local import response_cfg
 except ImportError:
     from datacube_ows.wms_cfg import response_cfg
 
+tf = TimezoneFinder(in_memory=True)
 
 # Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
 # datacube-core center time accessed through the dataset API is caluclated and may
@@ -25,24 +29,40 @@ def dataset_center_time(dataset):
     return center_time
 
 
-def mean_solar_time(time, mean_long):
-    mean_solar_tz_offset = mean_long / 15.0
-    mean_local_solar_time = time + timedelta(hours=mean_solar_tz_offset)
-    return mean_local_solar_time.date()
+def dataset_center_coords(dataset):
+    centroid = dataset.extent.centroid
+    crs_geo = geometry.CRS("EPSG:4326")
+    geom_centroid = centroid.to_crs(crs_geo)
+    return geom_centroid.coords[0]
 
 
 def local_date(ds):
     dt_utc = dataset_center_time(ds)
-    mean_long = (ds.metadata.lon.begin + ds.metadata.lon.end) / 2.0
-    return mean_solar_time(dt_utc, mean_long)
+    dc_lon, dc_lat = dataset_center_coords(ds)
+    return coord_date(dt_utc, dc_lon, dc_lat).date()
 
 
-def local_solar_date_range(geobox, time):
-    mean_long = geobox.geographic_extent.centroid.coords[0][0]
-    mean_solar_tz_offset = mean_long / 15.0
-    mst = datetime(time.year, time.month, time.day) - timedelta(hours=mean_solar_tz_offset)
-    mst_1 = mst + timedelta(days=1)
-    return (mst, mst_1)
+def tz_for_coord(lon, lat):
+    tzn = tf.closest_timezone_at(lng=lon, lat=lat, delta_degree=9)
+    if not tzn:
+        print("closest tz failed with delta 9deg")
+        tzn = tf.closest_timezone_at(lng=lon, lat=lat, delta_degree=15)
+        if not tzn:
+            raise Exception ("closest tz failed with delta 15deg")
+    return timezone(tzn)
+
+
+def coord_date(time, lon, lat):
+    tz = tz_for_coord(lon,lat)
+    return time.astimezone(tz)
+
+
+def local_solar_date_range(geobox, date):
+    centroid = geobox.geographic_extent.centroid
+    tz = tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
+    start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
+    end = datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
+    return (start.astimezone(utc), end.astimezone(utc))
 
 
 def resp_headers(d):
@@ -172,5 +192,4 @@ ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 
 def ls8_subproduct(ds):
     return int(ls8_s3_path_pattern.search(ds.uris[0]).group("path"))
-
 
