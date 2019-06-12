@@ -78,10 +78,16 @@ ADD https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/maste
 
 WORKDIR /code
 
+# Create owsuser directory using root access
+RUN mkdir -p "$HOME"/owsuser
+
+# Provide access to owsuser
+RUN chown owsuser "$HOME"/owsuser
+
+# Run container as an owsuser instead as root user
 USER owsuser
 
 # Create a new .datacube.conf file in owsuser home directory
-RUN mkdir -p "$HOME"
 RUN echo "[datacube]" > "$HOME/.datacube.conf"
 ENTRYPOINT ["wms-entrypoint.sh"]
 
