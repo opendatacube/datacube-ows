@@ -18,8 +18,6 @@ from datacube_wms.utils import opencensus_trace_call, get_jaeger_exporter, get_o
 
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
-from .rasterio_env import rio_env
-
 import logging
 
 # pylint: disable=invalid-name, broad-except
@@ -133,22 +131,21 @@ def ogc_impl():
 
     # create dummy env if not exists
     try:
-        with rio_env():
-            # service argument is only required (in fact only defined) by OGC for
-            # GetCapabilities requests.  As long as we are persisting with a single
-            # routing end point for all services, we must derive the service from the request
-            # parameter.
-            # This is a quick hack to fix #64.  Service and operation routing could be
-            # handled more elegantly.
-            op = nocase_args.get("request", "").upper()
-            if op in WMS_REQUESTS:
-                return ogc_svc_impl("wms")
-            elif op in WCS_REQUESTS:
-                return ogc_svc_impl("wcs")
-            else:
-                # Should we return a WMS or WCS exception if there is no service specified?
-                # Defaulting to WMS because that's what we already have.
-                raise WMSException("Invalid service and/or request", locator="Service and request parameters")
+        # service argument is only required (in fact only defined) by OGC for
+        # GetCapabilities requests.  As long as we are persisting with a single
+        # routing end point for all services, we must derive the service from the request
+        # parameter.
+        # This is a quick hack to fix #64.  Service and operation routing could be
+        # handled more elegantly.
+        op = nocase_args.get("request", "").upper()
+        if op in WMS_REQUESTS:
+            return ogc_svc_impl("wms")
+        elif op in WCS_REQUESTS:
+            return ogc_svc_impl("wcs")
+        else:
+            # Should we return a WMS or WCS exception if there is no service specified?
+            # Defaulting to WMS because that's what we already have.
+            raise WMSException("Invalid service and/or request", locator="Service and request parameters")
     except OGCException as e:
         return e.exception_response()
     except Exception as e:

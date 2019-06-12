@@ -1,8 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-import datetime
 from dateutil.parser import parse
-from collections import OrderedDict
 
 import datacube
 import numpy
@@ -11,14 +9,13 @@ from affine import Affine
 
 from datacube.utils import geometry
 from rasterio import MemoryFile
-from rasterio.enums import ColorInterp
 
 from datacube_wms.cube_pool import get_cube, release_cube
 from datacube_wms.data import DataStacker
 from datacube_wms.ogc_exceptions import WCS1Exception
 from datacube_wms.ogc_utils import ProductLayerException
 from datacube_wms.wms_layers import get_layers, get_service_cfg
-from datacube_wms.utils import log_call, opencensus_trace_call, get_opencensus_tracer
+from datacube_wms.utils import opencensus_trace_call, get_opencensus_tracer
 
 tracer = get_opencensus_tracer()
 

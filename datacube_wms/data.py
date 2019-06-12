@@ -1,14 +1,11 @@
 from __future__ import absolute_import
 
 import json
-from datetime import timedelta, datetime
+from datetime import datetime
 
 import numpy
 import xarray
-from dask import delayed
-from dask import array as da
 from affine import Affine
-import rasterio as rio
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
@@ -18,13 +15,13 @@ import re
 import datacube
 from datacube.utils import geometry
 from datacube.storage.masking import mask_to_dict
+from datacube.utils.rio import set_default_rio_config
 
 from datacube_wms.cube_pool import cube
 
 from datacube_wms.wms_layers import get_service_cfg
-from datacube_wms.wms_utils import img_coords_to_geopoint, int_trim, \
-    bounding_box_to_geom, GetMapParameters, GetFeatureInfoParameters, \
-    solar_correct_data
+from datacube_wms.wms_utils import img_coords_to_geopoint , GetMapParameters, \
+    GetFeatureInfoParameters, solar_correct_data
 from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
     ProductLayerException
 
@@ -32,100 +29,29 @@ from datacube_wms.utils import log_call
 
 import logging
 
-from datacube.drivers import new_datasource
-from collections import OrderedDict
-
-from dea.geom import read_with_reproject
-
 from datacube_wms.utils import get_opencensus_tracer, opencensus_trace_call
 
 _LOG = logging.getLogger(__name__)
 
 tracer = get_opencensus_tracer()
 
-def _make_destination(shape, no_data, dtype):
-    return numpy.full(shape, no_data, dtype)
-
-@log_call
-@opencensus_trace_call(tracer=tracer)
-def _read_file(source, geobox, band, no_data, resampling):
-    # Read our data
-
-    with rio.open(source.filename, sharing=False) as src:
-        dst = read_with_reproject(src, geobox,
-                                  dst_nodata=no_data,
-                                  src_nodata_fallback=no_data,
-                                  band=source.get_bandnumber(),
-                                  resampling=resampling)
-    return dst
-
-
-@log_call
-@opencensus_trace_call(tracer=tracer)
-def _get_measurement(datasources, geobox, resampling, no_data, dtype, fuse_func=None):
-    """ Gets the measurement array of a band of data
-    """
-    # pylint: disable=broad-except, protected-access
-
-    def copyto_fuser(dest, src):
-        """
-        :type dest: numpy.ndarray
-        :type src: numpy.ndarray
-        """
-        where_nodata = (dest == no_data) if not numpy.isnan(no_data) else numpy.isnan(dest)
-        numpy.copyto(dest, src, where=where_nodata)
-        return dest
-
-    fuse_func = fuse_func or copyto_fuser
-    destination = _make_destination(geobox.shape, no_data, dtype)
-
-    for source in datasources:
-        buffer = _read_file(source, geobox, band=source.get_bandnumber(), no_data=no_data,
-                                     resampling=resampling)
-        destination = fuse_func(destination, buffer)
-
-    return destination
-
-
 # Read data for given datasets and measurements per the output_geobox
-# If use_overviews is true
-# Do not use this function to load data where accuracy is important
-# may have errors when reprojecting the data
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def read_data(datasets, measurements, geobox, use_overviews=False, resampling=Resampling.nearest, **kwargs):
-    # pylint: disable=too-many-locals, dict-keys-not-iterating, protected-access
+def read_data(datasets, measurements, geobox, resampling=Resampling.nearest, **kwargs):
     if not hasattr(datasets, "__iter__"):
         datasets = [datasets]
-    if isinstance(datasets, xarray.DataArray):
-        sources = datasets
-    else:
-        holder = numpy.empty(shape=tuple(), dtype=object)
-        holder[()] = datasets
-        sources = xarray.DataArray(holder)
-    if use_overviews:
-        all_bands = xarray.Dataset()
-        for name, coord in geobox.coordinates.items():
-            all_bands[name] = (name, coord.values, {'units': coord.units})
 
-        datasets = sorted(datasets, key=lambda x: x.id)
-        for measurement in measurements:
-            datasources = [new_datasource(d, measurement['name']) for d in datasets]
-            data = _get_measurement(datasources,
-                                    geobox,
-                                    resampling,
-                                    measurement['nodata'],
-                                    measurement['dtype'],
-                                    fuse_func=kwargs.get('fuse_func', None),
-                                    )
-            coords = OrderedDict((dim, sources.coords[dim]) for dim in sources.dims)
-            dims = tuple(coords.keys()) + tuple(geobox.dimensions)
-            all_bands[measurement['name']] = (dims, data, measurement.dataarray_attrs())
-
-        all_bands.attrs['crs'] = geobox.crs
-        return all_bands
-    else:
-        return datacube.Datacube.load_data(sources, geobox, measurements, **kwargs)
+    datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
+    set_default_rio_config(aws=dict(aws_unsigned=True), 
+                           cloud_defaults=True)
+    data = datacube.Datacube.load_data(
+        datasets,
+        geobox,
+        measurements=measurements,
+        fuse_func=kwargs.get('fuse_func', None))
+    # maintain compatibility with functions not expecting the data to have a time dimension
+    return data.squeeze(dim='time', drop=True)
 
 
 class DataStacker():
@@ -197,7 +123,7 @@ class DataStacker():
 
     @log_call
     @opencensus_trace_call(tracer=tracer)
-    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, use_overviews=False, **kwargs):
+    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, **kwargs):
         # pylint: disable=too-many-locals, consider-using-enumerate
         if mask:
             prod = self._product.pq_product
@@ -208,13 +134,13 @@ class DataStacker():
 
         with datacube.set_options(reproject_threads=1, fast_load=True):
             if manual_merge:
-                return self.manual_data_stack(datasets, measurements, mask, skip_corrections, use_overviews, **kwargs)
+                return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
             elif self._product.solar_correction and not mask and not skip_corrections:
                 # Merge performed already by dataset extent, but we need to
                 # process the data for the datasets individually to do solar correction.
                 merged = None
                 for ds in datasets:
-                    d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
+                    d = read_data(ds, measurements, self._geobox, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -224,12 +150,12 @@ class DataStacker():
                         merged = merged.combine_first(d)
                 return merged
             else:
-                data = read_data(datasets, measurements, self._geobox, use_overviews, self._resampling, **kwargs)
+                data = read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
                 return data
 
     @log_call
     @opencensus_trace_call(tracer=tracer)
-    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, use_overviews, **kwargs):
+    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         merged = None
@@ -238,7 +164,7 @@ class DataStacker():
         else:
             bands = self.needed_bands()
         for ds in datasets:
-            d = read_data(ds, measurements, self._geobox, use_overviews, **kwargs)
+            d = read_data(ds, measurements, self._geobox, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -306,7 +232,6 @@ def get_map(args):
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             data = stacker.data(datasets,
                                 manual_merge=params.product.data_manual_merge,
-                                use_overviews=True,
                                 fuse_func=params.product.fuse_func)
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             if params.style.masks:
@@ -323,7 +248,6 @@ def get_map(args):
                         pq_data = stacker.data(pq_datasets,
                                                mask=True,
                                                manual_merge=params.product.pq_manual_merge,
-                                               use_overviews=True,
                                                fuse_func=params.product.pq_fuse_func)
                     else:
                         pq_data = None

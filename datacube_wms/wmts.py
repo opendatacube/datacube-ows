@@ -166,7 +166,6 @@ def wmts_args_to_wms(args):
     except ValueError:
         raise WMTSException("Invalid Tile Col: " + col)
 
-    matrix_size = 2 ** tileMatrix
     tileMatrixMinX=-20037508.3427892
     tileMatrixMaxY=20037508.3427892
 

@@ -10,9 +10,9 @@ from timezonefinder import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
 try:
-    from datacube_wms.wms_cfg_local import service_cfg, layer_cfg, response_cfg
+    from datacube_wms.wms_cfg_local import response_cfg
 except ImportError:
-    from datacube_wms.wms_cfg import service_cfg, layer_cfg, response_cfg
+    from datacube_wms.wms_cfg import response_cfg
 
 tf = TimezoneFinder(in_memory=True)
 

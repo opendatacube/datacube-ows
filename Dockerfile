@@ -1,4 +1,4 @@
-FROM opendatacube/datacube-core:1.6.2
+FROM opendatacube/datacube-core:1.7
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -25,13 +25,10 @@ RUN pip3 install --upgrade pip \
 
 RUN pip3 install -r requirements.txt \
     && rm -rf $HOME/.cache/pip
-    
-RUN pip3 install git+https://github.com/opendatacube/dea-proto.git@02b531d3cba9dad3bcccce44e90628bf69fef5b4 \
-    && rm -rf $HOME/.cache/pip
-    
+
 RUN pip install -U 'aiobotocore[awscli,boto3]' \
     && rm -rf $HOME/.cache/pip
-    
+
 RUN pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=odc_apps_cloud&subdirectory=apps/cloud' \
     && rm -rf $HOME/.cache/pip
 
@@ -80,4 +77,4 @@ WORKDIR /code
 
 ENTRYPOINT ["wms-entrypoint.sh"]
 
-CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms:wms --pid=gunicorn.pid
+CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms.wsgi --pid=gunicorn.pid

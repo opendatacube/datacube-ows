@@ -22,9 +22,9 @@ import math
 import numpy
 
 try:
-    from datacube_wms.wms_cfg_local import response_cfg, layer_cfg
+    from datacube_wms.wms_cfg_local import layer_cfg
 except ImportError:
-    from datacube_wms.wms_cfg import response_cfg, layer_cfg
+    from datacube_wms.wms_cfg import layer_cfg
 from datacube_wms.wms_layers import get_layers, get_service_cfg
 
 from datacube_wms.ogc_exceptions import WMSException
