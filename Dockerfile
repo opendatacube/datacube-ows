@@ -2,6 +2,9 @@ FROM opendatacube/datacube-core:1.7
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN groupadd -r owsgroup && \
+    useradd -r -g owsgroup owsuser
+
 RUN apt-get update && apt-get install -y \
     python3-matplotlib \
     python3-pil\
@@ -75,6 +78,7 @@ ADD https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/maste
 
 WORKDIR /code
 
+USER owsuser
 ENTRYPOINT ["wms-entrypoint.sh"]
 
 CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms.wsgi --pid=gunicorn.pid
