@@ -6,6 +6,10 @@
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
 
+import os
+from importlib import import_module
+import json
+
 try:
     from datacube_ows.wms_cfg_local import layer_cfg
 except ImportError:
@@ -15,7 +19,7 @@ try:
 except ImportError:
     from datacube_ows.wms_cfg import service_cfg
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.band_mapper import StyleDef
@@ -24,6 +28,66 @@ from datacube_ows.ogc_utils import get_function, ProductLayerException, Function
 import logging
 
 _LOG = logging.getLogger(__name__)
+
+
+class ConfigException(Exception):
+    pass
+
+
+def read_config():
+    cfg_env = os.environ.get("DATACUBE_OWS_CFG")
+    if not cfg_env:
+        from datacube_ows.ows_cfg import ows_cfg as cfg
+    elif "/" in cfg_env:
+        cfg = load_json_obj(cfg_env)
+    elif "." in cfg_env or cfg_env.endswith(".json"):
+        cfg = import_python_obj(cfg_env)
+    elif cfg_env.startswith("{"):
+        cfg = json.loads(cfg_env)
+    else:
+        mod = import_module("datacube_ows.ows_cfg")
+        cfg = getattr(mod, cfg_env)
+    return cfg_expand(cfg)
+
+
+def cfg_expand(cfg_unexpanded, inclusions=[]):
+    if isinstance(cfg_unexpanded, Mapping):
+        if "include" in cfg_unexpanded:
+            if cfg_unexpanded["include"] in inclusions:
+                raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
+            ninclusions = inclusions.copy()
+            ninclusions.append(cfg_unexpanded["include"])
+            # Perform expansion
+            if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
+                # JSON Expansion
+                return cfg_expand(load_json_obj(cfg_unexpanded["include"]), ninclusions)
+            elif cfg_unexpanded["type"] == "python":
+                # Python Expansion
+                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), ninclusions)
+            else:
+                raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
+        else:
+            return { k: cfg_expand(v, inclusions) for k,v in cfg_unexpanded.items()  }
+    elif isinstance(cfg_unexpanded, Sequence):
+        return list([cfg_expand(elem, inclusions) for elem in cfg_unexpanded ])
+    else:
+        return cfg_unexpanded
+
+
+def load_json_obj(path):
+    with open(path) as json_file:
+        return json.load(json_file)
+
+
+def import_python_obj(path):
+    """Imports a python dictionary by fully-qualified path
+
+    :return: a Callable object, or None
+    """
+    mod_name, obj_name = path.rsplit('.', 1)
+    mod = import_module(mod_name)
+    obj = getattr(mod, obj_name)
+    return obj
 
 
 def accum_min(a, b):
