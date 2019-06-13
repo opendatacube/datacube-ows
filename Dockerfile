@@ -88,7 +88,7 @@ RUN echo "[datacube]" > "$HOME"/.datacube.conf
 USER owsuser
 
 # Provide access to owsuser
-RUN chown owsuser "$HOME"/owsuser
+RUN chown owsuser "$HOME"
 
 ENTRYPOINT ["wms-entrypoint.sh"]
 
