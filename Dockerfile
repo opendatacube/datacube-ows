@@ -2,6 +2,9 @@ FROM opendatacube/datacube-core:1.7
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN groupadd -r owsgroup && \
+    useradd -r -g owsgroup owsuser
+
 RUN apt-get update && apt-get install -y \
     python3-matplotlib \
     python3-pil\
@@ -74,6 +77,18 @@ COPY docker/auxiliary/archive/assets/archive.sh .
 ADD https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/master/scripts/index_from_s3_bucket.py ls_s2_cog.py
 
 WORKDIR /code
+
+# Create owsuser directory using root access
+RUN mkdir -p /home/owsuser
+
+# Create a new .datacube.conf file in owsuser home directory as a root user
+RUN echo "[datacube]" > /home/owsuser/.datacube.conf
+
+# Change the ownership from root to owsuser
+RUN chown -c owsuser /home/owsuser/.datacube.conf
+
+# Run container as an owsuser instead as root user
+USER owsuser
 
 ENTRYPOINT ["wms-entrypoint.sh"]
 
