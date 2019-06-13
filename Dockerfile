@@ -81,14 +81,11 @@ WORKDIR /code
 # Create owsuser directory using root access
 RUN mkdir -p /home/owsuser
 
-# Create a new .datacube.conf file in owsuser home directory
+# Create a new .datacube.conf file in owsuser home directory as a root user
 RUN echo "[datacube]" > "$HOME"/.datacube.conf
 
 # Run container as an owsuser instead as root user
 USER owsuser
-
-# Provide access to owsuser
-RUN chown owsuser "$HOME"
 
 ENTRYPOINT ["wms-entrypoint.sh"]
 
