@@ -3,6 +3,13 @@ import os
 from datacube_ows.ows_configuration import read_config, ConfigException
 
 
+def test_cfg_direct():
+    os.environ["DATACUBE_OWS_CFG"] = "{\"test\": 12345}"
+    cfg = read_config()
+
+    assert cfg["test"] == 12345
+
+
 def test_cfg_py_simple_0():
     os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.simple.simple"
     cfg = read_config()
@@ -198,6 +205,4 @@ def test_cfg_json_mixed():
     assert cfg["test"] == 9364
     assert cfg["subtest"]["test_py"]["test"] == 123
     assert cfg["subtest"]["test_json"]["test"] == 1234
-
-
 
