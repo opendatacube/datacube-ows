@@ -80,7 +80,7 @@ infinite_1 = {
 infinite_2 = {
     "test": 7777,
     "subtest": {
-        "include": "tests.cfg.simple.infinite_2a",
+        "include": "tests.cfg.nested.infinite_2a",
         "type": "python"
     }
 }
@@ -89,7 +89,7 @@ infinite_2 = {
 infinite_2a = {
     "test": 7778,
     "subtest": {
-        "include": "tests.cfg.simple.infinite_2b",
+        "include": "tests.cfg.nested.infinite_2b",
         "type": "python"
     }
 }
@@ -98,7 +98,7 @@ infinite_2a = {
 infinite_2b = {
     "test": 7779,
     "subtest": {
-        "include": "tests.cfg.simple.infinite_2",
+        "include": "tests.cfg.nested.infinite_2",
         "type": "python"
     }
 }

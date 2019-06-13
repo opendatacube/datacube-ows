@@ -8,8 +8,8 @@
     {
       "test": 22563,
       "thing": {
-      "include": "tests/cfg/simple.json",
-      "type": "json"
+        "include": "tests/cfg/simple.json",
+        "type": "json"
       }
     },
     {
