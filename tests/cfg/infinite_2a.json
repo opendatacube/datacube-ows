@@ -1,0 +1,7 @@
+{
+    "test": 7788,
+    "subtest": {
+        "include": "tests/cfg/infinite_2b.json",
+        "type": "json"
+    }
+}

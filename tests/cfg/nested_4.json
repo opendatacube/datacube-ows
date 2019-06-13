@@ -1,0 +1,24 @@
+{
+  "test": 3222,
+  "things": [
+    {
+      "test": 2572,
+      "thing": null
+    },
+    {
+      "test": 2573,
+      "thing": {
+        "include": "tests/cfg/simple.json",
+        "type": "json"
+      }
+    },
+    {
+      "test": 2574,
+      "thing": {
+        "include": "tests/cfg/nested_3.json",
+        "type": "json"
+      }
+    }
+  ]
+}
+
