@@ -84,6 +84,9 @@ RUN mkdir -p /home/owsuser
 # Create a new .datacube.conf file in owsuser home directory as a root user
 RUN echo "[datacube]" > /home/owsuser/.datacube.conf
 
+# Change the ownership from root:root to owsgroup:owsuser
+RUN chown -c owsgroup:owsuser /home/owsuser/.datacube.conf
+
 # Run container as an owsuser instead as root user
 USER owsuser
 
