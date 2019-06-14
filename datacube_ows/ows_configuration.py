@@ -535,3 +535,80 @@ class ServiceCfg(object):
 
 def get_service_cfg(refresh=False):
     return ServiceCfg(service_cfg, refresh)
+
+
+class OWSConfigEntry(object):
+    def __init__(self, cfg):
+        self._ingest_dict(cfg)
+
+    def _ingest_dict(self, d):
+        for k,v in d.items():
+            setattr(self, k, v)
+
+    def __getitem__(self, item):
+        return getattr(item)
+
+
+class OWSConfig(OWSConfigEntry):
+    _instance = None
+    initialised = False
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, refresh=False):
+        if not self.initialised or refresh:
+            self.initialised = True
+            cfg = read_config()
+            self.response_headers = cfg["global"].get("response_headers", {})
+            self.wms = cfg["global"].get("services", {}).get("wms", True)
+            self.wmts = cfg["global"].get("services", {}).get("wmts", True)
+            self.wcs = cfg["global"].get("services", {}).get("wcs", False)
+            if not self.wms and not self.wmts and not self.wcs:
+                raise ConfigException("At least one service must be active.")
+            self.title = cfg["global"]["title"]
+            self.allowed_urls = cfg["global"]["allowed_urls"]
+            self.info_url = cfg["global"]["info_url"]
+            self.abstract = cfg["global"].get("abstract")
+            self.contact_info = cfg["global"].get("contact_info", {})
+            self.keywords = cfg["global"].get("keywords", [])
+            self.fees = cfg["global"].get("fees")
+            self.access_constraints = cfg["global"].get("access_constraints")
+            if not self.fees:
+                self.fees = "none"
+            if not self.access_constraints:
+                self.access_constraints = "none"
+            self.s3_bucket = cfg.get("wms", {}).get("s3_bucket", "")
+            self.s3_url = cfg.get("wms", {}).get("s3_url", "")
+            self.s3_aws_zone = cfg.get("wms", {}).get("s3_aws_zone", "")
+            self.wms_max_width = cfg.get("wms", {}).get("max_width", 256)
+            self.wms_max_height = cfg.get("wms", {}).get("max_height", 256)
+            self.attribution = AttributionCfg.parse(cfg.get("wms", {}).get("attribution"))
+            self.authorities = cfg.get("wms", {}).get("authorities", {})
+            self.published_CRSs = {}
+            for crs_str, crsdef in cfg["global"]["published_CRSs"].items():
+                if crs_str.startswith("EPSG:"):
+                    gml_name = "http://www.opengis.net/def/crs/EPSG/0/" + crs_str[5:]
+                else:
+                    gml_name = crs_str
+                self.published_CRSs[crs_str] = {
+                    "geographic": crsdef["geographic"],
+                    "horizontal_coord": crsdef.get("horizontal_coord", "longitude"),
+                    "vertical_coord": crsdef.get("vertical_coord", "latitude"),
+                    "vertical_coord_first": crsdef.get("vertical_coord_first", False),
+                    "gml_name": gml_name
+                }
+                if self.published_CRSs[crs_str]["geographic"]:
+                    if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
+                        raise Exception("Published CRS {} is geographic"
+                                        "but has a horizontal coordinate that is not 'longitude'".format(crs_str))
+                    if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
+                        raise Exception("Published CRS {} is geographic"
+                                        "but has a vertical coordinate that is not 'latitude'".format(crs_str))
+
+        # super().__init__({}) Not needed yet
+
+def get_config(refresh=False):
+    return OWSConfig(refresh=refresh)

@@ -9,10 +9,7 @@ from urllib.parse import urlparse
 from timezonefinder import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
-try:
-    from datacube_ows.wms_cfg_local import response_cfg
-except ImportError:
-    from datacube_ows.wms_cfg import response_cfg
+from datacube_ows.ows_configuration import get_config
 
 tf = TimezoneFinder(in_memory=True)
 
@@ -66,8 +63,7 @@ def local_solar_date_range(geobox, date):
 
 
 def resp_headers(d):
-    hdrs = {}
-    hdrs.update(response_cfg)
+    hdrs = get_config().response_headers.copy()
     hdrs.update(d)
     return hdrs
 
