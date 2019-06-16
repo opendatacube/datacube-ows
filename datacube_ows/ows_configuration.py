@@ -562,53 +562,111 @@ class OWSConfig(OWSConfigEntry):
         if not self.initialised or refresh:
             self.initialised = True
             cfg = read_config()
-            self.response_headers = cfg["global"].get("response_headers", {})
-            self.wms = cfg["global"].get("services", {}).get("wms", True)
-            self.wmts = cfg["global"].get("services", {}).get("wmts", True)
-            self.wcs = cfg["global"].get("services", {}).get("wcs", False)
-            if not self.wms and not self.wmts and not self.wcs:
-                raise ConfigException("At least one service must be active.")
-            self.title = cfg["global"]["title"]
-            self.allowed_urls = cfg["global"]["allowed_urls"]
-            self.info_url = cfg["global"]["info_url"]
-            self.abstract = cfg["global"].get("abstract")
-            self.contact_info = cfg["global"].get("contact_info", {})
-            self.keywords = cfg["global"].get("keywords", [])
-            self.fees = cfg["global"].get("fees")
-            self.access_constraints = cfg["global"].get("access_constraints")
-            if not self.fees:
-                self.fees = "none"
-            if not self.access_constraints:
-                self.access_constraints = "none"
-            self.s3_bucket = cfg.get("wms", {}).get("s3_bucket", "")
-            self.s3_url = cfg.get("wms", {}).get("s3_url", "")
-            self.s3_aws_zone = cfg.get("wms", {}).get("s3_aws_zone", "")
-            self.wms_max_width = cfg.get("wms", {}).get("max_width", 256)
-            self.wms_max_height = cfg.get("wms", {}).get("max_height", 256)
-            self.attribution = AttributionCfg.parse(cfg.get("wms", {}).get("attribution"))
-            self.authorities = cfg.get("wms", {}).get("authorities", {})
-            self.published_CRSs = {}
-            for crs_str, crsdef in cfg["global"]["published_CRSs"].items():
-                if crs_str.startswith("EPSG:"):
-                    gml_name = "http://www.opengis.net/def/crs/EPSG/0/" + crs_str[5:]
-                else:
-                    gml_name = crs_str
-                self.published_CRSs[crs_str] = {
-                    "geographic": crsdef["geographic"],
-                    "horizontal_coord": crsdef.get("horizontal_coord", "longitude"),
-                    "vertical_coord": crsdef.get("vertical_coord", "latitude"),
-                    "vertical_coord_first": crsdef.get("vertical_coord_first", False),
-                    "gml_name": gml_name
-                }
-                if self.published_CRSs[crs_str]["geographic"]:
-                    if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
-                        raise Exception("Published CRS {} is geographic"
-                                        "but has a horizontal coordinate that is not 'longitude'".format(crs_str))
-                    if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
-                        raise Exception("Published CRS {} is geographic"
-                                        "but has a vertical coordinate that is not 'latitude'".format(crs_str))
+            try:
+                self.parse_global(cfg["global"])
+            except KeyError as e:
+                raise ConfigException(
+                    "Missing required config entry in 'global' section: %s" % str(e)
+                )
+
+            if self.wms:
+                self.parse_wms(cfg.get("wms", {}))
+            else:
+                self.parse_wms({})
+
+            if self.wcs:
+                try:
+                    self.parse_wcs(cfg["wcs"])
+                except KeyError as e:
+                    raise ConfigException(
+                        "Missing required config entry in 'wcs' section (with WCS enabled): %s" % str(e)
+                    )
+            else:
+                self.parse_wcs(None)
 
         # super().__init__({}) Not needed yet
+
+    def parse_global(self, cfg):
+        self.response_headers = cfg.get("response_headers", {})
+        self.wms = cfg.get("services", {}).get("wms", True)
+        self.wmts = cfg.get("services", {}).get("wmts", True)
+        self.wcs = cfg.get("services", {}).get("wcs", False)
+        if not self.wms and not self.wmts and not self.wcs:
+            raise ConfigException("At least one service must be active.")
+        self.title = cfg["title"]
+        self.allowed_urls = cfg["allowed_urls"]
+        self.info_url = cfg["info_url"]
+        self.abstract = cfg.get("abstract")
+        self.contact_info = cfg.get("contact_info", {})
+        self.keywords = cfg.get("keywords", [])
+        self.fees = cfg.get("fees")
+        self.access_constraints = cfg.get("access_constraints")
+        if not self.fees:
+            self.fees = "none"
+        if not self.access_constraints:
+            self.access_constraints = "none"
+        self.published_CRSs = {}
+        for crs_str, crsdef in cfg["published_CRSs"].items():
+            if crs_str.startswith("EPSG:"):
+                gml_name = "http://www.opengis.net/def/crs/EPSG/0/" + crs_str[5:]
+            else:
+                gml_name = crs_str
+            self.published_CRSs[crs_str] = {
+                "geographic": crsdef["geographic"],
+                "horizontal_coord": crsdef.get("horizontal_coord", "longitude"),
+                "vertical_coord": crsdef.get("vertical_coord", "latitude"),
+                "vertical_coord_first": crsdef.get("vertical_coord_first", False),
+                "gml_name": gml_name
+            }
+            if self.published_CRSs[crs_str]["geographic"]:
+                if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
+                    raise Exception("Published CRS {} is geographic"
+                                    "but has a horizontal coordinate that is not 'longitude'".format(crs_str))
+                if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
+                    raise Exception("Published CRS {} is geographic"
+                                    "but has a vertical coordinate that is not 'latitude'".format(crs_str))
+
+    def parse_wms(self, cfg):
+        if not self.wms and not self.wmts:
+            cfg = {}
+        self.s3_bucket = cfg.get("s3_bucket", "")
+        self.s3_url = cfg.get("s3_url", "")
+        self.s3_aws_zone = cfg.get("s3_aws_zone", "")
+        self.wms_max_width = cfg.get("max_width", 256)
+        self.wms_max_height = cfg.get("max_height", 256)
+        self.attribution = AttributionCfg.parse(cfg.get("attribution"))
+        self.authorities = cfg.get("authorities", {})
+
+    def parse_wcs(self, cfg):
+        if self.wcs:
+            if not isinstance(cfg, Mapping):
+                raise ConfigException("WCS section missing (and WCS is enabled)")
+            self.default_geographic_CRS = cfg.get("default_geographic_CRS")
+            if self.default_geographic_CRS not in self.published_CRSs:
+                raise ConfigException("Configured default geographic CRS not listed in published CRSs.")
+            if not self.published_CRSs[self.default_geographic_CRS]["geographic"]:
+                raise ConfigException("Configured default geographic CRS not listed in published CRSs as geographic.")
+            self.default_geographic_CRS_def = self.published_CRSs[self.default_geographic_CRS]
+            self.wcs_formats = {}
+            for fmt_name, fmt in cfg["formats"].items():
+                self.wcs_formats[fmt_name] = {
+                    "mime": fmt["mime"],
+                    "extension": fmt["extension"],
+                    "multi-time": fmt["multi-time"],
+                    "name": fmt_name,
+                }
+                self.wcs_formats[fmt_name]["renderer"] = get_function(fmt["renderer"])
+            if not self.wcs_formats:
+                raise ConfigException("Must configure at least one wcs format to support WCS.")
+
+            self.native_wcs_format = cfg["native_format"]
+            if self.native_wcs_format not in self.wcs_formats:
+                raise Exception("Configured native WCS format not a supported format.")
+        else:
+            self.default_geographic_CRS = None
+            self.default_geographic_CRS_def = None
+            self.wcs_formats = {}
+            self.native_wcs_format = None
 
 def get_config(refresh=False):
     return OWSConfig(refresh=refresh)
