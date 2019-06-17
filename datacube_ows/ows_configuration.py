@@ -538,7 +538,7 @@ class OWSConfigEntry(object):
             setattr(self, k, v)
 
     def __getitem__(self, item):
-        return getattr(item)
+        return getattr(self, item)
 
 
 class OWSConfig(OWSConfigEntry):
