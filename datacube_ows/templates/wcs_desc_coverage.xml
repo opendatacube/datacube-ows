@@ -24,14 +24,14 @@
         <domainSet>
             <spatialDomain>
                 {% if not product.wcs_sole_time %}
-                    <gml:EnvelopeWithTimePeriod srsName="{{ service.default_geographic_CRS }}">
+                    <gml:EnvelopeWithTimePeriod srsName="{{ cfg.default_geographic_CRS }}">
                         <gml:pos>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
                         <gml:pos>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
                         <gml:timePosition>{{ product.ranges.start_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
                         <gml:timePosition>{{ product.ranges.end_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
                     </gml:EnvelopeWithTimePeriod>
                 {% else %}
-                    <gml:Envelope srsName="{{ service.default_geographic_CRS }}">
+                    <gml:Envelope srsName="{{ cfg.default_geographic_CRS }}">
                         <gml:pos dimension="2">{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
                         <gml:pos dimension="2">{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
                     </gml:Envelope>
@@ -107,15 +107,15 @@
             </RangeSet>
         </rangeSet>
         <supportedCRSs>
-            {% for crs in service.published_CRSs %}
+            {% for crs in cfg.published_CRSs %}
                 <requestResponseCRSs>{{ crs }}</requestResponseCRSs>
             {% endfor %}
             {% if product.native_CRS %}
             <nativeCRSs>{{ product.native_CRS }}</nativeCRSs>
             {% endif %}
         </supportedCRSs>
-        <supportedFormats nativeFormat="{{ service.native_wcs_format }}">
-            {% for fmt in service.wcs_formats %}
+        <supportedFormats nativeFormat="{{ cfg.native_wcs_format }}">
+            {% for fmt in cfg.wcs_formats %}
             <formats>{{ fmt }}</formats>
             {% endfor %}
         </supportedFormats>

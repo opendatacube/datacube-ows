@@ -7,7 +7,7 @@ from datacube_ows.ogc_utils import resp_headers, get_service_base_url
 
 from datacube_ows.ogc_exceptions import WMSException, WMTSException
 
-from datacube_ows.ows_configuration import get_layers, get_service_cfg
+from datacube_ows.ows_configuration import get_layers, get_config
 
 from datacube_ows.utils import log_call, opencensus_trace_call, get_opencensus_tracer
 
@@ -63,9 +63,9 @@ def get_capabilities(args):
     # Note: Only WMS v1.0.0 exists at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
-    service_cfg = get_service_cfg()
+    cfg = get_config()
     url = args.get('Host', args['url_root'])
-    base_url = get_service_base_url(service_cfg.allowed_urls, url)
+    base_url = get_service_base_url(cfg.allowed_urls, url)
     section = args.get("section")
     if section:
         section = section.lower()
@@ -106,7 +106,7 @@ def get_capabilities(args):
     return (
         render_template(
             "wmts_capabilities.xml",
-            service=service_cfg,
+            cfg=cfg,
             platforms=platforms,
             base_url=base_url,
             show_service_id = show_service_id,

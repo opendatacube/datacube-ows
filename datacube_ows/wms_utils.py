@@ -25,7 +25,7 @@ try:
     from datacube_ows.wms_cfg_local import layer_cfg
 except ImportError:
     from datacube_ows.wms_cfg import layer_cfg
-from datacube_ows.ows_configuration import get_layers, get_service_cfg
+from datacube_ows.ows_configuration import get_layers, get_config
 
 from datacube_ows.ogc_exceptions import WMSException
 
@@ -63,7 +63,7 @@ def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
 
 
 def _get_geobox_xy(args, crs):
-    if get_service_cfg().published_CRSs[crs.crs_str]["vertical_coord_first"]:
+    if get_config().published_CRSs[crs.crs_str]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
     else:
         minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
@@ -124,9 +124,9 @@ def zoom_factor(args, crs):
 
 
 def img_coords_to_geopoint(geobox, i, j):
-    service_cfg = get_service_cfg()
-    h_coord = service_cfg.published_CRSs[geobox.crs.crs_str]["horizontal_coord"]
-    v_coord = service_cfg.published_CRSs[geobox.crs.crs_str]["vertical_coord"]
+    cfg = get_config()
+    h_coord = cfg.published_CRSs[geobox.crs.crs_str]["horizontal_coord"]
+    v_coord = cfg.published_CRSs[geobox.crs.crs_str]["vertical_coord"]
     return geometry.point(geobox.coordinates[h_coord].values[int(i)],
                           geobox.coordinates[v_coord].values[int(j)],
                           geobox.crs)
@@ -284,7 +284,7 @@ class GetParameters():
             crs_arg = "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                              errcode=WMSException.INVALID_CRS,
-                             permitted_values=get_service_cfg().published_CRSs.keys())
+                             permitted_values=get_config().published_CRSs.keys())
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)

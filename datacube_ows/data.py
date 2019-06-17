@@ -19,7 +19,7 @@ from datacube.utils.rio import set_default_rio_config
 
 from datacube_ows.cube_pool import cube
 
-from datacube_ows.ows_configuration import get_service_cfg
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
@@ -440,16 +440,16 @@ def feature_info(args):
     stacker = DataStacker(params.product, geo_point_geobox, params.time)
 
     # --- Begin code section requiring datacube.
-    service_cfg = get_service_cfg()
+    cfg = get_config()
     with cube() as dc:
         datasets = stacker.datasets(dc.index, all_time=True, point=geo_point)
         pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
 
         # Taking the data as a single point so our indexes into the data should be 0,0
-        h_coord = service_cfg.published_CRSs[params.crsid]["horizontal_coord"]
-        v_coord = service_cfg.published_CRSs[params.crsid]["vertical_coord"]
-        s3_bucket = service_cfg.s3_bucket
-        s3_url = service_cfg.s3_url
+        h_coord = cfg.published_CRSs[params.crsid]["horizontal_coord"]
+        v_coord = cfg.published_CRSs[params.crsid]["vertical_coord"]
+        s3_bucket = cfg.s3_bucket
+        s3_url = cfg.s3_url
         isel_kwargs = {
             h_coord: 0,
             v_coord: 0
@@ -542,4 +542,4 @@ def feature_info(args):
             }
         ]
     }
-    return json.dumps(result), 200, resp_headers({"Content-Type": "application/json"})
+    return json.dumps(result), 200, cfg.response_headers({"Content-Type": "application/json"})

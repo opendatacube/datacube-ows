@@ -308,38 +308,38 @@ class ProductLayerDef(object):
         if not self.attribution:
             self.attribution = platform_def.attribution
         self.identifiers = product_cfg.get("identifiers", {})
-        svc_cfg = get_service_cfg()
+        cfg = get_config()
 
         for auth in self.identifiers.keys():
-            if auth not in svc_cfg.authorities:
+            if auth not in cfg.authorities:
                 raise ProductLayerException("Identifier with non-declared authority: %s" % repr(auth))
 
         self.feature_list_urls = SuppURL.parse_list(product_cfg.get("feature_list_urls"))
         self.data_urls = SuppURL.parse_list(product_cfg.get("data_urls"))
 
         # For WCS
-        if svc_cfg.wcs:
+        if cfg.wcs:
             try:
                 self.native_CRS = self.product.definition["storage"]["crs"]
             except KeyError:
                 self.native_CRS = None
             if not self.native_CRS:
                 self.native_CRS = product_cfg.get("native_wcs_crs")
-            if self.native_CRS not in svc_cfg.published_CRSs:
+            if self.native_CRS not in cfg.published_CRSs:
                 logging.warning("Native CRS for product %s (%s) not in published CRSs", self.product_name,
                                 self.native_CRS)
                 self.native_CRS = None
             if self.native_CRS:
-                self.native_CRS_def = svc_cfg.published_CRSs[self.native_CRS]
-            if svc_cfg.create_grid and not svc_cfg.dummy_grid and self.native_CRS:
+                self.native_CRS_def = cfg.published_CRSs[self.native_CRS]
+            if cfg.create_wcs_grid and not cfg.dummy_wcs_grid and self.native_CRS:
                 data = dc.load(self.product_name, dask_chunks={})
-                self.grid_high_x = len(data[svc_cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
-                self.grid_high_y = len(data[svc_cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
+                self.grid_high_x = len(data[cfg.published_CRSs[self.native_CRS]["horizontal_coord"]])
+                self.grid_high_y = len(data[cfg.published_CRSs[self.native_CRS]["vertical_coord"]])
                 self.origin_x = data.affine[3]
                 self.origin_y = data.affine[5]
                 self.resolution_x = data.affine[0]
                 self.resolution_y = data.affine[4]
-            elif not svc_cfg.dummy_grid and self.native_CRS and self.ranges is not None:
+            elif not cfg.dummy_wcs_grid and self.native_CRS and self.ranges is not None:
                 native_bounding_box = self.bboxes[self.native_CRS]
                 self.origin_x = native_bounding_box["left"]
                 self.origin_y = native_bounding_box["bottom"]
@@ -410,8 +410,8 @@ class LayerDefs(object):
             self.platforms = []
             self.platform_index = {}
             self.product_index = {}
-            svc_cfg = get_service_cfg()
-            self.attribution = svc_cfg.attribution
+            cfg = get_config()
+            self.attribution = cfg.attribution
             with cube() as dc:
                 for platform_cfg in platforms_cfg:
                     platform = PlatformLayerDef(platform_cfg, self, dc=dc)
@@ -587,7 +587,7 @@ class OWSConfig(OWSConfigEntry):
         # super().__init__({}) Not needed yet
 
     def parse_global(self, cfg):
-        self.response_headers = cfg.get("response_headers", {})
+        self._response_headers = cfg.get("response_headers", {})
         self.wms = cfg.get("services", {}).get("wms", True)
         self.wmts = cfg.get("services", {}).get("wmts", True)
         self.wcs = cfg.get("services", {}).get("wcs", False)
@@ -667,6 +667,15 @@ class OWSConfig(OWSConfigEntry):
             self.default_geographic_CRS_def = None
             self.wcs_formats = {}
             self.native_wcs_format = None
+        # TODO - do we really need to keep these?
+        self.dummy_wcs_grid = False
+        self.create_wcs_grid = False
+
+    def response_headers(self, d):
+        hdrs = self._response_headers.copy()
+        hdrs.update(d)
+        return hdrs
+
 
 def get_config(refresh=False):
     return OWSConfig(refresh=refresh)

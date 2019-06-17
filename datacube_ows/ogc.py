@@ -16,7 +16,7 @@ from datacube_ows.wmts import handle_wmts
 from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
 from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 
-from datacube_ows.ows_configuration import get_service_cfg, get_layers
+from datacube_ows.ows_configuration import get_config, get_layers
 
 import logging
 
@@ -92,8 +92,8 @@ class SupportedSvc(object):
         return v
 
     def activated(self):
-        svc_cfg = get_service_cfg()
-        return getattr(svc_cfg, self.service)
+        cfg = get_config()
+        return getattr(cfg, self.service)
 
 
 OWS_SUPPORTED = {

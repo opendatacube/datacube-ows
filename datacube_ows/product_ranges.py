@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function
 from datetime import date, datetime, timedelta
 import datacube
 
-from datacube_ows.ows_configuration import get_service_cfg, get_layers, ProductLayerDef
+from datacube_ows.ows_configuration import get_config, get_layers, ProductLayerDef
 from datacube_ows.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
@@ -60,14 +60,14 @@ def accum_max(a, b):
         return max(a, b)
 
 
-def get_crsids(svc=None):
-    if not svc:
-        svc = get_service_cfg()
-    return svc.published_CRSs.keys()
+def get_crsids(cfg=None):
+    if not cfg:
+        cfg = get_config()
+    return cfg.published_CRSs.keys()
 
 
-def get_crses(svc=None):
-    return  {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(svc)}
+def get_crses(cfg=None):
+    return  {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(cfg)}
 
 
 def jsonise_bbox(bbox):
@@ -97,82 +97,73 @@ def determine_product_ranges(dc, dc_product, extractor):
     }
     sub_r = {}
     time_set = set()
-    svc = get_service_cfg()
+    cfg = get_config()
     print ("OK, Let's do it")
-    crsids = get_crsids(svc)
-    calculate_extent = not svc.use_default_extent
+    crsids = get_crsids(cfg)
     extents = {crsid: None for crsid in crsids}
-    crses = get_crses(svc)
+    crses = get_crses(cfg)
     ds_count = 0
     for ds in dc.find_datasets(product=dc_product.name):
         print("Processing a dataset", ds.id)
         loc_date = local_date(ds)
         time_set.add(loc_date)
-        if calculate_extent or extractor is not None:
-            if extractor is not None:
-                path = extractor(ds)
-                if path not in sub_r:
-                    sub_r[path] = {
-                        "lat": {
-                            "min": None,
-                            "max": None,
-                        },
-                        "lon": {
-                            "min": None,
-                            "max": None,
-                        },
-                        "time_set": set(),
-                        "extents": {crsid: None for crsid in crsids}
-                    }
-                sub_r[path]["lat"]["min"] = accum_min(sub_r[path]["lat"]["min"], ds.metadata.lat.begin)
-                sub_r[path]["lat"]["max"] = accum_max(sub_r[path]["lat"]["max"], ds.metadata.lat.end)
-                sub_r[path]["lon"]["min"] = accum_min(sub_r[path]["lon"]["min"], ds.metadata.lon.begin)
-                sub_r[path]["lon"]["max"] = accum_max(sub_r[path]["lon"]["max"], ds.metadata.lon.end)
-            else:
-                path = None
+        if extractor is not None:
+            path = extractor(ds)
+            if path not in sub_r:
+                sub_r[path] = {
+                    "lat": {
+                        "min": None,
+                        "max": None,
+                    },
+                    "lon": {
+                        "min": None,
+                        "max": None,
+                    },
+                    "time_set": set(),
+                    "extents": {crsid: None for crsid in crsids}
+                }
+            sub_r[path]["lat"]["min"] = accum_min(sub_r[path]["lat"]["min"], ds.metadata.lat.begin)
+            sub_r[path]["lat"]["max"] = accum_max(sub_r[path]["lat"]["max"], ds.metadata.lat.end)
+            sub_r[path]["lon"]["min"] = accum_min(sub_r[path]["lon"]["min"], ds.metadata.lon.begin)
+            sub_r[path]["lon"]["max"] = accum_max(sub_r[path]["lon"]["max"], ds.metadata.lon.end)
+        else:
+            path = None
 
-            r["lat"]["min"] = accum_min(r["lat"]["min"], ds.metadata.lat.begin)
-            r["lat"]["max"] = accum_max(r["lat"]["max"], ds.metadata.lat.end)
-            r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
-            r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
+        r["lat"]["min"] = accum_min(r["lat"]["min"], ds.metadata.lat.begin)
+        r["lat"]["max"] = accum_max(r["lat"]["max"], ds.metadata.lat.end)
+        r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
+        r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
-            if path is not None:
-                sub_r[path]["time_set"].add(loc_date)
+        if path is not None:
+            sub_r[path]["time_set"].add(loc_date)
 
-            for crsid in crsids:
-                print("Working with CRS", crsid)
-                crs = crses[crsid]
-                ext = ds.extent
-                if ext.crs != crs:
-                    ext = ext.to_crs(crs)
-                cvx_ext = ext.convex_hull
-                if cvx_ext != ext:
-                    print("INFO: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
-                if extents[crsid] is None:
-                    extents[crsid] = cvx_ext
-                else:
-                    if not extents[crsid].is_valid:
-                        print("WARNING: Extent Union for", ds.id, "CRS", crsid, "is not valid")
-                    if not cvx_ext.is_valid:
-                        print("WARNING: Extent for CRS", crsid, "is not valid")
-                    union = extents[crsid].union(cvx_ext)
-                    if union._geom is not None:
-                        extents[crsid] = union
-                    else:
-                        print("WARNING: Dataset", ds.id, "CRS", crsid, "union topology exception, ignoring union")
-                if path is not None:
-                    if sub_r[path]["extents"][crsid] is None:
-                        sub_r[path]["extents"][crsid] = cvx_ext
-                    else:
-                        sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(cvx_ext)
-        ds_count += 1
-
-    # Default extent usage
-    if not calculate_extent and ds_count > 0:
         for crsid in crsids:
+            print("Working with CRS", crsid)
             crs = crses[crsid]
-            default = datacube.utils.geometry.Geometry(DEFAULT_GEOJSON, crs=DEFAULT_GEOJSON_CRS)
-            extents[crsid] = default.to_crs(crs)
+            ext = ds.extent
+            if ext.crs != crs:
+                ext = ext.to_crs(crs)
+            cvx_ext = ext.convex_hull
+            if cvx_ext != ext:
+                print("INFO: Dataset", ds.id, "CRS", crsid, "extent is not convex.")
+            if extents[crsid] is None:
+                extents[crsid] = cvx_ext
+            else:
+                if not extents[crsid].is_valid:
+                    print("WARNING: Extent Union for", ds.id, "CRS", crsid, "is not valid")
+                if not cvx_ext.is_valid:
+                    print("WARNING: Extent for CRS", crsid, "is not valid")
+                union = extents[crsid].union(cvx_ext)
+                if union._geom is not None:
+                    extents[crsid] = union
+                else:
+                    print("WARNING: Dataset", ds.id, "CRS", crsid, "union topology exception, ignoring union")
+            if path is not None:
+                if sub_r[path]["extents"][crsid] is None:
+                    sub_r[path]["extents"][crsid] = cvx_ext
+                else:
+                    sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(cvx_ext)
+        ds_count += 1
 
     r["times"] = sorted(time_set)
     r["time_set"] = time_set
@@ -396,9 +387,7 @@ def update_single_range(dc, product):
         dc_product = product
         extractor = None
 
-    product_range = determine_product_ranges(dc,
-                                             dc_product,
-                                             extractor)
+    product_range = determine_product_ranges(dc, dc_product, extractor)
     conn = get_sqlconn(dc)
     txn = conn.begin()
     db_range = get_ranges(dc, dc_product, is_dc_product=True)
@@ -670,13 +659,13 @@ def create_multiprod_range_entry(dc, product, crses):
         float(r[1]),
         epsg4326)
 
-    svc = get_service_cfg()
+    cfg = get_config()
     conn.execute("""
         UPDATE wms.multiproduct_ranges
         SET bboxes = %s::jsonb
         WHERE wms_product_name=%s
         """,
-                 Json({ crsid: jsonise_bbox(box.to_crs(crs).boundingbox) for crsid, crs in get_crses(svc).items() }),
+                 Json({ crsid: jsonise_bbox(box.to_crs(crs).boundingbox) for crsid, crs in get_crses(cfg).items() }),
                  wms_name
     )
 

@@ -7,7 +7,7 @@ from datacube_ows.ogc_utils import resp_headers, get_service_base_url
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
 
-from datacube_ows.ows_configuration import get_layers, get_service_cfg
+from datacube_ows.ows_configuration import get_layers, get_config
 
 from datacube_ows.utils import log_call, opencensus_trace_call, get_opencensus_tracer
 
@@ -60,15 +60,15 @@ def get_capabilities(args):
 
     # Extract layer metadata from Datacube.
     platforms = get_layers(refresh=True)
-    service_cfg = get_service_cfg()
+    cfg = get_config()
     url = args.get('Host', args['url_root'])
-    base_url = get_service_base_url(service_cfg.allowed_urls, url)
+    base_url = get_service_base_url(cfg.allowed_urls, url)
     return (
         render_template("wcs_capabilities.xml",
                         show_service=show_service,
                         show_capability=show_capability,
                         show_content_metadata=show_content_metadata,
-                        service=service_cfg,
+                        cfg=cfg,
                         platforms=platforms,
                         base_url=base_url),
         200,
@@ -104,7 +104,7 @@ def desc_coverages(args):
 
     return (
         render_template("wcs_desc_coverage.xml",
-                        service=get_service_cfg(),
+                        cfg=get_config(),
                         products=products),
         200,
         resp_headers({

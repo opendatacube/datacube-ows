@@ -9,65 +9,65 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
 
 {% if show_service_id %}
     <ows.ServiceIdentification>
-        <ows:Title>{{ service.title }}</ows:Title>
-        {% if service.abstract %}
+        <ows:Title>{{ cfg.title }}</ows:Title>
+        {% if cfg.abstract %}
         <ows:Abstract>
-            {{ service.abstract }}
+            {{ cfg.abstract }}
         </ows:Abstract>
         {% endif %}
-        {% if service.keywords %}
+        {% if cfg.keywords %}
         <ows:Keywords>
-            {% for kw in service.keywords %}
+            {% for kw in cfg.keywords %}
             <ows:Keyword>{{ kw }}</ows:Keyword>
             {% endfor %}
         </ows:Keywords>
         {% endif %}
         <ows:ServiceType>OGC WMTS</ows:ServiceType>
         <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
-        <ows:Fees>{% if service.fees %}{{ service.fees }}{% else %}none{% endif %}</ows:Fees>
-        <ows:AccessConstraints>{% if service.access_constraints %}{{ service.access_constraints }}{% else %}none{% endif %}</ows:AccessConstraints>
+        <ows:Fees>{{ cfg.fees }}</ows:Fees>
+        <ows:AccessConstraints>{{ cfg.access_constraints }}</ows:AccessConstraints>
     </ows.ServiceIdentification>
 {% endif %}
 
 {% if show_service_provider %}
     <ows:ServiceProvider>
-        {% if service.contact_info %}
-        {% if service.contact_info.organisation %}
-        <ows:ProviderName>{{ service.contact_info.organisation }}</ows:ProviderName>
+        {% if cfg.contact_info %}
+        {% if cfg.contact_info.organisation %}
+        <ows:ProviderName>{{ cfg.contact_info.organisation }}</ows:ProviderName>
         {% endif %}
-        {% if service.human_url %}
-        <ows:ProviderSite xlink:href="{{ service.human_url }}"/>
+        {% if cfg.info_url %}
+        <ows:ProviderSite xlink:href="{{ cfg.info_url }}"/>
         {% endif %}
         <ows:ServiceContact>
-            {% if service.contact_info.person %}
-            <ows:IndividualName>{{ service.contact_info.person }}</ows:IndividualName>
+            {% if cfg.contact_info.person %}
+            <ows:IndividualName>{{ cfg.contact_info.person }}</ows:IndividualName>
             {% endif %}
-            {% if service.contact_info.position %}
-            <ows:PositionName>{{ service.contact_info.position }}</ows:PositionName>
+            {% if cfg.contact_info.position %}
+            <ows:PositionName>{{ cfg.contact_info.position }}</ows:PositionName>
             {% endif %}
-            {% if service.contact_info.address or service.contact_info.telephone or service.contact_info.fax or service.contact_info.email %}
+            {% if cfg.contact_info.address or cfg.contact_info.telephone or cfg.contact_info.fax or cfg.contact_info.email %}
             <ows:ContactInfo>
-                {% if service.contact_info.telephone or service.contact_info.fax %}
+                {% if cfg.contact_info.telephone or cfg.contact_info.fax %}
                 <ows:Phone>
-                    {% if service.contact_info.telephone %}
-                    <ows:Voice>{{ service.contact_info.telephone }}</ows:Voice>
+                    {% if cfg.contact_info.telephone %}
+                    <ows:Voice>{{ cfg.contact_info.telephone }}</ows:Voice>
                     {% endif %}
-                    {% if service.contact_info.fax %}
-                    <ows:Facsimile>{{ service.contact_info.fax }}</ows:Facsimile>
+                    {% if cfg.contact_info.fax %}
+                    <ows:Facsimile>{{ cfg.contact_info.fax }}</ows:Facsimile>
                     {% endif %}
                 </ows:Phone>
                 {% endif %}
-                {% if service.contact_info.address or service.contact_info.email %}
+                {% if cfg.contact_info.address or cfg.contact_info.email %}
                 <ows:Address>
-                    {%  if service.contact_info.address %}
-                    <ows:DeliveryPoint>{{ service.contact_info.address.address }}</ows:DeliveryPoint>
-                    <ows:City>{{ service.contact_info.address.city }}</ows:City>
-                    <ows:AdministrativeArea>{{ service.contact_info.address.state }}</ows:AdministrativeArea>
-                    <ows:PostalCode>{{ service.contact_info.address.postcode }}</ows:PostalCode>
-                    <ows:Country>{{ service.contact_info.address.country }}</ows:Country>
+                    {%  if cfg.contact_info.address %}
+                    <ows:DeliveryPoint>{{ cfg.contact_info.address.address }}</ows:DeliveryPoint>
+                    <ows:City>{{ cfg.contact_info.address.city }}</ows:City>
+                    <ows:AdministrativeArea>{{ cfg.contact_info.address.state }}</ows:AdministrativeArea>
+                    <ows:PostalCode>{{ cfg.contact_info.address.postcode }}</ows:PostalCode>
+                    <ows:Country>{{ cfg.contact_info.address.country }}</ows:Country>
                     {%  endif %}
-                    {% if service.contact_info.email %}
-                    <ows:ElectronicMailAddress>{{ service.contact_info.email }}</ows:ElectronicMailAddress>
+                    {% if cfg.contact_info.email %}
+                    <ows:ElectronicMailAddress>{{ cfg.contact_info.email }}</ows:ElectronicMailAddress>
                     {% endif %}
                 </ows:Address>
                 {% endif %}
@@ -180,10 +180,10 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
 {% if show_themes %}
     <Themes>
         <Theme>
-            <ows:Title>{{ service.title }}</ows:Title>
-            {% if service.abstract %}
+            <ows:Title>{{ cfg.title }}</ows:Title>
+            {% if cfg.abstract %}
             <ows:Abstract>
-                {{ service.abstract }}
+                {{ cfg.abstract }}
             </ows:Abstract>
             {% endif %}
             <ows:Identifier>main_menu</ows:Identifier>

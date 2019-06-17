@@ -63,9 +63,7 @@ def local_solar_date_range(geobox, date):
 
 
 def resp_headers(d):
-    hdrs = get_config().response_headers.copy()
-    hdrs.update(d)
-    return hdrs
+    return get_config().response_headers(d)
 
 
 def get_function(func):

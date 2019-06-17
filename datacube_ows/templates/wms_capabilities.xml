@@ -7,62 +7,62 @@ xsi:schemaLocation="http://www.opengis.net/wms
 http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
 <Service>
     <Name>WMS</Name>
-    <Title>{{ service.title }}</Title>
-    {% if service.abstract %}
+    <Title>{{ cfg.title }}</Title>
+    {% if cfg.abstract %}
     <Abstract>
-        {{ service.abstract }}
+        {{ cfg.abstract }}
     </Abstract>
     {% endif %}
-    {% if service.keywords %}
+    {% if cfg.keywords %}
     <KeywordList>
-        {% for kw in service.keywords %}
+        {% for kw in cfg.keywords %}
         <Keyword>{{ kw }}</Keyword>
         {% endfor %}
     </KeywordList>
     {% endif %}
 
     <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple"
-    xlink:href="{{ service.human_url }}/" />
+    xlink:href="{{ cfg.info_url }}/" />
 
-    {% if service.contact_info %}
+    {% if cfg.contact_info %}
     <ContactInformation>
-        {% if service.contact_info.person or service.contact_info.organisation %}
+        {% if cfg.contact_info.person or cfg.contact_info.organisation %}
         <ContactPersonPrimary>
-            <ContactPerson>{{ service.contact_info.person }}</ContactPerson>
-            <ContactOrganization>{{ service.contact_info.organisation }}</ContactOrganization>
+            <ContactPerson>{{ cfg.contact_info.person }}</ContactPerson>
+            <ContactOrganization>{{ cfg.contact_info.organisation }}</ContactOrganization>
         </ContactPersonPrimary>
         {% endif %}
-        {% if service.contact_info.position %}
-        <ContactPosition>{{ service.contact_info.position }}</ContactPosition>
+        {% if cfg.contact_info.position %}
+        <ContactPosition>{{ cfg.contact_info.position }}</ContactPosition>
         {% endif %}
-        {% if service.contact_info.address %}
+        {% if cfg.contact_info.address %}
         <ContactAddress>
-            <AddressType>{{ service.contact_info.address.type }}</AddressType>
-            <Address>{{ service.contact_info.address.address }}</Address>
-            <City>{{ service.contact_info.address.city }}</City>
-            <StateOrProvince>{{ service.contact_info.address.state }}</StateOrProvince>
-            <PostCode>{{ service.contact_info.address.postcode }}</PostCode>
-            <Country>{{ service.contact_info.address.country }}</Country>
+            <AddressType>{{ cfg.contact_info.address.type }}</AddressType>
+            <Address>{{ cfg.contact_info.address.address }}</Address>
+            <City>{{ cfg.contact_info.address.city }}</City>
+            <StateOrProvince>{{ cfg.contact_info.address.state }}</StateOrProvince>
+            <PostCode>{{ cfg.contact_info.address.postcode }}</PostCode>
+            <Country>{{ cfg.contact_info.address.country }}</Country>
         </ContactAddress>
         {% endif %}
-        {% if service.contact_info.telephone %}
-        <ContactVoiceTelephone>{{ service.contact_info.telephone }}</ContactVoiceTelephone>
+        {% if cfg.contact_info.telephone %}
+        <ContactVoiceTelephone>{{ cfg.contact_info.telephone }}</ContactVoiceTelephone>
         {% endif %}
-        {% if service.contact_info.fax %}
-        <ContactFacsimileTelephone>{{ service.contact_info.fax }}</ContactFacsimileTelephone>
+        {% if cfg.contact_info.fax %}
+        <ContactFacsimileTelephone>{{ cfg.contact_info.fax }}</ContactFacsimileTelephone>
         {% endif %}
-        {% if service.contact_info.email %}
-        <ContactElectronicMailAddress>{{ service.contact_info.email }}</ContactElectronicMailAddress>
+        {% if cfg.contact_info.email %}
+        <ContactElectronicMailAddress>{{ cfg.contact_info.email }}</ContactElectronicMailAddress>
         {% endif %}
     </ContactInformation>
     {% endif %}
 
-    <Fees>{% if service.fees %}{{ service.fees }}{% else %}none{% endif %}</Fees>
-    <AccessConstraints>{% if service.access_constraints %}{{ service.access_constraints }}{% else %}none{% endif %}</AccessConstraints>
+    <Fees>{{ cfg.fees }}</Fees>
+    <AccessConstraints>{{ cfg.access_constraints }}</AccessConstraints>
 
-    {% if service.layer_limit %}<LayerLimit>{{ service.layer_limit }}</LayerLimit>{% endif %}
-     {% if service.max_width %}<MaxWidth>{{ service.max_width }}</MaxWidth>{% endif %}
-     {% if service.max_height %}<MaxHeight>{{ service.max_height }}</MaxHeight>{% endif %}
+    <LayerLimit>1</LayerLimit>
+    <MaxWidth>{{ cfg.wms_max_width }}</MaxWidth>
+    <MaxHeight>{{ cfg.wms_max_height }}</MaxHeight>
 </Service>
 
 <Capability>
@@ -110,19 +110,19 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
     </Exception>
 
     <Layer>{# Start Top Level Layer #}
-        <Title>{{ service.title }}</Title>
+        <Title>{{ cfg.title }}</Title>
 
-        {% if service.abstract %}
+        {% if cfg.abstract %}
         <Abstract>
-            {{ service.abstract }}
+            {{ cfg.abstract }}
         </Abstract>
         {% endif %}
 
-        {% for crs in service.published_CRSs.keys() %}
+        {% for crs in cfg.published_CRSs.keys() %}
         <CRS>{{ crs }}</CRS>
         {% endfor %}
 
-        {% for name, url in service.authorities.items() %}
+        {% for name, url in cfg.authorities.items() %}
         <AuthorityURL name="{{ name }}">
             <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
                             xlink:type="simple"

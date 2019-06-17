@@ -14,7 +14,7 @@ from datacube_ows.cube_pool import get_cube, release_cube
 from datacube_ows.data import DataStacker
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ProductLayerException
-from datacube_ows.ows_configuration import get_layers, get_service_cfg
+from datacube_ows.ows_configuration import get_layers, get_config
 from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
 
 tracer = get_opencensus_tracer()
@@ -25,7 +25,7 @@ class WCS1GetCoverageRequest():
     def __init__(self, args):
         self.args = args
         layers = get_layers()
-        svc_cfg = get_service_cfg()
+        cfg = get_config()
 
         # Argument: Coverage (required)
         if "coverage" not in args:
@@ -44,11 +44,11 @@ class WCS1GetCoverageRequest():
             raise WCS1Exception("No FORMAT parameter supplied",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="FORMAT parameter")
-        if args["format"] not in svc_cfg.wcs_formats:
+        if args["format"] not in cfg.wcs_formats:
             raise WCS1Exception("Unsupported format: %s" % args["format"],
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="FORMAT parameter")
-        self.format = svc_cfg.wcs_formats[args["format"]]
+        self.format = cfg.wcs_formats[args["format"]]
 
         # Argument: (request) CRS (required)
         if "crs" not in args:
@@ -56,7 +56,7 @@ class WCS1GetCoverageRequest():
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="CRS parameter")
         self.request_crsid = args["crs"]
-        if self.request_crsid not in svc_cfg.published_CRSs:
+        if self.request_crsid not in cfg.published_CRSs:
             raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="CRS parameter")
@@ -65,7 +65,7 @@ class WCS1GetCoverageRequest():
         # Argument: response_crs (optional)
         if "response_crs" in args:
             self.response_crsid = args["response_crs"]
-            if self.response_crsid not in svc_cfg.published_CRSs:
+            if self.response_crsid not in cfg.published_CRSs:
                 raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESPONSE_CRS parameter")
@@ -293,11 +293,11 @@ def get_coverage_data(req):
     if not datasets:
         # TODO: Return an empty coverage file with full metadata?
         extents = dc.load(dask_chunks={}, product=req.product.product.name, geopolygon=req.geobox.extent, time=stacker._time)
-        svc = get_service_cfg()
+        cfg = get_config()
         x_range = (req.minx, req.maxx)
         y_range = (req.miny, req.maxy)
-        xname = svc.published_CRSs[req.request_crsid]["horizontal_coord"]
-        yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
+        xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
+        yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
         if xname in extents:
             xvals = extents[xname]
         else:
@@ -314,7 +314,7 @@ def get_coverage_data(req):
                 y_range[1],
                 num=req.height
             )
-        if svc.published_CRSs[req.request_crsid]["vertical_coord_first"]:
+        if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
             nparrays = {
                 band: ((yname, xname),
                        numpy.full((len(yvals), len(xvals)),
@@ -379,9 +379,9 @@ def get_tiff(req, data):
     dtype = str(max(dtype_list, key=lambda d: supported_dtype_map[str(d)]))
 
     data = data.astype(dtype)
-    svc = get_service_cfg()
-    xname = svc.published_CRSs[req.request_crsid]["horizontal_coord"]
-    yname = svc.published_CRSs[req.request_crsid]["vertical_coord"]
+    cfg = get_config()
+    xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
+    yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
     nodata = 0
     for band in data.data_vars:
         nodata = req.product.band_idx.nodata_val(band)
