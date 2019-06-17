@@ -14,10 +14,6 @@ try:
     from datacube_ows.wms_cfg_local import layer_cfg
 except ImportError:
     from datacube_ows.wms_cfg import layer_cfg
-try:
-    from datacube_ows.wms_cfg_local import service_cfg
-except ImportError:
-    from datacube_ows.wms_cfg import service_cfg
 
 from collections.abc import Mapping, Sequence
 
@@ -68,7 +64,7 @@ def cfg_expand(cfg_unexpanded, inclusions=[]):
                 raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
         else:
             return { k: cfg_expand(v, inclusions) for k,v in cfg_unexpanded.items()  }
-    elif isinstance(cfg_unexpanded, Sequence):
+    elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
         return list([cfg_expand(elem, inclusions) for elem in cfg_unexpanded ])
     else:
         return cfg_unexpanded
@@ -364,7 +360,7 @@ class ProductLayerDef(object):
                      "top": bbox["left"],
                      "bottom": bbox["right"]
                      } \
-                if service_cfg["published_CRSs"][crs_id].get("vertical_coord_first") \
+                if get_config()["published_CRSs"][crs_id].get("vertical_coord_first") \
                 else \
                 {"right": bbox["right"],
                  "left": bbox["left"],
@@ -531,10 +527,6 @@ class ServiceCfg(object):
 
     def __getitem__(self, name):
         return getattr(self, name)
-
-
-def get_service_cfg(refresh=False):
-    return ServiceCfg(service_cfg, refresh)
 
 
 class OWSConfigEntry(object):

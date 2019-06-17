@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 from timezonefinder import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
-from datacube_ows.ows_configuration import get_config
 
 tf = TimezoneFinder(in_memory=True)
 
@@ -63,6 +62,7 @@ def local_solar_date_range(geobox, date):
 
 
 def resp_headers(d):
+    from datacube_ows.ows_configuration import get_config
     return get_config().response_headers(d)
 
 
