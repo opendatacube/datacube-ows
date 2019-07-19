@@ -85,9 +85,8 @@ RUN mkdir -p /home/owsuser
 RUN echo "[datacube]" > /home/owsuser/.datacube.conf
 
 # Change the ownership from root to owsuser
-RUN chown -c owsuser /home/owsuser/.datacube.conf
 RUN chown -R owsuser /code/*
-RUN chown -R owsuser $HOME/*
+RUN chown -R owsuser /home/owsuser/*
 RUN chown -R owsuser /usr/local/*
 
 # Run container as an owsuser instead as root user
