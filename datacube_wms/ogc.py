@@ -213,7 +213,7 @@ def ping():
                                    )
             for r in results:
                 db_ok = True
-    except:
+    except Exception:
         pass
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
