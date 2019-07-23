@@ -206,7 +206,7 @@ def ping():
     db_ok = False
     try:
         with cube() as dc:
-            conn = dc.index._db._engine.connect()
+            conn = dc.index._db._engine.connect()  # pylint: disable=protected-access
             results = conn.execute("""
                     SELECT COUNT(*)
                     FROM agdc.dataset_type""",
