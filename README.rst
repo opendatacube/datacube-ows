@@ -38,6 +38,8 @@ Setup
 
       conda config --prepend channels conda-forge
       conda update --all
+	  
+* Clone the repo public repository into your desired destination using `git clone git://github.com/opendatacube/datacube-ows` 
 
 * Datacube OWS requires the scikit-image package:  `conda install scikit-image`
 
@@ -45,14 +47,14 @@ Setup
 
     pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=dea-proto[async]'
 
-* Run `python update_ranges.py --schema` to create schema and tables used
+* Run `python update_ranges.py --role *datacube_user_role* --schema` to create schema and tables used
   by datacube-ows.
 
 * Edit `datacube_ows/wms_cfg.py` as required (See `datacube_ows/wms_cfg_example.py` for examples).
   If you are using git, you should either create a branch first, or use `datacube_ows/wms_cfg_local.py` instead.
   (If it exists, `wms_cfg_local.py` is read in preference to `wms_cfg.py`, but is explicitly ignored by git.)
 
-* Run `python update_ranges.py --no-calculate-ranges` (in the Datacube Conda environment).  This
+* Run `python update_ranges.py -- product *product_name* --no-calculate-extent` (in the Datacube Conda environment).  This
   script will need to be re-run every time additional datasets are added to
   the Datacube.
 

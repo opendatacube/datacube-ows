@@ -4,7 +4,7 @@ import traceback
 
 from time import monotonic
 
-from flask import Flask, request, g
+from flask import Flask, request, g, render_template
 from flask_log_request_id import RequestID, RequestIDLogFilter, current_request_id
 import os
 
@@ -15,6 +15,7 @@ from datacube_ows.wcs import handle_wcs, WCS_REQUESTS
 from datacube_ows.wmts import handle_wmts
 from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
 from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
+from datacube_ows.cube_pool import cube
 
 from datacube_ows.ows_configuration import get_config, get_layers
 
@@ -198,6 +199,26 @@ def ogc_wmts_impl():
 @app.route('/wcs')
 def ogc_wcs_impl():
     return ogc_svc_impl("wcs")
+
+
+@app.route('/ping')
+def ping():
+    db_ok = False
+    try:
+        with cube() as dc:
+            conn = dc.index._db._engine.connect()  # pylint: disable=protected-access
+            results = conn.execute("""
+                    SELECT COUNT(*)
+                    FROM agdc.dataset_type""",
+                                   )
+            for r in results:
+                db_ok = True
+    except Exception:
+        pass
+    if db_ok:
+        return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
+    else:
+        return (render_template("ping.html", status="Down"), 500, resp_headers({"Content-Type": "text/html"}))
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")

@@ -108,7 +108,7 @@ class BandIndex(object):
     def __init__(self, product, band_cfg, dc):
         self.product = product
         self.product_name = product.name
-        self.native_bands = dc.list_measurements().ix[self.product_name]
+        self.native_bands = dc.list_measurements().loc[self.product_name]
         if band_cfg is None:
             self.band_cfg = {}
             for b in self.native_bands.index:
@@ -343,7 +343,7 @@ class ProductLayerDef(object):
                 self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
                 self.grid_high_y = int((native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
             self.max_datasets_wcs = product_cfg.get("max_datasets_wcs", 0)
-            bands = dc.list_measurements().ix[self.product_name]
+            bands = dc.list_measurements().loc[self.product_name]
             self.bands = bands.index.values
             self.nodata_values = bands['nodata'].values
             self.nodata_dict = {a: b for a, b in zip(self.bands, self.nodata_values)}
