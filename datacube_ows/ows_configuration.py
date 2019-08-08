@@ -441,6 +441,67 @@ class OWSConfigEntry(object):
         return getattr(self, item)
 
 
+class OWSLayer(OWSConfigEntry):
+    def __init__(self, cfg, global_cfg, parent_layer=None):
+        self.global_cfg = global_cfg
+        self.parent_layer = parent_layer
+
+        self.title = cfg["title"]
+        self.abstract = cfg["abstract"]
+        # Accumulate keywords
+        self.keywords = set()
+        if self.parent_layer:
+            for word in self.parent_layer.keywords:
+                self.keywords.add(word)
+        else:
+            for word in self.global_cfg.keywords:
+                self.keywords.add(word)
+        for word in cfg.get("keywords", []):
+            self.keywords.add(word)
+        # Inherit or override attribution
+        if "attribution" in cfg:
+            self.attribution = AttributionCfg.parse(cfg.get("attribution"))
+        elif parent_layer:
+            self.attribution = self.parent_layer.attribution
+        else:
+            self.attribution = self.global_cfg.attribution
+
+
+
+class OWSFolder(OWSLayer):
+    def __init__(self, cfg, global_cfg, parent_layer=None):
+        super().__init__(cfg, global_cfg, parent_layer)
+        self.child_layers = list([ parse_ows_layer(lyr_cfg, global_cfg, self) for lyr_cfg in cfg["layers"] ])
+
+
+class OWSNamedLayer(OWSLayer):
+    def __init__(self, cfg, global_cfg, parent_layer=None):
+        super().__init__(cfg, global_cfg, parent_layer)
+        self.name = cfg["name"]
+
+        self.global_cfg.product_index[self.name] = self
+
+
+class OWSProductLayer(OWSNamedLayer):
+    def __init__(self, cfg, global_cfg, parent_layer=None):
+        super().__init__(cfg, global_cfg, parent_layer)
+
+
+class OWSMultiProductLayer(OWSNamedLayer):
+    def __init__(self, cfg, global_cfg, parent_layer=None):
+        super().__init__(cfg, global_cfg, parent_layer)
+
+
+def parse_ows_layer(cfg, global_cfg, parent_layer=None):
+    if cfg.get("name", None):
+        if cfg.get("multi_product", False):
+            return OWSMultiProductLayer(cfg, global_cfg, parent_layer)
+        else:
+            return OWSProductLayer(cfg, global_cfg, parent_layer)
+    else:
+        return OWSFolder(cfg, global_cfg, parent_layer)
+
+
 class OWSConfig(OWSConfigEntry):
     _instance = None
     initialised = False
@@ -475,7 +536,10 @@ class OWSConfig(OWSConfigEntry):
                     )
             else:
                 self.parse_wcs(None)
-
+            try:
+                self.parse_layers(cfg["layers"])
+            except KeyError as e:
+                raise ConfigException("Missing required config entry in 'layers' section")
         # super().__init__({}) Not needed yet
 
     def parse_global(self, cfg):
@@ -562,6 +626,12 @@ class OWSConfig(OWSConfigEntry):
         # TODO - do we really need to keep these?
         self.dummy_wcs_grid = False
         self.create_wcs_grid = False
+
+    def parse_layers(self, cfg):
+        self.layers = []
+        self.product_index = {}
+        for lyr_cfg in cfg:
+            self.layers.append(parse_ows_layer(lyr_cfg, self))
 
     def response_headers(self, d):
         hdrs = self._response_headers.copy()
