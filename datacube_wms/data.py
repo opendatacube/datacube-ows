@@ -459,13 +459,20 @@ def feature_info(args):
             v_coord: 0
         }
         if datasets:
+            dataset_date_index = {}
+            for ds in datasets:
+                ld = local_date(ds)
+                if ld in dataset_date_index:
+                    dataset_date_index[ld].append(ds)
+                else:
+                    dataset_date_index[ld] = [ds]
+
             # Group datasets by time, load only datasets that match the idx_date
-            available_dates = {local_date(d) for d in datasets}
+            available_dates = dataset_date_index.keys()
             pixel_ds = None
-            ds_at_time = [ds for ds in datasets if local_date(ds) == params.time]
+            ds_at_time = dataset_date_index[params.time]
             if len(ds_at_time) > 0:
                 data = stacker.data(ds_at_time, skip_corrections=True)
-                pixel_ds = data.isel(**isel_kwargs)
 
                 # Non-geographic coordinate systems need to be projected onto a geographic
                 # coordinate system.  Why not use EPSG:4326?
@@ -531,10 +538,9 @@ def feature_info(args):
                         feature_json["flags"][mk] = val
 
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
-            feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
+            feature_json["data_links"] = sorted(get_s3_browser_uris(ds_at_time, s3_url, s3_bucket))
             if params.product.feature_info_include_utc_dates:
-                feature_json["data_available_for_utc_dates"] = sorted(
-                    d.center_time.strftime("%Y-%m-%d") for d in datasets)
+                feature_json["data_available_for_utc_dates"] = sorted(d.center_time.strftime("%Y-%m-%d") for d in datasets)
     # --- End code section requiring datacube.
 
     result = {
