@@ -7,12 +7,13 @@ import click
 
 @click.command()
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema.")
+@click.option("--usgs", is_flag=True, default=False, help="Handle USGS-style date-time format")
 @click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--product", default=None, help="The name of a datacube product.")
 @click.option("--multiproduct", default=None, help="The name of OWS multi-product." )
 @click.option("--merge-only/--no-merge-only", default=False, help="When used with the multiproduct and calculate-extent options, the ranges for underlying datacube products are not updated.")
 @click.option("--calculate-extent/--no-calculate-extent", default=True, help="no-calculate-extent uses database queries to maximise efficiency. calculate-extent calculates ranges directly and is the default.")
-def main(product, multiproduct, merge_only, calculate_extent, schema, role):
+def main(product, multiproduct, merge_only, calculate_extent, schema, role, usgs):
     """Manage datacube-ows range tables.
 
     A valid invocation should specify at most one of '--product', '--multiproduct' or '--schema'.
@@ -28,6 +29,9 @@ def main(product, multiproduct, merge_only, calculate_extent, schema, role):
     elif schema and not role:
         print("Sorry, cannot update schema without specifying a role")
         return 1
+    elif usgs and not (product or multiproduct):
+        print("Sorry, cannot specify USGS date formats when updating all products")
+        return 1
 
     dc = Datacube(app="wms_update_ranges")
     if schema:
@@ -38,10 +42,10 @@ def main(product, multiproduct, merge_only, calculate_extent, schema, role):
     elif not calculate_extent:
         if product:
             print("Updating range for: ", product)
-            add_product_range(dc, product)
+            add_product_range(dc, product, usgs_format=usgs)
         elif multiproduct:
             print("Updating range for: ", multiproduct)
-            add_multiproduct_range(dc, multiproduct)
+            add_multiproduct_range(dc, multiproduct, usgs_format=usgs)
         else:
             print("Updating range for all, using SQL extent calculation")
             add_all(dc)

@@ -685,7 +685,7 @@ def create_multiprod_range_entry(dc, product, crses):
     return
 
 
-def create_range_entry(dc, product, crses):
+def create_range_entry(dc, product, crses, usgs_format=False):
   conn = get_sqlconn(dc)
   txn = conn.begin()
   prodid = product.id
@@ -714,13 +714,13 @@ def create_range_entry(dc, product, crses):
     set timezone to 'Etc/UTC'
   """)
 
-  # Create sorted list of dates
-  conn.execute("""
+  if usgs_format:
+      date_sql = """
     WITH sorted
     AS (SELECT to_jsonb(array_agg(dates.d))
         AS dates
         FROM (SELECT DISTINCT 
-               date(to_timestamp(metadata -> 'extent' ->> 'center_dt', 'YYYY-MM-DDTHH:MI:SS.MSZ') AT TIME ZONE 'UTC' +
+               date(to_timestamp(substring(metadata -> 'extent' ->> 'center_dt', 1, 26), 'YYYY-MM-DD HH24:MI:SS.US') AT TIME ZONE 'UTC' +
                 (least(to_number(metadata -> 'extent' -> 'coord' -> 'll' ->> 'lon', '9999.9999999999999999999999999999999999'),
                 to_number(metadata -> 'extent' -> 'coord' -> 'ul' ->> 'lon', '9999.9999999999999999999999999999999999')) +
                 greatest(to_number(metadata -> 'extent' -> 'coord' -> 'lr' ->> 'lon', '9999.9999999999999999999999999999999999'),
@@ -734,8 +734,31 @@ def create_range_entry(dc, product, crses):
     SET dates=sorted.dates
     FROM sorted
     WHERE id=%(p_id)s
-    """,
-    {"p_id": prodid})
+      """
+  else:
+      date_sql = """
+    WITH sorted
+    AS (SELECT to_jsonb(array_agg(dates.d))
+        AS dates
+        FROM (SELECT DISTINCT 
+               date(to_timestamp(metadata -> 'extent' ->> 'center_dt', 'YYYY-MM-DDTHH24:MI:SS.MSZ') AT TIME ZONE 'UTC' +
+                (least(to_number(metadata -> 'extent' -> 'coord' -> 'll' ->> 'lon', '9999.9999999999999999999999999999999999'),
+                to_number(metadata -> 'extent' -> 'coord' -> 'ul' ->> 'lon', '9999.9999999999999999999999999999999999')) +
+                greatest(to_number(metadata -> 'extent' -> 'coord' -> 'lr' ->> 'lon', '9999.9999999999999999999999999999999999'),
+                to_number(metadata -> 'extent' -> 'coord' -> 'ur' ->> 'lon', '9999.9999999999999999999999999999999999'))) / 30.0 * interval '1 hour')
+              AS d
+              FROM agdc.dataset
+              WHERE dataset_type_ref=%(p_id)s
+              AND archived IS NULL
+              ORDER BY d) dates)
+    UPDATE wms.product_ranges
+    SET dates=sorted.dates
+    FROM sorted
+    WHERE id=%(p_id)s
+    """
+
+  # Create sorted list of dates
+  conn.execute(date_sql, {"p_id": prodid})
 
   # calculate bounding boxes
   results = list(conn.execute("""
@@ -789,7 +812,7 @@ def check_datasets_exist(dc, product):
   return list(results)[0][0] > 0
 
 
-def add_product_range(dc, product):
+def add_product_range(dc, product, usgs_format=False):
     if isinstance(product, str):
         product = dc.index.products.get_by_name(product)
 
@@ -797,12 +820,12 @@ def add_product_range(dc, product):
     assert product is not None
 
     if check_datasets_exist(dc, product):
-        create_range_entry(dc, product, get_crses())
+        create_range_entry(dc, product, get_crses(), usgs_format=usgs_format)
     else:
         print("Could not find any datasets for: ", product.name)
 
 
-def add_multiproduct_range(dc, product, follow_dependencies=True):
+def add_multiproduct_range(dc, product, follow_dependencies=True, usgs_format=False):
     if isinstance(product, str):
         product = get_layers().product_index.get(product)
 
@@ -811,7 +834,7 @@ def add_multiproduct_range(dc, product, follow_dependencies=True):
     if follow_dependencies:
         for product_name in product.product_names:
             dc_prod = dc.index.products.get_by_name(product_name)
-            add_product_range(dc, dc_prod)
+            add_product_range(dc, dc_prod, usgs_format=usgs_format)
             if not check_datasets_exist(dc, dc_prod):
                 print("Could not find any datasets for: ", product_name)
 
@@ -820,14 +843,14 @@ def add_multiproduct_range(dc, product, follow_dependencies=True):
 
 
 # add product ranges providing the wms multi-product name
-def add_multiproduct_range_wms(dc, product, multiproduct, follow_dependencies=True):
+def add_multiproduct_range_wms(dc, product, multiproduct, follow_dependencies=True,usgs_format=False):
 
     assert product is not None
     prod_index = []
     if follow_dependencies:
         for product_name in product:
             dc_prod = dc.index.products.get_by_name(product_name)
-            add_product_range(dc, dc_prod)
+            add_product_range(dc, dc_prod,usgs_format=usgs_format)
             prod_index.append(dc_prod)
             if not check_datasets_exist(dc, dc_prod):
                 print("Could not find any datasets for: ", product_name)
@@ -836,7 +859,7 @@ def add_multiproduct_range_wms(dc, product, multiproduct, follow_dependencies=Tr
     create_multiprod_range_entry(dc, wms_product, get_crses())
 
 
-def add_all(dc):
+def add_all(dc, usgs_format=False):
     multi_products = set()
     for layer in get_layers():
         for product_cfg in layer.products:
@@ -845,9 +868,9 @@ def add_all(dc):
                 multi_products.add(product_cfg)
             else:
                 print("Adding range for:", product_name)
-                add_product_range(dc, product_name)
+                add_product_range(dc, product_name, usgs_format=usgs_format)
 
     for p in multi_products:
         print("Adding multiproduct range for:", p.name)
-        add_multiproduct_range(dc, p, follow_dependencies=False)
+        add_multiproduct_range(dc, p, follow_dependencies=False, usgs_format=usgs_format)
 
