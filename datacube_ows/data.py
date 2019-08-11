@@ -384,7 +384,11 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list):
                 if 'flags_definition' in pixel_dataset[band].attrs:
                     flag_def = pixel_dataset[band].attrs['flags_definition']
                     flag_dict = mask_to_dict(flag_def, band_val)
-                    ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
+                    try:
+                        ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
+                    except KeyError:
+                        # Weirdly formatted flag definition.  Hacky workaround for USGS data in DEAfrica demo.
+                        ret_val = [ val for flag, val in flag_dict.items() if val ]
                 band_dict[band_lbl] = ret_val
         except ProductLayerException:
             pass
