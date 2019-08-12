@@ -117,15 +117,16 @@ class ProductLayerException(Exception):
     pass
 
 
+class ConfigException(Exception):
+    pass
+
+
 # Function wrapper for configurable functional elements
 
 class FunctionWrapper(object):
     def __init__(self,  product_cfg, func_cfg):
         if callable(func_cfg):
-            self._func = func_cfg
-            self._args = []
-            self._kwargs = {}
-            self.product_cfg = None
+            raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
         elif isinstance(func_cfg, str):
             self._func = get_function(func_cfg)
             self._args = []

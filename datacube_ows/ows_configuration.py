@@ -19,15 +19,11 @@ from collections.abc import Mapping, Sequence
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.band_mapper import StyleDef
-from datacube_ows.ogc_utils import get_function, ProductLayerException, FunctionWrapper
+from datacube_ows.ogc_utils import get_function, ConfigException, ProductLayerException, FunctionWrapper
 
 import logging
 
 _LOG = logging.getLogger(__name__)
-
-
-class ConfigException(Exception):
-    pass
 
 
 def read_config():
@@ -442,7 +438,7 @@ class OWSConfigEntry(object):
 
 
 class OWSLayer(OWSConfigEntry):
-    def __init__(self, cfg, global_cfg, parent_layer=None):
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         self.global_cfg = global_cfg
         self.parent_layer = parent_layer
 
@@ -467,39 +463,133 @@ class OWSLayer(OWSConfigEntry):
             self.attribution = self.global_cfg.attribution
 
 
-
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, parent_layer=None):
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, parent_layer)
-        self.child_layers = list([ parse_ows_layer(lyr_cfg, global_cfg, self) for lyr_cfg in cfg["layers"] ])
+        self.child_layers = []
+        for lyr_cfg in cfg["layers"]:
+            try:
+                lyr = parse_ows_layer(lyr_cfg, global_cfg, dc, parent_layer=self)
+                self.child_layers.append(lyr)
+            except ConfigException as e:
+                _LOG.error("Could not load layer: %s", str(e))
 
 
 class OWSNamedLayer(OWSLayer):
-    def __init__(self, cfg, global_cfg, parent_layer=None):
-        super().__init__(cfg, global_cfg, parent_layer)
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
+        super().__init__(cfg, global_cfg, dc, parent_layer)
         self.name = cfg["name"]
+        self.parse_product_names(cfg)
+        self.products = []
+        for prod_name in self.product_names:
+            if "__" in prod_name:
+                raise ConfigException("Product names cannot contain a double underscore '__'.")
+            product = dc.index.products.get_by_name(prod_name)
+            if not product:
+                raise ConfigException("Could not find product %s in datacube" % prod_name)
+            self.products.append(product)
+        self.product = self.products[0]
+        self.definition = self.product.definition
+        from datacube_ows.product_ranges import get_ranges
+        self.ranges = get_ranges(dc, self)
+        # sub-ranges???
+        self.bands = BandIndex(self.product, cfg.get("bands"), dc)
+        self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
+        self.parse_flags(cfg.get("flags", {}), dc)
 
         self.global_cfg.product_index[self.name] = self
 
+    def parse_resource_limits(self, cfg):
+        self.zoom_fill = cfg["wms"].get("zoomed_out_fill_colour", [150, 180, 200, 160])
+        self.min_zoom = cfg["wms"].get("min_zoom_factor", 300.0)
+        self.max_datasets_wms = cfg["wms"].get("max_datasets", 0)
+        self.max_datasets_wcs = cfg["wcs"].get("max_datasets", 0)
+
+    def parse_flags(self, cfg, dc):
+        if cfg:
+            self.parse_pq_names(cfg)
+            self.pq_band = cfg["band"]
+            if "fuse_func" in cfg:
+                self.pq_fuse_func = FunctionWrapper(self, cfg["fuse_func"])
+            else:
+                self.pq_fuse_func = None
+            self.pq_ignore_time = cfg.get("ignore_time", False)
+            self.ignore_info_flags = cfg.get("ignore_info_flags", [])
+            self.pq_manual_merge = cfg.get("manual_merge", False)
+        else:
+            self.pq_names = []
+            self.pq_name = None
+            self.pq_band = None
+            self.pq_ignore_time = False
+            self.ignore_info_flags = []
+            self.pq_manual_merge = False
+
+        if self.pq_pnames:
+            for pqn in self.pq_names:
+                if pqn is not None:
+                    pq_product = dc.index.products.get_by_name(pqn)
+                    if pq_product is None:
+                        raise ConfigException("Could not find pq_product %s for %s in database" % (pqn, self.name))
+                    self.pq_products.append(pq_product)
+
+        self.info_mask = ~0
+        if self.pq_products:
+            self.pq_product = self.pq_products[0]
+            fd = self.pq_product.measurements[self.pq_band]["flags_definition"]
+            for bitname in self.ignore_flags_info:
+                bit = fd[bitname]["bits"]
+                if not isinstance(bit, int):
+                    continue;
+                flag = 1 << bit
+                self.info_mask &= ~flag
+        else:
+            self.pq_product = None
+
+    def parse_product_names(self, cfg):
+        raise NotImplementedError()
+
+    def parse_pq_names(self, cfg):
+        raise NotImplementedError()
+
 
 class OWSProductLayer(OWSNamedLayer):
-    def __init__(self, cfg, global_cfg, parent_layer=None):
-        super().__init__(cfg, global_cfg, parent_layer)
+    multi_product = False
+
+    def parse_product_names(self, cfg):
+        self.product_name = cfg["product_name"]
+        self.product_names = [ self.product_name ]
+
+    def parse_pq_names(self, cfg):
+        if "dataset" in cfg:
+            self.pq_name = cfg["dataset"]
+        else:
+            self.pq_name = self.product_name
+        self.pq_names = [ self.pq_name ]
 
 
 class OWSMultiProductLayer(OWSNamedLayer):
-    def __init__(self, cfg, global_cfg, parent_layer=None):
-        super().__init__(cfg, global_cfg, parent_layer)
+    multi_product = True
+
+    def parse_product_names(self, cfg):
+        self.product_names = cfg["product_names"]
+        self.product_name = self.product_names[0]
+
+    def parse_pq_names(self, cfg):
+        if "datasets" in cfg:
+            self.pq_names = cfg["datasets"]
+        else:
+            self.pq_names = list(self.product_names)
+        self.pq_name = self.pq_names[0]
 
 
-def parse_ows_layer(cfg, global_cfg, parent_layer=None):
+def parse_ows_layer(cfg, global_cfg, dc, parent_layer=None):
     if cfg.get("name", None):
         if cfg.get("multi_product", False):
-            return OWSMultiProductLayer(cfg, global_cfg, parent_layer)
+            return OWSMultiProductLayer(cfg, global_cfg, dc, parent_layer)
         else:
-            return OWSProductLayer(cfg, global_cfg, parent_layer)
+            return OWSProductLayer(cfg, global_cfg, dc, parent_layer)
     else:
-        return OWSFolder(cfg, global_cfg, parent_layer)
+        return OWSFolder(cfg, global_cfg, dc, parent_layer)
 
 
 class OWSConfig(OWSConfigEntry):
@@ -630,8 +720,9 @@ class OWSConfig(OWSConfigEntry):
     def parse_layers(self, cfg):
         self.layers = []
         self.product_index = {}
-        for lyr_cfg in cfg:
-            self.layers.append(parse_ows_layer(lyr_cfg, self))
+        with cube() as dc:
+            for lyr_cfg in cfg:
+                self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
 
     def response_headers(self, d):
         hdrs = self._response_headers.copy()
