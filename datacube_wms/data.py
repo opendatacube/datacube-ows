@@ -15,7 +15,6 @@ import re
 import datacube
 from datacube.utils import geometry
 from datacube.storage.masking import mask_to_dict
-from datacube.utils.rio import set_default_rio_config
 
 from datacube_wms.cube_pool import cube
 
@@ -43,8 +42,6 @@ def read_data(datasets, measurements, geobox, resampling=Resampling.nearest, **k
         datasets = [datasets]
 
     datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
-    set_default_rio_config(aws=dict(aws_unsigned=True), 
-                           cloud_defaults=True)
     data = datacube.Datacube.load_data(
         datasets,
         geobox,
