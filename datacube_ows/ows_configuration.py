@@ -496,7 +496,15 @@ class OWSNamedLayer(OWSLayer):
         self.bands = BandIndex(self.product, cfg.get("bands"), dc)
         self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
         self.parse_flags(cfg.get("flags", {}), dc)
+        self.parse_image_processing(cfg["image_processing"])
+        self.identifiers = cfg.get("identifiers", {})
+        for auth in self.identifiers.keys():
+            if auth not in cfg.authorities:
+                raise ConfigException("Identifier with non-declared authority: %s" % repr(auth))
+        self.parse_urls(cfg.get("urls", {}))
+        self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
 
+        # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
 
     def parse_resource_limits(self, cfg):
@@ -504,6 +512,16 @@ class OWSNamedLayer(OWSLayer):
         self.min_zoom = cfg["wms"].get("min_zoom_factor", 300.0)
         self.max_datasets_wms = cfg["wms"].get("max_datasets", 0)
         self.max_datasets_wcs = cfg["wcs"].get("max_datasets", 0)
+
+    def parse_image_processing(self, cfg):
+        emf_cfg = cfg["masking"]["extent_mask_func"]
+        if isinstance(emf_cfg, Mapping) or isinstance(emf_cfg, str):
+            self.extent_mask_func = [ FunctionWrapper(self, emf_cfg) ]
+        else:
+            self.extent_mask_func = list([ FunctionWrapper(self, emf) for emf in emf_cfg ])
+        raw_afb = self.cfg["masking"].get("always_fetch_bands", [])
+        self.always_fetch_bands = list([ self.band_idx.band(b) for b in raw_afb ])
+        self.solar_correction = cfg.get("apply_solar_corrections", False)
 
     def parse_flags(self, cfg, dc):
         if cfg:
@@ -544,6 +562,10 @@ class OWSNamedLayer(OWSLayer):
                 self.info_mask &= ~flag
         else:
             self.pq_product = None
+
+    def parse_urls(self, cfg):
+        self.feature_list_urls = SuppURL.parse_list(cfg.get("features", []))
+        self.data_urls = SuppURL.parse_list(cfg.get("data", []))
 
     def parse_product_names(self, cfg):
         raise NotImplementedError()
