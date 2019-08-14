@@ -438,6 +438,7 @@ class OWSConfigEntry(object):
 
 
 class OWSLayer(OWSConfigEntry):
+    named = False
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         self.global_cfg = global_cfg
         self.parent_layer = parent_layer
@@ -471,6 +472,7 @@ class OWSLayer(OWSConfigEntry):
     def __str__(self):
         return "OWSLayer Config: %s" % self.title
 
+
 class OWSFolder(OWSLayer):
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, parent_layer)
@@ -486,6 +488,7 @@ class OWSFolder(OWSLayer):
 
 
 class OWSNamedLayer(OWSLayer):
+    named = True
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, dc, parent_layer)
         self.name = cfg["name"]
@@ -508,6 +511,7 @@ class OWSNamedLayer(OWSLayer):
             self.ranges = get_ranges(dc, self)
         except Exception as a:
             raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+        self.bboxes = self.extract_bboxes()
         # sub-ranges???
         self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
         try:
@@ -617,6 +621,25 @@ class OWSNamedLayer(OWSLayer):
 
     def parse_pq_names(self, cfg):
         raise NotImplementedError()
+
+    def extract_bboxes(self):
+        if self.ranges is None:
+            return {}
+        return {
+            crs_id: {"right": bbox["bottom"],
+                     "left": bbox["top"],
+                     "top": bbox["left"],
+                     "bottom": bbox["right"]
+                     } \
+                if get_config()["published_CRSs"][crs_id].get("vertical_coord_first") \
+                else \
+                {"right": bbox["right"],
+                 "left": bbox["left"],
+                 "top": bbox["top"],
+                 "bottom": bbox["bottom"]
+                 }
+            for crs_id, bbox in self.ranges["bboxes"].items()
+        }
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
