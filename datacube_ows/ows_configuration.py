@@ -115,19 +115,19 @@ class BandIndex(object):
         self._nodata_vals = {}
         for b, aliases in self.band_cfg.items():
             if b not in self.native_bands.index:
-                raise ProductLayerException(f"Unknown band: {b}")
+                raise ConfigException(f"Unknown band: {b} in layer {product}")
             if b in self._idx:
-                raise ProductLayerException(f"Duplicate band name/alias: {b}")
+                raise ConfigException(f"Duplicate band name/alias: {b} in layer {product}")
             self._idx[b] = b
             for a in aliases:
                 if a in self._idx:
-                    raise ProductLayerException(f"Duplicate band name/alias: {a}")
+                    raise ConfigException(f"Duplicate band name/alias: {a} in layer {product}")
                 self._idx[a] = b
             self._nodata_vals[b] = self.native_bands['nodata'][b]
 
     def band(self, name_alias):
         if name_alias not in self._idx:
-            raise ProductLayerException(f"Unknown band name/alias: {name_alias}")
+            raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product}")
         return self._idx[name_alias]
 
     def band_label(self, name_alias):
@@ -304,7 +304,7 @@ class ProductLayerDef(object):
 
         for auth in self.identifiers.keys():
             if auth not in cfg.authorities:
-                raise ProductLayerException("Identifier with non-declared authority: %s" % repr(auth))
+                raise ProductLayerException("Identifier with non-declared authority in old cfg: %s" % repr(auth))
 
         self.feature_list_urls = SuppURL.parse_list(product_cfg.get("feature_list_urls"))
         self.data_urls = SuppURL.parse_list(product_cfg.get("data_urls"))
@@ -442,31 +442,41 @@ class OWSLayer(OWSConfigEntry):
         self.global_cfg = global_cfg
         self.parent_layer = parent_layer
 
+        if "title" not in cfg:
+            raise ConfigException("Layer without title found under parent layer %s" % str(parent_layer))
         self.title = cfg["title"]
-        self.abstract = cfg["abstract"]
-        # Accumulate keywords
-        self.keywords = set()
-        if self.parent_layer:
-            for word in self.parent_layer.keywords:
+        try:
+            self.abstract = cfg["abstract"]
+            # Accumulate keywords
+            self.keywords = set()
+            if self.parent_layer:
+                for word in self.parent_layer.keywords:
+                    self.keywords.add(word)
+            else:
+                for word in self.global_cfg.keywords:
+                    self.keywords.add(word)
+            for word in cfg.get("keywords", []):
                 self.keywords.add(word)
-        else:
-            for word in self.global_cfg.keywords:
-                self.keywords.add(word)
-        for word in cfg.get("keywords", []):
-            self.keywords.add(word)
-        # Inherit or override attribution
-        if "attribution" in cfg:
-            self.attribution = AttributionCfg.parse(cfg.get("attribution"))
-        elif parent_layer:
-            self.attribution = self.parent_layer.attribution
-        else:
-            self.attribution = self.global_cfg.attribution
+            # Inherit or override attribution
+            if "attribution" in cfg:
+                self.attribution = AttributionCfg.parse(cfg.get("attribution"))
+            elif parent_layer:
+                self.attribution = self.parent_layer.attribution
+            else:
+                self.attribution = self.global_cfg.attribution
 
+        except KeyError:
+            raise ConfigException("Required entry missing in layer %s" % self.title)
+
+    def __str__(self):
+        return "OWSLayer Config: %s" % self.title
 
 class OWSFolder(OWSLayer):
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, parent_layer)
         self.child_layers = []
+        if "layers" not in cfg:
+            raise ConfigException("No layers section in folder layer %s" % self.title)
         for lyr_cfg in cfg["layers"]:
             try:
                 lyr = parse_ows_layer(lyr_cfg, global_cfg, dc, parent_layer=self)
@@ -479,30 +489,52 @@ class OWSNamedLayer(OWSLayer):
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, dc, parent_layer)
         self.name = cfg["name"]
-        self.parse_product_names(cfg)
-        self.products = []
-        for prod_name in self.product_names:
-            if "__" in prod_name:
-                raise ConfigException("Product names cannot contain a double underscore '__'.")
-            product = dc.index.products.get_by_name(prod_name)
-            if not product:
-                raise ConfigException("Could not find product %s in datacube" % prod_name)
-            self.products.append(product)
-        self.product = self.products[0]
-        self.definition = self.product.definition
+        try:
+            self.parse_product_names(cfg)
+            self.products = []
+            for prod_name in self.product_names:
+                if "__" in prod_name:
+                    raise ConfigException("Product names cannot contain a double underscore '__'.")
+                product = dc.index.products.get_by_name(prod_name)
+                if not product:
+                    raise ConfigException("Could not find product %s in datacube" % prod_name)
+                self.products.append(product)
+            self.product = self.products[0]
+            self.definition = self.product.definition
+        except KeyError:
+            raise ConfigException("Required product names entry missing in named layer %s" % self.name)
         from datacube_ows.product_ranges import get_ranges
-        self.ranges = get_ranges(dc, self)
+        try:
+            self.ranges = get_ranges(dc, self)
+        except Exception as a:
+            raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
         # sub-ranges???
-        self.bands = BandIndex(self.product, cfg.get("bands"), dc)
-        self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
-        self.parse_flags(cfg.get("flags", {}), dc)
-        self.parse_image_processing(cfg["image_processing"])
+        self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
+        try:
+            self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
+        except KeyError:
+            raise ConfigException("Missing required config items in resource limits for layer %s" % self.name)
+        try:
+            self.parse_flags(cfg.get("flags", {}), dc)
+        except KeyError:
+            raise ConfigException("Missing required config items in flags section for layer %s" % self.name)
+        try:
+            self.parse_image_processing(cfg["image_processing"])
+        except KeyError:
+            raise ConfigException("Missing required config items in image processing section for layer %s" % self.name)
         self.identifiers = cfg.get("identifiers", {})
         for auth in self.identifiers.keys():
-            if auth not in cfg.authorities:
+            if auth not in self.global_cfg.authorities:
                 raise ConfigException("Identifier with non-declared authority: %s" % repr(auth))
-        self.parse_urls(cfg.get("urls", {}))
+        try:
+            self.parse_urls(cfg.get("urls", {}))
+        except KeyError:
+            raise ConfigException("Missing required config items in urls section for layer %s" % self.name)
         self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
+        try:
+            self.parse_styling(cfg["styling"])
+        except KeyError:
+            raise ConfigException("Missing required config items in styling section for layer %s" % self.name)
 
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
@@ -519,7 +551,7 @@ class OWSNamedLayer(OWSLayer):
             self.extent_mask_func = [ FunctionWrapper(self, emf_cfg) ]
         else:
             self.extent_mask_func = list([ FunctionWrapper(self, emf) for emf in emf_cfg ])
-        raw_afb = self.cfg["masking"].get("always_fetch_bands", [])
+        raw_afb = cfg["masking"].get("always_fetch_bands", [])
         self.always_fetch_bands = list([ self.band_idx.band(b) for b in raw_afb ])
         self.solar_correction = cfg.get("apply_solar_corrections", False)
 
@@ -541,8 +573,9 @@ class OWSNamedLayer(OWSLayer):
             self.pq_ignore_time = False
             self.ignore_info_flags = []
             self.pq_manual_merge = False
+        self.pq_products = []
 
-        if self.pq_pnames:
+        if self.pq_names:
             for pqn in self.pq_names:
                 if pqn is not None:
                     pq_product = dc.index.products.get_by_name(pqn)
@@ -554,7 +587,7 @@ class OWSNamedLayer(OWSLayer):
         if self.pq_products:
             self.pq_product = self.pq_products[0]
             fd = self.pq_product.measurements[self.pq_band]["flags_definition"]
-            for bitname in self.ignore_flags_info:
+            for bitname in self.ignore_info_flags:
                 bit = fd[bitname]["bits"]
                 if not isinstance(bit, int):
                     continue;
@@ -567,11 +600,26 @@ class OWSNamedLayer(OWSLayer):
         self.feature_list_urls = SuppURL.parse_list(cfg.get("features", []))
         self.data_urls = SuppURL.parse_list(cfg.get("data", []))
 
+    def parse_styling(self, cfg):
+        self.styles = list([ StyleDef(self, s) for s in cfg["styles"]])
+        self.style_index = { s.name: s for s in self.styles }
+        if "default_style" in cfg:
+            if cfg["default_style"] not in self.style_index:
+                raise ConfigException("Default style %s is not in the 'styles' for layer %s" % (
+                    cfg["default_style"], self.name
+                ))
+            self.default_style = self.style_index[cfg["default_style"]]
+        else:
+            self.default_style = self.styles[0]
+
     def parse_product_names(self, cfg):
         raise NotImplementedError()
 
     def parse_pq_names(self, cfg):
         raise NotImplementedError()
+
+    def __str__(self):
+        return "Named OWSLayer: %s" % self.name
 
 
 class OWSProductLayer(OWSNamedLayer):

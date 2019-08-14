@@ -33,6 +33,8 @@ class StyleMask(object):
 
 
 class StyleDefBase(object):
+    auto_legend = False
+
     def __init__(self, product, style_cfg):
         self.product = product
         self.name = style_cfg["name"]
@@ -43,6 +45,7 @@ class StyleDefBase(object):
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
 
+        self.parse_legend_cfg(style_cfg.get("legend", {}))
         self.legend_cfg = style_cfg.get("legend", dict())
 
     def apply_masks(self, data, pq_data):
@@ -60,11 +63,16 @@ class StyleDefBase(object):
     def transform_data(self, data, pq_data, extent_mask, *masks):
         pass
 
+    def parse_legend_cfg(self, cfg):
+        self.show_legend = cfg.get("show_legend", self.auto_legend)
+        self.legend_url_override = cfg.get('url', None)
+        self.legend_cfg = cfg
+
     def legend(self, bytesio):
-        pass
+        raise NotImplementedError()
 
     def legend_override_with_url(self):
-        return self.legend_cfg.get('url', None)
+        return self.legend_url_override
 
 
 class DynamicRangeCompression(StyleDefBase):
@@ -305,6 +313,7 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
 
 
 class RgbaColorRampDef(StyleDefBase):
+    auto_legend = True
     def __init__(self, product, style_cfg):
         super(RgbaColorRampDef, self).__init__(product, style_cfg)
 
@@ -484,6 +493,7 @@ class RgbaColorRampDef(StyleDefBase):
 
 
 class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
+    auto_legend = False
     def __init__(self, product, style_cfg):
         super(HybridStyleDef, self).__init__(product, style_cfg)
         self.component_ratio = style_cfg["component_ratio"]
