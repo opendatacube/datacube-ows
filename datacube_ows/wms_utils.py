@@ -21,11 +21,7 @@ from datacube.utils import geometry
 import math
 import numpy
 
-try:
-    from datacube_ows.wms_cfg_local import layer_cfg
-except ImportError:
-    from datacube_ows.wms_cfg import layer_cfg
-from datacube_ows.ows_configuration import get_layers, get_config
+from datacube_ows.ows_configuration import get_config
 
 from datacube_ows.ogc_exceptions import WMSException
 
@@ -139,8 +135,8 @@ def get_product_from_arg(args, argname="layers"):
     layer = layers[0]
     layer_chunks = layer.split("__")
     layer = layer_chunks[0]
-    platforms = get_layers()
-    product = platforms.product_index.get(layer)
+    cfg = get_config()
+    product = cfg.product_index.get(layer)
     if not product:
         raise WMSException("Layer %s is not defined" % layer,
                            WMSException.LAYER_NOT_DEFINED,
@@ -349,14 +345,8 @@ class GetMapParameters(GetParameters):
         # Zoom factor
         self.zf = zoom_factor(args, self.crs)
 
-        # Read Resampling method from config
+        # TODO: Do we need to make resampling method configurable?
         self.resampling = Resampling.nearest
-        layer_name = unquote(self.get_raw_product(args))
-        for layer in layer_cfg:
-            if layer["name"] == layer_name:
-                if "resampling" in layer:
-                    self.resampling = RESAMPLING_METHODS[layer["resampling"].lower()]
-                break
 
 
 class GetFeatureInfoParameters(GetParameters):

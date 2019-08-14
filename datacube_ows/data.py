@@ -23,7 +23,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ProductLayerException
+    ConfigException
 
 from datacube_ows.utils import log_call
 
@@ -390,7 +390,7 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list):
                         # Weirdly formatted flag definition.  Hacky workaround for USGS data in DEAfrica demo.
                         ret_val = [ val for flag, val in flag_dict.items() if val ]
                 band_dict[band_lbl] = ret_val
-        except ProductLayerException:
+        except ConfigException:
             pass
     return band_dict
 
