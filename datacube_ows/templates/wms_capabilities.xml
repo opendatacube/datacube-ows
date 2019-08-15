@@ -7,6 +7,7 @@
     {% endif %}
 {%- endmacro %}
 {% macro render_folder_layer(lyr, depth=0) -%}
+    {%  if lyr.layer_count() > 0 %}
     <Layer>
         <Title>{{ lyr.title }}</Title>
 
@@ -31,6 +32,7 @@
             {{ render_layer(c_lyr, depth=depth+1) }}
         {% endfor %}
     </Layer>
+    {%  endif %}
 {%- endmacro %}
 {% macro render_named_layer(lyr) -%}
     <Layer queryable="1">

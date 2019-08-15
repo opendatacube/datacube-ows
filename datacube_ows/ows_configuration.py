@@ -469,6 +469,9 @@ class OWSLayer(OWSConfigEntry):
         except KeyError:
             raise ConfigException("Required entry missing in layer %s" % self.title)
 
+    def layer_count(self):
+        return 0
+
     def __str__(self):
         return "OWSLayer Config: %s" % self.title
 
@@ -485,6 +488,10 @@ class OWSFolder(OWSLayer):
                 self.child_layers.append(lyr)
             except ConfigException as e:
                 _LOG.error("Could not load layer: %s", str(e))
+
+    def layer_count(self):
+        return sum([ l.layer_count() for l in self.child_layers ])
+
 
 
 class OWSNamedLayer(OWSLayer):
@@ -550,14 +557,19 @@ class OWSNamedLayer(OWSLayer):
         self.max_datasets_wcs = cfg["wcs"].get("max_datasets", 0)
 
     def parse_image_processing(self, cfg):
-        emf_cfg = cfg["masking"]["extent_mask_func"]
+        emf_cfg = cfg["extent_mask_func"]
         if isinstance(emf_cfg, Mapping) or isinstance(emf_cfg, str):
             self.extent_mask_func = [ FunctionWrapper(self, emf_cfg) ]
         else:
             self.extent_mask_func = list([ FunctionWrapper(self, emf) for emf in emf_cfg ])
-        raw_afb = cfg["masking"].get("always_fetch_bands", [])
+        raw_afb = cfg.get("always_fetch_bands", [])
         self.always_fetch_bands = list([ self.band_idx.band(b) for b in raw_afb ])
         self.solar_correction = cfg.get("apply_solar_corrections", False)
+        self.data_manual_merge = cfg.get("manual_merge", False)
+        if cfg.get("fuse_func"):
+            self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
+        else:
+            self.fuse_func = None
 
     def parse_flags(self, cfg, dc):
         if cfg:
@@ -640,6 +652,8 @@ class OWSNamedLayer(OWSLayer):
                  }
             for crs_id, bbox in self.ranges["bboxes"].items()
         }
+    def layer_count(self):
+        return 1
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name

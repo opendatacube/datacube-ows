@@ -407,7 +407,7 @@ def _make_derived_band_dict(pixel_dataset, style_index):
     """
     derived_band_dict = {}
     for style_name, style in style_index.items():
-        if not hasattr(style, 'index_function') or style.index_function is None:
+        if not style.include_in_feature_info:
             continue
 
         if any(pixel_dataset[band] == pixel_dataset[band].nodata for band in style.needed_bands):
@@ -498,9 +498,6 @@ def feature_info(args):
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
                     feature_json["band_derived"] = derived_band_dict
-                if callable(params.product.feature_info_include_custom):
-                    additional_data = params.product.feature_info_include_custom(feature_json["bands"])
-                    feature_json.update(additional_data)
 
             my_flags = 0
             for pqd in pq_datasets:

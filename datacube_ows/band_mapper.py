@@ -20,8 +20,7 @@ from textwrap import fill
 
 from math import isclose
 
-from datacube_ows.ogc_utils import FunctionWrapper
-
+from datacube_ows.ogc_utils import FunctionWrapper, ConfigException
 
 _LOG = logging.getLogger(__name__)
 
@@ -34,6 +33,7 @@ class StyleMask(object):
 
 class StyleDefBase(object):
     auto_legend = False
+    include_in_feature_info = False
 
     def __init__(self, product, style_cfg):
         self.product = product
@@ -351,10 +351,12 @@ class RgbaColorRampDef(StyleDefBase):
         for band in style_cfg["needed_bands"]:
             self.needed_bands.add(self.product.band_idx.band(band))
 
+        self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
+
         if "index_function" in style_cfg:
             self.index_function = FunctionWrapper(self.product, style_cfg["index_function"])
         else:
-            self.index_function = None
+            raise ConfigException("Index function is required for index and hybrid styles.")
 
     def get_value(self, data, values, intensities):
         return numpy.interp(data, values, intensities)

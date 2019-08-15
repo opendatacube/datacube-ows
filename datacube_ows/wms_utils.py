@@ -336,7 +336,7 @@ class GetMapParameters(GetParameters):
             raise WMSException("Multi-layer GetMap requests not supported")
         style_r = self.styles[0]
         if not style_r:
-            style_r = self.product.default_style
+            style_r = self.product.default_style.name
         self.style = self.product.style_index.get(style_r)
         if not self.style:
             raise WMSException("Style %s is not defined" % style_r,
