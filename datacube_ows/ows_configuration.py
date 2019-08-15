@@ -16,6 +16,7 @@ except ImportError:
     from datacube_ows.wms_cfg import layer_cfg
 
 from collections.abc import Mapping, Sequence
+from slugify import slugify
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.band_mapper import StyleDef
@@ -479,6 +480,7 @@ class OWSLayer(OWSConfigEntry):
 class OWSFolder(OWSLayer):
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, parent_layer)
+        self.slug_name = slugify(self.title, separator="_")
         self.child_layers = []
         if "layers" not in cfg:
             raise ConfigException("No layers section in folder layer %s" % self.title)
@@ -491,7 +493,6 @@ class OWSFolder(OWSLayer):
 
     def layer_count(self):
         return sum([ l.layer_count() for l in self.child_layers ])
-
 
 
 class OWSNamedLayer(OWSLayer):

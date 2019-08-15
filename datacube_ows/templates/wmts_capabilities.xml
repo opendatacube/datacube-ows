@@ -124,7 +124,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
 
 {% if show_contents %}
     <Contents>
-        {% for platform in platforms %}{% for product in platform.products %}
+        {% for product in cfg.product_index.values() %}
         {% if product.ranges %}
         <Layer>
             <ows:Title>{{ product.title }}</ows:Title>
@@ -135,7 +135,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
             </ows:WGS84BoundingBox>
             <ows:Identifier>{{ product.name }}</ows:Identifier>
             {% for style in product.styles %}
-            <Style{% if loop.first %} isDefault="true"{% endif %}>
+            <Style{% if style == product.default_style %} isDefault="true"{% endif %}>
                 <ows:Identifier>{{ style.name }}</ows:Identifier>
                 <ows:Title>{{ style.title }}</ows:Title>
                 <ows:Abstract>{{ style.abstract }}</ows:Abstract>
@@ -157,7 +157,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
             </TileMatrixSetLink>
         </Layer>
         {% endif %}
-        {% endfor %}{% endfor %}
+        {% endfor %}
         <TileMatrixSet>
             <ows:Identifier>WholeWorld_WebMercator</ows:Identifier>
             <ows:SupportedCRS>urn:ogc:def:crs:EPSG::3857</ows:SupportedCRS>
@@ -177,34 +177,37 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
     </Contents>
 {% endif %}
 
+{% macro render_theme(lyr) -%}
+    {% if lyr.named %}
+        {{ render_theme_layer(lyr) }}
+    {% else %}
+        {{ render_theme_folder(lyr) }}
+    {% endif %}
+{%- endmacro  %}
+{% macro render_theme_folder(lyr) -%}
+    <Theme>
+        <ows:Title>{{ lyr.title }}</ows:Title>
+        <ows:Abstract>{{ lyr.abstract }}</ows:Abstract>
+        <ows:Identifier>{{ lyr.slug_name }}</ows:Identifier>
+        {% for c_lyr in lyr.child_layers %}
+            {{ render_theme(c_lyr) }}
+        {% endfor %}
+    </Theme>
+{%- endmacro  %}
+{% macro render_theme_layer(lyr) -%}
+    <Theme>
+        <ows:Title>{{ lyr.title }}</ows:Title>
+        <ows:Abstract>{{ lyr.abstract }}</ows:Abstract>
+        <ows:Identifier>{{ lyr.name }}</ows:Identifier>
+        <LayerRef>{{ lyr.name }}</LayerRef>
+    </Theme>
+{%- endmacro  %}
+
 {% if show_themes %}
     <Themes>
-        <Theme>
-            <ows:Title>{{ cfg.title }}</ows:Title>
-            {% if cfg.abstract %}
-            <ows:Abstract>
-                {{ cfg.abstract }}
-            </ows:Abstract>
-            {% endif %}
-            <ows:Identifier>main_menu</ows:Identifier>
-            {% for platform in platforms %}
-            {% if platform.products %}
-            <Theme>
-                <ows:Title>{{ platform.title }}</ows:Title>
-                <ows:Abstract>{{ platform.abstract }}</ows:Abstract>
-                <ows:Identifier>{{ platform.name }}</ows:Identifier>
-                {% for product in platform.products %}
-                <Theme>
-                    <ows:Title>{{ product.title }}</ows:Title>
-                    <ows:Identifier>{{ product.name }}</ows:Identifier>
-                    <ows:Abstract>{{ product.abstract }}</ows:Abstract>
-                    <LayerRef>{{ product.name }}</LayerRef>
-                </Theme>
-                {% endfor %}
-            </Theme>
-            {% endif %}
-            {% endfor %}
-        </Theme>
+        {% for lyr in cfg.layers %}
+            {{ render_theme(lyr) }}
+        {% endfor %}
     </Themes>
 {% endif %}
 </Capabilities>

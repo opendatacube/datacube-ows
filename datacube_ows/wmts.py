@@ -62,7 +62,7 @@ def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.0.0 exists at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
-    platforms = get_layers(refresh=True)
+    # platforms = get_layers(refresh=True)
     cfg = get_config()
     url = args.get('Host', args['url_root'])
     base_url = get_service_base_url(cfg.allowed_urls, url)
@@ -107,7 +107,7 @@ def get_capabilities(args):
         render_template(
             "wmts_capabilities.xml",
             cfg=cfg,
-            platforms=platforms,
+     #      platforms=platforms,
             base_url=base_url,
             show_service_id = show_service_id,
             show_service_provider = show_service_provider,
