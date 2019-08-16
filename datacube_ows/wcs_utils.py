@@ -14,7 +14,7 @@ from datacube_ows.cube_pool import get_cube, release_cube
 from datacube_ows.data import DataStacker
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ProductLayerException
-from datacube_ows.ows_configuration import get_layers, get_config
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
 
 tracer = get_opencensus_tracer()
@@ -24,7 +24,6 @@ class WCS1GetCoverageRequest():
     @opencensus_trace_call(tracer=tracer)
     def __init__(self, args):
         self.args = args
-        layers = get_layers()
         cfg = get_config()
 
         # Argument: Coverage (required)
@@ -33,8 +32,8 @@ class WCS1GetCoverageRequest():
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="COVERAGE parameter")
         self.product_name = args["coverage"]
-        self.product = layers.product_index.get(self.product_name)
-        if not self.product:
+        self.product = cfg.product_index.get(self.product_name)
+        if not self.product or not self.product.wcs:
             raise WCS1Exception("Invalid coverage: %s" % self.product_name,
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
                                 locator="COVERAGE parameter")

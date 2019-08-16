@@ -109,17 +109,6 @@ service_cfg = {
     },
     "fees": "",
     "access_constraints": "",
-    # If True this will not calculate spatial extents
-    # in update_ranges.py but will instead use a default
-    # extent covering much of Australia for all
-    # temporal extents
-    # False by default (calculate spatial extents)
-    "use_default_extent": True,
-    # If using GeoTIFFs as storage
-    # this will set the rasterio env
-    # GDAL Config for GTiff Georeferencing
-    # See https://www.gdal.org/frmt_gtiff.html#georeferencing
-    "geotiff_georeference_source": "INTERNAL",
     # Attribution.  This entire section is optional.  If provided, it is taken as the
     #               default attribution for any layer that does not override it.
     "attribution": {

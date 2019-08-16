@@ -548,6 +548,12 @@ class OWSNamedLayer(OWSLayer):
         except KeyError:
             raise ConfigException("Missing required config items in styling section for layer %s" % self.name)
 
+        if self.global_cfg.wcs:
+            try:
+                self.parse_wcs(cfg.get("wcs"), dc)
+            except KeyError:
+                raise ConfigException("Missing required config items in wcs section for layer %s" % self.name)
+
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
 
@@ -629,6 +635,49 @@ class OWSNamedLayer(OWSLayer):
         else:
             self.default_style = self.styles[0]
 
+    def parse_wcs(self, cfg, dc):
+        if cfg is None:
+            self.wcs = False
+            return
+        else:
+            self.wcs = True
+        # Native CRS
+        try:
+            self.native_CRS = self.product.definition["storage"]["crs"]
+        except KeyError:
+            self.native_CRS = None
+        if not self.native_CRS:
+            self.native_CRS = cfg.get("native_crs")
+        if not self.native_CRS:
+            raise ConfigException("No native CRS could be found for layer %s" % self.name)
+        if self.native_CRS not in self.global_cfg.published_CRSs:
+            raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
+                            self.product_name,
+                            self.native_CRS))
+        self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
+        # Prepare Rectified Grid
+        native_bounding_box = self.bboxes[self.native_CRS]
+        self.origin_x = native_bounding_box["left"]
+        self.origin_y = native_bounding_box["bottom"]
+        try:
+            self.resolution_x, self.resolution_y = cfg["native_resolution"]
+        except KeyError:
+            raise ConfigException("No native resolution supplied for WCS enabled layer %s" % self.name)
+        except ValueError:
+            raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
+        except TypeError:
+            raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
+        self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
+        self.grid_high_y = int((native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+
+        # Band management
+        self.wcs_default_bands = [self.band_idx.band(b) for b in cfg["default_bands"]]
+        # Cache some metadata from the datacube
+        bands = dc.list_measurements().loc[self.product_name]
+        self.bands = bands.index.values
+        self.nodata_values = bands['nodata'].values
+        self.nodata_dict = {a: b for a, b in zip(self.bands, self.nodata_values)}
+
     def parse_product_names(self, cfg):
         raise NotImplementedError()
 
@@ -644,7 +693,7 @@ class OWSNamedLayer(OWSLayer):
                      "top": bbox["left"],
                      "bottom": bbox["right"]
                      } \
-                if get_config()["published_CRSs"][crs_id].get("vertical_coord_first") \
+                if self.global_cfg["published_CRSs"][crs_id].get("vertical_coord_first") \
                 else \
                 {"right": bbox["right"],
                  "left": bbox["left"],
@@ -821,9 +870,9 @@ class OWSConfig(OWSConfigEntry):
             self.default_geographic_CRS_def = None
             self.wcs_formats = {}
             self.native_wcs_format = None
-        # TODO - do we really need to keep these?
-        self.dummy_wcs_grid = False
-        self.create_wcs_grid = False
+        # shouldn't need to keep these?
+        # self.dummy_wcs_grid = False
+        # self.create_wcs_grid = False
 
     def parse_layers(self, cfg):
         self.layers = []

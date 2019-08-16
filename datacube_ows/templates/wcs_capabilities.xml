@@ -111,8 +111,8 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
 {% endif %}
 {% if show_content_metadata %}
 <ContentMetadata>
-    {% for platform in platforms %}{% for product in platform.products %}
-    {% if product.ranges %}
+    {% for product in cfg.product_index.values() %}
+    {% if product.wcs %}
         <CoverageOfferingBrief>
             <description>{{ product.definition.description }}</description>
             <name>{{ product.name }}</name>
@@ -127,7 +127,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
             </lonLatEnvelope>
         </CoverageOfferingBrief>
     {% endif %}
-    {% endfor %}{% endfor %}
+    {% endfor %}
 </ContentMetadata>
 {% endif %}
 
