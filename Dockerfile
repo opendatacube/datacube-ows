@@ -26,14 +26,20 @@ RUN pip3 install --upgrade pip \
 RUN pip3 install -r requirements.txt \
     && rm -rf $HOME/.cache/pip
 
-RUN pip install -U 'aiobotocore[awscli,boto3]' \
+# ODC cloud tools depend on aiobotocore which has a dependency on a specific version of botocore,
+# boto3 also depends on a specific version of botocore as a result having both aiobotocore and boto3 in one
+# environment can be a bit tricky. The easiest way to solve this is to install aiobotocore[awscli,boto3] before
+# anything else, which will pull in a compatible version of boto3 and awscli into the environment.
+RUN pip3 install -U 'aiobotocore[awscli,boto3]' \
     && rm -rf $HOME/.cache/pip
 
-RUN pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=odc_apps_cloud&subdirectory=apps/cloud' \
+RUN pip3 install --extra-index-url="https://packages.dea.gadevs.ga" \
+    odc-apps-cloud \
+    odc-apps-dc-tools \
     && rm -rf $HOME/.cache/pip
 
-RUN pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=odc_apps_dc_tools&subdirectory=apps/dc_tools'  \
-    && rm -rf $HOME/.cache/pip
+RUN pip3 install . \
+  && rm -rf $HOME/.cache/pip
 
 # RUN pip3 install -r requirements-opencensus.txt \
 #     && rm -rf $HOME/.cache/pip
@@ -77,4 +83,4 @@ WORKDIR /code
 
 ENTRYPOINT ["wms-entrypoint.sh"]
 
-CMD gunicorn -b '0.0.0.0:8000' -w 4 --timeout 120 datacube_wms.wsgi --pid=gunicorn.pid
+CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 --worker-class=gthread --worker-tmp-dir /dev/shm --timeout 120 --pid=gunicorn.pid datacube_wms.wsgi
