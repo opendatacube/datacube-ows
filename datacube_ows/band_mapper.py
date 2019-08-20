@@ -91,6 +91,7 @@ class DynamicRangeCompression(StyleDefBase):
         return normalized * 255
 
 class RGBAMappedStyleDef(StyleDefBase):
+    auto_legend = True
     def __init__(self, product, style_cfg):
         super(RGBAMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
