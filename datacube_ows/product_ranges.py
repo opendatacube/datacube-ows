@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function
 from datetime import date, datetime, timedelta
 import datacube
 
-from datacube_ows.ows_configuration import get_config, get_layers, ProductLayerDef
+from datacube_ows.ows_configuration import get_config, OWSNamedLayer  # , get_layers, ProductLayerDef
 from datacube_ows.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
@@ -205,7 +205,7 @@ def get_product_paths_in_db(conn, dc_product):
 
 def rng_update(conn, rng, product, path=None):
     # pylint: disable=bad-continuation
-    if isinstance(product, ProductLayerDef):
+    if isinstance(product, OWSNamedLayer):
         if product.multi_product:
             assert path is None
             conn.execute("""
@@ -276,7 +276,7 @@ def rng_update(conn, rng, product, path=None):
 
 def rng_insert(conn, rng, product, path=None):
     # pylint: disable=bad-continuation
-    if isinstance(product, ProductLayerDef):
+    if isinstance(product, OWSNamedLayer):
         if product.multi_product:
             conn.execute("""
                 INSERT into wms.multiproduct_ranges
@@ -365,7 +365,7 @@ def ranges_equal(r1, rdb):
 
 def update_range(dc, product, multi=False, follow_dependencies=True):
     if multi:
-        product = get_layers().product_index.get(product)
+        product = get_config().product_index.get(product)
     else:
         product = dc.index.products.get_by_name(product)
 
@@ -379,7 +379,7 @@ def update_range(dc, product, multi=False, follow_dependencies=True):
 
 
 def update_single_range(dc, product):
-    if isinstance(product, ProductLayerDef):
+    if isinstance(product, OWSNamedLayer):
         assert not product.multi_product
         dc_product = product.product
         extractor  = product.sub_product_extractor
@@ -481,18 +481,17 @@ def update_all_ranges(dc):
 
     multiproducts = set()
 
-    for layer in get_layers():
-        for prod in layer.products:
-            if prod.multi_product:
-                multiproducts.add(prod)
-            else:
-                stats = update_single_range(dc, prod)
-                p  += stats[0]
-                u  += stats[1]
-                i  += stats[2]
-                sp += stats[3]
-                su += stats[4]
-                si += stats[5]
+    for prod in get_config().product_index.values():
+        if prod.multi_product:
+            multiproducts.add(prod)
+        else:
+            stats = update_single_range(dc, prod)
+            p  += stats[0]
+            u  += stats[1]
+            i  += stats[2]
+            sp += stats[3]
+            su += stats[4]
+            si += stats[5]
 
     for mprod in multiproducts:
         stats = update_multi_range(dc, mprod, follow_dependencies=False)
@@ -793,9 +792,10 @@ def add_product_range(dc, product):
 
 def add_multiproduct_range(dc, product, follow_dependencies=True):
     if isinstance(product, str):
-        product = get_layers().product_index.get(product)
+        product = get_config().product_index.get(product)
 
     assert product is not None
+    assert product.multi_product
 
     if follow_dependencies:
         for product_name in product.product_names:
@@ -808,33 +808,15 @@ def add_multiproduct_range(dc, product, follow_dependencies=True):
     create_multiprod_range_entry(dc, product, get_crses())
 
 
-# add product ranges providing the wms multi-product name
-def add_multiproduct_range_wms(dc, product, multiproduct, follow_dependencies=True):
-
-    assert product is not None
-    prod_index = []
-    if follow_dependencies:
-        for product_name in product:
-            dc_prod = dc.index.products.get_by_name(product_name)
-            add_product_range(dc, dc_prod)
-            prod_index.append(dc_prod)
-            if not check_datasets_exist(dc, dc_prod):
-                print("Could not find any datasets for: ", product_name)
-    wms_product = {"name": multiproduct, "products": prod_index}
-    # Actually merge and store!
-    create_multiprod_range_entry(dc, wms_product, get_crses())
-
-
 def add_all(dc):
     multi_products = set()
-    for layer in get_layers():
-        for product_cfg in layer.products:
-            product_name = product_cfg.product_name
-            if product_cfg.multi_product:
-                multi_products.add(product_cfg)
-            else:
-                print("Adding range for:", product_name)
-                add_product_range(dc, product_name)
+    for product_cfg in get_config().product_index.values():
+        product_name = product_cfg.product_name
+        if product_cfg.multi_product:
+            multi_products.add(product_cfg)
+        else:
+            print("Adding range for:", product_name)
+            add_product_range(dc, product_name)
 
     for p in multi_products:
         print("Adding multiproduct range for:", p.name)

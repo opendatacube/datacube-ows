@@ -1174,6 +1174,7 @@ ows_cfg = {
                         # Default to False.
                         "manual_merge": False,
                     },
+                    # The image_processing section must be supplied.
                     "image_processing": {
                         # Extent mask function
                         # Determines what portions of dataset is potentially meaningful data.

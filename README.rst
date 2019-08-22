@@ -47,6 +47,11 @@ Setup
 
     pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=dea-proto[async]'
 
+* Datacube OWS has some dependencies that cannot be handled by conda.  After doing the conda
+  installs, run pip install against the supplied requirements.txt::
+
+    pip install -r requirements.txt
+
 * Run `python update_ranges.py --role *datacube_user_role* --schema` to create schema and tables used
   by datacube-ows.
 

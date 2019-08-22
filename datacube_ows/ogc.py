@@ -17,7 +17,7 @@ from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WMSExceptio
 from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 from datacube_ows.cube_pool import cube
 
-from datacube_ows.ows_configuration import get_config, get_layers
+from datacube_ows.ows_configuration import get_config
 
 import logging
 
@@ -223,8 +223,8 @@ def ping():
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
 def legend(layer, style):
-    platforms = get_layers()
-    product = platforms.product_index.get(layer)
+    cfg = get_config()
+    product = cfg.product_index.get(layer)
     if not product:
         return ("Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"}))
     img = create_legend_for_style(product, style)

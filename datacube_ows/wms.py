@@ -7,7 +7,7 @@ from datacube_ows.ogc_utils import get_service_base_url
 
 from datacube_ows.ogc_exceptions import WMSException
 
-from datacube_ows.ows_configuration import get_layers, get_config
+from datacube_ows.ows_configuration import get_config
 
 from datacube_ows.legend_generator import legend_graphic
 from datacube_ows.utils import log_call, get_opencensus_tracer, opencensus_trace_call
