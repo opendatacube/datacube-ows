@@ -29,10 +29,9 @@ RUN pip3 install -r requirements.txt \
 RUN pip install -U 'aiobotocore[awscli,boto3]' \
     && rm -rf $HOME/.cache/pip
 
-RUN pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=odc_apps_cloud&subdirectory=apps/cloud' \
-    && rm -rf $HOME/.cache/pip
-
-RUN pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=odc_apps_dc_tools&subdirectory=apps/dc_tools'  \
+RUN pip install --extra-index-url="https://packages.dea.gadevs.ga" \
+    odc-apps-cloud \
+    odc-apps-dc-tools \
     && rm -rf $HOME/.cache/pip
 
 # RUN pip3 install -r requirements-opencensus.txt \

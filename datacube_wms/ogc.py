@@ -16,7 +16,7 @@ from datacube_wms.wmts import handle_wmts
 from datacube_wms.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
 from datacube_wms.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 from datacube_wms.cube_pool import cube
-
+from datacube.utils.rio import set_default_rio_config
 from datacube_wms.wms_layers import get_service_cfg, get_layers
 
 import logging
@@ -52,6 +52,10 @@ _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_wms.metrics.prometheus import setup_prometheus
     setup_prometheus(app)
+
+set_default_rio_config(aws=dict(aws_unsigned=True,
+                                region_name="auto"),
+                       cloud_defaults=True)
 
 
 class SupportedSvcVersion(object):
