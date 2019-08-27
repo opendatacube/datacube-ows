@@ -14,8 +14,8 @@ jobs:
   include:
     - stage: test
       script:
-        - docker build -t opendatacube/wms:test .
-        - docker run opendatacube/wms:test /bin/sh -c "./check-code.sh"
+        - docker build -t opendatacube/wms:latest .
+        - docker run opendatacube/wms:latest /bin/sh -c "./check-code.sh"
         - ifconfig
     - stage: build
       if: (branch = master OR (tag = branch)) AND type = push
