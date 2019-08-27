@@ -43,10 +43,6 @@ Setup
 
 * Datacube OWS requires the scikit-image package:  `conda install scikit-image`
 
-* Manually install dea-proto::
-
-    pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=dea-proto[async]'
-
 * Run `python update_ranges.py --role *datacube_user_role* --schema` to create schema and tables used
   by datacube-ows.
 

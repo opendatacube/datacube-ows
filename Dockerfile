@@ -38,9 +38,6 @@ RUN pip3 install --extra-index-url="https://packages.dea.gadevs.ga" \
     odc-apps-dc-tools \
     && rm -rf $HOME/.cache/pip
 
-RUN pip3 install . \
-  && rm -rf $HOME/.cache/pip
-
 # RUN pip3 install -r requirements-opencensus.txt \
 #     && rm -rf $HOME/.cache/pip
 
