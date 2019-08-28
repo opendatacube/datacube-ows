@@ -26,10 +26,6 @@ RUN pip3 install --upgrade pip \
 RUN pip3 install -r requirements.txt \
     && rm -rf $HOME/.cache/pip
 
-# ODC cloud tools depend on aiobotocore which has a dependency on a specific version of botocore,
-# boto3 also depends on a specific version of botocore as a result having both aiobotocore and boto3 in one
-# environment can be a bit tricky. The easiest way to solve this is to install aiobotocore[awscli,boto3] before
-# anything else, which will pull in a compatible version of boto3 and awscli into the environment.
 RUN pip install -U 'aiobotocore[awscli,boto3]' \
     && rm -rf $HOME/.cache/pip
 
