@@ -69,15 +69,6 @@ class DataStacker():
     def needed_bands(self):
         return self._needed_bands
 
-    def point_in_dataset_by_extent(self, point, dataset):
-        # Return true if dataset contains point
-        polygon = dataset.extent
-        if point.crs == polygon.crs:
-            point_crs = point
-        else:
-            point_crs = point.to_crs(polygon.crs)
-        return polygon.contains(point_crs)
-
     @log_call
     @opencensus_trace_call(tracer=tracer)
     def datasets(self, index, mask=False, all_time=False, point=None):
@@ -115,10 +106,6 @@ class DataStacker():
             _LOG.debug("query start %s", datetime.now().time())
             datasets = index.datasets.search_eager(**query.search_terms)
             _LOG.debug("query stop %s", datetime.now().time())
-
-        if point:
-            # Cleanup Note. Previously by_bounds was used for PQ data
-            datasets = [dataset for dataset in datasets if self.point_in_dataset_by_extent(point, dataset)]
 
         return datasets
 
