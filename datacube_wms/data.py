@@ -71,8 +71,12 @@ class DataStacker():
 
     def point_in_dataset_by_extent(self, point, dataset):
         # Return true if dataset contains point
-        compare_geometry = dataset.extent.to_crs(self._geobox.crs)
-        return compare_geometry.contains(point)
+        polygon = dataset.extent
+        if point.crs == polygon.crs:
+            point_crs = point
+        else:
+            point_crs = point.to_crs(polygon.crs)
+        return polygon.contains(point_crs)
 
     @log_call
     @opencensus_trace_call(tracer=tracer)
