@@ -22,7 +22,7 @@ from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ProductLayerException
+    ProductLayerException, tz_for_coord, dataset_center_coords
 
 from datacube_wms.utils import log_call
 
@@ -448,18 +448,23 @@ def feature_info(args):
         }
         if datasets:
             dataset_date_index = {}
+            tz = None
             for ds in datasets:
-                ld = local_date(ds)
+                if tz is None:
+                    crs_geo = geometry.CRS("EPSG:4326")
+                    ptg = geo_point.to_crs(crs_geo)
+                    tz = tz_for_coord(ptg.coords[0][0], ptg.coords[0][1])
+                ld = local_date(ds, tz=tz)
                 if ld in dataset_date_index:
                     dataset_date_index[ld].append(ds)
                 else:
                     dataset_date_index[ld] = [ds]
-
             # Group datasets by time, load only datasets that match the idx_date
             available_dates = dataset_date_index.keys()
-            pixel_ds = None
             ds_at_time = dataset_date_index[params.time]
+            _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
             if len(ds_at_time) > 0:
+                pixel_ds = None
                 data = stacker.data(ds_at_time, skip_corrections=True)
 
                 # Non-geographic coordinate systems need to be projected onto a geographic
