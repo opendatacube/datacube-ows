@@ -23,6 +23,10 @@ import logging
 
 # pylint: disable=invalid-name, broad-except
 
+if os.environ.get("PYDEV_DEBUG"):
+    import pydevd_pycharm
+    pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+
 app = Flask(__name__.split('.')[0])
 RequestID(app)
 
