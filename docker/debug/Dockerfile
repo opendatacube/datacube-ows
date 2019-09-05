@@ -26,6 +26,8 @@ RUN pip3 install --upgrade pip \
 RUN pip3 install -r requirements.txt \
     && rm -rf $HOME/.cache/pip
 
+RUN pip3 install pydevd-pycharm~=191.7479.30 && rm -rf $HOME/.cache/pip
+
 RUN pip install -U 'aiobotocore[awscli,boto3]' \
     && rm -rf $HOME/.cache/pip
 
@@ -43,6 +45,7 @@ RUN pip3 install . \
 COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
 COPY docker/get_wms_config.sh /usr/local/bin/get_wms_config.sh
 COPY docker/update-and-reload.sh /usr/local/bin/update-and-reload.sh
+
 
 # Perform setup install
 RUN mkdir -p /code/setup
@@ -79,4 +82,6 @@ ENTRYPOINT ["wms-entrypoint.sh"]
 # Increase the maximum number of open file descriptors for a given process, ulimit (65535*3 = 196605)
 RUN ulimit -n 196605
 
-CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_wms.wsgi
+# NB. Call docker run with e.g. -p 8888:8000 to expose outside the container as port 8888.
+# CMD gunicorn -b '0.0.0.0:8000' --workers=1 --threads=1 -k gevent --timeout 121 --pid gunicorn.pid --log-level debug --worker-tmp-dir /dev/shm datacube_wms.wsgi
+CMD FLASK_APP=/code/datacube_wms/ogc.py flask run --host=0.0.0.0 --port=8000

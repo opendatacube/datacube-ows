@@ -23,6 +23,10 @@ import logging
 
 # pylint: disable=invalid-name, broad-except
 
+if os.environ.get("PYDEV_DEBUG"):
+    import pydevd_pycharm
+    pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+
 app = Flask(__name__.split('.')[0])
 RequestID(app)
 
@@ -52,6 +56,10 @@ _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_ows.metrics.prometheus import setup_prometheus
     setup_prometheus(app)
+
+set_default_rio_config(aws=dict(aws_unsigned=True,
+                                region_name="auto"),
+                       cloud_defaults=True)
 
 
 class SupportedSvcVersion(object):

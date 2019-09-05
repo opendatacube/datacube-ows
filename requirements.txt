@@ -19,3 +19,4 @@ requests
 watchdog
 timezonefinder
 python-slugify
+bottleneck

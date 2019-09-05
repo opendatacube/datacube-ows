@@ -32,10 +32,13 @@ def dataset_center_coords(dataset):
     return geom_centroid.coords[0]
 
 
-def local_date(ds):
+def local_date(ds, tz=None):
     dt_utc = dataset_center_time(ds)
-    dc_lon, dc_lat = dataset_center_coords(ds)
-    return coord_date(dt_utc, dc_lon, dc_lat).date()
+    if tz:
+        return dt_utc.astimezone(tz).date()
+    else:
+        dc_lon, dc_lat = dataset_center_coords(ds)
+        return coord_date(dt_utc, dc_lon, dc_lat).date()
 
 
 def tz_for_coord(lon, lat):

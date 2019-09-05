@@ -43,7 +43,7 @@ def band_quotient(data, band1, band2, product_cfg=None):
     else:
         b1 = band1
         b2 = band2
-    return data[band1] / data[band2]
+    return data[b1] / data[b2]
 
 
 def band_quotient_sum(data, band1a, band1b, band2a, band2b, product_cfg=None):

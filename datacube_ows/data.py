@@ -15,7 +15,6 @@ import re
 import datacube
 from datacube.utils import geometry
 from datacube.storage.masking import mask_to_dict
-from datacube.utils.rio import set_default_rio_config
 
 from datacube_ows.cube_pool import cube
 
@@ -23,7 +22,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ConfigException
+    ConfigException, tz_for_coord, dataset_center_coords
 
 from datacube_ows.utils import log_call
 
@@ -43,8 +42,6 @@ def read_data(datasets, measurements, geobox, resampling=Resampling.nearest, **k
         datasets = [datasets]
 
     datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
-    set_default_rio_config(aws=dict(aws_unsigned=True), 
-                           cloud_defaults=True)
     data = datacube.Datacube.load_data(
         datasets,
         geobox,
@@ -71,11 +68,6 @@ class DataStacker():
 
     def needed_bands(self):
         return self._needed_bands
-
-    def point_in_dataset_by_extent(self, point, dataset):
-        # Return true if dataset contains point
-        compare_geometry = dataset.extent.to_crs(self._geobox.crs)
-        return compare_geometry.contains(point)
 
     @log_call
     @opencensus_trace_call(tracer=tracer)
@@ -114,10 +106,6 @@ class DataStacker():
             _LOG.debug("query start %s", datetime.now().time())
             datasets = index.datasets.search_eager(**query.search_terms)
             _LOG.debug("query stop %s", datetime.now().time())
-
-        if point:
-            # Cleanup Note. Previously by_bounds was used for PQ data
-            datasets = [dataset for dataset in datasets if self.point_in_dataset_by_extent(point, dataset)]
 
         return datasets
 
@@ -459,13 +447,25 @@ def feature_info(args):
             v_coord: 0
         }
         if datasets:
+            dataset_date_index = {}
+            tz = None
+            for ds in datasets:
+                if tz is None:
+                    crs_geo = geometry.CRS("EPSG:4326")
+                    ptg = geo_point.to_crs(crs_geo)
+                    tz = tz_for_coord(ptg.coords[0][0], ptg.coords[0][1])
+                ld = local_date(ds, tz=tz)
+                if ld in dataset_date_index:
+                    dataset_date_index[ld].append(ds)
+                else:
+                    dataset_date_index[ld] = [ds]
             # Group datasets by time, load only datasets that match the idx_date
-            available_dates = {local_date(d) for d in datasets}
-            pixel_ds = None
-            ds_at_time = [ds for ds in datasets if local_date(ds) == params.time]
+            available_dates = dataset_date_index.keys()
+            ds_at_time = dataset_date_index[params.time]
+            _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
             if len(ds_at_time) > 0:
+                pixel_ds = None
                 data = stacker.data(ds_at_time, skip_corrections=True)
-                pixel_ds = data.isel(**isel_kwargs)
 
                 # Non-geographic coordinate systems need to be projected onto a geographic
                 # coordinate system.  Why not use EPSG:4326?
