@@ -41,7 +41,6 @@ RUN pip3 install . \
   && rm -rf $HOME/.cache/pip
 
 COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
-COPY docker/get_wms_config.sh /usr/local/bin/get_wms_config.sh
 COPY docker/update-and-reload.sh /usr/local/bin/update-and-reload.sh
 
 # Perform setup install
@@ -79,4 +78,4 @@ ENTRYPOINT ["wms-entrypoint.sh"]
 # Increase the maximum number of open file descriptors for a given process, ulimit (65535*3 = 196605)
 RUN ulimit -n 196605
 
-CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_wms.wsgi
+CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi

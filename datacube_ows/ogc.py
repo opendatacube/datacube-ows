@@ -16,7 +16,7 @@ from datacube_ows.wmts import handle_wmts
 from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
 from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 from datacube_ows.cube_pool import cube
-
+from datacube.utils.rio import set_default_rio_config
 from datacube_ows.ows_configuration import get_config
 
 import logging

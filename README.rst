@@ -154,15 +154,30 @@ to multiple web apps using different virtual environments.
 
 Docker
 ------
-To run this image, use something like: ::
+To run this image, create a docker volume containing your ows config files and use something like: ::
+
+  docker build --tag=name_of_built_container .
 
   docker run \
       --rm \
       opendatacube/wms \
       gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_ows:ogc
 
+  docker run --rm \
+        -e PYTHONPATH=/test_cfg \                                  # Location of config files on docker mounted volume
+        -e DATACUBE_OWS_CFG=test_cfg.ows_cfg                       # Location of config object
+        -e AWS_ACCESS_KEY_ID=THISISNOTAREALAWSKEY \                # AWS ACCESS KEY (if accessing files on S3)
+        -e AWS_SECRET_ACCESS_KEY=THISisNOTaREALawsSECRETaccessKEY \# AWS SECRET ACCESS KEY (if accessing files on S3)
+        -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (if accessing files on S3)
+        -e DB_HOSTNAME=172.17.0.1 -e DB_PORT=5432 \                # Hostname/IP address and port of ODC postgres database
+        -e DB_DATABASE=datacube \                                  # Name of ODC postgres database
+        -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
+        -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
+        \                                                          # container at port 8008 on the host machine.
+        --mount source=test_cfg,target=/test_cfg \                 # Mount the docker volume where the config lives
+        name_of_built_container
 
-The image comes with the standard ODC installed, including the entrypoint that sets the config from the environment.
+The image is based on the standard ODC container.
 
 Credits
 ---------

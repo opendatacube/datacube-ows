@@ -43,7 +43,6 @@ RUN pip3 install . \
   && rm -rf $HOME/.cache/pip
 
 COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
-COPY docker/get_wms_config.sh /usr/local/bin/get_wms_config.sh
 COPY docker/update-and-reload.sh /usr/local/bin/update-and-reload.sh
 
 
@@ -84,4 +83,4 @@ RUN ulimit -n 196605
 
 # NB. Call docker run with e.g. -p 8888:8000 to expose outside the container as port 8888.
 # CMD gunicorn -b '0.0.0.0:8000' --workers=1 --threads=1 -k gevent --timeout 121 --pid gunicorn.pid --log-level debug --worker-tmp-dir /dev/shm datacube_wms.wsgi
-CMD FLASK_APP=/code/datacube_wms/ogc.py flask run --host=0.0.0.0 --port=8000
+CMD FLASK_APP=/code/datacube_ows/ogc.py flask run --host=0.0.0.0 --port=8000
