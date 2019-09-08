@@ -40,7 +40,7 @@ RUN pip install --extra-index-url="https://packages.dea.gadevs.ga" \
 RUN pip3 install . \
   && rm -rf $HOME/.cache/pip
 
-COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
+COPY docker/ows-entrypoint.sh /usr/local/bin/ows-entrypoint.sh
 COPY docker/update-and-reload.sh /usr/local/bin/update-and-reload.sh
 
 # Perform setup install
@@ -73,7 +73,7 @@ ADD https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/maste
 
 WORKDIR /code
 
-ENTRYPOINT ["wms-entrypoint.sh"]
+ENTRYPOINT ["ows-entrypoint.sh"]
 
 # Increase the maximum number of open file descriptors for a given process, ulimit (65535*3 = 196605)
 RUN ulimit -n 196605
