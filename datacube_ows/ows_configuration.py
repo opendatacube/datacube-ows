@@ -226,7 +226,7 @@ class OWSLayer(OWSConfigEntry):
 
         except KeyError:
             raise ConfigException("Required entry missing in layer %s" % self.title)
-        super().__init___({})
+        super().__init__({})
 
     def layer_count(self):
         return 0
