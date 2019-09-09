@@ -176,6 +176,13 @@ def style_cfg_ramp():
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
         "needed_bands": ["foo"],
+        "index_function": {
+            "function": "datacube_ows.band_utils.constant",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "const": "0.1"
+            }
+        },
         "color_ramp": [
             {"value": 0.0, "color": "#FFFFFF", "alpha": 0.0},
             {"value": 1.0, "color": "#000000", "alpha": 1.0}
@@ -186,7 +193,13 @@ def style_cfg_ramp():
 def test_correct_style_hybrid(product_layer, style_cfg_lin):
     style_cfg_lin["component_ratio"] = 1.0
     style_cfg_lin["range"] = [1, 2]
-    style_cfg_lin["index_function"] = lambda x: x
+    style_cfg_lin["index_function"] = {
+        "function": "datacube_ows.band_utils.constant",
+        "pass_product_cfg": True,
+        "kwargs": {
+            "const": "0.1"
+        }
+    }
     style_def = StyleDef(product_layer, style_cfg_lin)
 
     assert isinstance(style_def, bm.HybridStyleDef)

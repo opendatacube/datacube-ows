@@ -90,6 +90,7 @@ def test_make_derived_band_dict_nan():
             return fake_data()
 
     class fake_style:
+        include_in_feature_info = True
         def __init__(self):
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
@@ -113,6 +114,7 @@ def test_make_derived_band_dict_not_nan():
             return fake_data()
 
     class fake_style:
+        include_in_feature_info = True
         def __init__(self):
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
