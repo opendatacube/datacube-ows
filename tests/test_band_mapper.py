@@ -1,7 +1,7 @@
 import datacube_ows.band_mapper as bm
 from datacube_ows.band_mapper import StyleDef
 
-from datacube_ows.ows_configuration import BandIndex, ProductLayerDef
+from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 from xarray import DataArray, Dataset
 from unittest.mock import patch
@@ -12,7 +12,7 @@ import numpy as np
 
 @pytest.fixture
 def product_layer():
-    product_layer = ProductLayerDef.__new__(ProductLayerDef)
+    product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.always_fetch_bands = ["red", "green", "blue"]
@@ -88,7 +88,7 @@ def style_cfg_map():
 
 @pytest.fixture
 def product_layer_alpha_map():
-    product_layer = ProductLayerDef.__new__(ProductLayerDef)
+    product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.always_fetch_bands = ["foo"]
@@ -293,7 +293,7 @@ def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
 
 @pytest.fixture
 def product_layer_mask_map():
-    product_layer = ProductLayerDef.__new__(ProductLayerDef)
+    product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer.name = "test_product"
     product_layer.pq_band = None
     product_layer.always_fetch_bands = ["foo"]
