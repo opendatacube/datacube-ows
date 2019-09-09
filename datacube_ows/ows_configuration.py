@@ -38,7 +38,10 @@ def read_config():
     return cfg_expand(cfg)
 
 
+# pylint: disable=dangerous-default-value
 def cfg_expand(cfg_unexpanded, inclusions=[]):
+    # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
+    # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
     if isinstance(cfg_unexpanded, Mapping):
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
@@ -223,6 +226,7 @@ class OWSLayer(OWSConfigEntry):
 
         except KeyError:
             raise ConfigException("Required entry missing in layer %s" % self.title)
+        super().__init___({})
 
     def layer_count(self):
         return 0
@@ -367,7 +371,7 @@ class OWSNamedLayer(OWSLayer):
             for bitname in self.ignore_info_flags:
                 bit = fd[bitname]["bits"]
                 if not isinstance(bit, int):
-                    continue;
+                    continue
                 flag = 1 << bit
                 self.info_mask &= ~flag
         else:
@@ -471,6 +475,7 @@ class OWSProductLayer(OWSNamedLayer):
         self.product_names = [ self.product_name ]
 
     def parse_pq_names(self, cfg):
+        # pylint: disable=attribute-defined-outside-init
         if "dataset" in cfg:
             self.pq_name = cfg["dataset"]
         else:
@@ -486,6 +491,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
         self.product_name = self.product_names[0]
 
     def parse_pq_names(self, cfg):
+        # pylint: disable=attribute-defined-outside-init
         if "datasets" in cfg:
             self.pq_names = cfg["datasets"]
         else:
@@ -541,7 +547,7 @@ class OWSConfig(OWSConfigEntry):
                 self.parse_layers(cfg["layers"])
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
-        # super().__init__({}) Not needed yet
+        super().__init__({})
 
     def parse_global(self, cfg):
         self._response_headers = cfg.get("response_headers", {})

@@ -75,6 +75,7 @@ class StyleDefBase(object):
         return self.legend_url_override
 
 
+# pylint: disable=abstract-method
 class DynamicRangeCompression(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(DynamicRangeCompression, self).__init__(product, style_cfg)
@@ -200,6 +201,7 @@ class RGBAMappedStyleDef(StyleDefBase):
         plt.savefig(bytesio, format='png')
 
 
+# pylint: disable=abstract-method
 class LinearStyleDef(DynamicRangeCompression):
     def __init__(self, product, style_cfg):
         super(LinearStyleDef, self).__init__(product, style_cfg)
