@@ -183,6 +183,10 @@ def mask_by_quality(data, band):
 def mask_by_extent_flag(data, band):
     return data["extent"] == 1
 
+
+def mask_by_extent_val(data, band):
+    return data["extent"] != data["extent"].attrs['nodata']
+
 # Sub-product extractors
 
 ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
