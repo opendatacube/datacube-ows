@@ -604,6 +604,9 @@ style_wofs_frequency = {
             "band": "frequency",
         }
     },
+    # Should the index_function value be shown as a derived band in GetFeatureInfo responses.
+    # Defaults to true for style types with an index function.
+    "include_in_feature_info": False,
     "color_ramp": [
         {
             "value": 0.002,
@@ -1067,8 +1070,10 @@ ows_cfg = {
     "layers": [
         {
             # NOTE: This layer is a folder - it is NOT "named layer" that can be selected in GetMap requests
-            # Every layer must have a distinct human-readable title and abstract.
+            # Every layer must have a human-readable title
             "title": "Landsat 8",
+            # Top level layers must have a human-readable abstract. The abstract is optional for child-layers - defaulting
+            # to that of the parent layer.
             "abstract": "Images from the Landsat 8 satellite",
             # NOTE: Folder-layers do not have a layer "name".
 
@@ -1402,7 +1407,7 @@ ows_cfg = {
                     },
                     "wcs": {
                         "native_crs": "EPSG:3577",
-                        "native_resolution": [ 25.0, 25.0 ],
+                        "native_resolution": [ 10.0, 10.0 ],
                         "default_bands": [ "red", "green", "blue" ],
                     },
                     "identifiers": {
