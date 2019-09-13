@@ -205,7 +205,12 @@ class OWSLayer(OWSConfigEntry):
             raise ConfigException("Layer without title found under parent layer %s" % str(parent_layer))
         self.title = cfg["title"]
         try:
-            self.abstract = cfg["abstract"]
+            if "abstract" in cfg:
+                self.abstract = cfg["abstract"]
+            elif parent_layer:
+                self.abstract = parent_layer.abstract
+            else:
+                raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
             # Accumulate keywords
             self.keywords = set()
             if self.parent_layer:
