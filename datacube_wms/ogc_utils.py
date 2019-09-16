@@ -173,8 +173,11 @@ class FunctionWrapper(object):
 
 # Extent Mask Functions
 
-def mask_by_val(data, band):
-    return data[band] != data[band].attrs['nodata']
+def mask_by_val(data, band, val=None):
+    if val is None:
+        return data[band] != data[band].attrs['nodata']
+    else:
+        return data[band] != val
 
 
 def mask_by_bitflag(data, band):
