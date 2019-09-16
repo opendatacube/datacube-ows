@@ -165,18 +165,22 @@ def determine_product_ranges(dc, dc_product, extractor):
                     sub_r[path]["extents"][crsid] = sub_r[path]["extents"][crsid].union(cvx_ext)
         ds_count += 1
 
-    r["times"] = sorted(time_set)
-    r["time_set"] = time_set
-    r["bboxes"] = { crsid: jsonise_bbox(extents[crsid].boundingbox) for crsid in crsids }
-    print("LATS: ", r["lat"], " LONS: ", r["lon"])
-    if extractor is not None:
-        for path in sub_r.keys():
-            sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
-            sub_r[path]["bboxes"] = {crsid: jsonise_bbox(sub_r[path]["extents"][crsid].boundingbox) for crsid in crsids}
-            del sub_r[path]["extents"]
-        r["sub_products"] = sub_r
-    end = datetime.now()
-    print("Scanned %d datasets in %d seconds" % (ds_count, (end - start).seconds))
+    if ds_count > 0:
+        r["times"] = sorted(time_set)
+        r["time_set"] = time_set
+        r["bboxes"] = { crsid: jsonise_bbox(extents[crsid].boundingbox) for crsid in crsids }
+        print("LATS: ", r["lat"], " LONS: ", r["lon"])
+        if extractor is not None:
+            for path in sub_r.keys():
+                sub_r[path]["times"] = sorted(sub_r[path]["time_set"])
+                sub_r[path]["bboxes"] = {crsid: jsonise_bbox(sub_r[path]["extents"][crsid].boundingbox) for crsid in crsids}
+                del sub_r[path]["extents"]
+            r["sub_products"] = sub_r
+        end = datetime.now()
+        print("Scanned %d datasets in %d seconds" % (ds_count, (end - start).seconds))
+    else:
+        end = datetime.now()
+        print("No datasets indexed. Nothing to do and didn't do it in %s seconds" % (end - start).seconds)
     return r
 
 
