@@ -1266,9 +1266,27 @@ ows_cfg = {
                             }
                         ]
                     },
-                    # Include an additional list of utc dates in the WMS Get Feature Info. Defaults to False.
-                    # HACK: only used for GSKY non-solar day lookup.
-                    "feature_info_include_utc_dates": False,
+                    # The feature_info section is optional.
+                    "feature_info": {
+                        # Include an additional list of utc dates in the WMS Get Feature Info. Defaults to False.
+                        # HACK: only used for GSKY non-solar day lookup.
+                        "include_utc_dates": False,
+                        # Optional: custom data to be included in GetFeatureInfo responses.  Defaults to an empty
+                        # dictionary.
+                        # Keys are the keys to insert into the GetFeatureInfo response.  Values are function wrappers,
+                        # using the same format options available elsewhere in the config.  Specified functions are
+                        # expected to be passed a dictionary of band values (as parameter "data") and return any data
+                        # that can be serialised to JSON.
+                        "include_custom": {
+                            "timeseries": {
+                                "function": "datacube_ows.ogc_utils.feature_info_url_template",
+                                "pass_product_cfg": False,
+                                "kwargs": {
+                                    "template": "https://host.domain/path/{data['f_id']:06}.csv"
+                                }
+                            }
+                        }
+                    },
                     # Style definitions
                     # The "styling" section is required
                     "styling": {
@@ -1329,7 +1347,6 @@ ows_cfg = {
                         "native_resolution": [ 25.0, 25.0 ],
                         "default_bands": [ "red", "green", "blue" ],
                     },
-                    "feature_info_include_utc_dates": False,
                     "styling": {
                         "default_style": "simple_rgb",
                         "styles": [
@@ -1427,7 +1444,6 @@ ows_cfg = {
                             }
                         ]
                     },
-                    "feature_info_include_utc_dates": False,
                     "styling": {
                         "default_style": "simple_rgb",
                         "styles": [ style_rgb ],
@@ -1474,7 +1490,6 @@ ows_cfg = {
                     }
                 ]
             },
-            "feature_info_include_utc_dates": False,
             "styling": {
                 "default_style": "mangrove",
                 "styles": [ style_mangrove ],

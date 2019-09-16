@@ -195,3 +195,7 @@ ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
 def ls8_subproduct(ds):
     return int(ls8_s3_path_pattern.search(ds.uris[0]).group("path"))
 
+# Method for formatting urls, e.g. for use in feature_info custom inclusions.
+
+def feature_info_url_template(data, template):
+    return template.format(data=data)

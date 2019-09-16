@@ -305,6 +305,8 @@ class OWSNamedLayer(OWSLayer):
             self.parse_urls(cfg.get("urls", {}))
         except KeyError:
             raise ConfigException("Missing required config items in urls section for layer %s" % self.name)
+        self.parse_feature_info(cfg.get("feature_info", {}))
+
         self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
         try:
             self.parse_styling(cfg["styling"])
@@ -340,6 +342,11 @@ class OWSNamedLayer(OWSLayer):
             self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
         else:
             self.fuse_func = None
+
+    def parse_feature_info(self, cfg):
+        self.feature_info_include_utc_dates = cfg.get("include_utc_dates", False)
+        custom = cfg.get("include_custom", {})
+        self.feature_info_custom_includes = { k: FunctionWrapper(self, v) for k,v in custom.items() }
 
     def parse_flags(self, cfg, dc):
         if cfg:

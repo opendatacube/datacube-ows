@@ -498,6 +498,9 @@ def feature_info(args):
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
                     feature_json["band_derived"] = derived_band_dict
+                # Add any custom-defined fields.
+                for k, f in params.product.feature_info_custom_includes.items():
+                    feature_json[k] = f(feature_json["bands"])
 
             my_flags = 0
             for pqd in pq_datasets:
