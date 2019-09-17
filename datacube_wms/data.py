@@ -465,7 +465,10 @@ def feature_info(args):
             _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
             if len(ds_at_time) > 0:
                 pixel_ds = None
-                data = stacker.data(ds_at_time, skip_corrections=True)
+                data = stacker.data(ds_at_time, skip_corrections=True,
+                                    manual_merge=params.product.data_manual_merge,
+                                    fuse_func=params.product.fuse_func
+                                    )
 
                 # Non-geographic coordinate systems need to be projected onto a geographic
                 # coordinate system.  Why not use EPSG:4326?
