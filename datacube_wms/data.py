@@ -461,7 +461,7 @@ def feature_info(args):
                     dataset_date_index[ld] = [ds]
             # Group datasets by time, load only datasets that match the idx_date
             available_dates = dataset_date_index.keys()
-            ds_at_time = dataset_date_index[params.time]
+            ds_at_time = dataset_date_index.get(params.time, [])
             _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
             if len(ds_at_time) > 0:
                 pixel_ds = None
