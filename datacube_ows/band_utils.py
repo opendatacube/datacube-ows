@@ -17,7 +17,7 @@ def delta_bands(data, band1, band2, product_cfg=None):
 
 def norm_diff(data, band1, band2, product_cfg=None):
     # Calculate a normalised difference index.
-    return sum_bands(data, band1,band2, product_cfg) / delta_bands(data, band1, band2, product_cfg)
+    return delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
 
 
 def constant(data, band, const, product_cfg=None):
