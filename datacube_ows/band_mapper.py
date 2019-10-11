@@ -1,4 +1,7 @@
 from __future__ import absolute_import, division, print_function
+
+from itertools import zip_longest
+
 from xarray import Dataset, DataArray, merge
 import numpy
 from colour import Color
@@ -12,6 +15,8 @@ from datetime import datetime
 # pylint: disable=wrong-import-position
 import matplotlib
 # Do not use X Server backend
+from datacube_ows.ogc_utils import DataCollection
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
@@ -35,7 +40,7 @@ class StyleDefBase(object):
     auto_legend = False
     include_in_feature_info = False
 
-    def __init__(self, product, style_cfg):
+    def __init__(self, product, style_cfg, defer_multi_date=False):
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
@@ -47,6 +52,13 @@ class StyleDefBase(object):
 
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         self.legend_cfg = style_cfg.get("legend", dict())
+        if not defer_multi_date:
+            self.parse_multi_date(style_cfg)
+
+    def parse_multi_date(self, cfg):
+        self.multi_date_handlers = []
+        for mb_cfg in cfg.get("multi_date", []):
+            self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
     def apply_masks(self, data, pq_data):
         if pq_data is not None:
@@ -61,6 +73,16 @@ class StyleDefBase(object):
         return data
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
+        date_count = len(data)
+        if date_count == 1:
+            return self.transform_single_date_data(data.collapse_to_single(),
+                                                   pq_data.collapse_to_single(),
+                                                   extent_mask.collapse_to_single(),
+                                                   *masks)
+        mdh = self.get_multi_date_handler(date_count)
+        return mdh.transform_data(data, pq_data, extent_mask, *masks)
+
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         pass
 
     def parse_legend_cfg(self, cfg):
@@ -74,6 +96,32 @@ class StyleDefBase(object):
     def legend_override_with_url(self):
         return self.legend_url_override
 
+    def get_multi_date_handler(self, count):
+        for mdh in self.multi_date_handlers:
+            if mdh.applies_to(count):
+                return mdh
+        return None
+
+    class MultiDateHandler(object):
+        def __init__(self, style, cfg):
+            self.style = style
+            if "allowed_count_range" not in cfg:
+                raise ConfigException("multi_date handler must have an allowed_count_range")
+            if len(cfg["allowed_count_range"]) > 2:
+                raise ConfigException("multi_date handler allowed_count_range must have 2 and only 2 members")
+            self.min_count, self.max_count = cfg["allowed_count_range"]
+            if self.max_count < self.min_count:
+                raise ConfigException("multi_date handler allowed_count_range: minimum must be less than equal to maximum")
+            if "aggregator_function" in cfg:
+                self.aggregator = FunctionWrapper(style.product, cfg["aggregator_function"])
+            else:
+                raise ConfigException("Aggregator function is required for multi-date handlers.")
+
+        def applies_to(self, count):
+            return (self.min_count <= count and self.max_count >= count)
+
+        def transform_data(self, data, pq_data, extent_mask, *masks):
+            raise NotImplementedError()
 
 # pylint: disable=abstract-method
 class DynamicRangeCompression(StyleDefBase):
@@ -135,7 +183,7 @@ class RGBAMappedStyleDef(StyleDefBase):
         return mask
 
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         # pylint: disable=too-many-locals, too-many-branches
         # extent mask data per band to preseve nodata
         _LOG.debug("transform begin %s", datetime.now())
@@ -242,7 +290,7 @@ class LinearStyleDef(DynamicRangeCompression):
             "blue": self.blue_components,
         }
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
@@ -314,27 +362,27 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
         } for u in unscaled
     ]
 
+def crack_ramp(ramp):
+    values = []
+    red = []
+    green = []
+    blue = []
+    alpha = []
+    for r in ramp:
+        values.append(float(r["value"]))
+        color = Color(r["color"])
+        red.append(color.red)
+        green.append(color.green)
+        blue.append(color.blue)
+        alpha.append(r.get("alpha", 1.0))
+
+    return (values, red, green, blue, alpha)
+
 
 class RgbaColorRampDef(StyleDefBase):
     auto_legend = True
-    def __init__(self, product, style_cfg):
-        super(RgbaColorRampDef, self).__init__(product, style_cfg)
-
-        def crack_ramp(ramp):
-            values = []
-            red = []
-            green = []
-            blue = []
-            alpha = []
-            for r in ramp:
-                values.append(float(r["value"]))
-                color = Color(r["color"])
-                red.append(color.red)
-                green.append(color.green)
-                blue.append(color.blue)
-                alpha.append(r.get("alpha", 1.0))
-
-            return (values, red, green, blue, alpha)
+    def __init__(self, product, style_cfg, defer_multi_date=False):
+        super(RgbaColorRampDef, self).__init__(product, style_cfg, defer_multi_date=True)
 
         if "color_ramp" in style_cfg:
             self.color_ramp = style_cfg["color_ramp"]
@@ -360,30 +408,32 @@ class RgbaColorRampDef(StyleDefBase):
             self.index_function = FunctionWrapper(self.product, style_cfg["index_function"])
         else:
             raise ConfigException("Index function is required for index and hybrid styles.")
+        if not defer_multi_date:
+            self.parse_multi_date(style_cfg)
 
     def get_value(self, data, values, intensities):
         return numpy.interp(data, values, intensities)
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
-        if extent_mask is not None:
-            data = data.where(extent_mask)
-        data = self.apply_masks(data, pq_data)
-
-        data_bands = self.needed_bands
-
-        if self.index_function is not None:
-            data_bands = ['index_function']
-            data[data_bands[0]] = (data.dims, self.index_function(data))
-
+    def apply_colour_ramp(self, data, ramp_values, ramp_components):
         imgdata = Dataset()
-        for data_band in data_bands:
-            d = data[data_band]
-            for band, intensity in self.components.items():
-                imgdata[band] = (d.dims, self.get_value(d, self.values, intensity))
+        for band, intensity in ramp_components.items():
+            imgdata[band] = (data.dims, self.get_value(data, ramp_values, intensity))
         imgdata *= 255
         imgdata = imgdata.astype("uint8")
         return imgdata
 
+    def apply_masks_and_index(self, data, pq_data, extent_mask, *masks):
+        if extent_mask is not None:
+            data = data.where(extent_mask)
+        data = self.apply_masks(data, pq_data)
+
+        data_bands = ['index_function']
+        data['index_function'] = (data.dims, self.index_function(data))
+        return data["index_function"]
+
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
+        d = self.apply_masks_and_index(data, pq_data, extent_mask, *masks)
+        return self.apply_colour_ramp(d, self.values, self.components)
 
     def legend(self, bytesio):
         #pylint: disable=too-many-locals, too-many-statements
@@ -496,6 +546,39 @@ class RgbaColorRampDef(StyleDefBase):
 
         plt.savefig(bytesio, format='png')
 
+    class MultiDateHandler(StyleDefBase.MultiDateHandler):
+        def __init__(self, style, cfg):
+            super().__init__(style, cfg)
+            self.feature_info_label = cfg.get("feature_info_label", None)
+
+            if "color_ramp" in cfg:
+                self.color_ramp = cfg["color_ramp"]
+            else:
+                rmin, rmax = cfg["range"]
+                self.color_ramp = scale_unscaled_ramp(
+                    rmin, rmax,
+                    UNSCALED_DEFAULT_RAMP)
+            values, r, g, b, a = crack_ramp(self.color_ramp)
+            self.values = values
+            self.components = {
+                "red": r,
+                "green": g,
+                "blue": b,
+                "alpha": a
+            }
+
+        def transform_data(self, data, pq_data, extent_mask, *masks):
+            indexes = DataCollection()
+            for d, pqd, emsk in zip_longest(data, pq_data, extent_mask):
+                th = d.time
+                if pqd is not None:
+                    pqd = pqd.data
+                if emsk is not None:
+                    emsk = pqd.data
+                indexes.add_time(th, self.style.apply_masks_and_index(d.data, pqd, emsk, *masks))
+            agg = self.aggregator(indexes)
+            return self.style.apply_colour_ramp(agg, self.values, self.components)
+
 
 class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
     auto_legend = False
@@ -503,7 +586,7 @@ class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
         super(HybridStyleDef, self).__init__(product, style_cfg)
         self.component_ratio = style_cfg["component_ratio"]
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         #pylint: disable=too-many-locals
         if extent_mask is not None:
             data = data.where(extent_mask)
