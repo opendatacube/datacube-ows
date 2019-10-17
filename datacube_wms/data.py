@@ -22,7 +22,7 @@ from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ProductLayerException, tz_for_coord, dataset_center_coords
+    ProductLayerException, tz_for_coord
 
 from datacube_wms.utils import log_call
 
