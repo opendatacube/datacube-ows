@@ -22,7 +22,7 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
-from datacube_ows.ogc_utils import resp_headers, local_date, dataset_center_time, \
+from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
     ConfigException, tz_for_coord, DataCollection, DatasetCollection, TimeHolder
 
 from datacube_ows.utils import log_call
@@ -156,20 +156,17 @@ class DataStacker(object):
             elif self._product.solar_correction and not mask and not skip_corrections:
                 # Merge performed already by dataset extent, but we need to
                 # process the data for the datasets individually to do solar correction.
-                result = DataCollection()
-                for tds in datasets:
-                    merged = None
-                    for ds in tds.datasets:
-                        d = read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
-                        for band in self.needed_bands():
-                            if band != self._product.pq_band:
-                                d[band] = solar_correct_data(d[band], ds)
-                        if merged is None:
-                            merged = d
-                        else:
-                            merged = merged.combine_first(d)
-                    result.add_time(tds.time, merged)
-                return result
+                merged = None
+                for ds in datasets:
+                    d = read_data(ds, measurements, self._geobox, **kwargs)
+                    for band in self.needed_bands():
+                        if band != self._product.pq_band:
+                            d[band] = solar_correct_data(d[band], ds)
+                    if merged is None:
+                        merged = d
+                    else:
+                        merged = merged.combine_first(d)
+                return merged
             else:
                 return read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
 
@@ -511,11 +508,14 @@ def feature_info(args):
                     dataset_date_index[ld] = [ds]
             # Group datasets by time, load only datasets that match the idx_date
             available_dates = dataset_date_index.keys()
-            ds_at_time = dataset_date_index[params.time]
+            ds_at_time = dataset_date_index.get(params.time, [])
             _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
             if len(ds_at_time) > 0:
                 pixel_ds = None
-                data = stacker.data(ds_at_time, skip_corrections=True)
+                data = stacker.data(ds_at_time, skip_corrections=True,
+                                    manual_merge=params.product.data_manual_merge,
+                                    fuse_func=params.product.fuse_func
+                                    )
 
                 # Non-geographic coordinate systems need to be projected onto a geographic
                 # coordinate system.  Why not use EPSG:4326?
