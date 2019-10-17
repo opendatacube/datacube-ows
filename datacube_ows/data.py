@@ -22,7 +22,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ConfigException, tz_for_coord, dataset_center_coords
+    ConfigException, tz_for_coord
 
 from datacube_ows.utils import log_call
 
@@ -461,11 +461,14 @@ def feature_info(args):
                     dataset_date_index[ld] = [ds]
             # Group datasets by time, load only datasets that match the idx_date
             available_dates = dataset_date_index.keys()
-            ds_at_time = dataset_date_index[params.time]
+            ds_at_time = dataset_date_index.get(params.time, [])
             _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
             if len(ds_at_time) > 0:
                 pixel_ds = None
-                data = stacker.data(ds_at_time, skip_corrections=True)
+                data = stacker.data(ds_at_time, skip_corrections=True,
+                                    manual_merge=params.product.data_manual_merge,
+                                    fuse_func=params.product.fuse_func
+                                    )
 
                 # Non-geographic coordinate systems need to be projected onto a geographic
                 # coordinate system.  Why not use EPSG:4326?

@@ -17,6 +17,6 @@ pytest-localserver
 pytest-mock
 requests
 watchdog
-timezonefinder
+timezonefinderL
 python-slugify
 bottleneck
