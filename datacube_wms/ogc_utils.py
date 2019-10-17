@@ -3,16 +3,18 @@ from __future__ import absolute_import, division, print_function
 import re
 from importlib import import_module
 from itertools import chain
-from datetime import timedelta, datetime
+from datetime import datetime
 from dateutil.parser import parse
 from urllib.parse import urlparse
-from timezonefinder import TimezoneFinder
+from timezonefinderL import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
 try:
     from datacube_wms.wms_cfg_local import response_cfg
 except ImportError:
     from datacube_wms.wms_cfg import response_cfg
+
+
 
 tf = TimezoneFinder(in_memory=True)
 
@@ -46,12 +48,9 @@ def local_date(ds, tz=None):
 
 
 def tz_for_coord(lon, lat):
-    tzn = tf.closest_timezone_at(lng=lon, lat=lat, delta_degree=9)
+    tzn = tf.timezone_at(lng=lon, lat=lat)
     if not tzn:
-        print("closest tz failed with delta 9deg")
-        tzn = tf.closest_timezone_at(lng=lon, lat=lat, delta_degree=15)
-        if not tzn:
-            raise Exception ("closest tz failed with delta 15deg")
+        raise Exception ("tz find failed.")
     return timezone(tzn)
 
 
