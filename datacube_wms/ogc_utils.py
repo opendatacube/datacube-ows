@@ -48,7 +48,6 @@ def local_date(ds, tz=None):
 def tz_for_coord(lon, lat):
     tzn = tf.timezone_at(lng=lon, lat=lat)
     if not tzn:
-        _LOG.info("No time zone found for lon=%f lat=%f" % (lon,lat))
         raise NoTimezoneException ("tz find failed.")
     return timezone(tzn)
 
