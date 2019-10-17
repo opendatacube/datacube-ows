@@ -60,6 +60,6 @@ def get_capabilities(args):
             base_url=base_url),
         200,
         resp_headers(
-            {"Content-Type": "application/xml", "Cache-Control": "no-cache,max-age=0"}
+            {"Content-Type": "application/xml", "Cache-Control": "max-age=10"}
         )
     )
