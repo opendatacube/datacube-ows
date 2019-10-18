@@ -106,7 +106,7 @@ def desc_coverages(args):
         200,
         resp_headers({
             "Content-Type": "application/xml",
-            "Cache-Control": "no-cache.max-age=0"
+            "Cache-Control": "max-age=10"
         })
     )
 
