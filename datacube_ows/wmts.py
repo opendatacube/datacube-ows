@@ -114,7 +114,7 @@ def get_capabilities(args):
             show_themes = show_themes,
             webmerc_ss = WebMercScaleSet),
         200,
-        resp_headers(
+        cfg.resp_headers(
             {"Content-Type": "application/xml", "Cache-Control": "max-age=10"}
         )
     )
