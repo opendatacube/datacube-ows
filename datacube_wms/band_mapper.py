@@ -29,7 +29,7 @@ _LOG = logging.getLogger(__name__)
 
 # Matplotlib is not thread-safe.  All usage of the matplotlib library should
 # be serialised through this lock.
-mpl_lock = Lock()
+MPL_LOCK = Lock()
 
 
 class StyleMask(object):
@@ -70,7 +70,7 @@ class StyleDefBase(object):
     def safe_legend(self, bytesio):
         if not self.auto_legend:
             return None
-        with mpl_lock:
+        with MPL_LOCK:
             return self.legend(bytesio)
 
     def legend(self, bytesio):
