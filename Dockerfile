@@ -37,6 +37,11 @@ RUN pip install --extra-index-url="https://packages.dea.gadevs.ga" \
 # RUN pip3 install -r requirements-opencensus.txt \
 #     && rm -rf $HOME/.cache/pip
 
+# install eoxserver from directory
+ADD eoxserver /eoxserver
+RUN cd /eoxserver && \
+  pip3 install .
+
 RUN pip3 install . \
   && rm -rf $HOME/.cache/pip
 

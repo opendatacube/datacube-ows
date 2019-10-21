@@ -62,3 +62,12 @@ class WCS1Exception(OGCException):
 
     version = "1.2.0"
     schema_url = "http://schemas.opengis.net/wcs/1.0.0/OGC-exception.xsd"
+
+
+class WCS2Exception(OGCException):
+    COVERAGE_NOT_DEFINED = "CoverageNotDefined"
+    MISSING_PARAMETER_VALUE = "MissingParameterValue"
+    INVALID_PARAMETER_VALUE = "InvalidParameterValue"
+
+    version = "2.0.0"
+    schema_url = "http://schemas.opengis.net/wcs/2.0/wcs.xsd"
