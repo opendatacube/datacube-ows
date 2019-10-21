@@ -8,6 +8,7 @@ from datacube.storage.masking import make_mask
 
 import logging
 from datetime import datetime
+from threading import Lock
 
 # pylint: disable=wrong-import-position
 import matplotlib
@@ -26,6 +27,11 @@ from datacube_wms.ogc_utils import FunctionWrapper
 _LOG = logging.getLogger(__name__)
 
 
+# Matplotlib is not thread-safe.  All usage of the matplotlib library should
+# be serialised through this lock.
+mpl_lock = Lock()
+
+
 class StyleMask(object):
     def __init__(self, flags, invert=False):
         self.flags = flags
@@ -33,6 +39,7 @@ class StyleMask(object):
 
 
 class StyleDefBase(object):
+    auto_legend = False
     def __init__(self, product, style_cfg):
         self.product = product
         self.name = style_cfg["name"]
@@ -60,6 +67,12 @@ class StyleDefBase(object):
     def transform_data(self, data, pq_data, extent_mask, *masks):
         pass
 
+    def safe_legend(self, bytesio):
+        if not self.auto_legend:
+            return None
+        with mpl_lock:
+            return self.legend(bytesio)
+
     def legend(self, bytesio):
         pass
 
@@ -83,6 +96,8 @@ class DynamicRangeCompression(StyleDefBase):
         return normalized * 255
 
 class RGBAMappedStyleDef(StyleDefBase):
+    auto_legend = True
+
     def __init__(self, product, style_cfg):
         super(RGBAMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
@@ -305,6 +320,7 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
 
 
 class RgbaColorRampDef(StyleDefBase):
+    auto_legend = True
     def __init__(self, product, style_cfg):
         super(RgbaColorRampDef, self).__init__(product, style_cfg)
 
