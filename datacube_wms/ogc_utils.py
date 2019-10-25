@@ -22,7 +22,7 @@ _LOG = logging.getLogger(__name__)
 tf = TimezoneFinder(in_memory=True)
 
 # Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
-# datacube-core center time accessed through the dataset API is caluclated and may
+# datacube-core center time accessed through the dataset API is calculated and may
 # not agree with the metadata document
 def dataset_center_time(dataset):
     center_time = dataset.center_time
@@ -30,7 +30,11 @@ def dataset_center_time(dataset):
         metadata_time = dataset.metadata_doc['extent']['center_dt']
         center_time = parse(metadata_time)
     except KeyError:
-        pass
+        try:
+            metadata_time = dataset.metadata_doc['properties']['dtr:start_datetime']
+            center_time = parse(metadata_time)
+        except KeyError:
+            pass
     return center_time
 
 

@@ -293,6 +293,19 @@ layer_cfg = [
                 # Bands to always fetch from the Datacube, even if it is not used by the active style.
                 # Useful for when a particular band is always needed for the extent_mask_func,
                 "always_fetch_bands": [ ],
+                # Time resolution of the product. Controls the way ODC time query parameters are generated.
+                #
+                # Defaults to "raw".  Supported values are:
+                #
+                # "raw":    The default.  For sub-day time resolution, e.g. raw (unsummarised) EO data.
+                #           Also works fine for DEA packaged summary data where the "from" and "to" dates
+                #           are both set to the start of the summary time period.
+                #
+                # "month":
+                # "year" :  For data summarised to monthly or yearly resolution respectively.
+                #           Needed for e.g. summary data with EO3-style metadata with the "from" and "to"
+                #           dates set to the start and end of the summary time period.
+                "time_resolution": "raw",
                 # Apply corrections for solar angle, for "Level 1" products.
                 # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
                 "apply_solar_corrections": False,
