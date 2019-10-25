@@ -18,7 +18,7 @@ from datacube.storage.masking import mask_to_dict
 
 from datacube_wms.cube_pool import cube
 
-from datacube_wms.wms_layers import get_service_cfg
+from datacube_wms.wms_layers import get_service_cfg, TIMERES_RAW, TIMERES_YR, TIMERES_MON
 from datacube_wms.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
@@ -34,22 +34,6 @@ _LOG = logging.getLogger(__name__)
 
 tracer = get_opencensus_tracer()
 
-# Read data for given datasets and measurements per the output_geobox
-@log_call
-@opencensus_trace_call(tracer=tracer)
-def read_data(datasets, measurements, geobox, resampling=Resampling.nearest, **kwargs):
-    if not hasattr(datasets, "__iter__"):
-        datasets = [datasets]
-
-    datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
-    data = datacube.Datacube.load_data(
-        datasets,
-        geobox,
-        measurements=measurements,
-        fuse_func=kwargs.get('fuse_func', None))
-    # maintain compatibility with functions not expecting the data to have a time dimension
-    return data.squeeze(dim='time', drop=True)
-
 
 class DataStacker():
     @log_call
@@ -64,7 +48,13 @@ class DataStacker():
             self._needed_bands = [ self._product.band_idx.band(b) for b in bands ]
         else:
             self._needed_bands = self._product.band_idx.native_bands.index
-        self._time = local_solar_date_range(geobox, time)
+
+        if self._product.time_resolution == TIMERES_MON:
+            self._time = time
+        elif self._product.time_resolution == TIMERES_YR:
+            self._time = str(time.year)
+        else:
+            self._time = local_solar_date_range(geobox, time)
 
     def needed_bands(self):
         return self._needed_bands
@@ -128,7 +118,7 @@ class DataStacker():
                 # process the data for the datasets individually to do solar correction.
                 merged = None
                 for ds in datasets:
-                    d = read_data(ds, measurements, self._geobox, **kwargs)
+                    d = self.read_data(ds, measurements, self._geobox, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -138,7 +128,7 @@ class DataStacker():
                         merged = merged.combine_first(d)
                 return merged
             else:
-                data = read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
+                data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
                 return data
 
     @log_call
@@ -152,7 +142,7 @@ class DataStacker():
         else:
             bands = self.needed_bands()
         for ds in datasets:
-            d = read_data(ds, measurements, self._geobox, **kwargs)
+            d = self.read_data(ds, measurements, self._geobox, **kwargs)
             extent_mask = None
             for band in bands:
                 for f in self._product.extent_mask_func:
@@ -174,6 +164,26 @@ class DataStacker():
             for band in bands:
                 merged[band].attrs = d[band].attrs
         return merged
+
+    # Read data for given datasets and measurements per the output_geobox
+    @log_call
+    @opencensus_trace_call(tracer=tracer)
+    def read_data(self, datasets, measurements, geobox, resampling=Resampling.nearest, **kwargs):
+        if not hasattr(datasets, "__iter__"):
+            datasets = [datasets]
+
+        if self._product.time_resolution == TIMERES_RAW:
+            datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
+        else:
+            datasets = datacube.Datacube.group_datasets(datasets, 'time')
+        data = datacube.Datacube.load_data(
+            datasets,
+            geobox,
+            measurements=measurements,
+            fuse_func=kwargs.get('fuse_func', None))
+        # maintain compatibility with functions not expecting the data to have a time dimension
+        return data.squeeze(dim='time', drop=True)
+
 
 
 def bbox_to_geom(bbox, crs):

@@ -122,6 +122,13 @@ class SuppURL(object):
         self.format = cfg["format"]
 
 
+TIMERES_RAW = "raw"
+TIMERES_MON = "month"
+TIMERES_YR  = "year"
+
+TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR ]
+
+
 class ProductLayerDef(object):
     # pylint: disable=invalid-name, too-many-instance-attributes, bare-except, too-many-statements
     def __init__(self, product_cfg, platform_def, dc):
@@ -169,6 +176,10 @@ class ProductLayerDef(object):
             self.pq_names = [ product_cfg.get("pq_dataset") ]
         self.pq_name = self.pq_names[0] if self.pq_names is not None and len(self.pq_names) > 0 else None
         self.pq_band = product_cfg.get("pq_band")
+
+        self.time_resolution = product_cfg.get("time_resolution", TIMERES_RAW)
+        if self.time_resolution not in TIMERES_VALS:
+            raise ProductLayerException("Invalid time resolution value: %s" % self.time_resolution)
 
         self.min_zoom = product_cfg.get("min_zoom_factor", 300.0)
         self.max_datasets_wms = product_cfg.get("max_datasets_wms", 0)
