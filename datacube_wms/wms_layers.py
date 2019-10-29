@@ -296,6 +296,18 @@ class ProductLayerDef(object):
             self.wcs_default_bands = [self.band_idx.band(b) for b in product_cfg["wcs_default_bands"]]
 
     @property
+    def is_raw_time_res(self):
+        return self.time_resolution == TIMERES_RAW
+
+    @property
+    def is_month_time_res(self):
+        return self.time_resolution == TIMERES_MON
+
+    @property
+    def is_year_time_res(self):
+        return self.time_resolution == TIMERES_YR
+
+    @property
     def bboxes(self):
         if self.ranges is None:
             return dict()

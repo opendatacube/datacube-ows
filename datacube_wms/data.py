@@ -18,7 +18,7 @@ from datacube.storage.masking import mask_to_dict
 
 from datacube_wms.cube_pool import cube
 
-from datacube_wms.wms_layers import get_service_cfg, TIMERES_RAW, TIMERES_YR, TIMERES_MON
+from datacube_wms.wms_layers import get_service_cfg
 from datacube_wms.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_wms.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
@@ -49,9 +49,9 @@ class DataStacker():
         else:
             self._needed_bands = self._product.band_idx.native_bands.index
 
-        if self._product.time_resolution == TIMERES_MON:
+        if self._product.is_month_time_res:
             self._time = time
-        elif self._product.time_resolution == TIMERES_YR:
+        elif self._product.is_year_time_res:
             self._time = str(time.year)
         else:
             self._time = local_solar_date_range(geobox, time)
@@ -172,7 +172,7 @@ class DataStacker():
         if not hasattr(datasets, "__iter__"):
             datasets = [datasets]
 
-        if self._product.time_resolution == TIMERES_RAW:
+        if self._product.is_raw_time_res:
             datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
         else:
             datasets = datacube.Datacube.group_datasets(datasets, 'time')
