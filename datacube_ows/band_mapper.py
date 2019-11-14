@@ -135,21 +135,6 @@ class StyleDefBase(object):
         def transform_data(self, data, pq_data, extent_mask, *masks):
             raise NotImplementedError()
 
-# pylint: disable=abstract-method
-class DynamicRangeCompression(StyleDefBase):
-    def __init__(self, product, style_cfg):
-        super(DynamicRangeCompression, self).__init__(product, style_cfg)
-        self.scale_factor = style_cfg.get("scale_factor")
-        if "scale_range" in style_cfg:
-            self.scale_min, self.scale_max = style_cfg["scale_range"]
-        else:
-            self.scale_min = 0.0
-            self.scale_max = 255.0 * style_cfg["scale_factor"]
-
-    def compress_band(self, imgband_data):
-        clipped = imgband_data.clip(self.scale_min, self.scale_max)
-        normalized = (clipped - self.scale_min) / (self.scale_max - self.scale_min)
-        return normalized * 255
 
 class RGBAMappedStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
@@ -261,13 +246,37 @@ class RGBAMappedStyleDef(StyleDefBase):
 
 
 # pylint: disable=abstract-method
-class LinearStyleDef(DynamicRangeCompression):
+class LinearStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(LinearStyleDef, self).__init__(product, style_cfg)
         self.red_components = self.dealias_components(style_cfg["components"]["red"])
         self.green_components = self.dealias_components(style_cfg["components"]["green"])
         self.blue_components = self.dealias_components(style_cfg["components"]["blue"])
         self.alpha_components = self.dealias_components(style_cfg["components"].get("alpha", None))
+
+        self.scale_factor = style_cfg.get("scale_factor")
+        if "scale_range" in style_cfg:
+            self.scale_min, self.scale_max = style_cfg["scale_range"]
+        elif self.scale_factor:
+            self.scale_min = 0.0
+            self.scale_max = 255.0 * self.scale_factor
+        else:
+            self.scale_min = None
+            self.scale_max = None
+
+        self.component_scale_ranges = {}
+        for cn, cd in style_cfg["components"].items():
+            if "scale_range" in cd:
+                self.component_scale_ranges[cn] = {
+                    "min": cd["scale_range"][0],
+                    "max": cd["scale_range"][1],
+                }
+            else:
+                self.component_scale_ranges[cn] = {
+                    "min": self.scale_min,
+                    "max": self.scale_max,
+                }
+
         for band in self.red_components.keys():
             self.needed_bands.add(band)
         for band in self.green_components.keys():
@@ -283,7 +292,15 @@ class LinearStyleDef(DynamicRangeCompression):
         if comp_in is None:
             return None
         else:
-            return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() }
+            return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
+
+    def compress_band(self, component_name, imgband_data):
+        sc_min = self.component_scale_ranges[component_name]["min"]
+        sc_max = self.component_scale_ranges[component_name]["max"]
+        clipped = imgband_data.clip(sc_min, sc_max)
+        normalized = (clipped - sc_min) / (sc_max - sc_min)
+        return normalized * 255
+
 
     @property
     def rgb_components(self):
@@ -319,10 +336,7 @@ class LinearStyleDef(DynamicRangeCompression):
                 else:
                     imgband_data = imgband_component
             dims = imgband_data.dims
-            if imgband == "alpha":
-                imgband_data = imgband_data.astype('uint8').values
-            else:
-                imgband_data = self.compress_band(imgband_data).astype('uint8')
+            imgband_data = self.compress_band(imgband, imgband_data).astype('uint8')
             imgdata[imgband] = (dims, imgband_data)
         return imgdata
 

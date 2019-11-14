@@ -92,6 +92,10 @@ landsat8_bands = {
     # 5. Bands NOT listed here will not be included in the GetFeatureInfo output and cannot be referenced
     # elsewhere in the configuration.
     # 6. If not specified for a product, defaults to all available bands, using only their native names.
+    # 7. The following are reserved words that may not be used as aliases.  (N.B. If they occur as a native
+    #    band name, an alias should be declared and used in the config in preference to the native name):
+    #               scale_range
+    #
     "red": [],
     "green": [],
     "blue": [ "near_blue" ],
@@ -279,16 +283,22 @@ style_infrared_false_colour = {
     "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
     "components": {
         "red": {
-            "swir1": 1.0
+            "swir1": 1.0,
+            # The special dictionary value 'scale_range' can be used to provide a component-specific
+            # scale_range that overrides the style scale_range below.
+            "scale_range": [5.0, 4000.0],
         },
         "green": {
-            "swir2": 1.0
+            "swir2": 1.0,
+            "scale_range": [25.0, 4000.0],
         },
         "blue": {
-            "nir": 1.0
+            "nir": 1.0,
+            "scale_range": [0.0, 3000.0],
         }
     },
-    "scale_range": [0.0, 3000.0]
+    # The style scale_range can be omitted if all components have a component-specific scale_range defined.
+    # "scale_range": [0.0, 3000.0]
 }
 
 # Monochrome single band layers
@@ -417,6 +427,7 @@ style_pure_ls8_swir2 = {
     },
     "scale_range": [0.0, 3000.0]
 }
+
 
 # Examples of non-linear colour-ramped styles.
 style_ndvi = {
