@@ -35,44 +35,6 @@ _LOG = logging.getLogger(__name__)
 
 tracer = get_opencensus_tracer()
 
-
-
-# Read data for given datasets and measurements per the output_geobox
-@log_call
-@opencensus_trace_call(tracer=tracer)
-def read_data(datasets, measurements, geobox, resampling=Resampling.nearest, **kwargs):
-    if not hasattr(datasets, "__iter__"):
-        datasets = [datasets]   # REVISIT???
-
-    result = DataCollection()
-    for tds in datasets:
-        dc_datasets = datacube.Datacube.group_datasets(tds.datasets, 'solar_day')
-        data = datacube.Datacube.load_data(
-            dc_datasets,
-            geobox,
-            measurements=measurements,
-            fuse_func=kwargs.get('fuse_func', None))
-        # maintain compatibility with functions not expecting the data to have a time dimension
-        data = data.squeeze(dim='time', drop=True)
-        result.add_time(tds.time, data)
-    return result
-
-
-# Read data for single datasets and measurements per the output_geobox
-@log_call
-@opencensus_trace_call(tracer=tracer)
-def read_data_for_single_dataset(dataset, measurements, geobox, resampling=Resampling.nearest, **kwargs):
-    datasets = [dataset]
-    dc_datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
-    data = datacube.Datacube.load_data(
-        dc_datasets,
-        geobox,
-        measurements=measurements,
-        fuse_func=kwargs.get('fuse_func', None))
-    # maintain compatibility with functions not expecting the data to have a time dimension
-    return data.squeeze(dim='time', drop=True)
-
-
 class DataStacker(object):
     @log_call
     def __init__(self, product, geobox, times, resampling=None, style=None, bands=None, **kwargs):
@@ -86,7 +48,13 @@ class DataStacker(object):
             self._needed_bands = [ self._product.band_idx.band(b) for b in bands ]
         else:
             self._needed_bands = self._product.band_idx.native_bands.index
-        self._times = list([TimeHolder(time, geobox) for time in times])
+
+        if self._product.is_month_time_res:
+            self._times = list([TimeHolder(time, geobox) for time in times])
+        elif self._product.is_year_time_res:
+            self._times = list([TimeHolder(str(time.year), geobox) for time in times])
+        else:
+            self._times = list([TimeHolder(local_solar_date_range(geobox, time), geobox) for time in times])
 
     def needed_bands(self):
         return self._needed_bands
@@ -158,7 +126,7 @@ class DataStacker(object):
                 # process the data for the datasets individually to do solar correction.
                 merged = None
                 for ds in datasets:
-                    d = read_data(ds, measurements, self._geobox, **kwargs)
+                    d = self.read_data(ds, measurements, self._geobox, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
                             d[band] = solar_correct_data(d[band], ds)
@@ -168,7 +136,8 @@ class DataStacker(object):
                         merged = merged.combine_first(d)
                 return merged
             else:
-                return read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
+                data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
+                return data
 
     @log_call
     @opencensus_trace_call(tracer=tracer)
@@ -183,7 +152,7 @@ class DataStacker(object):
         for tds in datasets:
             merged = None
             for ds in tds.datasets:
-                d = read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
+                d = self.read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
                 extent_mask = None
                 for band in bands:
                     for f in self._product.extent_mask_func:
@@ -206,6 +175,46 @@ class DataStacker(object):
                     merged[band].attrs = d[band].attrs
             result.add_time(tds.time, merged)
         return result
+
+    # Read data for given datasets and measurements per the output_geobox
+    @log_call
+    @opencensus_trace_call(tracer=tracer)
+    def read_data(self, datasets, measurements, geobox, resampling=Resampling.nearest, **kwargs):
+        if not hasattr(datasets, "__iter__"):
+            datasets = [datasets] # REVISIT????
+
+        result = DataCollection()
+        for tds in datasets:
+            if self._product.is_raw_time_res:
+                dc_datasets = datacube.Datacube.group_datasets(tds.datasets, 'solar_day')
+            else:
+                dc_datasets = datacube.Datacube.group_datasets(tds.datasets, 'time')
+            data = datacube.Datacube.load_data(
+                dc_datasets,
+                geobox,
+                measurements=measurements,
+                fuse_func=kwargs.get('fuse_func', None))
+            # maintain compatibility with functions not expecting the data to have a time dimension
+            data = data.squeeze(dim='time', drop=True)
+            result.add_time(tds.time, data)
+        return result
+
+    # Read data for single datasets and measurements per the output_geobox
+    @log_call
+    @opencensus_trace_call(tracer=tracer)
+    def read_data_for_single_dataset(self, dataset, measurements, geobox, resampling=Resampling.nearest, **kwargs):
+        datasets = [dataset]
+        if self._product.is_raw_time_res:
+            dc_datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
+        else:
+            dc_datasets = datacube.Datacube.group_datasets(datasets, 'time')
+        data = datacube.Datacube.load_data(
+            dc_datasets,
+            geobox,
+            measurements=measurements,
+            fuse_func=kwargs.get('fuse_func', None))
+        # maintain compatibility with functions not expecting the data to have a time dimension
+        return data.squeeze(dim='time', drop=True)
 
 
 def bbox_to_geom(bbox, crs):

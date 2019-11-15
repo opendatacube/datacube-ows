@@ -258,6 +258,12 @@ class OWSFolder(OWSLayer):
         return sum([ l.layer_count() for l in self.child_layers ])
 
 
+TIMERES_RAW = "raw"
+TIMERES_MON = "month"
+TIMERES_YR  = "year"
+
+TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR]
+
 class OWSNamedLayer(OWSLayer):
     named = True
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
@@ -275,6 +281,10 @@ class OWSNamedLayer(OWSLayer):
                 self.products.append(product)
             self.product = self.products[0]
             self.definition = self.product.definition
+
+            self.time_resolution = cfg["time_resolution", TIMERES_RAW]
+            if self.time_resolution not in TIMERES_VALS:
+                raise ConfigException("Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
         from datacube_ows.product_ranges import get_ranges
@@ -474,6 +484,18 @@ class OWSNamedLayer(OWSLayer):
         }
     def layer_count(self):
         return 1
+
+    @property
+    def is_raw_time_res(self):
+        return self.time_resolution == TIMERES_RAW
+
+    @property
+    def is_month_time_res(self):
+        return self.time_resolution == TIMERES_MON
+
+    @property
+    def is_year_time_res(self):
+        return self.time_resolution == TIMERES_YR
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name

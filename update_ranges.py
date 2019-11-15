@@ -3,6 +3,7 @@
 from datacube_ows.product_ranges import update_all_ranges, get_sqlconn, add_product_range, add_multiproduct_range, add_all, update_range
 from datacube import Datacube
 from psycopg2.sql import SQL, Identifier
+import os
 import click
 
 @click.command()
@@ -28,6 +29,11 @@ def main(product, multiproduct, merge_only, calculate_extent, schema, role):
     elif schema and not role:
         print("Sorry, cannot update schema without specifying a role")
         return 1
+
+    if os.environ.get("PYDEV_DEBUG"):
+        import pydevd_pycharm
+        pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+
 
     dc = Datacube(app="wms_update_ranges")
     if schema:
