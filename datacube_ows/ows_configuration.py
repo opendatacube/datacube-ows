@@ -282,7 +282,7 @@ class OWSNamedLayer(OWSLayer):
             self.product = self.products[0]
             self.definition = self.product.definition
 
-            self.time_resolution = cfg["time_resolution", TIMERES_RAW]
+            self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
             if self.time_resolution not in TIMERES_VALS:
                 raise ConfigException("Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
         except KeyError:
