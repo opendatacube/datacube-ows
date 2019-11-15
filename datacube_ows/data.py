@@ -23,7 +23,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ConfigException, tz_for_coord, DataCollection, DatasetCollection, TimeHolder
+    ConfigException, tz_for_coord, DataCollection, DatasetCollection
 
 from datacube_ows.utils import log_call
 
@@ -50,11 +50,11 @@ class DataStacker(object):
             self._needed_bands = self._product.band_idx.native_bands.index
 
         if self._product.is_month_time_res:
-            self._times = list([TimeHolder(time, geobox) for time in times])
+            self._times = list(times)
         elif self._product.is_year_time_res:
-            self._times = list([TimeHolder(str(time.year), geobox) for time in times])
+            self._times = list([str(time.year) for time in times])
         else:
-            self._times = list([TimeHolder(local_solar_date_range(geobox, time), geobox) for time in times])
+            self._times = list([local_solar_date_range(geobox, time) for time in times])
 
     def needed_bands(self):
         return self._needed_bands
@@ -82,7 +82,7 @@ class DataStacker(object):
 
         result = DatasetCollection()
         for th in self._times:
-            query_args["time"] = th.solar_range
+            query_args["time"] = th
             result.add_time(th, self._dataset_query(index, prod_name, query_args))
 
         return result
