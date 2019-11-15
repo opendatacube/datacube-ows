@@ -11,7 +11,6 @@ from datacube.storage.masking import make_mask
 
 import logging
 from datetime import datetime
-from threading import Lock
 
 # pylint: disable=wrong-import-position
 import matplotlib
@@ -29,11 +28,6 @@ from math import isclose
 from datacube_ows.ogc_utils import FunctionWrapper, ConfigException
 
 _LOG = logging.getLogger(__name__)
-
-
-# Matplotlib is not thread-safe.  All usage of the matplotlib library should
-# be serialised through this lock.
-MPL_LOCK = Lock()
 
 
 class StyleMask(object):
@@ -91,12 +85,6 @@ class StyleDefBase(object):
     def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         pass
 
-    def safe_legend(self, bytesio):
-        if not self.auto_legend:
-            return None
-        with MPL_LOCK:
-            return self.legend(bytesio)
-
     def parse_legend_cfg(self, cfg):
         self.show_legend = cfg.get("show_legend", self.auto_legend)
         self.legend_url_override = cfg.get('url', None)
@@ -152,6 +140,7 @@ class DynamicRangeCompression(StyleDefBase):
         return normalized * 255
 
 class RGBAMappedStyleDef(StyleDefBase):
+    auto_legend = True
     def __init__(self, product, style_cfg):
         super(RGBAMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
