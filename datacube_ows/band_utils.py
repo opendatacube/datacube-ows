@@ -1,6 +1,13 @@
 from __future__ import division
 
 # Style index functions
+def scale_data(imgband_data, scale_from, scale_to):
+    sc_min, sc_max = scale_from
+    tc_min, tc_max = scale_to
+    clipped = imgband_data.clip(sc_min, sc_max)
+    normalised = (clipped - sc_min) / (sc_max - sc_min)
+    scaled = normalised * (tc_max - tc_min)
+    return scaled + tc_min
 
 def sum_bands(data, band1, band2, product_cfg=None):
     if product_cfg:
@@ -15,9 +22,14 @@ def delta_bands(data, band1, band2, product_cfg=None):
     return data[band1] - data[band2]
 
 
-def norm_diff(data, band1, band2, product_cfg=None):
+def norm_diff(data, band1, band2, product_cfg=None, scale_from=None, scale_to=[0,255]):
     # Calculate a normalised difference index.
-    return delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
+    unscaled = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
+    if scale_from:
+        scaled = scale_data(unscaled, scale_from, scale_to)
+    else:
+        scaled = unscaled
+    return scaled
 
 
 def constant(data, band, const, product_cfg=None):

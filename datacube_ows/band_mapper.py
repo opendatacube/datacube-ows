@@ -249,10 +249,20 @@ class RGBAMappedStyleDef(StyleDefBase):
 class LinearStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(LinearStyleDef, self).__init__(product, style_cfg)
-        self.red_components = self.dealias_components(style_cfg["components"]["red"])
-        self.green_components = self.dealias_components(style_cfg["components"]["green"])
-        self.blue_components = self.dealias_components(style_cfg["components"]["blue"])
-        self.alpha_components = self.dealias_components(style_cfg["components"].get("alpha", None))
+        self.components = {}
+        for imgband in ["red", "green", "blue", "alpha"]:
+            components = style_cfg["components"].get(imgband)
+            if components is None:
+                if imgband == "alpha":
+                    continue
+                else:
+                    raise ConfigException("No components defined for %s band" % imgband)
+            if "function" in components:
+                self.components[imgband] = FunctionWrapper(self.product, components)
+                for b in style_cfg["additional_bands"]:
+                    self.needed_bands.add(b)
+            else:
+                self.components[imgband] = self.dealias_components(components)
 
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
@@ -277,16 +287,10 @@ class LinearStyleDef(StyleDefBase):
                     "max": self.scale_max,
                 }
 
-        for band in self.red_components.keys():
-            self.needed_bands.add(band)
-        for band in self.green_components.keys():
-            self.needed_bands.add(band)
-        for band in self.blue_components.keys():
-            self.needed_bands.add(band)
-
-        if self.alpha_components is not None:
-            for band in self.alpha_components.keys():
-                self.needed_bands.add(band)
+        for imgband in ["red", "green", "blue", "alpha" ]:
+            if imgband in self.components and not callable(self.components[imgband]):
+                for band in self.components[imgband].keys():
+                    self.needed_bands.add(band)
 
     def dealias_components(self, comp_in):
         if comp_in is None:
@@ -302,42 +306,32 @@ class LinearStyleDef(StyleDefBase):
         return normalized * 255
 
 
-    @property
-    def rgb_components(self):
-        if self.alpha_components is not None:
-            return {
-                "red": self.red_components,
-                "green": self.green_components,
-                "blue": self.blue_components,
-                "alpha": self.alpha_components,
-            }
-
-        return {
-            "red": self.red_components,
-            "green": self.green_components,
-            "blue": self.blue_components,
-        }
-
     def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
         imgdata = Dataset()
-        for imgband, components in self.rgb_components.items():
-            imgband_data = None
-            for band, intensity in components.items():
-                if callable(intensity):
-                    imgband_component = intensity(data[band], band, imgband)
-                else:
-                    imgband_component = data[band] * intensity
+        for imgband, components in self.components.items():
+            if callable(components):
+                imgband_data = components(data)
+                dims = imgband_data.dims
+                imgband_data = imgband_data.astype('uint8')
+                imgdata[imgband] = (dims, imgband_data)
+            else:
+                imgband_data = None
+                for band, intensity in components.items():
+                    if callable(intensity):
+                        imgband_component = intensity(data[band], band, imgband)
+                    else:
+                        imgband_component = data[band] * intensity
 
-                if imgband_data is not None:
-                    imgband_data += imgband_component
-                else:
-                    imgband_data = imgband_component
-            dims = imgband_data.dims
-            imgband_data = self.compress_band(imgband, imgband_data).astype('uint8')
-            imgdata[imgband] = (dims, imgband_data)
+                    if imgband_data is not None:
+                        imgband_data += imgband_component
+                    else:
+                        imgband_data = imgband_component
+                dims = imgband_data.dims
+                imgband_data = self.compress_band(imgband, imgband_data).astype('uint8')
+                imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
 
