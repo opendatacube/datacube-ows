@@ -138,12 +138,6 @@ class ConfigException(Exception):
 
 # Wrapper datatypes for data management and manipulation.
 
-class TimeHolder(object):
-    def __init__(self, time, geobox):
-        self.time = time
-        self.solar_range = local_solar_date_range(geobox, time)
-
-
 class DataCollection(object):
     def __init__(self):
         self._collections = []
