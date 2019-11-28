@@ -20,3 +20,4 @@ watchdog
 timezonefinder
 python-slugify
 bottleneck
+pyows
