@@ -370,7 +370,10 @@ class RgbaColorRampDef(StyleDefBase):
         if "index_function" in style_cfg:
             self.index_function = FunctionWrapper(self.product, style_cfg["index_function"])
         else:
-            raise ConfigException("Index function is required for index and hybrid styles.")
+            raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
+                self.name,
+                self.product.name
+            ) )
 
     def get_value(self, data, values, intensities):
         return numpy.interp(data, values, intensities)
@@ -554,11 +557,17 @@ class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
 
 #pylint: disable=invalid-name, inconsistent-return-statements
 def StyleDef(product, cfg):
-    if "component_ratio" in cfg:
-        return HybridStyleDef(product, cfg)
-    elif cfg.get("components", False):
-        return LinearStyleDef(product, cfg)
-    elif cfg.get("value_map", False):
-        return RGBAMappedStyleDef(product, cfg)
-    elif cfg.get("color_ramp", False) or cfg.get("range", False):
-        return RgbaColorRampDef(product, cfg)
+    try:
+        if "component_ratio" in cfg:
+            return HybridStyleDef(product, cfg)
+        elif cfg.get("components", False):
+            return LinearStyleDef(product, cfg)
+        elif cfg.get("value_map", False):
+            return RGBAMappedStyleDef(product, cfg)
+        elif cfg.get("color_ramp", False) or cfg.get("range", False):
+            return RgbaColorRampDef(product, cfg)
+    except KeyError:
+        raise ConfigException("Required field missing in style %s of layer %s" % (
+            cfg.get("name", ""),
+            product.name
+        ))
