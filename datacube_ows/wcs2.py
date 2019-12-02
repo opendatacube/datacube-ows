@@ -1,24 +1,26 @@
 from __future__ import absolute_import, division, print_function
 
-from flask import render_template
+from flask import render_template, request
 
 
 from ows.common.v20.decoders import kvp_decode_get_capabilities
-from ows.common.objects import WGS84BoundingBox
-from ows.wcs.objects import (
-    CoverageSummary, ServiceCapabilities, CoverageDescription, Field,
-    Grid, RectifiedGrid
+from ows.common import WGS84BoundingBox
+from ows.gml import Grid, RegularAxis, IrregularAxis
+from ows.swe import Field
+from ows.wcs import (
+    CoverageSummary, ServiceCapabilities, CoverageDescription
 )
-from ows.wcs.v20.objects import (
+from ows.wcs.v20 import (
     GetCapabilitiesRequest, DescribeCoverageRequest, GetCoverageRequest
 )
-from ows.wcs.v20.decoders import kvp_decode_describe_coverage
-from ows.wcs.v20.encoders import xml_encode_capabilities, xml_encode_coverage_descriptions
+from ows.wcs.v20.decoders import kvp_decode_describe_coverage, kvp_decode_get_coverage
+from ows.wcs.v20 import encoders as encoders_v20
+from ows.wcs.v21 import encoders as encoders_v21
 
 from datacube_ows.ogc_utils import resp_headers, get_service_base_url
 
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
+from datacube_ows.wcs2_utils import get_coverage_data
 
 from datacube_ows.ows_configuration import get_config
 
@@ -32,15 +34,15 @@ tracer = get_opencensus_tracer()
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def handle_wcs2(nocase_args):
-    operation = nocase_args.get("request", "").upper()
+    operation = request.args.get("request", "").upper()
     if not operation:
         raise WCS2Exception("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":
-        return get_capabilities(nocase_args)
+        return get_capabilities(request.args)
     elif operation == "DESCRIBECOVERAGE":
-        return desc_coverages(nocase_args)
+        return desc_coverages(request.args)
     elif operation == "GETCOVERAGE":
-        return get_coverage(nocase_args)
+        return get_coverage(request.args.lists())
     else:
         raise WCS2Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
 
@@ -130,12 +132,14 @@ def get_capabilities(args):
         ],
         interpolations_supported=None,  # TODO: find out interpolations
     )
-    result = xml_encode_capabilities(capabilities,
-                                     include_service_identification=include_service_identification,
-                                     include_service_provider=include_service_provider,
-                                     include_operations_metadata=include_operations_metadata,
-                                     include_service_metadata=include_service_metadata,
-                                     include_coverage_summary=include_coverage_summary)
+    result = encoders_v20.xml_encode_capabilities(
+        capabilities,
+        include_service_identification=include_service_identification,
+        include_service_provider=include_service_provider,
+        include_operations_metadata=include_operations_metadata,
+        include_service_metadata=include_service_metadata,
+        include_coverage_summary=include_coverage_summary
+    )
 
     return (
         result.value,
@@ -144,6 +148,81 @@ def get_capabilities(args):
             "Content-Type": result.content_type,
             "Cache-Control": "no-cache, max-age=0"
         })
+    )
+
+
+def create_coverage_description(cfg, product):
+    axes = [
+        RegularAxis(
+            label=product.native_CRS_def["horizontal_coord"],
+            index_label='i',
+            lower_bound=min(
+                product.ranges["bboxes"][product.native_CRS]["left"],
+                product.ranges["bboxes"][product.native_CRS]["right"],
+            ),
+            upper_bound=max(
+                product.ranges["bboxes"][product.native_CRS]["left"],
+                product.ranges["bboxes"][product.native_CRS]["right"],
+            ),
+            resolution=product.resolution_x,
+            uom='deg',
+            size=product.grid_high_x,
+        ),
+        RegularAxis(
+            label=product.native_CRS_def["vertical_coord"],
+            index_label='j',
+            lower_bound=min(
+                product.ranges["bboxes"][product.native_CRS]["top"],
+                product.ranges["bboxes"][product.native_CRS]["bottom"],
+            ),
+            upper_bound=max(
+                product.ranges["bboxes"][product.native_CRS]["top"],
+                product.ranges["bboxes"][product.native_CRS]["bottom"],
+            ),
+            resolution=product.resolution_y,
+            uom='deg',
+            size=product.grid_high_y,
+        ),
+    ]
+
+    # swap axes if necessary
+    if product.native_CRS_def.get("vertical_coord_first"):
+        axes = reversed(axes)
+
+    # TODO: has this setting been removed?
+    # if not product.wcs_sole_time:
+    axes.append(
+        IrregularAxis(
+            label='time',
+            index_label='k',
+            positions=[
+                f'{t.isoformat()}T00:00:00.000Z'
+                for t in product.ranges['times']
+            ],
+            uom='ISO-8601'
+        )
+    )
+
+    return CoverageDescription(
+        identifier=product.name,
+        range_type=[
+            Field(
+                name=band_label,
+                description=band_label,
+                uom=band_label,
+                nil_values={
+                    nv: 'invalid'
+                    for nv in product.band_idx.band_nodata_vals()
+                }
+            )
+            for band_label in product.band_idx.band_labels()
+        ],
+        grid=Grid(
+            axes=axes,
+            srs=product.native_CRS,
+        ),
+        native_format=cfg.wcs_formats[cfg.native_wcs_format]['mime'],
+        coverage_subtype='RectifiedGridCoverage',
     )
 
 @log_call
@@ -167,57 +246,19 @@ def desc_coverages(args):
                                 locator="Coverage parameter")
 
     coverage_descriptions = [
-        CoverageDescription(
-            identifier=product.name,
-            range_type=[
-                Field(
-                    name=band_label,
-                    description=band_label,
-                    uom=band_label,
-                    nil_values={
-                        nv: 'invalid'
-                        for nv in product.band_idx.band_nodata_vals()
-                    }
-                )
-                for band_label in product.band_idx.band_labels()
-            ],
-            grid=RectifiedGrid(
-                identifier='%s__grid' % product.name,
-                limits=[
-                    [0, 0],
-                    [product.grid_high_x, product.grid_high_y],
-                ],
-
-                # TODO: flip axes when CRS is flipped
-
-                origin=[
-                    min(
-                        product.ranges["bboxes"][product.native_CRS]["left"],
-                        product.ranges["bboxes"][product.native_CRS]["right"],
-                    ),
-                    min(
-                        product.ranges["bboxes"][product.native_CRS]["top"],
-                        product.ranges["bboxes"][product.native_CRS]["bottom"],
-                    ),
-                ],
-                offsets=[
-                    [product.resolution_x, 0.0],
-                    [0.0, product.resolution_y],
-                ],
-                axis_names=[
-                    product.native_CRS_def["horizontal_coord"],
-                    product.native_CRS_def["vertical_coord"],
-                ],
-                srs=product.native_CRS,
-                # uom_labels=,
-            ),
-            native_format=cfg.native_wcs_format,
-            coverage_subtype='RectifiedGridCoverage',
-        )
+        create_coverage_description(cfg, product)
         for product in products
     ]
 
-    result = xml_encode_coverage_descriptions(coverage_descriptions)
+
+    version = request.version
+
+    if version == (2, 0):
+        result = encoders_v20.xml_encode_coverage_descriptions(coverage_descriptions)
+    elif version == (2, 1):
+        result = encoders_v21.xml_encode_coverage_descriptions(coverage_descriptions)
+    else:
+        raise Exception('meh')
 
     return (
         result.value,
@@ -229,17 +270,25 @@ def desc_coverages(args):
     )
 
 
+import logging
+_LOG = logging.getLogger(__name__)
+
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def get_coverage(args):
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
-    req = WCS1GetCoverageRequest(args)
-    data = get_coverage_data(req)
+    request = kvp_decode_get_coverage(args)
+
+
+    _LOG.info(args)
+    _LOG.info(request)
+
+    output, mime, filename = get_coverage_data(request)
     return (
-        req.format["renderer"](req, data),
+        output,
         200,
         resp_headers({
-            "Content-Type": req.format["mime"],
-            'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format["extension"])
+            "Content-Type": mime,
+            'content-disposition': 'attachment; filename=%s' % filename
         })
     )
