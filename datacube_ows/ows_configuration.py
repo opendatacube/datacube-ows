@@ -26,9 +26,9 @@ def read_config():
     cfg_env = os.environ.get("DATACUBE_OWS_CFG")
     if not cfg_env:
         from datacube_ows.ows_cfg import ows_cfg as cfg
-    elif "/" in cfg_env:
+    elif "/" in cfg_env or cfg_env.endswith(".json"):
         cfg = load_json_obj(cfg_env)
-    elif "." in cfg_env or cfg_env.endswith(".json"):
+    elif "." in cfg_env:
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
         cfg = json.loads(cfg_env)
