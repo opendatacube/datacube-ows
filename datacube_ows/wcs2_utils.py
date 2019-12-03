@@ -138,6 +138,9 @@ def get_coverage_data(request):
         dimension = 'TODO'
         raise WCS2Exception('Duplicate subsets for axis %s' % dimension, )
 
+
+    _LOG.info(x_name, y_name)
+
     for subset in subsets:
         dimension = subset.dimension.lower()
         if dimension == x_name:
@@ -396,7 +399,7 @@ def get_tiff(request, data, product, width, height, affine, crs):
             crs=crs,
             nodata=nodata,
             tiled=gtiff.tiling if gtiff.tiling is not None else True,
-            compress=gtiff.compression.lower() or "lzw",
+            compress=gtiff.compression.lower() if gtiff.compression else "lzw",
             interleave=gtiff.interleave or "band",
             dtype=dtype) as dst:
             for idx, band in enumerate(data.data_vars, start=1):

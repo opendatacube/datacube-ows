@@ -38,9 +38,9 @@ def handle_wcs2(nocase_args):
     if not operation:
         raise WCS2Exception("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":
-        return get_capabilities(request.args)
+        return get_capabilities(nocase_args)
     elif operation == "DESCRIBECOVERAGE":
-        return desc_coverages(request.args)
+        return desc_coverages(nocase_args)
     elif operation == "GETCOVERAGE":
         return get_coverage(request.args.lists())
     else:
