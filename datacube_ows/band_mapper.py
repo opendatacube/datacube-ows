@@ -104,6 +104,8 @@ class DynamicRangeCompression(StyleDefBase):
         return normalized * 255
 
 class RGBAMappedStyleDef(StyleDefBase):
+    auto_legend = True
+
     def __init__(self, product, style_cfg):
         super(RGBAMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
@@ -199,7 +201,10 @@ class RGBAMappedStyleDef(StyleDefBase):
                 if "title" in value and "abstract" in value and "color" in value and value["title"]:
                     rgb = Color(value["color"])
                     label = fill(value["title"] + " - " + value["abstract"], 30)
-                    patch = mpatches.Patch(color=rgb.hex, label=label)
+                    try:
+                        patch = mpatches.Patch(color=rgb.hex_l, label=label)
+                    except Exception as e:
+                        print("Error creating patch?", e)
                     patches.append(patch)
         cfg = self.legend_cfg
         plt.rcdefaults()
