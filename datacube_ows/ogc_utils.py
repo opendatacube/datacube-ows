@@ -186,6 +186,10 @@ def mask_by_val(data, band, val=None):
     else:
         return data[band] != val
 
+def mask_by_val2(data, band):
+    # REVISIT: Is this the same as mask_by_val or subtlely different?
+    return data[band] != data[band].nodata
+
 
 def mask_by_bitflag(data, band):
     return ~data[band] & data[band].attrs['nodata']
