@@ -10,6 +10,7 @@ from affine import Affine
 
 from datacube.utils import geometry
 from rasterio import MemoryFile
+from rasterio.warp import calculate_default_transform
 
 from ows.wcs.v20 import (
     Slice, Trim, ScaleSize, ScaleAxis, ScaleExtent
@@ -191,20 +192,22 @@ def get_coverage_data(request):
         axis = 'TODO'
         raise WCS2Exception('Duplicate scales for axis %s' % axis, )
 
+    x_resolution = product.resolution_x
+    y_resolution = product.resolution_y
+    x_size = round((extent_x[1] - extent_x[0]) / x_resolution)
+    y_size = round((extent_y[1] - extent_y[0]) / x_resolution)
 
-    if native_crs == subsetting_crs:
-        x_resolution = product.resolution_x
-        y_resolution = product.resolution_y
-
-        x_size = round((extent_x[1] - extent_x[0]) / x_resolution)
-        y_size = round((extent_y[1] - extent_y[0]) / x_resolution)
-
-    else:
-        x_resolution = None  # TODO: translate from native resolution
-        y_resolution = None  # TODO: translate from native resolution
-
-        x_size = None
-        y_size = None
+    if native_crs != subsetting_crs:
+        _, size = calculate_default_transform(
+            geometry.CRS(native_crs),
+            geometry.CRS(subsetting_crs),
+            x_size, y_size,
+            left=extent_x[0],
+            right=extent_x[1],
+            bottom=extent_y[0],
+            top=extent_y[1],
+        )
+        x_size, y_size = size
 
     for scale in scales:
         axis = scale.axis.lower()
