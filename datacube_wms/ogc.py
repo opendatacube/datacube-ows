@@ -2,6 +2,9 @@ from __future__ import absolute_import, division, print_function
 import sys
 import traceback
 
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+
 from time import monotonic
 
 from flask import Flask, request, g, render_template
@@ -27,6 +30,19 @@ if os.environ.get("PYDEV_DEBUG"):
     import pydevd_pycharm
     pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
 
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
+handler.addFilter(RequestIDLogFilter())
+_LOG = logging.getLogger()
+_LOG.addHandler(handler)
+
+if os.environ.get("SENTRY_KEY") and os.environ("SENTRY_PROJECT"):
+    sentry_sdk.init(
+        dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
+        integrations = [FlaskIntegration()]
+    )
+    _LOG.info("Sentry logging enabled")
+
 app = Flask(__name__.split('.')[0])
 RequestID(app)
 
@@ -41,11 +57,7 @@ if opencensus_tracing_enabled():
     middleware = FlaskMiddleware(app, exporter=jaegerExporter)    
 
 
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
-handler.addFilter(RequestIDLogFilter())
-_LOG = logging.getLogger()
-_LOG.addHandler(handler)
+
 
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
 # this will mean the root logs will be captured and managed by the gunicorn logger

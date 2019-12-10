@@ -19,3 +19,4 @@ requests
 watchdog
 timezonefinderL
 bottleneck
+sentry-sdk
