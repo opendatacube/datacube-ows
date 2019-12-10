@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import sys
 import traceback
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 from time import monotonic
 
@@ -23,11 +25,26 @@ import logging
 
 # pylint: disable=invalid-name, broad-except
 
+
+
 if os.environ.get("PYDEV_DEBUG"):
     import pydevd_pycharm
     pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
 
-app = Flask(__name__.split('.')[0])
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
+handler.addFilter(RequestIDLogFilter())
+_LOG = logging.getLogger()
+_LOG.addHandler(handler)
+
+if os.environ.get("SENTRY_KEY") and os.environ("SENTRY_PROJECT"):
+    sentry_sdk.init(
+        dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
+        integrations = [FlaskIntegration()]
+    )
+    _LOG.info("Sentry logging enabled")
+
+app = Flask(__name__.split('.')[0]
 RequestID(app)
 
 tracer = None
@@ -38,14 +55,8 @@ if opencensus_tracing_enabled():
     integration = ['sqlalchemy']
     config_integration.trace_integrations(integration, tracer=tracer)
     jaegerExporter = get_jaeger_exporter()
-    middleware = FlaskMiddleware(app, exporter=jaegerExporter)    
-
-
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
-handler.addFilter(RequestIDLogFilter())
-_LOG = logging.getLogger()
-_LOG.addHandler(handler)
+    middleware = FlaskMiddleware(app, exporter=jaegerExporter)
+    _LOG.info("Opencensus tracing enabled")
 
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
 # this will mean the root logs will be captured and managed by the gunicorn logger
@@ -56,6 +67,7 @@ _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_ows.metrics.prometheus import setup_prometheus
     setup_prometheus(app)
+    _LOG.info("Prometheus metrics enabled")
 
 set_default_rio_config(aws=dict(aws_unsigned=True,
                                 region_name="auto"),

@@ -52,7 +52,9 @@ To run the standard Docker image, create a docker volume containing your ows con
         -e DATACUBE_OWS_CFG=test_cfg.ows_cfg                       # Location of config object
         -e AWS_ACCESS_KEY_ID=THISISNOTAREALAWSKEY \                # AWS ACCESS KEY (if accessing files on S3)
         -e AWS_SECRET_ACCESS_KEY=THISisNOTaREALawsSECRETaccessKEY \# AWS SECRET ACCESS KEY (if accessing files on S3)
-        -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (if accessing files on S3)
+        -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
+        -e SENTRY_KEY=set5gstgw45gdfgw54t \                        # Key for Sentry logging (optional)
+        -e SENTRY_PROJECT=my_datacube_ows_project \                # Project name for Sentry logging (optional)
         -e DB_HOSTNAME=172.17.0.1 -e DB_PORT=5432 \                # Hostname/IP address and port of ODC postgres database
         -e DB_DATABASE=datacube \                                  # Name of ODC postgres database
         -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
