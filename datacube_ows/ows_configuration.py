@@ -39,9 +39,11 @@ def read_config():
 
 
 # pylint: disable=dangerous-default-value
-def cfg_expand(cfg_unexpanded, inclusions=[]):
+def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
     # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
     # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
+    if cwd is None:
+        cwd = os.getcwd()
     if isinstance(cfg_unexpanded, Mapping):
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
@@ -51,16 +53,35 @@ def cfg_expand(cfg_unexpanded, inclusions=[]):
             # Perform expansion
             if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
                 # JSON Expansion
-                return cfg_expand(load_json_obj(cfg_unexpanded["include"]), ninclusions)
+                raw_path = cfg_unexpanded["include"]
+                try:
+                    # Try in actual working directory
+                    json_obj = load_json_obj(raw_path)
+                    abs_path = os.path.abspath(cfg_unexpanded["include"])
+                    dir = os.path.dirname(abs_path)
+                except:
+                    json_obj = None
+                if json_obj is None:
+                    path = os.path.join(cwd, raw_path)
+                    try:
+                        # Try in inherited working directory
+                        json_obj = load_json_obj(path)
+                        abs_path = os.path.abspath(path)
+                        dir = os.path.dirname(abs_path)
+                    except:
+                        json_obj = None
+                if json_obj is None:
+                    raise ConfigException("Could not find json file %s" % raw_path)
+                return cfg_expand(load_json_obj(abs_path), cwd=dir, inclusions=ninclusions)
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
-                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), ninclusions)
+                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
             else:
                 raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
         else:
-            return { k: cfg_expand(v, inclusions) for k,v in cfg_unexpanded.items()  }
+            return { k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k,v in cfg_unexpanded.items()  }
     elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
-        return list([cfg_expand(elem, inclusions) for elem in cfg_unexpanded ])
+        return list([cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded ])
     else:
         return cfg_unexpanded
 

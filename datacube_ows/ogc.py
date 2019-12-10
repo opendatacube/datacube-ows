@@ -156,6 +156,7 @@ def ogc_impl():
             # Defaulting to WMS because that's what we already have.
             raise WMSException("Invalid service and/or request", locator="Service and request parameters")
     except OGCException as e:
+        _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
     except Exception as e:
         tb = sys.exc_info()[2]
