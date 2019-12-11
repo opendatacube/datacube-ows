@@ -48,8 +48,7 @@ To run the standard Docker image, create a docker volume containing your ows con
       gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_ows:ogc
 
   docker run --rm \
-        -e PYTHONPATH=/test_cfg \                                  # Location of config files on docker mounted volume
-        -e DATACUBE_OWS_CFG=test_cfg.ows_cfg                       # Location of config object
+        -e DATACUBE_OWS_CFG=datacube_ows.config.test_cfg.ows_cfg   # Location of config object
         -e AWS_ACCESS_KEY_ID=THISISNOTAREALAWSKEY \                # AWS ACCESS KEY (if accessing files on S3)
         -e AWS_SECRET_ACCESS_KEY=THISisNOTaREALawsSECRETaccessKEY \# AWS SECRET ACCESS KEY (if accessing files on S3)
         -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
@@ -60,7 +59,7 @@ To run the standard Docker image, create a docker volume containing your ows con
         -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
         -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
         \                                                          # container at port 8008 on the host machine.
-        --mount source=test_cfg,target=/test_cfg \                 # Mount the docker volume where the config lives
+        --mount source=test_cfg,target=/code/datacube_ows/config \ # Mount the docker volume where the config lives
         name_of_built_container
 
 The image is based on the standard ODC container.
