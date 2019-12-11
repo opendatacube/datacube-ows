@@ -313,7 +313,8 @@ def get_map(args):
                 body = _write_png(data, pq_data, params.style, extent_mask)
                 
 
-    return body, 200, resp_headers({"Content-Type": "image/png"})
+    cfg = get_config()
+    return body, 200, cfg.response_headers({"Content-Type": "image/png"})
 
 
 @log_call

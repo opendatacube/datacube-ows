@@ -30,7 +30,8 @@
 #    Config loaded as json from file in working directory.
 #
 # 5. Contains a dot (.), e.g. "package.sub_package.module.cfg_object_name"
-#    Imported as python object (expected to be a dictionary) from supplied Python path.
+#    Imported as python object (expected to be a dictionary).
+#    N.B. It is up to you that the Python file in question is in your Python path.
 #
 # 6. Valid python object name, e.g. "cfg_prod"
 #    Imported as python object from named object in datacube_ows/ows_cfg.py
@@ -65,11 +66,19 @@
 #           "type": "python"
 #       }
 #
+#       N.B. It is up to you to make sure the included Python file is in your Python Path.
+#            Relative Python imports are not supported.
+#
 # 3. Include a JSON file (by absolute or relative file path):
 #       {
 #           "include": "path/to/file.json",
 #           "type": "json"
 #       }
+#
+#       N.B. Resolution of relative file paths is done in the following order:
+#           a) Relative to the working directory of the web app.
+#           b) If a JSON file is being included from another JSON file, relative to
+#              directory in which the including file resides.
 #
 # Note that this does not just apply to dictionaries. Either of the above include dictionaries
 # could expand to an array, or even to single integer or string.
@@ -513,6 +522,31 @@ style_ndvi = {
             "color": "#114D04"
         }
     ],
+    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
+    # Defaults to True.
+    "include_in_feature_info": True,
+    # Legend section is optional for non-linear colour-ramped styles.
+    # If not supplied, a legend for the style will be automatically generated from the colour ramp.
+    "legend": {
+        # Whether or not to display a legend for this style.
+        # Defaults to True for non-linear colour-ramped styles.
+        "show_legend": True,
+        # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
+        # be used instead.  If 'url' is not supplied, the generated legend is used.
+        "url": "http://example.com/custom_style_image.png"
+    }
+}
+
+# Examples of Matplotlib Color-Ramp styles
+style_deform = {
+    "name": "deform",
+    "title": "InSAR Deformation",
+    "abstract": "InSAR Derived Deformation Map",
+    # Range is needed to map values in color ramp
+    "range": [0.0, 1.0],
+    # The Matplotlib color ramp. Value specified is a string that indicates a Matplotlib Colour Ramp should be
+    # used. Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
+    "mpl_ramp": "RdBu",
     # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
     # Defaults to True.
     "include_in_feature_info": True,

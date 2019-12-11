@@ -24,24 +24,31 @@ _LOG = logging.getLogger(__name__)
 
 def read_config():
     cfg_env = os.environ.get("DATACUBE_OWS_CFG")
+    cwd = None
     if not cfg_env:
         from datacube_ows.ows_cfg import ows_cfg as cfg
-    elif "/" in cfg_env:
+    elif "/" in cfg_env or cfg_env.endswith(".json"):
         cfg = load_json_obj(cfg_env)
-    elif "." in cfg_env or cfg_env.endswith(".json"):
+        abs_path =  os.path.abspath(cfg_env)
+        cwd = os.path.dirname(abs_path)
+    elif "." in cfg_env:
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
         cfg = json.loads(cfg_env)
+        abs_path =  os.path.abspath(cfg_env)
+        cwd = os.path.dirname(abs_path)
     else:
         mod = import_module("datacube_ows.ows_cfg")
         cfg = getattr(mod, cfg_env)
-    return cfg_expand(cfg)
+    return cfg_expand(cfg, cwd=cwd)
 
 
 # pylint: disable=dangerous-default-value
-def cfg_expand(cfg_unexpanded, inclusions=[]):
+def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
     # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
     # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
+    if cwd is None:
+        cwd = os.getcwd()
     if isinstance(cfg_unexpanded, Mapping):
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
@@ -51,16 +58,37 @@ def cfg_expand(cfg_unexpanded, inclusions=[]):
             # Perform expansion
             if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
                 # JSON Expansion
-                return cfg_expand(load_json_obj(cfg_unexpanded["include"]), ninclusions)
+                raw_path = cfg_unexpanded["include"]
+                try:
+                    # Try in actual working directory
+                    json_obj = load_json_obj(raw_path)
+                    abs_path = os.path.abspath(cfg_unexpanded["include"])
+                    cwd = os.path.dirname(abs_path)
+                # pylint: disable=broad-except
+                except Exception:
+                    json_obj = None
+                if json_obj is None:
+                    path = os.path.join(cwd, raw_path)
+                    try:
+                        # Try in inherited working directory
+                        json_obj = load_json_obj(path)
+                        abs_path = os.path.abspath(path)
+                        cwd = os.path.dirname(abs_path)
+                    # pylint: disable=broad-except
+                    except Exception:
+                        json_obj = None
+                if json_obj is None:
+                    raise ConfigException("Could not find json file %s" % raw_path)
+                return cfg_expand(load_json_obj(abs_path), cwd=cwd, inclusions=ninclusions)
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
-                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), ninclusions)
+                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
             else:
                 raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
         else:
-            return { k: cfg_expand(v, inclusions) for k,v in cfg_unexpanded.items()  }
+            return { k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k,v in cfg_unexpanded.items()  }
     elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
-        return list([cfg_expand(elem, inclusions) for elem in cfg_unexpanded ])
+        return list([cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded ])
     else:
         return cfg_unexpanded
 

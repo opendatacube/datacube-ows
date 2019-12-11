@@ -35,7 +35,7 @@ def legend_graphic(args):
 
 
 def create_legend_for_style(product, style_name):
-    if not product.legend or style_name not in product.legend.get('styles', product.legend):
+    if style_name not in product.style_index:
         return None
     style = product.style_index[style_name]
     return create_legends_from_styles([style])
