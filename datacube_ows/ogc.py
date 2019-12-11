@@ -44,7 +44,7 @@ if os.environ.get("SENTRY_KEY") and os.environ("SENTRY_PROJECT"):
     )
     _LOG.info("Sentry logging enabled")
 
-app = Flask(__name__.split('.')[0]
+app = Flask(__name__.split('.')[0])
 RequestID(app)
 
 tracer = None
