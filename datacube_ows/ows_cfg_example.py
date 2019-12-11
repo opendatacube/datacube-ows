@@ -30,7 +30,8 @@
 #    Config loaded as json from file in working directory.
 #
 # 5. Contains a dot (.), e.g. "package.sub_package.module.cfg_object_name"
-#    Imported as python object (expected to be a dictionary) from supplied Python path.
+#    Imported as python object (expected to be a dictionary).
+#    N.B. It is up to you that the Python file in question is in your Python path.
 #
 # 6. Valid python object name, e.g. "cfg_prod"
 #    Imported as python object from named object in datacube_ows/ows_cfg.py
@@ -65,11 +66,19 @@
 #           "type": "python"
 #       }
 #
+#       N.B. It is up to you to make sure the included Python file is in your Python Path.
+#            Relative Python imports are not supported.
+#
 # 3. Include a JSON file (by absolute or relative file path):
 #       {
 #           "include": "path/to/file.json",
 #           "type": "json"
 #       }
+#
+#       N.B. Resolution of relative file paths is done in the following order:
+#           a) Relative to the working directory of the web app.
+#           b) If a JSON file is being included from another JSON file, relative to
+#              directory in which the including file resides.
 #
 # Note that this does not just apply to dictionaries. Either of the above include dictionaries
 # could expand to an array, or even to single integer or string.
