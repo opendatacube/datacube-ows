@@ -15,7 +15,7 @@ import matplotlib
 # Do not use X Server backend
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, to_hex
 import matplotlib.patches as mpatches
 from textwrap import fill
 
@@ -286,6 +286,7 @@ class LinearStyleDef(DynamicRangeCompression):
 
 
 UNSCALED_DEFAULT_RAMP = [
+    # TODO: -0.0 is not really different number to 0.0 (does this indicate a specific limit case)
     {
         "value": -0.0,
         "color": "#000080",
@@ -331,6 +332,28 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
         } for u in unscaled
     ]
 
+def read_mpl_ramp(mpl_ramp : str):
+    unscaled_cmap = []
+    cmap = plt.get_cmap(mpl_ramp)
+    val_range = numpy.arange(0.1, 1.1, 0.1)
+    rgba_hex = to_hex(cmap(0.0))
+    unscaled_cmap.append(
+        {
+            "value" : 0.0,
+            "color" : rgba_hex,
+            "alpha" : 1.0
+        }
+    )
+    for val in val_range:
+        rgba_hex = to_hex(cmap(val))
+        unscaled_cmap.append(
+            {
+                "value" : float(val),
+                "color" : rgba_hex
+            }
+        )
+    return unscaled_cmap
+
 
 class RgbaColorRampDef(StyleDefBase):
     auto_legend = True
@@ -357,9 +380,11 @@ class RgbaColorRampDef(StyleDefBase):
             self.color_ramp = style_cfg["color_ramp"]
         else:
             rmin, rmax = style_cfg["range"]
+            unscaled_ramp = UNSCALED_DEFAULT_RAMP
+            if "mpl_ramp" in style_cfg:
+                unscaled_ramp = read_mpl_ramp(style_cfg["mpl_ramp"])
             self.color_ramp = scale_unscaled_ramp(
-                    rmin, rmax,
-                    UNSCALED_DEFAULT_RAMP)
+                    rmin, rmax, unscaled_ramp)
         values, r, g, b, a = crack_ramp(self.color_ramp)
         self.values = values
         self.components = {
@@ -490,6 +515,9 @@ class RgbaColorRampDef(StyleDefBase):
         combined_cfg["ramp"] = self.color_ramp
 
         cdict, ticks = create_cdict_ticks(self.components, combined_cfg)
+        
+        # TODO: Potentially short-circuit this if using string based mpl_ramp
+        # custom_map = plt.get_cmap(style_cfg["mpl_ramp"]) should return a LinearSegmentedColormap
 
         plt.rcdefaults()
         if combined_cfg.get("rcParams", None) is not None:

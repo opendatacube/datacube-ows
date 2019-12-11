@@ -528,6 +528,31 @@ style_ndvi = {
     }
 }
 
+# Examples of Matplotlib Color-Ramp styles
+style_deform = {
+    "name": "deform",
+    "title": "InSAR Deformation",
+    "abstract": "InSAR Derived Deformation Map",
+    # Range is needed to map values in color ramp
+    "range": [0.0, 1.0],
+    # The Matplotlib color ramp. Value specified is a string that indicates a Matplotlib Colour Ramp should be
+    # used. Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
+    "mpl_ramp": "RdBu",
+    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
+    # Defaults to True.
+    "include_in_feature_info": True,
+    # Legend section is optional for non-linear colour-ramped styles.
+    # If not supplied, a legend for the style will be automatically generated from the colour ramp.
+    "legend": {
+        # Whether or not to display a legend for this style.
+        # Defaults to True for non-linear colour-ramped styles.
+        "show_legend": True,
+        # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
+        # be used instead.  If 'url' is not supplied, the generated legend is used.
+        "url": "http://example.com/custom_style_image.png"
+    }
+}
+
 style_ndvi_cloudmask = {
     "name": "ndvi_cloudmask",
     "title": "NDVI with cloud masking",
