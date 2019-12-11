@@ -64,7 +64,7 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
                     json_obj = load_json_obj(raw_path)
                     abs_path = os.path.abspath(cfg_unexpanded["include"])
                     cwd = os.path.dirname(abs_path)
-                # pylint: disable=broad-exception
+                # pylint: disable=broad-except
                 except Exception:
                     json_obj = None
                 if json_obj is None:
@@ -74,7 +74,7 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
                         json_obj = load_json_obj(path)
                         abs_path = os.path.abspath(path)
                         cwd = os.path.dirname(abs_path)
-                    # pylint: disable=broad-exception
+                    # pylint: disable=broad-except
                     except Exception:
                         json_obj = None
                 if json_obj is None:
