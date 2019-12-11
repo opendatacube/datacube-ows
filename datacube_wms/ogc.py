@@ -36,7 +36,7 @@ handler.addFilter(RequestIDLogFilter())
 _LOG = logging.getLogger()
 _LOG.addHandler(handler)
 
-if os.environ.get("SENTRY_KEY") and os.environ("SENTRY_PROJECT"):
+if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
     sentry_sdk.init(
         dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
         integrations = [FlaskIntegration()]
