@@ -24,18 +24,23 @@ _LOG = logging.getLogger(__name__)
 
 def read_config():
     cfg_env = os.environ.get("DATACUBE_OWS_CFG")
+    cwd = None
     if not cfg_env:
         from datacube_ows.ows_cfg import ows_cfg as cfg
     elif "/" in cfg_env or cfg_env.endswith(".json"):
         cfg = load_json_obj(cfg_env)
+        abs_path =  os.path.abspath(cfg_env)
+        cwd = os.path.dirname(abs_path)
     elif "." in cfg_env:
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
         cfg = json.loads(cfg_env)
+        abs_path =  os.path.abspath(cfg_env)
+        cwd = os.path.dirname(abs_path)
     else:
         mod = import_module("datacube_ows.ows_cfg")
         cfg = getattr(mod, cfg_env)
-    return cfg_expand(cfg)
+    return cfg_expand(cfg, cwd=cwd)
 
 
 # pylint: disable=dangerous-default-value
