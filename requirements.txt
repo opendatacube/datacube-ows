@@ -21,3 +21,4 @@ timezonefinderL
 python-slugify
 bottleneck
 sentry-sdk
+blinker
