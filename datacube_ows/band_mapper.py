@@ -203,6 +203,7 @@ class RGBAMappedStyleDef(StyleDefBase):
                     label = fill(value["title"] + " - " + value["abstract"], 30)
                     try:
                         patch = mpatches.Patch(color=rgb.hex_l, label=label)
+                    # pylint: disable=broad-exception
                     except Exception as e:
                         print("Error creating patch?", e)
                     patches.append(patch)

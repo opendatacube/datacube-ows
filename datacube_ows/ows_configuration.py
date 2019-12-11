@@ -63,8 +63,9 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
                     # Try in actual working directory
                     json_obj = load_json_obj(raw_path)
                     abs_path = os.path.abspath(cfg_unexpanded["include"])
-                    dir = os.path.dirname(abs_path)
-                except:
+                    cwd = os.path.dirname(abs_path)
+                # pylint: disable=broad-exception
+                except Exception:
                     json_obj = None
                 if json_obj is None:
                     path = os.path.join(cwd, raw_path)
@@ -72,12 +73,13 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
                         # Try in inherited working directory
                         json_obj = load_json_obj(path)
                         abs_path = os.path.abspath(path)
-                        dir = os.path.dirname(abs_path)
-                    except:
+                        cwd = os.path.dirname(abs_path)
+                    # pylint: disable=broad-exception
+                    except Exception:
                         json_obj = None
                 if json_obj is None:
                     raise ConfigException("Could not find json file %s" % raw_path)
-                return cfg_expand(load_json_obj(abs_path), cwd=dir, inclusions=ninclusions)
+                return cfg_expand(load_json_obj(abs_path), cwd=cwd, inclusions=ninclusions)
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
                 return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
