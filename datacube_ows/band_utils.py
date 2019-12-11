@@ -15,6 +15,7 @@ def sum_bands(data, band1, band2, product_cfg=None):
         band2=product_cfg.band_idx.band(band2)
     return data[band1] + data[band2]
 
+
 def delta_bands(data, band1, band2, product_cfg=None):
     if product_cfg:
         band1=product_cfg.band_idx.band(band1)
@@ -72,3 +73,11 @@ def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, product_cfg=None):
 def multi_data_delta(data):
     data1, data2 = data.data_list()
     return data2 - data1
+
+
+def single_band_log(data, band, scale_factor, exponent, product_cfg=None):
+    if product_cfg:
+        band = product_cfg.band_idx.band(band)
+    return scale_factor * ( (data[band] ** exponent) - 1.0)
+
+
