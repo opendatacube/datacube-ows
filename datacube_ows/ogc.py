@@ -69,9 +69,13 @@ if os.environ.get("prometheus_multiproc_dir", False):
     setup_prometheus(app)
     _LOG.info("Prometheus metrics enabled")
 
-set_default_rio_config(aws=dict(aws_unsigned=True,
-                                region_name="auto"),
-                       cloud_defaults=True)
+if os.environ.get("AWS_DEFAULT_REGION"):
+    set_default_rio_config(aws=dict(aws_unsigned=True,
+                                    region_name="auto"),
+                           cloud_defaults=True)
+else:
+    set_default_rio_config()
+    _LOG.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
 
 class SupportedSvcVersion(object):
