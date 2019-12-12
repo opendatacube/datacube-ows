@@ -234,7 +234,7 @@ def ping():
         try:
             results = conn.execute("""
                     SELECT COUNT(*)
-                    FROM agdc.dataset_type""",
+                    FROM wms.product_ranges""",
                                    )
             for r in results:
                 db_ok = True
