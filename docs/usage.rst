@@ -28,7 +28,7 @@ These should be available in the OWS docker image.
 
 Index all the YAML files for a particular year of ALOS-PALSAR
 using a classic Unix toolchain style,
-with [AWS CLI](https://aws.amazon.com/cli/) grabbing them from S3.
+with `AWS CLI <https://aws.amazon.com/cli/>`_ grabbing them from S3.
 
 .. code-block:: console
 
@@ -44,7 +44,7 @@ Update extents of products in Datacube to make it easier for OWS to create getca
 
     $ update_ranges.py -- product alos_palsar_mosaic --no-calculate-extent
 
-Deploy the Digital Earth Africa OWS config available [here](https://github.com/digitalearthafrica/config/blob/master/services/ows.py)
+Deploy the Digital Earth Africa OWS config available `here <https://github.com/digitalearthafrica/config/blob/master/services/ows.py>`_
 by copying to wms_cfg.py. Ideally load the config outside
 a docker container to iterate faster.
 
