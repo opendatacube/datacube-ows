@@ -229,17 +229,19 @@ def ogc_wcs_impl():
 @app.route('/ping')
 def ping():
     db_ok = False
-    try:
-        with cube() as dc:
-            conn = dc.index._db._engine.connect()  # pylint: disable=protected-access
+    with cube() as dc:
+        conn = dc.index._db._engine.connect()  # pylint: disable=protected-access
+        try:
             results = conn.execute("""
                     SELECT COUNT(*)
                     FROM agdc.dataset_type""",
                                    )
             for r in results:
                 db_ok = True
-    except Exception:
-        pass
+        except Exception:
+            pass
+        finally:
+            conn.close()
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
     else:

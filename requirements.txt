@@ -1,7 +1,6 @@
 pytest
 flask
 colour
-flask
 scikit-image
 gevent
 eventlet
@@ -22,4 +21,3 @@ python-slugify
 bottleneck
 sentry-sdk
 blinker
-python-slugify
