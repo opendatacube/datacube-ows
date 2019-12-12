@@ -20,6 +20,8 @@ from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_o
 from datacube_ows.cube_pool import cube
 from datacube.utils.rio import set_default_rio_config
 from datacube_ows.ows_configuration import get_config
+from psycopg2 import connect
+from urllib.parse import urlparse
 
 import logging
 
@@ -230,18 +232,16 @@ def ogc_wcs_impl():
 def ping():
     db_ok = False
     with cube() as dc:
-        conn = dc.index._db._engine.connect()  # pylint: disable=protected-access
-        try:
-            results = conn.execute("""
-                    SELECT COUNT(*)
-                    FROM wms.product_ranges""",
-                                   )
-            for r in results:
-                db_ok = True
-        except Exception:
-            pass
-        finally:
-            conn.close()
+        with dc.index._db.give_me_a_connection() as conn:
+            try:
+                results = conn.execute("""
+                        SELECT COUNT(*)
+                        FROM wms.product_ranges""",
+                                       )
+                for r in results:
+                    db_ok = True
+            except Exception:
+                pass
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
     else:
