@@ -159,9 +159,9 @@ class RGBAMappedStyleDef(StyleDefBase):
                 except AttributeError:
                     data[band] = data[band].where(extent_mask)
 
-        _LOG.debug("extent mask complete %d", datetime.now())
+        _LOG.debug("extent mask complete %s", str(datetime.now()))
         data = self.apply_masks(data, pq_data)
-        _LOG.debug("mask complete %d", datetime.now())
+        _LOG.debug("mask complete %s", str(datetime.now()))
         imgdata = Dataset()
         for cfg_band, values in self.value_map.items():
             # Run through each item
