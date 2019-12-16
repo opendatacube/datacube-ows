@@ -357,6 +357,13 @@ class OWSNamedLayer(OWSLayer):
             except KeyError:
                 raise ConfigException("Missing required config items in wcs section for layer %s" % self.name)
 
+        sub_prod_cfg = cfg.get("sub_products", {})
+        self.sub_product_label = sub_prod_cfg.get("label")
+        if "extractor" in sub_prod_cfg:
+            self.sub_product_extractor = FunctionWrapper(sub_prod_cfg["extractor"])
+        else:
+            self.sub_product_extractor = None
+
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
 

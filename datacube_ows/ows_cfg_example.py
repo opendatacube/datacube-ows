@@ -1321,6 +1321,19 @@ ows_cfg = {
                             }
                         }
                     },
+                    # The sub_products section is optional.
+                    "sub_products": {
+                        # A function that extracts the "sub-product" id (e.g. path number) from a dataset.
+                        # Function should return a (small) integer.  If None or not specified, the product
+                        # has no sub-layers.
+                        # All the formats supported for extent_mask_func as described above are supported here.
+                        # The function is assumed to take a datacube dataset object and return an integer
+                        # sub-product id.
+                        "extractor": "datacube_ows.ogc_utils.ls8_subproduct",
+                        # A prefix used to describe the sub-layer in the GetCapabilities response.
+                        # E.g. sub-layer 109 will be described as "Landsat Path 109"
+                        "label": "Landsat Path",
+                    },
                     # Style definitions
                     # The "styling" section is required
                     "styling": {
