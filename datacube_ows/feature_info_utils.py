@@ -8,10 +8,12 @@ def get_water_info(data: dict, hostname: str, path: str):
     Use in ows_cfg.py as below:
 
     "feature_info": {
-     "include_custom": "datacube_ows.feature_info_utils.get_water_info",
-     "kwargs" : {
-         "hostname" : "https://data.dea.ga.gov.au",
-         "path" : "projects/WaterBodies/feature_info/"
+     "include_custom": {
+        "function" : "datacube_ows.feature_info_utils.get_water_info",
+        "kwargs" : {
+            "hostname" : "https://data.dea.ga.gov.au",
+            "path" : "projects/WaterBodies/feature_info/"
+            }
         }
     }
 
