@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<WCS_Capabilities version="1.0.0"
+xmlns="http://www.opengis.net/wcs"
+xmlns:xlink="http://www.w3.org/1999/xlink"
+xmlns:gml="http://www.opengis.net/gml"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.0.0/wcsCapabilities.xsd">
+
+{% if show_service %}
+<Service>
+    {% if cfg.abstract %}
+    <description>
+        {{ cfg.abstract }}
+    </description>
+    {% endif %}
+    <name>WCS</name>
+    <label>{{ cfg.title }}</label>
+    {% if cfg.keywords %}
+    <keywords>
+        {% for kw in cfg.keywords %}
+        <keyword>{{ kw }}</keyword>
+        {% endfor %}
+    </keywords>
+    {% endif %}
+
+    {% if cfg.contact_info %}
+    <responsibleParty>
+        {% if cfg.contact_info.person %}
+        <individualName>{{ cfg.contact_info.person }}</individualName>
+        {% endif %}
+        {% if cfg.contact_info.organisation %}
+        <organisationName>{{ cfg.contact_info.organisation }}</organisationName>
+        {% endif %}
+        {% if cfg.contact_info.position %}
+        <positionName>{{ cfg.contact_info.position }}</positionName>
+        {% endif %}
+        {% if cfg.contact_info.address or cfg.contact_info.telephone or cfg.contact_info.fax or cfg.contact_info.email %}
+        <contactInfo>
+            {% if cfg.contact_info.telephone or cfg.contact_info.fax %}
+            <phone>
+                {% if cfg.contact_info.telephone %}
+                <voice>{{ cfg.contact_info.telephone }}</voice>
+                {% endif %}
+                {% if cfg.contact_info.fax %}
+                <facsimile>{{ cfg.contact_info.fax }}</facsimile>
+                {% endif %}
+            </phone>
+            {% endif %}
+            {% if cfg.contact_info.address or cfg.contact_info.email %}
+            <address>
+                {%  if cfg.contact_info.address %}
+                <deliveryPoint>{{ cfg.contact_info.address.address }}</deliveryPoint>
+                <city>{{ cfg.contact_info.address.city }}</city>
+                <administrativeArea>{{ cfg.contact_info.address.state }}</administrativeArea>
+                <postalCode>{{ cfg.contact_info.address.postcode }}</postalCode>
+                <country>{{ cfg.contact_info.address.country }}</country>
+                {%  endif %}
+                {% if cfg.contact_info.email %}
+                <electronicMailAddress>{{ cfg.contact_info.email }}</electronicMailAddress>
+                {% endif %}
+            </address>
+            {% endif %}
+        </contactInfo>
+        {% endif %}
+    </responsibleParty>
+    {% endif %}
+
+    <fees>{% if cfg.fees == 'none' %}NONE{% else %}{{ cfg.fees }}{% endif %}</fees>
+    <accessConstraints>{% if cfg.access_constraints == 'none' %}NONE{% else %}{{ cfg.access_constraints }}{% endif %}</accessConstraints>
+</Service>
+{% endif %}
+{% if show_capability %}
+    <Capability>
+    <Request>
+        <GetCapabilities>
+            <DCPType>
+                <HTTP>
+                    <Get>
+                        <OnlineResource xlink:type="simple"
+                                        xlink:href="{{ base_url }}/wcs?" />
+                    </Get>
+                </HTTP>
+            </DCPType>
+        </GetCapabilities>
+        <DescribeCoverage>
+            <DCPType>
+                <HTTP>
+                    <Get>
+                        <OnlineResource xlink:type="simple"
+                                        xlink:href="{{ base_url }}/wcs?" />
+                    </Get>
+                </HTTP>
+            </DCPType>
+        </DescribeCoverage>
+        <GetCoverage>
+            <DCPType>
+                <HTTP>
+                    <Get>
+                        <OnlineResource xlink:type="simple"
+                                        xlink:href="{{ base_url }}/wcs?" />
+                    </Get>
+                </HTTP>
+            </DCPType>
+        </GetCoverage>
+    </Request>
+
+    <Exception>
+        <Format>application/vnd.ogc.se_xml</Format>
+    </Exception>
+</Capability>
+{% endif %}
+{% if show_content_metadata %}
+<ContentMetadata>
+    {% for product in cfg.product_index.values() %}
+    {% if product.wcs %}
+        <CoverageOfferingBrief>
+            <description>{{ product.definition.description }}</description>
+            <name>{{ product.name }}</name>
+            <label>{{ product.title }}</label>
+            <lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
+                <gml:pos dimension="2">{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</gml:pos>
+                <gml:pos dimension="2">{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</gml:pos>
+                {%  if not product.wcs_sole_time %}
+                <gml:timePosition>{{ product.ranges.start_time.isoformat() }}</gml:timePosition>
+                <gml:timePosition>{{ product.ranges.end_time.isoformat() }}</gml:timePosition>
+                {% endif %}
+            </lonLatEnvelope>
+        </CoverageOfferingBrief>
+    {% endif %}
+    {% endfor %}
+</ContentMetadata>
+{% endif %}
+
+</WCS_Capabilities>

@@ -1,0 +1,9 @@
+[
+  {
+    "test": 88888
+  },
+  {
+      "include": "tests/cfg/simple.json",
+      "type": "json"
+  }
+]

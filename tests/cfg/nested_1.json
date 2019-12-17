@@ -1,0 +1,4 @@
+{
+  "include": "tests/cfg/simple.json",
+  "type": "json"
+}

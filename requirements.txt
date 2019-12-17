@@ -1,7 +1,6 @@
 pytest
 flask
 colour
-flask
 scikit-image
 gevent
 eventlet
@@ -18,5 +17,7 @@ pytest-mock
 requests
 watchdog
 timezonefinderL
+python-slugify
 bottleneck
 sentry-sdk
+blinker

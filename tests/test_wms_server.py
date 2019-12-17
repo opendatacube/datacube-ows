@@ -1,4 +1,4 @@
-from datacube_wms import ogc
+from datacube_ows import ogc
 
 import pytest
 from pytest_localserver.http import WSGIServer

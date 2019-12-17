@@ -40,8 +40,7 @@ RUN pip install --extra-index-url="https://packages.dea.gadevs.ga" \
 RUN pip3 install . \
   && rm -rf $HOME/.cache/pip
 
-COPY docker/wms-entrypoint.sh /usr/local/bin/wms-entrypoint.sh
-COPY docker/get_wms_config.sh /usr/local/bin/get_wms_config.sh
+COPY docker/ows-entrypoint.sh /usr/local/bin/ows-entrypoint.sh
 COPY docker/update-and-reload.sh /usr/local/bin/update-and-reload.sh
 
 # Perform setup install
@@ -72,11 +71,14 @@ WORKDIR /code/archive/archiving
 COPY docker/auxiliary/archive/assets/archive.sh .
 ADD https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/master/scripts/index_from_s3_bucket.py ls_s2_cog.py
 
+# Create Directory inside python path for config - mount your config volume here!
+RUN mkdir -p /code/datacube_ows/config
+
 WORKDIR /code
 
-ENTRYPOINT ["wms-entrypoint.sh"]
+ENTRYPOINT ["ows-entrypoint.sh"]
 
 # Increase the maximum number of open file descriptors for a given process, ulimit (65535*3 = 196605)
 RUN ulimit -n 196605
 
-CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_wms.wsgi
+CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi

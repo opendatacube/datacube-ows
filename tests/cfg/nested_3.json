@@ -1,0 +1,25 @@
+{
+  "test": 2222,
+  "things": [
+    {
+      "test": 22562,
+      "thing": null
+    },
+    {
+      "test": 22563,
+      "thing": {
+        "include": "tests/cfg/simple.json",
+        "type": "json"
+      }
+    },
+    {
+      "test": 22564,
+      "thing": {
+        "include": "simple.json",
+        "type": "json"
+      }
+    }
+  ]
+}
+
+

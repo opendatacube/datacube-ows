@@ -24,12 +24,50 @@ Note on Naming
 
 This project originally supported WMS only and was known as "datacube_wms".
 
-There are still a number of file and object names in the codebase that
+There are still a handful of file and object names in the codebase that
 include the substring "wms" although they are actually more general.
 These names will be updated to "ows" as time permits.
 
 Setup
 -----
+
+Datacube_ows (and datacube_core itself) has many complex dependencies on particular versions of
+geospatial libraries.  Dependency conflicts are almost unavoidable in environments that also contain
+other large complex geospatial software packages.  We therefore strongly recommend some kind of
+containerised solution and we supply scripts for building appropriate Docker containers.
+
+Docker
+------
+To run the standard Docker image, create a docker volume containing your ows config files and use something like: ::
+
+  docker build --tag=name_of_built_container .
+
+  docker run \
+      --rm \
+      opendatacube/wms \
+      gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_ows:ogc
+
+  docker run --rm \
+        -e DATACUBE_OWS_CFG=datacube_ows.config.test_cfg.ows_cfg   # Location of config object
+        -e AWS_ACCESS_KEY_ID=THISISNOTAREALAWSKEY \                # AWS ACCESS KEY (if accessing files on S3)
+        -e AWS_SECRET_ACCESS_KEY=THISisNOTaREALawsSECRETaccessKEY \# AWS SECRET ACCESS KEY (if accessing files on S3)
+        -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
+        -e SENTRY_KEY=set5gstgw45gdfgw54t \                        # Key for Sentry logging (optional)
+        -e SENTRY_PROJECT=my_datacube_ows_project \                # Project name for Sentry logging (optional)
+        -e DB_HOSTNAME=172.17.0.1 -e DB_PORT=5432 \                # Hostname/IP address and port of ODC postgres database
+        -e DB_DATABASE=datacube \                                  # Name of ODC postgres database
+        -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
+        -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
+        \                                                          # container at port 8008 on the host machine.
+        --mount source=test_cfg,target=/code/datacube_ows/config \ # Mount the docker volume where the config lives
+        name_of_built_container
+
+The image is based on the standard ODC container.
+
+Manual installation
+-------------------
+
+The folllowing instructions are for installing on a clean Linux system.
 
 * Follow datacube installation instructions
 
@@ -43,27 +81,46 @@ Setup
 
 * Datacube OWS requires the scikit-image package:  `conda install scikit-image`
 
+* Manually install dea-proto::
+
+    pip install 'git+https://github.com/opendatacube/dea-proto.git#egg=dea-proto[async]'
+
+* Datacube OWS has some dependencies that cannot be handled by conda.  After doing the conda
+  installs, run pip install against the supplied requirements.txt::
+
+    pip install -r requirements.txt
+
 * Run `python update_ranges.py --role *datacube_user_role* --schema` to create schema and tables used
   by datacube-ows.
 
-* Edit `datacube_ows/wms_cfg.py` as required (See `datacube_ows/wms_cfg_example.py` for examples).
-  If you are using git, you should either create a branch first, or use `datacube_ows/wms_cfg_local.py` instead.
-  (If it exists, `wms_cfg_local.py` is read in preference to `wms_cfg.py`, but is explicitly ignored by git.)
+* Create a configuration file for your service, and all data products you wish to publish in
+  it.  See `datacube_ows/ows_cfg_example.py` for examples and documentation of the configuration
+  format.  The simplest approach is to make a copy of `ows_cfg_example.py` called `ows_cfg.py`
+  and edit as required.  But for production deployments other approaches such as importing
+  config as json are possible.
 
 * Run `python update_ranges.py -- product *product_name* --no-calculate-extent` (in the Datacube Conda environment).  This
   script will need to be re-run every time additional datasets are added to
   the Datacube.
 
-* If you are accessing data on AWS S3 and running `datacube_ows` on Ubuntu you may encounter errors with `GetMap` similar to: `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`. If this occurs run the following commands::
+* If you are accessing data on AWS S3 and running `datacube_ows` on Ubuntu you may encounter errors with `GetMap`
+  similar to:
+  `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`.
+  If this occurs run the following commands::
 
     mkdir -p /etc/pki/tls/certs
     ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
 
-* Launch flask app using your favorite WSGI server. The following approaches
-  have been tested:
+* Launch flask app using your favorite WSGI server.  We recommend using Gunicorn with
+  either nginx or a load balancer.
+
+The following approaches have also been tested:
 
 Flask Dev Server
 ----------------
+
+* Good for initial dev work and testing.  Not (remotely) suitable for production
+  deployments.
 
 * `cd` to the directory containing this README file.
 
@@ -82,6 +139,10 @@ Flask Dev Server
 
 Apache2 mod_wsgi
 ----------------
+
+Getting things working with Apache2 mod_wsgi is not trivial and probably not the best
+approach in most circumstances, but if it makes sense for you, this how we have got
+it working in the past:
 
 Getting mod_wsgi to work with a Conda virtual environment is not trivial. The
 following steps worked for me, but will not support connecting your web server
@@ -112,11 +173,11 @@ to multiple web apps using different virtual environments.
   appropriate `VirtualHost` section)::
 
         WSGIDaemonProcess datacube_ows processes=20 threads=1 user=uuu group=ggg maximum-requests=10000
-        WSGIScriptAlias /datacube_ows /path/to/source_code/datacube-ows/datacube_wms/wsgi.py
+        WSGIScriptAlias /datacube_ows /path/to/source_code/datacube-ows/datacube_ows/wsgi.py
         <Location /datacube_ows>
                 WSGIProcessGroup datacube_ows
         </Location>
-        <Directory /path/to/source_code/datacube-ows/datacube_wms>
+        <Directory /path/to/source_code/datacube-ows/datacube_ows>
                 <Files wsgi.py>
                         AllowOverride None
                         Require all granted
@@ -125,25 +186,12 @@ to multiple web apps using different virtual environments.
 
   Note that `uuu` and `ggg` above are the user and group of the owner of the Conda virtual environment.
 
-* Edit `datacube_wms/wsgi.py` to suit your system.
+* Copy `datacube_ows/wsgi.py` to `datacube_odc/local_wsgi.py` and edit to suit your system.
 
-* Update the url in service_cfg in `datacube_wms/wms_cfg.py`.
-
-Docker
--------
-To run this image, use something like: ::
-
-  docker run \
-      --rm \
-      opendatacube/wms \
-      gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_wms:wms
+* Update the url in the configuration
 
 
-The image comes with the standard ODC installed, including the entrypoint that sets the config from the environment.
 
-Additionally, the image includes another flag that can be used to grab a config file from a URL:
-
-* `WMS_CONFIG_URL`
 
 Credits
 ---------
