@@ -232,6 +232,7 @@ def ogc_wcs_impl():
 def ping():
     db_ok = False
     with cube() as dc:
+        # pylint: disable=protected-access
         with dc.index._db.give_me_a_connection() as conn:
             try:
                 results = conn.execute("""
