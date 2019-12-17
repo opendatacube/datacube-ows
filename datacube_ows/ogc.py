@@ -20,8 +20,6 @@ from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_o
 from datacube_ows.cube_pool import cube
 from datacube.utils.rio import set_default_rio_config
 from datacube_ows.ows_configuration import get_config
-from psycopg2 import connect
-from urllib.parse import urlparse
 
 import logging
 
