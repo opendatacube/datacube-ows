@@ -543,7 +543,7 @@ style_deform = {
     "title": "InSAR Deformation",
     "abstract": "InSAR Derived Deformation Map",
     # Range is needed to map values in color ramp
-    "range": [0.0, 1.0],
+    "range": [-110.0, 110.0],
     # The Matplotlib color ramp. Value specified is a string that indicates a Matplotlib Colour Ramp should be
     # used. Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
     "mpl_ramp": "RdBu",
@@ -553,12 +553,23 @@ style_deform = {
     # Legend section is optional for non-linear colour-ramped styles.
     # If not supplied, a legend for the style will be automatically generated from the colour ramp.
     "legend": {
-        # Whether or not to display a legend for this style.
-        # Defaults to True for non-linear colour-ramped styles.
-        "show_legend": True,
-        # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
-        # be used instead.  If 'url' is not supplied, the generated legend is used.
-        "url": "http://example.com/custom_style_image.png"
+        # appended to the title of the legend
+        # if missing will use 'unitless'
+        "units": "mm",
+        # radix places to round tick labels to
+        # set to 0 for ints
+        "radix_point": 0,
+        # values will be scaled by this amount
+        # to generate tick labels
+        # e.g. for a percentage stored as 0 - 1.0
+        # this should be 100
+        # TODO: Make this derive automatically from range as appropriate
+        "scale_by": 220.0,
+        # tick labels will be created for values that
+        # are modulo 0 by this value
+        "major_ticks": 10,
+        ## Use offset to get negative side of the ramp
+        "offset": -110.0
     }
 }
 
