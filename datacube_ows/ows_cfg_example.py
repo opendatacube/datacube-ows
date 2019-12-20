@@ -564,12 +564,12 @@ style_deform = {
         # e.g. for a percentage stored as 0 - 1.0
         # this should be 100
         # TODO: Make this derive automatically from range as appropriate
-        "scale_by": 220.0,
+        "scale_by": 1.0,
         # tick labels will be created for values that
         # are modulo 0 by this value
         "major_ticks": 10,
         ## Use offset to get negative side of the ramp
-        "offset": -110.0
+        "offset": 0.0
     }
 }
 
