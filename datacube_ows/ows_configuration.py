@@ -504,8 +504,11 @@ class OWSNamedLayer(OWSLayer):
         self._ranges = None
         try:
             self._ranges = get_ranges(dc, self)
+            if self._ranges is None:
+                raise Exception("Null product range")
         except Exception as a:
-            raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
+            raise ConfigException(range_failure)
         finally:
             if not ext_dc:
                 release_cube(dc)
