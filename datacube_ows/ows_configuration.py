@@ -13,7 +13,7 @@ import json
 from collections.abc import Mapping, Sequence
 from slugify import slugify
 
-from datacube_ows.cube_pool import cube
+from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.band_mapper import StyleDef
 from datacube_ows.ogc_utils import get_function, ConfigException, ProductLayerException, FunctionWrapper
 
@@ -315,13 +315,9 @@ class OWSNamedLayer(OWSLayer):
                 raise ConfigException("Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
-        from datacube_ows.product_ranges import get_ranges
-        try:
-            self.ranges = get_ranges(dc, self)
-        except Exception as a:
-            raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
-        self.bboxes = self.extract_bboxes()
-        # sub-ranges???
+        self.dynamic = cfg.get("dynamic", False)
+        self.force_range_update(dc)
+        # TODO: sub-ranges
         self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
         try:
             self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
@@ -499,8 +495,30 @@ class OWSNamedLayer(OWSLayer):
     def parse_pq_names(self, cfg):
         raise NotImplementedError()
 
+    def force_range_update(self, ext_dc=None):
+        if ext_dc:
+            dc = ext_dc
+        else:
+            dc = get_cube()
+        from datacube_ows.product_ranges import get_ranges
+        self._ranges = None
+        try:
+            self._ranges = get_ranges(dc, self)
+        except Exception as a:
+            raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+        finally:
+            if not ext_dc:
+                release_cube(dc)
+        self.bboxes = self.extract_bboxes()
+
+    @property
+    def ranges(self):
+        if self.dynamic:
+            self.force_range_update()
+        return self._ranges
+
     def extract_bboxes(self):
-        if self.ranges is None:
+        if self._ranges is None:
             return {}
         return {
             crs_id: {"right": bbox["bottom"],
@@ -515,7 +533,7 @@ class OWSNamedLayer(OWSLayer):
                  "top": bbox["top"],
                  "bottom": bbox["bottom"]
                  }
-            for crs_id, bbox in self.ranges["bboxes"].items()
+            for crs_id, bbox in self._ranges["bboxes"].items()
         }
     def layer_count(self):
         return 1

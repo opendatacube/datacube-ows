@@ -1172,6 +1172,9 @@ ows_cfg = {
                     # Resource limits.
                     # See reusable resource limit declarations above for documentation.
                     "resource_limits": standard_resource_limits,
+                    # If "dynamic" is False (the default) the the ranges for the product are cached in memory.
+                    # Dynamic products slow down the generation of the GetCapabilities document - use sparingly.
+                    "dynamic": False,
                     "flags": {
                         # Data may include flags that mark which pixels have missing or poor-quality data,
                         # or contain cloud, or cloud-shadow, etc.  This section describes how
@@ -1467,6 +1470,8 @@ ows_cfg = {
                     "product_names": ["s2a_nrt_granule", "s2b_nrt_granule"],
                     "bands": sentinel2_bands,
                     "resource_limits": standard_resource_limits,
+                    # Near Real Time datasets are being regularly updated - do not cache ranges in memory.
+                    "dynamic": True,
                     "flags": {
                         "band": "quality",
                         "ignore_time": False,
