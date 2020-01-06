@@ -318,8 +318,11 @@ class OWSNamedLayer(OWSLayer):
         from datacube_ows.product_ranges import get_ranges
         try:
             self.ranges = get_ranges(dc, self)
+            if self.ranges is None:
+                raise Exception("Null product range")
         except Exception as a:
-            raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
+            raise ConfigException(range_failure)
         self.bboxes = self.extract_bboxes()
         # sub-ranges???
         self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
