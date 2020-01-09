@@ -129,6 +129,8 @@ class DataStacker(object):
                     d = self.read_data(ds, measurements, self._geobox, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
+                            # No idea why pylint suddenly doesn't like this statement
+                            # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
                             d[band] = solar_correct_data(d[band], ds)
                     if merged is None:
                         merged = d
