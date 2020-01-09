@@ -228,27 +228,27 @@ def test_alpha_style_map(
 
     band = np.array([True, True, True])
     time = datetime.date.today()
-    da = DataCollection()
-    da.add_time(time, DataArray(band, name='foo'))
-    ds = DatasetCollection()
-    ds.add_time(time, Dataset(data_vars={'foo': da}))
+    da = DataArray(band, name='foo')
+    dsc = DatasetCollection()
+    ds = Dataset(data_vars={'foo': da})
+    dsc.add_time(time, ds)
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(dsc, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(dsc, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 127).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(dsc, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 255).all()
 
@@ -292,7 +292,9 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     band[1] = 0
     band[2] = 3001
 
-    compressed = style_def.compress_band(band)
+    data = { "band_name": band}
+
+    compressed = style_def.compress_band("band_name", data)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
@@ -374,8 +376,7 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
     band = np.array([0, 0, 1, 1, 2, 2])
     today = datetime.date.today()
-    da = DataCollection()
-    da.add_time(today, DataArray(band, name='foo'))
+    da = DataArray(band, name='foo')
     ds = DatasetCollection()
     ds.add_time(today, Dataset(data_vars={'foo': da}))
 
