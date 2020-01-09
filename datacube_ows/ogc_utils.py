@@ -181,6 +181,7 @@ class DatasetCollection(DataCollection):
         def __init__(self, time, datasets):
             self.time = time
             self.datasets = datasets
+            self.data = datasets
 
         def __len__(self):
             return len(self.datasets)

@@ -271,9 +271,9 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     band[1] = 0
     band[2] = 3000
 
-    data = { "band_name": band}
+    data = { "red": band}
 
-    compressed = style_def.compress_band("band_name", data)
+    compressed = style_def.compress_band("red", data)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
@@ -292,9 +292,9 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     band[1] = 0
     band[2] = 3001
 
-    data = { "band_name": band}
+    data = { "red": band}
 
-    compressed = style_def.compress_band("band_name", data)
+    compressed = style_def.compress_band("red", data)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
