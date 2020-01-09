@@ -1,5 +1,8 @@
+import datetime
+
 import datacube_ows.band_mapper as bm
 from datacube_ows.band_mapper import StyleDef
+from datacube_ows.ogc_utils import DataCollection, DatasetCollection
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
@@ -224,8 +227,11 @@ def test_alpha_style_map(
         return data
 
     band = np.array([True, True, True])
-    da = DataArray(band, name='foo')
-    ds = Dataset(data_vars={'foo': da})
+    time = datetime.date.today()
+    da = DataCollection()
+    da.add_time(time, DataArray(band, name='foo'))
+    ds = DatasetCollection()
+    ds.add_time(time, Dataset(data_vars={'foo': da}))
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)

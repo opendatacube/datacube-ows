@@ -420,7 +420,7 @@ def read_mpl_ramp(mpl_ramp : str):
 class RgbaColorRampDef(StyleDefBase):
     auto_legend = True
     def __init__(self, product, style_cfg, defer_multi_date=False):
-        super(RgbaColorRampDef, self).__init__(product, style_cfg, defer_multi_date=True)
+        super(RgbaColorRampDef, self).__init__(product, style_cfg)
 
         if "color_ramp" in style_cfg:
             self.color_ramp = style_cfg["color_ramp"]
