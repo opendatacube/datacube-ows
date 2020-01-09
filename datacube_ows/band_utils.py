@@ -24,7 +24,7 @@ def delta_bands(data, band1, band2, product_cfg=None):
 
 
 # N.B. Modifying scale_to would be dangerous - don't do it.
-# pylint disable=dangerous-default-value
+# pylint: disable=dangerous-default-value
 def norm_diff(data, band1, band2, product_cfg=None, scale_from=None, scale_to=[0,255]):
     # Calculate a normalised difference index.
     unscaled = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
