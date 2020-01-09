@@ -271,7 +271,9 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     band[1] = 0
     band[2] = 3000
 
-    compressed = style_def.compress_band(band)
+    data = { "band_name": band}
+
+    compressed = style_def.compress_band("band_name", data)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
@@ -371,8 +373,11 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    da = DataArray(band, name='foo')
-    ds = Dataset(data_vars={'foo': da})
+    today = datetime.date.today()
+    da = DataCollection()
+    da.add_time(today, DataArray(band, name='foo'))
+    ds = DatasetCollection()
+    ds.add_time(today, Dataset(data_vars={'foo': da}))
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
