@@ -292,9 +292,7 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     band[1] = 0
     band[2] = 3001
 
-    data = { "red": band}
-
-    compressed = style_def.compress_band("red", data)
+    compressed = style_def.compress_band("red", band)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2

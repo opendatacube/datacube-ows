@@ -75,9 +75,13 @@ class StyleDefBase(object):
     def transform_data(self, data, pq_data, extent_mask, *masks):
         date_count = len(data)
         if date_count == 1:
+            if pq_data is not None:
+                pq_data = pq_data.collapse_to_single()
+            if extent_mask is not None:
+                 extent_mask = extent_mask.collapse_to_single()
             return self.transform_single_date_data(data.collapse_to_single(),
-                                                   pq_data.collapse_to_single(),
-                                                   extent_mask.collapse_to_single(),
+                                                   pq_data,
+                                                   extent_mask,
                                                    *masks)
         mdh = self.get_multi_date_handler(date_count)
         return mdh.transform_data(data, pq_data, extent_mask, *masks)
