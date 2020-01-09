@@ -125,13 +125,14 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
 {% if show_contents %}
     <Contents>
         {% for product in cfg.product_index.values() %}
-        {% if product.ranges %}
+        {% set product_ranges = product.ranges %}
+        {% if product_ranges %}
         <Layer>
             <ows:Title>{{ product.title }}</ows:Title>
             <ows:Abstract>{{ product.abstract }}</ows:Abstract>
             <ows:WGS84BoundingBox>
-                <ows:LowerCorner>{{ product.ranges.lon.min }} {{ product.ranges.lat.min }}</ows:LowerCorner>
-                <ows:UpperCorner>{{ product.ranges.lon.max }} {{ product.ranges.lat.max }}</ows:UpperCorner>
+                <ows:LowerCorner>{{ product_ranges.lon.min }} {{ product_ranges.lat.min }}</ows:LowerCorner>
+                <ows:UpperCorner>{{ product_ranges.lon.max }} {{ product_ranges.lat.max }}</ows:UpperCorner>
             </ows:WGS84BoundingBox>
             <ows:Identifier>{{ product.name }}</ows:Identifier>
             {% for style in product.styles %}
@@ -148,7 +149,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
             <Dimension>
                 <ows:Identifier>Time</ows:Identifier>
                 <ows:Title>Date</ows:Title>
-                {% for t in product.ranges.times %}
+                {% for t in product_ranges.times %}
                 <Value>{{ t }}</Value>
                 {% endfor %}
             </Dimension>
