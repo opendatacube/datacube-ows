@@ -318,8 +318,11 @@ class OWSNamedLayer(OWSLayer):
         from datacube_ows.product_ranges import get_ranges
         try:
             self.ranges = get_ranges(dc, self)
+            if self.ranges is None:
+                raise Exception("Null product range")
         except Exception as a:
-            raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
+            raise ConfigException(range_failure)
         self.bboxes = self.extract_bboxes()
         # sub-ranges???
         self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
@@ -356,6 +359,13 @@ class OWSNamedLayer(OWSLayer):
                 self.parse_wcs(cfg.get("wcs"), dc)
             except KeyError:
                 raise ConfigException("Missing required config items in wcs section for layer %s" % self.name)
+
+        sub_prod_cfg = cfg.get("sub_products", {})
+        self.sub_product_label = sub_prod_cfg.get("label")
+        if "extractor" in sub_prod_cfg:
+            self.sub_product_extractor = FunctionWrapper(sub_prod_cfg["extractor"])
+        else:
+            self.sub_product_extractor = None
 
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self

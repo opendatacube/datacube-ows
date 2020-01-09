@@ -511,6 +511,7 @@ class RgbaColorRampDef(StyleDefBase):
 
         def from_definition(components, cfg, generate):
             tick_mod = cfg.get("major_ticks", 1)
+            tick_offset = cfg.get("offset", 0)
             tick_scale = cfg.get("scale_by", 1)
             places = cfg.get("radix_point", 1)
             ramp = cfg.get("ramp")
@@ -536,11 +537,11 @@ class RgbaColorRampDef(StyleDefBase):
                 mod_close = False
                 mod_equal = False
                 if generate:
-                    mod_close = isclose((value * tick_scale) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
+                    mod_close = isclose((value * tick_scale + tick_offset) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
                     mod_equal = value % tick_mod == 0
 
                 if mod_close or mod_equal:
-                    label = value * tick_scale
+                    label = value * tick_scale + tick_offset
                     label = round(label, places) if places > 0 else int(label)
                     ticks[normalized] = label
 
