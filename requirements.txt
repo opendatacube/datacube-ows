@@ -4,9 +4,9 @@ colour
 scikit-image
 gevent
 eventlet
-gunicorn==19.9.0
-gunicorn[gevent]==19.9.0
-gunicorn[eventlet]==19.9.0
+gunicorn
+gunicorn[gevent]
+gunicorn[eventlet]
 boto3
 rasterio>=1.0.9
 ruamel.yaml
