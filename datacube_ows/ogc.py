@@ -234,9 +234,10 @@ def ping():
         with dc.index._db.give_me_a_connection() as conn:
             try:
                 results = conn.execute("""
-                        SELECT COUNT(*)
-                        FROM wms.product_ranges""",
-                                       )
+                        SELECT *
+                        FROM wms.product_ranges
+                        LIMIT 1"""
+                )
                 for r in results:
                     db_ok = True
             except Exception:
