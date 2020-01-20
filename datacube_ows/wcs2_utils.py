@@ -27,6 +27,18 @@ _LOG = logging.getLogger(__name__)
 
 tracer = get_opencensus_tracer()
 
+
+def uniform_crs(crs):
+    " Helper function to transform a URL style EPSG definition to an 'EPSG:nnn' one "
+    if crs.startswith('http://www.opengis.net/def/crs/EPSG/'):
+        code = crs.rpartition('/')[-1]
+        crs = 'EPSG:%s' % code
+    elif crs.startswith('urn:ogc:def:crs:EPSG:'):
+        code = crs.rpartition(':')[-1]
+        crs = 'EPSG:%s' % code
+    return crs
+
+
 @opencensus_trace_call(tracer=tracer)
 def get_coverage_data(request):
     #pylint: disable=too-many-locals, protected-access
@@ -42,73 +54,20 @@ def get_coverage_data(request):
 
     dc = get_cube()
 
-    # if not datasets:
-    #     # TODO: Return an empty coverage file with full metadata?
-    #     extents = dc.load(dask_chunks={}, product=req.product.product.name, geopolygon=req.geobox.extent, time=stacker._time)
-    #     cfg = get_config()
-    #     x_range = (req.minx, req.maxx)
-    #     y_range = (req.miny, req.maxy)
-    #     xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
-    #     yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
-    #     if xname in extents:
-    #         xvals = extents[xname]
-    #     else:
-    #         xvals = numpy.linspace(
-    #             x_range[0],
-    #             x_range[1],
-    #             num=req.width
-    #         )
-    #     if yname in extents:
-    #         yvals = extents[yname]
-    #     else:
-    #         yvals = numpy.linspace(
-    #             y_range[0],
-    #             y_range[1],
-    #             num=req.height
-    #         )
-    #     if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
-    #         nparrays = {
-    #             band: ((yname, xname),
-    #                    numpy.full((len(yvals), len(xvals)),
-    #                               req.product.nodata_dict[band])
-    #                   )
-    #             for band in req.bands
-    #         }
-    #     else:
-    #         nparrays = {
-    #             band: ((xname, yname),
-    #                    numpy.full((len(xvals), len(yvals)),
-    #                               req.product.nodata_dict[band])
-    #                   )
-    #             for band in req.bands
-    #         }
-    #     data = xarray.Dataset(
-    #         nparrays,
-    #         coords={
-    #             xname: xvals,
-    #             yname: yvals,
-    #         }
-    #     ).astype("int16")
-    #     release_cube(dc)
-    #     return data
-
     #
     # CRS handling
     #
 
-
     native_crs = product.native_CRS
-    subsetting_crs = request.subsetting_crs or native_crs
-    # TODO: assert that that CRS is in exposed CRSs
+    subsetting_crs = uniform_crs(request.subsetting_crs or native_crs)
 
     assert subsetting_crs in cfg.published_CRSs
 
-    output_crs = request.output_crs or subsetting_crs or native_crs
+    output_crs = uniform_crs(request.output_crs or subsetting_crs or native_crs)
 
     assert output_crs in cfg.published_CRSs
 
     request_crs = geometry.CRS(subsetting_crs)
-
 
     #
     # Subsetting/Scaling
@@ -244,12 +203,7 @@ def get_coverage_data(request):
         else:
             raise WCS2Exception('Invalid scaling axis %s' % scale.axis)
 
-
     _LOG.info(request.subsets)
-
-
-
-    # geobox =
 
     #
     # Rangesubset
@@ -297,16 +251,6 @@ def get_coverage_data(request):
     scale_aff = Affine.scale(x_resolution, -y_resolution)
     affine = trans_aff * scale_aff
     geobox = geometry.GeoBox(x_size, y_size, affine, geometry.CRS(subsetting_crs))
-
-
-    # raise Exception(str(dict(
-    #     x_resolution=x_resolution,
-    #     y_resolution=y_resolution,
-    #     trans_aff=trans_aff,
-    #     scale_aff=scale_aff,
-    #     affine=affine,
-    #     geobox=geobox,
-    # )))
 
     datasets = []
     for time in times:
@@ -393,6 +337,20 @@ def get_tiff(request, data, product, width, height, affine, crs):
         nodata = product.band_idx.nodata_val(band)
     with MemoryFile() as memfile:
         #pylint: disable=protected-access, bad-continuation
+
+        kwargs = {}
+        if gtiff.tile_width is not None:
+            kwargs['blockxsize'] = gtiff.tile_width
+        if gtiff.tile_height is not None:
+            kwargs['blockysize'] = gtiff.tile_height
+
+        if gtiff.predictor:
+            predictor = gtiff.predictor.lower()
+            if predictor == 'horizontal':
+                kwargs['predictor'] = 2
+            elif predictor == 'floatingpoint':
+                kwargs['predictor'] = 3
+
         with memfile.open(
             driver="GTiff",
             width=width,
@@ -403,8 +361,9 @@ def get_tiff(request, data, product, width, height, affine, crs):
             nodata=nodata,
             tiled=gtiff.tiling if gtiff.tiling is not None else True,
             compress=gtiff.compression.lower() if gtiff.compression else "lzw",
+            predictor=2,
             interleave=gtiff.interleave or "band",
-            dtype=dtype) as dst:
+            dtype=dtype, **kwargs) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
                 dst.set_band_description(idx, product.band_idx.band_label(band))
