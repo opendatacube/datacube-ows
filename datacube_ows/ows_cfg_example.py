@@ -101,6 +101,11 @@ landsat8_bands = {
     # 5. Bands NOT listed here will not be included in the GetFeatureInfo output and cannot be referenced
     # elsewhere in the configuration.
     # 6. If not specified for a product, defaults to all available bands, using only their native names.
+    # 7. The following are reserved words that may not be used as aliases.  (N.B. If they occur as a native
+    #    band name, an alias should be declared and used in the config in preference to the native name):
+    #               scale_range
+    #               function
+    #
     "red": [],
     "green": [],
     "blue": [ "near_blue" ],
@@ -288,16 +293,83 @@ style_infrared_false_colour = {
     "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
     "components": {
         "red": {
-            "swir1": 1.0
+            "swir1": 1.0,
+            # The special dictionary value 'scale_range' can be used to provide a component-specific
+            # scale_range that overrides the style scale_range below.
+            # (N.B. if you are unlucky enough to have a native band called "scale_range", you can access it
+            # by defining a band alias.)
+            "scale_range": [5.0, 4000.0],
         },
         "green": {
-            "swir2": 1.0
+            "swir2": 1.0,
+            "scale_range": [25.0, 4000.0],
         },
         "blue": {
-            "nir": 1.0
+            "nir": 1.0,
+            "scale_range": [0.0, 3000.0],
         }
     },
-    "scale_range": [0.0, 3000.0]
+    # The style scale_range can be omitted if all components have a component-specific scale_range defined.
+    # "scale_range": [0.0, 3000.0]
+}
+
+style_mineral_content = {
+    "name": "mineral_content",
+    "title": "Multi-band mineral indexes",
+    "abstract": "Red: Ferric Iron. Green: Bare soil. Blue: Clay/mica",
+    "components": {
+        "red": {
+            # If the component dictionary contains the key "function", then the dictionary as treated as
+            # a function callback as follows:
+            #    a) "function" (required): A string containing the fully qualified path to a python function
+            #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
+            #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
+            #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
+            #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
+            #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+            #       to band names.
+            #
+            # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
+            # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
+            #
+            # An xarray DataArray is returned containing the band data.  Note that it is up to the function
+            # to normalise the output to 0-255.
+            #
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "red",
+                "band2": "blue",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "green": {
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "nir",
+                "band2": "swir1",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "blue": {
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "swir1",
+                "band2": "swir2",
+                "scale_from": [-0.1, 1.0],
+            }
+        }
+    },
+    # If ANY components include a function callback, the bands that need to be passed to the callback
+    # MUST be declared in a "additional_bands" item:
+    "additional_bands": [ "red", "blue", "nir", "swir1", "swir2" ]
+
+    #
+    # The style scale_range can be omitted if all components have a component-specific scale_range defined or
+    # a function callback.
+    # "scale_range": [0.0, 3000.0]
 }
 
 # Monochrome single band layers
@@ -426,6 +498,7 @@ style_pure_ls8_swir2 = {
     },
     "scale_range": [0.0, 3000.0]
 }
+
 
 # Examples of non-linear colour-ramped styles.
 style_ndvi = {
