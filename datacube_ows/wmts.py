@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from flask import render_template
 
 from datacube_ows.data import get_map, feature_info
-from datacube_ows.ogc_utils import resp_headers, get_service_base_url
+from datacube_ows.ogc_utils import get_service_base_url
 
 from datacube_ows.ogc_exceptions import WMSException, WMTSException
 
@@ -114,8 +114,8 @@ def get_capabilities(args):
             show_themes = show_themes,
             webmerc_ss = WebMercScaleSet),
         200,
-        resp_headers(
-            {"Content-Type": "application/xml", "Cache-Control": "no-cache,max-age=0"}
+        cfg.response_headers(
+            {"Content-Type": "application/xml", "Cache-Control": "max-age=10"}
         )
     )
 

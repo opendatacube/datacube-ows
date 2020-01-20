@@ -30,7 +30,8 @@
 #    Config loaded as json from file in working directory.
 #
 # 5. Contains a dot (.), e.g. "package.sub_package.module.cfg_object_name"
-#    Imported as python object (expected to be a dictionary) from supplied Python path.
+#    Imported as python object (expected to be a dictionary).
+#    N.B. It is up to you that the Python file in question is in your Python path.
 #
 # 6. Valid python object name, e.g. "cfg_prod"
 #    Imported as python object from named object in datacube_ows/ows_cfg.py
@@ -65,11 +66,19 @@
 #           "type": "python"
 #       }
 #
+#       N.B. It is up to you to make sure the included Python file is in your Python Path.
+#            Relative Python imports are not supported.
+#
 # 3. Include a JSON file (by absolute or relative file path):
 #       {
 #           "include": "path/to/file.json",
 #           "type": "json"
 #       }
+#
+#       N.B. Resolution of relative file paths is done in the following order:
+#           a) Relative to the working directory of the web app.
+#           b) If a JSON file is being included from another JSON file, relative to
+#              directory in which the including file resides.
 #
 # Note that this does not just apply to dictionaries. Either of the above include dictionaries
 # could expand to an array, or even to single integer or string.
@@ -525,6 +534,42 @@ style_ndvi = {
         # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
         # be used instead.  If 'url' is not supplied, the generated legend is used.
         "url": "http://example.com/custom_style_image.png"
+    }
+}
+
+# Examples of Matplotlib Color-Ramp styles
+style_deform = {
+    "name": "deform",
+    "title": "InSAR Deformation",
+    "abstract": "InSAR Derived Deformation Map",
+    # Range is needed to map values in color ramp
+    "range": [-110.0, 110.0],
+    # The Matplotlib color ramp. Value specified is a string that indicates a Matplotlib Colour Ramp should be
+    # used. Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
+    "mpl_ramp": "RdBu",
+    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
+    # Defaults to True.
+    "include_in_feature_info": True,
+    # Legend section is optional for non-linear colour-ramped styles.
+    # If not supplied, a legend for the style will be automatically generated from the colour ramp.
+    "legend": {
+        # appended to the title of the legend
+        # if missing will use 'unitless'
+        "units": "mm",
+        # radix places to round tick labels to
+        # set to 0 for ints
+        "radix_point": 0,
+        # values will be scaled by this amount
+        # to generate tick labels
+        # e.g. for a percentage stored as 0 - 1.0
+        # this should be 100
+        # TODO: Make this derive automatically from range as appropriate
+        "scale_by": 1.0,
+        # tick labels will be created for values that
+        # are modulo 0 by this value
+        "major_ticks": 10,
+        ## Use offset to get negative side of the ramp
+        "offset": 0.0
     }
 }
 
@@ -1127,6 +1172,9 @@ ows_cfg = {
                     # Resource limits.
                     # See reusable resource limit declarations above for documentation.
                     "resource_limits": standard_resource_limits,
+                    # If "dynamic" is False (the default) the the ranges for the product are cached in memory.
+                    # Dynamic products slow down the generation of the GetCapabilities document - use sparingly.
+                    "dynamic": False,
                     "flags": {
                         # Data may include flags that mark which pixels have missing or poor-quality data,
                         # or contain cloud, or cloud-shadow, etc.  This section describes how
@@ -1287,6 +1335,19 @@ ows_cfg = {
                             }
                         }
                     },
+                    # The sub_products section is optional.
+                    "sub_products": {
+                        # A function that extracts the "sub-product" id (e.g. path number) from a dataset.
+                        # Function should return a (small) integer.  If None or not specified, the product
+                        # has no sub-layers.
+                        # All the formats supported for extent_mask_func as described above are supported here.
+                        # The function is assumed to take a datacube dataset object and return an integer
+                        # sub-product id.
+                        "extractor": "datacube_ows.ogc_utils.ls8_subproduct",
+                        # A prefix used to describe the sub-layer in the GetCapabilities response.
+                        # E.g. sub-layer 109 will be described as "Landsat Path 109"
+                        "label": "Landsat Path",
+                    },
                     # Style definitions
                     # The "styling" section is required
                     "styling": {
@@ -1409,6 +1470,8 @@ ows_cfg = {
                     "product_names": ["s2a_nrt_granule", "s2b_nrt_granule"],
                     "bands": sentinel2_bands,
                     "resource_limits": standard_resource_limits,
+                    # Near Real Time datasets are being regularly updated - do not cache ranges in memory.
+                    "dynamic": True,
                     "flags": {
                         "band": "quality",
                         "ignore_time": False,

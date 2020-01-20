@@ -8,13 +8,14 @@ from datacube.storage.masking import make_mask
 
 import logging
 from datetime import datetime
+from threading import Lock
 
 # pylint: disable=wrong-import-position
 import matplotlib
 # Do not use X Server backend
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, to_hex
 import matplotlib.patches as mpatches
 from textwrap import fill
 
@@ -23,6 +24,11 @@ from math import isclose
 from datacube_ows.ogc_utils import FunctionWrapper, ConfigException
 
 _LOG = logging.getLogger(__name__)
+
+
+# Matplotlib is not thread-safe.  All usage of the matplotlib library should
+# be serialised through this lock.
+MPL_LOCK = Lock()
 
 
 class StyleMask(object):
@@ -63,6 +69,12 @@ class StyleDefBase(object):
     def transform_data(self, data, pq_data, extent_mask, *masks):
         pass
 
+    def safe_legend(self, bytesio):
+        if not self.auto_legend:
+            return None
+        with MPL_LOCK:
+            return self.legend(bytesio)
+
     def parse_legend_cfg(self, cfg):
         self.show_legend = cfg.get("show_legend", self.auto_legend)
         self.legend_url_override = cfg.get('url', None)
@@ -93,6 +105,7 @@ class DynamicRangeCompression(StyleDefBase):
 
 class RGBAMappedStyleDef(StyleDefBase):
     auto_legend = True
+
     def __init__(self, product, style_cfg):
         super(RGBAMappedStyleDef, self).__init__(product, style_cfg)
         self.value_map = style_cfg["value_map"]
@@ -146,9 +159,9 @@ class RGBAMappedStyleDef(StyleDefBase):
                 except AttributeError:
                     data[band] = data[band].where(extent_mask)
 
-        _LOG.debug("extent mask complete %d", datetime.now())
+        _LOG.debug("extent mask complete %s", str(datetime.now()))
         data = self.apply_masks(data, pq_data)
-        _LOG.debug("mask complete %d", datetime.now())
+        _LOG.debug("mask complete %s", str(datetime.now()))
         imgdata = Dataset()
         for cfg_band, values in self.value_map.items():
             # Run through each item
@@ -188,7 +201,11 @@ class RGBAMappedStyleDef(StyleDefBase):
                 if "title" in value and "abstract" in value and "color" in value and value["title"]:
                     rgb = Color(value["color"])
                     label = fill(value["title"] + " - " + value["abstract"], 30)
-                    patch = mpatches.Patch(color=rgb.hex, label=label)
+                    try:
+                        patch = mpatches.Patch(color=rgb.hex_l, label=label)
+                    # pylint: disable=broad-except
+                    except Exception as e:
+                        print("Error creating patch?", e)
                     patches.append(patch)
         cfg = self.legend_cfg
         plt.rcdefaults()
@@ -269,6 +286,7 @@ class LinearStyleDef(DynamicRangeCompression):
 
 
 UNSCALED_DEFAULT_RAMP = [
+    # TODO: -0.0 is not really different number to 0.0 (does this indicate a specific limit case)
     {
         "value": -0.0,
         "color": "#000080",
@@ -314,6 +332,28 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
         } for u in unscaled
     ]
 
+def read_mpl_ramp(mpl_ramp : str):
+    unscaled_cmap = []
+    cmap = plt.get_cmap(mpl_ramp)
+    val_range = numpy.arange(0.1, 1.1, 0.1)
+    rgba_hex = to_hex(cmap(0.0))
+    unscaled_cmap.append(
+        {
+            "value" : 0.0,
+            "color" : rgba_hex,
+            "alpha" : 1.0
+        }
+    )
+    for val in val_range:
+        rgba_hex = to_hex(cmap(val))
+        unscaled_cmap.append(
+            {
+                "value" : float(val),
+                "color" : rgba_hex
+            }
+        )
+    return unscaled_cmap
+
 
 class RgbaColorRampDef(StyleDefBase):
     auto_legend = True
@@ -340,9 +380,11 @@ class RgbaColorRampDef(StyleDefBase):
             self.color_ramp = style_cfg["color_ramp"]
         else:
             rmin, rmax = style_cfg["range"]
+            unscaled_ramp = UNSCALED_DEFAULT_RAMP
+            if "mpl_ramp" in style_cfg:
+                unscaled_ramp = read_mpl_ramp(style_cfg["mpl_ramp"])
             self.color_ramp = scale_unscaled_ramp(
-                    rmin, rmax,
-                    UNSCALED_DEFAULT_RAMP)
+                    rmin, rmax, unscaled_ramp)
         values, r, g, b, a = crack_ramp(self.color_ramp)
         self.values = values
         self.components = {
@@ -359,7 +401,10 @@ class RgbaColorRampDef(StyleDefBase):
         if "index_function" in style_cfg:
             self.index_function = FunctionWrapper(self.product, style_cfg["index_function"])
         else:
-            raise ConfigException("Index function is required for index and hybrid styles.")
+            raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
+                self.name,
+                self.product.name
+            ) )
 
     def get_value(self, data, values, intensities):
         return numpy.interp(data, values, intensities)
@@ -418,6 +463,7 @@ class RgbaColorRampDef(StyleDefBase):
 
         def from_definition(components, cfg, generate):
             tick_mod = cfg.get("major_ticks", 1)
+            tick_offset = cfg.get("offset", 0)
             tick_scale = cfg.get("scale_by", 1)
             places = cfg.get("radix_point", 1)
             ramp = cfg.get("ramp")
@@ -443,11 +489,11 @@ class RgbaColorRampDef(StyleDefBase):
                 mod_close = False
                 mod_equal = False
                 if generate:
-                    mod_close = isclose((value * tick_scale) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
+                    mod_close = isclose((value * tick_scale + tick_offset) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
                     mod_equal = value % tick_mod == 0
 
                 if mod_close or mod_equal:
-                    label = value * tick_scale
+                    label = value * tick_scale + tick_offset
                     label = round(label, places) if places > 0 else int(label)
                     ticks[normalized] = label
 
@@ -470,6 +516,9 @@ class RgbaColorRampDef(StyleDefBase):
         combined_cfg["ramp"] = self.color_ramp
 
         cdict, ticks = create_cdict_ticks(self.components, combined_cfg)
+        
+        # TODO: Potentially short-circuit this if using string based mpl_ramp
+        # custom_map = plt.get_cmap(style_cfg["mpl_ramp"]) should return a LinearSegmentedColormap
 
         plt.rcdefaults()
         if combined_cfg.get("rcParams", None) is not None:
@@ -543,11 +592,17 @@ class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
 
 #pylint: disable=invalid-name, inconsistent-return-statements
 def StyleDef(product, cfg):
-    if "component_ratio" in cfg:
-        return HybridStyleDef(product, cfg)
-    elif cfg.get("components", False):
-        return LinearStyleDef(product, cfg)
-    elif cfg.get("value_map", False):
-        return RGBAMappedStyleDef(product, cfg)
-    elif cfg.get("color_ramp", False) or cfg.get("range", False):
-        return RgbaColorRampDef(product, cfg)
+    try:
+        if "component_ratio" in cfg:
+            return HybridStyleDef(product, cfg)
+        elif cfg.get("components", False):
+            return LinearStyleDef(product, cfg)
+        elif cfg.get("value_map", False):
+            return RGBAMappedStyleDef(product, cfg)
+        elif cfg.get("color_ramp", False) or cfg.get("range", False):
+            return RgbaColorRampDef(product, cfg)
+    except KeyError:
+        raise ConfigException("Required field missing in style %s of layer %s" % (
+            cfg.get("name", ""),
+            product.name
+        ))

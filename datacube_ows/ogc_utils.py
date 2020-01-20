@@ -1,19 +1,24 @@
 from __future__ import absolute_import, division, print_function
 
 import re
+import datetime
 from importlib import import_module
 from itertools import chain
-from datetime import timedelta, datetime
 from dateutil.parser import parse
 from urllib.parse import urlparse
-from timezonefinder import TimezoneFinder
+from timezonefinderL import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
+
+import logging
+
+_LOG = logging.getLogger(__name__)
+
 
 tf = TimezoneFinder(in_memory=True)
 
 # Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
-# datacube-core center time accessed through the dataset API is caluclated and may
+# datacube-core center time accessed through the dataset API is calculated and may
 # not agree with the metadata document
 def dataset_center_time(dataset):
     center_time = dataset.center_time
@@ -21,47 +26,54 @@ def dataset_center_time(dataset):
         metadata_time = dataset.metadata_doc['extent']['center_dt']
         center_time = parse(metadata_time)
     except KeyError:
-        pass
+        try:
+            metadata_time = dataset.metadata_doc['properties']['dtr:start_datetime']
+            center_time = parse(metadata_time)
+        except KeyError:
+            pass
     return center_time
 
 
-def dataset_center_coords(dataset):
-    centroid = dataset.extent.centroid
-    crs_geo = geometry.CRS("EPSG:4326")
-    geom_centroid = centroid.to_crs(crs_geo)
-    return geom_centroid.coords[0]
-
+class NoTimezoneException(Exception):
+    pass
 
 def local_date(ds, tz=None):
     dt_utc = dataset_center_time(ds)
     if tz:
         return dt_utc.astimezone(tz).date()
     else:
-        dc_lon, dc_lat = dataset_center_coords(ds)
-        return coord_date(dt_utc, dc_lon, dc_lat).date()
+        return dt_utc.astimezone(tz_for_geometry(ds.extent))
 
 
 def tz_for_coord(lon, lat):
-    tzn = tf.closest_timezone_at(lng=lon, lat=lat, delta_degree=9)
+    tzn = tf.timezone_at(lng=lon, lat=lat)
     if not tzn:
-        print("closest tz failed with delta 9deg")
-        tzn = tf.closest_timezone_at(lng=lon, lat=lat, delta_degree=15)
-        if not tzn:
-            raise Exception ("closest tz failed with delta 15deg")
+        raise NoTimezoneException ("tz find failed.")
     return timezone(tzn)
 
 
-def coord_date(time, lon, lat):
-    tz = tz_for_coord(lon,lat)
-    return time.astimezone(tz)
-
-
 def local_solar_date_range(geobox, date):
-    centroid = geobox.geographic_extent.centroid
-    tz = tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
-    start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
-    end = datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
+    tz = tz_for_geometry(geobox.geographic_extent)
+    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
+    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
     return (start.astimezone(utc), end.astimezone(utc))
+
+
+def tz_for_geometry(geom):
+    crs_geo = geometry.CRS("EPSG:4326")
+    geo_geom = geom.to_crs(crs_geo)
+    centroid = geo_geom.centroid
+    try:
+        return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
+    except NoTimezoneException:
+        pass
+    for pt in geo_geom.boundary.coords:
+        try:
+            return tz_for_coord(pt[0], pt[1])
+        except NoTimezoneException:
+            pass
+    offset = round(centroid.coords[0][0] / 15.0)
+    return datetime.timezone(datetime.timedelta(hours=offset))
 
 
 def resp_headers(d):
@@ -173,6 +185,10 @@ def mask_by_val(data, band, val=None):
         return data[band] != data[band].attrs['nodata']
     else:
         return data[band] != val
+
+def mask_by_val2(data, band):
+    # REVISIT: Is this the same as mask_by_val or subtlely different?
+    return data[band] != data[band].nodata
 
 
 def mask_by_bitflag(data, band):

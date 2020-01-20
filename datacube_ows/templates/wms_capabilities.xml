@@ -35,6 +35,7 @@
     {%  endif %}
 {%- endmacro %}
 {% macro render_named_layer(lyr) -%}
+    {% set lyr_ranges = lyr.ranges %}
     <Layer queryable="1">
         <Name>{{ lyr.name }}</Name>
         <Title>{{ lyr.title }}</Title>
@@ -45,10 +46,10 @@
             {% endfor %}
         </KeywordList>
         <EX_GeographicBoundingBox>
-            <westBoundLongitude>{{ lyr.ranges.lon.min }}</westBoundLongitude>
-            <eastBoundLongitude>{{ lyr.ranges.lon.max }}</eastBoundLongitude>
-            <southBoundLatitude>{{ lyr.ranges.lat.min }}</southBoundLatitude>
-            <northBoundLatitude>{{ lyr.ranges.lat.max }}</northBoundLatitude>
+            <westBoundLongitude>{{ lyr_ranges.lon.min }}</westBoundLongitude>
+            <eastBoundLongitude>{{ lyr_ranges.lon.max }}</eastBoundLongitude>
+            <southBoundLatitude>{{ lyr_ranges.lat.min }}</southBoundLatitude>
+            <northBoundLatitude>{{ lyr_ranges.lat.max }}</northBoundLatitude>
         </EX_GeographicBoundingBox>
         {% for crsid, bbox in lyr.bboxes.items() %}
             <BoundingBox CRS="{{ crsid }}"
@@ -65,7 +66,7 @@
             />
         {% endfor %}
         <Dimension name="time" units="ISO8601">
-            {% for t in lyr.ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
+            {% for t in lyr_ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
         </Dimension>
         {% for style in lyr.styles %}
             <Style>

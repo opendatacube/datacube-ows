@@ -55,3 +55,10 @@ def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, product_cfg=None):
     mndwi = norm_diff(data, b_green, b_swir, product_cfg)
 
     return red_delta / red_sum.where(mndwi > 0.1)
+
+
+def single_band_log(data, band, scale_factor, exponent, product_cfg=None):
+    if product_cfg:
+        band = product_cfg.band_idx.band(band)
+    return scale_factor * ( (data[band] ** exponent) - 1.0)
+

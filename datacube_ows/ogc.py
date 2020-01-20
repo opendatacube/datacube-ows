@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import sys
 import traceback
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 from time import monotonic
 
@@ -24,9 +26,24 @@ import logging
 
 # pylint: disable=invalid-name, broad-except
 
+
+
 if os.environ.get("PYDEV_DEBUG"):
     import pydevd_pycharm
     pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
+handler.addFilter(RequestIDLogFilter())
+_LOG = logging.getLogger()
+_LOG.addHandler(handler)
+
+if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
+    sentry_sdk.init(
+        dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
+        integrations = [FlaskIntegration()]
+    )
+    _LOG.info("Sentry logging enabled")
 
 app = Flask(__name__.split('.')[0])
 RequestID(app)
@@ -40,13 +57,7 @@ if opencensus_tracing_enabled():
     config_integration.trace_integrations(integration, tracer=tracer)
     jaegerExporter = get_jaeger_exporter()
     middleware = FlaskMiddleware(app, exporter=jaegerExporter)
-
-
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
-handler.addFilter(RequestIDLogFilter())
-_LOG = logging.getLogger()
-_LOG.addHandler(handler)
+    _LOG.info("Opencensus tracing enabled")
 
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
 # this will mean the root logs will be captured and managed by the gunicorn logger
@@ -57,10 +68,15 @@ _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 if os.environ.get("prometheus_multiproc_dir", False):
     from datacube_ows.metrics.prometheus import setup_prometheus
     setup_prometheus(app)
+    _LOG.info("Prometheus metrics enabled")
 
-set_default_rio_config(aws=dict(aws_unsigned=True,
-                                region_name="auto"),
-                       cloud_defaults=True)
+if os.environ.get("AWS_DEFAULT_REGION"):
+    set_default_rio_config(aws=dict(aws_unsigned=True,
+                                    region_name="auto"),
+                           cloud_defaults=True)
+else:
+    set_default_rio_config()
+    _LOG.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
 
 class SupportedSvcVersion(object):
@@ -160,6 +176,7 @@ def ogc_impl():
             # Defaulting to WMS because that's what we already have.
             raise WMSException("Invalid service and/or request", locator="Service and request parameters")
     except OGCException as e:
+        _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
     except Exception as e:
         tb = sys.exc_info()[2]
@@ -216,17 +233,19 @@ def ogc_wcs_impl():
 @app.route('/ping')
 def ping():
     db_ok = False
-    try:
-        with cube() as dc:
-            conn = dc.index._db._engine.connect()  # pylint: disable=protected-access
-            results = conn.execute("""
-                    SELECT COUNT(*)
-                    FROM agdc.dataset_type""",
-                                   )
-            for r in results:
-                db_ok = True
-    except Exception:
-        pass
+    with cube() as dc:
+        # pylint: disable=protected-access
+        with dc.index._db.give_me_a_connection() as conn:
+            try:
+                results = conn.execute("""
+                        SELECT *
+                        FROM wms.product_ranges
+                        LIMIT 1"""
+                )
+                for r in results:
+                    db_ok = True
+            except Exception:
+                pass
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
     else:

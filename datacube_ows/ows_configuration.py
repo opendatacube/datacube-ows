@@ -13,7 +13,7 @@ import json
 from collections.abc import Mapping, Sequence
 from slugify import slugify
 
-from datacube_ows.cube_pool import cube
+from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.band_mapper import StyleDef
 from datacube_ows.ogc_utils import get_function, ConfigException, ProductLayerException, FunctionWrapper
 
@@ -24,24 +24,31 @@ _LOG = logging.getLogger(__name__)
 
 def read_config():
     cfg_env = os.environ.get("DATACUBE_OWS_CFG")
+    cwd = None
     if not cfg_env:
         from datacube_ows.ows_cfg import ows_cfg as cfg
-    elif "/" in cfg_env:
+    elif "/" in cfg_env or cfg_env.endswith(".json"):
         cfg = load_json_obj(cfg_env)
-    elif "." in cfg_env or cfg_env.endswith(".json"):
+        abs_path =  os.path.abspath(cfg_env)
+        cwd = os.path.dirname(abs_path)
+    elif "." in cfg_env:
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
         cfg = json.loads(cfg_env)
+        abs_path =  os.path.abspath(cfg_env)
+        cwd = os.path.dirname(abs_path)
     else:
         mod = import_module("datacube_ows.ows_cfg")
         cfg = getattr(mod, cfg_env)
-    return cfg_expand(cfg)
+    return cfg_expand(cfg, cwd=cwd)
 
 
 # pylint: disable=dangerous-default-value
-def cfg_expand(cfg_unexpanded, inclusions=[]):
+def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
     # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
     # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
+    if cwd is None:
+        cwd = os.getcwd()
     if isinstance(cfg_unexpanded, Mapping):
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
@@ -51,16 +58,37 @@ def cfg_expand(cfg_unexpanded, inclusions=[]):
             # Perform expansion
             if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
                 # JSON Expansion
-                return cfg_expand(load_json_obj(cfg_unexpanded["include"]), ninclusions)
+                raw_path = cfg_unexpanded["include"]
+                try:
+                    # Try in actual working directory
+                    json_obj = load_json_obj(raw_path)
+                    abs_path = os.path.abspath(cfg_unexpanded["include"])
+                    cwd = os.path.dirname(abs_path)
+                # pylint: disable=broad-except
+                except Exception:
+                    json_obj = None
+                if json_obj is None:
+                    path = os.path.join(cwd, raw_path)
+                    try:
+                        # Try in inherited working directory
+                        json_obj = load_json_obj(path)
+                        abs_path = os.path.abspath(path)
+                        cwd = os.path.dirname(abs_path)
+                    # pylint: disable=broad-except
+                    except Exception:
+                        json_obj = None
+                if json_obj is None:
+                    raise ConfigException("Could not find json file %s" % raw_path)
+                return cfg_expand(load_json_obj(abs_path), cwd=cwd, inclusions=ninclusions)
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
-                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), ninclusions)
+                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
             else:
                 raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
         else:
-            return { k: cfg_expand(v, inclusions) for k,v in cfg_unexpanded.items()  }
+            return { k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k,v in cfg_unexpanded.items()  }
     elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
-        return list([cfg_expand(elem, inclusions) for elem in cfg_unexpanded ])
+        return list([cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded ])
     else:
         return cfg_unexpanded
 
@@ -258,6 +286,12 @@ class OWSFolder(OWSLayer):
         return sum([ l.layer_count() for l in self.child_layers ])
 
 
+TIMERES_RAW = "raw"
+TIMERES_MON = "month"
+TIMERES_YR  = "year"
+
+TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR]
+
 class OWSNamedLayer(OWSLayer):
     named = True
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
@@ -275,15 +309,15 @@ class OWSNamedLayer(OWSLayer):
                 self.products.append(product)
             self.product = self.products[0]
             self.definition = self.product.definition
+
+            self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
+            if self.time_resolution not in TIMERES_VALS:
+                raise ConfigException("Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
-        from datacube_ows.product_ranges import get_ranges
-        try:
-            self.ranges = get_ranges(dc, self)
-        except Exception as a:
-            raise ConfigException("get_ranges failed for layer %s: %s" % (self.name, str(a)))
-        self.bboxes = self.extract_bboxes()
-        # sub-ranges???
+        self.dynamic = cfg.get("dynamic", False)
+        self.force_range_update(dc)
+        # TODO: sub-ranges
         self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
         try:
             self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
@@ -318,6 +352,13 @@ class OWSNamedLayer(OWSLayer):
                 self.parse_wcs(cfg.get("wcs"), dc)
             except KeyError:
                 raise ConfigException("Missing required config items in wcs section for layer %s" % self.name)
+
+        sub_prod_cfg = cfg.get("sub_products", {})
+        self.sub_product_label = sub_prod_cfg.get("label")
+        if "extractor" in sub_prod_cfg:
+            self.sub_product_extractor = FunctionWrapper(sub_prod_cfg["extractor"])
+        else:
+            self.sub_product_extractor = None
 
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
@@ -454,8 +495,33 @@ class OWSNamedLayer(OWSLayer):
     def parse_pq_names(self, cfg):
         raise NotImplementedError()
 
+    def force_range_update(self, ext_dc=None):
+        if ext_dc:
+            dc = ext_dc
+        else:
+            dc = get_cube()
+        from datacube_ows.product_ranges import get_ranges
+        self._ranges = None
+        try:
+            self._ranges = get_ranges(dc, self)
+            if self._ranges is None:
+                raise Exception("Null product range")
+        except Exception as a:
+            range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
+            raise ConfigException(range_failure)
+        finally:
+            if not ext_dc:
+                release_cube(dc)
+        self.bboxes = self.extract_bboxes()
+
+    @property
+    def ranges(self):
+        if self.dynamic:
+            self.force_range_update()
+        return self._ranges
+
     def extract_bboxes(self):
-        if self.ranges is None:
+        if self._ranges is None:
             return {}
         return {
             crs_id: {"right": bbox["bottom"],
@@ -470,10 +536,22 @@ class OWSNamedLayer(OWSLayer):
                  "top": bbox["top"],
                  "bottom": bbox["bottom"]
                  }
-            for crs_id, bbox in self.ranges["bboxes"].items()
+            for crs_id, bbox in self._ranges["bboxes"].items()
         }
     def layer_count(self):
         return 1
+
+    @property
+    def is_raw_time_res(self):
+        return self.time_resolution == TIMERES_RAW
+
+    @property
+    def is_month_time_res(self):
+        return self.time_resolution == TIMERES_MON
+
+    @property
+    def is_year_time_res(self):
+        return self.time_resolution == TIMERES_YR
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name

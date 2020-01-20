@@ -67,6 +67,9 @@ target/
 # PyCharm project files
 .idea/
 
+# VSCode project files
+.vscode/
+
 wsgi_local.py
 wms_cfg_local.py
 ows_cfg.py

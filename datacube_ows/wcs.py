@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from flask import render_template
 
-from datacube_ows.ogc_utils import resp_headers, get_service_base_url
+from datacube_ows.ogc_utils import get_service_base_url
 
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
@@ -69,7 +69,7 @@ def get_capabilities(args):
                         cfg=cfg,
                         base_url=base_url),
         200,
-        resp_headers({
+        cfg.response_headers({
             "Content-Type": "application/xml",
             "Cache-Control": "no-cache, max-age=0"
         }))
@@ -104,9 +104,9 @@ def desc_coverages(args):
                         cfg=cfg,
                         products=products),
         200,
-        resp_headers({
+        cfg.response_headers({
             "Content-Type": "application/xml",
-            "Cache-Control": "no-cache.max-age=0"
+            "Cache-Control": "max-age=10"
         })
     )
 
@@ -115,12 +115,13 @@ def desc_coverages(args):
 @opencensus_trace_call(tracer=tracer)
 def get_coverage(args):
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
+    cfg = get_config()
     req = WCS1GetCoverageRequest(args)
     data = get_coverage_data(req)
     return (
         req.format["renderer"](req, data),
         200,
-        resp_headers({
+        cfg.response_headers({
             "Content-Type": req.format["mime"],
             'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format["extension"])
         })

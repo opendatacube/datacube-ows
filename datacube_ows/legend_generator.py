@@ -35,7 +35,7 @@ def legend_graphic(args):
 
 
 def create_legend_for_style(product, style_name):
-    if not product.legend or style_name not in product.legend.get('styles', product.legend):
+    if style_name not in product.style_index:
         return None
     style = product.style_index[style_name]
     return create_legends_from_styles([style])
@@ -52,7 +52,7 @@ def create_legends_from_styles(styles):
                 imgs.append(img)
         else:
             bytesio = io.BytesIO()
-            s.legend(bytesio)
+            s.safe_legend(bytesio)
             bytesio.seek(0)
             imgs.append(Image.open(bytesio))
 

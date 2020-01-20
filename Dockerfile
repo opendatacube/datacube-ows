@@ -71,6 +71,9 @@ WORKDIR /code/archive/archiving
 COPY docker/auxiliary/archive/assets/archive.sh .
 ADD https://raw.githubusercontent.com/opendatacube/datacube-dataset-config/master/scripts/index_from_s3_bucket.py ls_s2_cog.py
 
+# Create Directory inside python path for config - mount your config volume here!
+RUN mkdir -p /code/datacube_ows/config
+
 WORKDIR /code
 
 ENTRYPOINT ["ows-entrypoint.sh"]
