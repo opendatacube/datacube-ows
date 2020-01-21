@@ -515,6 +515,7 @@ def feature_info(args):
             available_dates = datasets.times()
             global_info_written = False
             feature_json["data"] = []
+            fi_date_index = {}
             ds_at_times = datasets.collapse(params.times)
             data = stacker.data(ds_at_times, skip_corrections=True,
                                 manual_merge=params.product.data_manual_merge,
@@ -563,13 +564,16 @@ def feature_info(args):
                     date_info[k] = f(date_info["bands"])
 
                 feature_json["data"].append(date_info)
+                fi_date_index[td.time] = feature_json["data"][-1]
 
             my_flags = 0
-            for pqd in pq_datasets:
-                idx_date = dataset_center_time(pqd)
-                if idx_date == params.time:
-                    pq_data = stacker.data([pqd], mask=True)
-                    pq_pixel_ds = pq_data.isel(**isel_kwargs)
+            if pq_datasets:
+                pq_datasets.collapse(params.times)
+                pq_data = stacker.data(pq_datasets, mask=True)
+                for pqd in pq_data:
+                    idx_date = pqd.time
+                    date_info = fi_date_index[idx_date]
+                    pq_pixel_ds = pqd.data.isel(**isel_kwargs)
                     # PQ flags
                     m = params.product.pq_product.measurements[params.product.pq_band]
                     flags = pq_pixel_ds[params.product.pq_band].item()
@@ -577,7 +581,7 @@ def feature_info(args):
                         my_flags = my_flags | flags
                     else:
                         continue
-                    feature_json["flags"] = {}
+                    date_info["flags"] = {}
                     for mk, mv in m["flags_definition"].items():
                         if mk in params.product.ignore_flags_info:
                             continue
@@ -590,7 +594,7 @@ def feature_info(args):
                             val = values['1']
                         else:
                             val = values['0']
-                        feature_json["flags"][mk] = val
+                        date_info["flags"][mk] = val
 
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
