@@ -2,8 +2,11 @@ from __future__ import absolute_import, division, print_function
 
 import re
 import datetime
+from functools import reduce
 from importlib import import_module
 from itertools import chain
+from operator import add
+
 from dateutil.parser import parse
 from urllib.parse import urlparse
 from timezonefinderL import TimezoneFinder
@@ -37,12 +40,17 @@ def dataset_center_time(dataset):
 class NoTimezoneException(Exception):
     pass
 
+
 def local_date(ds, tz=None):
     dt_utc = dataset_center_time(ds)
     if tz:
         return dt_utc.astimezone(tz).date()
     else:
-        return dt_utc.astimezone(tz_for_geometry(ds.extent))
+        return dt_utc.astimezone(tz_for_geometry(ds.extent)).date()
+
+
+def tz_for_dataset(ds):
+    return tz_for_geometry(ds.extent)
 
 
 def tz_for_coord(lon, lat):
@@ -141,6 +149,7 @@ class ConfigException(Exception):
 class DataCollection(object):
     def __init__(self):
         self._collections = []
+        self._index = {}
 
     class TimeData(object):
         def __init__(self, time, data):
@@ -149,12 +158,33 @@ class DataCollection(object):
 
     def add_time(self, time, data):
         self._collections.append(self.TimeData(time, data))
+        self._index[time] = self._collections[-1]
+
+    def get_time(self, time):
+        return self._index.get(time)
+
+    def times(self):
+        return sorted(self._index.keys())
+
+    def add_entry(self, time, data):
+        if time in self._index:
+            self._index[time].data.append(data)
+        else:
+            self.add_time(time, [data])
 
     def __iter__(self):
         yield from self._collections
 
     def __len__(self):
         return len(self._collections)
+
+    def collapse(self, times):
+        collapsed = self.__class__()
+        for t in times:
+            entry = self.get_time(t)
+            if entry:
+                collapsed.add_time(t, entry.data)
+        return collapsed
 
     def collapse_to_single(self):
         if self._collections:
@@ -188,6 +218,9 @@ class DatasetCollection(DataCollection):
 
     def __len__(self):
         return sum([len(td) for td in self._collections])
+
+    def all_datasets(self):
+        return reduce(add, ( c.datasets for c in self._collections))
 
 
 # Function wrapper for configurable functional elements

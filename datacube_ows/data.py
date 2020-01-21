@@ -23,7 +23,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ConfigException, tz_for_coord, DataCollection, DatasetCollection
+    ConfigException, tz_for_coord, DataCollection, DatasetCollection, tz_for_dataset
 
 from datacube_ows.utils import log_call
 
@@ -77,14 +77,19 @@ class DataStacker(object):
                 "product": prod_name,
                 "geopolygon": self._geobox.extent
             }
-        if all_time:
-            return self._dataset_query(index, prod_name, query_args)
-
         result = DatasetCollection()
-        for th in self._times:
-            query_args["time"] = th
-            result.add_time(th, self._dataset_query(index, prod_name, query_args))
-
+        if all_time:
+            all_datasets = self._dataset_query(index, prod_name, query_args)
+            tz = None
+            for ds in all_datasets:
+                if tz is None:
+                    tz = tz_for_dataset(ds)
+                date = local_date(ds, tz)
+                result.add_entry(date, ds)
+        else:
+            for th in self._times:
+                query_args["time"] = th
+                result.add_time(th, self._dataset_query(index, prod_name, query_args))
         return result
 
     def _dataset_query(self, index, prod_name, query_args):
@@ -391,7 +396,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def get_s3_browser_uris(datasets, s3url="", s3bucket=""):
-    uris = [d.uris for d in datasets]
+    uris = [d.uris for d in datasets.all_datasets()]
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
@@ -488,7 +493,7 @@ def feature_info(args):
     else:
         geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
-    stacker = DataStacker(params.product, geo_point_geobox, params.time)
+    stacker = DataStacker(params.product, geo_point_geobox, params.times)
 
     # --- Begin code section requiring datacube.
     cfg = get_config()
@@ -506,63 +511,58 @@ def feature_info(args):
             v_coord: 0
         }
         if datasets:
-            dataset_date_index = {}
-            tz = None
-            for ds in datasets:
-                if tz is None:
-                    crs_geo = geometry.CRS("EPSG:4326")
-                    ptg = geo_point.to_crs(crs_geo)
-                    tz = tz_for_coord(ptg.coords[0][0], ptg.coords[0][1])
-                ld = local_date(ds, tz=tz)
-                if ld in dataset_date_index:
-                    dataset_date_index[ld].append(ds)
-                else:
-                    dataset_date_index[ld] = [ds]
             # Group datasets by time, load only datasets that match the idx_date
-            available_dates = dataset_date_index.keys()
-            ds_at_time = dataset_date_index.get(params.time, [])
-            _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
-            if len(ds_at_time) > 0:
-                pixel_ds = None
-                data = stacker.data(ds_at_time, skip_corrections=True,
-                                    manual_merge=params.product.data_manual_merge,
-                                    fuse_func=params.product.fuse_func
-                                    )
+            available_dates = datasets.times()
+            global_info_written = False
+            feature_json["data"] = []
+            ds_at_times = datasets.collapse(params.times)
+            data = stacker.data(ds_at_times, skip_corrections=True,
+                                manual_merge=params.product.data_manual_merge,
+                                fuse_func=params.product.fuse_func
+                                )
+            for td in data:
+                # Global data that should apply to all dates, but needs some data to extract
+                if not global_info_written:
+                    global_info_written = True
+                    # Non-geographic coordinate systems need to be projected onto a geographic
+                    # coordinate system.  Why not use EPSG:4326?
+                    # Extract coordinates in CRS
+                    data_x = getattr(td.data, h_coord)
+                    data_y = getattr(td.data, v_coord)
 
-                # Non-geographic coordinate systems need to be projected onto a geographic
-                # coordinate system.  Why not use EPSG:4326?
-                # Extract coordinates in CRS
-                data_x = getattr(data, h_coord)
-                data_y = getattr(data, v_coord)
+                    x = data_x[isel_kwargs[h_coord]].item()
+                    y = data_y[isel_kwargs[v_coord]].item()
+                    pt = geometry.point(x, y, params.crs)
 
-                x = data_x[isel_kwargs[h_coord]].item()
-                y = data_y[isel_kwargs[v_coord]].item()
-                pt = geometry.point(x, y, params.crs)
+                    # Project to EPSG:4326
+                    crs_geo = geometry.CRS("EPSG:4326")
+                    ptg = pt.to_crs(crs_geo)
 
+                    # Capture lat/long coordinates
+                    feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+
+                date_info = {}
+
+                ds = ds_at_times.get_time(td.time).datasets[0]
                 if params.product.multi_product:
-                    feature_json["source_product"] = "%s (%s)" % (ds_at_time[0].type.name, ds_at_time[0].metadata_doc["platform"]["code"])
-
-                # Project to EPSG:4326
-                crs_geo = geometry.CRS("EPSG:4326")
-                ptg = pt.to_crs(crs_geo)
-
-                # Capture lat/long coordinates
-                feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+                    date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
 
                 # Extract data pixel
-                pixel_ds = data.isel(**isel_kwargs)
+                pixel_ds = td.data.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
-                feature_json["time"] = dataset_center_time(ds_at_time[0]).strftime("%Y-%m-%d %H:%M:%S UTC")
+                date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
 
                 # Collect raw band values for pixel and derived bands from styles
-                feature_json["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
+                date_info["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
-                    feature_json["band_derived"] = derived_band_dict
+                    date_info["band_derived"] = derived_band_dict
                 # Add any custom-defined fields.
                 for k, f in params.product.feature_info_custom_includes.items():
-                    feature_json[k] = f(feature_json["bands"])
+                    date_info[k] = f(date_info["bands"])
+
+                feature_json["data"].append(date_info)
 
             my_flags = 0
             for pqd in pq_datasets:
