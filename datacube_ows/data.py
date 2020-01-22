@@ -435,7 +435,12 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list):
             else:
                 if 'flags_definition' in pixel_dataset[band].attrs:
                     flag_def = pixel_dataset[band].attrs['flags_definition']
-                    flag_dict = mask_to_dict(flag_def, band_val)
+                    # HACK: Work around bands with floating point values
+                    try:
+                        flag_dict = mask_to_dict(flag_def, band_val)
+                    except TypeError as te:
+                        logging.warning('Working around for float bands')
+                        flag_dict = mask_to_dict(flag_def, int(band_val))
                     try:
                         ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
                     except KeyError:
