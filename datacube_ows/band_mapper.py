@@ -247,7 +247,7 @@ class RGBAMappedStyleDef(StyleDefBase):
 class LinearStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(LinearStyleDef, self).__init__(product, style_cfg)
-        self.components = {}
+        self.rgb_components = {}
         for imgband in ["red", "green", "blue", "alpha"]:
             components = style_cfg["components"].get(imgband)
             if components is None:
@@ -256,11 +256,11 @@ class LinearStyleDef(StyleDefBase):
                 else:
                     raise ConfigException("No components defined for %s band" % imgband)
             if "function" in components:
-                self.components[imgband] = FunctionWrapper(self.product, components)
+                self.rgb_components[imgband] = FunctionWrapper(self.product, components)
                 for b in style_cfg["additional_bands"]:
                     self.needed_bands.add(b)
             else:
-                self.components[imgband] = self.dealias_components(components)
+                self.rgb_components[imgband] = self.dealias_components(components)
 
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
@@ -286,8 +286,8 @@ class LinearStyleDef(StyleDefBase):
                 }
 
         for imgband in ["red", "green", "blue", "alpha" ]:
-            if imgband in self.components and not callable(self.components[imgband]):
-                for band in self.components[imgband].keys():
+            if imgband in self.rgb_components and not callable(self.rgb_components[imgband]):
+                for band in self.rgb_components[imgband].keys():
                     self.needed_bands.add(band)
 
     def dealias_components(self, comp_in):
@@ -309,7 +309,7 @@ class LinearStyleDef(StyleDefBase):
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
         imgdata = Dataset()
-        for imgband, components in self.components.items():
+        for imgband, components in self.rgb_components.items():
             if callable(components):
                 imgband_data = components(data)
                 dims = imgband_data.dims
@@ -643,34 +643,32 @@ class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
 
-        data_bands = self.needed_bands
-
         if self.index_function is not None:
-            data_bands = ['index_function']
-            data[data_bands[0]] = (data.dims, self.index_function(data))
+            data['index_function'] = (data.dims, self.index_function(data))
+
         imgdata = Dataset()
-        for data_band in data_bands:
-            d = data[data_band]
-            for band, intensity in self.components.items():
-                rampdata = self.get_value(d, self.values, intensity)
-                component_band_data = None
-                if band in self.rgb_components:
-                    for c_band, c_intensity in self.rgb_components[band].items():
-                        if callable(c_intensity):
-                            imgband_component_data = c_intensity(data[c_band], c_band, band)
-                        else:
-                            imgband_component_data = data[c_band] * c_intensity
-                        if component_band_data is not None:
-                            component_band_data += imgband_component_data
-                        else:
-                            component_band_data = imgband_component_data
-                        if band != "alpha":
-                            component_band_data = self.compress_band(component_band_data)
-                    img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
-                                     + self.component_ratio * component_band_data)
-                else:
-                    img_band_data = rampdata * 255.0
-                imgdata[band] = (d.dims, img_band_data.astype("uint8"))
+
+        d = data['index_function']
+        for band, intensity in self.components.items():
+            rampdata = self.get_value(d, self.values, intensity)
+            component_band_data = None
+            if band in self.rgb_components:
+                for c_band, c_intensity in self.rgb_components[band].items():
+                    if callable(c_intensity):
+                        imgband_component_data = c_intensity(data[c_band], c_band, band)
+                    else:
+                        imgband_component_data = data[c_band] * c_intensity
+                    if component_band_data is not None:
+                        component_band_data += imgband_component_data
+                    else:
+                        component_band_data = imgband_component_data
+                    if band != "alpha":
+                        component_band_data = self.compress_band(band, component_band_data)
+                img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
+                                 + self.component_ratio * component_band_data)
+            else:
+                img_band_data = rampdata * 255.0
+            imgdata[band] = (d.dims, img_band_data.astype("uint8"))
 
         return imgdata
 
