@@ -89,7 +89,8 @@ class DataStacker(object):
         else:
             for th in self._times:
                 query_args["time"] = th
-                result.add_time(th, self._dataset_query(index, prod_name, query_args))
+                index_date = datetime(th[0].year, th[0].month, th[0].day)
+                result.add_time(index_date, self._dataset_query(index, prod_name, query_args))
         return result
 
     def _dataset_query(self, index, prod_name, query_args):
@@ -504,7 +505,6 @@ def feature_info(args):
     cfg = get_config()
     with cube() as dc:
         datasets = stacker.datasets(dc.index, all_time=True, point=geo_point)
-        pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
 
         # Taking the data as a single point so our indexes into the data should be 0,0
         h_coord = cfg.published_CRSs[params.crsid]["horizontal_coord"]
@@ -572,6 +572,11 @@ def feature_info(args):
                 fi_date_index[td.time] = feature_json["data"][-1]
 
             my_flags = 0
+            if params.product.pq_names == params.product.product_names:
+                pq_datasets = ds_at_times
+            else:
+                pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
+
             if pq_datasets:
                 pq_datasets.collapse(params.times)
                 pq_data = stacker.data(pq_datasets, mask=True)
@@ -588,19 +593,29 @@ def feature_info(args):
                         continue
                     date_info["flags"] = {}
                     for mk, mv in m["flags_definition"].items():
-                        if mk in params.product.ignore_flags_info:
+                        if mk in params.product.ignore_info_flags:
                             continue
                         bits = mv["bits"]
                         values = mv["values"]
-                        if not isinstance(bits, int):
-                            continue
-                        flag = 1 << bits
-                        if my_flags & flag:
-                            val = values['1']
+                        if isinstance(bits, int):
+                            flag = 1 << bits
+                            if my_flags & flag:
+                                val = values['1']
+                            else:
+                                val = values['0']
+                            date_info["flags"][mk] = val
                         else:
-                            val = values['0']
-                        date_info["flags"][mk] = val
-
+                            try:
+                                for i in bits:
+                                    if not isinstance(i, int):
+                                        raise TypeError()
+                                # bits is a list of ints try to do it alos way
+                                for key, desc in values.items():
+                                    if (isinstance(key, str) and key == str(my_flags)) or (isinstance(key, int) and key==my_flags):
+                                        date_info["flags"][mk] = desc
+                                        break
+                            except TypeError:
+                                pass
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
             if params.product.feature_info_include_utc_dates:
