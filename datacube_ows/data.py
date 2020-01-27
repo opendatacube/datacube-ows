@@ -578,7 +578,7 @@ def feature_info(args):
                 pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
 
             if pq_datasets:
-                pq_datasets.collapse(params.times)
+                pq_datasets = pq_datasets.collapse(params.times)
                 pq_data = stacker.data(pq_datasets, mask=True)
                 for pqd in pq_data:
                     idx_date = pqd.time
