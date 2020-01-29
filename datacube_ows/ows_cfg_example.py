@@ -1248,6 +1248,9 @@ ows_cfg = {
                     # If "dynamic" is False (the default) the the ranges for the product are cached in memory.
                     # Dynamic products slow down the generation of the GetCapabilities document - use sparingly.
                     "dynamic": False,
+                    # The resolution of the time access.  Optional. Allowed values are: "raw" (the default - daily),
+                    # "month" (for monthly summary datasets) or "year" (for annual summary datasets)
+                    "time_resolution": "raw",
                     "flags": {
                         # Data may include flags that mark which pixels have missing or poor-quality data,
                         # or contain cloud, or cloud-shadow, etc.  This section describes how
