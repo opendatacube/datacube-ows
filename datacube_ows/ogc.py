@@ -119,7 +119,6 @@ class SupportedSvc(object):
 
     def activated(self):
         cfg = get_config()
-        print(cfg)
         return getattr(cfg, self.service)
 
 

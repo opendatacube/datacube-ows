@@ -55,8 +55,8 @@ def get_capabilities(args):
     url = args.get('Host', args['url_root'])
     base_url = get_service_base_url(cfg.allowed_urls, url)
 
-    request = kvp_decode_get_capabilities(args)
-    sections = request.sections or ['all']
+    request_obj = kvp_decode_get_capabilities(args)
+    sections = request_obj.sections or ['all']
 
     # TODO: check for invalid sections
     include_service_identification = False
@@ -232,11 +232,11 @@ def desc_coverages(args):
     # Extract layer metadata from Datacube.
     cfg = get_config()
 
-    request = kvp_decode_describe_coverage(args)
+    request_obj = kvp_decode_describe_coverage(args)
 
     products = []
 
-    for coverage_id in request.coverage_ids:
+    for coverage_id in request_obj.coverage_ids:
         product = cfg.product_index.get(coverage_id)
         if product and product.wcs:
             products.append(product)
@@ -277,13 +277,9 @@ _LOG = logging.getLogger(__name__)
 @opencensus_trace_call(tracer=tracer)
 def get_coverage(args):
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
-    request = kvp_decode_get_coverage(args)
+    request_obj = kvp_decode_get_coverage(args)
 
-
-    _LOG.info(args)
-    _LOG.info(request)
-
-    output, mime, filename = get_coverage_data(request)
+    output, mime, filename = get_coverage_data(request_obj)
     return (
         output,
         200,
