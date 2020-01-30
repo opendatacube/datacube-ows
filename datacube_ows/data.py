@@ -89,7 +89,10 @@ class DataStacker(object):
         else:
             for th in self._times:
                 query_args["time"] = th
-                index_date = datetime(th[0].year, th[0].month, th[0].day)
+                if self._product.is_year_time_res:
+                    index_date = datetime(int(th), 1, 1)
+                else:
+                    index_date = datetime(th[0].year, th[0].month, th[0].day)
                 result.add_time(index_date, self._dataset_query(index, prod_name, query_args))
         return result
 
