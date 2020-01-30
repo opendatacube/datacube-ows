@@ -157,7 +157,7 @@ def get_coverage_data(request):
     y_size = round((extent_y[1] - extent_y[0]) / x_resolution)
 
     if native_crs != subsetting_crs:
-        _, size = calculate_default_transform(
+        transform_result = calculate_default_transform(
             geometry.CRS(native_crs),
             geometry.CRS(subsetting_crs),
             x_size, y_size,
@@ -166,7 +166,7 @@ def get_coverage_data(request):
             bottom=extent_y[0],
             top=extent_y[1],
         )
-        x_size, y_size = size
+        x_size, y_size = transform_result[1]
 
     for scale in scales:
         axis = scale.axis.lower()
