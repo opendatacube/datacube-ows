@@ -610,15 +610,120 @@ style_ndvi = {
     }
 }
 
+# Examples of non-linear colour-ramped style with multi-date support.
+style_ndvi_delta = {
+    "name": "ndvi_delta",
+    "title": "NDVI Delta",
+    "abstract": "Normalised Difference Vegetation Index - with delta support",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "pass_product_cfg": True,
+        "kwargs": {
+            "band1": "nir",
+            "band2": "red"
+        }
+    },
+    "needed_bands": ["red", "nir"],
+    # The color ramp for single-date requests - same as ndvi style example above
+    "color_ramp": [
+        {
+            "value": -0.0,
+            "color": "#8F3F20",
+            "alpha": 0.0
+        },
+        {
+            "value": 0.0,
+            "color": "#8F3F20",
+            "alpha": 1.0
+        },
+        {
+            "value": 0.1,
+            "color": "#A35F18"
+        },
+        {
+            "value": 0.2,
+            "color": "#B88512"
+        },
+        {
+            "value": 0.3,
+            "color": "#CEAC0E"
+        },
+        {
+            "value": 0.4,
+            "color": "#E5D609"
+        },
+        {
+            "value": 0.5,
+            "color": "#FFFF0C"
+        },
+        {
+            "value": 0.6,
+            "color": "#C3DE09"
+        },
+        {
+            "value": 0.7,
+            "color": "#88B808"
+        },
+        {
+            "value": 0.8,
+            "color": "#529400"
+        },
+        {
+            "value": 0.9,
+            "color": "#237100"
+        },
+        {
+            "value": 1.0,
+            "color": "#114D04"
+        }
+    ],
+    "include_in_feature_info": True,
+    "legend": {
+        "show_legend": True,
+    },
+    # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
+    "multi_date": [
+        # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
+        {
+            # The count range for which this handler is to be used - a tuple of two ints, the smallest and
+            # largest date counts for which this handler will be used.  Required.
+            "allowed_count_range": [2, 2],
+            # A function, expressed in the standard format as described elsewhere in this example file.
+            # The function is assumed to take one arguments, a datacube_ows.ogc_utils.DataCollection object,
+            # containing an xarray dataset for each date value. The function returns an xarray Dataset
+            # with a single band, which is the input to the colour ramp defined below.
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_delta"
+            },
+            # The multi-date color ramp.  May be defined as an explicit colour ramp, as shown above for the single
+            # date case; or may be defined with a range and unscaled color ramp as shown here.
+            #
+            # The range specifies the min and max values for the color ramp.  Required if an explicit color
+            # ramp is not defined.
+            "range": [-110.0, 110.0],
+            # The name of a named matplotlib color ramp.
+            # Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
+            # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
+            # kind of ugly) blue-to-red rainbow ramp.
+            "mpl_ramp": "RdBu",
+            # The feature info label for the multi-date index value.
+            "feature_info_label": "ndvi_delta"
+        }
+    ]
+}
+
 # Examples of Matplotlib Color-Ramp styles
 style_deform = {
     "name": "deform",
     "title": "InSAR Deformation",
     "abstract": "InSAR Derived Deformation Map",
-    # Range is needed to map values in color ramp
+    # The range specifies the min and max values for the color ramp.  Required if an explicit color ramp is not
+    # defined.
     "range": [-110.0, 110.0],
     # The Matplotlib color ramp. Value specified is a string that indicates a Matplotlib Colour Ramp should be
     # used. Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
+    # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
+    # kind of ugly) blue-to-red rainbow ramp.
     "mpl_ramp": "RdBu",
     # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
     # Defaults to True.

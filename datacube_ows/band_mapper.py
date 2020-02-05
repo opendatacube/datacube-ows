@@ -606,9 +606,12 @@ class RgbaColorRampDef(StyleDefBase):
                 self.color_ramp = cfg["color_ramp"]
             else:
                 rmin, rmax = cfg["range"]
+                unscaled_ramp = UNSCALED_DEFAULT_RAMP
+                if "mpl_ramp" in cfg:
+                    unscaled_ramp = read_mpl_ramp(cfg["mpl_ramp"])
                 self.color_ramp = scale_unscaled_ramp(
                     rmin, rmax,
-                    UNSCALED_DEFAULT_RAMP)
+                    unscaled_ramp)
             values, r, g, b, a = crack_ramp(self.color_ramp)
             self.values = values
             self.components = {
