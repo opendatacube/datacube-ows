@@ -52,7 +52,7 @@ def create_legends_from_styles(styles):
                 imgs.append(img)
         else:
             bytesio = io.BytesIO()
-            s.safe_legend(bytesio)
+            s.legend(bytesio)
             bytesio.seek(0)
             imgs.append(Image.open(bytesio))
 

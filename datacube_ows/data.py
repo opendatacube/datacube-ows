@@ -17,12 +17,13 @@ from datacube.utils import geometry
 from datacube.storage.masking import mask_to_dict
 
 from datacube_ows.cube_pool import cube
+from datacube_ows.ogc_exceptions import WMSException
 
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ConfigException, tz_for_coord
+    ConfigException, tz_for_coord, DataCollection, DatasetCollection, tz_for_dataset
 
 from datacube_ows.utils import log_call
 
@@ -34,10 +35,9 @@ _LOG = logging.getLogger(__name__)
 
 tracer = get_opencensus_tracer()
 
-
-class DataStacker():
+class DataStacker(object):
     @log_call
-    def __init__(self, product, geobox, time, resampling=None, style=None, bands=None, **kwargs):
+    def __init__(self, product, geobox, times, resampling=None, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
         self._geobox = geobox
@@ -50,11 +50,11 @@ class DataStacker():
             self._needed_bands = self._product.band_idx.native_bands.index
 
         if self._product.is_month_time_res:
-            self._time = time
+            self._times = list(times)
         elif self._product.is_year_time_res:
-            self._time = str(time.year)
+            self._times = list([str(time.year) for time in times])
         else:
-            self._time = local_solar_date_range(geobox, time)
+            self._times = list([local_solar_date_range(geobox, time) for time in times])
 
     def needed_bands(self):
         return self._needed_bands
@@ -77,9 +77,26 @@ class DataStacker():
                 "product": prod_name,
                 "geopolygon": self._geobox.extent
             }
-        if not all_time:
-            query_args["time"] = self._time
+        result = DatasetCollection()
+        if all_time:
+            all_datasets = self._dataset_query(index, prod_name, query_args)
+            tz = None
+            for ds in all_datasets:
+                if tz is None:
+                    tz = tz_for_dataset(ds)
+                date = local_date(ds, tz)
+                result.add_entry(date, ds)
+        else:
+            for th in self._times:
+                query_args["time"] = th
+                if self._product.is_year_time_res:
+                    index_date = datetime(int(th), 1, 1)
+                else:
+                    index_date = datetime(th[0].year, th[0].month, th[0].day)
+                result.add_time(index_date, self._dataset_query(index, prod_name, query_args))
+        return result
 
+    def _dataset_query(self, index, prod_name, query_args):
         # ODC Dataset Query
         if self._product.multi_product:
             queries = []
@@ -121,6 +138,8 @@ class DataStacker():
                     d = self.read_data(ds, measurements, self._geobox, **kwargs)
                     for band in self.needed_bands():
                         if band != self._product.pq_band:
+                            # No idea why pylint suddenly doesn't like this statement
+                            # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
                             d[band] = solar_correct_data(d[band], ds)
                     if merged is None:
                         merged = d
@@ -136,54 +155,77 @@ class DataStacker():
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
-        merged = None
         if mask:
             bands = [self._product.pq_band]
         else:
             bands = self.needed_bands()
-        for ds in datasets:
-            d = self.read_data(ds, measurements, self._geobox, **kwargs)
-            extent_mask = None
-            for band in bands:
-                for f in self._product.extent_mask_func:
-                    if extent_mask is None:
-                        extent_mask = f(d, band)
-                    else:
-                        extent_mask &= f(d, band)
-            dm = d.where(extent_mask)
-            if self._product.solar_correction and not mask and not skip_corrections:
+        result = DataCollection()
+        for tds in datasets:
+            merged = None
+            for ds in tds.datasets:
+                d = self.read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
+                extent_mask = None
                 for band in bands:
-                    if band != self._product.pq_band:
-                        dm[band] = solar_correct_data(dm[band], ds)
-            if merged is None:
-                merged = dm
-            else:
-                merged = merged.combine_first(dm)
-        if mask:
-            merged = merged.astype('uint8', copy=True)
-            for band in bands:
-                merged[band].attrs = d[band].attrs
-        return merged
+                    for f in self._product.extent_mask_func:
+                        if extent_mask is None:
+                            extent_mask = f(d, band)
+                        else:
+                            extent_mask &= f(d, band)
+                dm = d.where(extent_mask)
+                if self._product.solar_correction and not mask and not skip_corrections:
+                    for band in bands:
+                        if band != self._product.pq_band:
+                            dm[band] = solar_correct_data(dm[band], ds)
+                if merged is None:
+                    merged = dm
+                else:
+                    merged = merged.combine_first(dm)
+            if mask:
+                merged = merged.astype('uint8', copy=True)
+                for band in bands:
+                    merged[band].attrs = d[band].attrs
+            result.add_time(tds.time, merged)
+        return result
 
     # Read data for given datasets and measurements per the output_geobox
     @log_call
     @opencensus_trace_call(tracer=tracer)
     def read_data(self, datasets, measurements, geobox, resampling=Resampling.nearest, **kwargs):
         if not hasattr(datasets, "__iter__"):
-            datasets = [datasets]
+            datasets = [datasets] # REVISIT????
 
+        result = DataCollection()
+        for tds in datasets:
+            if self._product.is_raw_time_res:
+                dc_datasets = datacube.Datacube.group_datasets(tds.datasets, 'solar_day')
+            else:
+                dc_datasets = datacube.Datacube.group_datasets(tds.datasets, 'time')
+            data = datacube.Datacube.load_data(
+                dc_datasets,
+                geobox,
+                measurements=measurements,
+                fuse_func=kwargs.get('fuse_func', None))
+            # maintain compatibility with functions not expecting the data to have a time dimension
+            data = data.squeeze(dim='time', drop=True)
+            result.add_time(tds.time, data)
+        return result
+
+    # Read data for single datasets and measurements per the output_geobox
+    @log_call
+    @opencensus_trace_call(tracer=tracer)
+    def read_data_for_single_dataset(self, dataset, measurements, geobox, resampling=Resampling.nearest, **kwargs):
+        datasets = [dataset]
         if self._product.is_raw_time_res:
-            datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
+            dc_datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
         else:
-            datasets = datacube.Datacube.group_datasets(datasets, 'time')
+            dc_datasets = datacube.Datacube.group_datasets(datasets, 'time')
         data = datacube.Datacube.load_data(
-            datasets,
+            dc_datasets,
             geobox,
             measurements=measurements,
             fuse_func=kwargs.get('fuse_func', None))
         # maintain compatibility with functions not expecting the data to have a time dimension
         return data.squeeze(dim='time', drop=True)
-
 
 
 def bbox_to_geom(bbox, crs):
@@ -196,10 +238,18 @@ def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetMapParameters(args)
+    n_dates = len(params.times)
+    if n_dates == 1:
+        mdh = None
+    else:
+        mdh = params.style.get_multi_date_handler(n_dates)
+        if mdh is None:
+            raise WMSException("Style %s does not support GetMap requests with %d dates" % (params.style.name, n_dates),
+                               WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
 
     with cube() as dc:
         # Tiling.
-        stacker = DataStacker(params.product, params.geobox, params.time, params.resampling, style=params.style)
+        stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
         datasets = stacker.datasets(dc.index)
         zoomed_out = params.zf < params.product.min_zoom
         too_many_datasets = (params.product.max_datasets_wms > 0 and len(datasets) > params.product.max_datasets_wms)
@@ -215,15 +265,16 @@ def get_map(args):
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None
             extent_crs = None
-            for ds in datasets:
-                if extent:
-                    new_extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
-                    if new_extent.crs != extent_crs:
-                        new_extent = new_extent.to_crs(extent_crs)
-                    extent = extent.union(new_extent)
-                else:
-                    extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
-                    extent_crs = extent.crs
+            for tds in datasets:
+                for ds in tds.datasets:
+                    if extent:
+                        new_extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
+                        if new_extent.crs != extent_crs:
+                            new_extent = new_extent.to_crs(extent_crs)
+                        extent = extent.union(new_extent)
+                    else:
+                        extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
+                        extent_crs = extent.crs
             extent = extent.to_crs(params.crs)
             body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
         else:
@@ -234,12 +285,16 @@ def get_map(args):
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             if params.style.masks:
                 if params.product.pq_name == params.product.name:
-                    pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
-                    pq_data = xarray.Dataset({params.product.pq_band: pq_band_data},
+                    pq_data = DataCollection()
+                    for td in data:
+                        pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
+                        pq_t_data = xarray.Dataset({params.product.pq_band: pq_band_data},
                                              coords=data[params.product.pq_band].coords
                                              )
-                    flag_def = data[params.product.pq_band].flags_definition
-                    pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
+                        flag_def = data[params.product.pq_band].flags_definition
+                        pq_t_data[params.product.pq_band].attrs["flags_definition"] = flag_def
+
+                        pq_data.add_time(td.time, pq_t_data)
                 else:
                     pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time)
                     if pq_datasets:
@@ -248,19 +303,22 @@ def get_map(args):
                                                manual_merge=params.product.pq_manual_merge,
                                                fuse_func=params.product.pq_fuse_func)
                     else:
-                        pq_data = None
+                        pq_data = DataCollection()
             else:
-                pq_data = None
-            extent_mask = None
+                pq_data = DataCollection()
+            extent_mask = DataCollection()
             if not params.product.data_manual_merge:
-                for band in params.style.needed_bands:
-                    for f in params.product.extent_mask_func:
-                        if extent_mask is None:
-                            extent_mask = f(data, band)
-                        else:
-                            extent_mask &= f(data, band)
+                for td in data:
+                    ext_mask = None
+                    for band in params.style.needed_bands:
+                        for f in params.product.extent_mask_func:
+                            if ext_mask is None:
+                                ext_mask = f(td.data, band)
+                            else:
+                                ext_mask &= f(td.data, band)
+                    extent_mask.add_time(td.time, ext_mask)
 
-            if data is None or (params.style.masks and pq_data is None):
+            if not data or (params.style.masks and not pq_data):
                 body = _write_empty(params.geobox)
             else:
                 body = _write_png(data, pq_data, params.style, extent_mask)
@@ -273,8 +331,7 @@ def get_map(args):
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def _write_png(data, pq_data, style, extent_mask):
-    width = data[data.crs.dimensions[1]].size
-    height = data[data.crs.dimensions[0]].size
+    width, height = data.pixel_counts()
 
     img_data = style.transform_data(data, pq_data, extent_mask)
 
@@ -343,7 +400,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def get_s3_browser_uris(datasets, s3url="", s3bucket=""):
-    uris = [d.uris for d in datasets]
+    uris = [d.uris for d in datasets.all_datasets()]
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
@@ -445,13 +502,12 @@ def feature_info(args):
     else:
         geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
-    stacker = DataStacker(params.product, geo_point_geobox, params.time)
+    stacker = DataStacker(params.product, geo_point_geobox, params.times)
 
     # --- Begin code section requiring datacube.
     cfg = get_config()
     with cube() as dc:
         datasets = stacker.datasets(dc.index, all_time=True, point=geo_point)
-        pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
 
         # Taking the data as a single point so our indexes into the data should be 0,0
         h_coord = cfg.published_CRSs[params.crsid]["horizontal_coord"]
@@ -463,70 +519,74 @@ def feature_info(args):
             v_coord: 0
         }
         if datasets:
-            dataset_date_index = {}
-            tz = None
-            for ds in datasets:
-                if tz is None:
-                    crs_geo = geometry.CRS("EPSG:4326")
-                    ptg = geo_point.to_crs(crs_geo)
-                    tz = tz_for_coord(ptg.coords[0][0], ptg.coords[0][1])
-                ld = local_date(ds, tz=tz)
-                if ld in dataset_date_index:
-                    dataset_date_index[ld].append(ds)
-                else:
-                    dataset_date_index[ld] = [ds]
             # Group datasets by time, load only datasets that match the idx_date
-            available_dates = dataset_date_index.keys()
-            ds_at_time = dataset_date_index.get(params.time, [])
-            _LOG.info("%d datasets, %d at target date", len(datasets), len(ds_at_time))
-            if len(ds_at_time) > 0:
-                pixel_ds = None
-                data = stacker.data(ds_at_time, skip_corrections=True,
-                                    manual_merge=params.product.data_manual_merge,
-                                    fuse_func=params.product.fuse_func
-                                    )
+            available_dates = datasets.times()
+            global_info_written = False
+            feature_json["data"] = []
+            fi_date_index = {}
+            ds_at_times = datasets.collapse(params.times)
+            data = stacker.data(ds_at_times, skip_corrections=True,
+                                manual_merge=params.product.data_manual_merge,
+                                fuse_func=params.product.fuse_func
+                                )
+            for td in data:
+                # Global data that should apply to all dates, but needs some data to extract
+                if not global_info_written:
+                    global_info_written = True
+                    # Non-geographic coordinate systems need to be projected onto a geographic
+                    # coordinate system.  Why not use EPSG:4326?
+                    # Extract coordinates in CRS
+                    data_x = getattr(td.data, h_coord)
+                    data_y = getattr(td.data, v_coord)
 
-                # Non-geographic coordinate systems need to be projected onto a geographic
-                # coordinate system.  Why not use EPSG:4326?
-                # Extract coordinates in CRS
-                data_x = getattr(data, h_coord)
-                data_y = getattr(data, v_coord)
+                    x = data_x[isel_kwargs[h_coord]].item()
+                    y = data_y[isel_kwargs[v_coord]].item()
+                    pt = geometry.point(x, y, params.crs)
 
-                x = data_x[isel_kwargs[h_coord]].item()
-                y = data_y[isel_kwargs[v_coord]].item()
-                pt = geometry.point(x, y, params.crs)
+                    # Project to EPSG:4326
+                    crs_geo = geometry.CRS("EPSG:4326")
+                    ptg = pt.to_crs(crs_geo)
 
+                    # Capture lat/long coordinates
+                    feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+
+                date_info = {}
+
+                ds = ds_at_times.get_time(td.time).datasets[0]
                 if params.product.multi_product:
-                    feature_json["source_product"] = "%s (%s)" % (ds_at_time[0].type.name, ds_at_time[0].metadata_doc["platform"]["code"])
-
-                # Project to EPSG:4326
-                crs_geo = geometry.CRS("EPSG:4326")
-                ptg = pt.to_crs(crs_geo)
-
-                # Capture lat/long coordinates
-                feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+                    date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
 
                 # Extract data pixel
-                pixel_ds = data.isel(**isel_kwargs)
+                pixel_ds = td.data.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
-                feature_json["time"] = dataset_center_time(ds_at_time[0]).strftime("%Y-%m-%d %H:%M:%S UTC")
+                date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
 
                 # Collect raw band values for pixel and derived bands from styles
-                feature_json["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
+                date_info["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
-                    feature_json["band_derived"] = derived_band_dict
+                    date_info["band_derived"] = derived_band_dict
                 # Add any custom-defined fields.
                 for k, f in params.product.feature_info_custom_includes.items():
-                    feature_json[k] = f(feature_json["bands"])
+                    date_info[k] = f(date_info["bands"])
+
+                feature_json["data"].append(date_info)
+                fi_date_index[td.time] = feature_json["data"][-1]
 
             my_flags = 0
-            for pqd in pq_datasets:
-                idx_date = dataset_center_time(pqd)
-                if idx_date == params.time:
-                    pq_data = stacker.data([pqd], mask=True)
-                    pq_pixel_ds = pq_data.isel(**isel_kwargs)
+            if params.product.pq_names == params.product.product_names:
+                pq_datasets = ds_at_times
+            else:
+                pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
+
+            if pq_datasets:
+                pq_datasets = pq_datasets.collapse(params.times)
+                pq_data = stacker.data(pq_datasets, mask=True)
+                for pqd in pq_data:
+                    idx_date = pqd.time
+                    date_info = fi_date_index[idx_date]
+                    pq_pixel_ds = pqd.data.isel(**isel_kwargs)
                     # PQ flags
                     m = params.product.pq_product.measurements[params.product.pq_band]
                     flags = pq_pixel_ds[params.product.pq_band].item()
@@ -534,21 +594,31 @@ def feature_info(args):
                         my_flags = my_flags | flags
                     else:
                         continue
-                    feature_json["flags"] = {}
+                    date_info["flags"] = {}
                     for mk, mv in m["flags_definition"].items():
-                        if mk in params.product.ignore_flags_info:
+                        if mk in params.product.ignore_info_flags:
                             continue
                         bits = mv["bits"]
                         values = mv["values"]
-                        if not isinstance(bits, int):
-                            continue
-                        flag = 1 << bits
-                        if my_flags & flag:
-                            val = values['1']
+                        if isinstance(bits, int):
+                            flag = 1 << bits
+                            if my_flags & flag:
+                                val = values['1']
+                            else:
+                                val = values['0']
+                            date_info["flags"][mk] = val
                         else:
-                            val = values['0']
-                        feature_json["flags"][mk] = val
-
+                            try:
+                                for i in bits:
+                                    if not isinstance(i, int):
+                                        raise TypeError()
+                                # bits is a list of ints try to do it alos way
+                                for key, desc in values.items():
+                                    if (isinstance(key, str) and key == str(my_flags)) or (isinstance(key, int) and key==my_flags):
+                                        date_info["flags"][mk] = desc
+                                        break
+                            except TypeError:
+                                pass
             feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
             if params.product.feature_info_include_utc_dates:

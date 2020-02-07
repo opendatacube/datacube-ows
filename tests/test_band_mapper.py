@@ -1,5 +1,8 @@
+import datetime
+
 import datacube_ows.band_mapper as bm
 from datacube_ows.band_mapper import StyleDef
+from datacube_ows.ogc_utils import DataCollection, DatasetCollection
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
@@ -224,25 +227,28 @@ def test_alpha_style_map(
         return data
 
     band = np.array([True, True, True])
+    time = datetime.date.today()
     da = DataArray(band, name='foo')
+    dsc = DatasetCollection()
     ds = Dataset(data_vars={'foo': da})
+    dsc.add_time(time, ds)
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(dsc, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(dsc, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 127).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(dsc, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 255).all()
 
@@ -265,7 +271,7 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     band[1] = 0
     band[2] = 3000
 
-    compressed = style_def.compress_band(band)
+    compressed = style_def.compress_band("red", band)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
@@ -284,7 +290,7 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     band[1] = 0
     band[2] = 3001
 
-    compressed = style_def.compress_band(band)
+    compressed = style_def.compress_band("red", band)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
@@ -365,8 +371,10 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
 
     band = np.array([0, 0, 1, 1, 2, 2])
+    today = datetime.date.today()
     da = DataArray(band, name='foo')
-    ds = Dataset(data_vars={'foo': da})
+    ds = DatasetCollection()
+    ds.add_time(today, Dataset(data_vars={'foo': da}))
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)

@@ -172,16 +172,16 @@ def get_times_for_product(product, raw_product):
     return ranges['times']
 
 
-def get_time(args, product, raw_product):
+def get_times(args, product, raw_product):
     # Time parameter
-    times = args.get('time', '')
-    if times.find(',') != -1:
-        raise WMSException(
-            "Selecting a list of time dimension values not supported",
-            WMSException.INVALID_DIMENSION_VALUE,
-            locator="Time parameter")
+    times_raw = args.get('time', '')
+    times = times_raw.split(',')
 
-    times = times.split('/')
+    return list([parse_time_item(item, product, raw_product) for item in times])
+
+
+def parse_time_item(item, product, raw_product):
+    times = item.split('/')
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
 
@@ -290,7 +290,7 @@ class GetParameters():
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
         # Time parameter
-        self.time = get_time(args, self.product, self.raw_product)
+        self.times = get_times(args, self.product, self.raw_product)
 
         self.method_specific_init(args)
 

@@ -101,6 +101,11 @@ landsat8_bands = {
     # 5. Bands NOT listed here will not be included in the GetFeatureInfo output and cannot be referenced
     # elsewhere in the configuration.
     # 6. If not specified for a product, defaults to all available bands, using only their native names.
+    # 7. The following are reserved words that may not be used as aliases.  (N.B. If they occur as a native
+    #    band name, an alias should be declared and used in the config in preference to the native name):
+    #               scale_range
+    #               function
+    #
     "red": [],
     "green": [],
     "blue": [ "near_blue" ],
@@ -288,16 +293,83 @@ style_infrared_false_colour = {
     "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
     "components": {
         "red": {
-            "swir1": 1.0
+            "swir1": 1.0,
+            # The special dictionary value 'scale_range' can be used to provide a component-specific
+            # scale_range that overrides the style scale_range below.
+            # (N.B. if you are unlucky enough to have a native band called "scale_range", you can access it
+            # by defining a band alias.)
+            "scale_range": [5.0, 4000.0],
         },
         "green": {
-            "swir2": 1.0
+            "swir2": 1.0,
+            "scale_range": [25.0, 4000.0],
         },
         "blue": {
-            "nir": 1.0
+            "nir": 1.0,
+            "scale_range": [0.0, 3000.0],
         }
     },
-    "scale_range": [0.0, 3000.0]
+    # The style scale_range can be omitted if all components have a component-specific scale_range defined.
+    # "scale_range": [0.0, 3000.0]
+}
+
+style_mineral_content = {
+    "name": "mineral_content",
+    "title": "Multi-band mineral indexes",
+    "abstract": "Red: Ferric Iron. Green: Bare soil. Blue: Clay/mica",
+    "components": {
+        "red": {
+            # If the component dictionary contains the key "function", then the dictionary as treated as
+            # a function callback as follows:
+            #    a) "function" (required): A string containing the fully qualified path to a python function
+            #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
+            #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
+            #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
+            #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
+            #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+            #       to band names.
+            #
+            # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
+            # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
+            #
+            # An xarray DataArray is returned containing the band data.  Note that it is up to the function
+            # to normalise the output to 0-255.
+            #
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "red",
+                "band2": "blue",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "green": {
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "nir",
+                "band2": "swir1",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "blue": {
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "swir1",
+                "band2": "swir2",
+                "scale_from": [-0.1, 1.0],
+            }
+        }
+    },
+    # If ANY components include a function callback, the bands that need to be passed to the callback
+    # MUST be declared in a "additional_bands" item:
+    "additional_bands": [ "red", "blue", "nir", "swir1", "swir2" ]
+
+    #
+    # The style scale_range can be omitted if all components have a component-specific scale_range defined or
+    # a function callback.
+    # "scale_range": [0.0, 3000.0]
 }
 
 # Monochrome single band layers
@@ -427,6 +499,7 @@ style_pure_ls8_swir2 = {
     "scale_range": [0.0, 3000.0]
 }
 
+
 # Examples of non-linear colour-ramped styles.
 style_ndvi = {
     "name": "ndvi",
@@ -537,15 +610,120 @@ style_ndvi = {
     }
 }
 
+# Examples of non-linear colour-ramped style with multi-date support.
+style_ndvi_delta = {
+    "name": "ndvi_delta",
+    "title": "NDVI Delta",
+    "abstract": "Normalised Difference Vegetation Index - with delta support",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "pass_product_cfg": True,
+        "kwargs": {
+            "band1": "nir",
+            "band2": "red"
+        }
+    },
+    "needed_bands": ["red", "nir"],
+    # The color ramp for single-date requests - same as ndvi style example above
+    "color_ramp": [
+        {
+            "value": -0.0,
+            "color": "#8F3F20",
+            "alpha": 0.0
+        },
+        {
+            "value": 0.0,
+            "color": "#8F3F20",
+            "alpha": 1.0
+        },
+        {
+            "value": 0.1,
+            "color": "#A35F18"
+        },
+        {
+            "value": 0.2,
+            "color": "#B88512"
+        },
+        {
+            "value": 0.3,
+            "color": "#CEAC0E"
+        },
+        {
+            "value": 0.4,
+            "color": "#E5D609"
+        },
+        {
+            "value": 0.5,
+            "color": "#FFFF0C"
+        },
+        {
+            "value": 0.6,
+            "color": "#C3DE09"
+        },
+        {
+            "value": 0.7,
+            "color": "#88B808"
+        },
+        {
+            "value": 0.8,
+            "color": "#529400"
+        },
+        {
+            "value": 0.9,
+            "color": "#237100"
+        },
+        {
+            "value": 1.0,
+            "color": "#114D04"
+        }
+    ],
+    "include_in_feature_info": True,
+    "legend": {
+        "show_legend": True,
+    },
+    # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
+    "multi_date": [
+        # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
+        {
+            # The count range for which this handler is to be used - a tuple of two ints, the smallest and
+            # largest date counts for which this handler will be used.  Required.
+            "allowed_count_range": [2, 2],
+            # A function, expressed in the standard format as described elsewhere in this example file.
+            # The function is assumed to take one arguments, a datacube_ows.ogc_utils.DataCollection object,
+            # containing an xarray dataset for each date value. The function returns an xarray Dataset
+            # with a single band, which is the input to the colour ramp defined below.
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_delta"
+            },
+            # The multi-date color ramp.  May be defined as an explicit colour ramp, as shown above for the single
+            # date case; or may be defined with a range and unscaled color ramp as shown here.
+            #
+            # The range specifies the min and max values for the color ramp.  Required if an explicit color
+            # ramp is not defined.
+            "range": [-110.0, 110.0],
+            # The name of a named matplotlib color ramp.
+            # Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
+            # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
+            # kind of ugly) blue-to-red rainbow ramp.
+            "mpl_ramp": "RdBu",
+            # The feature info label for the multi-date index value.
+            "feature_info_label": "ndvi_delta"
+        }
+    ]
+}
+
 # Examples of Matplotlib Color-Ramp styles
 style_deform = {
     "name": "deform",
     "title": "InSAR Deformation",
     "abstract": "InSAR Derived Deformation Map",
-    # Range is needed to map values in color ramp
+    # The range specifies the min and max values for the color ramp.  Required if an explicit color ramp is not
+    # defined.
     "range": [-110.0, 110.0],
     # The Matplotlib color ramp. Value specified is a string that indicates a Matplotlib Colour Ramp should be
     # used. Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
+    # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
+    # kind of ugly) blue-to-red rainbow ramp.
     "mpl_ramp": "RdBu",
     # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
     # Defaults to True.
@@ -1175,6 +1353,9 @@ ows_cfg = {
                     # If "dynamic" is False (the default) the the ranges for the product are cached in memory.
                     # Dynamic products slow down the generation of the GetCapabilities document - use sparingly.
                     "dynamic": False,
+                    # The resolution of the time access.  Optional. Allowed values are: "raw" (the default - daily),
+                    # "month" (for monthly summary datasets) or "year" (for annual summary datasets)
+                    "time_resolution": "raw",
                     "flags": {
                         # Data may include flags that mark which pixels have missing or poor-quality data,
                         # or contain cloud, or cloud-shadow, etc.  This section describes how

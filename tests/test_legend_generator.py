@@ -15,8 +15,8 @@ def test_create_legends_from_styles(make_response):
 
     class fakestyle:
         def __init__(self):
-            self.safe_legend = MagicMock()
-            self.safe_legend.side_effect = fake_img
+            self.legend = MagicMock()
+            self.legend.side_effect = fake_img
             self.legend_override_with_url = MagicMock()
             self.legend_override_with_url.return_value = None
 
