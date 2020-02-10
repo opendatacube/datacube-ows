@@ -276,19 +276,11 @@ class WCS1GetCoverageRequest():
 def get_coverage_data(req):
     #pylint: disable=too-many-locals, protected-access
     dc = get_cube()
-    datasets = []
-    for t in req.times:
-        # IF t was passed to the datasets method instead of the stacker
-        # constructor, we could use the one stacker.
-        stacker = DataStacker(req.product,
-                              req.geobox,
-                              t,
-                              bands=req.bands)
-        t_datasets = stacker.datasets(dc.index)
-        if not t_datasets:
-            # No matching data for this date
-            continue
-        datasets.extend(t_datasets)
+    stacker = DataStacker(req.product,
+                          req.geobox,
+                          req.times,
+                          bands=req.bands)
+    datasets = stacker.datasets(dc.index)
     if not datasets:
         # TODO: Return an empty coverage file with full metadata?
         extents = dc.load(dask_chunks={}, product=req.product.product.name, geopolygon=req.geobox.extent, time=stacker._time)
@@ -344,14 +336,9 @@ def get_coverage_data(req):
                             "Please reduce the bounds of your request and try again."
                             "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, len(datasets)))
 
-    if req.format["multi-time"] and len(req.times) > 1:
-        # Group by solar day
-        group_by = datacube.api.query.query_group_by(time=req.times, group_by='solar_day')
-        datasets = dc.group_datasets(datasets, group_by)
-
     stacker = DataStacker(req.product,
                           req.geobox,
-                          req.times[0],
+                          req.times,
                           bands=req.bands)
     output = stacker.data(datasets, skip_corrections=True)
     release_cube(dc)
