@@ -712,7 +712,7 @@ def create_range_entry(dc, product, crses):
     AS (SELECT to_jsonb(array_agg(dates.d))
         AS dates
         FROM (SELECT DISTINCT 
-               date(to_timestamp(metadata -> 'extent' ->> 'center_dt', 'YYYY-MM-DDTHH:MI:SS.MSZ') AT TIME ZONE 'UTC' +
+               date(cast(metadata -> 'extent' ->> 'center_dt' as timestamp) AT TIME ZONE 'UTC' +
                 (least(to_number(metadata -> 'extent' -> 'coord' -> 'll' ->> 'lon', '9999.9999999999999999999999999999999999'),
                 to_number(metadata -> 'extent' -> 'coord' -> 'ul' ->> 'lon', '9999.9999999999999999999999999999999999')) +
                 greatest(to_number(metadata -> 'extent' -> 'coord' -> 'lr' ->> 'lon', '9999.9999999999999999999999999999999999'),
