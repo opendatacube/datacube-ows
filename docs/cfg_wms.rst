@@ -1,0 +1,74 @@
+=================
+OWS Configuration
+=================
+
+.. contents:: Table of Contents
+
+WMS Section
+--------------
+
+The "wms" section of the `root configuration object
+<configuration.rst>`_
+contains config entries that apply
+to the WMS/WMTS services for all layers.
+
+All entries apply identically to both WMS and WMTS services unless
+stated otherwise. All entries in the WMS section are optional and the
+entire section can therefore be omitted.
+
+Max Tile Size (max_height/max_width)
+=======================================
+
+Tile size is fixed for WMTS requests, so these entries only apply to
+WMS requests.   Requests for tiles larger than the configured maximum
+height and width will result in an error.  Note that many WMS clients
+do not honour the maximum width and height.  For these clients, please
+consider using WMTS instead.
+
+The ``max_width`` and ``max_height`` config entries in the ``wms`` section
+should be integers.  Both entries are optional, and default to 256 if
+not set.
+
+E.g.:
+
+::
+
+   "max_height": 512,
+   "max_width": 512,
+
+S3 Data URL Elements
+====================
+
+These entries are used for constructing S3 data urls for use in GetFeatureInfo
+responses.  This feature is restricted to data stored in AWS S3 and is fairly
+specialised to DEA requirements and may not be suitable for other use cases.  All
+these entries are optional.
+
+s3_url
+   The base url exposing the public S3 bucket containing the data.
+
+s3_bucket
+   The name of the S3 bucket.
+
+s3_aws_zone
+   The AWS zone where the data is stored.
+
+E.g.
+
+::
+
+        "s3_url": "http://data.au",
+        "s3_bucket": "s3_bucket_name",
+        "s3_aws_zone": "ap-southeast-2",
+
+Identifier Authorities (authorities)
+====================================
+
+Default Attribution (attribution)
+=================================
+
+
+
+
+
+
