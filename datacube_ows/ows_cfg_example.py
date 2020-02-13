@@ -700,7 +700,7 @@ style_ndvi_delta = {
             #
             # The range specifies the min and max values for the color ramp.  Required if an explicit color
             # ramp is not defined.
-            "range": [-110.0, 110.0],
+            "range": [-1.0, 1.0],
             # The name of a named matplotlib color ramp.
             # Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
             # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
