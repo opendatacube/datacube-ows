@@ -33,7 +33,18 @@ from agdc.dataset where metadata_type_ref=3::smallint;
 
 -- Try all different locations for spatial extents and COALESCE them
 -- This is eo3 spatial (Uses CEMP INSAR as a sample product)
-select metadata from agdc.dataset where metadata_type_ref=3::smallint;
+with ranges as
+(select id,
+  (metadata #> '{extent, lat, begin}') as lat_begin,
+  (metadata #> '{extent, lat, end}') as lat_end,
+  (metadata #> '{extent, lon, begin}') as lon_begin,
+  (metadata #> '{extent, lon, end}') as lon_end
+   from agdc.dataset where metadata_type_ref=3::smallint)
+select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
+        lon_begin, lat_begin, lon_end, lat_begin,  lon_end, lat_end, 
+        lon_begin, lat_end, lon_begin, lat_begin)::geometry
+as spatial_extent 
+from ranges;
 
 -- This is eo spatial (Uses ALOS-PALSAR over Africa as a sample product)
 with corners as
@@ -52,14 +63,15 @@ select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
         ul_lon, ul_lat, ll_lon, ll_lat)::geometry as spatial_extent 
 from corners;
 
--- This is optional and in native projection where present (3577, spatial reference where present)
-select
+-- This is optional and in native projection where present,
+-- String processing drops EPSG prefix
+select id,
     ST_Transform(
     ST_SetSRID(
     ST_GeomFromGeoJSON(
         metadata #>> '{grid_spatial,projection,valid_data}'),
-        3577
+        substr(metadata #>> '{grid_spatial,projection,spatial_reference}',6)::integer
     ),
     4326
-    ) as spatial_extent
-from agdc.dataset;
+    ) as detail_spatial_extent
+from agdc.dataset where metadata_type_ref=3::smallint;
