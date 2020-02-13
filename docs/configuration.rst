@@ -189,14 +189,16 @@ The `global <cfg_global.rst>`_ section is always required.
 The `wms <cfg_wms.rst>`_ section contains configuration that applies to the WMS/WMTS
 services aross all layers.
 The `wms <cfg_wms.rst>`_ section can be omitted if only the WCS service is
-activated (specified in the `global services <cfg_global.rst#services>`_
+activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
 section), or if the default values for all entries are acceptable.
 
-The "wcs" section can be omitted if the WCS service is deactivated.
+The `wcs <cfg_wcs.rst>`_ section must be supplied if the WCS service is
+activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
+section).
 
 There is no separate section for WMTS as WMTS is implemented as a thin wrapper around the WMS implementation.
 
-The layers section contains a list of layer configurations.  The configured layers define the
+The "layers" section contains a list of layer configurations.  The configured layers define the
 layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour.
 
 

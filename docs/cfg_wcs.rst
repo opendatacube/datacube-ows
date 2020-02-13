@@ -4,20 +4,23 @@ OWS Configuration
 
 .. contents:: Table of Contents
 
-WMS Section
+WCS Section
 --------------
 
-The "wms" section of the `root configuration object
+The ``wcs`` section of the `root configuration object
 <configuration.rst>`_
 contains config entries that apply
-to the WMS/WMTS services for all layers.
+to the WCS services for all coverages.
 
-All entries apply identically to both WMS and WMTS services unless
-stated otherwise. All entries in the WMS section are optional and the
-entire section can therefore be omitted.
+The ``wcs`` section must be supplied if the WCS service is
+activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
+section).
 
-Max Tile Size (max_height/max_width)
-=======================================
+
+Default Geographic CRS (default_geographic_CRS)
+===============================================
+
+Specifies
 
 Tile size is fixed for WMTS requests, so these entries only apply to
 WMS requests.   Requests for tiles larger than the configured maximum
