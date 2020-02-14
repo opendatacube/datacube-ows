@@ -364,6 +364,7 @@ def get_tiff(req, data):
     dtype_list = [data[array].dtype for array in data.data_vars]
     dtype = str(max(dtype_list, key=lambda d: supported_dtype_map[str(d)]))
 
+    data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     cfg = get_config()
     xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]

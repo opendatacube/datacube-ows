@@ -123,7 +123,7 @@ def get_coverage(args):
                             locator="Time parameter")
     data = get_coverage_data(req)
     return (
-        req.format["renderer"](req, data.collapse_to_single()),
+        req.format["renderer"](req, data),
         200,
         cfg.response_headers({
             "Content-Type": req.format["mime"],
