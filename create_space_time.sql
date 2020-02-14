@@ -30,6 +30,14 @@ select
     (metadata->'properties'->>'datetime'):: timestamp + interval '1 day'
    ) as temporal_extent
 from agdc.dataset where metadata_type_ref=3::smallint;
+-- Start/End timestamp variant product.
+-- http://dapds00.nci.org.au/thredds/fileServer/xu18/ga_ls8c_ard_3/092/090/2019/06/05/ga_ls8c_ard_3-0-0_092090_2019-06-05_final.odc-metadata.yaml
+select
+  id,tstzrange(
+    (metadata->'properties'->>'dtr:start_datetime'):: timestamp,
+    (metadata->'properties'->>'dtr:end_datetime'):: timestamp
+   ) as temporal_extent
+from agdc.dataset where metadata_type_ref=4::smallint;
 
 
 -- Spatial extents per dataset (to be created as a column of the space-time table)
@@ -42,7 +50,9 @@ ranges as
   (metadata #> '{extent, lat, end}') as lat_end,
   (metadata #> '{extent, lon, begin}') as lon_begin,
   (metadata #> '{extent, lon, end}') as lon_end
-   from agdc.dataset where metadata_type_ref=3::smallint),
+   from agdc.dataset where 
+      metadata_type_ref=3::smallint
+  ),
 -- This is eo spatial (Uses ALOS-PALSAR over Africa as a sample product)
 corners as
 (select id,
@@ -77,4 +87,6 @@ select id,
     ),
     4326
     ) as detail_spatial_extent
-from agdc.dataset where metadata_type_ref=3::smallint;
+from agdc.dataset where 
+(metadata_type_ref=3::smallint or
+metadata_type_ref=4::smallint)
