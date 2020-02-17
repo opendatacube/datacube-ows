@@ -72,7 +72,7 @@ def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, product_cfg=None):
     return red_delta / red_sum.where(mndwi > 0.1)
 
 
-def multi_data_delta(data):
+def multi_date_delta(data):
     data1, data2 = data.data_list()
     return data2 - data1
 
