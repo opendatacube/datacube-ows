@@ -29,7 +29,8 @@ select
     (metadata->'properties'->>'datetime'):: timestamp,
     (metadata->'properties'->>'datetime'):: timestamp + interval '1 day'
    ) as temporal_extent
-from agdc.dataset where metadata_type_ref=3::smallint;
+from agdc.dataset where metadata_type_ref=3::smallint
+UNION
 -- Start/End timestamp variant product.
 -- http://dapds00.nci.org.au/thredds/fileServer/xu18/ga_ls8c_ard_3/092/090/2019/06/05/ga_ls8c_ard_3-0-0_092090_2019-06-05_final.odc-metadata.yaml
 select
@@ -74,19 +75,48 @@ UNION
 select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
         ll_lon, ll_lat, lr_lon, lr_lat,  ur_lon, ur_lat, 
         ul_lon, ul_lat, ll_lon, ll_lat)::geometry as spatial_extent 
-from corners;
+from corners
+UNION
+select id,
+  ST_Transform(
+    ST_SetSRID(
+      ST_GeomFromGeoJSON(
+        metadata #>> '{geometry}'),
+        substr(
+          metadata #>> '{crs}',6)::integer
+        ),
+        4326
+      ) as spatial_extent
+ from agdc.dataset where metadata_type_ref=4::smallint;
+
 
 -- This is optional and in native projection where present,
 -- String processing drops EPSG prefix
-select id,
-    ST_Transform(
+select
+  id,
+  ST_Transform(
     ST_SetSRID(
-    ST_GeomFromGeoJSON(
+      ST_GeomFromGeoJSON(
         metadata #>> '{grid_spatial,projection,valid_data}'),
-        substr(metadata #>> '{grid_spatial,projection,spatial_reference}',6)::integer
-    ),
-    4326
-    ) as detail_spatial_extent
-from agdc.dataset where 
-(metadata_type_ref=3::smallint or
-metadata_type_ref=4::smallint)
+        substr(
+          metadata #>> '{grid_spatial,projection,spatial_reference}',6)::integer
+        ),
+        4326
+      ) as detail_spatial_extent
+      from agdc.dataset
+      where
+        metadata_type_ref=3::smallint
+
+select id,
+  ST_Transform(
+    ST_SetSRID(
+      ST_GeomFromGeoJSON(
+        metadata #>> '{geometry}'),
+        substr(
+          metadata #>> '{crs}',6)::integer
+        ),
+        4326
+      ) as detail_spatial_extent
+
+ from agdc.dataset where metadata_type_ref=4::smallint;
+
