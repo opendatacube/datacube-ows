@@ -40,6 +40,12 @@ of the config file, and edit it to reflect your requirements.
 
     $ cp datacube_wms/wms_cfg_example.py datacube_wms/wms_cfg_local.py
 
+To install datacube-ows, run:
+
+.. code-block:: console
+
+    $ python3 setup.py install
+
 
 .. _datacube-core: https://datacube-core.readthedocs.io/en/latest/
 .. _Github repo: https://github.com/opendatacube/datacube-ows
@@ -79,20 +85,20 @@ use as parameters to run OWS.
 
 Build a docker image in the local registry:
 
--- code-block:: console
+.. code-block:: console
 
     $ docker build -t ows-dev .
 
 Run docker image to start gunicorn with ows. Here the DB
 parameters noted previously are forwared to the docker image entrypoint.
 
--- code-block:: console
+.. code-block:: console
 
     $ docker run -e DB_DATABASE=datacube -e DB_HOSTNAME=localhost -e DB_USERNAME=ubuntu -e DB_PASSWORD=ubuntu --network=host ows-dev
 
 Connect to the running docker to initialise DB:
 
--- code-block:: console
+.. code-block:: console
 
     $ docker exec -it beautiful_docker bash
     $ datacube system init
@@ -101,13 +107,6 @@ Connect to the running docker to initialise DB:
 Exit the docker environment and use curl to validate the
 GetCapabilities form OWS works:
 
--- code-block:: console
+.. code-block:: console
 
     $ curl "localhost:8000/?service=wms&request=getcapabilities"
-
-
-
-
-
-
-

@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import datetime
+
 from dateutil.parser import parse
 
 import datacube
@@ -13,7 +15,7 @@ from rasterio import MemoryFile
 from datacube_ows.cube_pool import get_cube, release_cube
 from datacube_ows.data import DataStacker
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import ProductLayerException
+from datacube_ows.ogc_utils import ProductLayerException, DataCollection
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
 
@@ -283,28 +285,21 @@ def get_coverage_data(req):
     datasets = stacker.datasets(dc.index)
     if not datasets:
         # TODO: Return an empty coverage file with full metadata?
-        extents = dc.load(dask_chunks={}, product=req.product.product.name, geopolygon=req.geobox.extent, time=stacker._time)
         cfg = get_config()
         x_range = (req.minx, req.maxx)
         y_range = (req.miny, req.maxy)
         xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
         yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
-        if xname in extents:
-            xvals = extents[xname]
-        else:
-            xvals = numpy.linspace(
-                x_range[0],
-                x_range[1],
-                num=req.width
-            )
-        if yname in extents:
-            yvals = extents[yname]
-        else:
-            yvals = numpy.linspace(
-                y_range[0],
-                y_range[1],
-                num=req.height
-            )
+        xvals = numpy.linspace(
+            x_range[0],
+            x_range[1],
+            num=req.width
+        )
+        yvals = numpy.linspace(
+            y_range[0],
+            y_range[1],
+            num=req.height
+        )
         if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
             nparrays = {
                 band: ((yname, xname),
@@ -329,7 +324,10 @@ def get_coverage_data(req):
             }
         ).astype("int16")
         release_cube(dc)
-        return data
+
+        result = DataCollection()
+        result.add_time(datetime.datetime.now(), data)
+        return result
 
     if req.product.max_datasets_wcs > 0 and len(datasets) > req.product.max_datasets_wcs:
         raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
