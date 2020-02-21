@@ -19,7 +19,8 @@ select
   id,tstzrange(
     (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp
   ) as temporal_extent
-from agdc.dataset where metadata_type_ref=1::smallint
+from agdc.dataset where 
+  metadata_type_ref=1::smallint or metadata_type_ref=5::smallint
 UNION
 -- This is the eo3 variant of the temporal extent, the sample eo3 dataset uses a singleton
 -- timestamp, some other variants use start/end timestamps. From OWS perspective temporal
@@ -65,7 +66,8 @@ corners as
   (metadata #> '{extent, coord, ul, lon}') as ul_lon,
   (metadata #> '{extent, coord, ur, lat}') as ur_lat,
   (metadata #> '{extent, coord, ur, lon}') as ur_lon
-   from agdc.dataset where metadata_type_ref=1::smallint)
+   from agdc.dataset where metadata_type_ref=1::smallint 
+   or metadata_type_ref=5::smallint)
 select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
         lon_begin, lat_begin, lon_end, lat_begin,  lon_end, lat_end, 
         lon_begin, lat_end, lon_begin, lat_begin)::geometry
@@ -120,3 +122,4 @@ select id,
 
  from agdc.dataset where metadata_type_ref=4::smallint;
 
+select count(1),metadata_type_ref from agdc.dataset group by metadata_type_ref;
