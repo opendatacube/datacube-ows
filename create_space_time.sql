@@ -14,6 +14,8 @@ SET
 -- https://www.postgresql.org/docs/11/queries-union.html
 
 -- Try all different locations for temporal extents and UNION them
+CREATE MATERIALIZED VIEW IF NOT EXISTS time_view (ID, temporal_extent)
+AS
 with 
 -- Crib metadata to use as for string matching various types
 metadata_lookup as (
@@ -49,6 +51,8 @@ from agdc.dataset where metadata_type_ref in (select id from metadata_lookup whe
 
 -- Spatial extents per dataset (to be created as a column of the space-time table)
 -- Try all different locations for spatial extents and UNION them
+CREATE MATERIALIZED VIEW IF NOT EXISTS space_view (ID, spatial_extent)
+AS
 with 
 -- Crib metadata to use as for string matching various types
 metadata_lookup as (
@@ -101,34 +105,40 @@ select id,
  from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard'));
 
 
+-- Join the above queries for space and time as CTE's into a space-time view
+
+
 -- This is optional and in native projection where present,
 -- String processing drops EPSG prefix
-select
-  id,
-  ST_Transform(
-    ST_SetSRID(
-      ST_GeomFromGeoJSON(
-        metadata #>> '{grid_spatial,projection,valid_data}'),
-        substr(
-          metadata #>> '{grid_spatial,projection,spatial_reference}',6)::integer
-        ),
-        4326
-      ) as detail_spatial_extent
-      from agdc.dataset
-      where
-        metadata_type_ref=3::smallint
+-- select
+--  id,
+--  ST_Transform(
+--    ST_SetSRID(
+--      ST_GeomFromGeoJSON(
+--        metadata #>> '{grid_spatial,projection,valid_data}'),
+--        substr(
+--          metadata #>> '{grid_spatial,projection,spatial_reference}',6)::integer
+--        ),
+--        4326
+--      ) as detail_spatial_extent
+--      from agdc.dataset
+--     where
+--        metadata_type_ref=3::smallint
 
-select id,
-  ST_Transform(
-    ST_SetSRID(
-      ST_GeomFromGeoJSON(
-        metadata #>> '{geometry}'),
-        substr(
-          metadata #>> '{crs}',6)::integer
-        ),
-        4326
-      ) as detail_spatial_extent
+-- select id,
+--  ST_Transform(
+--    ST_SetSRID(
+--      ST_GeomFromGeoJSON(
+--        metadata #>> '{geometry}'),
+--        substr(
+--          metadata #>> '{crs}',6)::integer
+--        ),
+--        4326
+--      ) as detail_spatial_extent
+-- from agdc.dataset where metadata_type_ref=4::smallint;
 
- from agdc.dataset where metadata_type_ref=4::smallint;
+CREATE MATERIALIZED VIEW IF NOT EXISTS space_time_view (ID, spatial_extent, temporal_extent)
+AS
+select space_view.id, spatial_extent, temporal_extent from space_view join time_view on space_view.id=time_view.id;
 
-select count(1),metadata_type_ref from agdc.dataset group by metadata_type_ref;
+-- select * from space_time_view;
