@@ -40,6 +40,12 @@ of the config file, and edit it to reflect your requirements.
 
     $ cp datacube_wms/wms_cfg_example.py datacube_wms/wms_cfg_local.py
 
+To install datacube-ows, run:
+
+.. code-block:: console
+
+    $ python3 setup.py install
+
 
 .. _datacube-core: https://datacube-core.readthedocs.io/en/latest/
 .. _Github repo: https://github.com/opendatacube/datacube-ows
