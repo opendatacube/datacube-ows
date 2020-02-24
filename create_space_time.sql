@@ -14,13 +14,18 @@ SET
 -- https://www.postgresql.org/docs/11/queries-union.html
 
 -- Try all different locations for temporal extents and UNION them
+with 
+-- Crib metadata to use as for string matching various types
+metadata_lookup as (
+  select id,name from agdc.metadata_type
+)
 -- This is the eodataset variant of the temporal extent
 select
   id,tstzrange(
     (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp
   ) as temporal_extent
 from agdc.dataset where 
-  metadata_type_ref=1::smallint or metadata_type_ref=5::smallint
+  metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
 UNION
 -- This is the eo3 variant of the temporal extent, the sample eo3 dataset uses a singleton
 -- timestamp, some other variants use start/end timestamps. From OWS perspective temporal
@@ -30,7 +35,7 @@ select
     (metadata->'properties'->>'datetime'):: timestamp,
     (metadata->'properties'->>'datetime'):: timestamp + interval '1 day'
    ) as temporal_extent
-from agdc.dataset where metadata_type_ref=3::smallint
+from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name='eo3')
 UNION
 -- Start/End timestamp variant product.
 -- http://dapds00.nci.org.au/thredds/fileServer/xu18/ga_ls8c_ard_3/092/090/2019/06/05/ga_ls8c_ard_3-0-0_092090_2019-06-05_final.odc-metadata.yaml
@@ -39,12 +44,16 @@ select
     (metadata->'properties'->>'dtr:start_datetime'):: timestamp,
     (metadata->'properties'->>'dtr:end_datetime'):: timestamp
    ) as temporal_extent
-from agdc.dataset where metadata_type_ref=4::smallint;
+from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard'));
 
 
 -- Spatial extents per dataset (to be created as a column of the space-time table)
 -- Try all different locations for spatial extents and UNION them
 with 
+-- Crib metadata to use as for string matching various types
+metadata_lookup as (
+  select id,name from agdc.metadata_type
+),
 -- This is eo3 spatial (Uses CEMP INSAR as a sample product)
 ranges as
 (select id,
@@ -53,7 +62,7 @@ ranges as
   (metadata #> '{extent, lon, begin}') as lon_begin,
   (metadata #> '{extent, lon, end}') as lon_end
    from agdc.dataset where 
-      metadata_type_ref=3::smallint
+      metadata_type_ref in (select id from metadata_lookup where name='eo3')
   ),
 -- This is eo spatial (Uses ALOS-PALSAR over Africa as a sample product)
 corners as
@@ -66,8 +75,7 @@ corners as
   (metadata #> '{extent, coord, ul, lon}') as ul_lon,
   (metadata #> '{extent, coord, ur, lat}') as ur_lat,
   (metadata #> '{extent, coord, ur, lon}') as ur_lon
-   from agdc.dataset where metadata_type_ref=1::smallint 
-   or metadata_type_ref=5::smallint)
+   from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus')))
 select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
         lon_begin, lat_begin, lon_end, lat_begin,  lon_end, lat_end, 
         lon_begin, lat_end, lon_begin, lat_begin)::geometry
@@ -79,6 +87,7 @@ select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
         ul_lon, ul_lat, ll_lon, ll_lat)::geometry as spatial_extent 
 from corners
 UNION
+-- This is lansat_scene and landsat_l1_scene with geometries
 select id,
   ST_Transform(
     ST_SetSRID(
@@ -89,7 +98,7 @@ select id,
         ),
         4326
       ) as spatial_extent
- from agdc.dataset where metadata_type_ref=4::smallint;
+ from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard'));
 
 
 -- This is optional and in native projection where present,
