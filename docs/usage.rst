@@ -42,7 +42,7 @@ Update extents of products in Datacube to make it easier for OWS to create getca
 
 .. code-block:: console
 
-    $ update_ranges.py -- product alos_palsar_mosaic --no-calculate-extent
+    $ python3 update_ranges.py --product alos_palsar_mosaic --no-calculate-extent
 
 Deploy the Digital Earth Africa OWS config available `here <https://github.com/digitalearthafrica/config/blob/master/services/ows.py>`_
 by copying to wms_cfg.py. Ideally load the config outside
