@@ -563,7 +563,7 @@ def feature_info(args):
 
                 date_info = {}
 
-                ds = ds_at_times.sel(time=td).values.tolist()[0]
+                ds = ds_at_times.sel(time=dt).values.tolist()[0]
                 if params.product.multi_product:
                     date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
 
