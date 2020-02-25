@@ -22,10 +22,9 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
-from datacube_ows.ogc_utils import resp_headers, local_solar_date_range, local_date, dataset_center_time, \
-    ConfigException, tz_for_coord, DataCollection, DatasetCollection, tz_for_dataset
+from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException
 
-from datacube_ows.utils import log_call
+from datacube_ows.utils import log_call, group_by_statistical
 
 import logging
 
@@ -51,10 +50,10 @@ class DataStacker(object):
 
         if self._product.is_month_time_res:
             self._times = list(times.date)
-            self.group_by = "time"
+            self.group_by = group_by_statistical()
         elif self._product.is_year_time_res:
             self._times = list([date(time.year, 1, 1) for time in times])
-            self.group_by = "time"
+            self.group_by = group_by_statistical()
         else:
             self._times = list([local_solar_date_range(geobox, time) for time in times])
             self.group_by = "solar_day"
@@ -393,7 +392,10 @@ def _write_polygon(geobox, polygon, zoom_fill):
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def get_s3_browser_uris(datasets, s3url="", s3bucket=""):
-    uris = [d.uris for d in datasets.all_datasets()]
+    uris = []
+    for tds in datasets:
+        for ds in tds.values.item():
+            uris.append(ds.uris)
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
@@ -513,24 +515,39 @@ def feature_info(args):
         }
         if datasets:
             # Group datasets by time, load only datasets that match the idx_date
-            available_dates = datasets.times()
+            available_dates = datasets.coords["time"].values
             global_info_written = False
             feature_json["data"] = []
             fi_date_index = {}
-            ds_at_times = datasets.collapse(params.times)
+            collapsed = numpy.empty(len(params.times), dtype=object)
+            selected_dates = []
+            for i, dt in enumerate(params.times):
+                npdt = numpy.datetime64(dt)
+                assert npdt in available_dates
+                selected_dates.append(npdt)
+                dss = datasets.sel(time=dt)
+                dssv = dss.values
+                collapsed[i] = tuple(dssv.tolist())
+            ds_at_times = xarray.DataArray(
+                    collapsed,
+                    dims=["time"],
+                    coords=[selected_dates]
+            )
+            # ds_at_times["time"].attrs["units"] = 'seconds since 1970-01-01 00:00:00'
             data = stacker.data(ds_at_times, skip_corrections=True,
                                 manual_merge=params.product.data_manual_merge,
                                 fuse_func=params.product.fuse_func
                                 )
-            for td in data:
+            for dt in data.time.values:
+                td = data.sel(time=dt)
                 # Global data that should apply to all dates, but needs some data to extract
                 if not global_info_written:
                     global_info_written = True
                     # Non-geographic coordinate systems need to be projected onto a geographic
                     # coordinate system.  Why not use EPSG:4326?
                     # Extract coordinates in CRS
-                    data_x = getattr(td.data, h_coord)
-                    data_y = getattr(td.data, v_coord)
+                    data_x = getattr(td, h_coord)
+                    data_y = getattr(td, v_coord)
 
                     x = data_x[isel_kwargs[h_coord]].item()
                     y = data_y[isel_kwargs[v_coord]].item()
@@ -545,12 +562,12 @@ def feature_info(args):
 
                 date_info = {}
 
-                ds = ds_at_times.get_time(td.time).datasets[0]
+                ds = ds_at_times.sel(time=td).values.tolist()[0]
                 if params.product.multi_product:
                     date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
 
                 # Extract data pixel
-                pixel_ds = td.data.isel(**isel_kwargs)
+                pixel_ds = td.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
                 date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -565,7 +582,7 @@ def feature_info(args):
                     date_info[k] = f(date_info["bands"])
 
                 feature_json["data"].append(date_info)
-                fi_date_index[td.time] = feature_json["data"][-1]
+                fi_date_index[dt] = feature_json["data"][-1]
 
             my_flags = 0
             if params.product.pq_names == params.product.product_names:
@@ -612,9 +629,19 @@ def feature_info(args):
                                         break
                             except TypeError:
                                 pass
-            feature_json["data_available_for_dates"] = [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
+            feature_json["data_available_for_dates"] = []
+            for d in available_dates:
+                dt = datetime.utcfromtimestamp(d.astype(int) * 1e-9)
+                feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
             if params.product.feature_info_include_utc_dates:
+                unsorted_dates = []
+                for tds in datasets:
+                    for ds in tds.values.item():
+                        if params.product.time_resolution.is_raw_time_res:
+                            unsorted_dates.append(ds.center_time.strftime("%Y-%m-%d"))
+                        else:
+                            unsorted_dates.append(ds.time.begin.strftime("%Y-%m-%d"))
                 feature_json["data_available_for_utc_dates"] = sorted(
                     d.center_time.strftime("%Y-%m-%d") for d in datasets)
     # --- End code section requiring datacube.
