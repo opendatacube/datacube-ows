@@ -76,9 +76,9 @@ class StyleDefBase(object):
         date_count = len(data.coords["time"])
         if date_count == 1:
             if pq_data is not None:
-                pq_data = pq_data.collapse_to_single()
+                pq_data = pq_data.squeeze(dim="time", drop=True)
             if extent_mask is not None:
-                extent_mask = extent_mask.collapse_to_single()
+                extent_mask = extent_mask.squeeze(dim="time", drop=True)
             return self.transform_single_date_data(data.squeeze(dim="time", drop=True),
                                                    pq_data,
                                                    extent_mask,
