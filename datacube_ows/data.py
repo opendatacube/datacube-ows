@@ -514,7 +514,7 @@ def feature_info(args):
             h_coord: 0,
             v_coord: 0
         }
-        if datasets:
+        if any(datasets):
             # Group datasets by time, load only datasets that match the idx_date
             available_dates = datasets.coords["time"].values
             global_info_written = False
