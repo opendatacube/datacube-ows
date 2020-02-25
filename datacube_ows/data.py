@@ -295,17 +295,18 @@ def get_map(args):
             # extent_mask = DataCollection()
             extent_mask = None
             if not params.product.data_manual_merge:
-                pass
-                # REFACTOR: TODO
-                #
-                #for td in data:
-                #    ext_mask = None
-                #    for band in params.style.needed_bands:
-                #        for f in params.product.extent_mask_func:
-                #            if ext_mask is None:
-                #                ext_mask = f(td.data, band)
-                #            else:
-                #                ext_mask &= f(td.data, band)
+                td_masks = []
+                for npdt in data.time.values:
+                    td = data.sel(time=npdt)
+                    td_ext_mask = None
+                    for band in params.style.needed_bands:
+                        for f in params.product.extent_mask_func:
+                            if td_ext_mask is None:
+                                td_ext_mask = f(td, band)
+                            else:
+                                td_ext_mask &= f(td, band)
+                    td_masks.append(td_ext_mask)
+                extent_mask = xarray.concat(td_masks, dim=data.time)
                 #    extent_mask.add_time(td.time, ext_mask)
 
             if not data or (params.style.masks and not pq_data):
@@ -562,7 +563,7 @@ def feature_info(args):
 
                 date_info = {}
 
-                ds = ds_at_times.sel(time=td).values.tolist()[0]
+                ds = ds_at_times.sel(time=dt).values.tolist()[0]
                 if params.product.multi_product:
                     date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
 
