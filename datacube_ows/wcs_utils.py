@@ -302,16 +302,16 @@ def get_coverage_data(req):
         )
         if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
             nparrays = {
-                band: ((yname, xname),
-                       numpy.full((len(yvals), len(xvals)),
+                band: (("time", yname, xname),
+                       numpy.full((len(req.times), len(yvals), len(xvals)),
                                   req.product.nodata_dict[band])
                       )
                 for band in req.bands
             }
         else:
             nparrays = {
-                band: ((xname, yname),
-                       numpy.full((len(xvals), len(yvals)),
+                band: (("time", xname, yname),
+                       numpy.full((len(req.times), len(xvals), len(yvals)),
                                   req.product.nodata_dict[band])
                       )
                 for band in req.bands
@@ -319,15 +319,14 @@ def get_coverage_data(req):
         data = xarray.Dataset(
             nparrays,
             coords={
+                "time": req.times,
                 xname: xvals,
                 yname: yvals,
             }
         ).astype("int16")
         release_cube(dc)
 
-        result = DataCollection()
-        result.add_time(datetime.datetime.now(), data)
-        return result
+        return data
 
     if req.product.max_datasets_wcs > 0 and len(datasets) > req.product.max_datasets_wcs:
         raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
