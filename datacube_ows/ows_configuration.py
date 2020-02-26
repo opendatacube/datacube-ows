@@ -500,19 +500,19 @@ class OWSNamedLayer(OWSLayer):
             dc = ext_dc
         else:
             dc = get_cube()
-        from datacube_ows.product_ranges import get_ranges
         self._ranges = None
         try:
+            from datacube_ows.product_ranges import get_ranges
             self._ranges = get_ranges(dc, self)
             if self._ranges is None:
                 raise Exception("Null product range")
+            self.bboxes = self.extract_bboxes()
         except Exception as a:
             range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
             raise ConfigException(range_failure)
         finally:
             if not ext_dc:
                 release_cube(dc)
-        self.bboxes = self.extract_bboxes()
 
     @property
     def ranges(self):
@@ -654,6 +654,7 @@ class OWSConfig(OWSConfigEntry):
         self.keywords = cfg.get("keywords", [])
         self.fees = cfg.get("fees")
         self.access_constraints = cfg.get("access_constraints")
+        self.use_extent_views = cfg.get("use_extent_views", False)
         if not self.fees:
             self.fees = "none"
         if not self.access_constraints:
