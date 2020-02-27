@@ -142,3 +142,15 @@ AS
 select space_view.id, spatial_extent, temporal_extent from space_view join time_view on space_view.id=time_view.id;
 
 -- select * from space_time_view;
+
+-- Spatial extents are indexed using GIST index for BBOX queries
+-- https://postgis.net/workshops/postgis-intro/indexing.html
+CREATE INDEX space_time_view_geom_idx
+  ON space_time_view
+  USING GIST (spatial_extent);
+
+-- Time range types can carray indexes for range lookup
+-- https://www.postgresql.org/docs/11/rangetypes.html#RANGETYPES-INDEXING
+CREATE INDEX space_time_view_time_idx
+  ON space_time_view
+  USING SPGIST (temporal_extent);
