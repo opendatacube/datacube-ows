@@ -10,11 +10,20 @@ SET
   search_path = public,
   agdc;
 
+-- Get rid of already existing Materialized View
+DROP INDEX space_time_view_geom_idx;
+DROP INDEX space_time_view_time_idx;
+DROP INDEX space_time_view_ds_idx;
+DROP MATERIALIZED VIEW space_time_view;
+DROP MATERIALIZED VIEW time_view;
+DROP MATERIALIZED VIEW space_view;
+
+
 -- Handling different variants of metadata requires UNION with WHICH clauses per metadata type
 -- https://www.postgresql.org/docs/11/queries-union.html
 
 -- Try all different locations for temporal extents and UNION them
-CREATE MATERIALIZED VIEW IF NOT EXISTS time_view (ID, temporal_extent)
+CREATE MATERIALIZED VIEW IF NOT EXISTS time_view (dataset_type_ref, ID, temporal_extent)
 AS
 with 
 -- Crib metadata to use as for string matching various types
@@ -23,7 +32,7 @@ metadata_lookup as (
 )
 -- This is the eodataset variant of the temporal extent
 select
-  id,tstzrange(
+  dataset_type_ref, id,tstzrange(
     (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp
   ) as temporal_extent
 from agdc.dataset where 
@@ -33,7 +42,7 @@ UNION
 -- timestamp, some other variants use start/end timestamps. From OWS perspective temporal
 -- resolution is 1 whole day
 select
-  id,tstzrange(
+  dataset_type_ref, id,tstzrange(
     (metadata->'properties'->>'datetime'):: timestamp,
     (metadata->'properties'->>'datetime'):: timestamp + interval '1 day'
    ) as temporal_extent
@@ -42,7 +51,7 @@ UNION
 -- Start/End timestamp variant product.
 -- http://dapds00.nci.org.au/thredds/fileServer/xu18/ga_ls8c_ard_3/092/090/2019/06/05/ga_ls8c_ard_3-0-0_092090_2019-06-05_final.odc-metadata.yaml
 select
-  id,tstzrange(
+  dataset_type_ref, id,tstzrange(
     (metadata->'properties'->>'dtr:start_datetime'):: timestamp,
     (metadata->'properties'->>'dtr:end_datetime'):: timestamp
    ) as temporal_extent
@@ -137,9 +146,9 @@ select id,
 --      ) as detail_spatial_extent
 -- from agdc.dataset where metadata_type_ref=4::smallint;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS space_time_view (ID, spatial_extent, temporal_extent)
+CREATE MATERIALIZED VIEW IF NOT EXISTS space_time_view (ID, dataset_type_ref, spatial_extent, temporal_extent)
 AS
-select space_view.id, spatial_extent, temporal_extent from space_view join time_view on space_view.id=time_view.id;
+select space_view.id, dataset_type_ref, spatial_extent, temporal_extent from space_view join time_view on space_view.id=time_view.id;
 
 -- select * from space_time_view;
 
@@ -154,3 +163,9 @@ CREATE INDEX space_time_view_geom_idx
 CREATE INDEX space_time_view_time_idx
   ON space_time_view
   USING SPGIST (temporal_extent);
+
+-- Create standard btree index over dataset_type_ref to ease searching by
+-- https://ieftimov.com/post/postgresql-indexes-btree/
+CREATE INDEX space_time_view_ds_idx
+  ON space_time_view
+  USING BTREE(dataset_type_ref)
