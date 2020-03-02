@@ -168,4 +168,4 @@ CREATE INDEX space_time_view_time_idx
 -- https://ieftimov.com/post/postgresql-indexes-btree/
 CREATE INDEX space_time_view_ds_idx
   ON space_time_view
-  USING BTREE(dataset_type_ref)
+  USING BTREE(dataset_type_ref);
