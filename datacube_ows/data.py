@@ -39,6 +39,7 @@ class DataStacker(object):
     def __init__(self, product, geobox, times, resampling=None, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
+        self.cfg = product.global_cfg
         self._geobox = geobox
         self._resampling = resampling if resampling is not None else Resampling.nearest
         if style:
@@ -48,14 +49,15 @@ class DataStacker(object):
         else:
             self._needed_bands = self._product.band_idx.native_bands.index
 
+        self.raw_times = times
         if self._product.is_month_time_res:
-            self._times = list(times.date)
+            self._times = list(t.date for t in times)
             self.group_by = group_by_statistical()
         elif self._product.is_year_time_res:
-            self._times = list([date(time.year, 1, 1) for time in times])
+            self._times = list([date(t.year, 1, 1) for t in times])
             self.group_by = group_by_statistical()
         else:
-            self._times = list([local_solar_date_range(geobox, time) for time in times])
+            self._times = list([local_solar_date_range(geobox, t) for t in times])
             self.group_by = "solar_day"
 
     def needed_bands(self):
