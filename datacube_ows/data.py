@@ -51,7 +51,7 @@ class DataStacker(object):
 
         self.raw_times = times
         if self._product.is_month_time_res:
-            self._times = list(t.date for t in times)
+            self._times = list(t for t in times)
             self.group_by = group_by_statistical()
         elif self._product.is_year_time_res:
             self._times = list([date(t.year, 1, 1) for t in times])
@@ -156,9 +156,10 @@ class DataStacker(object):
             bands = [self._product.pq_band]
         else:
             bands = self.needed_bands()
-        result = []
-        merged = None
-        for tds in datasets:
+        time_slices = []
+        for i, dt in enumerate(datasets.time.values):
+            tds = datasets.sel(time=dt)
+            merged = None
             for ds in tds.values.item():
                 d = self.read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
                 extent_mask = None
@@ -181,7 +182,10 @@ class DataStacker(object):
                 merged = merged.astype('uint8', copy=True)
                 for band in bands:
                     merged[band].attrs = d[band].attrs
-        return merged
+            time_slices.append(merged)
+
+        result = xarray.concat(time_slices, datasets.time)
+        return result
 
     # Read data for given datasets and measurements per the output_geobox
     @log_call
