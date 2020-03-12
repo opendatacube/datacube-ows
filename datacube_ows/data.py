@@ -157,7 +157,7 @@ class DataStacker(object):
         else:
             bands = self.needed_bands()
         time_slices = []
-        for i, dt in enumerate(datasets.time.values):
+        for dt in datasets.time.values:
             tds = datasets.sel(time=dt)
             merged = None
             for ds in tds.values.item():

@@ -6,7 +6,7 @@ from datacube_ows.ogc_utils import DataCollection, DatasetCollection
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
-from xarray import DataArray, Dataset
+from xarray import DataArray, Dataset, concat
 from unittest.mock import patch
 
 import pytest
@@ -226,29 +226,30 @@ def test_alpha_style_map(
     def fake_make_mask(data, **kwargs):
         return data
 
+
     band = np.array([True, True, True])
-    time = datetime.date.today()
+    timarray = [np.datetime64(datetime.date.today())]
+    times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     da = DataArray(band, name='foo')
-    dsc = DatasetCollection()
-    ds = Dataset(data_vars={'foo': da})
-    dsc.add_time(time, ds)
+    dst = Dataset(data_vars={'foo': da})
+    ds = concat([dst], times)
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
-        result = style_def.transform_data(dsc, None, None)
+        result = style_def.transform_data(ds, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
 
-        result = style_def.transform_data(dsc, None, None)
+        result = style_def.transform_data(ds, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 127).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
-        result = style_def.transform_data(dsc, None, None)
+        result = style_def.transform_data(ds, None, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 255).all()
 
@@ -371,10 +372,11 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    today = datetime.date.today()
+    timarray = [np.datetime64(datetime.date.today())]
+    times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     da = DataArray(band, name='foo')
-    ds = DatasetCollection()
-    ds.add_time(today, Dataset(data_vars={'foo': da}))
+    dst = Dataset(data_vars={'foo': da})
+    ds = concat([dst], times)
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
