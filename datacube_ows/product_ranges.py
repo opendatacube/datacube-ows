@@ -2,15 +2,16 @@
 
 from __future__ import absolute_import, division, print_function
 
-from datetime import date, datetime, timedelta
+from datetime import datetime
 import datacube
 
 from datacube_ows.ows_configuration import get_config, OWSNamedLayer  # , get_layers, ProductLayerDef
 from datacube_ows.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
-from uuid import UUID
 import json
+
+from datacube_ows.utils import get_sqlconn
 
 DEFAULT_GEOJSON = json.loads('''{
 "type": "Polygon",
@@ -182,11 +183,6 @@ def determine_product_ranges(dc, dc_product, extractor):
         end = datetime.now()
         print("No datasets indexed. Nothing to do and didn't do it in %s seconds" % (end - start).seconds)
     return r
-
-
-def get_sqlconn(dc):
-    # pylint: disable=protected-access
-    return dc.index._db._engine.connect()
 
 
 def get_ids_in_db(conn):

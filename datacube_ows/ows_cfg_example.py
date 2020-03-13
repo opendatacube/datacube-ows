@@ -1201,6 +1201,11 @@ ows_cfg = {
                 "vertical_coord": "y",
             },
         },
+        # If True the new EXPERIMENTAL materialised views are used for spatio-temporal extents.
+        # If False (the default), the old "update_ranges" tables (and native ODC search methods) are used.
+        # DO NOT SET THIS TO TRUE unless you understand what this means and want to participate
+        # in the experiment!
+        "use_extent_views": False,
     },   #### End of "global" section.
 
     # Config items in the "wms" section apply to the WMS service (and WMTS, which is implemented as a
