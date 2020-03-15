@@ -259,8 +259,9 @@ def get_map(args):
             # Construct a polygon which is the union of the extents of the matching datasets.
             extent = None
             extent_crs = None
-            for tds in datasets:
-                for ds in tds.datasets:
+            for dt in datasets.time.values:
+                tds = datasets.sel(time=dt)
+                for ds in tds.values.item():
                     if extent:
                         new_extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
                         if new_extent.crs != extent_crs:
