@@ -3,6 +3,7 @@ flask
 colour
 scikit-image
 gevent
+python-slugify
 eventlet
 gunicorn
 gunicorn[gevent]
