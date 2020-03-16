@@ -22,7 +22,8 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
-from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException
+from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException, tz_for_geometry, \
+    solar_date
 
 from datacube_ows.utils import log_call, group_by_statistical
 
@@ -301,7 +302,6 @@ def get_map(args):
             else:
                 pq_data = None
 
-            # extent_mask = DataCollection()
             extent_mask = None
             if not params.product.data_manual_merge:
                 td_masks = []
@@ -531,11 +531,20 @@ def feature_info(args):
             fi_date_index = {}
             collapsed = numpy.empty(len(params.times), dtype=object)
             selected_dates = []
+            tz = tz_for_geometry(geo_point_geobox.geographic_extent)
             for i, dt in enumerate(params.times):
-                npdt = numpy.datetime64(dt)
-                assert npdt in available_dates
+                # TODO: Improve efficiency for large available date sets!
+                npdt = None
+                for avnpdt in available_dates:
+                    av_dt = datetime.utcfromtimestamp(avnpdt.astype(int) * 1e-9)
+                    av_date = solar_date(av_dt, tz)
+                    if av_date == dt:
+                        npdt = avnpdt
+                        break
+                if not npdt:
+                    raise WMSException("Date mismatch")
                 selected_dates.append(npdt)
-                dss = datasets.sel(time=dt)
+                dss = datasets.sel(time=npdt)
                 dssv = dss.values
                 collapsed[i] = tuple(dssv.tolist())
             ds_at_times = xarray.DataArray(

@@ -2,7 +2,6 @@ import datetime
 
 import datacube_ows.band_mapper as bm
 from datacube_ows.band_mapper import StyleDef
-from datacube_ows.ogc_utils import DataCollection, DatasetCollection
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 

@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-from itertools import zip_longest
-
 from xarray import Dataset, DataArray, merge
 import numpy
 from colour import Color
@@ -15,7 +13,6 @@ from datetime import datetime
 # pylint: disable=wrong-import-position
 import matplotlib
 # Do not use X Server backend
-from datacube_ows.ogc_utils import DataCollection
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
