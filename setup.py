@@ -30,6 +30,7 @@ requirements = [
     'regex',
     'scikit-image',
     'timezonefinderL',
+    'python-slugify',
     'xarray'
 ]
 
