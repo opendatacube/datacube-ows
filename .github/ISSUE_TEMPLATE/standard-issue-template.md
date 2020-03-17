@@ -1,4 +1,4 @@
-* datacube-wms version:
+* datacube-ows version:
 * Python version:
 * Operating System:
 
