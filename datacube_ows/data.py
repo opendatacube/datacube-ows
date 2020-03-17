@@ -533,7 +533,7 @@ def feature_info(args):
             selected_dates = []
             tz = tz_for_geometry(geo_point_geobox.geographic_extent)
             for i, dt in enumerate(params.times):
-                if product.is_raw_time_res:
+                if params.product.is_raw_time_res:
                     # TODO: Improve efficiency for large available date sets!
                     npdt = None
                     for avnpdt in available_dates:
