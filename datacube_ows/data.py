@@ -533,7 +533,8 @@ def feature_info(args):
             selected_dates = []
             tz = tz_for_geometry(geo_point_geobox.geographic_extent)
             for i, dt in enumerate(params.times):
-                if params.product.is_raw_time_res:
+                npdt = numpy.datetime64(dt)
+                if npdt not in available_dates:
                     # TODO: Improve efficiency for large available date sets!
                     npdt = None
                     for avnpdt in available_dates:
@@ -543,10 +544,6 @@ def feature_info(args):
                             npdt = avnpdt
                             break
                     if not npdt:
-                        raise WMSException("Date mismatch")
-                else:
-                    npdt = numpy.datetime64(dt)
-                    if npdt not in available_dates:
                         raise WMSException("Date mismatch")
                 selected_dates.append(npdt)
                 dss = datasets.sel(time=npdt)
