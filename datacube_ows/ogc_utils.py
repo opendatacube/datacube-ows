@@ -2,10 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 import re
 import datetime
-from functools import reduce
 from importlib import import_module
 from itertools import chain
-from operator import add
 
 from dateutil.parser import parse
 from urllib.parse import urlparse

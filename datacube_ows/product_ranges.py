@@ -82,7 +82,7 @@ def jsonise_bbox(bbox):
             "right": bbox.right,
         }
 
-def determine_product_ranges(dc, dc_product, extractor):
+def determine_product_ranges(dc, dc_product, extractor, summary_dataset=False):
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements, protected-access
     start = datetime.now()
     print("Product: ", dc_product.name)
@@ -106,8 +106,10 @@ def determine_product_ranges(dc, dc_product, extractor):
     ds_count = 0
     for ds in dc.find_datasets(product=dc_product.name):
         print("Processing a dataset", ds.id)
-        loc_date = local_date(ds)
-        time_set.add(loc_date)
+        if summary_dataset:
+            ds_time = ds.metadata.time[0]
+        else:
+            ds_time = local_date(ds)
         if extractor is not None:
             path = extractor(ds)
             if path not in sub_r:
@@ -135,8 +137,9 @@ def determine_product_ranges(dc, dc_product, extractor):
         r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
         r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
+        time_set.add(ds_time)
         if path is not None:
-            sub_r[path]["time_set"].add(loc_date)
+            sub_r[path]["time_set"].add(ds_time)
 
         for crsid in crsids:
             print("Working with CRS", crsid)
@@ -383,11 +386,17 @@ def update_single_range(dc, product):
         assert not product.multi_product
         dc_product = product.product
         extractor  = product.sub_product_extractor
+        summary = not product.is_raw_time_res
     else:
         dc_product = product
         extractor = None
+        product = get_config().native_product_index.get(product.name)
+        if product:
+            summary = not product.is_raw_time_res
+        else:
+            summary = False
 
-    product_range = determine_product_ranges(dc, dc_product, extractor)
+    product_range = determine_product_ranges(dc, dc_product, extractor, summary)
     conn = get_sqlconn(dc)
     txn = conn.begin()
     db_range = get_ranges(dc, dc_product, is_dc_product=True)

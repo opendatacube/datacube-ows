@@ -362,6 +362,8 @@ class OWSNamedLayer(OWSLayer):
 
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
+        if not self.multi_product:
+            self.global_cfg.native_product_index[self.product_name] = self
 
     def parse_resource_limits(self, cfg):
         self.zoom_fill = cfg["wms"].get("zoomed_out_fill_colour", [150, 180, 200, 160])
@@ -728,6 +730,7 @@ class OWSConfig(OWSConfigEntry):
     def parse_layers(self, cfg):
         self.layers = []
         self.product_index = {}
+        self.native_product_index = {}
         with cube() as dc:
             for lyr_cfg in cfg:
                 self.layers.append(parse_ows_layer(lyr_cfg, self, dc))

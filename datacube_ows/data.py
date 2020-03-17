@@ -20,8 +20,8 @@ from datacube_ows.cube_pool import cube
 from datacube_ows.ogc_exceptions import WMSException
 
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.wms_utils import img_coords_to_geopoint , GetMapParameters, \
-    GetFeatureInfoParameters, solar_correct_data
+from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
+    GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
 from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException, tz_for_geometry, \
     solar_date
 
@@ -507,6 +507,7 @@ def feature_info(args):
     else:
         geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
+    tz = tz_for_geometry(geo_point_geobox.geographic_extent)
     stacker = DataStacker(params.product, geo_point_geobox, params.times)
 
     # --- Begin code section requiring datacube.
@@ -525,35 +526,10 @@ def feature_info(args):
         }
         if any(datasets):
             # Group datasets by time, load only datasets that match the idx_date
-            available_dates = datasets.coords["time"].values
             global_info_written = False
             feature_json["data"] = []
             fi_date_index = {}
-            collapsed = numpy.empty(len(params.times), dtype=object)
-            selected_dates = []
-            tz = tz_for_geometry(geo_point_geobox.geographic_extent)
-            for i, dt in enumerate(params.times):
-                npdt = numpy.datetime64(dt)
-                if npdt not in available_dates:
-                    # TODO: Improve efficiency for large available date sets!
-                    npdt = None
-                    for avnpdt in available_dates:
-                        av_dt = datetime.utcfromtimestamp(avnpdt.astype(int) * 1e-9)
-                        av_date = solar_date(av_dt, tz)
-                        if av_date == dt:
-                            npdt = avnpdt
-                            break
-                    if not npdt:
-                        raise WMSException("Date mismatch")
-                selected_dates.append(npdt)
-                dss = datasets.sel(time=npdt)
-                dssv = dss.values
-                collapsed[i] = tuple(dssv.tolist())
-            ds_at_times = xarray.DataArray(
-                    collapsed,
-                    dims=["time"],
-                    coords=[selected_dates]
-            )
+            ds_at_times =collapse_datasets_to_times(datasets, params.times, tz)
             # ds_at_times["time"].attrs["units"] = 'seconds since 1970-01-01 00:00:00'
             data = stacker.data(ds_at_times, skip_corrections=True,
                                 manual_merge=params.product.data_manual_merge,
@@ -612,12 +588,16 @@ def feature_info(args):
                 pq_datasets = stacker.datasets(dc.index, mask=True, all_time=False, point=geo_point)
 
             if pq_datasets:
-                pq_datasets = pq_datasets.collapse(params.times)
+                pq_datasets =collapse_datasets_to_times(pq_datasets, params.times, tz)
                 pq_data = stacker.data(pq_datasets, mask=True)
-                for pqd in pq_data:
-                    idx_date = pqd.time
-                    date_info = fi_date_index[idx_date]
-                    pq_pixel_ds = pqd.data.isel(**isel_kwargs)
+                feature_json["flags"] = []
+                for dt in pq_data.time.values:
+                    pqd =pq_data.sel(time=dt)
+                    date_info = fi_date_index.get(dt)
+                    if not date_info:
+                        date_info = {}
+                        feature_info["data"].append(date_info)
+                    pq_pixel_ds = pqd.isel(**isel_kwargs)
                     # PQ flags
                     m = params.product.pq_product.measurements[params.product.pq_band]
                     flags = pq_pixel_ds[params.product.pq_band].item()
@@ -651,8 +631,10 @@ def feature_info(args):
                             except TypeError:
                                 pass
             feature_json["data_available_for_dates"] = []
-            for d in available_dates:
+            for d in datasets.coords["time"].values:
                 dt = datetime.utcfromtimestamp(d.astype(int) * 1e-9)
+                if params.product.is_raw_time_res:
+                    dt = solar_date(dt, tz)
                 feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
             feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
             if params.product.feature_info_include_utc_dates:
