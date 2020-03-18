@@ -596,7 +596,7 @@ def feature_info(args):
                     date_info = fi_date_index.get(dt)
                     if not date_info:
                         date_info = {}
-                        feature_info["data"].append(date_info)
+                        feature_json["data"].append(date_info)
                     pq_pixel_ds = pqd.isel(**isel_kwargs)
                     # PQ flags
                     m = params.product.pq_product.measurements[params.product.pq_band]
