@@ -38,11 +38,18 @@ with `AWS CLI <https://aws.amazon.com/cli/>`_ grabbing them from S3.
 
 .. note:: The next step will be superseded soon by an OWS sub-command.
 
-Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents.
+Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is within the code directory.
 
 .. code-block:: console
 
     $ python3 update_ranges.py --product alos_palsar_mosaic --no-calculate-extent
+
+Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is outside of the code directory, i.e. `/opt`.
+
+.. code-block:: console
+
+    $ PYTHONPATH=/opt python3 update_ranges.py --product alos_palsar_mosaic --no-calculate-extent
+
 
 Deploy the Digital Earth Africa OWS config available `here <https://github.com/digitalearthafrica/config/blob/master/services/ows.py>`_
 by copying to wms_cfg.py. Ideally load the config outside
