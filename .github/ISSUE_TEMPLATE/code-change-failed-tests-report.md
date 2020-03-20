@@ -13,12 +13,19 @@ assignees: ''
 
 ### Major errors
 
-* impacted layer
-Please list the link that is returning error message and paste in the error code.
+```
+error here
+```
+**impacted layer**
+Please list the link that is returning the error message.
+
+| item no. | layer | url |
+| --------- | ----- | --- |
+|  1.          | TBA  | link |
 
 ### Output differences
 
 
-| layer        | old code link           | new code link  |
-| ------------- |:-------------|:-----|
-| col 3 is      | right-aligned | $1600 |
+| Item no. | layer        | old code link           | new code link  |
+|  ------ | ------------- |:-------------|:-----|
+| 1.  | TBA   | old link | new link |
