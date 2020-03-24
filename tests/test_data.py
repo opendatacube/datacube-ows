@@ -29,15 +29,18 @@ def s3_url_datasets():
     datasets.append(d1)
     datasets.append(d2)
 
-    class DatasetCollectionMock:
+    class DataSetMock:
         def __init__(self, datasets):
             self.datasets = datasets
 
-        def all_datasets(self):
-            return datasets
+            class InnerMock:
+                def __init__(self, datasets):
+                    self.datasets = datasets
+                def item(self):
+                    return self.datasets
+            self.values = InnerMock(datasets)
 
-    return DatasetCollectionMock(datasets)
-
+    return [DataSetMock(datasets)]
 
 def test_s3_browser_uris(s3_url_datasets):
     uris = get_s3_browser_uris(s3_url_datasets)

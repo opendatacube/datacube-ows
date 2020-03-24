@@ -1,10 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-import datetime
-
 from dateutil.parser import parse
 
-import datacube
 import numpy
 import xarray
 from affine import Affine
@@ -15,7 +12,7 @@ from rasterio import MemoryFile
 from datacube_ows.cube_pool import get_cube, release_cube
 from datacube_ows.data import DataStacker
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import ProductLayerException, DataCollection
+from datacube_ows.ogc_utils import ProductLayerException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
 
@@ -302,16 +299,16 @@ def get_coverage_data(req):
         )
         if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
             nparrays = {
-                band: ((yname, xname),
-                       numpy.full((len(yvals), len(xvals)),
+                band: (("time", yname, xname),
+                       numpy.full((len(req.times), len(yvals), len(xvals)),
                                   req.product.nodata_dict[band])
                       )
                 for band in req.bands
             }
         else:
             nparrays = {
-                band: ((xname, yname),
-                       numpy.full((len(xvals), len(yvals)),
+                band: (("time", xname, yname),
+                       numpy.full((len(req.times), len(xvals), len(yvals)),
                                   req.product.nodata_dict[band])
                       )
                 for band in req.bands
@@ -319,15 +316,14 @@ def get_coverage_data(req):
         data = xarray.Dataset(
             nparrays,
             coords={
+                "time": req.times,
                 xname: xvals,
                 yname: yvals,
             }
         ).astype("int16")
         release_cube(dc)
 
-        result = DataCollection()
-        result.add_time(datetime.datetime.now(), data)
-        return result
+        return data
 
     if req.product.max_datasets_wcs > 0 and len(datasets) > req.product.max_datasets_wcs:
         raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
@@ -362,6 +358,7 @@ def get_tiff(req, data):
     dtype_list = [data[array].dtype for array in data.data_vars]
     dtype = str(max(dtype_list, key=lambda d: supported_dtype_map[str(d)]))
 
+    data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     cfg = get_config()
     xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]

@@ -362,6 +362,8 @@ class OWSNamedLayer(OWSLayer):
 
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
+        if not self.multi_product:
+            self.global_cfg.native_product_index[self.product_name] = self
 
     def parse_resource_limits(self, cfg):
         self.zoom_fill = cfg["wms"].get("zoomed_out_fill_colour", [150, 180, 200, 160])
@@ -500,19 +502,19 @@ class OWSNamedLayer(OWSLayer):
             dc = ext_dc
         else:
             dc = get_cube()
-        from datacube_ows.product_ranges import get_ranges
         self._ranges = None
         try:
+            from datacube_ows.product_ranges import get_ranges
             self._ranges = get_ranges(dc, self)
             if self._ranges is None:
                 raise Exception("Null product range")
+            self.bboxes = self.extract_bboxes()
         except Exception as a:
             range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
             raise ConfigException(range_failure)
         finally:
             if not ext_dc:
                 release_cube(dc)
-        self.bboxes = self.extract_bboxes()
 
     @property
     def ranges(self):
@@ -654,6 +656,7 @@ class OWSConfig(OWSConfigEntry):
         self.keywords = cfg.get("keywords", [])
         self.fees = cfg.get("fees")
         self.access_constraints = cfg.get("access_constraints")
+        self.use_extent_views = cfg.get("use_extent_views", False)
         if not self.fees:
             self.fees = "none"
         if not self.access_constraints:
@@ -727,6 +730,7 @@ class OWSConfig(OWSConfigEntry):
     def parse_layers(self, cfg):
         self.layers = []
         self.product_index = {}
+        self.native_product_index = {}
         with cube() as dc:
             for lyr_cfg in cfg:
                 self.layers.append(parse_ows_layer(lyr_cfg, self, dc))

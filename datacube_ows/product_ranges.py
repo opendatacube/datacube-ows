@@ -2,15 +2,16 @@
 
 from __future__ import absolute_import, division, print_function
 
-from datetime import date, datetime, timedelta
+from datetime import datetime
 import datacube
 
 from datacube_ows.ows_configuration import get_config, OWSNamedLayer  # , get_layers, ProductLayerDef
 from datacube_ows.ogc_utils import local_date
 from psycopg2.extras import Json
 from itertools import zip_longest
-from uuid import UUID
 import json
+
+from datacube_ows.utils import get_sqlconn
 
 DEFAULT_GEOJSON = json.loads('''{
 "type": "Polygon",
@@ -81,7 +82,7 @@ def jsonise_bbox(bbox):
             "right": bbox.right,
         }
 
-def determine_product_ranges(dc, dc_product, extractor):
+def determine_product_ranges(dc, dc_product, extractor, summary_dataset=False):
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements, protected-access
     start = datetime.now()
     print("Product: ", dc_product.name)
@@ -105,8 +106,10 @@ def determine_product_ranges(dc, dc_product, extractor):
     ds_count = 0
     for ds in dc.find_datasets(product=dc_product.name):
         print("Processing a dataset", ds.id)
-        loc_date = local_date(ds)
-        time_set.add(loc_date)
+        if summary_dataset:
+            ds_time = ds.metadata.time[0]
+        else:
+            ds_time = local_date(ds)
         if extractor is not None:
             path = extractor(ds)
             if path not in sub_r:
@@ -134,8 +137,9 @@ def determine_product_ranges(dc, dc_product, extractor):
         r["lon"]["min"] = accum_min(r["lon"]["min"], ds.metadata.lon.begin)
         r["lon"]["max"] = accum_max(r["lon"]["max"], ds.metadata.lon.end)
 
+        time_set.add(ds_time)
         if path is not None:
-            sub_r[path]["time_set"].add(loc_date)
+            sub_r[path]["time_set"].add(ds_time)
 
         for crsid in crsids:
             print("Working with CRS", crsid)
@@ -182,11 +186,6 @@ def determine_product_ranges(dc, dc_product, extractor):
         end = datetime.now()
         print("No datasets indexed. Nothing to do and didn't do it in %s seconds" % (end - start).seconds)
     return r
-
-
-def get_sqlconn(dc):
-    # pylint: disable=protected-access
-    return dc.index._db._engine.connect()
 
 
 def get_ids_in_db(conn):
@@ -387,11 +386,17 @@ def update_single_range(dc, product):
         assert not product.multi_product
         dc_product = product.product
         extractor  = product.sub_product_extractor
+        summary = not product.is_raw_time_res
     else:
         dc_product = product
         extractor = None
+        product = get_config().native_product_index.get(product.name)
+        if product:
+            summary = not product.is_raw_time_res
+        else:
+            summary = False
 
-    product_range = determine_product_ranges(dc, dc_product, extractor)
+    product_range = determine_product_ranges(dc, dc_product, extractor, summary)
     conn = get_sqlconn(dc)
     txn = conn.begin()
     db_range = get_ranges(dc, dc_product, is_dc_product=True)
@@ -677,7 +682,7 @@ def create_multiprod_range_entry(dc, product, crses):
     return
 
 
-def create_range_entry(dc, product, crses):
+def create_range_entry(dc, product, crses, summary_product=False):
   conn = get_sqlconn(dc)
   txn = conn.begin()
   prodid = product.id
@@ -706,28 +711,54 @@ def create_range_entry(dc, product, crses):
     set timezone to 'Etc/UTC'
   """)
 
-  # Create sorted list of dates
-  conn.execute("""
-    WITH sorted
-    AS (SELECT to_jsonb(array_agg(dates.d))
-        AS dates
-        FROM (SELECT DISTINCT 
-               date(cast(metadata -> 'extent' ->> 'center_dt' as timestamp) AT TIME ZONE 'UTC' +
-                (least(to_number(metadata -> 'extent' -> 'coord' -> 'll' ->> 'lon', '9999.9999999999999999999999999999999999'),
-                to_number(metadata -> 'extent' -> 'coord' -> 'ul' ->> 'lon', '9999.9999999999999999999999999999999999')) +
-                greatest(to_number(metadata -> 'extent' -> 'coord' -> 'lr' ->> 'lon', '9999.9999999999999999999999999999999999'),
-                to_number(metadata -> 'extent' -> 'coord' -> 'ur' ->> 'lon', '9999.9999999999999999999999999999999999'))) / 30.0 * interval '1 hour')
-              AS d
-              FROM agdc.dataset
-              WHERE dataset_type_ref=%(p_id)s
-              AND archived IS NULL
-              ORDER BY d) dates)
-    UPDATE wms.product_ranges
-    SET dates=sorted.dates
-    FROM sorted
-    WHERE id=%(p_id)s
-    """,
-    {"p_id": prodid})
+  if summary_product:
+      # Loop over dates
+      dates = set()
+
+      for result in conn.execute("""
+        SELECT DISTINCT cast(metadata -> 'extent' ->> 'from_dt' as date) as dt
+        FROM agdc.dataset
+        WHERE dataset_type_ref = %(p_id)s
+        AND archived IS NULL
+        ORDER BY dt 
+      """,
+                                 {"p_id": prodid}):
+          dates.add(result[0])
+      dates = sorted(dates)
+
+      conn.execute("""
+           UPDATE wms.product_ranges
+           SET dates = %(dates)s
+           WHERE id= %(p_id)s
+      """,
+                   {
+                       "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
+                       "p_id": prodid
+                   }
+      )
+  else:
+      # Create sorted list of dates
+      conn.execute("""
+        WITH sorted
+        AS (SELECT to_jsonb(array_agg(dates.d))
+            AS dates
+            FROM (SELECT DISTINCT
+                   date(cast(metadata -> 'extent' ->> 'center_dt' as timestamp) AT TIME ZONE 'UTC' +
+                    (least(to_number(metadata -> 'extent' -> 'coord' -> 'll' ->> 'lon', '9999.9999999999999999999999999999999999'),
+                    to_number(metadata -> 'extent' -> 'coord' -> 'ul' ->> 'lon', '9999.9999999999999999999999999999999999')) +
+                    greatest(to_number(metadata -> 'extent' -> 'coord' -> 'lr' ->> 'lon', '9999.9999999999999999999999999999999999'),
+                    to_number(metadata -> 'extent' -> 'coord' -> 'ur' ->> 'lon', '9999.9999999999999999999999999999999999'))) / 30.0 * interval '1 hour')
+                  AS d
+                  FROM agdc.dataset
+                  WHERE dataset_type_ref=%(p_id)s
+                  AND archived IS NULL
+                  ORDER BY d) dates)
+        UPDATE wms.product_ranges
+        SET dates=sorted.dates
+        FROM sorted
+        WHERE id=%(p_id)s
+        """,
+        {"p_id": prodid})
 
   # calculate bounding boxes
   results = list(conn.execute("""
@@ -766,15 +797,16 @@ def create_range_entry(dc, product, crses):
   conn.close()
 
 
-def check_datasets_exist(dc, product):
+def check_datasets_exist(dc, product_name):
   conn = get_sqlconn(dc)
-  prodid = product.id
 
   results = conn.execute("""
     SELECT COUNT(*)
-    FROM agdc.dataset
-    WHERE dataset_type_ref=%s AND archived IS NULL""",
-    prodid)
+    FROM agdc.dataset ds, agdc.dataset_type p
+    WHERE ds.archived IS NULL
+    AND ds.dataset_type_ref = p.id
+    AND p.name = %s""",
+    product_name)
 
   conn.close()
 
@@ -783,15 +815,24 @@ def check_datasets_exist(dc, product):
 
 def add_product_range(dc, product):
     if isinstance(product, str):
-        product = dc.index.products.get_by_name(product)
-
-
-    assert product is not None
-
-    if check_datasets_exist(dc, product):
-        create_range_entry(dc, product, get_crses())
+        product_name = product
+        dc_product = dc.index.products.get_by_name(product)
     else:
-        print("Could not find any datasets for: ", product.name)
+        product_name = product.name
+        dc_product = product
+
+    ows_product = get_config().native_product_index.get(product_name)
+    if ows_product:
+        summary_product = not ows_product.is_raw_time_res
+    else:
+        summary_product = False
+
+    assert dc_product is not None
+
+    if check_datasets_exist(dc, product_name):
+        create_range_entry(dc, dc_product, get_crses(), summary_product)
+    else:
+        print("Could not find any datasets for: ", product_name)
 
 
 def add_multiproduct_range(dc, product, follow_dependencies=True):
@@ -804,9 +845,10 @@ def add_multiproduct_range(dc, product, follow_dependencies=True):
     if follow_dependencies:
         for product_name in product.product_names:
             dc_prod = dc.index.products.get_by_name(product_name)
-            add_product_range(dc, dc_prod)
-            if not check_datasets_exist(dc, dc_prod):
+            if not check_datasets_exist(dc, product_name):
                 print("Could not find any datasets for: ", product_name)
+            else:
+                add_product_range(dc, product_name)
 
     # Actually merge and store!
     create_multiprod_range_entry(dc, product, get_crses())

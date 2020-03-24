@@ -689,9 +689,9 @@ style_ndvi_delta = {
             # largest date counts for which this handler will be used.  Required.
             "allowed_count_range": [2, 2],
             # A function, expressed in the standard format as described elsewhere in this example file.
-            # The function is assumed to take one arguments, a datacube_ows.ogc_utils.DataCollection object,
-            # containing an xarray dataset for each date value. The function returns an xarray Dataset
-            # with a single band, which is the input to the colour ramp defined below.
+            # The function is assumed to take one arguments, an xarray Dataset.
+            # The function returns an xarray Dataset with a single band, which is the input to the
+            # colour ramp defined below.
             "aggregator_function": {
                 "function": "datacube_ows.band_utils.multi_date_delta"
             },
@@ -1201,6 +1201,11 @@ ows_cfg = {
                 "vertical_coord": "y",
             },
         },
+        # If True the new EXPERIMENTAL materialised views are used for spatio-temporal extents.
+        # If False (the default), the old "update_ranges" tables (and native ODC search methods) are used.
+        # DO NOT SET THIS TO TRUE unless you understand what this means and want to participate
+        # in the experiment!
+        "use_extent_views": False,
     },   #### End of "global" section.
 
     # Config items in the "wms" section apply to the WMS service (and WMTS, which is implemented as a

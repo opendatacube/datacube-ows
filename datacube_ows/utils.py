@@ -100,5 +100,17 @@ def get_opencensus_tracer():
     return tracer
 
 
+def group_by_statistical():
+    from datacube.api.query import GroupBy
+
+    return GroupBy(
+        dimension='time',
+        group_by_func=lambda ds: ds.time.begin,
+        units='seconds since 1970-01-01 00:00:00',
+        sort_key=lambda ds: ds.time.begin
+    )
 
 
+def get_sqlconn(dc):
+    # pylint: disable=protected-access
+    return dc.index._db._engine.connect()
