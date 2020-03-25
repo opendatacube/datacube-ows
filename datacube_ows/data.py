@@ -321,19 +321,18 @@ def get_map(args):
             if not data or (params.style.masks and not pq_data):
                 body = _write_empty(params.geobox)
             else:
-                body = _write_png(data, pq_data, params.style, extent_mask)
+                body = _write_png(data, pq_data, params.style, extent_mask, params.geobox)
                 
-
     cfg = get_config()
     return body, 200, cfg.response_headers({"Content-Type": "image/png"})
 
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def _write_png(data, pq_data, style, extent_mask):
+def _write_png(data, pq_data, style, extent_mask, geobox):
     img_data = style.transform_data(data, pq_data, extent_mask)
-    width = len(img_data.coords["x"])
-    height = len(img_data.coords["y"])
+    width = geobox.width
+    height = geobox.height
     # width, height = img_data.pixel_counts()
 
 
