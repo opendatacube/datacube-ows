@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from datacube_ows.product_ranges import update_all_ranges, get_sqlconn, add_product_range, add_multiproduct_range, add_all, update_range
+from datacube_ows.product_ranges import update_all_ranges, update_range
+from datacube_ows.product_ranges_2 import get_sqlconn, add_product_range, add_multiproduct_range, add_all
 from datacube import Datacube
 from psycopg2.sql import SQL, Identifier
 import os
@@ -11,8 +12,8 @@ import click
 @click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--product", default=None, help="The name of a datacube product.")
 @click.option("--multiproduct", default=None, help="The name of OWS multi-product." )
-@click.option("--merge-only/--no-merge-only", default=False, help="When used with the multiproduct and calculate-extent options, the ranges for underlying datacube products are not updated.")
-@click.option("--calculate-extent/--no-calculate-extent", default=True, help="no-calculate-extent uses database queries to maximise efficiency. calculate-extent calculates ranges directly and is the default.")
+@click.option("--merge-only/--no-merge-only", default=False, help="When used with the multiproduct options, the ranges for underlying datacube products are not updated.")
+@click.option("--calculate-extent/--no-calculate-extent", default=False, help="no-calculate-extent uses database queries against the extent materialised views to maximise efficiency and is the default. calculate-extent calculates ranges directly.")
 def main(product, multiproduct, merge_only, calculate_extent, schema, role):
     """Manage datacube-ows range tables.
 
@@ -29,6 +30,9 @@ def main(product, multiproduct, merge_only, calculate_extent, schema, role):
     elif schema and not role:
         print("Sorry, cannot update schema without specifying a role")
         return 1
+    elif role and not schema:
+        print("Sorry, role only makes sense for updating the schema")
+        return 1
 
     if os.environ.get("PYDEV_DEBUG"):
         import pydevd_pycharm
@@ -42,6 +46,7 @@ def main(product, multiproduct, merge_only, calculate_extent, schema, role):
         create_schema(dc, role)
         print("Done")
     elif not calculate_extent:
+        print("Deriving extents from materialised views")
         if product:
             print("Updating range for: ", product)
             add_product_range(dc, product)
@@ -49,10 +54,11 @@ def main(product, multiproduct, merge_only, calculate_extent, schema, role):
             print("Updating range for: ", multiproduct)
             add_multiproduct_range(dc, multiproduct)
         else:
-            print("Updating range for all, using SQL extent calculation")
+            print("Updating range for all configured products")
             add_all(dc)
-            print("Done")
+        print("Done")
     else:
+        print("Calculating extents manually - this may take a long time")
         if product:
             print("Updating range for: ", product)
             p, u, i, sp, su, si = update_range(dc, product, multi=False)
@@ -81,6 +87,7 @@ def main(product, multiproduct, merge_only, calculate_extent, schema, role):
                 print ("Updated ranges for %d existing sub-products and inserted ranges for %d new sub-products (%d existing sub-products unchanged)" % (su, si, sp))
             if mp or mu or mi:
                 print ("Updated ranges for %d existing multi-products and inserted ranges for %d new multi-products (%d existing multi-products unchanged)" % (su, si, sp))
+        print("Done")
     return 0
 
 
