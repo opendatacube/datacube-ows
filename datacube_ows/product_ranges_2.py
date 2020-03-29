@@ -135,16 +135,19 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
   # Update min/max lat/longs
   conn.execute(
-    """
-    UPDATE wms.product_ranges pr
-    SET lat_min = st_ymin(st_extent(sv.spatial_extent)),
-        lat_max = st_ymax(st_extent(sv.spatial_extent)),
-        lon_min = st_xmin(st_extent(sv.spatial_extent)),
-        lon_max = st_xmax(st_extent(sv.spatial_extent))
-    FROM public.space_view sv
-    WHERE sv.dataset_type_ref=%(p_id)s
-    """,
-    {"p_id": prodid})
+      """
+      UPDATE wms.product_ranges pr
+      SET lat_min = st_ymin(subq.bbox),
+          lat_max = st_ymax(subq.bbox),
+          lon_min = st_xmin(subq.bbox),
+          lon_max = st_xmax(subq.bbox)
+      FROM (
+        SELECT st_extent(stv.spatial_extent) as bbox
+        FROM public.space_time_view stv
+        WHERE stv.dataset_type_ref = %(p_id)s
+      ) as subq
+      """,
+      {"p_id": prodid})
 
   # Set default timezone
   conn.execute("""
@@ -161,15 +164,16 @@ def create_range_entry(dc, product, crses, summary_product=False):
             ST_YMin(st_extent(spatial_extent)),
             ST_YMax(st_extent(spatial_extent)),
             array_agg(temporal_extent)
-      from space_time_view 
+      from space_time_view  sv
       group by dataset_type_ref
       """
   )
 
   for result in results:
+      # array_agg comes through as list of DateRanges with upper and lower datetimes.
       print("Oo-ah!")
 
-  conn.rollback()
+  txn.rollback()
   quit()
 
   if summary_product:
