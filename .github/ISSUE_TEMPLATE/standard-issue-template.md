@@ -7,9 +7,13 @@ assignees: ''
 
 ---
 
-datacube-ows version:
-Python version:
-Operating System:
+`datacube-ows` version:
+`ows_config.py` version/link::
+Env: 
+- [ ] dev 
+- [ ] deafrica 
+- [ ] prod 
+- [ ] cambodia
 
 
 ### Description
