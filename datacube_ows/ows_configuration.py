@@ -469,7 +469,10 @@ class OWSNamedLayer(OWSLayer):
                             self.native_CRS))
         self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
         # Prepare Rectified Grid
-        native_bounding_box = self.bboxes[self.native_CRS]
+        try:
+            native_bounding_box = self.bboxes[self.native_CRS]
+        except KeyError:
+            raise ConfigException("No bounding box in ranges for native CRS %s - rerun update_ranges.py" % self.native_CRS)
         self.origin_x = native_bounding_box["left"]
         self.origin_y = native_bounding_box["bottom"]
         try:
@@ -486,9 +489,16 @@ class OWSNamedLayer(OWSLayer):
         # Band management
         self.wcs_default_bands = [self.band_idx.band(b) for b in cfg["default_bands"]]
         # Cache some metadata from the datacube
-        bands = dc.list_measurements().loc[self.product_name]
+        try:
+            bands = dc.list_measurements().loc[self.product_name]
+        except KeyError:
+            raise ConfigException("Datacube.list_measurements() not returning measurements for product %s" %
+                                  self.product_name)
         self.bands = bands.index.values
-        self.nodata_values = bands['nodata'].values
+        try:
+            self.nodata_values = bands['nodata'].values
+        except KeyError:
+            raise ConfigException("Datacube has no 'nodata' values for bands in product %s" % self.product_name)
         self.nodata_dict = {a: b for a, b in zip(self.bands, self.nodata_values)}
 
     def parse_product_names(self, cfg):
