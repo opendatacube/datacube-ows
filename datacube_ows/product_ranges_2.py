@@ -154,41 +154,24 @@ def create_range_entry(dc, product, crses, summary_product=False):
     set timezone to 'Etc/UTC'
   """)
 
-  # Experimental shit
-
-  results = conn.execute(
-      """
-      select  dataset_type_ref,
-            ST_XMin(st_extent(spatial_extent)),
-            ST_XMax(st_extent(spatial_extent)),
-            ST_YMin(st_extent(spatial_extent)),
-            ST_YMax(st_extent(spatial_extent)),
-            array_agg(temporal_extent)
-      from space_time_view  sv
-      group by dataset_type_ref
-      """
-  )
-
-  for result in results:
-      # array_agg comes through as list of DateRanges with upper and lower datetimes.
-      print("Oo-ah!")
-
-  txn.rollback()
-  quit()
 
   if summary_product:
       # Loop over dates
       dates = set()
 
-      for result in conn.execute("""
-        SELECT DISTINCT cast(metadata -> 'extent' ->> 'from_dt' as date) as dt
-        FROM agdc.dataset
-        WHERE dataset_type_ref = %(p_id)s
-        AND archived IS NULL
-        ORDER BY dt 
-      """,
-                                 {"p_id": prodid}):
-          dates.add(result[0])
+      results = conn.execute(
+          """
+          select  
+                array_agg(temporal_extent)
+          from public.space_time_view 
+          WHERE dataset_type_ref = %(p_id)s
+          """,
+          {"p_id": prodid}
+      )
+      for result in results:
+          for dat_ran in result[0]:
+              dates.add(dat_ran.lower)
+
       dates = sorted(dates)
 
       conn.execute("""
@@ -224,6 +207,28 @@ def create_range_entry(dc, product, crses, summary_product=False):
         WHERE id=%(p_id)s
         """,
         {"p_id": prodid})
+
+# Experimental shit
+
+  results = conn.execute(
+      """
+      select  dataset_type_ref,
+            ST_XMin(st_extent(spatial_extent)),
+            ST_XMax(st_extent(spatial_extent)),
+            ST_YMin(st_extent(spatial_extent)),
+            ST_YMax(st_extent(spatial_extent)),
+            array_agg(temporal_extent)
+      from space_time_view  sv
+      group by dataset_type_ref
+      """
+  )
+
+  for result in results:
+      # array_agg comes through as list of DateRanges with upper and lower datetimes.
+      print("Oo-ah!")
+
+  txn.rollback()
+  quit()
 
   # calculate bounding boxes
   results = list(conn.execute("""
