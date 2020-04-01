@@ -34,7 +34,7 @@ metadata_lookup as (
 select
   dataset_type_ref, id,tstzrange(
     (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp
-  ) as temporal_extent
+  ) + interval '1 microsecond' as temporal_extent
 from agdc.dataset where 
   metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
 UNION
