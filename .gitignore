@@ -75,3 +75,5 @@ wms_cfg_local.py
 ows_cfg.py
 
 .DS_Store
+docker-compose.yaml
+ows_cfg.py
