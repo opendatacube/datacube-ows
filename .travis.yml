@@ -15,15 +15,9 @@ jobs:
   include:
     - stage: test
       script:
-        - docker build \
-          --target env_builder \
-          --tag        opendatacube/ows:_builder \
-          .
+        - docker build --target env_builder --tag opendatacube/ows:_builder .
         - docker run opendatacube/ows:_builder /bin/sh -c "./check-code.sh"
-        - docker build \
-          --cache-from opendatacube/ows:_builder \
-          --tag        opendatacube/ows:latest \
-          .
+        - docker build --cache-from opendatacube/ows:_builder --tag opendatacube/ows:latest .
     - stage: build
       if: (branch = master OR (tag = branch)) AND type = push
       script:
