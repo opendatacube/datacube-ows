@@ -1,12 +1,19 @@
 ARG V_BASE=-3.0.4
 ARG py_env_path=/env
+
 FROM opendatacube/geobase:wheels${V_BASE} as env_builder
+ARG py_env_path
 
 COPY requirements.txt /
 RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
 
-COPY requirements-docker.txt /
-RUN /usr/local/bin/env-build-tool extend /requirements-docker.txt ${py_env_path}
+ENV PATH=${py_env_path}/bin:$PATH
+
+RUN mkdir -p /code
+WORKDIR /code
+ADD . /code
+
+RUN pip install .
 
 FROM opendatacube/geobase:runner${V_BASE}
 

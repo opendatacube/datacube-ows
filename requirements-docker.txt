@@ -1,2 +1,0 @@
-# Datacube-ows
-https://github.com/opendatacube/datacube-ows/archive/0.13.1.zip
