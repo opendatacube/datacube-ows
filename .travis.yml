@@ -10,6 +10,7 @@ language: python
 python:
 # We don't use the travis python, but we will use it for the build matrix
   - "3.6"
+install: skip
 jobs:
   include:
     - stage: test
