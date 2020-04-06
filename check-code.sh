@@ -4,7 +4,7 @@
 set -eu
 set -x
 
-pylint -j 2 --reports no datacube_ows --disable=C,R
+pylint --rcfile=/code/pylintrc -j 2 --reports no datacube_ows --disable=C,R
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
