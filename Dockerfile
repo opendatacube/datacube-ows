@@ -33,9 +33,16 @@ RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
     postgresql-client-11 \
     && rm -rf /var/lib/apt/lists/*
 
+RUN useradd -m -s /bin/bash -N -g 100 -u 1000 ows
+WORKDIR "/home/ows"
+
 ARG py_env_path
 COPY --chown=1000:100 --from=env_builder $py_env_path $py_env_path
 
 ENV PATH=${py_env_path}/bin:$PATH
 
-CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi
+RUN chown 1000:100 /dev/shm
+CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid /home/ows/gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi
+
+USER ows
+EXPOSE 8000

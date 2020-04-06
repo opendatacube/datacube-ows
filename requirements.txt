@@ -1,4 +1,5 @@
-datacube
+--extra-index-url="https://packages.dea.ga.gov.au"
+datacube[performance]
 pytest
 flask
 colour
