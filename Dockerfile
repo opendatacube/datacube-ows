@@ -53,4 +53,3 @@ RUN chown 1000:100 /dev/shm
 CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid /home/ows/gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi
 
 USER ows
-EXPOSE 8000
