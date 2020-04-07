@@ -44,6 +44,7 @@ WORKDIR "/home/ows"
 ARG py_env_path
 COPY --chown=1000:100 --from=env_builder $py_env_path $py_env_path
 ENV PATH=${py_env_path}/bin:$PATH \
+    PYTHONPATH=${py_env_path} \
     GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
     GDAL_HTTP_MAX_RETRY="10" \
