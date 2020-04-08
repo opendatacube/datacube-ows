@@ -10,7 +10,7 @@ RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
 
 ## Only install dev requirements if arg DEV is set to 'yes'
 COPY requirements-dev.txt /
-ARG DEV=0
+ARG DEV="no"
 RUN if [ "$DEV" = "yes" ]; then \
     /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path} \
     # Postgres 11
