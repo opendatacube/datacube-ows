@@ -8,7 +8,22 @@ ARG py_env_path
 COPY requirements.txt /
 RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
 
-ENV PATH=${py_env_path}/bin:$PATH
+## Only install dev requirements if arg DEV is set to 'yes'
+COPY requirements-dev.txt /
+ARG DEV=0
+RUN if [ "$DEV" = "yes" ]; then \
+  /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path} \
+;fi
+
+ENV PATH=${py_env_path}/bin:$PATH \
+    PYTHONPATH=${py_env_path} \
+    GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
+    CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
+    GDAL_HTTP_MAX_RETRY="10" \
+    GDAL_HTTP_RETRY_DELAY="1" 
+
+# We use the env_builder image for development, so set a cmd
+CMD FLASK_APP=/code/datacube_ows/ogc.py flask run --host=0.0.0.0 --port=8000
 
 # Copy source code and install it
 RUN mkdir -p /code
