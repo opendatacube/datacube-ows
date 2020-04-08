@@ -12,7 +12,13 @@ RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
 COPY requirements-dev.txt /
 ARG DEV=0
 RUN if [ "$DEV" = "yes" ]; then \
-  /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path} \
+    /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path} \
+    # Postgres 11
+    curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
+    sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+    apt-get update && apt install -y \
+    postgresql-client-11 \
+    && rm -rf /var/lib/apt/lists/* \
 ;fi
 
 ENV PATH=${py_env_path}/bin:$PATH \
@@ -66,6 +72,6 @@ ENV PATH=${py_env_path}/bin:$PATH \
     GDAL_HTTP_RETRY_DELAY="1" 
 
 RUN chown 1000:100 /dev/shm
-CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid /home/ows/gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi
 
 USER ows
+CMD gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid /home/ows/gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi
