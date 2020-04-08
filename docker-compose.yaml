@@ -17,7 +17,7 @@ services:
       context: .
       # Development container, remove args and target to build a production container instead
       args:
-      - DEV=yes
+      - DEV="yes"
       target: env_builder
       # End dev config
     environment:
