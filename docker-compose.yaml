@@ -24,7 +24,6 @@ services:
       - WMS_CONFIG_PATH=/env/config/ows_cfg.py
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env) 
       - DATACUBE_OWS_CFG=config.ows_cfg.ows_cfg
-      - VIRTUAL_HOST=localhost,127.0.0.0
       - AWS_DEFAULT_REGION=ap-southeast-2
     ports:
       - "8000:8000"
@@ -47,7 +46,6 @@ services:
   #     - DB_DATABASE=
   #     - WMS_CONFIG_PATH=/env/config/ows_cfg.py
   #     - DATACUBE_OWS_CFG=config.ows_cfg.ows_cfg
-  #     - VIRTUAL_HOST=localhost,127.0.0.0
   #     - AWS_DEFAULT_REGION=ap-southeast-2
   #   network_mode: host
   #   ports:
