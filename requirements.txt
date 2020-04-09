@@ -1,4 +1,7 @@
+--extra-index-url="https://packages.dea.ga.gov.au"
+datacube[performance,s3]
 pytest
+pylint
 flask
 colour
 scikit-image

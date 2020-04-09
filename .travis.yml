@@ -10,13 +10,14 @@ language: python
 python:
 # We don't use the travis python, but we will use it for the build matrix
   - "3.6"
+install: skip
 jobs:
   include:
     - stage: test
       script:
-        - docker build -t opendatacube/ows:latest .
-        - docker run opendatacube/ows:latest /bin/sh -c "./check-code.sh"
-        - ifconfig
+        - docker build --target env_builder --tag opendatacube/ows:_builder .
+        - docker run opendatacube/ows:_builder /bin/sh -c "./check-code.sh"
+        - docker build --cache-from opendatacube/ows:_builder --tag opendatacube/ows:latest .
     - stage: build
       if: (branch = master OR (tag = branch)) AND type = push
       script:
