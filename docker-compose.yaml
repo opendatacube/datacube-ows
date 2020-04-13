@@ -20,6 +20,7 @@ services:
       - DEV="yes"
       target: env_builder
       # End dev config
+    image: opendatacube/ows:latest
     environment:
       - DB_HOSTNAME=postgres
       - DB_PORT=5432
@@ -50,6 +51,7 @@ services:
   #     - DEV="yes"
   #     target: env_builder
   #     # End dev config
+  #   image: opendatacube/ows:latest
   #   environment:
   #     - DB_HOSTNAME=localhost
   #     - DB_PORT=5432
