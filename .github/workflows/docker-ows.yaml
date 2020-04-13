@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/docker-ows.yml'
   pull_request:
+    branches: [master]
+    types: [synchronize, opened, reopened, ready_for_review]
     paths:
       - '.github/workflows/docker-ows.yml'
 
