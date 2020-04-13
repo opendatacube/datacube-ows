@@ -1,4 +1,4 @@
-name: Sandbox build and push latest
+name: OWS build and push
 
 on:
   push:
