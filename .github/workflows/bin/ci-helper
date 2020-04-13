@@ -1,0 +1,116 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+branch_name () {
+    local ref="${1:-${GITHUB_REF:-}}"
+    case "${ref}" in
+        "refs/heads/"*)
+            echo "${ref#refs/heads/}"
+            ;;
+        "refs/tags/"*)
+            echo "${ref#refs/tags/}"
+            ;;
+        "refs/pull/"*)
+            if [ -z "${GITHUB_HEAD_REF:-}" ] ; then
+                return 1
+            else
+                echo "${GITHUB_HEAD_REF}"
+            fi
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+export_cfg () {
+    local ref="${1:-${GITHUB_REF:-}}"
+    local sha="${2:-${GITHUB_SHA:-missing_sha}}"
+
+    pull_cache="yes"  # always yes for now
+    push_cache="yes"  # not from PR, not from Release
+    push_image="yes"  # not from PR
+
+    im_latest=${ORG}/${IMAGE}:latest
+    im_stage2_fallback=${im_latest}
+    im_stage1_fallback=${ORG}/${IMAGE_DEV}:master_stage1
+    im_extra=""  # only set on master
+    build_info="$(date -Im) $sha"
+
+    case "${ref}" in
+        "refs/heads/master")
+            BRANCH="master"
+            im_stage2=${im_latest}
+            im_stage2_fallback=""
+            # figure out extra tag
+            git fetch --prune --unshallow 2> /dev/null || true
+            vv=$(git describe --tags)
+            im_extra="${ORG}/${IMAGE_DEV}:${vv}"
+            ;;
+        "refs/heads/"*)
+            BRANCH="${ref#refs/heads/}"
+            im_stage2=${ORG}/${IMAGE_DEV}:${BRANCH}
+            ;;
+        "refs/tags/"*)
+            push_cache="no"
+            BRANCH="${ref#refs/tags/}"
+            im_stage2=${ORG}/${IMAGE}:${BRANCH}
+            ;;
+        "refs/pull/"*)
+            if [ -z "${GITHUB_HEAD_REF:-}" ] ; then
+                return 1
+            fi
+            push_cache="no"
+            push_image="no"
+            BRANCH="${GITHUB_HEAD_REF}"
+            im_stage2=${ORG}/${IMAGE_DEV}:${BRANCH}
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+
+    im_stage1=${ORG}/${IMAGE_DEV}:${BRANCH}_stage1
+    all_envs='BRANCH
+      pull_cache
+      push_cache
+      push_image
+      im_stage1 im_stage1_fallback
+      im_stage2 im_stage2_fallback
+      im_latest
+      im_extra
+      build_info'
+
+    for x in $all_envs; do
+        export "${x}"                         # make it available to calling script
+        echo "::set-env name=${x}::${!x}"     # make it available to subsequent Actions
+        echo "::set-output name=${x}::${!x}"  # make it available to subsequent Actions inside if:
+    done
+}
+
+pull_docker_cache () {
+    local image=${1}
+    local fallback=${2:-}
+
+    if docker pull $image ; then
+        echo "Pulled ${image}"
+    else
+        if [ -n "${fallback}" ]; then
+            echo "Pulling fallback ${fallback}"
+            if docker pull $fallback ; then
+                echo "Using fallback: ${fallback}"
+                docker tag $fallback $image
+                docker rmi "$fallback"
+            fi
+        fi
+    fi
+}
+
+[ $# -eq 0 ] || {
+    cmd=$1
+    shift
+    $cmd $@
+}
