@@ -23,20 +23,32 @@ jobs:
 
     # Build image and tag as latest, connect to pre-indexed database
     - name: Build Docker Containers
-      run: docker-compose up --build
+      run: docker-compose up --build -d
 
     # Run some tests on the images
     - name: Test ping
-      run: curl localhost:8000/ping
+      run: |
+        curl --silent --show-error --fail \
+        "localhost:8000/ping" \
+        > /dev/null
 
     - name: Test WMS GetCapabilities
-      run: curl http://localhost:8000/?service=WMS&version=1.3.0&request=GetCapabilities
+      run: |
+        curl --silent --show-error --fail \
+        "localhost:8000/?service=WMS&version=1.3.0&request=GetCapabilities" \
+        > /dev/null
 
     - name: Test WMTS GetCapabilities
-      run: curl http://localhost:8000/?service=WMS&version=1.0.0&request=GetCapabilities
+      run: |
+        curl --silent --show-error --fail \
+        "localhost:8000/?service=WMS&version=1.0.0&request=GetCapabilities" \
+        > /dev/null
 
     - name: Test WCS GetCapabilities
-      run: curl http://localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities
+      run: |
+        curl --silent --show-error --fail \
+        "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities" \
+        > /dev/null
 
     - name: Test datacube-ows-update
       run: docker-compose exec datacube-ows-exec

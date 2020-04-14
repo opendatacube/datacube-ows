@@ -32,6 +32,8 @@ services:
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env) 
       - DATACUBE_OWS_CFG=config.ows_cfg.ows_cfg
       - AWS_DEFAULT_REGION=ap-southeast-2
+      # Talk to AWS without using credentials
+      - AWS_NO_SIGN_REQUEST=YES
     ports:
       - "8000:8000"
     volumes:
