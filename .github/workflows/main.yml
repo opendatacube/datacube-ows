@@ -25,10 +25,15 @@ jobs:
     - name: Build Docker Containers
       run: docker-compose up --build -d
 
+    - name: Sleep for 30 seconds
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '30s'
+
     # Run some tests on the images
     - name: Test ping
       run: |
-        curl --silent --show-error --fail \
+        curl --show-error --fail \
         --connect-timeout 5 \
         --max-time 10 \
         --retry 5 \
