@@ -17,7 +17,7 @@ services:
       context: .
       # Development container, remove args and target to build a production container instead
       args:
-      - DEV="yes"
+        DEV: "yes"
       target: env_builder
       # End dev config
     image: opendatacube/ows:latest
@@ -34,13 +34,18 @@ services:
       - AWS_DEFAULT_REGION=ap-southeast-2
       # Talk to AWS without using credentials
       - AWS_NO_SIGN_REQUEST=YES
+      - FLASK_APP=/code/datacube_ows/ogc.py
     ports:
       - "8000:8000"
     volumes:
       - ./ows_test_cfg.py:/env/config/ows_cfg.py
+      - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
     depends_on:
       - "postgres"
     restart: always
+    # Because docker-compose doesn't have init containers we have a wait script
+    # That will keep trying till the database is up
+    command: ["wait-for-db", "flask", "run", "--host=0.0.0.0", "--port=8000"]
 
 # If you've already got a local postgres server on your machine you can use this example instead
 # just comment out the default postgres and ows services and uncomment this one
@@ -50,21 +55,32 @@ services:
   #     context: .
   #     # Development container, remove args and target to build a production container instead
   #     args:
-  #     - DEV="yes"
+  #       DEV: "yes"
   #     target: env_builder
   #     # End dev config
   #   image: opendatacube/ows:latest
   #   environment:
-  #     - DB_HOSTNAME=localhost
+  #     - DB_HOSTNAME=
   #     - DB_PORT=5432
   #     - DB_USERNAME=
   #     - DB_PASSWORD=
   #     - DB_DATABASE=
+  #     # Where the config file is (must match the volume mount)
   #     - WMS_CONFIG_PATH=/env/config/ows_cfg.py
+  #     # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env) 
   #     - DATACUBE_OWS_CFG=config.ows_cfg.ows_cfg
   #     - AWS_DEFAULT_REGION=ap-southeast-2
-  #   network_mode: host
+  #     # Talk to AWS without using credentials
+  #     - AWS_NO_SIGN_REQUEST=YES
+  #     - FLASK_APP=/code/datacube_ows/ogc.py
   #   ports:
   #     - "8000:8000"
   #   volumes:
   #     - ./ows_cfg.py:/env/config/ows_cfg.py
+  #     - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
+  #   depends_on:
+  #     - "postgres"
+  #   restart: always
+  #   # Because docker-compose doesn't have init containers we have a wait script
+  #   # That will keep trying till the database is up
+  #   command: ["wait-for-db", "flask", "run", "--host=0.0.0.0", "--port=8000"]

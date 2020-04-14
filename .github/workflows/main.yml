@@ -29,6 +29,11 @@ jobs:
     - name: Test ping
       run: |
         curl --silent --show-error --fail \
+        --connect-timeout 5 \
+        --max-time 10 \
+        --retry 5 \
+        --retry-delay 0 \
+        --retry-max-time 40 \
         "localhost:8000/ping" \
         > /dev/null
 
