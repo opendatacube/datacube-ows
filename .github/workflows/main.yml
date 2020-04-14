@@ -21,6 +21,9 @@ jobs:
       run: |
         echo "${{ secrets.DockerPassword }}" | docker login -u "${{ secrets.DockerUser }}" --password-stdin
 
+    - name: Pull latest image for cache
+      run: docker pull ${ORG}/${IMAGE}:latest
+
     # Build image and tag as latest, connect to pre-indexed database
     - name: Build Docker Containers
       run: docker-compose up --build -d

@@ -19,6 +19,8 @@ services:
       args:
         DEV: "yes"
       target: env_builder
+      cache_from: 
+        - opendatacube/ows:latest
       # End dev config
     image: opendatacube/ows:latest
     environment:
