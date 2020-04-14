@@ -61,7 +61,7 @@ jobs:
         > /dev/null
 
     - name: Test datacube-ows-update
-      run: docker-compose exec datacube-ows-exec
+      run: docker-compose exec ows datacube-ows-update
 
     # Tag image if this is a tagged build
     # if not use a pseudo tag based on current tag,

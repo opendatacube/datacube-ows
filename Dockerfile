@@ -28,15 +28,16 @@ ENV PATH=${py_env_path}/bin:$PATH \
     GDAL_HTTP_MAX_RETRY="10" \
     GDAL_HTTP_RETRY_DELAY="1" 
 
-# We use the env_builder image for development, so set a cmd
-CMD FLASK_APP=/code/datacube_ows/ogc.py flask run --host=0.0.0.0 --port=8000
-
 # Copy source code and install it
 RUN mkdir -p /code
 WORKDIR /code
 ADD . /code
 
 RUN pip install .
+
+# We use the env_builder image for development, so set a cmd
+CMD FLASK_APP=/code/datacube_ows/ogc.py flask run --host=0.0.0.0 --port=8000
+
 
 # Runner image starts here
 FROM opendatacube/geobase:runner${V_BASE}
