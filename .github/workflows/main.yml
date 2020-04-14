@@ -61,7 +61,10 @@ jobs:
         > /dev/null
 
     - name: Test datacube-ows-update
-      run: docker-compose exec ows datacube-ows-update
+      run: docker-compose exec -T ows datacube-ows-update
+
+    - name: Lint and run python tests
+      run: docker-compose exec -T ows ./check-code.sh
 
     # Tag image if this is a tagged build
     # if not use a pseudo tag based on current tag,
