@@ -112,7 +112,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wcs/1.
 {% if show_content_metadata %}
 <ContentMetadata>
     {% for product in cfg.product_index.values() %}
-    {% if product.wcs %}
+    {% if product.wcs and not product.hide %}
         {% set product_ranges = product.ranges %}
         <CoverageOfferingBrief>
             <description>{{ product.definition.description }}</description>

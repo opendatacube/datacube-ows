@@ -18,6 +18,7 @@ DROP MATERIALIZED VIEW space_time_view;
 DROP MATERIALIZED VIEW time_view;
 DROP MATERIALIZED VIEW space_view;
 
+set timezone to 'Etc/UTC';
 
 -- Handling different variants of metadata requires UNION with WHICH clauses per metadata type
 -- https://www.postgresql.org/docs/11/queries-union.html

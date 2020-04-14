@@ -59,29 +59,45 @@ def create_multiprod_range_entry(dc, product, crses):
     # Update extents
     conn.execute("""
         UPDATE wms.multiproduct_ranges
-        SET (lat_min,lat_max,lon_min,lon_max) =
-        (wms_get_min(%(p_prodids)s, 'lat'), wms_get_max(%(p_prodids)s, 'lat'), wms_get_min(%(p_prodids)s, 'lon'), wms_get_max(%(p_prodids)s, 'lon'))
-        WHERE wms_product_name=%(p_id)s
+        SET lat_min = subq.lat_min,
+            lat_max = subq.lat_max, 
+            lon_min = subq.lon_min, 
+            lon_max = subq.lon_max
+        FROM (
+            select min(lat_min) as lat_min,
+                   max(lat_max) as lat_max,
+                   min(lon_min) as lon_min,
+                   max(lon_max) as lon_max
+            from wms.product_ranges
+            where id in %(p_prodid)s
+        ) as subq
+        WHERE wms_product_name = %(p_id)s
         """,
                  {"p_id": wms_name, "p_prodids": prodids})
 
     # Create sorted list of dates
+    results = conn.execute(
+        """
+        SELECT dates
+        FROM   wms.product_ranges
+        WHERE  id in %(p_prodid)s
+        """, {"p_prodids": prodids}
+    )
+    dates = set()
+    for r in results:
+        for d in r[0]:
+            dates.add(r)
+    dates = sorted(dates)
     conn.execute("""
-        WITH sorted
-        AS (SELECT to_jsonb(array_agg(dates.d))
-            AS dates
-            FROM (SELECT DISTINCT to_date(metadata::json->'extent'->>'center_dt', 'YYYY-MM-DD')
-                  AS d
-                  FROM agdc.dataset
-                  WHERE dataset_type_ref = any (%(p_prodids)s)
-                  AND archived IS NULL
-                  ORDER BY d) dates)
-        UPDATE wms.multiproduct_ranges
-        SET dates=sorted.dates
-        FROM sorted
-        WHERE wms_product_name=%(p_id)s
-        """,
-                 {"p_id": wms_name, "p_prodids": prodids})
+           UPDATE wms.multiproduct_ranges
+           SET dates = %(dates)s
+           WHERE wms_product_name= %(p_id)s
+      """,
+                 {
+                     "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
+                     "p_id": wms_name
+                 }
+    )
 
     # calculate bounding boxes
     results = list(conn.execute("""
@@ -208,27 +224,6 @@ def create_range_entry(dc, product, crses, summary_product=False):
         """,
         {"p_id": prodid})
 
-# Experimental shit
-
-  results = conn.execute(
-      """
-      select  dataset_type_ref,
-            ST_XMin(st_extent(spatial_extent)),
-            ST_XMax(st_extent(spatial_extent)),
-            ST_YMin(st_extent(spatial_extent)),
-            ST_YMax(st_extent(spatial_extent)),
-            array_agg(temporal_extent)
-      from space_time_view  sv
-      group by dataset_type_ref
-      """
-  )
-
-  for result in results:
-      # array_agg comes through as list of DateRanges with upper and lower datetimes.
-      print("Oo-ah!")
-
-  txn.rollback()
-  quit()
 
   # calculate bounding boxes
   results = list(conn.execute("""
