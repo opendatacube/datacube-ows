@@ -21,19 +21,31 @@ jobs:
       run: |
         echo "${{ secrets.DockerPassword }}" | docker login -u "${{ secrets.DockerUser }}" --password-stdin
 
-    - name: Pull latest image for cache
-      run: docker pull ${ORG}/${IMAGE}:latest
+    # We build the stage 1 image, then run test on it
+    # These tests require extra files we don't want in
+    # the production image
+    - name: Build OWS image (stage 1)
+      run: |
+        docker build \
+          --target env_builder \
+          --tag    ${ORG}/${IMAGE}:_builder \
+          .
 
-    # Build image and tag as latest, connect to pre-indexed database
-    - name: Build Docker Containers
+    - name: Test and Lint OWS image (stage 1)
+      run: |
+        docker run opendatacube/ows:_builder /bin/sh -c "./check-code.sh"
+
+    # Build prod image and tag as latest, connect to pre-indexed database
+    - name: Build Docker Containers (stage 2)
       run: docker-compose up --build -d
 
-    - name: Sleep for 30 seconds
+    - name: Sleep for 10 seconds
       uses: jakejarvis/wait-action@master
       with:
-        time: '30s'
+        time: '10s'
 
     # Run some tests on the images
+    # These tests require a working database
     - name: Test ping
       run: |
         curl --show-error --fail \
@@ -66,12 +78,9 @@ jobs:
     - name: Test datacube-ows-update
       run: docker-compose exec -T ows datacube-ows-update
 
-    - name: Lint and run python tests
-      run: docker-compose exec -T ows ./check-code.sh
-
     # Tag image if this is a tagged build
     # if not use a pseudo tag based on current tag,
-    # number of commits since last tag and hash
+    # number of commits since last tag and git hash
     - name: Push to DockerHub (master branch only)
       if: github.ref == 'refs/heads/master'
       run: |

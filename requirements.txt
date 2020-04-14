@@ -5,7 +5,7 @@ pylint
 flask
 colour
 scikit-image
-gevent
+gevent==1.4.0
 python-slugify
 eventlet
 gunicorn

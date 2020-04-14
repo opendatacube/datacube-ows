@@ -16,8 +16,8 @@ services:
     build:
       context: .
       cache_from: 
+        - opendatacube/ows:_builder
         - opendatacube/ows:latest
-      # End dev config
     image: opendatacube/ows:latest
     environment:
       - DB_HOSTNAME=postgres
@@ -32,33 +32,10 @@ services:
       - AWS_DEFAULT_REGION=ap-southeast-2
       # Talk to AWS without using credentials
       - AWS_NO_SIGN_REQUEST=YES
-      - FLASK_APP=/code/datacube_ows/ogc.py
     ports:
       - "8000:8000"
     volumes:
       - ./ows_test_cfg.py:/env/config/ows_cfg.py
-      - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
     depends_on:
       - "postgres"
     restart: always
-    # Because docker-compose doesn't have init containers we have a wait script
-    # That will keep trying till the database is up
-    command:
-      - "wait-for-db"
-      - "gunicorn"
-      - "-b"
-      - "0.0.0.0:8000"
-      - "-w"
-      - "3"
-      - "--threads=3"
-      - "-k"
-      - "gevent"
-      - "--timeout"
-      - "121"
-      - "--pid"
-      - "gunicorn.pid"
-      - "--log-level"
-      - "info"
-      - "--worker-tmp-dir"
-      - "/dev/shm"
-      - "datacube_ows.wsgi"
