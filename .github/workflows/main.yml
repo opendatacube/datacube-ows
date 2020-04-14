@@ -33,7 +33,7 @@ jobs:
 
     - name: Test and Lint OWS image (stage 1)
       run: |
-        docker run opendatacube/ows:_builder /bin/sh -c "./check-code.sh"
+        docker run ${ORG}/${IMAGE}:_builder /bin/sh -c "./check-code.sh"
 
     # Build prod image and tag as latest, connect to pre-indexed database
     - name: Build Docker Containers (stage 2)

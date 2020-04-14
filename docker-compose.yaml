@@ -15,9 +15,6 @@ services:
   ows:
     build:
       context: .
-      cache_from: 
-        - opendatacube/ows:_builder
-        - opendatacube/ows:latest
     image: opendatacube/ows:latest
     environment:
       - DB_HOSTNAME=postgres
