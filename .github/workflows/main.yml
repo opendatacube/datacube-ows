@@ -24,17 +24,23 @@ jobs:
     # We build the stage 1 image, then run test on it
     # These tests require extra files we don't want in
     # the production image
-    - name: Build and run dev OWS containers (stage 1)
-      run: docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up --build -d
+    # We build the stage 1 image, then run test on it
+    # These tests require extra files we don't want in
+    # the production image
+    - name: Build dev OWS image (stage 1)
+      run: |
+        docker build \
+          --target env_builder \
+          --tag    ${ORG}/${IMAGE}:_builder \
+          .
 
-    - name: Test and Lint Dev OWS containers
-      run: docker-compose exec -T ows ./check-code.sh
+    - name: Test and lint dev OWS image (stage 1)
+      run: |
+        docker run ${ORG}/${IMAGE}:_builder /bin/sh -c "./check-code.sh"
 
-    - name: stop dev OWS image
-      run: docker-compose down
 
     # Build prod image and tag as latest, connect to pre-indexed database
-    - name: Build and run prod OWS containers (stage 2)
+    - name: Build and run prod OWS images (stage 2)
       run: docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up --build --force-recreate -d
 
     - name: Sleep for 10 seconds
