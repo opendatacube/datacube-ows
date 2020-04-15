@@ -1,38 +1,42 @@
 version: '3.4'
 
+# Default compose will create an ows image, with dev settings and connect to a local db
+
 services:
-  postgres:
-    # db with some data from ls8_usgs_level1_scene pre-indexed
-    build: docker/database/
-    environment:
-      - POSTGRES_DB=opendatacube
-      - POSTGRES_PASSWORD=opendatacubepassword
-      - POSTGRES_USER=opendatacube
-    ports:
-      - 5432:5432
-    restart: always
   
   ows:
     build:
       context: .
-    image: opendatacube/ows:latest
+      # Development container, remove args and target to build a production container instead
+      args:
+        DEV: "yes"
+      target: env_builder
+      cache_from: 
+        - opendatacube/ows:_builder
+      # End dev config
+    image: opendatacube/ows:_builder
+    # network_mode: host
     environment:
-      - DB_HOSTNAME=postgres
-      - DB_PORT=5432
-      - DB_USERNAME=opendatacube
-      - DB_PASSWORD=opendatacubepassword
-      - DB_DATABASE=opendatacube
+      # Defaults are defined in .env file
+      DB_HOSTNAME: ${DB_HOSTNAME}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
       # Where the config file is (must match the volume mount)
-      - WMS_CONFIG_PATH=/env/config/ows_cfg.py
+      WMS_CONFIG_PATH: /env/config/ows_cfg.py
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env) 
-      - DATACUBE_OWS_CFG=config.ows_cfg.ows_cfg
-      - AWS_DEFAULT_REGION=ap-southeast-2
+      DATACUBE_OWS_CFG: config.ows_cfg.ows_cfg
+      AWS_DEFAULT_REGION: ap-southeast-2
       # Talk to AWS without using credentials
-      - AWS_NO_SIGN_REQUEST=YES
+      AWS_NO_SIGN_REQUEST: "YES"
+      # Dev flags
+      FLASK_APP: /code/datacube_ows/ogc.py
+      PYDEV_DEBUG: "YES"
     ports:
       - "8000:8000"
     volumes:
-      - ./ows_test_cfg.py:/env/config/ows_cfg.py
-    depends_on:
-      - "postgres"
+      - ./ows_cfg.py:/env/config/ows_cfg.py
+      - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
     restart: always
+    command: ["wait-for-db", "flask", "run", "--host=0.0.0.0", "--port=8000"]

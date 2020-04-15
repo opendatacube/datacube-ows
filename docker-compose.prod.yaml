@@ -1,0 +1,44 @@
+version: '3.4'
+
+# Default compose will create an ows image, with dev settings and connect to a local db
+
+services:
+  postgres:
+    # db with some data from ls8_usgs_level1_scene pre-indexed
+    build: docker/database/
+    environment:
+      - POSTGRES_DB=opendatacube
+      - POSTGRES_PASSWORD=opendatacubepassword
+      - POSTGRES_USER=opendatacube
+    ports:
+      - 5432:5432
+    restart: always
+
+  ows:
+    build:
+      context: .
+    image: opendatacube/ows:latest
+    environment:
+      DB_HOSTNAME: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: opendatacube
+      DB_PASSWORD: opendatacubepassword
+      DB_DATABASE: opendatacube
+      # Where the config file is (must match the volume mount)
+      WMS_CONFIG_PATH: /env/config/ows_cfg.py
+      # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env) 
+      DATACUBE_OWS_CFG: config.ows_cfg.ows_cfg
+      AWS_DEFAULT_REGION: ap-southeast-2
+      # Talk to AWS without using credentials
+      AWS_NO_SIGN_REQUEST: "YES"
+      # Dev flags
+      FLASK_APP: ""
+      PYDEV_DEBUG: ""
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ows_test_cfg.py:/env/config/ows_cfg.py
+    restart: always
+    depends_on:
+      - postgres
+    command: gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid /home/ows/gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi

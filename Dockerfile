@@ -12,7 +12,7 @@ RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
 COPY requirements-dev.txt /
 ARG DEV="no"
 RUN if [ "$DEV" = "yes" ]; then \
-    /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path} && \
+    /usr/local/bin/env-build-tool new /requirements-dev.txt ${py_env_path} && \
     # Postgres 11
     curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
     sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \

@@ -36,6 +36,27 @@ geospatial libraries.  Dependency conflicts are almost unavoidable in environmen
 other large complex geospatial software packages.  We therefore strongly recommend some kind of
 containerised solution and we supply scripts for building appropriate Docker containers.
 
+Docker-Compose
+--------------
+
+We use docker-compose to make development and testing of the containerised ows images easier
+
+
+To connect to a pre-existing database on your local machine: ::
+
+  export DB_USERNAME=username
+  export DB_PASSWORD=password
+  export DB_DATABASE=opendatacube
+  docker-compose up --build
+
+To start ows with a pre-indexed database: ::
+
+  docker-compose up -f docker-compose.yaml -f docker-compose.dev.yaml --build 
+
+To start ows with the production (gunicorn) image ::
+
+  docker-compose up -f docker-compose.yaml -f docker-compose.prod.yaml --build 
+
 Docker
 ------
 To run the standard Docker image, create a docker volume containing your ows config files and use something like: ::
