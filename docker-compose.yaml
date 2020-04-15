@@ -7,13 +7,11 @@ services:
   ows:
     build:
       context: .
-      # Development container, remove args and target to build a production container instead
       args:
         DEV: "yes"
       target: env_builder
       cache_from: 
         - opendatacube/ows:_builder
-      # End dev config
     image: opendatacube/ows:_builder
     # network_mode: host
     environment:

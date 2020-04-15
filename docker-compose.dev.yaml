@@ -15,6 +15,11 @@ services:
   ows:
     build:
       context: .
+      args:
+        DEV: "yes"
+      target: env_builder
+      cache_from: 
+        - opendatacube/ows:_builder
     environment:
       # Overwrite db config to point to pre-indexed-db
       DB_HOSTNAME: postgres
