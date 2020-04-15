@@ -51,11 +51,11 @@ To connect to a pre-existing database on your local machine: ::
 
 To start ows with a pre-indexed database: ::
 
-  docker-compose up -f docker-compose.yaml -f docker-compose.dev.yaml --build 
+  docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up --build 
 
 To start ows with the production (gunicorn) image ::
 
-  docker-compose up -f docker-compose.yaml -f docker-compose.prod.yaml --build 
+  docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up --build 
 
 Docker
 ------

@@ -37,7 +37,7 @@ jobs:
 
     # Build prod image and tag as latest, connect to pre-indexed database
     - name: Build Docker Containers (stage 2)
-      run: docker-compose up -f docker-compose.yaml -f docker-compose.prod.yaml --build -d
+      run: docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up --build -d
 
     - name: Sleep for 10 seconds
       uses: jakejarvis/wait-action@master
