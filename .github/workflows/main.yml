@@ -28,7 +28,7 @@ jobs:
       run: docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up --build -d
 
     - name: Test and Lint Dev OWS containers
-      run: docker-compose exec -T ows datacube-ows-update ./check-code.sh
+      run: docker-compose exec -T ows ./check-code.sh
 
     - name: stop dev OWS image
       run: docker-compose down
