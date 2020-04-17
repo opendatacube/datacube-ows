@@ -42,20 +42,33 @@ Docker-Compose
 We use docker-compose to make development and testing of the containerised ows images easier
 
 
-To connect to a pre-existing database on your local machine: ::
+To start OWS with flask connected to a pre-existing database on your local machine: ::
 
   export DB_USERNAME=username
   export DB_PASSWORD=password
   export DB_DATABASE=opendatacube
-  docker-compose up --build
+  export DB_hostname=localhost
+  export NETWORK_MODE=host
+  OWS_CFG_FILE=/path/to/ows_cfg.py
+  docker-compose up
 
 To start ows with a pre-indexed database: ::
 
-  docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up --build 
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up
 
-To start ows with the production (gunicorn) image ::
+To start ows with db and gunicorn instead of flask (production) ::
 
-  docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up --build 
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up
+
+The default environment variables (in .env file) can be overriden by setting local environment variables ::
+
+  # Enable pydev for pycharm (needs rebuild to install python libs)
+  export PYDEV_DEBUG=yes
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up --build
+
+  # Change location of default config file (good for testing config changes on a local db)
+  OWS_CFG_FILE=/path/to/ows_cfg.py
+  docker-compose -f docker-compose.yaml
 
 Docker
 ------
