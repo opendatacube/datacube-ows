@@ -48,7 +48,6 @@ To start OWS with flask connected to a pre-existing database on your local machi
   export DB_PASSWORD=password
   export DB_DATABASE=opendatacube
   export DB_hostname=localhost
-  export NETWORK_MODE=host
   OWS_CFG_FILE=/path/to/ows_cfg.py
   docker-compose up
 
