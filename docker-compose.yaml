@@ -1,9 +1,5 @@
 version: '3.4'
 
-networks:
-  ows:
-    driver: ${NETWORK_MODE}
-
 # Default compose will create an ows image, with dev settings and connect to a local db
 services:
   ows:
@@ -15,8 +11,7 @@ services:
         - opendatacube/ows:_builder
         - opendatacube/ows:latest
     image: opendatacube/ows:latest
-    networks: 
-      - ows
+    network_mode: host
     environment:
       # Defaults are defined in .env file
       DB_HOSTNAME: ${DB_HOSTNAME}
