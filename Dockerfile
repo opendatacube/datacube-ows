@@ -34,7 +34,7 @@ RUN apt-get update && apt install -y \
 # Install postgres client 11
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
     sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
-    apt-get update && apt install -y \
+    apt-get update && apt-get install -y \
     postgresql-client-11 \
     && rm -rf /var/lib/apt/lists/*
 
