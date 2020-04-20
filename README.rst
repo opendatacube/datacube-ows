@@ -62,7 +62,9 @@ To start ows with db and gunicorn instead of flask (production) ::
 The default environment variables (in .env file) can be overriden by setting local environment variables ::
 
   # Enable pydev for pycharm (needs rebuild to install python libs)
+  # hot reload is not supported, so we need to set FLASK_DEV to production
   export PYDEV_DEBUG=yes
+  export FLASK_DEV=production
   docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up --build
 
   # Change location of default config file (good for testing config changes on a local db)

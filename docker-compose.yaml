@@ -28,7 +28,7 @@ services:
       AWS_NO_SIGN_REQUEST: "${AWS_NO_SIGN_REQUEST}"
       # Dev flags
       FLASK_APP: /code/datacube_ows/ogc.py
-      FLASK_ENV: development
+      FLASK_ENV: ${FLASK_ENV}
       PYDEV_DEBUG: "${PYDEV_DEBUG}"
     ports:
       - "8000:8000"
