@@ -8,28 +8,8 @@ ARG py_env_path
 COPY requirements.txt /
 RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
 
-## Only install dev requirements if arg DEV is set to 'yes'
-COPY requirements-dev.txt /
-ARG DEV="no"
-RUN if [ "$DEV" = "yes" ]; then \
-    /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path} \
-    # Postgres 11
-    curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
-    sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
-    apt-get update && apt install -y \
-    postgresql-client-11 \
-    && rm -rf /var/lib/apt/lists/* \
-;fi
-
 ENV PATH=${py_env_path}/bin:$PATH \
-    PYTHONPATH=${py_env_path} \
-    GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
-    CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
-    GDAL_HTTP_MAX_RETRY="10" \
-    GDAL_HTTP_RETRY_DELAY="1" 
-
-# We use the env_builder image for development, so set a cmd
-CMD FLASK_APP=/code/datacube_ows/ogc.py flask run --host=0.0.0.0 --port=8000
+    PYTHONPATH=${py_env_path}
 
 # Copy source code and install it
 RUN mkdir -p /code
@@ -37,6 +17,7 @@ WORKDIR /code
 ADD . /code
 
 RUN pip install .
+
 
 # Runner image starts here
 FROM opendatacube/geobase:runner${V_BASE}
@@ -53,7 +34,7 @@ RUN apt-get update && apt install -y \
 # Install postgres client 11
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
     sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
-    apt-get update && apt install -y \
+    apt-get update && apt-get install -y \
     postgresql-client-11 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -70,6 +51,12 @@ ENV PATH=${py_env_path}/bin:$PATH \
     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
     GDAL_HTTP_MAX_RETRY="10" \
     GDAL_HTTP_RETRY_DELAY="1" 
+
+## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
+ARG PYDEV_DEBUG="no"
+RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
+    pip install pydevd-pycharm~=193.6911.25 \
+;fi
 
 RUN chown 1000:100 /dev/shm
 
