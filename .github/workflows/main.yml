@@ -88,7 +88,10 @@ jobs:
     - name: Push to DockerHub (master branch only)
       if: github.ref == 'refs/heads/master'
       run: |
+        # figure out extra tag
+        git fetch --prune --unshallow 2> /dev/null || true
         tag=$(git describe --tags)
+        # tag and push images
         docker tag ${ORG}/${IMAGE}:latest ${ORG}/${IMAGE}:${tag}
         docker push ${ORG}/${IMAGE}:latest
         docker push ${ORG}/${IMAGE}:${tag}
