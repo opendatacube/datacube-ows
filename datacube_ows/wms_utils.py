@@ -453,7 +453,7 @@ def collapse_datasets_to_times(datasets, times, tz):
         collapsed.append(tuple(dssv.tolist()))
 
     nparray = numpy.empty(len(selected_dates), dtype=object)
-    for i, dss in collapsed:
+    for i, dss in enumerate(collapsed):
         nparray[i] = dss
     return xarray.DataArray(
         nparray,
