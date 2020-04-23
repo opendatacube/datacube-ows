@@ -151,6 +151,8 @@ class BandIndex(object):
                     raise ConfigException(f"Duplicate band name/alias: {a} in layer {product}")
                 self._idx[a] = b
             self._nodata_vals[b] = self.native_bands['nodata'][b]
+            if isinstance(self._nodata_vals[b], str) and self._nodata_vals[b].lower() == "nan":
+                self._nodata_vals[b] = float("nan")
 
     def band(self, name_alias):
         if name_alias not in self._idx:
