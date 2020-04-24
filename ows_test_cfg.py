@@ -944,7 +944,7 @@ ows_cfg = {
             "wcs": True
         },
         # Service title - appears e.g. in Terria catalog (required)
-        "title": "OGC web-services for the Open Data Cube",
+        "title": "Open web-services for the Open Data Cube",
         # Service URL.
         # A list of fully qualified URLs that the service can return
         # in the GetCapabilities documents based on the requesting url
