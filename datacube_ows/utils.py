@@ -56,7 +56,7 @@ def get_jaeger_exporter():
         return None
 
     opts = {
-        "service_name": os.getenv("JAEGER_SERVICE_NAME", "OGC Web Services")
+        "service_name": os.getenv("JAEGER_SERVICE_NAME", "Open Web Services")
     }
 
     hostname = os.getenv("JAEGER_HOSTNAME")

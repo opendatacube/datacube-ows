@@ -1137,7 +1137,7 @@ ows_cfg = {
             "wcs": True
         },
         # Service title - appears e.g. in Terria catalog (required)
-        "title": "OGC web-services for the Open Datacube",
+        "title": "Open web-services for the Open Data Cube",
         # Service URL.
         # A list of fully qualified URLs that the service can return
         # in the GetCapabilities documents based on the requesting url
@@ -1150,7 +1150,7 @@ ows_cfg = {
         "info_url": "http://opendatacube.org",
         # Abstract - longer description of the service (Note this text is used for both WM(T)S and WCS)
         # Optional - defaults to empty string.
-        "abstract": """This web-service serves georectified raster data from our very own special Open Datacube instance.""",
+        "abstract": """This web-service serves georectified raster data from our very own special Open Data Cube instance.""",
         # Keywords included for all services and products
         # Optional - defaults to empty list.
         "keywords": [
