@@ -83,7 +83,7 @@ class DataStacker(object):
                 "product": prod_name,
                 "geopolygon": self._geobox.extent
             }
-        if all_time or self._product.pq_ignore_time:
+        if all_time or (mask and self._product.pq_ignore_time):
             all_datasets = self._dataset_query(index, prod_name, query_args)
         else:
             all_datasets = []
