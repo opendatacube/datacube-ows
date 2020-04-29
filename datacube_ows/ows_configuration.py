@@ -322,7 +322,7 @@ class OWSNamedLayer(OWSLayer):
         # TODO: sub-ranges
         self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
         try:
-            self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
+            self.parse_resource_limits(cfg.get("resource_limits", {}))
         except KeyError:
             raise ConfigException("Missing required config items in resource limits for layer %s" % self.name)
         try:
@@ -368,10 +368,12 @@ class OWSNamedLayer(OWSLayer):
             self.global_cfg.native_product_index[self.product_name] = self
 
     def parse_resource_limits(self, cfg):
-        self.zoom_fill = cfg["wms"].get("zoomed_out_fill_colour", [150, 180, 200, 160])
-        self.min_zoom = cfg["wms"].get("min_zoom_factor", 300.0)
-        self.max_datasets_wms = cfg["wms"].get("max_datasets", 0)
-        self.max_datasets_wcs = cfg["wcs"].get("max_datasets", 0)
+        wms_cfg = cfg.get("wms", {})
+        wcs_cfg = cfg.get("wcs", {})
+        self.zoom_fill = wms_cfg.get("zoomed_out_fill_colour", [150, 180, 200, 160])
+        self.min_zoom = wms_cfg.get("min_zoom_factor", 300.0)
+        self.max_datasets_wms = wms_cfg.get("max_datasets", 0)
+        self.max_datasets_wcs = wcs_cfg.get("max_datasets", 0)
 
     def parse_image_processing(self, cfg):
         emf_cfg = cfg["extent_mask_func"]
