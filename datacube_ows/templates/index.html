@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{  cfg.title }} (datacube-ows)</title>
+</head>
+<body>
+<h1>{{ cfg.title }} (datacube-ows)</h1>
+<p>{{ cfg.abstract }}</p> <hr/>
+    <p>
+        This URL is an
+        <a href="https://opendatacube.org">Open Data Cube</a>
+        <a href="https://github.com/opendatacube/datacube-ows">Open Web Services (datacube-ows)</a>
+        end-point and is not intended for direct viewing.</p>
+    <p>This instance supports the following protocols:</p>
+    {% if cfg.wms %}
+        <h2>WMS (OGC Web Map Service)</h2>
+        <p><b>Supported Versions:</b> {% for sv in supported["wms"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}
+        (N.B. We maintain some compatibility with v1.1.1 but do not guarantee full compliance with the standard.)</p>
+        <p>To view service metadata and supported capabilities see:<br/>
+            <a href="{{ base_url }}/wms?request=GetCapabilities&service=WMS&version={{ supported["wms"].versions[-1].version }}">
+                {{ base_url }}/wms?request=GetCapabilities&service=WMS&version={{ supported["wms"].versions[-1].version }}
+            </a>
+        </p>
+    {% endif %}
+    {% if cfg.wmts %}
+        <h2>WMTS (OGC Web Map Tiling Service)</h2>
+        <p><b>Supported Versions:</b> {% for sv in supported["wmts"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}</p>
+        <p>To view service metadata and supported capabilities see:<br/>
+            <a href="{{ base_url }}/wmts?request=GetCapabilities&service=WMTS&version={{ supported["wmts"].versions[-1].version }}">
+                {{ base_url }}/wmts?request=GetCapabilities&service=WMTS&version={{ supported["wmts"].versions[-1].version }}
+            </a>
+        </p>
+    {% endif %}
+    {% if cfg.wcs %}
+        <h2>WCS (OGC Web Coverage Service)</h2>
+        <p><b>Supported Versions:</b> {% for sv in supported["wcs"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}</p>
+        <p>To view service metadata and supported capabilities see:<br/>
+            <a href="{{ base_url }}/wcs?request=GetCapabilities&service=WCS&version={{ supported["wcs"].versions[-1].version }}">
+            {{ base_url }}/wcs?request=GetCapabilities&service=WCS&version={{ supported["wcs"].versions[-1].version }}
+            </a>
+        </p>
+    {% endif %}
+</body>
+</html>

@@ -66,9 +66,11 @@
                     {% endif %}
             />
         {% endfor %}
+        {% if lyr_ranges.times|length > 1 %}
         <Dimension name="time" units="ISO8601">
             {% for t in lyr_ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
         </Dimension>
+        {% endif %}
         {% for style in lyr.styles %}
             <Style>
                 <Name>{{ style.name }}</Name>

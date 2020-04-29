@@ -42,11 +42,11 @@ test_requirements = [
 setup(
     name='datacube_ows',
     version='0.2.0',
-    description="Datacube Open Web Services",
+    description="Open Data Cube Open Web Services",
     long_description=readme + '\n\n' + history,
     author="Open Data Cube",
     author_email='earth.observation@ga.gov.au',
-    url='https://github.com/opendatacube/datacube-wms',
+    url='https://github.com/opendatacube/datacube-ows',
     entry_points={
         'console_scripts': [
             'datacube-ows=datacube_ows.wsgi:main',

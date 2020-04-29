@@ -432,7 +432,7 @@ def item_fuser(dest, src):
 
 def collapse_datasets_to_times(datasets, times, tz):
     available_dates = datasets.coords["time"].values
-    collapsed = numpy.empty(len(times), dtype=object)
+    collapsed = []
     selected_dates = []
     for i, dt in enumerate(times):
         npdt = numpy.datetime64(dt)
@@ -446,13 +446,17 @@ def collapse_datasets_to_times(datasets, times, tz):
                     npdt = avnpdt
                     break
             if not npdt:
-                raise WMSException("Date mismatch")
+                continue
         selected_dates.append(npdt)
         dss = datasets.sel(time=npdt)
         dssv = dss.values
-        collapsed[i] = tuple(dssv.tolist())
+        collapsed.append(tuple(dssv.tolist()))
+
+    nparray = numpy.empty(len(selected_dates), dtype=object)
+    for i, dss in enumerate(collapsed):
+        nparray[i] = dss
     return xarray.DataArray(
-        collapsed,
+        nparray,
         dims=["time"],
         coords=[selected_dates]
     )
