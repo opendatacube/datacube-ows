@@ -590,11 +590,14 @@ def feature_info(args):
                 if not params.product.pq_ignore_time:
                     pq_datasets = collapse_datasets_to_times(pq_datasets, params.times, tz)
                 pq_data = stacker.data(pq_datasets, mask=True)
-                feature_json["flags"] = []
+                # feature_json["flags"] = []
                 for dt in pq_data.time.values:
                     pqd =pq_data.sel(time=dt)
                     date_info = fi_date_index.get(dt)
                     if not date_info:
+                        if "flags" not in date_info:
+                            date_info["flags"] = {}
+                    else:
                         date_info = {"flags": {}}
                         feature_json["data"].append(date_info)
                     pq_pixel_ds = pqd.isel(**isel_kwargs)
