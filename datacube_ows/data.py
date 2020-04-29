@@ -566,8 +566,10 @@ def feature_info(args):
                 pixel_ds = td.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
-                date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
-
+                if params.product.is_raw_time_res:
+                    date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
+                else:
+                    date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
                 # Collect raw band values for pixel and derived bands from styles
                 date_info["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
