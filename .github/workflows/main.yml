@@ -87,7 +87,7 @@ jobs:
     # Tag image if this is a tagged build
     # if not use a pseudo tag based on current tag,
     # number of commits since last tag and git hash
-    - name: Push to DockerHub (master branch only)
+    - name: Push to DockerHub (master branch or tagged release only)
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/tags/'
       run: |
         # figure out extra tag
