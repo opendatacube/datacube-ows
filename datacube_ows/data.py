@@ -596,7 +596,7 @@ def feature_info(args):
                 for dt in pq_data.time.values:
                     pqd =pq_data.sel(time=dt)
                     date_info = fi_date_index.get(dt)
-                    if not date_info:
+                    if date_info:
                         if "flags" not in date_info:
                             date_info["flags"] = {}
                     else:
