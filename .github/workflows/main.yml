@@ -88,7 +88,7 @@ jobs:
     # if not use a pseudo tag based on current tag,
     # number of commits since last tag and git hash
     - name: Push to DockerHub (master branch only)
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/tags/'
       run: |
         # figure out extra tag
         git fetch --prune --unshallow 2> /dev/null || true
