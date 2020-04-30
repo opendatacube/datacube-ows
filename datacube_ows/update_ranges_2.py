@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
-from datacube_ows.product_ranges import update_all_ranges, update_range
 from datacube_ows.product_ranges_2 import get_sqlconn, add_ranges
 from datacube import Datacube
-from psycopg2.sql import SQL, Identifier
+from psycopg2.sql import SQL
 from datacube_ows.ows_configuration import get_config
 import os
 import click
 
 @click.command()
-@click.option("--views", is_flag=True, default=False, help="Create or update the ODC spatio-temporal materialised views.")
+@click.option("--views", is_flag=True, default=False, help="Create (if called with the --schema option) or refresh the ODC spatio-temporal materialised views.")
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products" )
@@ -55,9 +54,13 @@ def main(products, merge_only, summary, schema, views, role):
             print("Creating or replacing WMS database schema...")
             create_schema(dc, role)
             print("Done")
-        if views:
-            print("Recalculating materialised views...")
+        if schema and views:
+            print("Creating or replacing materialised views...")
             create_views(dc)
+            print("Done")
+        elif views:
+            print("Refreshing materialised views...")
+            refresh_views(dc)
             print("Done")
         return 0
 
@@ -225,6 +228,22 @@ CREATE INDEX space_time_view_geom_idx
 
     ]
     run_sql(dc, commands)
+
+
+def refresh_views(dc):
+    commands = [
+        ("Refreshing TIME materialized view",
+         "REFRESH MATERIALIZED VIEW time_view"
+         ),
+        ("Refreshing SPACE materialized view",
+         "REFRESH MATERIALIZED VIEW space_view"
+         ),
+        ("Refreshing combined SPACE-TIME materialized view",
+         "REFRESH MATERIALIZED VIEW CONCURRENTLY space_time_view"
+         ),
+    ]
+    run_sql(dc, commands)
+
 
 def create_schema(dc, role):
     commands = [
