@@ -491,7 +491,8 @@ class OWSNamedLayer(OWSLayer):
         except TypeError:
             raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
         self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
-        self.grid_high_y = int((native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+        self.grid_high_y = int((
+                                       native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
 
         # Band management
         self.wcs_default_bands = [self.band_idx.band(b) for b in cfg["default_bands"]]

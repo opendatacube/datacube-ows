@@ -13,6 +13,24 @@ import json
 
 from datacube_ows.utils import get_sqlconn
 
+def get_odc_products(dc, any_product, odc_only=False):
+    if isinstance(any_product, OWSNamedLayer):
+        return any_product.products
+    elif isinstance(any_product, str):
+        dc_product = dc.index.products.get_by_name(any_product)
+        if odc_only:
+            ows_product = None
+        else:
+            ows_product = get_config().product_index.get(any_product)
+        if ows_product:
+            if dc_product and [dc_product] == ows_product.products:
+                # The same!
+                return [dc_product]
+            print("Updating OWS product %s (ODC Products: []).  If you meant the ODC product %s, please use the --odc-only flag.")
+            return ows_product.products
+    else:
+        # Assume ODC product
+        return [any_product]
 
 def get_crsids(cfg=None):
     if not cfg:
@@ -37,14 +55,14 @@ def jsonise_bbox(bbox):
 
 
 def create_multiprod_range_entry(dc, product, crses):
+    print("Merging multiproduct ranges for %s (ODC products: %s)" % (
+        product.name,
+        repr(product.product_names)
+    ))
     conn = get_sqlconn(dc)
     txn = conn.begin()
-    if isinstance(product, dict):
-        prodids = [p.id for p in product["products"]]
-        wms_name = product["name"]
-    else:
-        prodids = [ p.id for p in product.products ]
-        wms_name = product.name
+    prodids = [ p.id for p in product.products ]
+    wms_name = product.name
 
     # Attempt to insert row
     conn.execute("""
@@ -69,7 +87,7 @@ def create_multiprod_range_entry(dc, product, crses):
                    min(lon_min) as lon_min,
                    max(lon_max) as lon_max
             from wms.product_ranges
-            where id in %(p_prodid)s
+            where id = ANY (%(p_prodids)s)
         ) as subq
         WHERE wms_product_name = %(p_id)s
         """,
@@ -80,13 +98,13 @@ def create_multiprod_range_entry(dc, product, crses):
         """
         SELECT dates
         FROM   wms.product_ranges
-        WHERE  id in %(p_prodid)s
+        WHERE  id  = ANY (%(p_prodids)s)
         """, {"p_prodids": prodids}
     )
     dates = set()
     for r in results:
         for d in r[0]:
-            dates.add(r)
+            dates.add(d)
     dates = sorted(dates)
     conn.execute("""
            UPDATE wms.multiproduct_ranges
@@ -94,7 +112,7 @@ def create_multiprod_range_entry(dc, product, crses):
            WHERE wms_product_name= %(p_id)s
       """,
                  {
-                     "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
+                     "dates": Json(dates),
                      "p_id": wms_name
                  }
     )
@@ -133,6 +151,7 @@ def create_multiprod_range_entry(dc, product, crses):
 
 
 def create_range_entry(dc, product, crses, summary_product=False):
+  print("Updating range for ODC product %s..."% product.name)
   # NB. product is an ODC product
   conn = get_sqlconn(dc)
   txn = conn.begin()
@@ -277,59 +296,56 @@ def check_datasets_exist(dc, product_name):
 
   return list(results)[0][0] > 0
 
-
-def add_product_range(dc, product):
-    if isinstance(product, str):
-        product_name = product
-        dc_product = dc.index.products.get_by_name(product)
-    else:
-        product_name = product.name
-        dc_product = product
-
-    ows_product = get_config().native_product_index.get(product_name)
-    if ows_product:
-        summary_product = not ows_product.is_raw_time_res
-    else:
-        summary_product = False
-
-    assert dc_product is not None
-
-    if check_datasets_exist(dc, product_name):
-        create_range_entry(dc, dc_product, get_crses(), summary_product)
-    else:
-        print("Could not find any datasets for: ", product_name)
-
-
-def add_multiproduct_range(dc, product, follow_dependencies=True):
-    if isinstance(product, str):
-        product = get_config().product_index.get(product)
-
-    assert product is not None
-    assert product.multi_product
-
-    if follow_dependencies:
-        for product_name in product.product_names:
-            dc_prod = dc.index.products.get_by_name(product_name)
-            if not check_datasets_exist(dc, product_name):
-                print("Could not find any datasets for: ", product_name)
+def add_ranges(dc, product_names, summary=False, merge_only=False):
+    odc_products = {}
+    ows_multiproducts = []
+    for pname in product_names:
+        dc_product = None
+        ows_product = get_config().product_index.get(pname)
+        if not ows_product:
+            ows_product = get_config().native_product_index.get(pname)
+        if ows_product:
+            for dc_pname in ows_product.product_names:
+                if dc_pname in odc_products:
+                    odc_products[dc_pname]["ows"].append(ows_product)
+                else:
+                    odc_products[dc_pname] = { "ows": [ows_product]}
+            print("OWS Layer %s maps to ODC Product(s): %s" % (
+                ows_product.name,
+                repr(ows_product.product_names)
+            ))
+            if ows_product.multi_product:
+                ows_multiproducts.append(ows_product)
+        if not ows_product:
+            dc_product = dc.index.products.get_by_name(pname)
+            if dc_product:
+                print("ODC Layer: %s" % pname)
+                if pname in odc_products:
+                    odc_products[pname]["ows"].append(None)
+                else:
+                    odc_products[pname] = { "ows": [None]}
             else:
-                add_product_range(dc, product_name)
+                print("Unrecognised product name:", pname)
+                continue
 
-    # Actually merge and store!
-    create_multiprod_range_entry(dc, product, get_crses())
+    if ows_multiproducts and merge_only:
+        print("Merge-only: Skipping range update of products:", repr(list(odc_products.keys())))
+    else:
+        for pname, ows_prods in odc_products.items():
+            dc_product = dc.index.products.get_by_name(pname)
+            if check_datasets_exist(dc, dc_product.name):
+                prod_summary = summary
+                for ows_prod in ows_prods["ows"]:
+                    if ows_prod:
+                        prod_summary = not ows_prod.is_raw_time_res
+                        break
+                create_range_entry(dc, dc_product, get_crses(), prod_summary)
+            else:
+                print("Could not find any datasets for: ", pname)
 
+    for mp in ows_multiproducts:
+        create_multiprod_range_entry(dc, mp, get_crses())
 
-def add_all(dc):
-    multi_products = set()
-    for product_cfg in get_config().product_index.values():
-        product_name = product_cfg.product_name
-        if product_cfg.multi_product:
-            multi_products.add(product_cfg)
-        else:
-            print("Adding range for:", product_name)
-            add_product_range(dc, product_name)
+    print("Done.")
 
-    for p in multi_products:
-        print("Adding multiproduct range for:", p.name)
-        add_multiproduct_range(dc, p, follow_dependencies=False)
 
