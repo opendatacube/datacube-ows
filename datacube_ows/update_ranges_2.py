@@ -63,7 +63,7 @@ def main(products, merge_only, summary, schema, views, role):
 
     print("Deriving extents from materialised views")
     if not products:
-        products = get_config().product_index.keys()
+        products = list(get_config().product_index.keys())
     add_ranges(dc, products, summary, merge_only)
     return 0
 

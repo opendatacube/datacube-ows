@@ -528,6 +528,7 @@ class OWSNamedLayer(OWSLayer):
             if self._ranges is None:
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
+        # pylint: disable=broad-except
         except Exception as a:
             print("get_ranges failed for layer %s: %s" % (self.name, str(a)))
             self.hide = True
