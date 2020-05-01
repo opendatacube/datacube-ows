@@ -50,8 +50,8 @@ setup(
     entry_points={
         'console_scripts': [
             'datacube-ows=datacube_ows.wsgi:main',
-            'datacube-ows-update=datacube_ows.update_ranges:main',
-            'datacube-ows-update-2=datacube_ows.update_ranges_2:main'
+            'datacube-ows-update-old=datacube_ows.update_ranges_old:main',
+            'datacube-ows-update=datacube_ows.update_ranges:main'
         ]
     },
     packages=find_packages(),

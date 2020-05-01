@@ -15,7 +15,7 @@ from slugify import slugify
 
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.band_mapper import StyleDef
-from datacube_ows.ogc_utils import get_function, ConfigException, ProductLayerException, FunctionWrapper
+from datacube_ows.ogc_utils import get_function, ConfigException, FunctionWrapper
 
 import logging
 
