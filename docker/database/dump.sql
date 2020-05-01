@@ -17,13 +17,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: agdc; Type: SCHEMA; Schema: -; Owner: agdc_admin
+-- Name: agdc; Type: SCHEMA; Schema: -; Owner: opendatacube
 --
 
 CREATE SCHEMA agdc;
 
 
-ALTER SCHEMA agdc OWNER TO agdc_admin;
+ALTER SCHEMA agdc OWNER TO opendatacube;
 
 --
 -- Name: pg_cron; Type: EXTENSION; Schema: -; Owner: 
@@ -107,7 +107,7 @@ COMMENT ON EXTENSION postgis_topology IS 'PostGIS topology spatial types and fun
 
 
 --
--- Name: float8range; Type: TYPE; Schema: agdc; Owner: agdc_admin
+-- Name: float8range; Type: TYPE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE TYPE agdc.float8range AS RANGE (
@@ -116,10 +116,10 @@ CREATE TYPE agdc.float8range AS RANGE (
 );
 
 
-ALTER TYPE agdc.float8range OWNER TO agdc_admin;
+ALTER TYPE agdc.float8range OWNER TO opendatacube;
 
 --
--- Name: common_timestamp(text); Type: FUNCTION; Schema: agdc; Owner: agdc_admin
+-- Name: common_timestamp(text); Type: FUNCTION; Schema: agdc; Owner: opendatacube
 --
 
 CREATE FUNCTION agdc.common_timestamp(text) RETURNS timestamp with time zone
@@ -129,7 +129,7 @@ select ($1)::timestamp at time zone 'utc';
 $_$;
 
 
-ALTER FUNCTION agdc.common_timestamp(text) OWNER TO agdc_admin;
+ALTER FUNCTION agdc.common_timestamp(text) OWNER TO opendatacube;
 
 --
 -- Name: wms_get_max(integer[], text); Type: FUNCTION; Schema: agdc; Owner: opendatacube
@@ -414,7 +414,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: dataset; Type: TABLE; Schema: agdc; Owner: agdc_admin
+-- Name: dataset; Type: TABLE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE TABLE agdc.dataset (
@@ -428,10 +428,10 @@ CREATE TABLE agdc.dataset (
 );
 
 
-ALTER TABLE agdc.dataset OWNER TO agdc_admin;
+ALTER TABLE agdc.dataset OWNER TO opendatacube;
 
 --
--- Name: dataset_location; Type: TABLE; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location; Type: TABLE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE TABLE agdc.dataset_location (
@@ -445,10 +445,10 @@ CREATE TABLE agdc.dataset_location (
 );
 
 
-ALTER TABLE agdc.dataset_location OWNER TO agdc_admin;
+ALTER TABLE agdc.dataset_location OWNER TO opendatacube;
 
 --
--- Name: dataset_location_id_seq; Type: SEQUENCE; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location_id_seq; Type: SEQUENCE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE SEQUENCE agdc.dataset_location_id_seq
@@ -460,17 +460,17 @@ CREATE SEQUENCE agdc.dataset_location_id_seq
     CACHE 1;
 
 
-ALTER TABLE agdc.dataset_location_id_seq OWNER TO agdc_admin;
+ALTER TABLE agdc.dataset_location_id_seq OWNER TO opendatacube;
 
 --
--- Name: dataset_location_id_seq; Type: SEQUENCE OWNED BY; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location_id_seq; Type: SEQUENCE OWNED BY; Schema: agdc; Owner: opendatacube
 --
 
 ALTER SEQUENCE agdc.dataset_location_id_seq OWNED BY agdc.dataset_location.id;
 
 
 --
--- Name: dataset_source; Type: TABLE; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_source; Type: TABLE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE TABLE agdc.dataset_source (
@@ -480,10 +480,10 @@ CREATE TABLE agdc.dataset_source (
 );
 
 
-ALTER TABLE agdc.dataset_source OWNER TO agdc_admin;
+ALTER TABLE agdc.dataset_source OWNER TO opendatacube;
 
 --
--- Name: dataset_type; Type: TABLE; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type; Type: TABLE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE TABLE agdc.dataset_type (
@@ -498,10 +498,10 @@ CREATE TABLE agdc.dataset_type (
 );
 
 
-ALTER TABLE agdc.dataset_type OWNER TO agdc_admin;
+ALTER TABLE agdc.dataset_type OWNER TO opendatacube;
 
 --
--- Name: dataset_type_id_seq; Type: SEQUENCE; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type_id_seq; Type: SEQUENCE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE SEQUENCE agdc.dataset_type_id_seq
@@ -513,17 +513,17 @@ CREATE SEQUENCE agdc.dataset_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE agdc.dataset_type_id_seq OWNER TO agdc_admin;
+ALTER TABLE agdc.dataset_type_id_seq OWNER TO opendatacube;
 
 --
--- Name: dataset_type_id_seq; Type: SEQUENCE OWNED BY; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type_id_seq; Type: SEQUENCE OWNED BY; Schema: agdc; Owner: opendatacube
 --
 
 ALTER SEQUENCE agdc.dataset_type_id_seq OWNED BY agdc.dataset_type.id;
 
 
 --
--- Name: metadata_type; Type: TABLE; Schema: agdc; Owner: agdc_admin
+-- Name: metadata_type; Type: TABLE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE TABLE agdc.metadata_type (
@@ -536,7 +536,7 @@ CREATE TABLE agdc.metadata_type (
 );
 
 
-ALTER TABLE agdc.metadata_type OWNER TO agdc_admin;
+ALTER TABLE agdc.metadata_type OWNER TO opendatacube;
 
 --
 -- Name: dv_eo_dataset; Type: VIEW; Schema: agdc; Owner: opendatacube
@@ -721,7 +721,7 @@ CREATE VIEW agdc.dv_telemetry_dataset AS
 ALTER TABLE agdc.dv_telemetry_dataset OWNER TO opendatacube;
 
 --
--- Name: metadata_type_id_seq; Type: SEQUENCE; Schema: agdc; Owner: agdc_admin
+-- Name: metadata_type_id_seq; Type: SEQUENCE; Schema: agdc; Owner: opendatacube
 --
 
 CREATE SEQUENCE agdc.metadata_type_id_seq
@@ -733,14 +733,121 @@ CREATE SEQUENCE agdc.metadata_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE agdc.metadata_type_id_seq OWNER TO agdc_admin;
+ALTER TABLE agdc.metadata_type_id_seq OWNER TO opendatacube;
 
 --
--- Name: metadata_type_id_seq; Type: SEQUENCE OWNED BY; Schema: agdc; Owner: agdc_admin
+-- Name: metadata_type_id_seq; Type: SEQUENCE OWNED BY; Schema: agdc; Owner: opendatacube
 --
 
 ALTER SEQUENCE agdc.metadata_type_id_seq OWNED BY agdc.metadata_type.id;
 
+
+--
+-- Name: space_view; Type: MATERIALIZED VIEW; Schema: public; Owner: opendatacube
+--
+
+CREATE MATERIALIZED VIEW public.space_view AS
+ WITH metadata_lookup AS (
+         SELECT metadata_type.id,
+            metadata_type.name
+           FROM agdc.metadata_type
+        ), ranges AS (
+         SELECT dataset.id,
+            (dataset.metadata #> '{extent,lat,begin}'::text[]) AS lat_begin,
+            (dataset.metadata #> '{extent,lat,end}'::text[]) AS lat_end,
+            (dataset.metadata #> '{extent,lon,begin}'::text[]) AS lon_begin,
+            (dataset.metadata #> '{extent,lon,end}'::text[]) AS lon_end
+           FROM agdc.dataset
+          WHERE (dataset.metadata_type_ref IN ( SELECT metadata_lookup.id
+                   FROM metadata_lookup
+                  WHERE ((metadata_lookup.name)::text = 'eo3'::text)))
+        ), corners AS (
+         SELECT dataset.id,
+            (dataset.metadata #> '{extent,coord,ll,lat}'::text[]) AS ll_lat,
+            (dataset.metadata #> '{extent,coord,ll,lon}'::text[]) AS ll_lon,
+            (dataset.metadata #> '{extent,coord,lr,lat}'::text[]) AS lr_lat,
+            (dataset.metadata #> '{extent,coord,lr,lon}'::text[]) AS lr_lon,
+            (dataset.metadata #> '{extent,coord,ul,lat}'::text[]) AS ul_lat,
+            (dataset.metadata #> '{extent,coord,ul,lon}'::text[]) AS ul_lon,
+            (dataset.metadata #> '{extent,coord,ur,lat}'::text[]) AS ur_lat,
+            (dataset.metadata #> '{extent,coord,ur,lon}'::text[]) AS ur_lon
+           FROM agdc.dataset
+          WHERE (dataset.metadata_type_ref IN ( SELECT metadata_lookup.id
+                   FROM metadata_lookup
+                  WHERE ((metadata_lookup.name)::text = ANY ((ARRAY['eo'::character varying, 'gqa_eo'::character varying, 'eo_plus'::character varying])::text[]))))
+        )
+ SELECT ranges.id,
+    (format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))'::text, ranges.lon_begin, ranges.lat_begin, ranges.lon_end, ranges.lat_begin, ranges.lon_end, ranges.lat_end, ranges.lon_begin, ranges.lat_end, ranges.lon_begin, ranges.lat_begin))::public.geometry AS spatial_extent
+   FROM ranges
+UNION
+ SELECT corners.id,
+    (format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))'::text, corners.ll_lon, corners.ll_lat, corners.lr_lon, corners.lr_lat, corners.ur_lon, corners.ur_lat, corners.ul_lon, corners.ul_lat, corners.ll_lon, corners.ll_lat))::public.geometry AS spatial_extent
+   FROM corners
+UNION
+ SELECT dataset.id,
+    public.st_transform(public.st_setsrid(public.st_geomfromgeojson((dataset.metadata #>> '{geometry}'::text[])), (substr((dataset.metadata #>> '{crs}'::text[]), 6))::integer), 4326) AS spatial_extent
+   FROM agdc.dataset
+  WHERE (dataset.metadata_type_ref IN ( SELECT metadata_lookup.id
+           FROM metadata_lookup
+          WHERE ((metadata_lookup.name)::text = 'eo3_landsat_ard'::text)))
+  WITH NO DATA;
+
+
+ALTER TABLE public.space_view OWNER TO opendatacube;
+
+--
+-- Name: time_view; Type: MATERIALIZED VIEW; Schema: public; Owner: opendatacube
+--
+
+CREATE MATERIALIZED VIEW public.time_view AS
+ WITH metadata_lookup AS (
+         SELECT metadata_type.id,
+            metadata_type.name
+           FROM agdc.metadata_type
+        )
+ SELECT dataset.dataset_type_ref,
+    dataset.id,
+    tstzrange(((((dataset.metadata -> 'extent'::text) ->> 'from_dt'::text))::timestamp without time zone)::timestamp with time zone, (((((dataset.metadata -> 'extent'::text) ->> 'to_dt'::text))::timestamp without time zone + '00:00:00.000001'::interval))::timestamp with time zone) AS temporal_extent
+   FROM agdc.dataset
+  WHERE (dataset.metadata_type_ref IN ( SELECT metadata_lookup.id
+           FROM metadata_lookup
+          WHERE ((metadata_lookup.name)::text = ANY ((ARRAY['eo'::character varying, 'gqa_eo'::character varying, 'eo_plus'::character varying])::text[]))))
+UNION
+ SELECT dataset.dataset_type_ref,
+    dataset.id,
+    tstzrange(((((dataset.metadata -> 'properties'::text) ->> 'datetime'::text))::timestamp without time zone)::timestamp with time zone, (((((dataset.metadata -> 'properties'::text) ->> 'datetime'::text))::timestamp without time zone + '1 day'::interval))::timestamp with time zone) AS temporal_extent
+   FROM agdc.dataset
+  WHERE (dataset.metadata_type_ref IN ( SELECT metadata_lookup.id
+           FROM metadata_lookup
+          WHERE ((metadata_lookup.name)::text = 'eo3'::text)))
+UNION
+ SELECT dataset.dataset_type_ref,
+    dataset.id,
+    tstzrange(((((dataset.metadata -> 'properties'::text) ->> 'dtr:start_datetime'::text))::timestamp without time zone)::timestamp with time zone, ((((dataset.metadata -> 'properties'::text) ->> 'dtr:end_datetime'::text))::timestamp without time zone)::timestamp with time zone) AS temporal_extent
+   FROM agdc.dataset
+  WHERE (dataset.metadata_type_ref IN ( SELECT metadata_lookup.id
+           FROM metadata_lookup
+          WHERE ((metadata_lookup.name)::text = 'eo3_landsat_ard'::text)))
+  WITH NO DATA;
+
+
+ALTER TABLE public.time_view OWNER TO opendatacube;
+
+--
+-- Name: space_time_view; Type: MATERIALIZED VIEW; Schema: public; Owner: opendatacube
+--
+
+CREATE MATERIALIZED VIEW public.space_time_view AS
+ SELECT space_view.id,
+    time_view.dataset_type_ref,
+    space_view.spatial_extent,
+    time_view.temporal_extent
+   FROM (public.space_view
+     JOIN public.time_view ON ((space_view.id = time_view.id)))
+  WITH NO DATA;
+
+
+ALTER TABLE public.space_time_view OWNER TO opendatacube;
 
 --
 -- Name: multiproduct_ranges; Type: TABLE; Schema: wms; Owner: opendatacube
@@ -795,28 +902,28 @@ CREATE TABLE wms.sub_product_ranges (
 ALTER TABLE wms.sub_product_ranges OWNER TO opendatacube;
 
 --
--- Name: dataset_location id; Type: DEFAULT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location id; Type: DEFAULT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_location ALTER COLUMN id SET DEFAULT nextval('agdc.dataset_location_id_seq'::regclass);
 
 
 --
--- Name: dataset_type id; Type: DEFAULT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type id; Type: DEFAULT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_type ALTER COLUMN id SET DEFAULT nextval('agdc.dataset_type_id_seq'::regclass);
 
 
 --
--- Name: metadata_type id; Type: DEFAULT; Schema: agdc; Owner: agdc_admin
+-- Name: metadata_type id; Type: DEFAULT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.metadata_type ALTER COLUMN id SET DEFAULT nextval('agdc.metadata_type_id_seq'::regclass);
 
 
 --
--- Data for Name: dataset; Type: TABLE DATA; Schema: agdc; Owner: agdc_admin
+-- Data for Name: dataset; Type: TABLE DATA; Schema: agdc; Owner: opendatacube
 --
 
 COPY agdc.dataset (id, metadata_type_ref, dataset_type_ref, metadata, archived, added, added_by) FROM stdin;
@@ -870,7 +977,7 @@ bc7c6bcf-05f1-5435-8b56-b1848c41de71	1	1	{"id": "bc7c6bcf-05f1-5435-8b56-b1848c4
 
 
 --
--- Data for Name: dataset_location; Type: TABLE DATA; Schema: agdc; Owner: agdc_admin
+-- Data for Name: dataset_location; Type: TABLE DATA; Schema: agdc; Owner: opendatacube
 --
 
 COPY agdc.dataset_location (id, dataset_ref, uri_scheme, uri_body, added, added_by, archived) FROM stdin;
@@ -924,7 +1031,7 @@ COPY agdc.dataset_location (id, dataset_ref, uri_scheme, uri_body, added, added_
 
 
 --
--- Data for Name: dataset_source; Type: TABLE DATA; Schema: agdc; Owner: agdc_admin
+-- Data for Name: dataset_source; Type: TABLE DATA; Schema: agdc; Owner: opendatacube
 --
 
 COPY agdc.dataset_source (dataset_ref, classifier, source_dataset_ref) FROM stdin;
@@ -932,7 +1039,7 @@ COPY agdc.dataset_source (dataset_ref, classifier, source_dataset_ref) FROM stdi
 
 
 --
--- Data for Name: dataset_type; Type: TABLE DATA; Schema: agdc; Owner: agdc_admin
+-- Data for Name: dataset_type; Type: TABLE DATA; Schema: agdc; Owner: opendatacube
 --
 
 COPY agdc.dataset_type (id, name, metadata, metadata_type_ref, definition, added, added_by) FROM stdin;
@@ -944,7 +1051,7 @@ COPY agdc.dataset_type (id, name, metadata, metadata_type_ref, definition, added
 
 
 --
--- Data for Name: metadata_type; Type: TABLE DATA; Schema: agdc; Owner: agdc_admin
+-- Data for Name: metadata_type; Type: TABLE DATA; Schema: agdc; Owner: opendatacube
 --
 
 COPY agdc.metadata_type (id, name, definition, added, added_by) FROM stdin;
@@ -1011,21 +1118,21 @@ COPY wms.sub_product_ranges (product_id, sub_product_id, lat_min, lat_max, lon_m
 
 
 --
--- Name: dataset_location_id_seq; Type: SEQUENCE SET; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location_id_seq; Type: SEQUENCE SET; Schema: agdc; Owner: opendatacube
 --
 
 SELECT pg_catalog.setval('agdc.dataset_location_id_seq', 46, true);
 
 
 --
--- Name: dataset_type_id_seq; Type: SEQUENCE SET; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type_id_seq; Type: SEQUENCE SET; Schema: agdc; Owner: opendatacube
 --
 
 SELECT pg_catalog.setval('agdc.dataset_type_id_seq', 4, true);
 
 
 --
--- Name: metadata_type_id_seq; Type: SEQUENCE SET; Schema: agdc; Owner: agdc_admin
+-- Name: metadata_type_id_seq; Type: SEQUENCE SET; Schema: agdc; Owner: opendatacube
 --
 
 SELECT pg_catalog.setval('agdc.metadata_type_id_seq', 2, true);
@@ -1039,7 +1146,7 @@ SELECT pg_catalog.setval('cron.jobid_seq', 1, false);
 
 
 --
--- Name: dataset pk_dataset; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset pk_dataset; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset
@@ -1047,7 +1154,7 @@ ALTER TABLE ONLY agdc.dataset
 
 
 --
--- Name: dataset_location pk_dataset_location; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location pk_dataset_location; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_location
@@ -1055,7 +1162,7 @@ ALTER TABLE ONLY agdc.dataset_location
 
 
 --
--- Name: dataset_source pk_dataset_source; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_source pk_dataset_source; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_source
@@ -1063,7 +1170,7 @@ ALTER TABLE ONLY agdc.dataset_source
 
 
 --
--- Name: dataset_type pk_dataset_type; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type pk_dataset_type; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_type
@@ -1071,7 +1178,7 @@ ALTER TABLE ONLY agdc.dataset_type
 
 
 --
--- Name: metadata_type pk_metadata_type; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: metadata_type pk_metadata_type; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.metadata_type
@@ -1079,7 +1186,7 @@ ALTER TABLE ONLY agdc.metadata_type
 
 
 --
--- Name: dataset_location uq_dataset_location_uri_scheme; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location uq_dataset_location_uri_scheme; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_location
@@ -1087,7 +1194,7 @@ ALTER TABLE ONLY agdc.dataset_location
 
 
 --
--- Name: dataset_source uq_dataset_source_source_dataset_ref; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_source uq_dataset_source_source_dataset_ref; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_source
@@ -1095,7 +1202,7 @@ ALTER TABLE ONLY agdc.dataset_source
 
 
 --
--- Name: dataset_type uq_dataset_type_name; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type uq_dataset_type_name; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_type
@@ -1103,7 +1210,7 @@ ALTER TABLE ONLY agdc.dataset_type
 
 
 --
--- Name: metadata_type uq_metadata_type_name; Type: CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: metadata_type uq_metadata_type_name; Type: CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.metadata_type
@@ -1135,77 +1242,98 @@ ALTER TABLE ONLY wms.product_ranges
 
 
 --
--- Name: dix_ls5_usgs_level1_scene_lat_lon_time; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls5_usgs_level1_scene_lat_lon_time; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls5_usgs_level1_scene_lat_lon_time ON agdc.dataset USING gist (agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text), tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 3));
 
 
 --
--- Name: dix_ls5_usgs_level1_scene_time_lat_lon; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls5_usgs_level1_scene_time_lat_lon; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls5_usgs_level1_scene_time_lat_lon ON agdc.dataset USING gist (tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 3));
 
 
 --
--- Name: dix_ls7_usgs_level1_scene_lat_lon_time; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls7_usgs_level1_scene_lat_lon_time; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls7_usgs_level1_scene_lat_lon_time ON agdc.dataset USING gist (agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text), tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 2));
 
 
 --
--- Name: dix_ls7_usgs_level1_scene_time_lat_lon; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls7_usgs_level1_scene_time_lat_lon; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls7_usgs_level1_scene_time_lat_lon ON agdc.dataset USING gist (tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 2));
 
 
 --
--- Name: dix_ls8_l1_pc_usgs_lat_lon_time; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls8_l1_pc_usgs_lat_lon_time; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls8_l1_pc_usgs_lat_lon_time ON agdc.dataset USING gist (agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text), tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 4));
 
 
 --
--- Name: dix_ls8_l1_pc_usgs_time_lat_lon; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls8_l1_pc_usgs_time_lat_lon; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls8_l1_pc_usgs_time_lat_lon ON agdc.dataset USING gist (tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 4));
 
 
 --
--- Name: dix_ls8_usgs_level1_scene_lat_lon_time; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls8_usgs_level1_scene_lat_lon_time; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls8_usgs_level1_scene_lat_lon_time ON agdc.dataset USING gist (agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text), tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 1));
 
 
 --
--- Name: dix_ls8_usgs_level1_scene_time_lat_lon; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: dix_ls8_usgs_level1_scene_time_lat_lon; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX dix_ls8_usgs_level1_scene_time_lat_lon ON agdc.dataset USING gist (tstzrange(LEAST(agdc.common_timestamp((metadata #>> '{extent,from_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), GREATEST(agdc.common_timestamp((metadata #>> '{extent,to_dt}'::text[])), agdc.common_timestamp((metadata #>> '{extent,center_dt}'::text[]))), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ur,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ul,lat}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lat}'::text[]))::double precision), '[]'::text), agdc.float8range(LEAST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), GREATEST(((metadata #>> '{extent,coord,ul,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ur,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,ll,lon}'::text[]))::double precision, ((metadata #>> '{extent,coord,lr,lon}'::text[]))::double precision), '[]'::text)) WHERE ((archived IS NULL) AND (dataset_type_ref = 1));
 
 
 --
--- Name: ix_agdc_dataset_dataset_type_ref; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: ix_agdc_dataset_dataset_type_ref; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX ix_agdc_dataset_dataset_type_ref ON agdc.dataset USING btree (dataset_type_ref);
 
 
 --
--- Name: ix_agdc_dataset_location_dataset_ref; Type: INDEX; Schema: agdc; Owner: agdc_admin
+-- Name: ix_agdc_dataset_location_dataset_ref; Type: INDEX; Schema: agdc; Owner: opendatacube
 --
 
 CREATE INDEX ix_agdc_dataset_location_dataset_ref ON agdc.dataset_location USING btree (dataset_ref);
 
 
 --
--- Name: dataset fk_dataset_dataset_type_ref_dataset_type; Type: FK CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: space_time_view_ds_idx; Type: INDEX; Schema: public; Owner: opendatacube
+--
+
+CREATE INDEX space_time_view_ds_idx ON public.space_time_view USING btree (dataset_type_ref);
+
+
+--
+-- Name: space_time_view_geom_idx; Type: INDEX; Schema: public; Owner: opendatacube
+--
+
+CREATE INDEX space_time_view_geom_idx ON public.space_time_view USING gist (spatial_extent);
+
+
+--
+-- Name: space_time_view_time_idx; Type: INDEX; Schema: public; Owner: opendatacube
+--
+
+CREATE INDEX space_time_view_time_idx ON public.space_time_view USING spgist (temporal_extent);
+
+
+--
+-- Name: dataset fk_dataset_dataset_type_ref_dataset_type; Type: FK CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset
@@ -1213,7 +1341,7 @@ ALTER TABLE ONLY agdc.dataset
 
 
 --
--- Name: dataset_location fk_dataset_location_dataset_ref_dataset; Type: FK CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_location fk_dataset_location_dataset_ref_dataset; Type: FK CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_location
@@ -1221,7 +1349,7 @@ ALTER TABLE ONLY agdc.dataset_location
 
 
 --
--- Name: dataset fk_dataset_metadata_type_ref_metadata_type; Type: FK CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset fk_dataset_metadata_type_ref_metadata_type; Type: FK CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset
@@ -1229,7 +1357,7 @@ ALTER TABLE ONLY agdc.dataset
 
 
 --
--- Name: dataset_source fk_dataset_source_dataset_ref_dataset; Type: FK CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_source fk_dataset_source_dataset_ref_dataset; Type: FK CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_source
@@ -1237,7 +1365,7 @@ ALTER TABLE ONLY agdc.dataset_source
 
 
 --
--- Name: dataset_source fk_dataset_source_source_dataset_ref_dataset; Type: FK CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_source fk_dataset_source_source_dataset_ref_dataset; Type: FK CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_source
@@ -1245,7 +1373,7 @@ ALTER TABLE ONLY agdc.dataset_source
 
 
 --
--- Name: dataset_type fk_dataset_type_metadata_type_ref_metadata_type; Type: FK CONSTRAINT; Schema: agdc; Owner: agdc_admin
+-- Name: dataset_type fk_dataset_type_metadata_type_ref_metadata_type; Type: FK CONSTRAINT; Schema: agdc; Owner: opendatacube
 --
 
 ALTER TABLE ONLY agdc.dataset_type
@@ -1282,79 +1410,24 @@ CREATE POLICY cron_job_policy ON cron.job USING ((username = (CURRENT_USER)::tex
 ALTER TABLE cron.job ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: SCHEMA agdc; Type: ACL; Schema: -; Owner: agdc_admin
+-- Name: TABLE space_view; Type: ACL; Schema: public; Owner: opendatacube
 --
 
-GRANT USAGE ON SCHEMA agdc TO agdc_user;
-GRANT CREATE ON SCHEMA agdc TO agdc_manage;
-
-
---
--- Name: FUNCTION common_timestamp(text); Type: ACL; Schema: agdc; Owner: agdc_admin
---
-
-GRANT ALL ON FUNCTION agdc.common_timestamp(text) TO agdc_user;
+GRANT SELECT ON TABLE public.space_view TO replicator;
 
 
 --
--- Name: TABLE dataset; Type: ACL; Schema: agdc; Owner: agdc_admin
+-- Name: TABLE time_view; Type: ACL; Schema: public; Owner: opendatacube
 --
 
-GRANT SELECT ON TABLE agdc.dataset TO agdc_user;
-GRANT INSERT ON TABLE agdc.dataset TO agdc_ingest;
-
-
---
--- Name: TABLE dataset_location; Type: ACL; Schema: agdc; Owner: agdc_admin
---
-
-GRANT SELECT ON TABLE agdc.dataset_location TO agdc_user;
-GRANT INSERT ON TABLE agdc.dataset_location TO agdc_ingest;
+GRANT SELECT ON TABLE public.time_view TO replicator;
 
 
 --
--- Name: SEQUENCE dataset_location_id_seq; Type: ACL; Schema: agdc; Owner: agdc_admin
+-- Name: TABLE space_time_view; Type: ACL; Schema: public; Owner: opendatacube
 --
 
-GRANT SELECT,USAGE ON SEQUENCE agdc.dataset_location_id_seq TO agdc_ingest;
-
-
---
--- Name: TABLE dataset_source; Type: ACL; Schema: agdc; Owner: agdc_admin
---
-
-GRANT SELECT ON TABLE agdc.dataset_source TO agdc_user;
-GRANT INSERT ON TABLE agdc.dataset_source TO agdc_ingest;
-
-
---
--- Name: TABLE dataset_type; Type: ACL; Schema: agdc; Owner: agdc_admin
---
-
-GRANT SELECT ON TABLE agdc.dataset_type TO agdc_user;
-GRANT INSERT,DELETE ON TABLE agdc.dataset_type TO agdc_manage;
-
-
---
--- Name: SEQUENCE dataset_type_id_seq; Type: ACL; Schema: agdc; Owner: agdc_admin
---
-
-GRANT SELECT,USAGE ON SEQUENCE agdc.dataset_type_id_seq TO agdc_ingest;
-
-
---
--- Name: TABLE metadata_type; Type: ACL; Schema: agdc; Owner: agdc_admin
---
-
-GRANT SELECT ON TABLE agdc.metadata_type TO agdc_user;
-GRANT INSERT,DELETE ON TABLE agdc.metadata_type TO agdc_manage;
-
-
---
--- Name: SEQUENCE metadata_type_id_seq; Type: ACL; Schema: agdc; Owner: agdc_admin
---
-
-GRANT SELECT,USAGE ON SEQUENCE agdc.metadata_type_id_seq TO agdc_ingest;
+GRANT SELECT ON TABLE public.space_time_view TO replicator;
 
 
 --
@@ -1363,6 +1436,27 @@ GRANT SELECT,USAGE ON SEQUENCE agdc.metadata_type_id_seq TO agdc_ingest;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE opendatacube IN SCHEMA public REVOKE ALL ON TABLES  FROM opendatacube;
 ALTER DEFAULT PRIVILEGES FOR ROLE opendatacube IN SCHEMA public GRANT SELECT ON TABLES  TO replicator;
+
+
+--
+-- Name: space_view; Type: MATERIALIZED VIEW DATA; Schema: public; Owner: opendatacube
+--
+
+REFRESH MATERIALIZED VIEW public.space_view;
+
+
+--
+-- Name: time_view; Type: MATERIALIZED VIEW DATA; Schema: public; Owner: opendatacube
+--
+
+REFRESH MATERIALIZED VIEW public.time_view;
+
+
+--
+-- Name: space_time_view; Type: MATERIALIZED VIEW DATA; Schema: public; Owner: opendatacube
+--
+
+REFRESH MATERIALIZED VIEW public.space_time_view;
 
 
 --
