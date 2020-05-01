@@ -2,7 +2,9 @@
 
 from datacube_ows.product_ranges import get_sqlconn, add_ranges
 from datacube import Datacube
+import psycopg2
 from psycopg2.sql import SQL
+import sqlalchemy
 from datacube_ows.ows_configuration import get_config
 import os
 import click
@@ -101,7 +103,15 @@ def main(products,
     print("Deriving extents from materialised views")
     if not products:
         products = list(get_config().product_index.keys())
-    add_ranges(dc, products, summary, merge_only)
+    try:
+        add_ranges(dc, products, summary, merge_only)
+    except (psycopg2.errors.UndefinedColumn,
+            sqlalchemy.exc.ProgrammingError):
+        print("ERROR: OWS schema or extent materialised views appear to be missing",
+              "\n",
+              "       Try running with the --schema and --views options first."
+              )
+        return 1
     return 0
 
 
