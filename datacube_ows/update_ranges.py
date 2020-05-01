@@ -110,11 +110,11 @@ def create_views(dc):
         ("Installing Postgis extensions on public schema",
          "create extension if not exists postgis"),
         ("Giving other schemas access to PostGIS functions installed in the public schema",
-         """ALTER DATABASE datacube
+         """ALTER DATABASE %s
             SET
               search_path = public,
               agdc
-         """),
+         """ % os.environ.get("DB_DATABASE", "datacube")),
         ("Dropping already existing Materialized View Index 1/3",
             "DROP INDEX IF EXISTS space_time_view_geom_idx"),
         ("Dropping already existing Materialized View Index 2/3",
@@ -172,8 +172,7 @@ from agdc.dataset where metadata_type_ref in (select id from metadata_lookup whe
 """),
         # Spatial extents per dataset (to be created as a column of the space-time table)
         # Try all different locations for spatial extents and UNION them
-        ("Creating SPACE Materialised View (Slowest step!)",
-"""
+        ("Creating SPACE Materialised View (Slowest step!)", """
 CREATE MATERIALIZED VIEW IF NOT EXISTS space_view (ID, spatial_extent)
 AS
 with
