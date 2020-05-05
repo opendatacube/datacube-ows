@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datacube_ows import __version__
 from datacube_ows.product_ranges import get_sqlconn, add_ranges
 from datacube import Datacube
 import psycopg2
@@ -46,7 +47,7 @@ def main(layers, blocking,
     # --version
     if version:
         print("Open Data Cube Open Web Services (datacube-ows) version",
-              "notsure"
+              __version__
                )
         return 0
     # Handle old-style calls
