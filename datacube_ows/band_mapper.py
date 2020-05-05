@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-from itertools import zip_longest
-
 from xarray import Dataset, DataArray, merge
 import numpy
 from colour import Color
@@ -15,7 +13,6 @@ from datetime import datetime
 # pylint: disable=wrong-import-position
 import matplotlib
 # Do not use X Server backend
-from datacube_ows.ogc_utils import DataCollection
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -73,13 +70,13 @@ class StyleDefBase(object):
         return data
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
-        date_count = len(data)
+        date_count = len(data.coords["time"])
         if date_count == 1:
             if pq_data is not None:
-                pq_data = pq_data.collapse_to_single()
+                pq_data = pq_data.squeeze(dim="time", drop=True)
             if extent_mask is not None:
-                extent_mask = extent_mask.collapse_to_single()
-            return self.transform_single_date_data(data.collapse_to_single(),
+                extent_mask = extent_mask.squeeze(dim="time", drop=True)
+            return self.transform_single_date_data(data.squeeze(dim="time", drop=True),
                                                    pq_data,
                                                    extent_mask,
                                                    *masks)
@@ -462,12 +459,16 @@ class RgbaColorRampDef(StyleDefBase):
         return numpy.interp(data, values, intensities)
 
     def apply_colour_ramp(self, data, ramp_values, ramp_components):
-        imgdata = Dataset()
+        imgdata = {}
         for band, intensity in ramp_components.items():
-            imgdata[band] = (data.dims, self.get_value(data, ramp_values, intensity))
-        imgdata *= 255
-        imgdata = imgdata.astype("uint8")
-        return imgdata
+            bandnda = self.get_value(data, ramp_values, intensity)
+            bandnda *= 255
+            bandnda = bandnda.astype("uint8")
+            imgdata[band] = (data.dims, bandnda)
+        imgdataset = Dataset(imgdata)
+        # imgdataset *= 255
+        # imgdataset = imgdataset.astype("uint8")
+        return imgdataset
 
     def apply_masks_and_index(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
@@ -622,15 +623,8 @@ class RgbaColorRampDef(StyleDefBase):
             }
 
         def transform_data(self, data, pq_data, extent_mask, *masks):
-            indexes = DataCollection()
-            for d, pqd, emsk in zip_longest(data, pq_data, extent_mask):
-                th = d.time
-                if pqd is not None:
-                    pqd = pqd.data
-                if emsk is not None:
-                    emsk = pqd.data
-                indexes.add_time(th, self.style.apply_masks_and_index(d.data, pqd, emsk, *masks))
-            agg = self.aggregator(indexes)
+            xformed_data = self.style.apply_masks_and_index(data, pq_data, extent_mask, *masks)
+            agg = self.aggregator(xformed_data)
             return self.style.apply_colour_ramp(agg, self.values, self.components)
 
 

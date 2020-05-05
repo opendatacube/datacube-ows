@@ -5,11 +5,12 @@ try:
 except ImportError:
     import re
 
+import numpy
+import xarray
 from datetime import datetime
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from pytz import utc
-from urllib.parse import unquote
 
 try:
     from rasterio.warp import Resampling
@@ -19,10 +20,9 @@ except ImportError:
 from affine import Affine
 from datacube.utils import geometry
 import math
-import numpy
 
 from datacube_ows.ows_configuration import get_config
-
+from datacube_ows.ogc_utils import solar_date
 from datacube_ows.ogc_exceptions import WMSException
 
 RESAMPLING_METHODS = {
@@ -428,3 +428,36 @@ def item_fuser(dest, src):
     where_combined = numpy.isnan(dest) | (dest == -6666.)
     numpy.copyto(dest, src, where=where_combined)
     return dest
+
+
+def collapse_datasets_to_times(datasets, times, tz):
+    available_dates = datasets.coords["time"].values
+    collapsed = []
+    selected_dates = []
+    for i, dt in enumerate(times):
+        npdt = numpy.datetime64(dt)
+        if npdt not in available_dates:
+            # TODO: Improve efficiency for large available date sets!
+            npdt = None
+            for avnpdt in available_dates:
+                av_dt = datetime.utcfromtimestamp(avnpdt.astype(int) * 1e-9)
+                av_date = solar_date(av_dt, tz)
+                if av_date == dt:
+                    npdt = avnpdt
+                    break
+            if not npdt:
+                continue
+        selected_dates.append(npdt)
+        dss = datasets.sel(time=npdt)
+        dssv = dss.values
+        collapsed.append(tuple(dssv.tolist()))
+
+    nparray = numpy.empty(len(selected_dates), dtype=object)
+    for i, dss in enumerate(collapsed):
+        nparray[i] = dss
+    return xarray.DataArray(
+        nparray,
+        dims=["time"],
+        coords=[selected_dates]
+    )
+

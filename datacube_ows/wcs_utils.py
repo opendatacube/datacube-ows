@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 from dateutil.parser import parse
 
-import datacube
 import numpy
 import xarray
 from affine import Affine
@@ -283,40 +282,33 @@ def get_coverage_data(req):
     datasets = stacker.datasets(dc.index)
     if not datasets:
         # TODO: Return an empty coverage file with full metadata?
-        extents = dc.load(dask_chunks={}, product=req.product.product.name, geopolygon=req.geobox.extent, time=stacker._time)
         cfg = get_config()
         x_range = (req.minx, req.maxx)
         y_range = (req.miny, req.maxy)
         xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
         yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
-        if xname in extents:
-            xvals = extents[xname]
-        else:
-            xvals = numpy.linspace(
-                x_range[0],
-                x_range[1],
-                num=req.width
-            )
-        if yname in extents:
-            yvals = extents[yname]
-        else:
-            yvals = numpy.linspace(
-                y_range[0],
-                y_range[1],
-                num=req.height
-            )
+        xvals = numpy.linspace(
+            x_range[0],
+            x_range[1],
+            num=req.width
+        )
+        yvals = numpy.linspace(
+            y_range[0],
+            y_range[1],
+            num=req.height
+        )
         if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
             nparrays = {
-                band: ((yname, xname),
-                       numpy.full((len(yvals), len(xvals)),
+                band: (("time", yname, xname),
+                       numpy.full((len(req.times), len(yvals), len(xvals)),
                                   req.product.nodata_dict[band])
                       )
                 for band in req.bands
             }
         else:
             nparrays = {
-                band: ((xname, yname),
-                       numpy.full((len(xvals), len(yvals)),
+                band: (("time", xname, yname),
+                       numpy.full((len(req.times), len(xvals), len(yvals)),
                                   req.product.nodata_dict[band])
                       )
                 for band in req.bands
@@ -324,11 +316,13 @@ def get_coverage_data(req):
         data = xarray.Dataset(
             nparrays,
             coords={
+                "time": req.times,
                 xname: xvals,
                 yname: yvals,
             }
         ).astype("int16")
         release_cube(dc)
+
         return data
 
     if req.product.max_datasets_wcs > 0 and len(datasets) > req.product.max_datasets_wcs:
@@ -364,6 +358,7 @@ def get_tiff(req, data):
     dtype_list = [data[array].dtype for array in data.data_vars]
     dtype = str(max(dtype_list, key=lambda d: supported_dtype_map[str(d)]))
 
+    data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     cfg = get_config()
     xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]

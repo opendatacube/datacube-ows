@@ -1,8 +1,12 @@
+--extra-index-url="https://packages.dea.ga.gov.au"
+datacube[performance,s3]
 pytest
+pylint==2.4.4
 flask
 colour
 scikit-image
-gevent
+gevent==1.4.0
+python-slugify
 eventlet
 gunicorn
 gunicorn[gevent]

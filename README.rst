@@ -36,6 +36,41 @@ geospatial libraries.  Dependency conflicts are almost unavoidable in environmen
 other large complex geospatial software packages.  We therefore strongly recommend some kind of
 containerised solution and we supply scripts for building appropriate Docker containers.
 
+Docker-Compose
+--------------
+
+We use docker-compose to make development and testing of the containerised ows images easier
+
+
+To start OWS with flask connected to a pre-existing database on your local machine: ::
+
+  export DB_USERNAME=username
+  export DB_PASSWORD=password
+  export DB_DATABASE=opendatacube
+  export DB_hostname=localhost
+  OWS_CFG_FILE=/path/to/ows_cfg.py
+  docker-compose up
+
+To start ows with a pre-indexed database: ::
+
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up
+
+To start ows with db and gunicorn instead of flask (production) ::
+
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up
+
+The default environment variables (in .env file) can be overriden by setting local environment variables ::
+
+  # Enable pydev for pycharm (needs rebuild to install python libs)
+  # hot reload is not supported, so we need to set FLASK_DEV to production
+  export PYDEV_DEBUG=yes
+  export FLASK_DEV=production
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up --build
+
+  # Change location of default config file (good for testing config changes on a local db)
+  OWS_CFG_FILE=/path/to/ows_cfg.py
+  docker-compose -f docker-compose.yaml
+
 Docker
 ------
 To run the standard Docker image, create a docker volume containing your ows config files and use something like: ::
@@ -99,7 +134,7 @@ The folllowing instructions are for installing on a clean Linux system.
   and edit as required.  But for production deployments other approaches such as importing
   config as json are possible.
 
-* Run `python update_ranges.py -- product *product_name* --no-calculate-extent` (in the Datacube Conda environment).  This
+* Run `python update_ranges.py` (in the Datacube Conda environment).  This
   script will need to be re-run every time additional datasets are added to
   the Datacube.
 

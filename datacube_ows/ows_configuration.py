@@ -15,7 +15,7 @@ from slugify import slugify
 
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.band_mapper import StyleDef
-from datacube_ows.ogc_utils import get_function, ConfigException, ProductLayerException, FunctionWrapper
+from datacube_ows.ogc_utils import get_function, ConfigException, FunctionWrapper
 
 import logging
 
@@ -151,6 +151,8 @@ class BandIndex(object):
                     raise ConfigException(f"Duplicate band name/alias: {a} in layer {product}")
                 self._idx[a] = b
             self._nodata_vals[b] = self.native_bands['nodata'][b]
+            if isinstance(self._nodata_vals[b], str) and self._nodata_vals[b].lower() == "nan":
+                self._nodata_vals[b] = float("nan")
 
     def band(self, name_alias):
         if name_alias not in self._idx:
@@ -297,6 +299,7 @@ class OWSNamedLayer(OWSLayer):
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, dc, parent_layer)
         self.name = cfg["name"]
+        self.hide = False
         try:
             self.parse_product_names(cfg)
             self.products = []
@@ -320,7 +323,7 @@ class OWSNamedLayer(OWSLayer):
         # TODO: sub-ranges
         self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
         try:
-            self.parse_resource_limits(cfg.get("resource_limits", {"wms": {}, "wcs": {}}))
+            self.parse_resource_limits(cfg.get("resource_limits", {}))
         except KeyError:
             raise ConfigException("Missing required config items in resource limits for layer %s" % self.name)
         try:
@@ -362,12 +365,16 @@ class OWSNamedLayer(OWSLayer):
 
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
+        if not self.multi_product:
+            self.global_cfg.native_product_index[self.product_name] = self
 
     def parse_resource_limits(self, cfg):
-        self.zoom_fill = cfg["wms"].get("zoomed_out_fill_colour", [150, 180, 200, 160])
-        self.min_zoom = cfg["wms"].get("min_zoom_factor", 300.0)
-        self.max_datasets_wms = cfg["wms"].get("max_datasets", 0)
-        self.max_datasets_wcs = cfg["wcs"].get("max_datasets", 0)
+        wms_cfg = cfg.get("wms", {})
+        wcs_cfg = cfg.get("wcs", {})
+        self.zoom_fill = wms_cfg.get("zoomed_out_fill_colour", [150, 180, 200, 160])
+        self.min_zoom = wms_cfg.get("min_zoom_factor", 300.0)
+        self.max_datasets_wms = wms_cfg.get("max_datasets", 0)
+        self.max_datasets_wcs = wcs_cfg.get("max_datasets", 0)
 
     def parse_image_processing(self, cfg):
         emf_cfg = cfg["extent_mask_func"]
@@ -467,7 +474,12 @@ class OWSNamedLayer(OWSLayer):
                             self.native_CRS))
         self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
         # Prepare Rectified Grid
-        native_bounding_box = self.bboxes[self.native_CRS]
+        try:
+            native_bounding_box = self.bboxes[self.native_CRS]
+        except KeyError:
+            print("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py" % (self.name, self.native_CRS))
+            self.hide = True
+            return
         self.origin_x = native_bounding_box["left"]
         self.origin_y = native_bounding_box["bottom"]
         try:
@@ -479,14 +491,22 @@ class OWSNamedLayer(OWSLayer):
         except TypeError:
             raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
         self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
-        self.grid_high_y = int((native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+        self.grid_high_y = int((
+                                       native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
 
         # Band management
         self.wcs_default_bands = [self.band_idx.band(b) for b in cfg["default_bands"]]
         # Cache some metadata from the datacube
-        bands = dc.list_measurements().loc[self.product_name]
+        try:
+            bands = dc.list_measurements().loc[self.product_name]
+        except KeyError:
+            raise ConfigException("Datacube.list_measurements() not returning measurements for product %s" %
+                                  self.product_name)
         self.bands = bands.index.values
-        self.nodata_values = bands['nodata'].values
+        try:
+            self.nodata_values = bands['nodata'].values
+        except KeyError:
+            raise ConfigException("Datacube has no 'nodata' values for bands in product %s" % self.product_name)
         self.nodata_dict = {a: b for a, b in zip(self.bands, self.nodata_values)}
 
     def parse_product_names(self, cfg):
@@ -500,19 +520,22 @@ class OWSNamedLayer(OWSLayer):
             dc = ext_dc
         else:
             dc = get_cube()
-        from datacube_ows.product_ranges import get_ranges
+        self.hide = False
         self._ranges = None
         try:
+            from datacube_ows.product_ranges import get_ranges
             self._ranges = get_ranges(dc, self)
             if self._ranges is None:
                 raise Exception("Null product range")
+            self.bboxes = self.extract_bboxes()
+        # pylint: disable=broad-except
         except Exception as a:
-            range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
-            raise ConfigException(range_failure)
+            print("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            self.hide = True
+            self.bboxes = {}
         finally:
             if not ext_dc:
                 release_cube(dc)
-        self.bboxes = self.extract_bboxes()
 
     @property
     def ranges(self):
@@ -654,6 +677,7 @@ class OWSConfig(OWSConfigEntry):
         self.keywords = cfg.get("keywords", [])
         self.fees = cfg.get("fees")
         self.access_constraints = cfg.get("access_constraints")
+        self.use_extent_views = cfg.get("use_extent_views", False)
         if not self.fees:
             self.fees = "none"
         if not self.access_constraints:
@@ -727,6 +751,7 @@ class OWSConfig(OWSConfigEntry):
     def parse_layers(self, cfg):
         self.layers = []
         self.product_index = {}
+        self.native_product_index = {}
         with cube() as dc:
             for lyr_cfg in cfg:
                 self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
