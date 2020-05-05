@@ -15,7 +15,7 @@ from slugify import slugify
 
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.band_mapper import StyleDef
-from datacube_ows.ogc_utils import get_function, ConfigException, ProductLayerException, FunctionWrapper
+from datacube_ows.ogc_utils import get_function, ConfigException, FunctionWrapper
 
 import logging
 
@@ -299,6 +299,7 @@ class OWSNamedLayer(OWSLayer):
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
         super().__init__(cfg, global_cfg, dc, parent_layer)
         self.name = cfg["name"]
+        self.hide = False
         try:
             self.parse_product_names(cfg)
             self.products = []
@@ -476,7 +477,9 @@ class OWSNamedLayer(OWSLayer):
         try:
             native_bounding_box = self.bboxes[self.native_CRS]
         except KeyError:
-            raise ConfigException("No bounding box in ranges for native CRS %s - rerun update_ranges.py" % self.native_CRS)
+            print("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py" % (self.name, self.native_CRS))
+            self.hide = True
+            return
         self.origin_x = native_bounding_box["left"]
         self.origin_y = native_bounding_box["bottom"]
         try:
@@ -488,7 +491,8 @@ class OWSNamedLayer(OWSLayer):
         except TypeError:
             raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
         self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
-        self.grid_high_y = int((native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+        self.grid_high_y = int((
+                                       native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
 
         # Band management
         self.wcs_default_bands = [self.band_idx.band(b) for b in cfg["default_bands"]]
@@ -516,6 +520,7 @@ class OWSNamedLayer(OWSLayer):
             dc = ext_dc
         else:
             dc = get_cube()
+        self.hide = False
         self._ranges = None
         try:
             from datacube_ows.product_ranges import get_ranges
@@ -523,9 +528,11 @@ class OWSNamedLayer(OWSLayer):
             if self._ranges is None:
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
+        # pylint: disable=broad-except
         except Exception as a:
-            range_failure = "get_ranges failed for layer %s: %s" % (self.name, str(a))
-            raise ConfigException(range_failure)
+            print("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            self.hide = True
+            self.bboxes = {}
         finally:
             if not ext_dc:
                 release_cube(dc)

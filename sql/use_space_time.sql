@@ -1,0 +1,11 @@
+--- Usage of space-time tables to obtain spatial and temporal extents of datasets
+--- from indexed materialized views
+select dataset_type_ref, ST_Extent(spatial_extent) as bbox, array_agg(temporal_extent) from space_time_view group by dataset_type_ref;
+-------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------QUERY PLAN----------------------------------------------------------------                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+--HashAggregate  (cost=316452.75..316453.50 rows=50 width=99) (actual time=9850.712..10340.107 rows=74 loops=1)
+--   Group Key: dataset_type_ref
+--   ->  Seq Scan on space_time_view  (cost=0.00..255246.00 rows=8160900 width=128) (actual time=0.009..2750.915 rows=8160900 loops=1)
+-- Planning Time: 0.502 ms
+-- Execution Time: 10364.716 ms
