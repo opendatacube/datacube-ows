@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datacube_ows import __version__
 from datacube_ows.product_ranges import get_sqlconn, add_ranges
 from datacube import Datacube
 import psycopg2
@@ -10,37 +11,47 @@ import os
 import click
 
 @click.command()
-@click.option("--views", is_flag=True, default=False, help="Create (if called with the --schema option) or refresh the ODC spatio-temporal materialised views.")
-@click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema.")
+@click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
+@click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products" )
 @click.option("--merge-only/--no-merge-only", default=False, help="When used with a multiproduct layer, the ranges for underlying datacube products are not updated.")
 @click.option("--product", default=None, help="Deprecated option provided for backwards compatibility")
 @click.option("--multiproduct", default=None, help="Deprecated option provided for backwards compatibility." )
 @click.option("--calculate-extent/--no-calculate-extent", default=None, help="Has no effect any more.  Provided for backwards compatibility only")
-@click.argument("products", nargs=-1)
-def main(products,
+@click.option("--version", is_flag=True, default=False, help="Print version string and exit")
+@click.argument("layers", nargs=-1)
+def main(layers,
          merge_only, summary,
-         schema, views, role,
+         schema, views, role, version,
          product, multiproduct, calculate_extent):
     """Manage datacube-ows range tables.
 
     Valid invocations:
 
-    * Some combination of the --views and --schema flags (and no PRODUCTS).
-        (Perform the specified database updates)
+    * update_ranges.py --schema --role myrole
+        Create (re-create) the OWS schema (including materialised views) and grants permission to role myrole
 
-    * One of more OWS or ODC product names
-        (Update ranges for the specified PRODUCTS
+    * update_ranges.py --views
+        Refresh the materialised views
 
-    * No PRODUCTS (and neither the --views nor --schema flags)
-        (Update ranges for all configured OWS products.
+    * One or more OWS or ODC layer names
+        Update ranges for the specified LAYERS
+
+    * No LAYERS (and neither the --views nor --schema options)
+        (Update ranges for all configured OWS layers.
 
     Uses the DATACUBE_OWS_CFG environment variable to find the OWS config file.
     """
+    # --version
+    if version:
+        print("Open Data Cube Open Web Services (datacube-ows) version",
+              __version__
+               )
+        return 0
     # Handle old-style calls
-    if not products:
-        products = []
+    if not layers:
+        layers = []
     if product:
         print("********************************************************************************")
         print("Warning: The product flag is deprecated and will be removed in a future release.")
@@ -48,7 +59,7 @@ def main(products,
         print("          ")
         print("          python3 update_ranges.py %s" % product)
         print("********************************************************************************")
-        products.append(product)
+        layers.append(product)
     if multiproduct:
         print("********************************************************************************")
         print("Warning: The product flag is deprecated and will be removed in a future release.")
@@ -59,17 +70,17 @@ def main(products,
         else:
             print("          python3 update_ranges.py %s" % multiproduct)
         print("********************************************************************************")
-        products.append(multiproduct)
+        layers.append(multiproduct)
     if calculate_extent is not None:
         print("********************************************************************************")
         print("Warning: The calculate-extent and no-calculate-extent flags no longer have ")
         print("         any effect.  They are kept only for backwards compatibility and will")
         print("         be removed in a future release.")
         print("********************************************************************************")
-    if schema and products:
+    if schema and layers:
         print("Sorry, cannot update the schema and ranges in the same invocation.")
         return 1
-    elif views and products:
+    elif views and layers:
         print("Sorry, cannot update the materialised views and ranges in the same invocation.")
         return 1
     elif schema and not role:
@@ -84,32 +95,30 @@ def main(products,
         pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
 
     dc = Datacube(app="ows_update_ranges")
-    if schema or views:
-        if schema:
-            print("Checking schema....")
-            print("Creating or replacing WMS database schema...")
-            create_schema(dc, role)
-            print("Done")
-        if schema and views:
-            print("Creating or replacing materialised views...")
-            create_views(dc)
-            print("Done")
-        elif views:
-            print("Refreshing materialised views...")
-            refresh_views(dc)
-            print("Done")
+    if schema:
+        print("Checking schema....")
+        print("Creating or replacing WMS database schema...")
+        create_schema(dc, role)
+        print("Creating or replacing materialised views...")
+        create_views(dc)
+        print("Done")
+        return 0
+    elif views:
+        print("Refreshing materialised views...")
+        refresh_views(dc)
+        print("Done")
         return 0
 
     print("Deriving extents from materialised views")
-    if not products:
-        products = list(get_config().product_index.keys())
+    if not layers:
+        layers = list(get_config().product_index.keys())
     try:
-        add_ranges(dc, products, summary, merge_only)
+        add_ranges(dc, layers, summary, merge_only)
     except (psycopg2.errors.UndefinedColumn,
             sqlalchemy.exc.ProgrammingError):
         print("ERROR: OWS schema or extent materialised views appear to be missing",
               "\n",
-              "       Try running with the --schema and --views options first."
+              "       Try running with the --schema options first."
               )
         return 1
     return 0
