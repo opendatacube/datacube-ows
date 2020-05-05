@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from datacube_ows import __version__
 from datacube_ows.product_ranges import get_sqlconn, add_ranges
 from datacube import Datacube
 import psycopg2
@@ -12,6 +11,7 @@ import click
 
 @click.command()
 @click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
+@click.option("--blocking/--no-blocking", is_flag=True, default=False, help="In conjunction with --views, controls whether the materialised view refresh is blocking or concurrent. (defaults to concurrent)")
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products" )
@@ -21,7 +21,7 @@ import click
 @click.option("--calculate-extent/--no-calculate-extent", default=None, help="Has no effect any more.  Provided for backwards compatibility only")
 @click.option("--version", is_flag=True, default=False, help="Print version string and exit")
 @click.argument("layers", nargs=-1)
-def main(layers,
+def main(layers, blocking,
          merge_only, summary,
          schema, views, role, version,
          product, multiproduct, calculate_extent):
@@ -46,7 +46,7 @@ def main(layers,
     # --version
     if version:
         print("Open Data Cube Open Web Services (datacube-ows) version",
-              __version__
+              "notsure"
                )
         return 0
     # Handle old-style calls
@@ -105,7 +105,7 @@ def main(layers,
         return 0
     elif views:
         print("Refreshing materialised views...")
-        refresh_views(dc)
+        refresh_views(dc, blocking)
         print("Done")
         return 0
 
@@ -282,7 +282,13 @@ CREATE INDEX space_time_view_geom_idx
     run_sql(dc, commands)
 
 
-def refresh_views(dc):
+def refresh_views(dc, blocking):
+    if blocking:
+        st_refresh_help = "Refreshing combined SPACE-TIME materialized view"
+        st_refresh_cmd = "REFRESH MATERIALIZED VIEW space_time_view"
+    else:
+        st_refresh_help = "Launching background refresh of combined SPACE-TIME materialized view"
+        st_refresh_cmd = "REFRESH MATERIALIZED VIEW CONCURRENTLY space_time_view"
     commands = [
         ("Refreshing TIME materialized view",
          "REFRESH MATERIALIZED VIEW time_view"
@@ -290,8 +296,8 @@ def refresh_views(dc):
         ("Refreshing SPACE materialized view",
          "REFRESH MATERIALIZED VIEW space_view"
          ),
-        ("Refreshing combined SPACE-TIME materialized view",
-         "REFRESH MATERIALIZED VIEW CONCURRENTLY space_time_view"
+        (st_refresh_help,
+         st_refresh_cmd
          ),
     ]
     run_sql(dc, commands)
