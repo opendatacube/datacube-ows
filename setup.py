@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import versioneer
 from setuptools import setup, find_packages
 
 with open('README.rst') as readme_file:
@@ -41,7 +42,8 @@ test_requirements = [
 
 setup(
     name='datacube_ows',
-    version='0.2.0',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description="Open Data Cube Open Web Services",
     long_description=readme + '\n\n' + history,
     author="Open Data Cube",
