@@ -71,6 +71,6 @@ This entry must be supplied if the WCS service is
 activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
 section) and must contain the name of one of the formats in
 defined in the
-`formats <#native-format-native_format>`_ section.
+`formats <#supported-output-formats-formats>`_ section.
 
 
