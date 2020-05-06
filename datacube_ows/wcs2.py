@@ -250,8 +250,7 @@ def desc_coverages(args):
         for product in products
     ]
 
-
-    version = request.version
+    version = request_obj.version
 
     if version == (2, 0):
         result = encoders_v20.xml_encode_coverage_descriptions(coverage_descriptions)
