@@ -11,7 +11,7 @@ from flask_log_request_id import RequestID, RequestIDLogFilter, current_request_
 import os
 
 from datacube_ows.legend_generator import create_legend_for_style
-from datacube_ows.ogc_utils import capture_headers, resp_headers
+from datacube_ows.ogc_utils import capture_headers, resp_headers, get_service_base_url
 from datacube_ows.wms import handle_wms, WMS_REQUESTS
 from datacube_ows.wcs import handle_wcs, WCS_REQUESTS
 from datacube_ows.wcs2 import handle_wcs2
@@ -170,10 +170,17 @@ def ogc_impl():
             return ogc_svc_impl("wms")
         elif op in WCS_REQUESTS:
             return ogc_svc_impl("wcs")
-        else:
+        elif op:
             # Should we return a WMS or WCS exception if there is no service specified?
             # Defaulting to WMS because that's what we already have.
             raise WMSException("Invalid service and/or request", locator="Service and request parameters")
+        else:
+            cfg = get_config()
+            url = nocase_args.get('Host', nocase_args['url_root'])
+            base_url = get_service_base_url(cfg.allowed_urls, url)
+            return (render_template("index.html", cfg=cfg, supported=OWS_SUPPORTED, base_url=base_url),
+                    200,
+                    resp_headers({"Content-Type": "text/html"}))
     except OGCException as e:
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()

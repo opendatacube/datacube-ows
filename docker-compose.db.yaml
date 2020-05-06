@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+  postgres:
+    # db with some data from ls8_usgs_level1_scene pre-indexed
+    build: docker/database/
+    environment:
+      - POSTGRES_DB=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+    network_mode: bridge
+    ports:
+      - "${DB_PORT}:5432"
+    restart: always
+  # Overwrite ows so it can talk to docker db
+  ows:
+    network_mode: bridge
+    links:
+      - postgres:postgres

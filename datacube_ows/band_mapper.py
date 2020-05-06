@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+
 from xarray import Dataset, DataArray, merge
 import numpy
 from colour import Color
@@ -8,11 +9,11 @@ from datacube.storage.masking import make_mask
 
 import logging
 from datetime import datetime
-from threading import Lock
 
 # pylint: disable=wrong-import-position
 import matplotlib
 # Do not use X Server backend
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex
@@ -26,11 +27,6 @@ from datacube_ows.ogc_utils import FunctionWrapper, ConfigException
 _LOG = logging.getLogger(__name__)
 
 
-# Matplotlib is not thread-safe.  All usage of the matplotlib library should
-# be serialised through this lock.
-MPL_LOCK = Lock()
-
-
 class StyleMask(object):
     def __init__(self, flags, invert=False):
         self.flags = flags
@@ -41,7 +37,7 @@ class StyleDefBase(object):
     auto_legend = False
     include_in_feature_info = False
 
-    def __init__(self, product, style_cfg):
+    def __init__(self, product, style_cfg, defer_multi_date=False):
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
@@ -53,6 +49,13 @@ class StyleDefBase(object):
 
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         self.legend_cfg = style_cfg.get("legend", dict())
+        if not defer_multi_date:
+            self.parse_multi_date(style_cfg)
+
+    def parse_multi_date(self, cfg):
+        self.multi_date_handlers = []
+        for mb_cfg in cfg.get("multi_date", []):
+            self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
     def apply_masks(self, data, pq_data):
         if pq_data is not None:
@@ -67,13 +70,21 @@ class StyleDefBase(object):
         return data
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
-        pass
+        date_count = len(data.coords["time"])
+        if date_count == 1:
+            if pq_data is not None:
+                pq_data = pq_data.squeeze(dim="time", drop=True)
+            if extent_mask is not None:
+                extent_mask = extent_mask.squeeze(dim="time", drop=True)
+            return self.transform_single_date_data(data.squeeze(dim="time", drop=True),
+                                                   pq_data,
+                                                   extent_mask,
+                                                   *masks)
+        mdh = self.get_multi_date_handler(date_count)
+        return mdh.transform_data(data, pq_data, extent_mask, *masks)
 
-    def safe_legend(self, bytesio):
-        if not self.auto_legend:
-            return None
-        with MPL_LOCK:
-            return self.legend(bytesio)
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
+        pass
 
     def parse_legend_cfg(self, cfg):
         self.show_legend = cfg.get("show_legend", self.auto_legend)
@@ -86,22 +97,33 @@ class StyleDefBase(object):
     def legend_override_with_url(self):
         return self.legend_url_override
 
+    def get_multi_date_handler(self, count):
+        for mdh in self.multi_date_handlers:
+            if mdh.applies_to(count):
+                return mdh
+        return None
 
-# pylint: disable=abstract-method
-class DynamicRangeCompression(StyleDefBase):
-    def __init__(self, product, style_cfg):
-        super(DynamicRangeCompression, self).__init__(product, style_cfg)
-        self.scale_factor = style_cfg.get("scale_factor")
-        if "scale_range" in style_cfg:
-            self.scale_min, self.scale_max = style_cfg["scale_range"]
-        else:
-            self.scale_min = 0.0
-            self.scale_max = 255.0 * style_cfg["scale_factor"]
+    class MultiDateHandler(object):
+        def __init__(self, style, cfg):
+            self.style = style
+            if "allowed_count_range" not in cfg:
+                raise ConfigException("multi_date handler must have an allowed_count_range")
+            if len(cfg["allowed_count_range"]) > 2:
+                raise ConfigException("multi_date handler allowed_count_range must have 2 and only 2 members")
+            self.min_count, self.max_count = cfg["allowed_count_range"]
+            if self.max_count < self.min_count:
+                raise ConfigException("multi_date handler allowed_count_range: minimum must be less than equal to maximum")
+            if "aggregator_function" in cfg:
+                self.aggregator = FunctionWrapper(style.product, cfg["aggregator_function"])
+            else:
+                raise ConfigException("Aggregator function is required for multi-date handlers.")
 
-    def compress_band(self, imgband_data):
-        clipped = imgband_data.clip(self.scale_min, self.scale_max)
-        normalized = (clipped - self.scale_min) / (self.scale_max - self.scale_min)
-        return normalized * 255
+        def applies_to(self, count):
+            return (self.min_count <= count and self.max_count >= count)
+
+        def transform_data(self, data, pq_data, extent_mask, *masks):
+            raise NotImplementedError()
+
 
 class RGBAMappedStyleDef(StyleDefBase):
     auto_legend = True
@@ -148,7 +170,7 @@ class RGBAMappedStyleDef(StyleDefBase):
         return mask
 
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         # pylint: disable=too-many-locals, too-many-branches
         # extent mask data per band to preseve nodata
         _LOG.debug("transform begin %s", datetime.now())
@@ -219,69 +241,92 @@ class RGBAMappedStyleDef(StyleDefBase):
 
 
 # pylint: disable=abstract-method
-class LinearStyleDef(DynamicRangeCompression):
+class LinearStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(LinearStyleDef, self).__init__(product, style_cfg)
-        self.red_components = self.dealias_components(style_cfg["components"]["red"])
-        self.green_components = self.dealias_components(style_cfg["components"]["green"])
-        self.blue_components = self.dealias_components(style_cfg["components"]["blue"])
-        self.alpha_components = self.dealias_components(style_cfg["components"].get("alpha", None))
-        for band in self.red_components.keys():
-            self.needed_bands.add(band)
-        for band in self.green_components.keys():
-            self.needed_bands.add(band)
-        for band in self.blue_components.keys():
-            self.needed_bands.add(band)
+        self.rgb_components = {}
+        for imgband in ["red", "green", "blue", "alpha"]:
+            components = style_cfg["components"].get(imgband)
+            if components is None:
+                if imgband == "alpha":
+                    continue
+                else:
+                    raise ConfigException("No components defined for %s band" % imgband)
+            if "function" in components:
+                self.rgb_components[imgband] = FunctionWrapper(self.product, components)
+                for b in style_cfg["additional_bands"]:
+                    self.needed_bands.add(b)
+            else:
+                self.rgb_components[imgband] = self.dealias_components(components)
 
-        if self.alpha_components is not None:
-            for band in self.alpha_components.keys():
-                self.needed_bands.add(band)
+        self.scale_factor = style_cfg.get("scale_factor")
+        if "scale_range" in style_cfg:
+            self.scale_min, self.scale_max = style_cfg["scale_range"]
+        elif self.scale_factor:
+            self.scale_min = 0.0
+            self.scale_max = 255.0 * self.scale_factor
+        else:
+            self.scale_min = None
+            self.scale_max = None
+
+        self.component_scale_ranges = {}
+        for cn, cd in style_cfg["components"].items():
+            if "scale_range" in cd:
+                self.component_scale_ranges[cn] = {
+                    "min": cd["scale_range"][0],
+                    "max": cd["scale_range"][1],
+                }
+            else:
+                self.component_scale_ranges[cn] = {
+                    "min": self.scale_min,
+                    "max": self.scale_max,
+                }
+
+        for imgband in ["red", "green", "blue", "alpha" ]:
+            if imgband in self.rgb_components and not callable(self.rgb_components[imgband]):
+                for band in self.rgb_components[imgband].keys():
+                    self.needed_bands.add(band)
 
     def dealias_components(self, comp_in):
         if comp_in is None:
             return None
         else:
-            return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() }
+            return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
 
-    @property
-    def rgb_components(self):
-        if self.alpha_components is not None:
-            return {
-                "red": self.red_components,
-                "green": self.green_components,
-                "blue": self.blue_components,
-                "alpha": self.alpha_components,
-            }
+    def compress_band(self, component_name, imgband_data):
+        sc_min = self.component_scale_ranges[component_name]["min"]
+        sc_max = self.component_scale_ranges[component_name]["max"]
+        clipped = imgband_data.clip(sc_min, sc_max)
+        normalized = (clipped - sc_min) / (sc_max - sc_min)
+        return normalized * 255
 
-        return {
-            "red": self.red_components,
-            "green": self.green_components,
-            "blue": self.blue_components,
-        }
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
         imgdata = Dataset()
         for imgband, components in self.rgb_components.items():
-            imgband_data = None
-            for band, intensity in components.items():
-                if callable(intensity):
-                    imgband_component = intensity(data[band], band, imgband)
-                else:
-                    imgband_component = data[band] * intensity
-
-                if imgband_data is not None:
-                    imgband_data += imgband_component
-                else:
-                    imgband_data = imgband_component
-            dims = imgband_data.dims
-            if imgband == "alpha":
-                imgband_data = imgband_data.astype('uint8').values
+            if callable(components):
+                imgband_data = components(data)
+                dims = imgband_data.dims
+                imgband_data = imgband_data.astype('uint8')
+                imgdata[imgband] = (dims, imgband_data)
             else:
-                imgband_data = self.compress_band(imgband_data).astype('uint8')
-            imgdata[imgband] = (dims, imgband_data)
+                imgband_data = None
+                for band, intensity in components.items():
+                    if callable(intensity):
+                        imgband_component = intensity(data[band], band, imgband)
+                    else:
+                        imgband_component = data[band] * intensity
+
+                    if imgband_data is not None:
+                        imgband_data += imgband_component
+                    else:
+                        imgband_data = imgband_component
+                dims = imgband_data.dims
+                imgband_data = self.compress_band(imgband, imgband_data).astype('uint8')
+                imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
 
@@ -332,6 +377,24 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
         } for u in unscaled
     ]
 
+
+def crack_ramp(ramp):
+    values = []
+    red = []
+    green = []
+    blue = []
+    alpha = []
+    for r in ramp:
+        values.append(float(r["value"]))
+        color = Color(r["color"])
+        red.append(color.red)
+        green.append(color.green)
+        blue.append(color.blue)
+        alpha.append(r.get("alpha", 1.0))
+
+    return (values, red, green, blue, alpha)
+
+
 def read_mpl_ramp(mpl_ramp : str):
     unscaled_cmap = []
     cmap = plt.get_cmap(mpl_ramp)
@@ -357,24 +420,8 @@ def read_mpl_ramp(mpl_ramp : str):
 
 class RgbaColorRampDef(StyleDefBase):
     auto_legend = True
-    def __init__(self, product, style_cfg):
+    def __init__(self, product, style_cfg, defer_multi_date=False):
         super(RgbaColorRampDef, self).__init__(product, style_cfg)
-
-        def crack_ramp(ramp):
-            values = []
-            red = []
-            green = []
-            blue = []
-            alpha = []
-            for r in ramp:
-                values.append(float(r["value"]))
-                color = Color(r["color"])
-                red.append(color.red)
-                green.append(color.green)
-                blue.append(color.blue)
-                alpha.append(r.get("alpha", 1.0))
-
-            return (values, red, green, blue, alpha)
 
         if "color_ramp" in style_cfg:
             self.color_ramp = style_cfg["color_ramp"]
@@ -405,30 +452,36 @@ class RgbaColorRampDef(StyleDefBase):
                 self.name,
                 self.product.name
             ) )
+        if not defer_multi_date:
+            self.parse_multi_date(style_cfg)
 
     def get_value(self, data, values, intensities):
         return numpy.interp(data, values, intensities)
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def apply_colour_ramp(self, data, ramp_values, ramp_components):
+        imgdata = {}
+        for band, intensity in ramp_components.items():
+            bandnda = self.get_value(data, ramp_values, intensity)
+            bandnda *= 255
+            bandnda = bandnda.astype("uint8")
+            imgdata[band] = (data.dims, bandnda)
+        imgdataset = Dataset(imgdata)
+        # imgdataset *= 255
+        # imgdataset = imgdataset.astype("uint8")
+        return imgdataset
+
+    def apply_masks_and_index(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
 
-        data_bands = self.needed_bands
+        data_bands = ['index_function']
+        data['index_function'] = (data.dims, self.index_function(data))
+        return data["index_function"]
 
-        if self.index_function is not None:
-            data_bands = ['index_function']
-            data[data_bands[0]] = (data.dims, self.index_function(data))
-
-        imgdata = Dataset()
-        for data_band in data_bands:
-            d = data[data_band]
-            for band, intensity in self.components.items():
-                imgdata[band] = (d.dims, self.get_value(d, self.values, intensity))
-        imgdata *= 255
-        imgdata = imgdata.astype("uint8")
-        return imgdata
-
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
+        d = self.apply_masks_and_index(data, pq_data, extent_mask, *masks)
+        return self.apply_colour_ramp(d, self.values, self.components)
 
     def legend(self, bytesio):
         #pylint: disable=too-many-locals, too-many-statements
@@ -545,6 +598,35 @@ class RgbaColorRampDef(StyleDefBase):
 
         plt.savefig(bytesio, format='png')
 
+    class MultiDateHandler(StyleDefBase.MultiDateHandler):
+        def __init__(self, style, cfg):
+            super().__init__(style, cfg)
+            self.feature_info_label = cfg.get("feature_info_label", None)
+
+            if "color_ramp" in cfg:
+                self.color_ramp = cfg["color_ramp"]
+            else:
+                rmin, rmax = cfg["range"]
+                unscaled_ramp = UNSCALED_DEFAULT_RAMP
+                if "mpl_ramp" in cfg:
+                    unscaled_ramp = read_mpl_ramp(cfg["mpl_ramp"])
+                self.color_ramp = scale_unscaled_ramp(
+                    rmin, rmax,
+                    unscaled_ramp)
+            values, r, g, b, a = crack_ramp(self.color_ramp)
+            self.values = values
+            self.components = {
+                "red": r,
+                "green": g,
+                "blue": b,
+                "alpha": a
+            }
+
+        def transform_data(self, data, pq_data, extent_mask, *masks):
+            xformed_data = self.style.apply_masks_and_index(data, pq_data, extent_mask, *masks)
+            agg = self.aggregator(xformed_data)
+            return self.style.apply_colour_ramp(agg, self.values, self.components)
+
 
 class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
     auto_legend = False
@@ -552,40 +634,38 @@ class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
         super(HybridStyleDef, self).__init__(product, style_cfg)
         self.component_ratio = style_cfg["component_ratio"]
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         #pylint: disable=too-many-locals
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
 
-        data_bands = self.needed_bands
-
         if self.index_function is not None:
-            data_bands = ['index_function']
-            data[data_bands[0]] = (data.dims, self.index_function(data))
+            data['index_function'] = (data.dims, self.index_function(data))
+
         imgdata = Dataset()
-        for data_band in data_bands:
-            d = data[data_band]
-            for band, intensity in self.components.items():
-                rampdata = self.get_value(d, self.values, intensity)
-                component_band_data = None
-                if band in self.rgb_components:
-                    for c_band, c_intensity in self.rgb_components[band].items():
-                        if callable(c_intensity):
-                            imgband_component_data = c_intensity(data[c_band], c_band, band)
-                        else:
-                            imgband_component_data = data[c_band] * c_intensity
-                        if component_band_data is not None:
-                            component_band_data += imgband_component_data
-                        else:
-                            component_band_data = imgband_component_data
-                        if band != "alpha":
-                            component_band_data = self.compress_band(component_band_data)
-                    img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
-                                     + self.component_ratio * component_band_data)
-                else:
-                    img_band_data = rampdata * 255.0
-                imgdata[band] = (d.dims, img_band_data.astype("uint8"))
+
+        d = data['index_function']
+        for band, intensity in self.components.items():
+            rampdata = self.get_value(d, self.values, intensity)
+            component_band_data = None
+            if band in self.rgb_components:
+                for c_band, c_intensity in self.rgb_components[band].items():
+                    if callable(c_intensity):
+                        imgband_component_data = c_intensity(data[c_band], c_band, band)
+                    else:
+                        imgband_component_data = data[c_band] * c_intensity
+                    if component_band_data is not None:
+                        component_band_data += imgband_component_data
+                    else:
+                        component_band_data = imgband_component_data
+                    if band != "alpha":
+                        component_band_data = self.compress_band(band, component_band_data)
+                img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
+                                 + self.component_ratio * component_band_data)
+            else:
+                img_band_data = rampdata * 255.0
+            imgdata[band] = (d.dims, img_band_data.astype("uint8"))
 
         return imgdata
 

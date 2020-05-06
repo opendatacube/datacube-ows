@@ -1,0 +1,40 @@
+version: '3.4'
+
+# Default compose will create an ows image, with dev settings and connect to a local db
+services:
+  ows:
+    build:
+      context: .
+      args:
+        PYDEV_DEBUG: "${PYDEV_DEBUG}"
+      cache_from:
+        - opendatacube/ows:_builder
+        - opendatacube/ows:latest
+    image: opendatacube/ows:latest
+    network_mode: host
+    environment:
+      # Defaults are defined in .env file
+      DB_HOSTNAME: ${DB_HOSTNAME}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      # Where the config file is (must match the volume mount)
+      WMS_CONFIG_PATH: /env/config/ows_cfg.py
+      # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env) 
+      DATACUBE_OWS_CFG: config.ows_cfg.ows_cfg
+      AWS_DEFAULT_REGION: ${AWS_REGION}
+      # Talk to AWS without using credentials
+      AWS_NO_SIGN_REQUEST: "${AWS_NO_SIGN_REQUEST}"
+      # Dev flags
+      FLASK_APP: /code/datacube_ows/ogc.py
+      FLASK_ENV: ${FLASK_ENV}
+      PYDEV_DEBUG: "${PYDEV_DEBUG}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${OWS_CFG_FILE}:/env/config/ows_cfg.py
+      - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
+      - ./:/code/
+    restart: always
+    command: ["wait-for-db", "flask", "run", "--host=0.0.0.0", "--port=8000"]

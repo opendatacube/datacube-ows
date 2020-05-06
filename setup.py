@@ -10,7 +10,28 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'datacube', 'flask'
+    'datacube',
+    'Flask',
+    'flask_log_request_id',
+    'requests',
+    'affine',
+    'click',
+    'colour',
+    'lxml',
+    'matplotlib',
+    'numpy',
+    'opencensus',
+    'Pillow',
+    'prometheus_client',
+    'psycopg2',
+    'python_dateutil',
+    'pytz',
+    'rasterio',
+    'regex',
+    'scikit-image',
+    'timezonefinderL',
+    'python-slugify',
+    'xarray'
 ]
 
 test_requirements = [
@@ -21,14 +42,15 @@ test_requirements = [
 setup(
     name='datacube_ows',
     version='0.2.0',
-    description="Datacube Open Web Services",
+    description="Open Data Cube Open Web Services",
     long_description=readme + '\n\n' + history,
     author="Open Data Cube",
     author_email='earth.observation@ga.gov.au',
-    url='https://github.com/opendatacube/datacube-wms',
+    url='https://github.com/opendatacube/datacube-ows',
     entry_points={
         'console_scripts': [
-            'datacube-ows=datacube_ows.wms_wsgi.__main__:main'
+            'datacube-ows=datacube_ows.wsgi:main',
+            'datacube-ows-update=datacube_ows.update_ranges:main'
         ]
     },
     packages=find_packages(),

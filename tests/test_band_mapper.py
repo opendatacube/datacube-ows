@@ -1,9 +1,11 @@
+import datetime
+
 import datacube_ows.band_mapper as bm
 from datacube_ows.band_mapper import StyleDef
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
-from xarray import DataArray, Dataset
+from xarray import DataArray, Dataset, concat
 from unittest.mock import patch
 
 import pytest
@@ -223,9 +225,13 @@ def test_alpha_style_map(
     def fake_make_mask(data, **kwargs):
         return data
 
+
     band = np.array([True, True, True])
+    timarray = [np.datetime64(datetime.date.today())]
+    times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     da = DataArray(band, name='foo')
-    ds = Dataset(data_vars={'foo': da})
+    dst = Dataset(data_vars={'foo': da})
+    ds = concat([dst], times)
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
@@ -265,7 +271,7 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     band[1] = 0
     band[2] = 3000
 
-    compressed = style_def.compress_band(band)
+    compressed = style_def.compress_band("red", band)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
@@ -284,7 +290,7 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     band[1] = 0
     band[2] = 3001
 
-    compressed = style_def.compress_band(band)
+    compressed = style_def.compress_band("red", band)
 
     assert compressed[0] == 0
     assert compressed[1] == 255 / 2
@@ -365,8 +371,11 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
 
     band = np.array([0, 0, 1, 1, 2, 2])
+    timarray = [np.datetime64(datetime.date.today())]
+    times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     da = DataArray(band, name='foo')
-    ds = Dataset(data_vars={'foo': da})
+    dst = Dataset(data_vars={'foo': da})
+    ds = concat([dst], times)
 
     with patch('datacube_ows.band_mapper.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)

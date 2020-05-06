@@ -117,6 +117,10 @@ def get_coverage(args):
     # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
     cfg = get_config()
     req = WCS1GetCoverageRequest(args)
+    if req.format["multi-time"] and len(req.times) > 1:
+        raise WCS1Exception("Multi-time requests are not currently supported for WCS1",
+                            WCS1Exception.INVALID_PARAMETER_VALUE,
+                            locator="Time parameter")
     data = get_coverage_data(req)
     return (
         req.format["renderer"](req, data),

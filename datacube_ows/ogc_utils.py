@@ -4,6 +4,7 @@ import re
 import datetime
 from importlib import import_module
 from itertools import chain
+
 from dateutil.parser import parse
 from urllib.parse import urlparse
 from timezonefinderL import TimezoneFinder
@@ -37,12 +38,21 @@ def dataset_center_time(dataset):
 class NoTimezoneException(Exception):
     pass
 
+
+def solar_date(dt, tz):
+    return dt.astimezone(tz).date()
+
+
 def local_date(ds, tz=None):
     dt_utc = dataset_center_time(ds)
     if tz:
         return dt_utc.astimezone(tz).date()
     else:
-        return dt_utc.astimezone(tz_for_geometry(ds.extent))
+        return dt_utc.astimezone(tz_for_geometry(ds.extent)).date()
+
+
+def tz_for_dataset(ds):
+    return tz_for_geometry(ds.extent)
 
 
 def tz_for_coord(lon, lat):
@@ -134,7 +144,6 @@ class ProductLayerException(Exception):
 
 class ConfigException(Exception):
     pass
-
 
 # Function wrapper for configurable functional elements
 

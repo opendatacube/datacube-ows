@@ -6,6 +6,9 @@ ignore=ndexpr
 enable=python3
 
 disable=no-self-use,
+    no-absolute-import,
+    old-division,
+    filter-builtin-not-iterating,
     star-args,
     duplicate-code,
     unused-argument,

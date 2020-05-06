@@ -1,0 +1,7 @@
+version: '3.4'
+
+# override default compose to change the launch command
+
+services:
+  ows:
+    command: gunicorn -b '0.0.0.0:8000' --workers=3 --threads=2 -k gevent --timeout 121 --pid /home/ows/gunicorn.pid --log-level info --worker-tmp-dir /dev/shm datacube_ows.wsgi

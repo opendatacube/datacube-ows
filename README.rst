@@ -36,6 +36,41 @@ geospatial libraries.  Dependency conflicts are almost unavoidable in environmen
 other large complex geospatial software packages.  We therefore strongly recommend some kind of
 containerised solution and we supply scripts for building appropriate Docker containers.
 
+Docker-Compose
+--------------
+
+We use docker-compose to make development and testing of the containerised ows images easier
+
+
+To start OWS with flask connected to a pre-existing database on your local machine: ::
+
+  export DB_USERNAME=username
+  export DB_PASSWORD=password
+  export DB_DATABASE=opendatacube
+  export DB_hostname=localhost
+  OWS_CFG_FILE=/path/to/ows_cfg.py
+  docker-compose up
+
+To start ows with a pre-indexed database: ::
+
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up
+
+To start ows with db and gunicorn instead of flask (production) ::
+
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up
+
+The default environment variables (in .env file) can be overriden by setting local environment variables ::
+
+  # Enable pydev for pycharm (needs rebuild to install python libs)
+  # hot reload is not supported, so we need to set FLASK_DEV to production
+  export PYDEV_DEBUG=yes
+  export FLASK_DEV=production
+  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up --build
+
+  # Change location of default config file (good for testing config changes on a local db)
+  OWS_CFG_FILE=/path/to/ows_cfg.py
+  docker-compose -f docker-compose.yaml
+
 Docker
 ------
 To run the standard Docker image, create a docker volume containing your ows config files and use something like: ::
@@ -126,7 +161,7 @@ Flask Dev Server
 
 * Set the `FLASK_APP` environment variable::
 
-        export FLASK_APP=datacube_wms/ogc.py
+        export FLASK_APP=datacube_ows/ogc.py
 
 * Run the Flask dev server::
 
@@ -136,6 +171,19 @@ Flask Dev Server
   from other computers), use the `--host` option::
 
         flask run --host=0.0.0.0
+
+Local Postgres database
+-----------------------
+1. create an empty database and db_user 
+2. run `datacube system init` after creating a datacube config file
+3. A product added to your datacube `datacube product add url` some examples are here: https://github.com/GeoscienceAustralia/dea-config/tree/master/dev/products
+4. Index datasets into your product for example refer to https://github.com/opendatacube/datacube-ows/blob/master/docs/usage.rst ::
+  aws s3 ls s3://deafrica-data/jaxa/alos_palsar_mosaic/2017/ --recursive \
+  | grep yaml | awk '{print $4}' \
+  | xargs -n1 -I {} datacube dataset add s3://deafrica-data/{}
+5. Write an ows config file to identify the products you want available in ows, see example here: https://github.com/opendatacube/datacube-ows/blob/master/datacube_ows/ows_cfg_example.py
+6. Run `python3 https://github.com/opendatacube/datacube-ows/blob/master/update_ranges.py --schema` to create ows specific tables
+7. Run update_ranges.py to generate ows extents `python3 update_ranges.py --product PRODUCT  --no-calculate-extent`
 
 Apache2 mod_wsgi
 ----------------
