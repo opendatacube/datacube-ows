@@ -1201,11 +1201,6 @@ ows_cfg = {
                 "vertical_coord": "y",
             },
         },
-        # If True the new EXPERIMENTAL materialised views are used for spatio-temporal extents.
-        # If False (the default), the old "update_ranges" tables (and native ODC search methods) are used.
-        # DO NOT SET THIS TO TRUE unless you understand what this means and want to participate
-        # in the experiment!
-        "use_extent_views": False,
     },   #### End of "global" section.
 
     # Config items in the "wms" section apply to the WMS service (and WMTS, which is implemented as a
@@ -1258,9 +1253,6 @@ ows_cfg = {
     # Config items in the "wcs" section apply to the WCS service to all WCS coverages
     # (unless over-ridden).
     "wcs": {
-        # Must be a geographic CRS in the global published_CRSs list.
-        # EPSG:4326 is recommended, but any geographic CRS should work.
-        "default_geographic_CRS": "EPSG:4326",
         # Supported WCS formats
         # NetCDF and GeoTIFF work "out of the box".  Other formats will require writing a Python function
         # to do the rendering.

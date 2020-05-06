@@ -677,7 +677,7 @@ class OWSConfig(OWSConfigEntry):
         self.keywords = cfg.get("keywords", [])
         self.fees = cfg.get("fees")
         self.access_constraints = cfg.get("access_constraints")
-        self.use_extent_views = cfg.get("use_extent_views", False)
+        # self.use_extent_views = cfg.get("use_extent_views", False)
         if not self.fees:
             self.fees = "none"
         if not self.access_constraints:
@@ -718,12 +718,6 @@ class OWSConfig(OWSConfigEntry):
         if self.wcs:
             if not isinstance(cfg, Mapping):
                 raise ConfigException("WCS section missing (and WCS is enabled)")
-            self.default_geographic_CRS = cfg.get("default_geographic_CRS")
-            if self.default_geographic_CRS not in self.published_CRSs:
-                raise ConfigException("Configured default geographic CRS not listed in published CRSs.")
-            if not self.published_CRSs[self.default_geographic_CRS]["geographic"]:
-                raise ConfigException("Configured default geographic CRS not listed in published CRSs as geographic.")
-            self.default_geographic_CRS_def = self.published_CRSs[self.default_geographic_CRS]
             self.wcs_formats = {}
             for fmt_name, fmt in cfg["formats"].items():
                 self.wcs_formats[fmt_name] = {
@@ -740,8 +734,6 @@ class OWSConfig(OWSConfigEntry):
             if self.native_wcs_format not in self.wcs_formats:
                 raise Exception("Configured native WCS format not a supported format.")
         else:
-            self.default_geographic_CRS = None
-            self.default_geographic_CRS_def = None
             self.wcs_formats = {}
             self.native_wcs_format = None
         # shouldn't need to keep these?
