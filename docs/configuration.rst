@@ -198,7 +198,8 @@ section).
 
 There is no separate section for WMTS as WMTS is implemented as a thin wrapper around the WMS implementation.
 
-The "layers" section contains a list of layer configurations.  The configured layers define the
-layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour.
+The `layers <cfg_layers.rst>`_ section contains a list of layer configurations.  The configured layers define the
+layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour. The layers section
+is always required.
 
 
