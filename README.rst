@@ -161,7 +161,7 @@ Flask Dev Server
 
 * Set the `FLASK_APP` environment variable::
 
-        export FLASK_APP=datacube_wms/ogc.py
+        export FLASK_APP=datacube_ows/ogc.py
 
 * Run the Flask dev server::
 
