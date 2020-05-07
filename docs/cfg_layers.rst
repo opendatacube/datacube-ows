@@ -394,13 +394,255 @@ which works the same as in wms, `described above <#max_datasets>`_.
 Image Processing Section (image_processing)
 -------------------------------------------
 
+The "image_processing" section is required.  It contains
+entries that control the dataflow of raster image data
+from the ODC to the styling engine.
+
+E.g.
+
+    "image_processing": {
+        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+        "always_fetch_bands": "pixel_qa",
+        "fuse_func": None,
+        "manual_merge": False,
+        "apply_solar_corrections": True
+    }
+
+Extent Mask Function (extent_mask_func)
++++++++++++++++++++++++++++++++++++++++
+
+The "extent_mask_func" determines what portions of
+a dataset are potentially meaningful data.
+
+Many metadata formats (including EO3) support a "nodata"
+value to be defined for each band.  To use this flag simply
+use:
+
+::
+
+    "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+
+If this is not appropriate or possible for your data, you can
+set an alternative function using OWS's `function configuration format
+<cfg_functions.rst>`_.  Some sample functions are included in ``datacube_ows.ogc_utils``.
+
+The function is assumed to take two arguments, data (an xarray Dataset) and
+band (a band name).  (Plus any additional arguments you may be passing in
+through configuration).
+
+Additionally, multiple extent mask functions can be specified as a list of any of
+supported formats.  The result is the **intersection** of all supplied mask functions -
+the masks are ANDed together.
+
+E.g.
+
+::
+
+    "extent_mask_func: [
+        "datacube_ows.ogc_utils.mask_by_quality",
+        "datacube_ows.ogc_utils.mask_by_val",
+    ]
+
+Always Fetch Bands (always_fetch_bands)
++++++++++++++++++++++++++++++++++++++++
+
+"always_fetch_bands" is an optional list of bands that are always
+loaded from the Data Cube (defaults to an empty list).  This is
+useful if the extent mask function requires a particular band
+or bands to be present.
+
+E.g.
+
+
+
+    "extent_mask_func": "datacube_ows.ogc_utils.mask_by_quality",
+    "always_fetch_bands": ["quality"],
+
+Fuse Function (fuse_func)
++++++++++++++++++++++++++
+
+Determines how multiple dataset arrays are compressed into a
+single time array. Specified using OWS's `function configuration
+format <cfg_functions.rst>`_.
+
+The fuse function is passed through to directly to the datacube
+load_data() function - refer to the Open Data Cube documentation
+for calling conventions.
+
+Optional - default is to not use a fuse function.
+
+Manual Merge (manual_merge)
++++++++++++++++++++++++++++
+
+"manual_merge" is an optional boolean flag (defaults to False).  If True,
+data for each dataset is fused in OWS outside of ODC.  This is rarely what
+you want, but may work better for some metadata types.
+
+Apply Solar Corrections (apply_solar_corrections)
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+WARNING: apply_solar_corrections has not been actively used
+or tested for some time and may currently be broken. Use at
+your own risk, but feel free to raise a github issue if it
+doesn't work for you.
+
+"apply_solar_corrections" is an optional boolean flag (defaults to False).
+If True, corrections for local solar angle at the time of image
+capture are applied to all bands.
+
+This should not be used on "Level 2" or analysis-ready datacube products.
+
 -------------------------------
 Flag Processing Section (flags)
 -------------------------------
 
---------------------------
-WCS Coverage Section (wcs)
---------------------------
+Data may include flags that mark which pixels have missing or poor-quality data,
+or contain cloud, or cloud-shadow, etc.  This section describes the
+dataflow for such flags from the ODC to the styling engine.
+The entire section may be omitted if no flag masking is to be
+supported by the layer.
+
+Flag data may come from the same product as the image data, a separate but
+related product, or in some cases a completely independent product.
+
+Some entries have corresponding entries in
+the `image processing section <#image-processing-section-image_processing>`_
+described above.  Items in this section only affect WMS/WMTS.
+
+E.g.
+
+::
+
+    "flags": {
+        "band": "pixelquality",
+        "product": "ls8_pq",
+        "fuse_func": "datacube.helpers.ga_pq_fuser",
+        "manual_merge": False,
+        "ignore_info_flags": ["noisy"],
+        "ignore_time": False
+    }
+
+Flag Band (band)
+++++++++++++++++
+
+The name of the measurement band to be used for style-based masking.
+
+Pixel-quality bitmask bands or flag bands can be used.
+
+Required, unless the whole "flags" section is empty or None.
+
+Flag Product(s) (product/products)
+++++++++++++++++++++++++++++++++++
+
+The Flag Band is assumed to belong to the main layer product/products but this
+can be over-ridden with the "product" (for Product Layers) or "products"
+(for Multiproduct Layers) entry.
+
+For Product Layers, specify a single ODC product name, for Multiproduct Layers,
+specify a list of ODC product names, which should map one-to-one to the main
+`product_names <#multiproduct-layer-configuration-multi_product-product_names>`_ list.
+
+E.g. Product Layer, flag band is in the main layer product:
+
+::
+
+    "product_name": "ls8_combined",
+    "flags": {
+        "band": "pixelquality"
+    }
+
+Product Layer, flag band is in a separate product:
+
+::
+
+    "product_name": "ls8_data",
+    "flags": {
+        "band": "pixelquality",
+        "product": "ls8_flags"
+    }
+
+Multiproduct Layer, flag band is in separate products mapping to main layer products:
+
+::
+
+    "multi_product": True,
+    "product_names": ["s2a_data", "s2b_data"],
+    "flags": {
+        "band": "pixelquality",
+        "products": ["s2a_flags", "s2b_flags"]
+    }
+
+Multiproduct Layer, flag band is in a single separate product:
+
+::
+
+    "multi_product": True,
+    "product_names": ["s2a_data", "s2b_data"],
+    "flags": {
+        "band": "pixelquality",
+        "products": ["s2_combined_flags", "s2_combined_flags"]
+    }
+
+Flag Fuse Function (fuse_func)
+++++++++++++++++++++++++++++++
+
+Only applies if the flag band is read from a separate product
+(or product).  Equivalent to the `fuse function in the
+image_processing section <#fuse-function-fuse_func>`_.
+Always optional - defaults to None.
+
+Manual Flag Merge (manual_merge)
+++++++++++++++++++++++++++++++++
+
+Only applies if the flag band is read from a separate product
+(or product).  Equivalent to the `manual merge in the
+image_processing section <#manual-merge-manual_merge>`_.
+Optional - defaults to False.
+
+Ignore Time (ignore_time)
++++++++++++++++++++++++++
+
+Optional boolean flag. Defaults to False and only applies if
+the flag band is read from a separate product.
+
+If true, OWS assumes that flag product has no time dimension
+(i.e. the same flags apply to all times).
+
+Ignore Info Flags (ignore_info_flags)
++++++++++++++++++++++++++++++++++++++
+
+An optional list of flags which should be excluded from
+GetFeatureInfo responses.  Defaults to an empty list, meaning
+all flags defined in the ODC metadata will be included
+in GetFeatureInfo responses.
+
+-----------------------
+Layer WCS Section (wcs)
+-----------------------
+
+This section is optional, but if the WCS service is
+active and this section is omitted, then this layer
+will not appear as a coverage in WCS (but will still
+appear as a layer in WMS/WMTS).
+
+E.g.
+
+::
+
+    "wcs": {
+        "native_crs": "EPSG:3577",
+        "native_resolution": [25.0, 25.0],
+        "default_bands": ["red", "green", "blue"]
+    }
+
+Native Coordinate Reference System (native_crs)
++++++++++++++++++++++++++++++++++++++++++++++++
+
+Native Resolution (native_resolution)
++++++++++++++++++++++++++++++++++++++
+
+Default WCS Bands (default_bands)
++++++++++++++++++++++++++++++++++
 
 ---------------------------------
 Identifiers Section (identifiers)

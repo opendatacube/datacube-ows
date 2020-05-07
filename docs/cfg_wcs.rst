@@ -38,9 +38,6 @@ NetCDF formats and look something like this:
     "formats": {
             # Key is the format name, as used in DescribeCoverage XML
             "GeoTIFF": {
-                # Renderer is the FQN of a Python function that takes:
-                #   * A WCSRequest object
-                #   * Some ODC data to be rendered.
                 "renderer": "datacube_ows.wcs_utils.get_tiff",
                 # The MIME type of the image, as used in the Http Response.
                 "mime": "image/geotiff",
@@ -56,6 +53,11 @@ NetCDF formats and look something like this:
                 "multi-time": True,
             }
         },
+
+Renderer is set using OWS's `function configuration format <cfg_functions.rst>`_.
+The function is expected to take:
+  * A WCSRequest object
+  * An xarray.DataArray to render
 
 Some special use cases may require tweaking the MIME type or the
 file extension. Either way don't touch this section unless you

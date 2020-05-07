@@ -15,7 +15,7 @@ from slugify import slugify
 
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.band_mapper import StyleDef
-from datacube_ows.ogc_utils import get_function, ConfigException, FunctionWrapper
+from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 import logging
 
@@ -359,7 +359,7 @@ class OWSNamedLayer(OWSLayer):
         sub_prod_cfg = cfg.get("sub_products", {})
         self.sub_product_label = sub_prod_cfg.get("label")
         if "extractor" in sub_prod_cfg:
-            self.sub_product_extractor = FunctionWrapper(sub_prod_cfg["extractor"])
+            self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
         else:
             self.sub_product_extractor = None
 
@@ -591,6 +591,13 @@ class OWSProductLayer(OWSNamedLayer):
         # pylint: disable=attribute-defined-outside-init
         if "dataset" in cfg:
             self.pq_name = cfg["dataset"]
+            print("CFG WARNING:",
+                  "The preferred name for the 'dataset' entry",
+                  "in the flags section is now 'product'.",
+                  "Please update the configuration for layer",
+                  self.name)
+        elif "product" in cfg:
+            self.pq_name = cfg["product"]
         else:
             self.pq_name = self.product_name
         self.pq_names = [ self.pq_name ]
@@ -607,6 +614,13 @@ class OWSMultiProductLayer(OWSNamedLayer):
         # pylint: disable=attribute-defined-outside-init
         if "datasets" in cfg:
             self.pq_names = cfg["datasets"]
+            print("CFG WARNING:",
+                  "The preferred name for the 'datasets' entry",
+                  "in the flags section is now 'products'.",
+                  "Please update the configuration for layer",
+                  self.name)
+        elif "products" in cfg:
+            self.pq_names = cfg["products"]
         else:
             self.pq_names = list(self.product_names)
         self.pq_name = self.pq_names[0]
@@ -726,7 +740,7 @@ class OWSConfig(OWSConfigEntry):
                     "multi-time": fmt["multi-time"],
                     "name": fmt_name,
                 }
-                self.wcs_formats[fmt_name]["renderer"] = get_function(fmt["renderer"])
+                self.wcs_formats[fmt_name]["renderer"] = FunctionWrapper(fmt["renderer"])
             if not self.wcs_formats:
                 raise ConfigException("Must configure at least one wcs format to support WCS.")
 

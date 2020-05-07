@@ -1369,10 +1369,10 @@ ows_cfg = {
                         #
                         "band": "pixelquality",
                         # Sometimes the pixel quality band is packaged in a separate ODC product
-                        # If this is the case, you can specify this product with the "flags::dataset"
-                        # element.  If "pq_band" is set but "pq_dataset" is omitted, then the
+                        # If this is the case, you can specify this product with the "flags::product"
+                        # element.  If "flags::band" is set but "flags::product" is omitted, then the
                         # pixel quality band is assumed to be included in the main data product.
-                        "dataset": "ls8_pq_albers",
+                        "product": "ls8_pq_albers",
                         # Flags Fuse func
                         # Determines how multiple dataset arrays are compressed into a single time array for
                         # the PQ layer
