@@ -740,7 +740,7 @@ class OWSConfig(OWSConfigEntry):
                     "multi-time": fmt["multi-time"],
                     "name": fmt_name,
                 }
-                self.wcs_formats[fmt_name]["renderer"] = FunctionWrapper(fmt["renderer"])
+                self.wcs_formats[fmt_name]["renderer"] = FunctionWrapper(self, fmt["renderer"])
             if not self.wcs_formats:
                 raise ConfigException("Must configure at least one wcs format to support WCS.")
 

@@ -638,11 +638,44 @@ E.g.
 Native Coordinate Reference System (native_crs)
 +++++++++++++++++++++++++++++++++++++++++++++++
 
+In many cases, OWS can determine the native coordinate system
+directly from the ODC metadata. In such cases the native_crs
+need not be explicitly provided (and indeed, will be ignored
+if it is.)
+
+However some ODC products do not have a product wide CRS, but
+rather define a native CRS from for each dataset from a family
+of related CRSs. (e.g.
+Sentinel-2 data is usually packaged like this.)  In this case
+you must manually declare a "native" CRS (if WCS is active).
+This can be any CRS
+declared in the `global published_CRSs section
+<cfg_global.rst#co-ordinate-reference-systems-published_CRSs>`_
+and need not be related to the CRSs that the data is actually
+stored in.
+
 Native Resolution (native_resolution)
 +++++++++++++++++++++++++++++++++++++
 
+The native_resolution is required for WCS-enabled layers.  It is
+the number native CRS units (e.g. degrees, metres) per pixel in
+the horizontal and vertical directions.
+
+E.g. for EPSG:3577 (measured in metres) you would use (25.0, 25.0)
+for Landsat and (10.0, 10.0) for Sentinel-2.
+
+(Depending on the native CRS and the way the data has been processed,
+Landsat resolution may be closer to 30m.)
+
 Default WCS Bands (default_bands)
 +++++++++++++++++++++++++++++++++
+
+List the bands included in response to a WCS request that does not
+explicitly specify a band list.
+
+Must be provided if WCS is active, and must contain at least one band.
+Bands must be declared in the `bands dictionary <#bands-dictionary-bands>`_
+and may use native band names or aliases.
 
 ---------------------------------
 Identifiers Section (identifiers)

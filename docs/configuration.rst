@@ -21,6 +21,9 @@ note that there are some important differences:
 3. JSON does not allow commas after the last element of lists and objects (dictionaries in Python terms).
 4. JSON does not support comments of any kind.
 
+`This general introductory stuff is boring.  Take me straight to the description of the
+configuration file. <#general-config-structure>`_
+
 .. _location:
 
 Where is Configuration Read From?
