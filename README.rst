@@ -47,7 +47,7 @@ To start OWS with flask connected to a pre-existing database on your local machi
   export DB_USERNAME=username
   export DB_PASSWORD=password
   export DB_DATABASE=opendatacube
-  export DB_hostname=localhost
+  export DB_HOSTNAME=localhost
   OWS_CFG_FILE=/path/to/ows_cfg.py
   docker-compose up
 
@@ -111,8 +111,8 @@ The folllowing instructions are for installing on a clean Linux system.
 
       conda config --prepend channels conda-forge
       conda update --all
-	  
-* Clone the repo public repository into your desired destination using `git clone git://github.com/opendatacube/datacube-ows` 
+
+* Clone the repo public repository into your desired destination using `git clone git://github.com/opendatacube/datacube-ows`
 
 * Datacube OWS requires the scikit-image package:  `conda install scikit-image`
 
@@ -174,7 +174,7 @@ Flask Dev Server
 
 Local Postgres database
 -----------------------
-1. create an empty database and db_user 
+1. create an empty database and db_user
 2. run `datacube system init` after creating a datacube config file
 3. A product added to your datacube `datacube product add url` some examples are here: https://github.com/GeoscienceAustralia/dea-config/tree/master/dev/products
 4. Index datasets into your product for example refer to https://github.com/opendatacube/datacube-ows/blob/master/docs/usage.rst ::
@@ -248,4 +248,3 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
