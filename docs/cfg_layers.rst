@@ -614,7 +614,7 @@ Ignore Info Flags (ignore_info_flags)
 An optional list of flags which should be excluded from
 GetFeatureInfo responses.  Defaults to an empty list, meaning
 all flags defined in the ODC metadata will be included
-in GetFeatureInfo responses.
+in WMS and WMTS GetFeatureInfo responses.
 
 -----------------------
 Layer WCS Section (wcs)
@@ -658,14 +658,16 @@ Native Resolution (native_resolution)
 +++++++++++++++++++++++++++++++++++++
 
 The native_resolution is required for WCS-enabled layers.  It is
-the number native CRS units (e.g. degrees, metres) per pixel in
+the number of native CRS units (e.g. degrees, metres) per pixel in
 the horizontal and vertical directions.
 
 E.g. for EPSG:3577 (measured in metres) you would use (25.0, 25.0)
 for Landsat and (10.0, 10.0) for Sentinel-2.
 
-(Depending on the native CRS and the way the data has been processed,
-Landsat resolution may be closer to 30m.)
+Depending on the native CRS and the way the data has been processed,
+Landsat resolution may be closer to 30m. If the native CRS is measured
+in degrees, then the native resolution must also be measured in
+degrees, not metres.
 
 Default WCS Bands (default_bands)
 +++++++++++++++++++++++++++++++++
@@ -674,25 +676,128 @@ List the bands included in response to a WCS request that does not
 explicitly specify a band list.
 
 Must be provided if WCS is active, and must contain at least one band.
-Bands must be declared in the `bands dictionary <#bands-dictionary-bands>`_
+Bands must be declared in the layer's `bands dictionary <#bands-dictionary-bands>`_
 and may use native band names or aliases.
 
 ---------------------------------
 Identifiers Section (identifiers)
 ---------------------------------
 
+The identifiers section is optional.  It is a dictionary mapping names from the
+`WMS authorities section <cfg_wms.rst#identifier-authorities-authorities>`_
+to an identifier for this layer, issued by each of those authorities.
+
+E.g.
+
+::
+
+    "identifiers": {
+        "auth": "ls8_ard",
+        "idsrus": "12345435::0054234::GHW::24356-splunge"
+    },
+
 ------------------
 URL Section (urls)
 ------------------
+
+The urls section provides the values that are included in the FeatureListURLs and
+DataURLs sections of a WMS GetCapabilities document. Multiple of each may be defined
+per layer. (WMS only, does not apply to WMTS or WCS.)
+
+The entire section and the "features and "data" subsections within it are optional. The
+default is an empty list(s).
+
+Each individual entry must include a url and MIME type format.
+
+FeatureListURLs point to "a list of the features represented in a Layer".
+DataURLs "offer a link to the underlying data represented by a particular layer"
+
+E.g.
+
+::
+
+    "urls": {
+        "features": [
+            {
+                "url": "http://domain.tld/path/to/page.html",
+                "format": "text/html"
+            },
+            {
+                "url": "http://another-domain.tld/path/to/image.png",
+                "format": "image/png"
+            }
+        ],
+        "data": [
+            {
+                "url": "http://abc.xyz/data-link.xml",
+                "format": "application/xml"
+            }
+        ]
+    },
 
 -----------------------------------
 Feature Info Section (feature_info)
 -----------------------------------
 
+The "feature_info" section is optional and allows some customisation of WMS and WMTS
+GetFeatureInfo responses.
+
+UTC Dates (include_utc_dates)
++++++++++++++++++++++++++++++
+
+"include_utc_dates" is optional and defaults to False.
+
+If True, then available dates are supplied in two separate lists in
+GetFeatureInfo responses: the
+standard list of dates as used by datacube_ows, and a second list of UTC based
+days.
+
+This configuration option is provided to allow compatibility with other systems that
+do not use solar days and is not recommended for normal use.
+
+Include Custom Info (include_custom)
+++++++++++++++++++++++++++++++++++++
+
+Determines how multiple dataset arrays are compressed into a
+single time array. Specified using OWS's `function configuration
+format <cfg_functions.rst>`_.
+
+"include_custom" allows custom data to be included in GetFeatureInfo responses. It
+is optional and defaults to an empty dictionary (i.e. no custom data.)
+
+The keys of the "include_custom" dictionary are the keys that will be included in the
+GetFeatureInfo responses.  They should therefore be keys that are not included by
+default (e.g. "data", "data_available_for_dates", "data_links") - if you use one of
+these keys, the defined custom data will REPLACE the default data for these keys.
+
+The values for the dictionary entries are Python functions specified using
+OWS's `function configuration format <cfg_functions.rst>`_.
+
+The specified function(s) are expected to be passed a dictionary of band values
+(as parameter "data") and can return any data that can be serialised to JSON.
+
+E.g.
+
+::
+
+    "feature_info": {
+        "include_custom": {
+            "timeseries": {
+                "function": "datacube_ows.ogc_utils.feature_info_url_template",
+                "pass_product_cfg": False,
+                "kwargs": {
+                    "template": "https://host.domain/path/{data['f_id']:06}.csv"
+                }
+            }
+        }
+    }
+
 -----------------------------------
 Styling Section (styling)
 -----------------------------------
 
+The `"styling" section <cfg_styling.rst>`_ describes the WMS and WMTS styles for
+`the layer.
 
 
 

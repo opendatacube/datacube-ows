@@ -72,6 +72,8 @@ Authorities here.
 This entry is optional. If not provided, no identifier authorities are declared
 and no identifiers can be assigned to layers.
 
+Identifiers and Authorities only apply to WMS (not WMTS).
+
 If provided, this entry should be a dictionary mapping authority labels to URLs.
 
 E.g.
