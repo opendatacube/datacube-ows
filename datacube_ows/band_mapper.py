@@ -47,6 +47,12 @@ class StyleDefBase(object):
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
 
+        for i, product_name in enumerate(product.product_names):
+            if self.product.pq_names[i] == product_name:
+                if self.masks:
+                    self.needed_bands.add(self.product.pq_band)
+                break
+
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         self.legend_cfg = style_cfg.get("legend", dict())
         if not defer_multi_date:
@@ -61,6 +67,7 @@ class StyleDefBase(object):
         if pq_data is not None:
             net_mask = None
             for mask in self.masks:
+                print(pq_data.flags_definition)
                 odc_mask = make_mask(pq_data, **mask.flags)
                 mask_data = getattr(odc_mask, self.product.pq_band)
                 if mask.invert:
