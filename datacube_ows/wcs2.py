@@ -187,7 +187,7 @@ def create_coverage_description(cfg, product):
 
     # swap axes if necessary
     if product.native_CRS_def.get("vertical_coord_first"):
-        axes = reversed(axes)
+        axes = list(reversed(axes))
 
     # TODO: has this setting been removed?
     # if not product.wcs_sole_time:
@@ -242,8 +242,8 @@ def desc_coverages(args):
             products.append(product)
         else:
             raise WCS2Exception("Invalid coverage: %s" % coverage_id,
-                                WCS2Exception.COVERAGE_NOT_DEFINED,
-                                locator="Coverage parameter")
+                                WCS2Exception.NO_SUCH_COVERAGE,
+                                locator=coverage_id)
 
     coverage_descriptions = [
         create_coverage_description(cfg, product)
@@ -257,7 +257,9 @@ def desc_coverages(args):
     elif version == (2, 1):
         result = encoders_v21.xml_encode_coverage_descriptions(coverage_descriptions)
     else:
-        raise Exception('meh')
+        raise WCS2Exception("Unsupported version: %s" % version,
+                            WCS2Exception.INVALID_PARAMETER_VALUE,
+                            locator="version")
 
     return (
         result.value,

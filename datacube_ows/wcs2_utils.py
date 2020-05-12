@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import logging
 from dateutil.parser import parse
 
+import collections
 import datacube
 import numpy
 import xarray
@@ -36,6 +37,12 @@ def uniform_crs(crs):
     elif crs.startswith('urn:ogc:def:crs:EPSG:'):
         code = crs.rpartition(':')[-1]
         crs = 'EPSG:%s' % code
+    elif crs.startswith('EPSG'):
+        pass
+    else:
+        raise WCS2Exception("Not a CRS: %s" % crs,
+                            WCS2Exception.NOT_A_CRS,
+                            locator=crs)
     return crs
 
 
@@ -49,7 +56,7 @@ def get_coverage_data(request):
     product = cfg.product_index.get(product_name)
     if not product or not product.wcs:
         raise WCS2Exception("Invalid coverage: %s" % product_name,
-                            WCS2Exception.COVERAGE_NOT_DEFINED,
+                            WCS2Exception.NO_SUCH_COVERAGE,
                             locator="COVERAGE parameter")
 
     dc = get_cube()
@@ -61,11 +68,17 @@ def get_coverage_data(request):
     native_crs = product.native_CRS
     subsetting_crs = uniform_crs(request.subsetting_crs or native_crs)
 
-    assert subsetting_crs in cfg.published_CRSs
+    if subsetting_crs not in cfg.published_CRSs:
+        raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
+                            WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
+                            locator=subsetting_crs)
 
     output_crs = uniform_crs(request.output_crs or subsetting_crs or native_crs)
 
-    assert output_crs in cfg.published_CRSs
+    if output_crs not in cfg.published_CRSs:
+        raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
+                            WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
+                            locator=output_crs)
 
     request_crs = geometry.CRS(subsetting_crs)
 
@@ -93,13 +106,27 @@ def get_coverage_data(request):
 
     # TODO: Slices along spatial axes
 
-    subsets = request.subsets
+    try:
+        subsets = request.subsets
+    except Exception as exc:
+        raise WCS2Exception("Invalid subsetting: %s" % exc,
+                            WCS2Exception.INVALID_SUBSETTING)
+
     if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
-        dimension = 'TODO'
-        raise WCS2Exception('Duplicate subsets for axis %s' % dimension, )
+        dimensions = [subset.dimension.lower() for subset in subsets]
+        duplicate_dimensions = [
+            item
+            for item, count in collections.Counter(dimensions).items()
+            if count > 1
+        ]
 
-
-    _LOG.info(x_name, y_name)
+        raise WCS2Exception("Duplicate dimension%s: %s" % (
+                                's' if len(duplicate_dimensions) > 1 else ''
+                                ', '.join(duplicate_dimensions)
+                            ),
+                            WCS2Exception.INVALID_SUBSETTING,
+                            locator=','.join(duplicate_dimensions)
+                            )
 
     for subset in subsets:
         dimension = subset.dimension.lower()
@@ -140,7 +167,9 @@ def get_coverage_data(request):
                 times = [point]
 
         else:
-            raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension, )
+            raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
+                                WCS2Exception.INVALID_AXIS_LABEL,
+                                locator=subset.dimension)
 
     #
     # Scaling
@@ -148,8 +177,19 @@ def get_coverage_data(request):
 
     scales = request.scales
     if len(scales) != len(set(subset.axis.lower() for subset in scales)):
-        axis = 'TODO'
-        raise WCS2Exception('Duplicate scales for axis %s' % axis, )
+        axes = [subset.axis.lower() for subset in scales]
+        duplicate_axes = [
+            item
+            for item, count in collections.Counter(axes).items()
+            if count > 1
+        ]
+        raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
+                                'i' if len(duplicate_axes) == 1 else 'e'
+                                ', '.join(duplicate_axes)
+                            ),
+                            WCS2Exception.INVALID_SCALE_FACTOR,
+                            locator=','.join(duplicate_axes)
+                            )
 
     x_resolution = product.resolution_x
     y_resolution = product.resolution_y
@@ -174,7 +214,10 @@ def get_coverage_data(request):
         if axis in (x_name, 'x', 'i'):
             if isinstance(scale, ScaleAxis):
                 if x_size is None:
-                    raise Exception('Cannot scale axis %s' % scale.axis)
+                    raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+                                        WCS2Exception.INVALID_SCALE_FACTOR,
+                                        locator=scale.axis
+                                        )
 
                 x_size *= scale.factor
 
@@ -187,7 +230,10 @@ def get_coverage_data(request):
         elif axis in (y_name, 'y', 'j'):
             if isinstance(scale, ScaleAxis):
                 if y_size is None:
-                    raise Exception('Cannot scale axis %s' % scale.axis)
+                    raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+                                        WCS2Exception.INVALID_SCALE_FACTOR,
+                                        locator=scale.axis
+                                        )
 
                 y_size *= scale.factor
 
@@ -198,10 +244,16 @@ def get_coverage_data(request):
                 y_size = scale.high - scale.low
 
         elif axis in ('time', 'k'):
-            raise Exception('Cannot scale axis %s' % scale.axis)
+            raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+                                WCS2Exception.INVALID_SCALE_FACTOR,
+                                locator=scale.axis
+                                )
 
         else:
-            raise WCS2Exception('Invalid scaling axis %s' % scale.axis)
+            raise WCS2Exception('Invalid scaling axis %s' % scale.axis,
+                                WCS2Exception.SCALE_AXIS_UNDEFINED,
+                                locator=scale.axis
+                                )
 
     _LOG.info(request.subsets)
 
@@ -215,13 +267,22 @@ def get_coverage_data(request):
         for range_subset in request.range_subset:
             if isinstance(range_subset, str):
                 if range_subset not in band_labels:
-                    raise Exception('no such field')
+                    raise WCS2Exception('No such field %s' % range_subset,
+                                WCS2Exception.NO_SUCH_FIELD,
+                                locator=range_subset
+                                )
                 bands.append(range_subset)
             else:
                 if range_subset.start not in band_labels:
-                    raise Exception('no such field')
+                    raise WCS2Exception('No such field %s' % range_subset.start,
+                                        WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
+                                        locator=range_subset.start
+                                        )
                 if range_subset.end not in band_labels:
-                    raise Exception('no such field')
+                    raise WCS2Exception('No such field %s' % range_subset.end,
+                                        WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
+                                        locator=range_subset.end
+                                        )
 
                 start = band_labels.index(range_subset.start)
                 end = band_labels.index(range_subset.end)
@@ -242,7 +303,7 @@ def get_coverage_data(request):
         else:
             raise WCS2Exception("Unsupported format: %s" % request.format,
                                 WCS2Exception.INVALID_PARAMETER_VALUE,
-                                locator="FORMAT parameter")
+                                locator="FORMAT")
 
     x_resolution = (extent_x[1] - extent_x[0]) / x_size
     y_resolution = (extent_y[1] - extent_y[0]) / y_size

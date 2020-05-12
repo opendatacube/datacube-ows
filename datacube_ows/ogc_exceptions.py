@@ -1,7 +1,10 @@
 from __future__ import absolute_import, division, print_function
 from flask import render_template
+import traceback as tb
 
 from datacube_ows.ogc_utils import resp_headers
+from ows.common.v20.encoders import xml_encode_exception_report
+from ows.common.types import OWSException, Version
 
 
 class OGCException(Exception):
@@ -65,9 +68,44 @@ class WCS1Exception(OGCException):
 
 
 class WCS2Exception(OGCException):
-    COVERAGE_NOT_DEFINED = "CoverageNotDefined"
+    NO_SUCH_COVERAGE = "NoSuchCoverage"
+    INVALID_AXIS_LABEL = "InvalidAxisLabel"
+    INVALID_SUBSETTING = "InvalidSubsetting"
+    EMPTY_COVERAGE_ID_LIST = "emptyCoverageIdList"
+    NO_SUCH_FIELD = "NoSuchField"
+    ILLEGAL_FIELD_SEQUENCE = "IllegalFieldSequence"
+    INVALID_COVERAGE_TYPE = "InvalidCoverageType"
+    INVALID_SCALE_FACTOR = "InvalidScaleFactor"
+    INVALID_EXTENT = "InvalidExtent"
+    SCALE_AXIS_UNDEFINED = "ScaleAxisUndefined"
+    NOT_A_CRS = "NotACrs"
+    CRS_MISMATCH = "CrsMismatch"
+    SUBSETTING_CRS_NOT_SUPPORTED = "SubsettingCrsNotSupported"
+    OUTPUT_CRS_NOT_SUPPORTED = "OutputCrsNotSupported"
+    INTERPOLATION_METHOD_NOT_SUPPORTED = "InterpolationMethodNotSupported"
+    NO_SUCH_AXIS = "NoSuchAxis"
     MISSING_PARAMETER_VALUE = "MissingParameterValue"
     INVALID_PARAMETER_VALUE = "InvalidParameterValue"
 
     version = "2.0.1"
     schema_url = "http://schemas.opengis.net/wcs/2.0/wcsAll.xsd"
+
+    def exception_response(self, traceback=[]):
+        exceptions = [
+            OWSException(
+                code=error['code'],
+                locator=error['locator'],
+                text=[error['msg']] + tb.format_list(traceback)
+            )
+            for error in self.errors
+        ]
+
+        if traceback:
+            exceptions[0].traceback = tb.format_list(traceback)
+
+        result = xml_encode_exception_report(exceptions, Version.from_str(self.version))
+        return (
+            result.value,
+            self.http_response,
+            resp_headers({"Content-Type": "application/xml"})
+        )
