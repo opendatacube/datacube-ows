@@ -98,8 +98,6 @@ def get_coverage_data(request):
 
     times = product.ranges["times"]
 
-
-    _LOG.info(times)
     subsetting_crs_def = cfg.published_CRSs[subsetting_crs]
     x_name = subsetting_crs_def['horizontal_coord'].lower()
     y_name = subsetting_crs_def['vertical_coord'].lower()
@@ -255,8 +253,6 @@ def get_coverage_data(request):
                                 locator=scale.axis
                                 )
 
-    _LOG.info(request.subsets)
-
     #
     # Rangesubset
     #
@@ -313,44 +309,23 @@ def get_coverage_data(request):
     affine = trans_aff * scale_aff
     geobox = geometry.GeoBox(x_size, y_size, affine, geometry.CRS(subsetting_crs))
 
-    datasets = []
-    for time in times:
-        # IF t was passed to the datasets method instead of the stacker
-        # constructor, we could use the one stacker.
-        stacker = DataStacker(product,
-                              geobox,
-                              time,
-                              bands=bands)
-        t_datasets = stacker.datasets(dc.index)
-
-        if not t_datasets:
-            # No matching data for this date
-            continue
-        datasets.extend(t_datasets)
+    stacker = DataStacker(product,
+                          geobox,
+                          times,
+                          bands=bands)
+    datasets = stacker.datasets(dc.index)
 
     if product.max_datasets_wcs > 0 and len(datasets) > product.max_datasets_wcs:
         raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
                             "Please reduce the bounds of your request and try again."
                             "(max: %d, this request requires: %d)" % (product.max_datasets_wcs, len(datasets)))
 
-    _LOG.info('After iterating')
-
     if fmt["multi-time"] and len(times) > 1:
         # Group by solar day
         group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
         datasets = dc.group_datasets(datasets, group_by)
 
-    _LOG.info(datasets)
-
-    stacker = DataStacker(product,
-                          geobox,
-                          times[0],
-                          bands=bands)
-
-
     output = stacker.data(datasets, skip_corrections=True)
-
-    _LOG.info(output)
 
     release_cube(dc)
 
@@ -392,6 +367,7 @@ def get_tiff(request, data, product, width, height, affine, crs):
     # TODO: convert other parameters as-well
     gtiff = request.geotiff_encoding_parameters
 
+    data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     nodata = 0
     for band in data.data_vars:
