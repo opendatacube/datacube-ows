@@ -76,6 +76,111 @@ There are four distinct possible types of style.
    there are usually better ways to achieve the same effect on the
    client side.
 
+---------------
+Common Elements
+---------------
+
+The following configuration elements are common to all style
+types.
+
+Name
+++++
+
+It is always required and must be unique within the layer.
+
+E.g.
+
+::
+    "styles": [
+        {"name": "a_style", ...},       # Good.
+        {"name": "My Style", ...},      # Poor. (Legal, but the space will need to
+                                        # be escaped in URLs.
+        {"name": "a_style", ...},       # Error - not unique in layer.
+        {"name": "my_style_which_is_mine_and_nobody_elses", ...},
+                                        # Poor. (Legal, but not concise)
+    ]
+
+Name, Title and Abstract
+++++++++++++++++++++++++
+
+The "name" is a symbolic name for the style, for use in request URLs and internally.
+
+The "title" entry provides a short human-readable title for the style.
+
+The "abstract" entry provides a longer human-readable description
+of the style.
+
+All three are always required and must be unique within the layer.
+
+E.g.
+
+::
+    "styles": [
+        {
+            "name": "simple_rgb",
+            "title": "Simple RGB",
+            "abstract": "Simple true-colour image, using the red, green and blue bands",
+            ...
+        },
+        {
+            "name": "ndvi",
+            "title": "NDVI (red, nir)",
+            "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+            ...
+        },
+    ]
+
+Bit-flag Masks (pq_masks)
++++++++++++++++++++++++++
+
+The "pq_masks" section allows a style to mask the output image
+by the bit flags defined in the `Flag Processing Section <>`_ for the layer.
+
+The pq_masks section is a list of mask sections, which are OR'd together.  i.e. A pixel
+becomes transparent if it would be made transparent by any of the masks in the list
+acting individually.
+
+Mask Sections
+@@@@@@@@@@@@@
+
+Each mask section contains a "flags" dictionary and an optional "invert" flag, which
+is False by default.
+
+The flags dictionary is passed directly to ``datacube.utils.masking.make_mask``.
+The entries of the dictionary represent bitflag comparisons that
+are ANDed together.  i.e. A pixel is DISPLAYED if the bitflags
+for the pixel match ALL of the entries specified in the "flags" dictionary.
+
+specified by the index match.
+The keys of the dictionary are the flag names as used in the ODC metadata
+
+If the "invert" flag is True, then the output inverted (logically NOTed). I.e.
+A pixel is MADE TRANSPARENT if the bitflags
+for the pixel match ALL of the entries specified in the "flags" dictionary.
+
+E.g.
+
+::
+
+    # Remove pixels
+    "pq_masks": [
+        {
+            "flags": {
+                "cloud": "no_cloud",
+                "cloud_shadow": "no_cloud_shadow"
+            }
+        },
+        {
+            "invert": True,
+            "flags": {
+                "water": "no_water"
+            }
+        }
+    ],
+
+Legend
+++++++
+
 ----------------
 Component Styles
 ----------------
