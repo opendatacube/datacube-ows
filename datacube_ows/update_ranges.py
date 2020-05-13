@@ -155,8 +155,8 @@ def run_sql(dc, path, **params):
 
     files = sorted(pkg_resources.resource_listdir(__name__, f"sql/{path}"))
 
-    filename_req_pattern = re.compile("\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
-    filename_pattern = re.compile("\d+[_a-zA-Z0-9]+\.sql")
+    filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
+    filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
     conn = get_sqlconn(dc)
 
     for f in files:
