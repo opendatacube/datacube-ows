@@ -2,11 +2,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import datacube
 
 from datacube_ows.ows_configuration import get_config, OWSNamedLayer  # , get_layers, ProductLayerDef
-from datacube_ows.ogc_utils import local_date, tz_for_coord
+from datacube_ows.ogc_utils import local_date, tz_for_coord, NoTimezoneException
 from psycopg2.extras import Json
 from itertools import zip_longest
 import json
@@ -236,7 +236,11 @@ def create_range_entry(dc, product, crses, summary_product=False):
       )
       for result in results:
           dt1, dt2, lat, lon = result
-          tz = tz_for_coord(lon, lat)
+          try:
+              tz = tz_for_coord(lon, lat)
+          except NoTimezoneException:
+              offset = round(lon / 15.0)
+              tz = timezone(timedelta(hours=offset))
           dates.add(dt1.astimezone(tz).date())
       dates = sorted(dates)
 
