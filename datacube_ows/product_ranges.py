@@ -236,7 +236,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
       )
       for result in results:
           dt1, dt2, lat, lon = result
-          tz = tz_for_coord(lat, lon)
+          tz = tz_for_coord(lon, lat)
           dates.add(dt1.astimezone(tz).date())
       dates = sorted(dates)
 
