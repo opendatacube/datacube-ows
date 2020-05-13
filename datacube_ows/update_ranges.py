@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import re
+import os
+import pkg_resources
 from datacube_ows import __version__
 from datacube_ows.product_ranges import get_sqlconn, add_ranges
 from datacube import Datacube
@@ -7,7 +10,6 @@ import psycopg2
 from psycopg2.sql import SQL
 import sqlalchemy
 from datacube_ows.ows_configuration import get_config
-import os
 import click
 
 @click.command()
@@ -126,295 +128,72 @@ def main(layers, blocking,
 
 
 def create_views(dc):
-    commands = [
-        ("Installing Postgis extensions on public schema",
-         "create extension if not exists postgis"),
-        ("Giving other schemas access to PostGIS functions installed in the public schema",
-         """ALTER DATABASE %s
-            SET
-              search_path = public,
-              agdc
-         """ % os.environ.get("DB_DATABASE", "datacube")),
-        ("Dropping already existing Materialized View Index 1/3",
-            "DROP INDEX IF EXISTS space_time_view_geom_idx"),
-        ("Dropping already existing Materialized View Index 2/3",
-            "DROP INDEX IF EXISTS space_time_view_time_idx"),
-        ("Dropping already existing Materialized View Index 3/3",
-            "DROP INDEX IF EXISTS space_time_view_ds_idx"),
-        ("Dropping already existing Materialized View 1/3",
-            "DROP MATERIALIZED VIEW IF EXISTS space_time_view"),
-        ("Dropping already existing Materialized View 2/3",
-            "DROP MATERIALIZED VIEW IF EXISTS time_view"),
-        ("Dropping already existing Materialized View 3/3",
-            "DROP MATERIALIZED VIEW IF EXISTS space_view"),
-        ("Setting default timezone to UTC",
-            "set timezone to 'Etc/UTC'"),
-
-# Handling different variants of metadata requires UNION with WHICH clauses per metadata type
-# https://www.postgresql.org/docs/11/queries-union.html
-
-# Try all different locations for temporal extents and UNION them
-        ("Creating TIME Materialised View",
-         """
-CREATE MATERIALIZED VIEW IF NOT EXISTS time_view (dataset_type_ref, ID, temporal_extent)
-AS
-with
--- Crib metadata to use as for string matching various types
-metadata_lookup as (
-  select id,name from agdc.metadata_type
-)
--- This is the eodataset variant of the temporal extent
-select
-  dataset_type_ref, id,tstzrange(
-    (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp + interval '1 microsecond'
-  )  as temporal_extent
-from agdc.dataset where
-  metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
-UNION
--- This is the eo3 variant of the temporal extent, the sample eo3 dataset uses a singleton
--- timestamp, some other variants use start/end timestamps. From OWS perspective temporal
--- resolution is 1 whole day
-select
-  dataset_type_ref, id,tstzrange(
-    (metadata->'properties'->>'datetime'):: timestamp,
-    (metadata->'properties'->>'datetime'):: timestamp + interval '1 day'
-   ) as temporal_extent
-from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name='eo3')
-UNION
--- Start/End timestamp variant product.
--- http://dapds00.nci.org.au/thredds/fileServer/xu18/ga_ls8c_ard_3/092/090/2019/06/05/ga_ls8c_ard_3-0-0_092090_2019-06-05_final.odc-metadata.yaml
-select
-  dataset_type_ref, id,tstzrange(
-    (metadata->'properties'->>'dtr:start_datetime'):: timestamp,
-    (metadata->'properties'->>'dtr:end_datetime'):: timestamp
-   ) as temporal_extent
-from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard'))
-"""),
-        # Spatial extents per dataset (to be created as a column of the space-time table)
-        # Try all different locations for spatial extents and UNION them
-        ("Creating SPACE Materialised View (Slowest step!)", """
-CREATE MATERIALIZED VIEW IF NOT EXISTS space_view (ID, spatial_extent)
-AS
-with
--- Crib metadata to use as for string matching various types
-metadata_lookup as (
-  select id,name from agdc.metadata_type
-),
--- This is eo3 spatial (Uses CEMP INSAR as a sample product)
-ranges as
-(select id,
-  (metadata #>> '{extent, lat, begin}') as lat_begin,
-  (metadata #>> '{extent, lat, end}') as lat_end,
-  (metadata #>> '{extent, lon, begin}') as lon_begin,
-  (metadata #>> '{extent, lon, end}') as lon_end
-   from agdc.dataset where
-      metadata_type_ref in (select id from metadata_lookup where name='eo3')
-  ),
--- This is eo spatial (Uses ALOS-PALSAR over Africa as a sample product)
-corners as
-(select id,
-  (metadata #>> '{extent, coord, ll, lat}') as ll_lat,
-  (metadata #>> '{extent, coord, ll, lon}') as ll_lon,
-  (metadata #>> '{extent, coord, lr, lat}') as lr_lat,
-  (metadata #>> '{extent, coord, lr, lon}') as lr_lon,
-  (metadata #>> '{extent, coord, ul, lat}') as ul_lat,
-  (metadata #>> '{extent, coord, ul, lon}') as ul_lon,
-  (metadata #>> '{extent, coord, ur, lat}') as ur_lat,
-  (metadata #>> '{extent, coord, ur, lon}') as ur_lon
-   from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus')))
-select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
-        lon_begin, lat_begin, lon_end, lat_begin,  lon_end, lat_end,
-        lon_begin, lat_end, lon_begin, lat_begin)::geometry
-as spatial_extent
-from ranges
-UNION
-select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
-        ll_lon, ll_lat, lr_lon, lr_lat,  ur_lon, ur_lat,
-        ul_lon, ul_lat, ll_lon, ll_lat)::geometry as spatial_extent
-from corners
-UNION
--- This is lansat_scene and landsat_l1_scene with geometries
-select id,
-  ST_Transform(
-    ST_SetSRID(
-      ST_GeomFromGeoJSON(
-        metadata #>> '{geometry}'),
-        substr(
-          metadata #>> '{crs}',6)::integer
-        ),
-        4326
-      ) as spatial_extent
- from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard'))
-         """, True),
-# Join the above queries for space and time as CTE's into a space-time view
-
-        ("Creating combined SPACE-TIME Materialised View",
-         """
-CREATE MATERIALIZED VIEW IF NOT EXISTS space_time_view (ID, dataset_type_ref, spatial_extent, temporal_extent)
-AS
-select space_view.id, dataset_type_ref, spatial_extent, temporal_extent from space_view join time_view on space_view.id=time_view.id
-        """),
-
-# Spatial extents are indexed using GIST index for BBOX queries
-# https://postgis.net/workshops/postgis-intro/indexing.html
-        ("Creating Materialised View Index 1/3", """
-CREATE INDEX space_time_view_geom_idx
-  ON space_time_view
-  USING GIST (spatial_extent)
-  """),
-
-# Time range types can carray indexes for range lookup
-# https://www.postgresql.org/docs/11/rangetypes.html#RANGETYPES-INDEXING
-    ("Creating Materialised View Index 2/3", """
-     CREATE INDEX space_time_view_time_idx
-  ON space_time_view
-  USING SPGIST (temporal_extent)
-    """),
-
-# Create standard btree index over dataset_type_ref to ease searching by
-# https://ieftimov.com/post/postgresql-indexes-btree/
-           ("Creating Materialised View Index 3/3", """
-            CREATE INDEX space_time_view_ds_idx
-  ON space_time_view
-  USING BTREE(dataset_type_ref)
-  """),
-
-    ]
-    run_sql(dc, commands)
+    run_sql(dc, "extent_views/create", database=os.environ.get("DB_DATABASE"))
 
 
 def refresh_views(dc, blocking):
     if blocking:
-        st_refresh_help = "Refreshing combined SPACE-TIME materialized view"
-        st_refresh_cmd = "REFRESH MATERIALIZED VIEW space_time_view"
+        blocking = ""
+        print("N.B. Blocking refresh. Spacetime view will be locked until completion.")
     else:
-        st_refresh_help = "Launching background refresh of combined SPACE-TIME materialized view"
-        st_refresh_cmd = "REFRESH MATERIALIZED VIEW CONCURRENTLY space_time_view"
-    commands = [
-        ("Refreshing TIME materialized view",
-         "REFRESH MATERIALIZED VIEW time_view"
-         ),
-        ("Refreshing SPACE materialized view",
-         "REFRESH MATERIALIZED VIEW space_view"
-         ),
-        (st_refresh_help,
-         st_refresh_cmd
-         ),
-    ]
-    run_sql(dc, commands)
+        blocking = "CONCURRENTLY"
+        print("N.B. Concurrent refresh. Refresh will not take place immediately.")
+    run_sql(dc, "extent_views/refresh", blocking=blocking)
 
 
 def create_schema(dc, role):
-    commands = [
-        ("Creating/replacing wms schema", "create schema if not exists wms"),
+    run_sql(dc, "wms_schema/create", role=role)
 
-        ("Creating/replacing product ranges table", """
-            create table if not exists wms.product_ranges (
-                id smallint not null primary key references agdc.dataset_type (id),
 
-                lat_min decimal not null,
-                lat_max decimal not null,
-                lon_min decimal not null,
-                lon_max decimal not null,
+def run_sql(dc, path, **params):
+    if not pkg_resources.resource_exists(__name__, f"sql/{path}"):
+        print("Cannot find SQL resources - check your datacube-ows installation")
+        return
+    if not pkg_resources.resource_isdir(__name__, f"sql/{path}"):
+        print("Cannot find SQL resource directory - check your datacube-ows installation")
+        return
 
-                dates jsonb not null,
+    files = sorted(pkg_resources.resource_listdir(__name__, f"sql/{path}"))
 
-                bboxes jsonb not null)
-        """),
-        ("Creating/replacing sub-product ranges table", """
-            create table if not exists wms.sub_product_ranges (
-                product_id smallint not null references agdc.dataset_type (id),
-                sub_product_id smallint not null,
-                lat_min decimal not null,
-                lat_max decimal not null,
-                lon_min decimal not null,
-                lon_max decimal not null,
-                dates jsonb not null,
-                bboxes jsonb not null,
-                constraint pk_sub_product_ranges primary key (product_id, sub_product_id) )
-        """),
-        ("Creating/replacing multi-product ranges table", """
-            create table if not exists wms.multiproduct_ranges (
-                wms_product_name varchar(128) not null primary key,
-                lat_min decimal not null,
-                lat_max decimal not null,
-                lon_min decimal not null,
-                lon_max decimal not null,
-                dates jsonb not null,
-                bboxes jsonb not null)
-        """),
-        # Functions
-        ("Creating/replacing wms_get_min() function", """
-            CREATE OR REPLACE FUNCTION wms_get_min(integer[], text) RETURNS numeric AS $$
-            DECLARE
-                ret numeric;
-                ul text[] DEFAULT array_append('{extent, coord, ul}', $2);
-                ur text[] DEFAULT array_append('{extent, coord, ur}', $2);
-                ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
-                lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
-            BEGIN
-                WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref = any($1) AND archived IS NULL )
-                SELECT MIN(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
-                       (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
-                INTO ret
-                FROM m;
-                RETURN ret;
-            END;
-            $$ LANGUAGE plpgsql;
-        """),
-        ("Creating/replacing wms_get_max() function", """
-            CREATE OR REPLACE FUNCTION wms_get_max(integer[], text) RETURNS numeric AS $$
-            DECLARE
-                ret numeric;
-                ul text[] DEFAULT array_append('{extent, coord, ul}', $2);
-                ur text[] DEFAULT array_append('{extent, coord, ur}', $2);
-                ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
-                lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
-            BEGIN
-                WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref = ANY ($1) AND archived IS NULL )
-                SELECT MAX(GREATEST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
-                       (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
-                INTO ret
-                FROM m;
-                RETURN ret;
-            END;
-            $$ LANGUAGE plpgsql;
-        """),
-        ("""Granting usage on schema""",
-         "GRANT USAGE ON SCHEMA wms TO %s" % role
-        )
-    ]
-    run_sql(dc, commands)
-
-def run_sql(dc, commands):
+    filename_req_pattern = re.compile("\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
+    filename_pattern = re.compile("\d+[_a-zA-Z0-9]+\.sql")
     conn = get_sqlconn(dc)
-    for cmd_blob in commands:
-        if len(cmd_blob) == 2:
-            msg, sql = cmd_blob
-            override = False
+
+    for f in files:
+        match = filename_pattern.fullmatch(f)
+        if not match:
+            print(f"Illegal SQL filename: {f} (skipping)")
+            continue
+        req_match = filename_req_pattern.fullmatch(f)
+        if req_match:
+            reqs = req_match.group("reqs").split("_")
         else:
-            msg, sql, override = cmd_blob
-        print(msg)
-        if override:
+            reqs = []
+        sql_stream = pkg_resources.resource_stream(__name__, f"sql/{path}/{f}")
+        sql = ""
+        first = True
+        for line in sql_stream:
+            line = str(line, "utf-8")
+            if first and line.startswith("--"):
+                print(line[2:])
+            else:
+                sql = sql + "\n" + line
+                if first:
+                    print(f"Running {f}")
+            first = False
+        if reqs:
+            try:
+                kwargs = {v: params[v] for v in reqs}
+            except KeyError as e:
+                print(f"Required parameter {e} for file {f} not supplied - skipping")
+                continue
+            sql = sql.format(**kwargs)
+        if f.endswith("_raw.sql"):
             q = SQL(sql)
             with conn.connection.cursor() as psycopg2connection:
                 psycopg2connection.execute(q)
         else:
             conn.execute(sql)
-
-    # Add user based on param
-    # use psycopg2 directly to get proper psql
-    # quoting on the role name identifier
-    # print("Granting usage on schema")
-    # q = SQL("GRANT USAGE ON SCHEMA wms TO {}").format(Identifier(role))
-    # with conn.connection.cursor() as psycopg2connection:
-    #     psycopg2connection.execute(q)
     conn.close()
-
-    return
-
-
-if __name__ == '__main__':
-    main()
 
 
