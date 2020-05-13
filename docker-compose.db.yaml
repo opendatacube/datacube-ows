@@ -17,3 +17,5 @@ services:
     network_mode: bridge
     links:
       - postgres:postgres
+    environment:
+      DB_PORT: 5432
