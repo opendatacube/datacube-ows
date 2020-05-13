@@ -48,7 +48,7 @@ class StyleDefBase(object):
             self.needed_bands.add(band)
 
         for i, product_name in enumerate(product.product_names):
-            if self.product.pq_names[i] == product_name:
+            if not self.product.pq_names or self.product.pq_names[i] == product_name:
                 if self.masks:
                     self.needed_bands.add(self.product.pq_band)
                 break
