@@ -235,7 +235,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
           {"p_id": prodid}
       )
       for result in results:
-          dt1, dt2, lat, lon = result
+          dt1, dt2, lon, lat = result
           try:
               tz = tz_for_coord(lon, lat)
           except NoTimezoneException:
