@@ -47,11 +47,11 @@ class StyleDefBase(object):
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
 
-        for i, product_name in enumerate(product.product_names):
-            if not self.product.pq_names or self.product.pq_names[i] == product_name:
-                if self.masks:
+        if self.masks:
+            for i, product_name in enumerate(product.product_names):
+                if not self.product.pq_names or self.product.pq_names[i] == product_name:
                     self.needed_bands.add(self.product.pq_band)
-                break
+                    break
 
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         self.legend_cfg = style_cfg.get("legend", dict())

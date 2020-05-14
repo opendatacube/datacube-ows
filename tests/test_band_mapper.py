@@ -17,6 +17,7 @@ def product_layer():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
+    product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["red", "green", "blue"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx.band_cfg = {
@@ -93,6 +94,7 @@ def product_layer_alpha_map():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
+    product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["foo"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx.band_cfg = {
@@ -315,6 +317,7 @@ def product_layer_mask_map():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer.name = "test_product"
     product_layer.pq_band = None
+    product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["foo"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx.band_cfg = {
