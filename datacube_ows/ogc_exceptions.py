@@ -90,6 +90,7 @@ class WCS2Exception(OGCException):
     version = "2.0.1"
     schema_url = "http://schemas.opengis.net/wcs/2.0/wcsAll.xsd"
 
+    # pylint: disable=dangerous-default-value
     def exception_response(self, traceback=[]):
         exceptions = [
             OWSException(
