@@ -14,8 +14,9 @@ from datacube_ows.legend_generator import create_legend_for_style
 from datacube_ows.ogc_utils import capture_headers, resp_headers, get_service_base_url
 from datacube_ows.wms import handle_wms, WMS_REQUESTS
 from datacube_ows.wcs import handle_wcs, WCS_REQUESTS
+from datacube_ows.wcs2 import handle_wcs2
 from datacube_ows.wmts import handle_wmts
-from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WMSException, WMTSException
+from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WCS2Exception, WMSException, WMTSException
 from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 from datacube_ows.cube_pool import cube
 from datacube.utils.rio import set_default_rio_config
@@ -129,7 +130,9 @@ OWS_SUPPORTED = {
         SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException),
     ]),
     "wcs": SupportedSvc([
-        SupportedSvcVersion("wcs", "1.0.0", handle_wcs, WCS1Exception),
+        # SupportedSvcVersion("wcs", "1.0.0", handle_wcs, WCS1Exception),
+        SupportedSvcVersion("wcs", "2.0.0", handle_wcs2, WCS2Exception),
+        SupportedSvcVersion("wcs", "2.1.0", handle_wcs2, WCS2Exception),
     ]),
 }
 
