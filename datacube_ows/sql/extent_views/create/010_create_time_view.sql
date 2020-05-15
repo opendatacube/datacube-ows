@@ -24,7 +24,7 @@ UNION
 -- http://dapds00.nci.org.au/thredds/fileServer/xu18/ga_ls8c_ard_3/092/090/2019/06/05/ga_ls8c_ard_3-0-0_092090_2019-06-05_final.odc-metadata.yaml
 select
   dataset_type_ref, id,tstzrange(
-    coalesce(metadata->'properties'->>'datetime',metadata->'properties'->>'dtr:start_datetime'):: timestamp,
-    coalesce((metadata->'properties'->>'datetime'):: timestamp + interval '1 day',(metadata->'properties'->>'dtr:end_datetime'):: timestamp)
+    coalesce(metadata->'properties'->>'dtr:start_datetime', metadata->'properties'->>'datetime'):: timestamp,
+    coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp + interval '1 day')
    ) as temporal_extent
 from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard','eo3'))
