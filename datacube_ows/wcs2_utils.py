@@ -59,275 +59,272 @@ def get_coverage_data(request):
                             WCS2Exception.NO_SUCH_COVERAGE,
                             locator="COVERAGE parameter")
 
-    dc = get_cube()
+    with cube() as dc:
+        #
+        # CRS handling
+        #
 
-    #
-    # CRS handling
-    #
+        native_crs = product.native_CRS
+        subsetting_crs = uniform_crs(request.subsetting_crs or native_crs)
 
-    native_crs = product.native_CRS
-    subsetting_crs = uniform_crs(request.subsetting_crs or native_crs)
+        if subsetting_crs not in cfg.published_CRSs:
+            raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
+                                WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
+                                locator=subsetting_crs)
 
-    if subsetting_crs not in cfg.published_CRSs:
-        raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
-                            WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
-                            locator=subsetting_crs)
+        output_crs = uniform_crs(request.output_crs or subsetting_crs or native_crs)
 
-    output_crs = uniform_crs(request.output_crs or subsetting_crs or native_crs)
+        if output_crs not in cfg.published_CRSs:
+            raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
+                                WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
+                                locator=output_crs)
 
-    if output_crs not in cfg.published_CRSs:
-        raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
-                            WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
-                            locator=output_crs)
+        request_crs = geometry.CRS(subsetting_crs)
 
-    request_crs = geometry.CRS(subsetting_crs)
+        #
+        # Subsetting/Scaling
+        #
 
-    #
-    # Subsetting/Scaling
-    #
-
-    extent_x = (
-        product.ranges["bboxes"][subsetting_crs]["left"],
-        product.ranges["bboxes"][subsetting_crs]["right"],
-    )
-
-    extent_y = (
-        product.ranges["bboxes"][subsetting_crs]["bottom"],
-        product.ranges["bboxes"][subsetting_crs]["top"],
-    )
-
-    times = product.ranges["times"]
-
-    subsetting_crs_def = cfg.published_CRSs[subsetting_crs]
-    x_name = subsetting_crs_def['horizontal_coord'].lower()
-    y_name = subsetting_crs_def['vertical_coord'].lower()
-
-    # TODO: Slices along spatial axes
-
-    try:
-        subsets = request.subsets
-    except Exception as exc:
-        raise WCS2Exception("Invalid subsetting: %s" % exc,
-                            WCS2Exception.INVALID_SUBSETTING)
-
-    if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
-        dimensions = [subset.dimension.lower() for subset in subsets]
-        duplicate_dimensions = [
-            item
-            for item, count in collections.Counter(dimensions).items()
-            if count > 1
-        ]
-
-        raise WCS2Exception("Duplicate dimension%s: %s" % (
-                                's' if len(duplicate_dimensions) > 1 else ''
-                                ', '.join(duplicate_dimensions)
-                            ),
-                            WCS2Exception.INVALID_SUBSETTING,
-                            locator=','.join(duplicate_dimensions)
-                            )
-
-    for subset in subsets:
-        dimension = subset.dimension.lower()
-        if dimension == x_name:
-            if isinstance(subset, Trim):
-                extent_x = (
-                    subset.low if subset.low is not None else extent_x[0],
-                    subset.high if subset.high is not None else extent_x[1],
-                )
-            elif isinstance(subset, Slice):
-                extent_x = subset.point
-
-        elif dimension == y_name:
-            if isinstance(subset, Trim):
-                extent_y = (
-                    subset.low if subset.low is not None else extent_y[0],
-                    subset.high if subset.high is not None else extent_y[1],
-                )
-            elif isinstance(subset, Slice):
-                extent_y = subset.point
-
-        elif dimension == 'time':
-            if isinstance(subset, Trim):
-                low = parse(subset.low).date() if subset.low is not None else None
-                high = parse(subset.high).date() if subset.high is not None else None
-                if low is not None:
-                    times = [
-                        time for time in times
-                        if time >= low
-                    ]
-                if high is not None:
-                    times = [
-                        time for time in times
-                        if time <= high
-                    ]
-            elif isinstance(subset, Slice):
-                point = parse(subset.point).date()
-                times = [point]
-
-        else:
-            raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
-                                WCS2Exception.INVALID_AXIS_LABEL,
-                                locator=subset.dimension)
-
-    #
-    # Scaling
-    #
-
-    scales = request.scales
-    if len(scales) != len(set(subset.axis.lower() for subset in scales)):
-        axes = [subset.axis.lower() for subset in scales]
-        duplicate_axes = [
-            item
-            for item, count in collections.Counter(axes).items()
-            if count > 1
-        ]
-        raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
-                                'i' if len(duplicate_axes) == 1 else 'e'
-                                ', '.join(duplicate_axes)
-                            ),
-                            WCS2Exception.INVALID_SCALE_FACTOR,
-                            locator=','.join(duplicate_axes)
-                            )
-
-    x_resolution = product.resolution_x
-    y_resolution = product.resolution_y
-    x_size = round((extent_x[1] - extent_x[0]) / x_resolution)
-    y_size = round((extent_y[1] - extent_y[0]) / x_resolution)
-
-    if native_crs != subsetting_crs:
-        transform_result = calculate_default_transform(
-            geometry.CRS(native_crs),
-            geometry.CRS(subsetting_crs),
-            x_size, y_size,
-            left=extent_x[0],
-            right=extent_x[1],
-            bottom=extent_y[0],
-            top=extent_y[1],
+        extent_x = (
+            product.ranges["bboxes"][subsetting_crs]["left"],
+            product.ranges["bboxes"][subsetting_crs]["right"],
         )
-        x_size, y_size = transform_result[1]
 
-    for scale in scales:
-        axis = scale.axis.lower()
+        extent_y = (
+            product.ranges["bboxes"][subsetting_crs]["bottom"],
+            product.ranges["bboxes"][subsetting_crs]["top"],
+        )
 
-        if axis in (x_name, 'x', 'i'):
-            if isinstance(scale, ScaleAxis):
-                if x_size is None:
-                    raise WCS2Exception('Cannot scale axis %s' % scale.axis,
-                                        WCS2Exception.INVALID_SCALE_FACTOR,
-                                        locator=scale.axis
-                                        )
+        times = product.ranges["times"]
 
-                x_size *= scale.factor
+        subsetting_crs_def = cfg.published_CRSs[subsetting_crs]
+        x_name = subsetting_crs_def['horizontal_coord'].lower()
+        y_name = subsetting_crs_def['vertical_coord'].lower()
 
-            elif isinstance(scale, ScaleSize):
-                x_size = scale.size
+        # TODO: Slices along spatial axes
 
-            elif isinstance(scale, ScaleExtent):
-                x_size = scale.high - scale.low
+        try:
+            subsets = request.subsets
+        except Exception as exc:
+            raise WCS2Exception("Invalid subsetting: %s" % exc,
+                                WCS2Exception.INVALID_SUBSETTING)
 
-        elif axis in (y_name, 'y', 'j'):
-            if isinstance(scale, ScaleAxis):
-                if y_size is None:
-                    raise WCS2Exception('Cannot scale axis %s' % scale.axis,
-                                        WCS2Exception.INVALID_SCALE_FACTOR,
-                                        locator=scale.axis
-                                        )
+        if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
+            dimensions = [subset.dimension.lower() for subset in subsets]
+            duplicate_dimensions = [
+                item
+                for item, count in collections.Counter(dimensions).items()
+                if count > 1
+            ]
 
-                y_size *= scale.factor
-
-            elif isinstance(scale, ScaleSize):
-                y_size = scale.size
-
-            elif isinstance(scale, ScaleExtent):
-                y_size = scale.high - scale.low
-
-        elif axis in ('time', 'k'):
-            raise WCS2Exception('Cannot scale axis %s' % scale.axis,
-                                WCS2Exception.INVALID_SCALE_FACTOR,
-                                locator=scale.axis
+            raise WCS2Exception("Duplicate dimension%s: %s" % (
+                                    's' if len(duplicate_dimensions) > 1 else ''
+                                    ', '.join(duplicate_dimensions)
+                                ),
+                                WCS2Exception.INVALID_SUBSETTING,
+                                locator=','.join(duplicate_dimensions)
                                 )
 
-        else:
-            raise WCS2Exception('Invalid scaling axis %s' % scale.axis,
-                                WCS2Exception.SCALE_AXIS_UNDEFINED,
-                                locator=scale.axis
-                                )
+        for subset in subsets:
+            dimension = subset.dimension.lower()
+            if dimension == x_name:
+                if isinstance(subset, Trim):
+                    extent_x = (
+                        subset.low if subset.low is not None else extent_x[0],
+                        subset.high if subset.high is not None else extent_x[1],
+                    )
+                elif isinstance(subset, Slice):
+                    extent_x = subset.point
 
-    #
-    # Rangesubset
-    #
+            elif dimension == y_name:
+                if isinstance(subset, Trim):
+                    extent_y = (
+                        subset.low if subset.low is not None else extent_y[0],
+                        subset.high if subset.high is not None else extent_y[1],
+                    )
+                elif isinstance(subset, Slice):
+                    extent_y = subset.point
 
-    band_labels = product.band_idx.band_labels()
-    if request.range_subset:
-        bands = []
-        for range_subset in request.range_subset:
-            if isinstance(range_subset, str):
-                if range_subset not in band_labels:
-                    raise WCS2Exception('No such field %s' % range_subset,
-                                WCS2Exception.NO_SUCH_FIELD,
-                                locator=range_subset
-                                )
-                bands.append(range_subset)
+            elif dimension == 'time':
+                if isinstance(subset, Trim):
+                    low = parse(subset.low).date() if subset.low is not None else None
+                    high = parse(subset.high).date() if subset.high is not None else None
+                    if low is not None:
+                        times = [
+                            time for time in times
+                            if time >= low
+                        ]
+                    if high is not None:
+                        times = [
+                            time for time in times
+                            if time <= high
+                        ]
+                elif isinstance(subset, Slice):
+                    point = parse(subset.point).date()
+                    times = [point]
+
             else:
-                if range_subset.start not in band_labels:
-                    raise WCS2Exception('No such field %s' % range_subset.start,
-                                        WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
-                                        locator=range_subset.start
-                                        )
-                if range_subset.end not in band_labels:
-                    raise WCS2Exception('No such field %s' % range_subset.end,
-                                        WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
-                                        locator=range_subset.end
-                                        )
+                raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
+                                    WCS2Exception.INVALID_AXIS_LABEL,
+                                    locator=subset.dimension)
 
-                start = band_labels.index(range_subset.start)
-                end = band_labels.index(range_subset.end)
-                bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
-    else:
-        bands = product.wcs_default_bands  # TODO: standard says differently
+        #
+        # Scaling
+        #
 
-    #
-    # Format handling
-    #
+        scales = request.scales
+        if len(scales) != len(set(subset.axis.lower() for subset in scales)):
+            axes = [subset.axis.lower() for subset in scales]
+            duplicate_axes = [
+                item
+                for item, count in collections.Counter(axes).items()
+                if count > 1
+            ]
+            raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
+                                    'i' if len(duplicate_axes) == 1 else 'e'
+                                    ', '.join(duplicate_axes)
+                                ),
+                                WCS2Exception.INVALID_SCALE_FACTOR,
+                                locator=','.join(duplicate_axes)
+                                )
 
-    if not request.format:
-        fmt = cfg.wcs_formats[cfg.native_wcs_format]
-    else:
-        for fmt in cfg.wcs_formats.values():
-            if fmt['mime'] == request.format:
-                break
+        x_resolution = product.resolution_x
+        y_resolution = product.resolution_y
+        x_size = round((extent_x[1] - extent_x[0]) / x_resolution)
+        y_size = round((extent_y[1] - extent_y[0]) / y_resolution)
+
+        if native_crs != subsetting_crs:
+            transform_result = calculate_default_transform(
+                geometry.CRS(native_crs),
+                geometry.CRS(subsetting_crs),
+                x_size, y_size,
+                left=extent_x[0],
+                right=extent_x[1],
+                bottom=extent_y[0],
+                top=extent_y[1],
+            )
+            x_size, y_size = transform_result[1]
+
+        for scale in scales:
+            axis = scale.axis.lower()
+
+            if axis in (x_name, 'x', 'i'):
+                if isinstance(scale, ScaleAxis):
+                    if x_size is None:
+                        raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+                                            WCS2Exception.INVALID_SCALE_FACTOR,
+                                            locator=scale.axis
+                                            )
+
+                    x_size *= scale.factor
+
+                elif isinstance(scale, ScaleSize):
+                    x_size = scale.size
+
+                elif isinstance(scale, ScaleExtent):
+                    x_size = scale.high - scale.low
+
+            elif axis in (y_name, 'y', 'j'):
+                if isinstance(scale, ScaleAxis):
+                    if y_size is None:
+                        raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+                                            WCS2Exception.INVALID_SCALE_FACTOR,
+                                            locator=scale.axis
+                                            )
+
+                    y_size *= scale.factor
+
+                elif isinstance(scale, ScaleSize):
+                    y_size = scale.size
+
+                elif isinstance(scale, ScaleExtent):
+                    y_size = scale.high - scale.low
+
+            elif axis in ('time', 'k'):
+                raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+                                    WCS2Exception.INVALID_SCALE_FACTOR,
+                                    locator=scale.axis
+                                    )
+
+            else:
+                raise WCS2Exception('Invalid scaling axis %s' % scale.axis,
+                                    WCS2Exception.SCALE_AXIS_UNDEFINED,
+                                    locator=scale.axis
+                                    )
+
+        #
+        # Rangesubset
+        #
+
+        band_labels = product.band_idx.band_labels()
+        if request.range_subset:
+            bands = []
+            for range_subset in request.range_subset:
+                if isinstance(range_subset, str):
+                    if range_subset not in band_labels:
+                        raise WCS2Exception('No such field %s' % range_subset,
+                                    WCS2Exception.NO_SUCH_FIELD,
+                                    locator=range_subset
+                                    )
+                    bands.append(range_subset)
+                else:
+                    if range_subset.start not in band_labels:
+                        raise WCS2Exception('No such field %s' % range_subset.start,
+                                            WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
+                                            locator=range_subset.start
+                                            )
+                    if range_subset.end not in band_labels:
+                        raise WCS2Exception('No such field %s' % range_subset.end,
+                                            WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
+                                            locator=range_subset.end
+                                            )
+
+                    start = band_labels.index(range_subset.start)
+                    end = band_labels.index(range_subset.end)
+                    bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
         else:
-            raise WCS2Exception("Unsupported format: %s" % request.format,
-                                WCS2Exception.INVALID_PARAMETER_VALUE,
-                                locator="FORMAT")
+            bands = product.wcs_default_bands  # TODO: standard says differently
 
-    x_resolution = (extent_x[1] - extent_x[0]) / x_size
-    y_resolution = (extent_y[1] - extent_y[0]) / y_size
+        #
+        # Format handling
+        #
 
-    trans_aff = Affine.translation(extent_x[0], extent_y[1])
-    scale_aff = Affine.scale(x_resolution, -y_resolution)
-    affine = trans_aff * scale_aff
-    geobox = geometry.GeoBox(x_size, y_size, affine, geometry.CRS(subsetting_crs))
+        if not request.format:
+            fmt = cfg.wcs_formats[cfg.native_wcs_format]
+        else:
+            for fmt in cfg.wcs_formats.values():
+                if fmt['mime'] == request.format:
+                    break
+            else:
+                raise WCS2Exception("Unsupported format: %s" % request.format,
+                                    WCS2Exception.INVALID_PARAMETER_VALUE,
+                                    locator="FORMAT")
 
-    stacker = DataStacker(product,
-                          geobox,
-                          times,
-                          bands=bands)
-    datasets = stacker.datasets(dc.index)
+        x_resolution = (extent_x[1] - extent_x[0]) / x_size
+        y_resolution = (extent_y[1] - extent_y[0]) / y_size
 
-    if product.max_datasets_wcs > 0 and len(datasets) > product.max_datasets_wcs:
-        raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
-                            "Please reduce the bounds of your request and try again."
-                            "(max: %d, this request requires: %d)" % (product.max_datasets_wcs, len(datasets)))
+        trans_aff = Affine.translation(extent_x[0], extent_y[1])
+        scale_aff = Affine.scale(x_resolution, -y_resolution)
+        affine = trans_aff * scale_aff
+        geobox = geometry.GeoBox(x_size, y_size, affine, geometry.CRS(subsetting_crs))
 
-    if fmt["multi-time"] and len(times) > 1:
-        # Group by solar day
-        group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
-        datasets = dc.group_datasets(datasets, group_by)
+        stacker = DataStacker(product,
+                              geobox,
+                              times,
+                              bands=bands)
+        datasets = stacker.datasets(dc.index)
 
-    output = stacker.data(datasets, skip_corrections=True)
+        if product.max_datasets_wcs > 0 and len(datasets) > product.max_datasets_wcs:
+            raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
+                                "Please reduce the bounds of your request and try again."
+                                "(max: %d, this request requires: %d)" % (product.max_datasets_wcs, len(datasets)))
 
-    release_cube(dc)
+        if fmt["multi-time"] and len(times) > 1:
+            # Group by solar day
+            group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
+            datasets = dc.group_datasets(datasets, group_by)
+
+        output = stacker.data(datasets, skip_corrections=True)
 
     #
     # TODO: configurable
