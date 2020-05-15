@@ -31,7 +31,8 @@ requirements = [
     'scikit-image',
     'timezonefinderL',
     'python-slugify',
-    'xarray'
+    'xarray',
+    'pyows'
 ]
 
 test_requirements = [
