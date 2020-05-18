@@ -5,7 +5,7 @@ from flask import render_template, request
 
 from ows.common.v20.decoders import kvp_decode_get_capabilities
 from ows.common import WGS84BoundingBox
-from ows.gml import Grid, RegularAxis, IrregularAxis
+from ows.gml import Grid, RegularAxis, IrregularAxis, SpatioTemporalType
 from ows.swe import Field
 from ows.wcs import (
     CoverageSummary, ServiceCapabilities, CoverageDescription
@@ -199,12 +199,15 @@ def create_coverage_description(cfg, product):
                 f'{t.isoformat()}T00:00:00.000Z'
                 for t in product.ranges['times']
             ],
-            uom='ISO-8601'
+            uom='ISO-8601',
+            type=SpatioTemporalType.TEMPORAL,
         )
     )
 
     return CoverageDescription(
         identifier=product.name,
+        title=product.title,
+        abstract=product.definition.get('description'),
         range_type=[
             Field(
                 name=band_label,
