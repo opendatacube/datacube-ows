@@ -18,7 +18,7 @@ from ows.wcs.v20 import (
 )
 
 from datacube_ows.cube_pool import get_cube, release_cube, cube
-from datacube_ows.data import DataStacker
+from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ogc_utils import ProductLayerException
 from datacube_ows.ows_configuration import get_config
@@ -203,7 +203,7 @@ def get_coverage_data(request):
                 bottom=extent_y[0],
                 top=extent_y[1],
             )
-            x_size, y_size = transform_result[1]
+            x_size, y_size = transform_result[1:3]
 
         for scale in scales:
             axis = scale.axis.lower()
@@ -313,11 +313,12 @@ def get_coverage_data(request):
                               times,
                               bands=bands)
         datasets = stacker.datasets(dc.index)
+        n_datasets = datasets_in_xarray(datasets)
 
-        if product.max_datasets_wcs > 0 and len(datasets) > product.max_datasets_wcs:
+        if product.max_datasets_wcs > 0 and n_datasets > product.max_datasets_wcs:
             raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
-                                "(max: %d, this request requires: %d)" % (product.max_datasets_wcs, len(datasets)))
+                                "(max: %d, this request requires: %d)" % (product.max_datasets_wcs, n_datasets))
 
         if fmt["multi-time"] and len(times) > 1:
             # Group by solar day
