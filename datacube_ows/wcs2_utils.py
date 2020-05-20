@@ -23,6 +23,7 @@ from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ogc_utils import ProductLayerException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
+from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
 _LOG = logging.getLogger(__name__)
 
@@ -79,29 +80,12 @@ def get_coverage_data(request):
                                 WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
                                 locator=output_crs)
 
-        request_crs = geometry.CRS(subsetting_crs)
-
         #
         # Subsetting/Scaling
         #
 
-        extent_x = (
-            product.ranges["bboxes"][subsetting_crs]["left"],
-            product.ranges["bboxes"][subsetting_crs]["right"],
-        )
-
-        extent_y = (
-            product.ranges["bboxes"][subsetting_crs]["bottom"],
-            product.ranges["bboxes"][subsetting_crs]["top"],
-        )
-
+        scaler = WCSScaler(product, subsetting_crs)
         times = product.ranges["times"]
-
-        subsetting_crs_def = cfg.published_CRSs[subsetting_crs]
-        x_name = subsetting_crs_def['horizontal_coord'].lower()
-        y_name = subsetting_crs_def['vertical_coord'].lower()
-
-        # TODO: Slices along spatial axes
 
         try:
             subsets = request.subsets
@@ -127,25 +111,7 @@ def get_coverage_data(request):
 
         for subset in subsets:
             dimension = subset.dimension.lower()
-            if dimension == x_name:
-                if isinstance(subset, Trim):
-                    extent_x = (
-                        subset.low if subset.low is not None else extent_x[0],
-                        subset.high if subset.high is not None else extent_x[1],
-                    )
-                elif isinstance(subset, Slice):
-                    extent_x = subset.point
-
-            elif dimension == y_name:
-                if isinstance(subset, Trim):
-                    extent_y = (
-                        subset.low if subset.low is not None else extent_y[0],
-                        subset.high if subset.high is not None else extent_y[1],
-                    )
-                elif isinstance(subset, Slice):
-                    extent_y = subset.point
-
-            elif dimension == 'time':
+            if dimension == 'time':
                 if isinstance(subset, Trim):
                     low = parse(subset.low).date() if subset.low is not None else None
                     high = parse(subset.high).date() if subset.high is not None else None
@@ -164,9 +130,20 @@ def get_coverage_data(request):
                     times = [point]
 
             else:
-                raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
+                try:
+                    if isinstance(subset, Trim):
+                        scaler.trim(dimension, subset.low, subset.high)
+                    elif isinstance(subset, Slice):
+                        scaler.slice(dimension, subset.point)
+                except WCSScalerUnknownDimension:
+                    raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
                                     WCS2Exception.INVALID_AXIS_LABEL,
                                     locator=subset.dimension)
+
+        #
+        # Transform spatial extent to native CRS.
+        #
+        scaler.transform_to_native()
 
         #
         # Scaling
@@ -188,69 +165,21 @@ def get_coverage_data(request):
                                 locator=','.join(duplicate_axes)
                                 )
 
-        x_resolution = product.resolution_x
-        y_resolution = product.resolution_y
-        x_size = round((extent_x[1] - extent_x[0]) / x_resolution)
-        y_size = round((extent_y[1] - extent_y[0]) / y_resolution)
-
-        if native_crs != subsetting_crs:
-            transform_result = calculate_default_transform(
-                geometry.CRS(native_crs),
-                geometry.CRS(subsetting_crs),
-                x_size, y_size,
-                left=extent_x[0],
-                right=extent_x[1],
-                bottom=extent_y[0],
-                top=extent_y[1],
-            )
-            x_size, y_size = transform_result[1:3]
-
         for scale in scales:
             axis = scale.axis.lower()
 
-            if axis in (x_name, 'x', 'i'):
-                if isinstance(scale, ScaleAxis):
-                    if x_size is None:
-                        raise WCS2Exception('Cannot scale axis %s' % scale.axis,
-                                            WCS2Exception.INVALID_SCALE_FACTOR,
-                                            locator=scale.axis
-                                            )
-
-                    x_size *= scale.factor
-
-                elif isinstance(scale, ScaleSize):
-                    x_size = scale.size
-
-                elif isinstance(scale, ScaleExtent):
-                    x_size = scale.high - scale.low
-
-            elif axis in (y_name, 'y', 'j'):
-                if isinstance(scale, ScaleAxis):
-                    if y_size is None:
-                        raise WCS2Exception('Cannot scale axis %s' % scale.axis,
-                                            WCS2Exception.INVALID_SCALE_FACTOR,
-                                            locator=scale.axis
-                                            )
-
-                    y_size *= scale.factor
-
-                elif isinstance(scale, ScaleSize):
-                    y_size = scale.size
-
-                elif isinstance(scale, ScaleExtent):
-                    y_size = scale.high - scale.low
-
-            elif axis in ('time', 'k'):
+            if axis in ('time', 'k'):
                 raise WCS2Exception('Cannot scale axis %s' % scale.axis,
                                     WCS2Exception.INVALID_SCALE_FACTOR,
                                     locator=scale.axis
                                     )
-
             else:
-                raise WCS2Exception('Invalid scaling axis %s' % scale.axis,
-                                    WCS2Exception.SCALE_AXIS_UNDEFINED,
-                                    locator=scale.axis
-                                    )
+                if isinstance(scale, ScaleAxis):
+                    scaler.scale_axis(axis, scale.factor)
+                elif isinstance(scale, ScaleSize):
+                    scaler.scale_size(axis, scale.size)
+                elif isinstance(scale, ScaleExtent):
+                    scaler.scale_size(axis, scale.low, scale.high)
 
         #
         # Rangesubset
@@ -300,13 +229,9 @@ def get_coverage_data(request):
                                     WCS2Exception.INVALID_PARAMETER_VALUE,
                                     locator="FORMAT")
 
-        x_resolution = (extent_x[1] - extent_x[0]) / x_size
-        y_resolution = (extent_y[1] - extent_y[0]) / y_size
-
-        trans_aff = Affine.translation(extent_x[0], extent_y[1])
-        scale_aff = Affine.scale(x_resolution, -y_resolution)
-        affine = trans_aff * scale_aff
-        geobox = geometry.GeoBox(x_size, y_size, affine, geometry.CRS(subsetting_crs))
+        affine = scaler.affine()
+        geobox = geometry.GeoBox(scaler.size_x, scaler.size_y,
+                                 affine, geometry.CRS(native_crs))
 
         stacker = DataStacker(product,
                               geobox,
@@ -331,7 +256,7 @@ def get_coverage_data(request):
     # TODO: configurable
     #
     if fmt['mime'] == 'image/geotiff':
-        output = get_tiff(request, output, product, x_size, y_size, affine, output_crs)
+        output = get_tiff(request, output, product, scaler.size_x, scaler.size_y, affine, output_crs)
 
     elif fmt['mime'] == 'application/x-netcdf':
         output = get_netcdf(request, output, output_crs)
