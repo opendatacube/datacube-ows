@@ -126,7 +126,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
     <Contents>
         {% for product in cfg.product_index.values() %}
         {% set product_ranges = product.ranges %}
-        {% if product_ranges %}
+        {% if product_ranges and not product.hide %}
         <Layer>
             <ows:Title>{{ product.title }}</ows:Title>
             <ows:Abstract>{{ product.abstract }}</ows:Abstract>

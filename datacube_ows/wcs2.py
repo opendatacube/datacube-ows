@@ -231,8 +231,6 @@ def create_coverage_description(cfg, product):
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def desc_coverages(args):
-    # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
-    # Extract layer metadata from Datacube.
     cfg = get_config()
 
     request_obj = kvp_decode_describe_coverage(args)
@@ -280,7 +278,6 @@ _LOG = logging.getLogger(__name__)
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def get_coverage(args):
-    # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
     request_obj = kvp_decode_get_coverage(args)
 
     output, mime, filename = get_coverage_data(request_obj)

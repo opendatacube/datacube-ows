@@ -10,7 +10,7 @@ from datacube.utils import geometry
 from rasterio import MemoryFile
 
 from datacube_ows.cube_pool import get_cube, release_cube
-from datacube_ows.data import DataStacker
+from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ProductLayerException
 from datacube_ows.ows_configuration import get_config
@@ -325,10 +325,11 @@ def get_coverage_data(req):
 
         return data
 
-    if req.product.max_datasets_wcs > 0 and len(datasets) > req.product.max_datasets_wcs:
+    n_datasets = datasets_in_xarray(datasets)
+    if req.product.max_datasets_wcs > 0 and n_datasets > req.product.max_datasets_wcs:
         raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
                             "Please reduce the bounds of your request and try again."
-                            "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, len(datasets)))
+                            "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
 
     stacker = DataStacker(req.product,
                           req.geobox,

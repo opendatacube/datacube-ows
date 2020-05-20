@@ -134,7 +134,7 @@ The folllowing instructions are for installing on a clean Linux system.
   and edit as required.  But for production deployments other approaches such as importing
   config as json are possible.
 
-* Run `python update_ranges.py -- product *product_name* --no-calculate-extent` (in the Datacube Conda environment).  This
+* Run `python update_ranges.py` (in the Datacube Conda environment).  This
   script will need to be re-run every time additional datasets are added to
   the Datacube.
 

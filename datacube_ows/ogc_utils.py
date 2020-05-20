@@ -58,7 +58,7 @@ def tz_for_dataset(ds):
 def tz_for_coord(lon, lat):
     tzn = tf.timezone_at(lng=lon, lat=lat)
     if not tzn:
-        raise NoTimezoneException ("tz find failed.")
+        raise NoTimezoneException("tz find failed.")
     return timezone(tzn)
 
 

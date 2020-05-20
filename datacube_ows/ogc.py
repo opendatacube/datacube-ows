@@ -130,7 +130,7 @@ OWS_SUPPORTED = {
         SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException),
     ]),
     "wcs": SupportedSvc([
-        # SupportedSvcVersion("wcs", "1.0.0", handle_wcs, WCS1Exception),
+        SupportedSvcVersion("wcs", "1.0.0", handle_wcs, WCS1Exception),
         SupportedSvcVersion("wcs", "2.0.0", handle_wcs2, WCS2Exception),
         SupportedSvcVersion("wcs", "2.1.0", handle_wcs2, WCS2Exception),
     ]),
