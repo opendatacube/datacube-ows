@@ -231,7 +231,7 @@ def get_coverage_data(request):
                                     locator="FORMAT")
 
         affine = scaler.affine()
-        geobox = geometry.GeoBox(scaler.size_x, scaler.size_y,
+        geobox = geometry.GeoBox(scaler.size.x, scaler.size.y,
                                  affine, geometry.CRS(output_crs))
 
         stacker = DataStacker(layer,
@@ -262,7 +262,7 @@ def get_coverage_data(request):
     # TODO: configurable
     #
     if fmt['mime'] == 'image/geotiff':
-        output = get_tiff(request, output, layer, scaler.size_x, scaler.size_y, affine, output_crs)
+        output = get_tiff(request, output, layer, scaler.size.x, scaler.size.y, affine, output_crs)
 
     elif fmt['mime'] == 'application/x-netcdf':
         output = get_netcdf(request, output, output_crs)
