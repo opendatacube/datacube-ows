@@ -180,7 +180,7 @@ def get_coverage_data(request):
                 elif isinstance(scale, ScaleSize):
                     scaler.scale_size(axis, scale.size)
                 elif isinstance(scale, ScaleExtent):
-                    scaler.scale_size(axis, scale.low, scale.high)
+                    scaler.scale_extent(axis, scale.low, scale.high)
 
         #
         # Rangesubset
