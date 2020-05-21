@@ -1,5 +1,6 @@
 from datacube.utils import geometry
-
+import numpy
+import xarray
 from affine import Affine
 
 class WCSScalerException(Exception):
@@ -105,6 +106,7 @@ class WCSScaler:
                         self.layer.ranges["bboxes"][new_crs]["top"]
                 )
                 self.crs = new_crs
+                self._update_crs_def()
             elif not self.subsetted_x or not self.subsetted_y:
                 # One axis subsetted
                 if self.subsetted_x:
@@ -155,7 +157,8 @@ class WCSScaler:
                 self.set_minmax(True, bbox.left, bbox.right)
                 self.set_minmax(False, bbox.bottom, bbox.top)
                 self.quantise_to_resolution(grid)
-                self.crs = new_crs
+            self.crs = new_crs
+            self._update_crs_def()
         else:
             self.quantise_to_resolution(grid)
 
@@ -200,3 +203,48 @@ class WCSScaler:
         trans_aff = Affine.translation(self.min_x, self.max_y)
         scale_aff = Affine.scale(x_scale, y_scale)
         return trans_aff * scale_aff
+
+    def empty_dataset(self, bands, times):
+        xvals = numpy.linspace(
+            self.min_x,
+            self.max_x,
+            num = self.size_x
+        )
+        yvals = numpy.linspace(
+            self.min_y,
+            self.max_y,
+            num = self.size_y
+        )
+        x_name = self.crs_def["horizontal_coord"],
+        y_name = self.crs_def["vertical_coord"],
+        if self.crs_def["vertical_coord_first"]:
+            nparrays = {
+                band: (
+                        ("time", y_name, x_name),
+                        numpy.full(
+                            (len(times), self.size_y, self.size.x),
+                            self.layer.nodata_dict[band]
+                        )
+                )
+                for band in bands
+            }
+        else:
+            nparrays = {
+                band: (
+                    ("time", x_name, y_name),
+                    numpy.full(
+                        (len(times), self.size_x, self.size.y),
+                        self.layer.nodata_dict[band]
+                    )
+                )
+                for band in bands
+            }
+
+        return xarray.Dataset(
+                nparrays,
+                coords={
+                    "time": times,
+                    x_name: xvals,
+                    y_name: yvals,
+                }
+        ).astype("int16")

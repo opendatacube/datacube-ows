@@ -245,13 +245,18 @@ def get_coverage_data(request):
             raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
                                 "(max: %d, this request requires: %d)" % (layer.max_datasets_wcs, n_datasets))
+        elif n_datasets == 0:
+            output = scaler.empty_dataset(
+                bands,
+                times
+            )
+        else:
+            if fmt["multi-time"] and len(times) > 1:
+                # Group by solar day
+                group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
+                datasets = dc.group_datasets(datasets, group_by)
 
-        if fmt["multi-time"] and len(times) > 1:
-            # Group by solar day
-            group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
-            datasets = dc.group_datasets(datasets, group_by)
-
-        output = stacker.data(datasets, skip_corrections=True)
+            output = stacker.data(datasets, skip_corrections=True)
 
     #
     # TODO: configurable

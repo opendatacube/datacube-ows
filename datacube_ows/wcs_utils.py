@@ -9,7 +9,7 @@ from affine import Affine
 from datacube.utils import geometry
 from rasterio import MemoryFile
 
-from datacube_ows.cube_pool import get_cube, release_cube
+from datacube_ows.cube_pool import cube
 from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ProductLayerException
@@ -274,70 +274,69 @@ class WCS1GetCoverageRequest():
 @opencensus_trace_call(tracer=tracer)
 def get_coverage_data(req):
     #pylint: disable=too-many-locals, protected-access
-    dc = get_cube()
-    stacker = DataStacker(req.product,
-                          req.geobox,
-                          req.times,
-                          bands=req.bands)
-    datasets = stacker.datasets(dc.index)
-    if not datasets:
-        # TODO: Return an empty coverage file with full metadata?
-        cfg = get_config()
-        x_range = (req.minx, req.maxx)
-        y_range = (req.miny, req.maxy)
-        xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
-        yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
-        xvals = numpy.linspace(
-            x_range[0],
-            x_range[1],
-            num=req.width
-        )
-        yvals = numpy.linspace(
-            y_range[0],
-            y_range[1],
-            num=req.height
-        )
-        if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
-            nparrays = {
-                band: (("time", yname, xname),
-                       numpy.full((len(req.times), len(yvals), len(xvals)),
-                                  req.product.nodata_dict[band])
-                      )
-                for band in req.bands
-            }
-        else:
-            nparrays = {
-                band: (("time", xname, yname),
-                       numpy.full((len(req.times), len(xvals), len(yvals)),
-                                  req.product.nodata_dict[band])
-                      )
-                for band in req.bands
-            }
-        data = xarray.Dataset(
-            nparrays,
-            coords={
-                "time": req.times,
-                xname: xvals,
-                yname: yvals,
-            }
-        ).astype("int16")
-        release_cube(dc)
+    with cube() as dc:
+        stacker = DataStacker(req.product,
+                              req.geobox,
+                              req.times,
+                              bands=req.bands)
+        datasets = stacker.datasets(dc.index)
+        if not datasets:
+            # TODO: Return an empty coverage file with full metadata?
+            cfg = get_config()
+            x_range = (req.minx, req.maxx)
+            y_range = (req.miny, req.maxy)
+            xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
+            yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
+            xvals = numpy.linspace(
+                x_range[0],
+                x_range[1],
+                num=req.width
+            )
+            yvals = numpy.linspace(
+                y_range[0],
+                y_range[1],
+                num=req.height
+            )
+            if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
+                nparrays = {
+                    band: (("time", yname, xname),
+                           numpy.full((len(req.times), len(yvals), len(xvals)),
+                                      req.product.nodata_dict[band])
+                          )
+                    for band in req.bands
+                }
+            else:
+                nparrays = {
+                    band: (("time", xname, yname),
+                           numpy.full((len(req.times), len(xvals), len(yvals)),
+                                      req.product.nodata_dict[band])
+                          )
+                    for band in req.bands
+                }
+            data = xarray.Dataset(
+                nparrays,
+                coords={
+                    "time": req.times,
+                    xname: xvals,
+                    yname: yvals,
+                }
+            ).astype("int16")
 
-        return data
+            return data
 
-    n_datasets = datasets_in_xarray(datasets)
-    if req.product.max_datasets_wcs > 0 and n_datasets > req.product.max_datasets_wcs:
-        raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
-                            "Please reduce the bounds of your request and try again."
-                            "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
+        n_datasets = datasets_in_xarray(datasets)
+        if req.product.max_datasets_wcs > 0 and n_datasets > req.product.max_datasets_wcs:
+            raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
+                                "Please reduce the bounds of your request and try again."
+                                "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
 
-    stacker = DataStacker(req.product,
-                          req.geobox,
-                          req.times,
-                          bands=req.bands)
-    output = stacker.data(datasets, skip_corrections=True)
-    release_cube(dc)
-    return output
+        stacker = DataStacker(req.product,
+                              req.geobox,
+                              req.times,
+                              bands=req.bands)
+        output = stacker.data(datasets, skip_corrections=True)
+        return output
+
 
 @opencensus_trace_call(tracer=tracer)
 def get_tiff(req, data):
