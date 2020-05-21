@@ -22,7 +22,7 @@ class WCSScaler:
         if crs:
             self.crs = crs
         else:
-            self.layer.native_CRS
+            self.crs = self.layer.native_CRS
         self._update_crs_def()
         self.min_x = None
         self.max_x = None
