@@ -12,6 +12,8 @@ class WCSScalerUnknownDimension(WCSScalerException):
 class WCSScalerOverspecifiedDimension(WCSScalerException):
     pass
 
+class WCSScalarIllegalSize(WCSScalerException):
+    pass
 
 class WCSScaler:
     def __init__(self, layer, crs=None):
@@ -44,6 +46,10 @@ class WCSScaler:
             self.subsetted_y = True
 
     def set_size(self, is_x, size):
+        if size <= 0:
+            raise WCSScalarIllegalSize()
+        if isinstance(size, float):
+            size = int(size + 0.5)
         if is_x and self.size_x is None:
             self.size_x = size
         elif not is_x and self.size_y is None:
@@ -85,15 +91,20 @@ class WCSScaler:
     def trim(self, dimension, lower, higher):
         self.set_minmax(self.is_x_dim(dimension), lower, higher)
 
-    def transform_to_native(self):
-        if self.crs != self.layer.native_CRS:
+    def to_crs(self, new_crs):
+        grid = self.layer.grids[new_crs]
+        if self.crs != new_crs:
             if not self.subsetted_y and not self.subsetted_x:
                 # Neither axis subsetted
-                self.crs = self.layer.native_CRS
-                self.min_x  = self.layer.ranges["bboxes"][self.layer.native_CRS]["left"]
-                self.max_x  = self.layer.ranges["bboxes"][self.layer.native_CRS]["right"]
-                self.min_y = self.layer.ranges["bboxes"][self.layer.native_CRS]["bottom"]
-                self.max_y = self.layer.ranges["bboxes"][self.layer.native_CRS]["top"]
+                self.set_minmax(True,
+                        self.layer.ranges["bboxes"][new_crs]["left"],
+                        self.layer.ranges["bboxes"][new_crs]["right"]
+                )
+                self.set_minmax(False,
+                        self.layer.ranges["bboxes"][new_crs]["bottom"],
+                        self.layer.ranges["bboxes"][new_crs]["top"]
+                )
+                self.crs = new_crs
             elif not self.subsetted_x or not self.subsetted_y:
                 # One axis subsetted
                 if self.subsetted_x:
@@ -101,24 +112,24 @@ class WCSScaler:
                     self.max_y = self.layer.ranges["bboxes"][self.crs]["top"]
                 if self.subsetted_y:
                     self.min_x = self.layer.ranges["bboxes"][self.crs]["left"]
-                    self.max_y = self.layer.ranges["bboxes"][self.crs]["right"]
+                    self.max_x = self.layer.ranges["bboxes"][self.crs]["right"]
             else:
                 # Both axes subsetted
                 pass
 
-        if self.crs != self.layer.native_CRS:
+        if self.crs != new_crs:
             is_point = False
             # Prepare geometry for transformation
-            crs = geometry.CRS(self.crs)
+            old_crs_obj = geometry.CRS(self.crs)
             if self.is_x_slice() and self.is_y_slice():
-                geom = geometry.point(self.min_x, self.min_y, crs)
+                geom = geometry.point(self.min_x, self.min_y, old_crs_obj)
                 is_point = True
             elif self.is_x_slice() or self.is_y_slice():
                 geom = geometry.line(
                     (
                         (self.min_x, self.min_y),
                         (self.max_x, self.max_y)
-                    ), crs)
+                    ), old_crs_obj)
             else:
                 geom = geometry.polygon(
                     (
@@ -128,46 +139,46 @@ class WCSScaler:
                         (self.max_x, self.min_y),
                         (self.min_x, self.min_y),
                     ),
-                    crs
+                    old_crs_obj
                 )
-            crs = geometry.CRS(self.layer.native_CRS)
+            new_crs_obj = geometry.CRS(new_crs)
+            grid = self.layer.grids[new_crs]
             if is_point:
-                prj_pt = geom.to_crs(crs)
+                prj_pt = geom.to_crs(new_crs_obj)
                 x, y = prj_pt.coords[0]
-                self.set_minmax(True, x, x + self.layer.resolution_x)
-                self.set_minmax(False, y, y + self.layer.resolution_y)
+                self.set_minmax(True, x, x + grid["resolution"][0])
+                self.set_minmax(False, y, y + grid["resolution"][1])
                 self.size_x = 1
                 self.size_y = 1
             else:
-                bbox = geom.to_crs(crs).boundingbox
+                bbox = geom.to_crs(new_crs_obj).boundingbox
                 self.set_minmax(True, bbox.left, bbox.right)
                 self.set_minmax(False, bbox.bottom, bbox.top)
-                if self.max_x - self.min_x < self.layer.resolution_x * 1.5:
-                    self.max_x = self.min_x + self.layer.resolution_x
-                    self.size_x = 1
-                if self.max_y - self.min_y < self.layer.resolution_y * 1.5:
-                    self.max_y = self.min_y + self.layer.resolution_y
-                    self.size_y = 1
-                self.crs = self.layer.native_CRS
+                self.quantise_to_resolution(grid)
+                self.crs = new_crs
         else:
-            if self.max_x - self.min_x < self.layer.resolution_x * 1.5:
-                self.max_x = self.min_x + self.layer.resolution_x
-                self.size_x = 1
-            if self.max_y - self.min_y < self.layer.resolution_y * 1.5:
-                self.max_y = self.min_y + self.layer.resolution_y
-                self.size_y = 1
+            self.quantise_to_resolution(grid)
+
+    def quantise_to_resolution(self, grid):
+        if self.max_x - self.min_x < grid["resolution"][0] * 1.5:
+            self.max_x = self.min_x + grid["resolution"][0]
+            self.size_x = 1
+        if self.max_y - self.min_y < grid["resolution"][1] * 1.5:
+            self.max_y = self.min_y + grid["resolution"][1]
+            self.size_y = 1
 
     def scale_axis(self, dimension, factor):
         is_x = self.is_x_dim(dimension)
         dim_size, dim_min, dim_max = self.dim(is_x)
         if dim_size is not None:
             raise WCSScalerOverspecifiedDimension()
+        grid = self.layer.grids[self.crs]
         if is_x:
-            res = self.layer.resolution_x
+            res = grid["resolution"][0]
         else:
-            res = self.layer.resolution_y
+            res = grid["resolution"][1]
         self.set_size(is_x,
-                      int((dim_max - dim_min) * factor / res + 0.5)
+              abs((dim_max - dim_min) * factor / res)
         )
 
     def scale_size(self, dimension, size):
@@ -183,8 +194,9 @@ class WCSScaler:
         if self.size_y is None:
             self.scale_axis("y", 1.0)
 
-        x_res = (self.max_x - self.min_x) / self.size_x
-        y_res = (self.max_y - self.min_y) / self.size_y
+        x_scale = (self.max_x - self.min_x) / self.size_x
+        # Y axis is reversed: image coordinate conventions
+        y_scale = (self.min_y - self.max_y) / self.size_y
         trans_aff = Affine.translation(self.min_x, self.max_y)
-        scale_aff = Affine.scale(x_res, y_res)
+        scale_aff = Affine.scale(x_scale, y_scale)
         return trans_aff * scale_aff

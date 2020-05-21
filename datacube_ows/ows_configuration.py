@@ -473,7 +473,7 @@ class OWSNamedLayer(OWSLayer):
                             self.product_name,
                             self.native_CRS))
         self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
-        # Prepare Rectified Grid
+        # Prepare Rectified Grids
         try:
             native_bounding_box = self.bboxes[self.native_CRS]
         except KeyError:
@@ -493,6 +493,26 @@ class OWSNamedLayer(OWSLayer):
         self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
         self.grid_high_y = int((
                                        native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+
+        self.grids = {}
+        for crs, crs_def in self.global_cfg.published_CRSs.items():
+            if crs == self.native_CRS:
+                self.grids[crs] = {
+                    "origin": (self.origin_x, self.origin_y),
+                    "resolution": (self.resolution_x, self.resolution_y),
+                }
+            else:
+                try:
+                    bbox = self.bboxes[crs]
+                except KeyError:
+                    continue
+                self.grids[crs] = {
+                    "origin": (bbox["left"], bbox["bottom"]),
+                    "resolution": (
+                        (bbox["right"] - bbox["left"]) / self.grid_high_x,
+                        (bbox["top"] - bbox["bottom"]) / self.grid_high_y
+                    )
+                }
 
         # Band management
         self.wcs_default_bands = [self.band_idx.band(b) for b in cfg["default_bands"]]

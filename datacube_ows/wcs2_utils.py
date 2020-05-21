@@ -53,10 +53,10 @@ def get_coverage_data(request):
 
     cfg = get_config()
 
-    product_name = request.coverage_id
-    product = cfg.product_index.get(product_name)
-    if not product or not product.wcs:
-        raise WCS2Exception("Invalid coverage: %s" % product_name,
+    layer_name = request.coverage_id
+    layer = cfg.product_index.get(layer_name)
+    if not layer or not layer.wcs:
+        raise WCS2Exception("Invalid coverage: %s" % layer_name,
                             WCS2Exception.NO_SUCH_COVERAGE,
                             locator="COVERAGE parameter")
 
@@ -65,8 +65,9 @@ def get_coverage_data(request):
         # CRS handling
         #
 
-        native_crs = product.native_CRS
+        native_crs = layer.native_CRS
         subsetting_crs = uniform_crs(request.subsetting_crs or native_crs)
+        output_crs = uniform_crs(request.output_crs or subsetting_crs)
 
         if subsetting_crs not in cfg.published_CRSs:
             raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
@@ -84,8 +85,8 @@ def get_coverage_data(request):
         # Subsetting/Scaling
         #
 
-        scaler = WCSScaler(product, subsetting_crs)
-        times = product.ranges["times"]
+        scaler = WCSScaler(layer, subsetting_crs)
+        times = layer.ranges["times"]
 
         try:
             subsets = request.subsets
@@ -143,7 +144,7 @@ def get_coverage_data(request):
         #
         # Transform spatial extent to native CRS.
         #
-        scaler.transform_to_native()
+        scaler.to_crs(output_crs)
 
         #
         # Scaling
@@ -185,7 +186,7 @@ def get_coverage_data(request):
         # Rangesubset
         #
 
-        band_labels = product.band_idx.band_labels()
+        band_labels = layer.band_idx.band_labels()
         if request.range_subset:
             bands = []
             for range_subset in request.range_subset:
@@ -212,7 +213,7 @@ def get_coverage_data(request):
                     end = band_labels.index(range_subset.end)
                     bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
         else:
-            bands = product.wcs_default_bands  # TODO: standard says differently
+            bands = layer.wcs_default_bands  # TODO: standard says differently
 
         #
         # Format handling
@@ -231,19 +232,19 @@ def get_coverage_data(request):
 
         affine = scaler.affine()
         geobox = geometry.GeoBox(scaler.size_x, scaler.size_y,
-                                 affine, geometry.CRS(native_crs))
+                                 affine, geometry.CRS(output_crs))
 
-        stacker = DataStacker(product,
+        stacker = DataStacker(layer,
                               geobox,
                               times,
                               bands=bands)
         datasets = stacker.datasets(dc.index)
         n_datasets = datasets_in_xarray(datasets)
 
-        if product.max_datasets_wcs > 0 and n_datasets > product.max_datasets_wcs:
+        if layer.max_datasets_wcs > 0 and n_datasets > layer.max_datasets_wcs:
             raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
-                                "(max: %d, this request requires: %d)" % (product.max_datasets_wcs, n_datasets))
+                                "(max: %d, this request requires: %d)" % (layer.max_datasets_wcs, n_datasets))
 
         if fmt["multi-time"] and len(times) > 1:
             # Group by solar day
@@ -256,7 +257,7 @@ def get_coverage_data(request):
     # TODO: configurable
     #
     if fmt['mime'] == 'image/geotiff':
-        output = get_tiff(request, output, product, scaler.size_x, scaler.size_y, affine, output_crs)
+        output = get_tiff(request, output, layer, scaler.size_x, scaler.size_y, affine, output_crs)
 
     elif fmt['mime'] == 'application/x-netcdf':
         output = get_netcdf(request, output, output_crs)
