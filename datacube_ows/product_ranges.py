@@ -2,11 +2,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import datacube
 
 from datacube_ows.ows_configuration import get_config, OWSNamedLayer  # , get_layers, ProductLayerDef
-from datacube_ows.ogc_utils import local_date
+from datacube_ows.ogc_utils import local_date, tz_for_coord, NoTimezoneException
 from psycopg2.extras import Json
 from itertools import zip_longest
 import json
@@ -220,29 +220,40 @@ def create_range_entry(dc, product, crses, summary_product=False):
                    }
       )
   else:
-      # Create sorted list of dates
-      conn.execute("""
-        WITH sorted
-        AS (SELECT to_jsonb(array_agg(dates.d))
-            AS dates
-            FROM (SELECT DISTINCT
-                   date(cast(metadata -> 'extent' ->> 'center_dt' as timestamp) AT TIME ZONE 'UTC' +
-                    (least(to_number(metadata -> 'extent' -> 'coord' -> 'll' ->> 'lon', '9999.9999999999999999999999999999999999'),
-                    to_number(metadata -> 'extent' -> 'coord' -> 'ul' ->> 'lon', '9999.9999999999999999999999999999999999')) +
-                    greatest(to_number(metadata -> 'extent' -> 'coord' -> 'lr' ->> 'lon', '9999.9999999999999999999999999999999999'),
-                    to_number(metadata -> 'extent' -> 'coord' -> 'ur' ->> 'lon', '9999.9999999999999999999999999999999999'))) / 30.0 * interval '1 hour')
-                  AS d
-                  FROM agdc.dataset
-                  WHERE dataset_type_ref=%(p_id)s
-                  AND archived IS NULL
-                  ORDER BY d) dates)
-        UPDATE wms.product_ranges
-        SET dates=sorted.dates
-        FROM sorted
-        WHERE id=%(p_id)s
-        """,
-        {"p_id": prodid})
+      # Loop over dates
+      dates = set()
 
+      results = conn.execute(
+          """
+          select
+                lower(temporal_extent), upper(temporal_extent),
+                ST_X(ST_Centroid(spatial_extent)),
+                ST_Y(ST_Centroid(spatial_extent))
+          from public.space_time_view 
+          WHERE dataset_type_ref = %(p_id)s
+          """ %
+          {"p_id": prodid}
+      )
+      for result in results:
+          dt1, dt2, lon, lat = result
+          try:
+              tz = tz_for_coord(lon, lat)
+          except NoTimezoneException:
+              offset = round(lon / 15.0)
+              tz = timezone(timedelta(hours=offset))
+          dates.add(dt1.astimezone(tz).date())
+      dates = sorted(dates)
+
+      conn.execute("""
+           UPDATE wms.product_ranges
+           SET dates = %(dates)s
+           WHERE id= %(p_id)s
+      """,
+                   {
+                       "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
+                       "p_id": prodid
+                   }
+                   )
 
   # calculate bounding boxes
   results = list(conn.execute("""
@@ -381,7 +392,7 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
                                   )
     for result in results:
         conn.close()
-        times = [datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"]]
+        times = [datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"] if d is not None]
         if not times:
             return None
         return {

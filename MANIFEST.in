@@ -4,6 +4,7 @@ include HISTORY.rst
 include LICENSE
 include README.rst
 graft datacube_ows/templates
+graft datacube_ows/sql
 
 recursive-include tests *
 recursive-exclude * __pycache__

@@ -59,7 +59,7 @@ docs/_build/
 target/
 
 # pyenv python configuration file
-.python-version
+.python-versios
 
 # Editor temp files
 .*.swp
@@ -77,3 +77,5 @@ ows_cfg.py
 .DS_Store
 docker-compose.yaml
 ows_cfg.py
+
+_version.py
