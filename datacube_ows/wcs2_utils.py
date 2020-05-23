@@ -220,12 +220,11 @@ def get_coverage_data(request):
         #
 
         if not request.format:
-            fmt = cfg.wcs_formats[cfg.native_wcs_format]
+            fmt = cfg.wcs_formats[layer.native_wcs_format]
         else:
-            for fmt in cfg.wcs_formats.values():
-                if fmt['mime'] == request.format:
-                    break
-            else:
+            try:
+                fmt = cfg.wcs_formats_by_mime[request.format]
+            except KeyError:
                 raise WCS2Exception("Unsupported format: %s" % request.format,
                                     WCS2Exception.INVALID_PARAMETER_VALUE,
                                     locator="FORMAT")
@@ -251,7 +250,7 @@ def get_coverage_data(request):
                 times
             )
         else:
-            if fmt["multi-time"] and len(times) > 1:
+            if fmt.multi_time and len(times) > 1:
                 # Group by solar day
                 group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
                 datasets = dc.group_datasets(datasets, group_by)
@@ -261,20 +260,19 @@ def get_coverage_data(request):
     #
     # TODO: configurable
     #
-    if fmt['mime'] == 'image/geotiff':
-        output = get_tiff(request, output, layer, scaler.size.x, scaler.size.y, affine, output_crs)
+    if fmt.mime == 'image/geotiff':
+        output = fmt.renderer(request.version)(request, output, output_crs,
+                              layer, scaler.size.x, scaler.size.y, affine)
 
-    elif fmt['mime'] == 'application/x-netcdf':
-        output = get_netcdf(request, output, output_crs)
     else:
-        pass
+        output = fmt.renderer(request.version)(request, output, output_crs)
 
-    filename = '%s.%s' % (request.coverage_id, fmt['extension'])
-    return output, fmt['mime'], filename
+    filename = '%s.%s' % (request.coverage_id, fmt.extension)
+    return output, fmt.mime, filename
 
 
 @opencensus_trace_call(tracer=tracer)
-def get_tiff(request, data, product, width, height, affine, crs):
+def get_tiff(request, data, crs, product, width, height, affine):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Copied from CEOS.  Does not seem to support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {

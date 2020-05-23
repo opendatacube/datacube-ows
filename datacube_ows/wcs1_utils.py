@@ -9,6 +9,8 @@ from affine import Affine
 from datacube.utils import geometry
 from rasterio import MemoryFile
 
+from ows.util import Version
+
 from datacube_ows.cube_pool import cube
 from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS1Exception
@@ -19,6 +21,7 @@ from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
 tracer = get_opencensus_tracer()
 
 class WCS1GetCoverageRequest():
+    version = Version(1,0,0)
     #pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
     @opencensus_trace_call(tracer=tracer)
     def __init__(self, args):
@@ -42,11 +45,11 @@ class WCS1GetCoverageRequest():
             raise WCS1Exception("No FORMAT parameter supplied",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="FORMAT parameter")
-        if args["format"] not in cfg.wcs_formats:
+        if args["format"] not in cfg.wcs_formats_by_name:
             raise WCS1Exception("Unsupported format: %s" % args["format"],
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="FORMAT parameter")
-        self.format = cfg.wcs_formats[args["format"]]
+        self.format = cfg.wcs_formats_by_name[args["format"]]
 
         # Argument: (request) CRS (required)
         if "crs" not in args:

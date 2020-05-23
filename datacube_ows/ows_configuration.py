@@ -11,6 +11,8 @@ from importlib import import_module
 import json
 
 from collections.abc import Mapping, Sequence
+
+from ows import Version
 from slugify import slugify
 
 from datacube_ows.cube_pool import cube, get_cube, release_cube
@@ -529,6 +531,14 @@ class OWSNamedLayer(OWSLayer):
             raise ConfigException("Datacube has no 'nodata' values for bands in product %s" % self.product_name)
         self.nodata_dict = {a: b for a, b in zip(self.bands, self.nodata_values)}
 
+        # Native format
+        if "native_format" in cfg:
+            self.native_format = cfg["native_format"]
+            if self.native_format not in self.global_cfg.wcs_formats_by_name:
+                raise ConfigException("WCS native format for layer %s is not in supported formats list" % self.product_name)
+        else:
+            self.native_format = self.global_cfg.native_wcs_format
+
     def parse_product_names(self, cfg):
         raise NotImplementedError()
 
@@ -646,6 +656,47 @@ def parse_ows_layer(cfg, global_cfg, dc, parent_layer=None):
         return OWSFolder(cfg, global_cfg, dc, parent_layer)
 
 
+class WCSFormat:
+    @staticmethod
+    def from_cfg(cfg):
+        return [
+            WCSFormat(
+                name,
+                fmt["mime"],
+                fmt["extension"],
+                fmt["renderers"],
+                fmt.get("multi-time", False)
+            )
+            for name, fmt in cfg.items()
+        ]
+
+    def __init__(self, name, mime, extension, renderers,
+                 multi_time):
+        self.name = name
+        self.mime = mime
+        self.extension = extension
+        self.multi_time = multi_time
+        self.renderers = {
+            int(ver): get_function(renderer)
+            for ver, renderer in renderers.items()
+        }
+        if 1 not in self.renderers:
+            raise ConfigException(
+                f"No renderer supplied for WCS 1.x for format {self.name}"
+            )
+        if 2 not in self.renderers:
+            raise ConfigException(
+                f"No renderer supplied for WCS 2.x for format {self.name}"
+            )
+
+    def renderer(self, version):
+        if isinstance(version, str):
+            version = int(version.split(".")[0])
+        elif isinstance(version, Version):
+            version = version.major
+        return self.renderers[version]
+
+
 class OWSConfig(OWSConfigEntry):
     _instance = None
     initialised = False
@@ -748,25 +799,27 @@ class OWSConfig(OWSConfigEntry):
             if not self.published_CRSs[self.default_geographic_CRS]["geographic"]:
                 raise ConfigException("Configured default geographic CRS not listed in published CRSs as geographic.")
             self.default_geographic_CRS_def = self.published_CRSs[self.default_geographic_CRS]
-            self.wcs_formats = {}
-            for fmt_name, fmt in cfg["formats"].items():
-                self.wcs_formats[fmt_name] = {
-                    "mime": fmt["mime"],
-                    "extension": fmt["extension"],
-                    "multi-time": fmt["multi-time"],
-                    "name": fmt_name,
-                }
-                self.wcs_formats[fmt_name]["renderer"] = get_function(fmt["renderer"])
+            self.wcs_formats = WCSFormat.from_cfg(cfg["formats"])
+            self.wcs_formats_by_name = {
+                fmt.name: fmt
+                for fmt in self.wcs_formats
+            }
+            self.wcs_formats_by_mime = {
+                fmt.mime: fmt
+                for fmt in self.wcs_formats
+            }
             if not self.wcs_formats:
                 raise ConfigException("Must configure at least one wcs format to support WCS.")
 
             self.native_wcs_format = cfg["native_format"]
-            if self.native_wcs_format not in self.wcs_formats:
+            if self.native_wcs_format not in self.wcs_formats_by_name:
                 raise Exception("Configured native WCS format not a supported format.")
         else:
             self.default_geographic_CRS = None
             self.default_geographic_CRS_def = None
-            self.wcs_formats = {}
+            self.wcs_formats = []
+            self.wcs_formats_by_name = {}
+            self.wcs_formats_by_mime = {}
             self.native_wcs_format = None
         # shouldn't need to keep these?
         # self.dummy_wcs_grid = False
