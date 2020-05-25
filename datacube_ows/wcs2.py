@@ -225,7 +225,7 @@ def create_coverage_description(cfg, product):
             axes=axes,
             srs=product.native_CRS,
         ),
-        native_format=cfg.wcs_formats_by_name[product.native_wcs_format]['mime'],
+        native_format=cfg.wcs_formats_by_name[product.native_format].mime,
         coverage_subtype='RectifiedGridCoverage',
     )
 

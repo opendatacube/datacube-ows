@@ -104,7 +104,7 @@
             <nativeCRSs>{{ product.native_CRS }}</nativeCRSs>
             {% endif %}
         </supportedCRSs>
-        <supportedFormats nativeFormat="{{ product.native_wcs_format }}">
+        <supportedFormats nativeFormat="{{ product.native_format }}">
             {% for fmt in cfg.wcs_formats %}
             {% if fmt.renderers.1 %}<formats>{{ fmt.name }}</formats>{% endif %}
             {% endfor %}
