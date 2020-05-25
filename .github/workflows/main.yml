@@ -65,9 +65,8 @@ jobs:
 
     - name: Test WMS GetCapabilities
       run: |
-        curl --silent --show-error --fail \
+        curl --silent --show-error \
         "localhost:8000/?service=WMS&version=1.3.0&request=GetCapabilities" \
-        > /dev/null
 
     - name: Test WMTS GetCapabilities
       run: |
@@ -77,9 +76,9 @@ jobs:
 
     - name: Test WCS GetCapabilities
       run: |
-        # --fail \
-        curl --silent --show-error \
+        curl --silent --show-error --fail \
         "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities"
+        > /dev/null
 
     - name: Test datacube-ows-update
       run: docker-compose exec -T ows datacube-ows-update
