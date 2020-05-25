@@ -518,6 +518,10 @@ class OWSNamedLayer(OWSLayer):
         self.grid_high_y = int((
                                        native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
 
+        if self.grid_high_x == 0:
+            raise ConfigException(f"Grid High X is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}")
+        if self.grid_high_y == 0:
+            raise ConfigException(f"Grid High y is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: x_res={self.resolution_y}")
         self.grids = {}
         for crs, crs_def in self.global_cfg.published_CRSs.items():
             if crs == self.native_CRS:
