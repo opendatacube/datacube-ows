@@ -104,9 +104,9 @@
             <nativeCRSs>{{ product.native_CRS }}</nativeCRSs>
             {% endif %}
         </supportedCRSs>
-        <supportedFormats nativeFormat="{{ cfg.native_wcs_format }}">
+        <supportedFormats nativeFormat="{{ product.native_wcs_format }}">
             {% for fmt in cfg.wcs_formats %}
-            <formats>{{ fmt }}</formats>
+            {% if fmt.renderers.1 %}<formats>{{ fmt.name }}</formats>{% endif %}
             {% endfor %}
         </supportedFormats>
         <supportedInterpolations default="nearest neighbor">

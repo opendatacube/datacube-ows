@@ -123,8 +123,9 @@ def get_capabilities(args):
             for product in cfg.product_index.values()
         ],
         formats_supported=[
-            fmt['mime']
-            for fmt in cfg.wcs_formats.values()
+            fmt.mime
+            for fmt in cfg.wcs_formats
+            if 2 in fmt.renderers
         ],
         crss_supported=[
             crs  # TODO: conversion to URL format
