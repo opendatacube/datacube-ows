@@ -492,6 +492,28 @@ class OWSNamedLayer(OWSLayer):
             raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
         except TypeError:
             raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
+        if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
+            ConfigException("Native (%s) bounding box on layer %s has left %f, right %f (diff %d), but horizontal resolution is %f"
+                            % (
+                                self.native_CRS,
+                                self.name,
+                                native_bounding_box["left"],
+                                native_bounding_box["right"],
+                                native_bounding_box["right"] - native_bounding_box["left"],
+                                self.resolution_x
+
+                            ))
+        if (native_bounding_box["top"] - native_bounding_box["bottom"]) < self.resolution_x:
+            ConfigException("Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
+                            % (
+                                self.native_CRS,
+                                self.name,
+                                native_bounding_box["bottom"],
+                                native_bounding_box["top"],
+                                native_bounding_box["top"] - native_bounding_box["bottom"],
+                                self.resolution_y
+
+            ))
         self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
         self.grid_high_y = int((
                                        native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
@@ -659,16 +681,33 @@ def parse_ows_layer(cfg, global_cfg, dc, parent_layer=None):
 class WCSFormat:
     @staticmethod
     def from_cfg(cfg):
-        return [
-            WCSFormat(
-                name,
-                fmt["mime"],
-                fmt["extension"],
-                fmt["renderers"],
-                fmt.get("multi-time", False)
-            )
-            for name, fmt in cfg.items()
-        ]
+        renderers = []
+        for name, fmt in cfg.items():
+            if "renderers" in fmt:
+                renderers.append(
+                    WCSFormat(
+                        name,
+                        fmt["mime"],
+                        fmt["extension"],
+                        fmt["renderers"],
+                        fmt.get("multi-time", False)
+                    )
+                )
+            elif "renderer" in fmt:
+                print("Warning: 'renderer' in WCS format declarations is "
+                      "deprecated. Please review the latest example config "
+                      "file and update your config file accordingly. Format %s "
+                      "will be WCS 1 only." % name)
+                renderers.append(
+                    WCSFormat(
+                        name,
+                        fmt["mime"],
+                        fmt["extension"],
+                        {"1": fmt["renderer"]},
+                        fmt.get("multi-time", False)
+                    )
+                )
+        return renderers
 
     def __init__(self, name, mime, extension, renderers,
                  multi_time):
@@ -681,12 +720,12 @@ class WCSFormat:
             for ver, renderer in renderers.items()
         }
         if 1 not in self.renderers:
-            raise ConfigException(
-                f"No renderer supplied for WCS 1.x for format {self.name}"
+            print(
+                f"Warning: No renderer supplied for WCS 1.x for format {self.name}"
             )
         if 2 not in self.renderers:
-            raise ConfigException(
-                f"No renderer supplied for WCS 2.x for format {self.name}"
+            print(
+                f"Warning: No renderer supplied for WCS 2.x for format {self.name}"
             )
 
     def renderer(self, version):
