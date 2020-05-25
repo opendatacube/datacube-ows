@@ -77,9 +77,9 @@ jobs:
 
     - name: Test WCS GetCapabilities
       run: |
-        curl --silent --show-error --fail \
-        "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities" \
-        > /dev/null
+        # --fail \
+        curl --silent --show-error \
+        "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities"
 
     - name: Test datacube-ows-update
       run: docker-compose exec -T ows datacube-ows-update
