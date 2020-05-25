@@ -59,7 +59,7 @@ docs/_build/
 target/
 
 # pyenv python configuration file
-.python-versios
+.python-version
 
 # Editor temp files
 .*.swp

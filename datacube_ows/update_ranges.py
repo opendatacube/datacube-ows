@@ -87,7 +87,7 @@ def main(layers, blocking,
         print("Sorry, cannot update the materialised views and ranges in the same invocation.")
         return 1
     elif schema and not role:
-        print("Sorry, cannot update schema without specifying a role")
+        print("Sorry, cannot update schema without specifying a role, use: '--schema --role myrole'")
         return 1
     elif role and not schema:
         print("Sorry, role only makes sense for updating the schema")
