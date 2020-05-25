@@ -1269,7 +1269,7 @@ ows_cfg = {
             "GeoTIFF": {
                 # Writing your own renderers is not documented.
                 "renderers": {
-                    "1": "datacube_ows.wcs_utils.get_tiff",
+                    "1": "datacube_ows.wcs1_utils.get_tiff",
                     "2": "datacube_ows.wcs2_utils.get_tiff",
                 },
                 # The MIME type of the image, as used in the Http Response.
@@ -1281,7 +1281,7 @@ ows_cfg = {
             },
             "netCDF": {
                 "renderers": {
-                    "1": "datacube_ows.wcs_utils.get_netcdf",
+                    "1": "datacube_ows.wcs1_utils.get_netcdf",
                     "2": "datacube_ows.wcs2_utils.get_netcdf",
                 },
                 "mime": "application/x-netcdf",
