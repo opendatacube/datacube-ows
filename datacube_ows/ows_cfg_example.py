@@ -1259,10 +1259,11 @@ ows_cfg = {
         "formats": {
             # Key is the format name, as used in DescribeCoverage XML
             "GeoTIFF": {
-                # Renderer is the FQN of a Python function that takes:
-                #   * A WCSRequest object
-                #   * Some ODC data to be rendered.
-                "renderer": "datacube_ows.wcs_utils.get_tiff",
+                # Writing your own renderers is not documented.
+                "renderers": {
+                    "1": "datacube_ows.wcs1_utils.get_tiff",
+                    "2": "datacube_ows.wcs2_utils.get_tiff",
+                },
                 # The MIME type of the image, as used in the Http Response.
                 "mime": "image/geotiff",
                 # The file extension to add to the filename.
@@ -1271,13 +1272,18 @@ ows_cfg = {
                 "multi-time": False
             },
             "netCDF": {
-                "renderer": "datacube_ows.wcs_utils.get_netcdf",
+                "renderers": {
+                    "1": "datacube_ows.wcs1_utils.get_netcdf",
+                    "2": "datacube_ows.wcs2_utils.get_netcdf",
+                },
                 "mime": "application/x-netcdf",
                 "extension": "nc",
                 "multi-time": True,
             }
         },
         # The wcs:native_format must be declared in wcs:formats dict above.
+        # Maybe over-ridden at the named layer (i.e. coverage)
+        # level.
         "native_format": "GeoTIFF",
     }, ###### End of "wcs" section
 
@@ -1455,6 +1461,12 @@ ows_cfg = {
                         # 3. All bands must exist in the band index.
                         # 4. Bands may be referred to by either native name or alias
                         "default_bands": [ "red", "green", "blue" ],
+                        # The native format advertised for the coverage.
+                        # Must be one of the formats defined
+                        # in the global wcs formats section.
+                        # Optional: if not supplied defaults to the
+                        # globally defined native_format.
+                        "native_format": "NetCDF"
                     },
                     # Each key of the identifiers dictionary must match a name from the authorities dictionary
                     # in the global section.  The values are the identifiers defined for this layer by that

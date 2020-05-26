@@ -123,8 +123,9 @@ def get_capabilities(args):
             for product in cfg.product_index.values()
         ],
         formats_supported=[
-            fmt['mime']
-            for fmt in cfg.wcs_formats.values()
+            fmt.mime
+            for fmt in cfg.wcs_formats
+            if 2 in fmt.renderers
         ],
         crss_supported=[
             crs  # TODO: conversion to URL format
@@ -224,7 +225,7 @@ def create_coverage_description(cfg, product):
             axes=axes,
             srs=product.native_CRS,
         ),
-        native_format=cfg.wcs_formats[cfg.native_wcs_format]['mime'],
+        native_format=cfg.wcs_formats_by_name[product.native_format].mime,
         coverage_subtype='RectifiedGridCoverage',
     )
 
