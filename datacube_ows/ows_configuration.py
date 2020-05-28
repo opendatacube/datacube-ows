@@ -836,12 +836,6 @@ class OWSConfig(OWSConfigEntry):
         if self.wcs:
             if not isinstance(cfg, Mapping):
                 raise ConfigException("WCS section missing (and WCS is enabled)")
-            self.default_geographic_CRS = cfg.get("default_geographic_CRS")
-            if self.default_geographic_CRS not in self.published_CRSs:
-                raise ConfigException("Configured default geographic CRS not listed in published CRSs.")
-            if not self.published_CRSs[self.default_geographic_CRS]["geographic"]:
-                raise ConfigException("Configured default geographic CRS not listed in published CRSs as geographic.")
-            self.default_geographic_CRS_def = self.published_CRSs[self.default_geographic_CRS]
             self.wcs_formats = WCSFormat.from_cfg(cfg["formats"])
             self.wcs_formats_by_name = {
                 fmt.name: fmt
