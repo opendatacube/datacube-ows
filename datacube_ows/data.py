@@ -23,7 +23,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
 from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException, tz_for_geometry, \
-    solar_date
+    solar_date, year_date_range, month_date_range
 
 from datacube_ows.utils import log_call, group_by_statistical
 
@@ -52,10 +52,10 @@ class DataStacker(object):
 
         self.raw_times = times
         if self._product.is_month_time_res:
-            self._times = list(t for t in times)
+            self._times = list([month_date_range(t) for t in times])
             self.group_by = group_by_statistical()
         elif self._product.is_year_time_res:
-            self._times = list([date(t.year, 1, 1) for t in times])
+            self._times = list([year_date_range(t) for t in times])
             self.group_by = group_by_statistical()
         else:
             self._times = list([local_solar_date_range(geobox, t) for t in times])

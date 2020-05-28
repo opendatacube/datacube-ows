@@ -69,6 +69,22 @@ def local_solar_date_range(geobox, date):
     return (start.astimezone(utc), end.astimezone(utc))
 
 
+def month_date_range(date):
+    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0)
+    y = date.year
+    m = date.month + 1
+    if m == 13:
+        m = 1
+        y = y + 1
+    end = datetime.datetime(y, m, 1, 0, 0, 0) - datetime.timedelta(days=1)
+    return start, end
+
+def year_date_range(date):
+    start = datetime.datetime(date.year, 1, 1, 0, 0, 0)
+    end = datetime.datetime(date.year, 12, 31, 23, 59, 59)
+    return start, end
+
+
 def tz_for_geometry(geom):
     crs_geo = geometry.CRS("EPSG:4326")
     geo_geom = geom.to_crs(crs_geo)
