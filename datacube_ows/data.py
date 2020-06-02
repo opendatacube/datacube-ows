@@ -482,12 +482,9 @@ def _make_derived_band_dict(pixel_dataset, style_index):
     return derived_band_dict
 
 
-@log_call
 def geobox_is_point(geobox):
-    #pylint: disable=protected-access
-    pts = geobox.extent._geom.GetGeometryRef(0).GetPoints()
-    return pts.count(pts[0]) == len(pts)
-
+    # TODO: Not 100% sure why this function is needed.
+    return geobox.height == 1 and geobox.width == 1
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
