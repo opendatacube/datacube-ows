@@ -35,6 +35,7 @@
     {%  endif %}
 {%- endmacro %}
 {% macro render_named_layer(lyr) -%}
+    {% if not lyr.hide %}
     {% set lyr_ranges = lyr.ranges %}
     <Layer queryable="1">
         <Name>{{ lyr.name }}</Name>
@@ -131,6 +132,7 @@
         {% endfor %}
         {# TODO: Layers for Subproducts #}
     </Layer>
+    {% endif %}
 {%- endmacro %}
 <WMS_Capabilities version="1.3.0"
 xmlns="http://www.opengis.net/wms"

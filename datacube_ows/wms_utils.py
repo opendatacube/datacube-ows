@@ -270,6 +270,7 @@ def bounding_box_to_geom(bbox, bb_crs, target_crs):
 class GetParameters():
     # pylint: disable=dict-keys-not-iterating
     def __init__(self, args):
+        self.cfg = get_config()
         # Version
         self.version = get_arg(args, "version", "WMS version",
                                permitted_values=['1.1.1', '1.3.0'])
@@ -280,7 +281,7 @@ class GetParameters():
             crs_arg = "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                              errcode=WMSException.INVALID_CRS,
-                             permitted_values=get_config().published_CRSs.keys())
+                             permitted_values=self.cfg.published_CRSs.keys())
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)
@@ -342,6 +343,14 @@ class GetMapParameters(GetParameters):
             raise WMSException("Style %s is not defined" % style_r,
                                WMSException.STYLE_NOT_DEFINED,
                                locator="Style parameter")
+        cfg = get_config()
+        if self.geobox.width > cfg.wms_max_width:
+            raise WMSException(f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",
+                               locator="Width parameter")
+        if self.geobox.height > cfg.wms_max_height:
+            raise WMSException(f"Width {self.geobox.height} exceeds supported maximum {self.cfg.wms_max_height}.",
+                               locator="Height parameter")
+
         # Zoom factor
         self.zf = zoom_factor(args, self.crs)
 

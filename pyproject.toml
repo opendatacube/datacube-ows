@@ -1,0 +1,7 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>3.4"]
+
+[tool.setuptools_scm]
+write_to = "datacube_ows/_version.py"
+fallback_version = "1.8.0-rc1.0"

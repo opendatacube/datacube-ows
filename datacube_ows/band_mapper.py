@@ -47,6 +47,12 @@ class StyleDefBase(object):
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
 
+        if self.masks:
+            for i, product_name in enumerate(product.product_names):
+                if not self.product.pq_names or self.product.pq_names[i] == product_name:
+                    self.needed_bands.add(self.product.pq_band)
+                    break
+
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         self.legend_cfg = style_cfg.get("legend", dict())
         if not defer_multi_date:
@@ -61,6 +67,7 @@ class StyleDefBase(object):
         if pq_data is not None:
             net_mask = None
             for mask in self.masks:
+                print(pq_data.flags_definition)
                 odc_mask = make_mask(pq_data, **mask.flags)
                 mask_data = getattr(odc_mask, self.product.pq_band)
                 if mask.invert:
@@ -474,9 +481,8 @@ class RgbaColorRampDef(StyleDefBase):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
-
-        data_bands = ['index_function']
-        data['index_function'] = (data.dims, self.index_function(data))
+        index_data = self.index_function(data)
+        data['index_function'] = (index_data.dims, index_data)
         return data["index_function"]
 
     def transform_single_date_data(self, data, pq_data, extent_mask, *masks):

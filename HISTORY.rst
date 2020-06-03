@@ -17,3 +17,10 @@ History
 ------------------
 
 * Reconcile package version number with git managed version number
+
+1.8.0 (2020-?-?)
+----------------
+
+* Synchronise minor version number with datacube-core.
+* Materialised spatio-temporal views for ranges.
+* WCS2 support.

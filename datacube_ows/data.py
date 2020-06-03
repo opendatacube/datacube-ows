@@ -23,7 +23,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
 from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException, tz_for_geometry, \
-    solar_date
+    solar_date, year_date_range, month_date_range
 
 from datacube_ows.utils import log_call, group_by_statistical
 
@@ -52,10 +52,10 @@ class DataStacker(object):
 
         self.raw_times = times
         if self._product.is_month_time_res:
-            self._times = list(t for t in times)
+            self._times = list([month_date_range(t) for t in times])
             self.group_by = group_by_statistical()
         elif self._product.is_year_time_res:
-            self._times = list([date(t.year, 1, 1) for t in times])
+            self._times = list([year_date_range(t) for t in times])
             self.group_by = group_by_statistical()
         else:
             self._times = list([local_solar_date_range(geobox, t) for t in times])
@@ -124,28 +124,27 @@ class DataStacker(object):
             prod = self._product.product
             measurements = [prod.measurements[name].copy() for name in self.needed_bands()]
 
-        with datacube.set_options(reproject_threads=1, fast_load=True):
-            if manual_merge:
-                return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
-            elif self._product.solar_correction and not mask and not skip_corrections:
-                # Merge performed already by dataset extent, but we need to
-                # process the data for the datasets individually to do solar correction.
-                merged = None
-                for ds in datasets:
-                    d = self.read_data(ds, measurements, self._geobox, **kwargs)
-                    for band in self.needed_bands():
-                        if band != self._product.pq_band:
-                            # No idea why pylint suddenly doesn't like this statement
-                            # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
-                            d[band] = solar_correct_data(d[band], ds)
-                    if merged is None:
-                        merged = d
-                    else:
-                        merged = merged.combine_first(d)
-                return merged
-            else:
-                data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
-                return data
+        if manual_merge:
+            return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
+        elif self._product.solar_correction and not mask and not skip_corrections:
+            # Merge performed already by dataset extent, but we need to
+            # process the data for the datasets individually to do solar correction.
+            merged = None
+            for ds in datasets:
+                d = self.read_data(ds, measurements, self._geobox, **kwargs)
+                for band in self.needed_bands():
+                    if band != self._product.pq_band:
+                        # No idea why pylint suddenly doesn't like this statement
+                        # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
+                        d[band] = solar_correct_data(d[band], ds)
+                if merged is None:
+                    merged = d
+                else:
+                    merged = merged.combine_first(d)
+            return merged
+        else:
+            data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
+            return data
 
     @log_call
     @opencensus_trace_call(tracer=tracer)
@@ -483,12 +482,9 @@ def _make_derived_band_dict(pixel_dataset, style_index):
     return derived_band_dict
 
 
-@log_call
 def geobox_is_point(geobox):
-    #pylint: disable=protected-access
-    pts = geobox.extent._geom.GetGeometryRef(0).GetPoints()
-    return pts.count(pts[0]) == len(pts)
-
+    # TODO: Not 100% sure why this function is needed.
+    return geobox.height == 1 and geobox.width == 1
 
 @log_call
 @opencensus_trace_call(tracer=tracer)

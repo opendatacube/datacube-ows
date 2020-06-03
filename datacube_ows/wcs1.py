@@ -5,7 +5,7 @@ from flask import render_template
 from datacube_ows.ogc_utils import get_service_base_url
 
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.wcs_utils import WCS1GetCoverageRequest, get_coverage_data
+from datacube_ows.wcs1_utils import WCS1GetCoverageRequest, get_coverage_data
 
 from datacube_ows.ows_configuration import get_config
 
@@ -18,7 +18,7 @@ tracer = get_opencensus_tracer()
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def handle_wcs(nocase_args):
+def handle_wcs1(nocase_args):
     operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS1Exception("No operation specified", locator="Request parameter")
@@ -78,7 +78,6 @@ def get_capabilities(args):
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def desc_coverages(args):
-    # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     cfg = get_config()
 
@@ -114,19 +113,18 @@ def desc_coverages(args):
 @log_call
 @opencensus_trace_call(tracer=tracer)
 def get_coverage(args):
-    # Note: Only WCS v1.0.0 is fully supported at this stage, so no version negotiation is necessary
     cfg = get_config()
     req = WCS1GetCoverageRequest(args)
-    if req.format["multi-time"] and len(req.times) > 1:
+    if req.format.multi_time and len(req.times) > 1:
         raise WCS1Exception("Multi-time requests are not currently supported for WCS1",
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="Time parameter")
     data = get_coverage_data(req)
     return (
-        req.format["renderer"](req, data),
+        req.format.renderer(req.version)(req, data),
         200,
         cfg.response_headers({
-            "Content-Type": req.format["mime"],
-            'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format["extension"])
+            "Content-Type": req.format.mime,
+            'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format.extension)
         })
     )
