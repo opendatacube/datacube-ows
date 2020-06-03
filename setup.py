@@ -31,7 +31,8 @@ requirements = [
     'scikit-image',
     'timezonefinderL',
     'python-slugify',
-    'xarray'
+    'xarray',
+    'pyows'
 ]
 
 test_requirements = [
@@ -41,7 +42,6 @@ test_requirements = [
 
 setup(
     name='datacube_ows',
-    version='0.2.0',
     description="Open Data Cube Open Web Services",
     long_description=readme + '\n\n' + history,
     author="Open Data Cube",
@@ -50,6 +50,7 @@ setup(
     entry_points={
         'console_scripts': [
             'datacube-ows=datacube_ows.wsgi:main',
+            'datacube-ows-update-old=datacube_ows.update_ranges_old:main',
             'datacube-ows-update=datacube_ows.update_ranges:main'
         ]
     },

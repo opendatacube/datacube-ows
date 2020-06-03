@@ -1,186 +1,199 @@
 #!/usr/bin/env python3
 
-from datacube_ows.product_ranges import update_all_ranges, add_product_range, add_multiproduct_range, add_all, update_range
-from datacube_ows.utils import get_sqlconn
-from datacube import Datacube
-from psycopg2.sql import SQL, Identifier
+import re
 import os
+import pkg_resources
+from datacube_ows import __version__
+from datacube_ows.product_ranges import get_sqlconn, add_ranges
+from datacube import Datacube
+import psycopg2
+from psycopg2.sql import SQL
+import sqlalchemy
+from datacube_ows.ows_configuration import get_config
 import click
 
 @click.command()
-@click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema.")
+@click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
+@click.option("--blocking/--no-blocking", is_flag=True, default=False, help="In conjunction with --views, controls whether the materialised view refresh is blocking or concurrent. (defaults to concurrent)")
+@click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
-@click.option("--product", default=None, help="The name of a datacube product.")
-@click.option("--multiproduct", default=None, help="The name of OWS multi-product." )
-@click.option("--merge-only/--no-merge-only", default=False, help="When used with the multiproduct and calculate-extent options, the ranges for underlying datacube products are not updated.")
-@click.option("--calculate-extent/--no-calculate-extent", default=True, help="no-calculate-extent uses database queries to maximise efficiency. calculate-extent calculates ranges directly and is the default.")
-def main(product, multiproduct, merge_only, calculate_extent, schema, role):
+@click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products" )
+@click.option("--merge-only/--no-merge-only", default=False, help="When used with a multiproduct layer, the ranges for underlying datacube products are not updated.")
+@click.option("--product", default=None, help="Deprecated option provided for backwards compatibility")
+@click.option("--multiproduct", default=None, help="Deprecated option provided for backwards compatibility." )
+@click.option("--calculate-extent/--no-calculate-extent", default=None, help="Has no effect any more.  Provided for backwards compatibility only")
+@click.option("--version", is_flag=True, default=False, help="Print version string and exit")
+@click.argument("layers", nargs=-1)
+def main(layers, blocking,
+         merge_only, summary,
+         schema, views, role, version,
+         product, multiproduct, calculate_extent):
     """Manage datacube-ows range tables.
 
-    A valid invocation should specify at most one of '--product', '--multiproduct' or '--schema'.
-    If neither of these options are specified, then the ranges for all products and multiproducts
-    are updated.
+    Valid invocations:
+
+    * update_ranges.py --schema --role myrole
+        Create (re-create) the OWS schema (including materialised views) and grants permission to role myrole
+
+    * update_ranges.py --views
+        Refresh the materialised views
+
+    * One or more OWS or ODC layer names
+        Update ranges for the specified LAYERS
+
+    * No LAYERS (and neither the --views nor --schema options)
+        (Update ranges for all configured OWS layers.
+
+    Uses the DATACUBE_OWS_CFG environment variable to find the OWS config file.
     """
-    if product and multiproduct:
-        print("Sorry, you specified both a product and multiproduct.  One at a time, please.")
-        return 1
-    elif schema and (product or multiproduct):
+    # --version
+    if version:
+        print("Open Data Cube Open Web Services (datacube-ows) version",
+              __version__
+               )
+        return 0
+    # Handle old-style calls
+    if not layers:
+        layers = []
+    if product:
+        print("********************************************************************************")
+        print("Warning: The product flag is deprecated and will be removed in a future release.")
+        print("          The correct way to make this call is now:")
+        print("          ")
+        print("          python3 update_ranges.py %s" % product)
+        print("********************************************************************************")
+        layers.append(product)
+    if multiproduct:
+        print("********************************************************************************")
+        print("Warning: The product flag is deprecated and will be removed in a future release.")
+        print("          The correct way to make this call is now:")
+        print("          ")
+        if merge_only:
+            print("          python3 update_ranges.py --merge-only %s" % multiproduct)
+        else:
+            print("          python3 update_ranges.py %s" % multiproduct)
+        print("********************************************************************************")
+        layers.append(multiproduct)
+    if calculate_extent is not None:
+        print("********************************************************************************")
+        print("Warning: The calculate-extent and no-calculate-extent flags no longer have ")
+        print("         any effect.  They are kept only for backwards compatibility and will")
+        print("         be removed in a future release.")
+        print("********************************************************************************")
+    if schema and layers:
         print("Sorry, cannot update the schema and ranges in the same invocation.")
         return 1
+    elif views and layers:
+        print("Sorry, cannot update the materialised views and ranges in the same invocation.")
+        return 1
     elif schema and not role:
-        print("Sorry, cannot update schema without specifying a role")
+        print("Sorry, cannot update schema without specifying a role, use: '--schema --role myrole'")
+        return 1
+    elif role and not schema:
+        print("Sorry, role only makes sense for updating the schema")
         return 1
 
     if os.environ.get("PYDEV_DEBUG"):
         import pydevd_pycharm
         pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
 
-
-    dc = Datacube(app="wms_update_ranges")
+    dc = Datacube(app="ows_update_ranges")
     if schema:
         print("Checking schema....")
         print("Creating or replacing WMS database schema...")
         create_schema(dc, role)
+        print("Creating or replacing materialised views...")
+        create_views(dc)
         print("Done")
-    elif not calculate_extent:
-        if product:
-            print("Updating range for: ", product)
-            add_product_range(dc, product)
-        elif multiproduct:
-            print("Updating range for: ", multiproduct)
-            add_multiproduct_range(dc, multiproduct)
-        else:
-            print("Updating range for all, using SQL extent calculation")
-            add_all(dc)
-            print("Done")
-    else:
-        if product:
-            print("Updating range for: ", product)
-            p, u, i, sp, su, si = update_range(dc, product, multi=False)
-            if u:
-                print("Ranges updated for", product)
-            elif i:
-                print("New ranges inserted for", product)
-            else:
-                print("Ranges up to date for", product)
-            if sp or su or si:
-                print ("Updated ranges for %d existing sub-products and inserted ranges for %d new sub-products (%d existing sub-products unchanged)" % (su, si, sp))
-        elif multiproduct:
-            print("Updating range for: ", multiproduct)
-            p, u, i = update_range(dc, multiproduct, multi=True, follow_dependencies=not merge_only)
-            if u:
-                print("Merged ranges updated for", multiproduct)
-            elif i:
-                print("Merged ranges inserted for", multiproduct)
-            else:
-                print("Merged ranges up to date for", multiproduct)
-        else:
-            print ("Updating ranges for all layers/products")
-            p, u, i, sp, su, si, mp, mu, mi = update_all_ranges(dc)
-            print ("Updated ranges for %d existing layers/products and inserted ranges for %d new layers/products (%d existing layers/products unchanged)" % (u, i, p))
-            if sp or su or si:
-                print ("Updated ranges for %d existing sub-products and inserted ranges for %d new sub-products (%d existing sub-products unchanged)" % (su, si, sp))
-            if mp or mu or mi:
-                print ("Updated ranges for %d existing multi-products and inserted ranges for %d new multi-products (%d existing multi-products unchanged)" % (su, si, sp))
+        return 0
+    elif views:
+        print("Refreshing materialised views...")
+        refresh_views(dc, blocking)
+        print("Done")
+        return 0
+
+    print("Deriving extents from materialised views")
+    if not layers:
+        layers = list(get_config().product_index.keys())
+    try:
+        add_ranges(dc, layers, summary, merge_only)
+    except (psycopg2.errors.UndefinedColumn,
+            sqlalchemy.exc.ProgrammingError):
+        print("ERROR: OWS schema or extent materialised views appear to be missing",
+              "\n",
+              "       Try running with the --schema options first."
+              )
+        return 1
     return 0
 
 
+def create_views(dc):
+    run_sql(dc, "extent_views/create", database=os.environ.get("DB_DATABASE"))
+
+
+def refresh_views(dc, blocking):
+    if blocking:
+        blocking = ""
+        print("N.B. Blocking refresh. Spacetime view will be locked until completion.")
+    else:
+        blocking = "CONCURRENTLY"
+        print("N.B. Concurrent refresh. Refresh will not take place immediately.")
+    run_sql(dc, "extent_views/refresh", blocking=blocking)
+
+
 def create_schema(dc, role):
-    commands = [
-        ("Creating/replacing wms schema", "create schema if not exists wms"),
+    run_sql(dc, "wms_schema/create", role=role)
 
-        ("Creating/replacing product ranges table", """
-            create table if not exists wms.product_ranges (
-                id smallint not null primary key references agdc.dataset_type (id),
 
-                lat_min decimal not null,
-                lat_max decimal not null,
-                lon_min decimal not null,
-                lon_max decimal not null,
+def run_sql(dc, path, **params):
+    if not pkg_resources.resource_exists(__name__, f"sql/{path}"):
+        print("Cannot find SQL resources - check your datacube-ows installation")
+        return
+    if not pkg_resources.resource_isdir(__name__, f"sql/{path}"):
+        print("Cannot find SQL resource directory - check your datacube-ows installation")
+        return
 
-                dates jsonb not null,
+    files = sorted(pkg_resources.resource_listdir(__name__, f"sql/{path}"))
 
-                bboxes jsonb not null)
-        """),
-        ("Creating/replacing sub-product ranges table", """
-            create table if not exists wms.sub_product_ranges (
-                product_id smallint not null references agdc.dataset_type (id),
-                sub_product_id smallint not null,
-                lat_min decimal not null,
-                lat_max decimal not null,
-                lon_min decimal not null,
-                lon_max decimal not null,
-                dates jsonb not null,
-                bboxes jsonb not null,
-                constraint pk_sub_product_ranges primary key (product_id, sub_product_id) )
-        """),
-        ("Creating/replacing multi-product ranges table", """
-            create table if not exists wms.multiproduct_ranges (
-                wms_product_name varchar(128) not null primary key,
-                lat_min decimal not null,
-                lat_max decimal not null,
-                lon_min decimal not null,
-                lon_max decimal not null,
-                dates jsonb not null,
-                bboxes jsonb not null)
-        """),
-        # Functions
-        ("Creating/replacing wms_get_min() function", """
-            CREATE OR REPLACE FUNCTION wms_get_min(integer[], text) RETURNS numeric AS $$
-            DECLARE
-                ret numeric;
-                ul text[] DEFAULT array_append('{extent, coord, ul}', $2);
-                ur text[] DEFAULT array_append('{extent, coord, ur}', $2);
-                ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
-                lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
-            BEGIN
-                WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref = any($1) AND archived IS NULL )
-                SELECT MIN(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
-                       (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
-                INTO ret
-                FROM m;
-                RETURN ret;
-            END;
-            $$ LANGUAGE plpgsql;
-        """),
-        ("Creating/replacing wms_get_max() function", """
-            CREATE OR REPLACE FUNCTION wms_get_max(integer[], text) RETURNS numeric AS $$
-            DECLARE
-                ret numeric;
-                ul text[] DEFAULT array_append('{extent, coord, ul}', $2);
-                ur text[] DEFAULT array_append('{extent, coord, ur}', $2);
-                ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
-                lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
-            BEGIN
-                WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref = ANY ($1) AND archived IS NULL )
-                SELECT MAX(GREATEST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
-                       (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
-                INTO ret
-                FROM m;
-                RETURN ret;
-            END;
-            $$ LANGUAGE plpgsql;
-        """),
-    ]
-
+    filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
+    filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
     conn = get_sqlconn(dc)
-    for msg, sql in commands:
-        print(msg)
-        conn.execute(sql)
 
-    # Add user based on param
-    # use psycopg2 directly to get proper psql
-    # quoting on the role name identifier
-    print("Granting usage on schema")
-    q = SQL("GRANT USAGE ON SCHEMA wms TO {}").format(Identifier(role))
-    with conn.connection.cursor() as psycopg2connection:
-        psycopg2connection.execute(q)
+    for f in files:
+        match = filename_pattern.fullmatch(f)
+        if not match:
+            print(f"Illegal SQL filename: {f} (skipping)")
+            continue
+        req_match = filename_req_pattern.fullmatch(f)
+        if req_match:
+            reqs = req_match.group("reqs").split("_")
+        else:
+            reqs = []
+        sql_stream = pkg_resources.resource_stream(__name__, f"sql/{path}/{f}")
+        sql = ""
+        first = True
+        for line in sql_stream:
+            line = str(line, "utf-8")
+            if first and line.startswith("--"):
+                print(line[2:])
+            else:
+                sql = sql + "\n" + line
+                if first:
+                    print(f"Running {f}")
+            first = False
+        if reqs:
+            try:
+                kwargs = {v: params[v] for v in reqs}
+            except KeyError as e:
+                print(f"Required parameter {e} for file {f} not supplied - skipping")
+                continue
+            sql = sql.format(**kwargs)
+        if f.endswith("_raw.sql"):
+            q = SQL(sql)
+            with conn.connection.cursor() as psycopg2connection:
+                psycopg2connection.execute(q)
+        else:
+            conn.execute(sql)
     conn.close()
-
-    return
-
-
-if __name__ == '__main__':
-    main()
 
 

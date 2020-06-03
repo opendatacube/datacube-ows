@@ -1,4 +1,4 @@
-import osr
+from pyproj import CRS
 
 SUPPORTED_CRS = [
    'EPSG:3857', # Web Mercator
@@ -11,7 +11,11 @@ SUPPORTED_CRS = [
    'EPSG:6933', # Africa
 ]
 
-def test_gdal_crs():
+def test_pyproj_crs():
    for crs_string in SUPPORTED_CRS:
-      srs = osr.SpatialReference()
-      assert (srs.SetFromUserInput(crs_string) == 0), "{} is not supported".format(crs_string)
+      try:
+         crs = CRS(crs_string)
+         assert crs is not None
+      except:
+         assert False
+

@@ -25,3 +25,4 @@ python-slugify
 bottleneck
 sentry-sdk
 blinker
+pyows

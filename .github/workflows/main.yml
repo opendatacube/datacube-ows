@@ -67,7 +67,6 @@ jobs:
       run: |
         curl --silent --show-error --fail \
         "localhost:8000/?service=WMS&version=1.3.0&request=GetCapabilities" \
-        > /dev/null
 
     - name: Test WMTS GetCapabilities
       run: |
@@ -75,10 +74,16 @@ jobs:
         "localhost:8000/?service=WMS&version=1.0.0&request=GetCapabilities" \
         > /dev/null
 
-    - name: Test WCS GetCapabilities
+    - name: Test WCS1 GetCapabilities
       run: |
         curl --silent --show-error --fail \
-        "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities" \
+        "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities"
+        > /dev/null
+
+    - name: Test WCS2 GetCapabilities
+      run: |
+        curl --silent --show-error --fail \
+        "localhost:8000/?service=WCS&version=2.0.1&request=GetCapabilities"
         > /dev/null
 
     - name: Test datacube-ows-update
