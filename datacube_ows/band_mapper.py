@@ -481,9 +481,8 @@ class RgbaColorRampDef(StyleDefBase):
         if extent_mask is not None:
             data = data.where(extent_mask)
         data = self.apply_masks(data, pq_data)
-
-        data_bands = ['index_function']
-        data['index_function'] = (data.dims, self.index_function(data))
+        index_data = self.index_function(data)
+        data['index_function'] = (index_data.dims, index_data)
         return data["index_function"]
 
     def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
