@@ -526,57 +526,58 @@ def feature_info(args):
             fi_date_index = {}
             ds_at_times =collapse_datasets_to_times(datasets, params.times, tz)
             # ds_at_times["time"].attrs["units"] = 'seconds since 1970-01-01 00:00:00'
-            data = stacker.data(ds_at_times, skip_corrections=True,
-                                manual_merge=params.product.data_manual_merge,
-                                fuse_func=params.product.fuse_func
-                                )
-            for dt in data.time.values:
-                td = data.sel(time=dt)
-                # Global data that should apply to all dates, but needs some data to extract
-                if not global_info_written:
-                    global_info_written = True
-                    # Non-geographic coordinate systems need to be projected onto a geographic
-                    # coordinate system.  Why not use EPSG:4326?
-                    # Extract coordinates in CRS
-                    data_x = getattr(td, h_coord)
-                    data_y = getattr(td, v_coord)
+            if ds_at_times:
+                data = stacker.data(ds_at_times, skip_corrections=True,
+                                    manual_merge=params.product.data_manual_merge,
+                                    fuse_func=params.product.fuse_func
+                                    )
+                for dt in data.time.values:
+                    td = data.sel(time=dt)
+                    # Global data that should apply to all dates, but needs some data to extract
+                    if not global_info_written:
+                        global_info_written = True
+                        # Non-geographic coordinate systems need to be projected onto a geographic
+                        # coordinate system.  Why not use EPSG:4326?
+                        # Extract coordinates in CRS
+                        data_x = getattr(td, h_coord)
+                        data_y = getattr(td, v_coord)
 
-                    x = data_x[isel_kwargs[h_coord]].item()
-                    y = data_y[isel_kwargs[v_coord]].item()
-                    pt = geometry.point(x, y, params.crs)
+                        x = data_x[isel_kwargs[h_coord]].item()
+                        y = data_y[isel_kwargs[v_coord]].item()
+                        pt = geometry.point(x, y, params.crs)
 
-                    # Project to EPSG:4326
-                    crs_geo = geometry.CRS("EPSG:4326")
-                    ptg = pt.to_crs(crs_geo)
+                        # Project to EPSG:4326
+                        crs_geo = geometry.CRS("EPSG:4326")
+                        ptg = pt.to_crs(crs_geo)
 
-                    # Capture lat/long coordinates
-                    feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+                        # Capture lat/long coordinates
+                        feature_json["lon"], feature_json["lat"] = ptg.coords[0]
 
-                date_info = {}
+                    date_info = {}
 
-                ds = ds_at_times.sel(time=dt).values.tolist()[0]
-                if params.product.multi_product:
-                    date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
+                    ds = ds_at_times.sel(time=dt).values.tolist()[0]
+                    if params.product.multi_product:
+                        date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
 
-                # Extract data pixel
-                pixel_ds = td.isel(**isel_kwargs)
+                    # Extract data pixel
+                    pixel_ds = td.isel(**isel_kwargs)
 
-                # Get accurate timestamp from dataset
-                if params.product.is_raw_time_res:
-                    date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
-                else:
-                    date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
-                # Collect raw band values for pixel and derived bands from styles
-                date_info["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
-                derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
-                if derived_band_dict:
-                    date_info["band_derived"] = derived_band_dict
-                # Add any custom-defined fields.
-                for k, f in params.product.feature_info_custom_includes.items():
-                    date_info[k] = f(date_info["bands"])
+                    # Get accurate timestamp from dataset
+                    if params.product.is_raw_time_res:
+                        date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    else:
+                        date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
+                    # Collect raw band values for pixel and derived bands from styles
+                    date_info["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands())
+                    derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
+                    if derived_band_dict:
+                        date_info["band_derived"] = derived_band_dict
+                    # Add any custom-defined fields.
+                    for k, f in params.product.feature_info_custom_includes.items():
+                        date_info[k] = f(date_info["bands"])
 
-                feature_json["data"].append(date_info)
-                fi_date_index[dt] = feature_json["data"][-1]
+                    feature_json["data"].append(date_info)
+                    fi_date_index[dt] = feature_json["data"][-1]
 
             my_flags = 0
             if params.product.pq_names == params.product.product_names:
