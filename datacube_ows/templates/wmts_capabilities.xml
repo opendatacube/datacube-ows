@@ -1,14 +1,16 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<Capabilities version="1.0.0"
-xmlns="http://www.opengis.net/wmts/1.0"
-xmlns:ows="http://www.opengis.net/ows/1.1"
-xmlns:xlink="http://www.w3.org/1999/xlink"
-xmlns:gml="http://www.opengis.net/gml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd">
+<Capabilities
+        xmlns="http://www.opengis.net/wmts/1.0"
+        xmlns:ows="http://www.opengis.net/ows/1.1"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:gml="http://www.opengis.net/gml"
+        xsi:schemaLocation="http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0.0/wmtsGetCapabilities_response.xsd"
+        version="1.0.0"
+>
 
 {% if show_service_id %}
-    <ows.ServiceIdentification>
+    <ows:ServiceIdentification>
         <ows:Title>{{ cfg.title }}</ows:Title>
         {% if cfg.abstract %}
         <ows:Abstract>
@@ -26,7 +28,7 @@ xsi:schemaLocation="http://www.opengis.net/wcs http://schemas.opengis.net/wmts/1
         <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
         <ows:Fees>{{ cfg.fees }}</ows:Fees>
         <ows:AccessConstraints>{{ cfg.access_constraints }}</ows:AccessConstraints>
-    </ows.ServiceIdentification>
+    </ows:ServiceIdentification>
 {% endif %}
 
 {% if show_service_provider %}
