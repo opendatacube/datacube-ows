@@ -18,6 +18,7 @@ ranges as
   (metadata #>> '{extent, lon, end}') as lon_end
    from agdc.dataset where
       metadata_type_ref in (select id from metadata_lookup where name='eo3')
+      and archived is null
   ),
 -- This is eo spatial (Uses ALOS-PALSAR over Africa as a sample product)
 corners as
