@@ -42,7 +42,7 @@ Update extents of products in Datacube to make it easier for OWS to create getca
 
 .. code-block:: console
 
-    $ python3 update_ranges.py --product alos_palsar_mosaic --no-calculate-extent
+    $ python3 update_ranges.py alos_palsar_mosaic
 
 Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is outside of the code directory, i.e. `/opt`.
 
@@ -61,5 +61,3 @@ Perform GetMap via Qgis to ensure data is visible.
 .. code-block:: console
 
     $ curl "localhost:8000/?service=wms&request=getcapabilities"
-
-
