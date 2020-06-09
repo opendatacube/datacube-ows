@@ -162,8 +162,8 @@ class DataStacker(object):
             merged = None
             for ds in tds.values.item():
                 d = self.read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
+                # Squeeze upconverts uints to int32
                 d = d.squeeze(["time"], drop=True)
-                # GROK - collapse!!!
                 extent_mask = None
                 for band in bands:
                     for f in self._product.extent_mask_func:
