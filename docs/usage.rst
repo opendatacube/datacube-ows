@@ -26,7 +26,7 @@ These should be available in the OWS docker image.
 
     $ datacube product add https://raw.githubusercontent.com/digitalearthafrica/config/master/products/alos_palsar_mosaic.yaml
 
-Index all the YAML files for a particular year of ALOS-PALSAR
+Index all the ``YAML`` files for a particular year of ALOS-PALSAR
 using a classic Unix toolchain style,
 with `AWS CLI <https://aws.amazon.com/cli/>`_ grabbing them from S3.
 
@@ -35,6 +35,31 @@ with `AWS CLI <https://aws.amazon.com/cli/>`_ grabbing them from S3.
     $ aws s3 ls s3://deafrica-data/jaxa/alos_palsar_mosaic/2017/ --recursive \
     | grep yaml | awk '{print $4}' \
     | xargs -n1 -I {} datacube dataset add s3://deafrica-data/{}
+
+Index a dataset when ``yaml`` file is not available and ONLY ``.json`` file is available.
+
+.. code-block:: console
+
+    # How to index Sentinel-2 cogs
+
+    ## Tooling
+    pip install --upgrade --extra-index-url="https://packages.dea.ga.gov.au" odc-apps-dc-tools odc-index datacube
+
+    ## Find the files
+
+    s3-find s3://sentinel-cogs/sentinel-s2-l2a-cogs/2019/**/*.json > sentinel-cogs-2020.txt
+
+    ## Tar them up
+
+    s3-to-tar sentinel-cogs-2020.txt sentinel-cogs-2020.tar
+
+    ## Install the fresh indexing tools (if not already installed)
+
+    `pip install --upgrade --extra-index-url="https://packages.dea.ga.gov.au" odc-apps-dc-tools odc-index`
+
+    ## And index
+
+    dc-index-from-tar --stac --product=s2_l2a < sentinel-cogs-2020.tar
 
 .. note:: The next step will be superseded soon by an OWS sub-command.
 
