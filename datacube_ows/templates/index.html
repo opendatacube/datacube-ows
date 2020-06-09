@@ -1,45 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- CSS only -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: "Arial";
+            color: #404040 ;
+        }
+        .dea-color{
+            color: #00A1DE !important;
+        }
+        .btn-dea {
+            background-color: #00A1DE !important;
+            color: #fff;
+        }
+    </style>
+    <!-- JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+
     <title>{{  cfg.title }} (datacube-ows)</title>
 </head>
+
 <body>
-<h1>{{ cfg.title }} (datacube-ows)</h1>
-<p>{{ cfg.abstract }}</p> <hr/>
-    <p>
-        This URL is an
-        <a href="https://opendatacube.org">Open Data Cube</a>
-        <a href="https://github.com/opendatacube/datacube-ows">Open Web Services (datacube-ows)</a>
-        end-point and is not intended for direct viewing.</p>
-    <p>This instance supports the following protocols:</p>
-    {% if cfg.wms %}
-        <h2>WMS (OGC Web Map Service)</h2>
-        <p><b>Supported Versions:</b> {% for sv in supported["wms"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}
-        (N.B. We maintain some compatibility with v1.1.1 but do not guarantee full compliance with the standard.)</p>
-        <p>To view service metadata and supported capabilities see:<br/>
-            <a href="{{ base_url }}/wms?request=GetCapabilities&service=WMS&version={{ supported["wms"].versions[-1].version }}">
-                {{ base_url }}/wms?request=GetCapabilities&service=WMS&version={{ supported["wms"].versions[-1].version }}
-            </a>
-        </p>
+    <!-- Just an image -->
+    <nav class="navbar navbar-light bg-light">
+        <a class="navbar-brand" href="#">
+            <!-- <img src="https://docs.dea.ga.gov.au/_static/dea-logo-inline.svg" height="60" alt="{{ cfg.title }} (datacube-ows)" loading="lazy"> -->
+            {{ cfg.title }} (datacube-ows)
+        </a>
+    </nav>
+    <div class="jumbotron jumbotron-fluid" style="background-color: rgba(233, 236, 239, 0.6);">
+        <div class="container">
+          <h1 class="display-4">{{ cfg.abstract }}</h1>
+          <hr class="my-4">
+          <p class="lead">
+              This URL is an end-point and is not intended for direct viewing. For more information: </p>
+              <a href="https://opendatacube.org">
+                <img src="https://static.wixstatic.com/media/8959d6_98a1d74703d946ecab030b32f53db883~mv2.png/v1/fill/w_268,h_68,al_c,q_85,usm_0.66_1.00_0.01/f9d4ea_7a2d1d0c69ad4da0a2f48b69bc481612_.webp">
+              </a>
+              <a class="btn btn-dea btn-lg" href="https://github.com/opendatacube/datacube-ows" role="button">Open Web Services (datacube-ows) Repository</a>
+        </div>
+      </div>
+<div class="container-xl">
+      <p class="h2">This instance supports the following protocols:</p>
+    <div class="card-group">
+        {% if cfg.wms %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">WMS (OGC Web Map Service)</h5>
+                <p class="card-text"><b>Supported Versions:</b>
+                    {% for sv in supported["wms"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %} </p>
+                <p class="card-text"><small class="text-muted">(N.B. We maintain some compatibility with v1.1.1 but do not guarantee full compliance with the
+                standard.)</small></p>
+            </div>
+                <div class="card-body">
+                <p class="card-text">
+                    <a href="{{ base_url }}/wms?request=GetCapabilities&service=WMS&version={{ supported["wms"].versions[-1].version }}" class="btn btn-dea">
+                        WMS GetCapabilities</a>
+                </p>
+            </div>
+
+        </div>
+        {% endif %}
+        {% if cfg.wmts %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">WMTS (OGC Web Map Tiling Service)</h5>
+                <p class="card-text"><b>Supported Versions:</b>
+                    {% for sv in supported["wmts"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}
+                </p>
+            </div>
+                <div class="card-body">
+                <p class="card-text"><a
+                        href="{{ base_url }}/wmts?request=GetCapabilities&service=WMTS&version={{ supported["wmts"].versions[-1].version }}" class="btn btn-dea">
+                        WMTS GetCapabilities
+                    </a></p>
+                </div>
+
+        </div>
+        {% endif %}
+
+
+
+        {% if cfg.wcs %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">WCS (OGC Web Coverage Service)</h5>
+                <p class="card-text"><b>Supported Versions:</b>
+                    {% for sv in supported["wcs"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}
+                </p>
+            </div>
+                <div class="card-body">
+                <p class="card-text">
+                    <a
+                        href="{{ base_url }}/wcs?request=GetCapabilities&service=WCS&version={{ supported["wcs"].versions[-1].version }}" class="btn btn-dea">
+                        WCS GetCapabilities
+                    </a></p>
+                </div>
+
+        </div>
+    </div>
     {% endif %}
-    {% if cfg.wmts %}
-        <h2>WMTS (OGC Web Map Tiling Service)</h2>
-        <p><b>Supported Versions:</b> {% for sv in supported["wmts"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}</p>
-        <p>To view service metadata and supported capabilities see:<br/>
-            <a href="{{ base_url }}/wmts?request=GetCapabilities&service=WMTS&version={{ supported["wmts"].versions[-1].version }}">
-                {{ base_url }}/wmts?request=GetCapabilities&service=WMTS&version={{ supported["wmts"].versions[-1].version }}
-            </a>
-        </p>
-    {% endif %}
-    {% if cfg.wcs %}
-        <h2>WCS (OGC Web Coverage Service)</h2>
-        <p><b>Supported Versions:</b> {% for sv in supported["wcs"].versions %}{{ sv.version }}{% if loop.last %}.{% else %},{% endif %}{% endfor %}</p>
-        <p>To view service metadata and supported capabilities see:<br/>
-            <a href="{{ base_url }}/wcs?request=GetCapabilities&service=WCS&version={{ supported["wcs"].versions[-1].version }}">
-            {{ base_url }}/wcs?request=GetCapabilities&service=WCS&version={{ supported["wcs"].versions[-1].version }}
-            </a>
-        </p>
-    {% endif %}
+</div>
 </body>
+
 </html>

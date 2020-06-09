@@ -1,4 +1,4 @@
--- Creating Materialised View Index 3/3
+-- Creating Materialised View Index 3/4
 
 CREATE INDEX space_time_view_ds_idx
   ON space_time_view
