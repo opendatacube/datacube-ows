@@ -71,6 +71,8 @@ def _get_geobox(args, src_crs, dst_crs=None):
     height = int(args['height'])
     minx, miny, maxx, maxy = _get_geobox_xy(args, src_crs)
 
+    if minx == maxx or miny == maxy:
+        raise WMSException("Bounding box must enclose a non-zero area")
     if dst_crs is not None:
         minx, miny, maxx, maxy = _bounding_pts(
             minx, miny,
