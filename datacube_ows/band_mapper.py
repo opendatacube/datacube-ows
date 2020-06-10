@@ -67,7 +67,6 @@ class StyleDefBase(object):
         if pq_data is not None:
             net_mask = None
             for mask in self.masks:
-                print(pq_data.flags_definition)
                 odc_mask = make_mask(pq_data, **mask.flags)
                 mask_data = getattr(odc_mask, self.product.pq_band)
                 if mask.invert:
