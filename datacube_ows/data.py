@@ -404,7 +404,7 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     for tds in datasets:
         for ds in tds.values.item():
             if pt and ds.extent:
-                if ds.extent.countains(pt):
+                if ds.extent.contains(pt):
                     uris.append(ds.uris)
             else:
                 uris.append(ds.uris)
