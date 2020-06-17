@@ -399,12 +399,16 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def get_s3_browser_uris(datasets, pt, s3url="", s3bucket=""):
+def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     uris = []
     for tds in datasets:
         for ds in tds.values.item():
-            if ds.extent.countains(pt):
+            if pt and ds.extent:
+                if ds.extent.countains(pt):
+                    uris.append(ds.uris)
+            else:
                 uris.append(ds.uris)
+
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
