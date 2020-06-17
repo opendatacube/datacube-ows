@@ -40,6 +40,13 @@ jobs:
       run: |
         docker run ${ORG}/${IMAGE}:_builder /bin/sh -c "./check-code.sh"
 
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CodeCovToken }}
+        file: ./coverage.xml
+        fail_ci_if_error: false
+
 
     # Build prod image and tag as latest, connect to pre-indexed database
     - name: Build and run prod OWS images (stage 2)
