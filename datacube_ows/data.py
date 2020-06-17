@@ -403,7 +403,7 @@ def get_s3_browser_uris(datasets, pt, s3url="", s3bucket=""):
     uris = []
     for tds in datasets:
         for ds in tds.values.item():
-            if ds.extent.countains(pt):
+            if ds.extent.contains(pt):
                 uris.append(ds.uris)
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
