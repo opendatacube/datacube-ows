@@ -1,12 +1,23 @@
 from __future__ import absolute_import
 
 import logging
+from collections import defaultdict
+from math import isclose
+
 from datacube_ows.wms_utils import GetLegendGraphicParameters
 import io
 from PIL import Image
 import numpy as np
 from flask import make_response
 import requests
+
+import matplotlib
+# Do not use X Server backend
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+
 
 _LOG = logging.getLogger(__name__)
 
@@ -52,9 +63,14 @@ def create_legends_from_styles(styles):
                 imgs.append(img)
         else:
             bytesio = io.BytesIO()
-            s.legend(bytesio)
+            s.single_date_legend(bytesio)
             bytesio.seek(0)
             imgs.append(Image.open(bytesio))
+            for mdh in s.multi_date_handlers:
+                bytesio = io.BytesIO()
+                if mdh.legend(bytesio):
+                    bytesio.seek(0)
+                    imgs.append(Image.open(bytesio))
 
     min_shape = sorted([(np.sum(i.size), i.size) for i in imgs])[0][1]
     imgs_comb = np.vstack((np.asarray(i.resize(min_shape)) for i in imgs))
@@ -75,3 +91,5 @@ def get_image_from_url(url):
         bytesio.seek(0)
         return Image.open(bytesio)
     return None
+
+
