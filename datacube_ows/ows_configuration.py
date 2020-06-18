@@ -469,9 +469,11 @@ class OWSNamedLayer(OWSLayer):
         if not self.native_CRS:
             self.native_CRS = cfg.get("native_crs")
         elif cfg.get("native_crs") == self.native_CRS:
-            _LOG.debug(f"Native crs for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
+            _LOG.debug("Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                       self.name)
         elif "native_crs" in cfg:
-            _LOG.warning(f"Native crs for layer {self.name} is specified in config as {cfg['native_crs']} - overridden to {self.native_CRS} by ODC metadata")
+            _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                         self.name, cfg['native_crs'], self.native_CRS)
 
         if not self.native_CRS:
             raise ConfigException(f"No native CRS could be found for layer {self.name}")
@@ -484,7 +486,9 @@ class OWSNamedLayer(OWSLayer):
         try:
             native_bounding_box = self.bboxes[self.native_CRS]
         except KeyError:
-            _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py" % (self.name, self.native_CRS))
+            _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
+                         self.name,
+                         self.native_CRS)
             self.hide = True
             return
         self.origin_x = native_bounding_box["left"]
@@ -501,20 +505,22 @@ class OWSNamedLayer(OWSLayer):
             try:
                 self.resolution_x, self.resolution_y = cfg["native_resolution"]
             except KeyError:
-                raise ConfigException("No native resolution supplied for WCS enabled layer %s" % self.name)
+                raise ConfigException(f"No native resolution supplied for WCS enabled layer {self.name}")
             except ValueError:
-                raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
+                raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
             except TypeError:
-                raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
+                raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
         elif "native_resolution" in cfg:
             config_x, config_y = cfg["native_resolution"]
             if (
                     abs(config_x - self.resolution_x) < 0.000000000000000001
                 and abs(config_y - self.resolution_y) < 0.000000000000000001
                 ):
-                _LOG.debug(f"Native resolution for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
+                _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                           self.name)
             else:
-                _LOG.warning(f"Native resolution for layer {self.name} is specified in config as {cfg['native_resolution']} - overridden to ({self.resolution_x}, {self.resolution_y}) by ODC metadata")
+                _LOG.warning("Native resolution for layer %s is specified in config as %s - overridden to (%.f, %.f) by ODC metadata",
+                             self.name, repr(cfg['native_resolution']), self.resolution_x, self.resolution_y)
 
         if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
             ConfigException("Native (%s) bounding box on layer %s has left %f, right %f (diff %d), but horizontal resolution is %f"
@@ -610,7 +616,7 @@ class OWSNamedLayer(OWSLayer):
             self.bboxes = self.extract_bboxes()
         # pylint: disable=broad-except
         except Exception as a:
-            _LOG.warning("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            _LOG.warning("get_ranges failed for layer %s: %s", self.name, str(a))
             self.hide = True
             self.bboxes = {}
         finally:
@@ -725,7 +731,7 @@ class WCSFormat:
                 _LOG.warning("'renderer' in WCS format declarations is "
                       "deprecated. Please review the latest example config "
                       "file and update your config file accordingly. Format %s "
-                      "will be WCS 1 only." % name)
+                      "will be WCS 1 only.", name)
                 renderers.append(
                     WCSFormat(
                         name,
@@ -748,13 +754,9 @@ class WCSFormat:
             for ver, renderer in renderers.items()
         }
         if 1 not in self.renderers:
-            _LOG.warning(
-                f"No renderer supplied for WCS 1.x for format {self.name}"
-            )
+            _LOG.warning("No renderer supplied for WCS 1.x for format %s", self.name)
         if 2 not in self.renderers:
-            _LOG.warning(
-                f"Warning: No renderer supplied for WCS 2.x for format {self.name}"
-            )
+            _LOG.warning("Warning: No renderer supplied for WCS 2.x for format %s", self.name)
 
     def renderer(self, version):
         if isinstance(version, str):
