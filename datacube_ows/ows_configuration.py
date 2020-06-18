@@ -7,6 +7,7 @@
 #
 
 import os
+import math
 from importlib import import_module
 import json
 
@@ -513,8 +514,8 @@ class OWSNamedLayer(OWSLayer):
         elif "native_resolution" in cfg:
             config_x, config_y = cfg["native_resolution"]
             if (
-                    abs(config_x - self.resolution_x) < 0.000000000000000001
-                and abs(config_y - self.resolution_y) < 0.000000000000000001
+                    math.isclose(config_x, self.resolution_x, 1e-10)
+                and math.isclose(config_y, self.resolution_y, 1e-10)
                 ):
                 _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
                            self.name)
