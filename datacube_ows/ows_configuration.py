@@ -506,10 +506,15 @@ class OWSNamedLayer(OWSLayer):
                 raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
             except TypeError:
                 raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
-        elif map(float, cfg.get("native_resolution")) == (self.resolution_x, self.resolution_y):
-            _LOG.debug(f"Native resolution for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
         elif "native_resolution" in cfg:
-            _LOG.warning(f"Native resolution for layer {self.name} is specified in config as {cfg['native_resolution']} - overridden to ({self.resolution_x}, {self.resolution_y}) by ODC metadata")
+            config_x, config_y = cfg["native_resolution"]
+            if (
+                    abs(config_x - self.resolution_x) < 0.000000000000000001
+                and abs(config_y - self.resolution_y) < 0.000000000000000001
+                ):
+                _LOG.debug(f"Native resolution for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
+            else:
+                _LOG.warning(f"Native resolution for layer {self.name} is specified in config as {cfg['native_resolution']} - overridden to ({self.resolution_x}, {self.resolution_y}) by ODC metadata")
 
         if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
             ConfigException("Native (%s) bounding box on layer %s has left %f, right %f (diff %d), but horizontal resolution is %f"
