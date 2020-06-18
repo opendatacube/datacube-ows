@@ -514,8 +514,8 @@ class OWSNamedLayer(OWSLayer):
         elif "native_resolution" in cfg:
             config_x, config_y = cfg["native_resolution"]
             if (
-                    math.isclose(config_x, self.resolution_x, 1e-10)
-                and math.isclose(config_y, self.resolution_y, 1e-10)
+                    math.isclose(config_x, self.resolution_x, rel_tol=1e-10)
+                and math.isclose(config_y, self.resolution_y, rel_tol=1e-10)
                 ):
                 _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
                            self.name)
