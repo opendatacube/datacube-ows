@@ -469,9 +469,9 @@ class OWSNamedLayer(OWSLayer):
         if not self.native_CRS:
             self.native_CRS = cfg.get("native_crs")
         elif cfg.get("native_crs") == self.native_CRS:
-            print(f"NOTICE: Native crs for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
+            _LOG.debug(f"Native crs for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
         elif "native_crs" in cfg:
-            print(f"WARNING: Native crs for layer {self.name} is specified in config as {cfg['native_crs']} - overridden to {self.native_crs} by ODC metadata")
+            _LOG.warning(f"Native crs for layer {self.name} is specified in config as {cfg['native_crs']} - overridden to {self.native_CRS} by ODC metadata")
 
         if not self.native_CRS:
             raise ConfigException(f"No native CRS could be found for layer {self.name}")
@@ -484,7 +484,7 @@ class OWSNamedLayer(OWSLayer):
         try:
             native_bounding_box = self.bboxes[self.native_CRS]
         except KeyError:
-            print("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py" % (self.name, self.native_CRS))
+            _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py" % (self.name, self.native_CRS))
             self.hide = True
             return
         self.origin_x = native_bounding_box["left"]
@@ -506,10 +506,10 @@ class OWSNamedLayer(OWSLayer):
                 raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
             except TypeError:
                 raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
-        elif cfg.get("native_resolution") == (self.resolution_x, self.resolution_y):
-            print(f"NOTICE: Native resolution for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
+        elif map(float, cfg.get("native_resolution")) == (self.resolution_x, self.resolution_y):
+            _LOG.debug(f"Native resolution for layer {self.name} is specified in ODC metadata and does not need to be specified in configuration")
         elif "native_resolution" in cfg:
-            print(f"WARNING: Native resolution for layer {self.name} is specified in config as {cfg['native_resolution']} - overridden to ({self.resolution_x}, {self.resolution_y}) by ODC metadata")
+            _LOG.warning(f"Native resolution for layer {self.name} is specified in config as {cfg['native_resolution']} - overridden to ({self.resolution_x}, {self.resolution_y}) by ODC metadata")
 
         if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
             ConfigException("Native (%s) bounding box on layer %s has left %f, right %f (diff %d), but horizontal resolution is %f"
@@ -605,7 +605,7 @@ class OWSNamedLayer(OWSLayer):
             self.bboxes = self.extract_bboxes()
         # pylint: disable=broad-except
         except Exception as a:
-            print("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            _LOG.warning("get_ranges failed for layer %s: %s" % (self.name, str(a)))
             self.hide = True
             self.bboxes = {}
         finally:
@@ -717,7 +717,7 @@ class WCSFormat:
                     )
                 )
             elif "renderer" in fmt:
-                print("Warning: 'renderer' in WCS format declarations is "
+                _LOG.warning("'renderer' in WCS format declarations is "
                       "deprecated. Please review the latest example config "
                       "file and update your config file accordingly. Format %s "
                       "will be WCS 1 only." % name)
@@ -743,11 +743,11 @@ class WCSFormat:
             for ver, renderer in renderers.items()
         }
         if 1 not in self.renderers:
-            print(
-                f"Warning: No renderer supplied for WCS 1.x for format {self.name}"
+            _LOG.warning(
+                f"No renderer supplied for WCS 1.x for format {self.name}"
             )
         if 2 not in self.renderers:
-            print(
+            _LOG.warning(
                 f"Warning: No renderer supplied for WCS 2.x for format {self.name}"
             )
 
