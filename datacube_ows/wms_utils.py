@@ -317,13 +317,19 @@ class GetLegendGraphicParameters():
                               lower=True,
                               permitted_values=["image/png"])
         # Styles
-        self.styles = args.get("styles", "").split(",")
-        if len(self.styles) != 1:
-            raise WMSException("Multi-layer GetMap requests not supported")
-        self.style_name = style_r = self.styles[0]
-        if not style_r:
-            style_r = self.product.default_style
-        self.style = self.product.style_index.get(style_r)
+        try:
+            self.styles = [
+                self.product.style_index[style_name]
+                for style_name in args.get("styles", "").split(",")
+            ]
+        except KeyError as e:
+            raise WMSException(
+                f"Style {e} not valid for layer.",
+                WMSException.STYLE_NOT_DEFINED,
+                locator="STYLES parameter"
+            )
+        # Time parameter
+        self.times = get_times(args, self.product, self.raw_product)
 
 
 class GetMapParameters(GetParameters):

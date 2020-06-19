@@ -97,9 +97,6 @@ class StyleDefBase(object):
         self.legend_url_override = cfg.get('url', None)
         self.legend_cfg = cfg
 
-    def legend(self, bytesio):
-        raise NotImplementedError()
-
     def single_date_legend(self, bytesio):
         raise NotImplementedError()
 
