@@ -32,6 +32,12 @@ def test_wmts_fail(flask_client):
     rv = flask_client.get('/wmts')
     assert rv.status_code == 500
 
+def test_legend_fail(flask_client):
+    """Fail on legend"""
+
+    rv = flask_client.get("/legend/layer/style/legend.png")
+    assert rv.status_code == 500
+
 def test_index_fail(flask_client):
     """Base index endpoint fails"""
 
