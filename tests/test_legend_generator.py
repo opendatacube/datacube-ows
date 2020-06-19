@@ -42,6 +42,7 @@ def test_legend_graphic(make_response):
     class fakeparams:
         def __init__(self, style_name, product):
             self.product = product
+            self.times = []
             self.styles = [MagicMock()]
             self.styles[0].name = style_name
             self.styles[0].single_date_legend = MagicMock()
