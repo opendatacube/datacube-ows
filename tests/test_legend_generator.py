@@ -19,6 +19,8 @@ def test_create_legends_from_styles(make_response):
             self.single_date_legend.side_effect = fake_img
             self.legend_override_with_url = MagicMock()
             self.legend_override_with_url.return_value = None
+            self.multi_date_handlers = [
+            ]
 
     datacube_ows.legend_generator.create_legends_from_styles([fakestyle()])
 
