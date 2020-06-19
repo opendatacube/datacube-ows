@@ -1,0 +1,39 @@
+import pytest
+
+from datacube_ows.ogc import app
+
+@pytest.fixture
+def flask_client():
+    with app.test_client() as client:
+        yield client
+
+
+def test_db_connect_fail(flask_client):
+    """Start with a database connection"""
+
+    rv = flask_client.get('/ping')
+    assert rv.status_code == 500
+
+def test_wcs_fail(flask_client):
+    """WCS endpoint fails"""
+
+    rv = flask_client.get('/wcs')
+    assert rv.status_code == 500
+
+def test_wms_fail(flask_client):
+    """WMS endpoint fails"""
+
+    rv = flask_client.get('/wms')
+    assert rv.status_code == 500
+
+def test_wmts_fail(flask_client):
+    """WMTS endpoint fails"""
+
+    rv = flask_client.get('/wmts')
+    assert rv.status_code == 500
+
+def test_index_fail(flask_client):
+    """Base index endpoint fails"""
+
+    rv = flask_client.get('/')
+    assert rv.status_code == 500
