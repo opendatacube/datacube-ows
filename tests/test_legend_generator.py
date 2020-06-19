@@ -64,14 +64,10 @@ def test_legend_graphic(make_response):
         lg = datacube_ows.legend_generator.legend_graphic(None)
 
         assert lg.mimetype == 'image/png'
-
     with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("requests.get") as rg:
         lgp.return_value = fakeparams(False, fakeproduct({"url": "test_bad_url"}, dict()))
-        try:
-            lg = datacube_ows.legend_generator.legend_graphic(None)
-            assert False
-        except WMSException:
-            pass
+        lg = datacube_ows.legend_generator.legend_graphic(None)
+        assert lg.mimetype == 'image/png'
 
     with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("requests.get") as rg:
         class fakeresponse:
