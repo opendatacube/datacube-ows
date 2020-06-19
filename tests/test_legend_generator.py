@@ -6,6 +6,9 @@ from unittest.mock import patch, MagicMock
 
 import numpy as np
 
+from datacube_ows.ogc_exceptions import WMSException
+
+
 @patch("datacube_ows.legend_generator.make_response")
 def test_create_legends_from_styles(make_response):
 
@@ -60,13 +63,15 @@ def test_legend_graphic(make_response):
         lgp.return_value = fakeparams("test_style", None)
         lg = datacube_ows.legend_generator.legend_graphic(None)
 
-        assert lg is None
+        assert lg.mimetype == 'image/png'
 
     with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("requests.get") as rg:
         lgp.return_value = fakeparams(False, fakeproduct({"url": "test_bad_url"}, dict()))
-        lg = datacube_ows.legend_generator.legend_graphic(None)
-
-        assert lg is None
+        try:
+            lg = datacube_ows.legend_generator.legend_graphic(None)
+            assert False
+        except WMSException:
+            pass
 
     with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("requests.get") as rg:
         class fakeresponse:
