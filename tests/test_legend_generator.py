@@ -34,6 +34,10 @@ def test_create_legends_from_styles(make_response):
 @patch("datacube_ows.legend_generator.make_response")
 def test_legend_graphic(make_response):
 
+    def fake_img(bytesio):
+        from PIL import Image
+        Image.new('RGB', (256, 256)).save(bytesio, format="PNG")
+
     class fakeproduct:
         def __init__(self, legend, style_index):
             self.legend = legend
@@ -46,6 +50,7 @@ def test_legend_graphic(make_response):
             self.styles = [MagicMock()]
             self.styles[0].name = style_name
             self.styles[0].single_date_legend = MagicMock()
+            self.styles[0].single_date_legend.side_effect = fake_img
             self.styles[0].legend_override_with_url = MagicMock()
             self.styles[0].legend_override_with_url.return_value = None
             self.styles[0].multi_date_handlers = [
