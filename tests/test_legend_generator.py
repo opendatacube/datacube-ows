@@ -41,8 +41,14 @@ def test_legend_graphic(make_response):
 
     class fakeparams:
         def __init__(self, style_name, product):
-            self.style_name = style_name
             self.product = product
+            self.styles = [MagicMock()]
+            self.styles[0].name = style_name
+            self.styles[0].single_date_legend = MagicMock()
+            self.styles[0].legend_override_with_url = MagicMock()
+            self.styles[0].legend_override_with_url.return_value = None
+            self.styles[0].multi_date_handlers = [
+            ]
 
     with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp:
         lgp.return_value = fakeparams("test_style", None)
