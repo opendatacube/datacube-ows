@@ -16,6 +16,8 @@ services:
     image: 
       opendatacube/ows:_builder
     network_mode: bridge
+    links:
+      - postgres:postgres
     environment:
       # Defaults are defined in .env file
       DB_HOSTNAME: ${DB_HOSTNAME}
