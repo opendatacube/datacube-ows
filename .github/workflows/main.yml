@@ -41,6 +41,12 @@ jobs:
         mkdir artifacts
         docker run -v ${PWD}/artifacts:/mnt/artifacts ${ORG}/${IMAGE}:_builder /bin/sh -c "./check-code.sh"
 
+    - name: Dockerized Integration Pytest (stage 1)
+      run: |
+        docker-compose -f docker-compose.pytest.yaml up -d
+        docker exec -T datacubeows_ows_1 /bin/sh -c "./code/check-code.sh"
+        docker-compose -f docker-compose.pytest.yaml down
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
