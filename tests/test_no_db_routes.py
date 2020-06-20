@@ -1,12 +1,5 @@
-import pytest
-
-from datacube_ows.ogc import app
-
-@pytest.fixture
-def flask_client():
-    with app.test_client() as client:
-        yield client
-
+"""Run with no DB to simulate connection failure
+"""
 
 def test_db_connect_fail(flask_client):
     """Start with a database connection"""
