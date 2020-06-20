@@ -3,36 +3,36 @@ import os
 from datacube_ows.ows_configuration import read_config, ConfigException
 
 
-def test_cfg_direct():
-    os.environ["DATACUBE_OWS_CFG"] = "{\"test\": 12345}"
+def test_cfg_direct(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "{\"test\": 12345}")
     cfg = read_config()
 
     assert cfg["test"] == 12345
 
 
-def test_cfg_py_simple_0():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.simple.simple"
+def test_cfg_py_simple_0(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG",  "tests.cfg.simple.simple")
     cfg = read_config()
 
     assert cfg["test"] == 123
 
 
-def test_cfg_py_simple_1():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.simple.simple1"
+def test_cfg_py_simple_1(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.simple.simple1")
     cfg = read_config()
 
     assert cfg["test"] == 1
 
 
-def test_cfg_py_nested_0():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.nested.nested"
+def test_cfg_py_nested_0(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested")
     cfg = read_config()
 
     assert cfg["test"] == 123
 
 
-def test_cfg_py_nested_1():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.nested.nested_1"
+def test_cfg_py_nested_1(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_1")
     cfg = read_config()
 
     assert len(cfg) == 2
@@ -40,15 +40,15 @@ def test_cfg_py_nested_1():
     assert cfg[1]["test"] == 1
 
 
-def test_cfg_py_nested_2():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.nested.nested_2"
+def test_cfg_py_nested_2(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_2")
     cfg = read_config()
 
     assert cfg["subtest"]["test"] == 2
 
 
-def test_cfg_py_nested_3():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.nested.nested_3"
+def test_cfg_py_nested_3(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_3")
     cfg = read_config()
 
     assert cfg["test"] == 233
@@ -61,8 +61,8 @@ def test_cfg_py_nested_3():
     assert cfg["things"][2]["thing"]["test"] == 3
 
 
-def test_cfg_py_nested_4():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.nested.nested_4"
+def test_cfg_py_nested_4(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_4")
     cfg = read_config()
 
     assert cfg["test"] == 222
@@ -84,8 +84,8 @@ def test_cfg_py_nested_4():
     assert ncfg["things"][2]["thing"]["test"] == 3
 
 
-def test_cfg_py_infinite_1():
-    os.environ["DATACUBE_OWS_CFG"] = "tests.cfg.nested.infinite_1"
+def test_cfg_py_infinite_1(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_1")
     try:
         cfg = read_config()
         assert False
