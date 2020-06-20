@@ -44,7 +44,7 @@ jobs:
     - name: Dockerized Integration Pytest (stage 1)
       run: |
         docker-compose -f docker-compose.pytest.yaml up -d
-        docker exec datacubeows_ows_1 /bin/sh -c "./code/check-code.sh"
+        docker exec datacube-ows_ows_1 /bin/sh -c "./code/check-code.sh"
         docker-compose -f docker-compose.pytest.yaml down
 
     - name: Upload coverage to Codecov
