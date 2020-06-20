@@ -8,7 +8,6 @@ pylint -j 2 --reports no datacube_ows --disable=C,R
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
-python3 -m pytest --cov=datacube_ows --cov-report=xml tests/
-cp coverage.xml /mnt/artifacts
+python3 -m pytest --cov=datacube_ows tests/
 
 set +x
