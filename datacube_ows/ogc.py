@@ -240,9 +240,9 @@ def ogc_wcs_impl():
 def ping():
     db_ok = False
     with cube() as dc:
-        # pylint: disable=protected-access
-        with dc.index._db.give_me_a_connection() as conn:
-            try:
+        if dc:
+            # pylint: disable=protected-access
+            with dc.index._db.give_me_a_connection() as conn:
                 results = conn.execute("""
                         SELECT *
                         FROM wms.product_ranges
@@ -250,8 +250,6 @@ def ping():
                 )
                 for r in results:
                     db_ok = True
-            except Exception:
-                pass
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
     else:

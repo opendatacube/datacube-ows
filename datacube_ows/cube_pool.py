@@ -27,9 +27,13 @@ class CubePool():
                 self._cubes[c] = True
                 self._cubes_lock.release()
                 return c
-        c = self._new_cube()
-        self._cubes[c] = True
-        self._cubes_lock.release()
+        try:
+            c = self._new_cube()
+            self._cubes[c] = True
+        except:
+            c = None
+        finally:
+            self._cubes_lock.release()
         return c
 
     def release_cube(self, c):
@@ -67,4 +71,5 @@ def cube(app="wms"):
     try:
         yield dc
     finally:
-        release_cube(dc, app)
+        if dc:
+            release_cube(dc, app)

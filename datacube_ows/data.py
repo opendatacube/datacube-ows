@@ -241,6 +241,8 @@ def get_map(args):
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
 
     with cube() as dc:
+        if not dc:
+            raise WMSException("Database connectivity failure")
         # Tiling.
         stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
         datasets = stacker.datasets(dc.index)
@@ -513,6 +515,8 @@ def feature_info(args):
     # --- Begin code section requiring datacube.
     cfg = get_config()
     with cube() as dc:
+        if not dc:
+            raise WMSException("Database connectivity failure")
         datasets = stacker.datasets(dc.index, all_time=True, point=geo_point)
 
         # Taking the data as a single point so our indexes into the data should be 0,0
