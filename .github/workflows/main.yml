@@ -45,8 +45,7 @@ jobs:
     - name: Dockerized Integration Pytest (stage 1)
       continue-on-error: true
       run: |
-        adduser ows
-        chown ows artifacts
+        chmod a+rw artifacts
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
