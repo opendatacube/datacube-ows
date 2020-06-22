@@ -278,6 +278,8 @@ class WCS1GetCoverageRequest():
 def get_coverage_data(req):
     #pylint: disable=too-many-locals, protected-access
     with cube() as dc:
+        if not dc:
+            raise WCS1Exception("Database connectivity failure")
         stacker = DataStacker(req.product,
                               req.geobox,
                               req.times,

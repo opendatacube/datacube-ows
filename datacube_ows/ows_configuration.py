@@ -894,8 +894,9 @@ class OWSConfig(OWSConfigEntry):
         self.product_index = {}
         self.native_product_index = {}
         with cube() as dc:
-            for lyr_cfg in cfg:
-                self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
+            if dc:
+                for lyr_cfg in cfg:
+                    self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
 
     def response_headers(self, d):
         hdrs = self._response_headers.copy()
