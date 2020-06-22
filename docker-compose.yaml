@@ -36,5 +36,6 @@ services:
       - ${OWS_CFG_FILE}:/env/config/ows_cfg.py
       - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
       - ./:/code/
+      - ./artifacts:/mnt/artifacts
     restart: always
     command: ["wait-for-db", "flask", "run", "--host=0.0.0.0", "--port=8000"]

@@ -44,9 +44,9 @@ jobs:
     - name: Dockerized Integration Pytest (stage 1)
       continue-on-error: true
       run: |
-        docker-compose -f docker-compose.pytest.yaml up -d
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
         docker exec datacube-ows_ows_1 /bin/sh -c "./check-code-all.sh"
-        docker-compose -f docker-compose.pytest.yaml down
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
