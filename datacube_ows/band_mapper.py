@@ -97,7 +97,7 @@ class StyleDefBase(object):
         self.legend_url_override = cfg.get('url', None)
         self.legend_cfg = cfg
 
-    def legend(self, bytesio):
+    def single_date_legend(self, bytesio):
         raise NotImplementedError()
 
     def legend_override_with_url(self):
@@ -110,6 +110,7 @@ class StyleDefBase(object):
         return None
 
     class MultiDateHandler(object):
+        auto_legend = False
         def __init__(self, style, cfg):
             self.style = style
             if "allowed_count_range" not in cfg:
@@ -123,13 +124,25 @@ class StyleDefBase(object):
                 self.aggregator = FunctionWrapper(style.product, cfg["aggregator_function"])
             else:
                 raise ConfigException("Aggregator function is required for multi-date handlers.")
+            self.parse_legend_cfg(cfg.get("legend", {}))
 
         def applies_to(self, count):
             return (self.min_count <= count and self.max_count >= count)
 
+        def range_str(self):
+            if self.min_count == self.max_count:
+                return str(self.min_count)
+            return f"{self.min_count}-{self.max_count}"
         def transform_data(self, data, pq_data, extent_mask, *masks):
             raise NotImplementedError()
 
+        def parse_legend_cfg(self, cfg):
+            self.show_legend = cfg.get("show_legend", self.auto_legend)
+            self.legend_url_override = cfg.get('url', None)
+            self.legend_cfg = cfg
+
+        def legend(self, bytesio):
+            return False
 
 class RGBAMappedStyleDef(StyleDefBase):
     auto_legend = True
@@ -221,7 +234,7 @@ class RGBAMappedStyleDef(StyleDefBase):
         imgdata *= 255
         return imgdata.astype('uint8')
 
-    def legend(self, bytesio):
+    def single_date_legend(self, bytesio):
         patches = []
         for band in self.value_map.keys():
             for value in self.value_map[band]:
@@ -424,6 +437,118 @@ def read_mpl_ramp(mpl_ramp : str):
     return unscaled_cmap
 
 
+def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, components, map_name,
+                       default_title):
+    def custom_label(label, custom_config):
+        prefix = custom_config.get("prefix", "")
+        l = custom_config.get("label", label)
+        suffix = custom_config.get("suffix", "")
+        return f"{prefix}{l}{suffix}"
+
+    # Create custom cdict for matplotlib colorramp
+    # Matplot lib color dicts must start at 0 and end at 1
+    # because of this we normalize the values
+    # Also create tick labels based on configuration
+    # ticks are also normalized between 0 - 1.0
+    # so they are position correctly on the colorbar
+    def create_cdict_ticks(components, cfg):
+        generate = (cfg.get("major_ticks", None) is not None or \
+                    cfg.get("scale_by", None) is not None or \
+                    cfg.get("radix_point", None) is not None)
+
+        return from_definition(components, cfg, generate)
+
+    def find_clc(ramp, last=False):
+        l = ramp if not last else reversed(ramp)
+        for index, value in enumerate(l):
+            fwd_index = index if not last else (len(ramp) - (index + 1))
+            if "legend" in value:
+                return fwd_index
+        return 0 if not last else (len(ramp) - 1)
+
+    def from_definition(components, cfg, generate):
+        tick_mod = cfg.get("major_ticks", 1)
+        tick_offset = cfg.get("offset", 0)
+        tick_scale = cfg.get("scale_by", 1)
+        places = cfg.get("radix_point", 1)
+        ramp = cfg.get("ramp")
+
+        start_index = find_clc(ramp) if not generate else 0
+        stop_index = find_clc(ramp, last=True) if not generate else (len(ramp) - 1)
+
+        start = ramp[start_index].get("value")
+        stop = ramp[stop_index].get("value")
+        normalize_factor = stop - start
+
+        ticks = dict()
+        cdict = dict()
+        bands = defaultdict(list)
+        for index, ramp_val in enumerate(ramp):
+            if index < start_index or index > stop_index:
+                continue
+
+            value = ramp_val.get("value")
+            normalized = (value - start) / normalize_factor
+            custom_legend_cfg = ramp_val.get("legend", None)
+
+            mod_close = False
+            mod_equal = False
+            if generate:
+                mod_close = isclose((value * tick_scale + tick_offset) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
+                mod_equal = value % tick_mod == 0
+
+            if mod_close or mod_equal:
+                label = value * tick_scale + tick_offset
+                label = round(label, places) if places > 0 else int(label)
+                ticks[normalized] = label
+
+            if custom_legend_cfg is not None:
+                label = custom_label(value, custom_legend_cfg)
+                ticks[normalized] = label
+
+            for band, intensity in components.items():
+                bands[band].append((normalized, intensity[index], intensity[index]))
+
+        for band, blist in bands.items():
+            cdict[band] = tuple(blist)
+
+        if len(ticks) == 0:
+            ticks = None
+        return cdict, ticks
+
+    legend_cfg["ramp"] = colour_ramp
+
+    cdict, ticks = create_cdict_ticks(components, legend_cfg)
+
+    # TODO: Potentially short-circuit this if using string based mpl_ramp
+    # custom_map = plt.get_cmap(style_cfg["mpl_ramp"]) should return a LinearSegmentedColormap
+
+    plt.rcdefaults()
+    if legend_cfg.get("rcParams", None) is not None:
+        plt.rcParams.update(legend_cfg.get("rcParams"))
+    fig = plt.figure(figsize=(legend_cfg.get("width", 4),
+                              legend_cfg.get("height", 1.25)))
+    ax_pos = legend_cfg.get("axes_position", [0.05, 0.5, 0.9, 0.15])
+    ax = fig.add_axes(ax_pos)
+    custom_map = LinearSegmentedColormap(map_name, cdict)
+    color_bar = matplotlib.colorbar.ColorbarBase(
+        ax,
+        cmap=custom_map,
+        orientation="horizontal")
+
+    if ticks is not None:
+        color_bar.set_ticks(list(ticks.keys()))
+        color_bar.set_ticklabels([str(l) for l in ticks.values()])
+
+    title = legend_cfg.get("title", default_title)
+    unit = legend_cfg.get("units", "unitless")
+    title = title + "(" + unit + ")"
+
+    color_bar.set_label(title)
+
+    plt.savefig(bytesio, format='png')
+
+
 class RgbaColorRampDef(StyleDefBase):
     auto_legend = True
     def __init__(self, product, style_cfg, defer_multi_date=False):
@@ -488,122 +613,17 @@ class RgbaColorRampDef(StyleDefBase):
         d = self.apply_masks_and_index(data, pq_data, extent_mask, *masks)
         return self.apply_colour_ramp(d, self.values, self.components)
 
-    def legend(self, bytesio):
-        #pylint: disable=too-many-locals, too-many-statements
-        def custom_label(label, custom_config):
-            prefix = custom_config.get("prefix", "")
-            l = custom_config.get("label", label)
-            suffix = custom_config.get("suffix", "")
-            return f"{prefix}{l}{suffix}"
-
-        # Create custom cdict for matplotlib colorramp
-        # Matplot lib color dicts must start at 0 and end at 1
-        # because of this we normalize the values
-        # Also create tick labels based on configuration
-        # ticks are also normalized between 0 - 1.0
-        # so they are position correctly on the colorbar
-        def create_cdict_ticks(components, cfg):
-            generate = (cfg.get("major_ticks", None) is not None or \
-               cfg.get("scale_by", None) is not None or \
-               cfg.get("radix_point", None) is not None)
-
-            return from_definition(components, cfg, generate)
-
-
-        def find_clc(ramp, last=False):
-            l = ramp if not last else reversed(ramp)
-            for index, value in enumerate(l):
-                fwd_index = index if not last else (len(ramp) - (index + 1))
-                if "legend" in value:
-                    return fwd_index
-            return 0 if not last else (len(ramp) - 1)
-
-
-        def from_definition(components, cfg, generate):
-            tick_mod = cfg.get("major_ticks", 1)
-            tick_offset = cfg.get("offset", 0)
-            tick_scale = cfg.get("scale_by", 1)
-            places = cfg.get("radix_point", 1)
-            ramp = cfg.get("ramp")
-
-            start_index = find_clc(ramp) if not generate else 0
-            stop_index = find_clc(ramp, last=True) if not generate else (len(ramp) - 1)
-
-            start = ramp[start_index].get("value")
-            stop = ramp[stop_index].get("value")
-            normalize_factor = stop - start
-
-            ticks = dict()
-            cdict = dict()
-            bands = defaultdict(list)
-            for index, ramp_val in enumerate(ramp):
-                if index < start_index or index > stop_index:
-                    continue
-
-                value = ramp_val.get("value")
-                normalized = (value - start) / normalize_factor
-                custom_legend_cfg = ramp_val.get("legend", None)
-
-                mod_close = False
-                mod_equal = False
-                if generate:
-                    mod_close = isclose((value * tick_scale + tick_offset) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
-                    mod_equal = value % tick_mod == 0
-
-                if mod_close or mod_equal:
-                    label = value * tick_scale + tick_offset
-                    label = round(label, places) if places > 0 else int(label)
-                    ticks[normalized] = label
-
-                if custom_legend_cfg is not None:
-                    label = custom_label(value, custom_legend_cfg)
-                    ticks[normalized] = label
-
-                for band, intensity in components.items():
-                    bands[band].append((normalized, intensity[index], intensity[index]))
-
-            for band, blist in bands.items():
-                cdict[band] = tuple(blist)
-
-            if len(ticks) == 0:
-                ticks = None
-            return cdict, ticks
-
-
-        combined_cfg = self.legend_cfg
-        combined_cfg["ramp"] = self.color_ramp
-
-        cdict, ticks = create_cdict_ticks(self.components, combined_cfg)
-        
-        # TODO: Potentially short-circuit this if using string based mpl_ramp
-        # custom_map = plt.get_cmap(style_cfg["mpl_ramp"]) should return a LinearSegmentedColormap
-
-        plt.rcdefaults()
-        if combined_cfg.get("rcParams", None) is not None:
-            plt.rcParams.update(combined_cfg.get("rcParams"))
-        fig = plt.figure(figsize=(combined_cfg.get("width", 4),
-                                  combined_cfg.get("height", 1.25)))
-        ax_pos = combined_cfg.get("axes_position", [0.05, 0.5, 0.9, 0.15])
-        ax = fig.add_axes(ax_pos)
-        custom_map = LinearSegmentedColormap(self.product.name, cdict)
-        color_bar = matplotlib.colorbar.ColorbarBase(
-            ax,
-            cmap=custom_map,
-            orientation="horizontal")
-
-        if ticks is not None:
-            color_bar.set_ticks(list(ticks.keys()))
-            color_bar.set_ticklabels([str(l) for l in ticks.values()])
-
-        title = self.legend_cfg.get("title", self.title)
-        unit = self.legend_cfg.get("units", "unitless")
-        title = title + "(" + unit + ")"
-
-        color_bar.set_label(title)
-
-        plt.savefig(bytesio, format='png')
+    def single_date_legend(self, bytesio):
+        colour_ramp_legend(bytesio,
+                           self.legend_cfg,
+                           self.color_ramp,
+                           self.components,
+                           self.product.name,
+                           self.title
+                           )
 
     class MultiDateHandler(StyleDefBase.MultiDateHandler):
+        auto_legend = True
         def __init__(self, style, cfg):
             super().__init__(style, cfg)
             self.feature_info_label = cfg.get("feature_info_label", None)
@@ -632,6 +652,17 @@ class RgbaColorRampDef(StyleDefBase):
             agg = self.aggregator(xformed_data)
             return self.style.apply_colour_ramp(agg, self.values, self.components)
 
+        def legend(self, bytesio):
+            title = self.legend_cfg.get("title", self.range_str() + " Dates")
+            name = self.style.product.name + f"_{self.min_count}"
+            colour_ramp_legend(bytesio,
+                               self.legend_cfg,
+                               self.color_ramp,
+                               self.components,
+                               name,
+                               title
+                               )
+            return True
 
 class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
     auto_legend = False

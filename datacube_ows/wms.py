@@ -30,9 +30,7 @@ def handle_wms(nocase_args):
     elif operation == "GETFEATUREINFO":
         return feature_info(nocase_args)
     elif operation == "GETLEGENDGRAPHIC":
-        raise WMSException("Operation GetLegendGraphic no longer supported.  Please use the LegendURL entry for the style from the GetCapabilities document instead",
-                               WMSException.OPERATION_NOT_SUPPORTED,
-                               "Request parameter")
+        return legend_graphic(nocase_args)
     else:
         raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED,
                            "Request parameter")
