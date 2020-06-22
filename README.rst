@@ -4,7 +4,7 @@ datacube-ows
 
 .. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
         :target: https://travis-ci.org/opendatacube/datacube-ows
-        
+
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/opendatacube/datacube-ows
 
@@ -84,7 +84,7 @@ To run the standard Docker image, create a docker volume containing your ows con
 
   docker run \
       --rm \
-      opendatacube/wms \
+      opendatacube/ows \
       gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_ows:ogc
 
   docker run --rm \
@@ -109,7 +109,7 @@ Manual installation
 
 At the time of writing, pre-built pip-installed configurations also work fairly seemlessly:
 
-The folllowing instructions are for installing on a clean Linux system.
+The folllowing instructions are for installing on a clean Linux system with established ODC environment.
 
 * We currently recommend using pip with pre-built binary packages. Create a
   new python 3.6 or 3.7 virtualenv and run pip install against the supplied
@@ -118,7 +118,6 @@ The folllowing instructions are for installing on a clean Linux system.
     pip install --pre -r requirements.txt
 
 * Run ::
-
     python update_ranges.py --role *datacube_owner_role* --schema
 
   to create schema, tables and materialised views used by datacube-ows.
@@ -127,7 +126,10 @@ The folllowing instructions are for installing on a clean Linux system.
   it.  See `datacube_ows/ows_cfg_example.py` for examples and documentation of the configuration
   format.  The simplest approach is to make a copy of `ows_cfg_example.py` called `ows_cfg.py`
   and edit as required.  But for production deployments other approaches such as importing
-  config as json are possible.
+  config as json are possible::
+
+    PYTHONPATH=.
+    DATACUBE_OWS_CFG=ows_cfg_filename.ows_cfg
 
 * Run ``python update_ranges.py`` (in the Datacube virtual environment).
 
