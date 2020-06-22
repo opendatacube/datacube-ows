@@ -30,8 +30,7 @@ class CubePool():
         try:
             c = self._new_cube()
             self._cubes[c] = True
-        # pylint: disable:bare-except
-        except:
+        except: # pylint: disable:bare-except
             c = None
         finally:
             self._cubes_lock.release()
