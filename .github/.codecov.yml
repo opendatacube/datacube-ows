@@ -2,6 +2,12 @@ codecov:
   require_ci_to_pass: yes
 
 coverage:
+  status:
+    project:
+      default: # This can be anything, but it needs to exist as the name
+        # basic settings
+        target: auto
+        threshold: 20%
   precision: 2
   round: down
   range: "20...100"
