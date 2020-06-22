@@ -1,7 +1,9 @@
 from __future__ import absolute_import, division, print_function
 import sys
 import traceback
+import warnings
 import sentry_sdk
+from rasterio.errors import NotGeoreferencedWarning
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from time import monotonic
@@ -78,6 +80,8 @@ else:
     set_default_rio_config()
     _LOG.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
+# Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
+warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
 
 class SupportedSvcVersion(object):
     def __init__(self, service, version, router, exception_class):
