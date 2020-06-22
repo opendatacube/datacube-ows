@@ -61,6 +61,8 @@ def get_coverage_data(request):
                             locator="COVERAGE parameter")
 
     with cube() as dc:
+        if not dc:
+            raise WCS2Exception("Database connectivity failure")
         #
         # CRS handling
         #

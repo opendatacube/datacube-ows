@@ -1,6 +1,10 @@
 from __future__ import absolute_import
 
 import logging
+from collections import defaultdict
+from math import isclose
+
+from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.wms_utils import GetLegendGraphicParameters
 import io
 from PIL import Image
@@ -8,40 +12,34 @@ import numpy as np
 from flask import make_response
 import requests
 
+import matplotlib
+# Do not use X Server backend
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+
+
 _LOG = logging.getLogger(__name__)
 
 
 def legend_graphic(args):
     params = GetLegendGraphicParameters(args)
-    img = None
-    product = params.product
-    style = params.style_name
-    legend_config = getattr(product, 'legend', None)
-    if legend_config is not None:
-        if legend_config.get('url', None):
-            img_url = legend_config.get('url')
-            r = requests.get(img_url, timeout=1)
-            if r.status_code == 200 and r.headers['content-type'] == 'image/png':
-                img = make_response(r.content)
-                img.mimetype = 'image/png'
-        elif legend_config.get('styles', []):
-            if style in legend_config.get('styles', []):
-                img = create_legends_from_styles([style])
-            elif set(legend_config.get('styles', [])) == set(product.style_index.keys()):
-                # We want all the styles, and all the styles have legends
-                styles = [product.style_index[s] for s in legend_config.get('styles', [])]
-                img = create_legends_from_styles(styles)
+    img = create_legends_from_styles(params.styles,
+                        ndates=len(params.times))
+    if img is None:
+        raise WMSException("No legend is available for this request")
     return img
 
 
-def create_legend_for_style(product, style_name):
+def create_legend_for_style(product, style_name, ndates=0):
     if style_name not in product.style_index:
         return None
     style = product.style_index[style_name]
-    return create_legends_from_styles([style])
+    return create_legends_from_styles([style], ndates)
 
 
-def create_legends_from_styles(styles):
+def create_legends_from_styles(styles, ndates=0):
     # Run through all values in style cfg and generate
     imgs = []
     for s in styles:
@@ -51,10 +49,17 @@ def create_legends_from_styles(styles):
             if img:
                 imgs.append(img)
         else:
-            bytesio = io.BytesIO()
-            s.legend(bytesio)
-            bytesio.seek(0)
-            imgs.append(Image.open(bytesio))
+            if ndates in [0,1]:
+                bytesio = io.BytesIO()
+                s.single_date_legend(bytesio)
+                bytesio.seek(0)
+                imgs.append(Image.open(bytesio))
+            for mdh in s.multi_date_handlers:
+                if ndates == 0 or mdh.applies_to(ndates):
+                    bytesio = io.BytesIO()
+                    if mdh.legend(bytesio):
+                        bytesio.seek(0)
+                        imgs.append(Image.open(bytesio))
 
     min_shape = sorted([(np.sum(i.size), i.size) for i in imgs])[0][1]
     imgs_comb = np.vstack((np.asarray(i.resize(min_shape)) for i in imgs))
@@ -75,3 +80,5 @@ def get_image_from_url(url):
         bytesio.seek(0)
         return Image.open(bytesio)
     return None
+
+
