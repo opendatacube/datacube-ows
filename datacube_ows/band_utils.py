@@ -20,6 +20,18 @@ def delta_bands(data, band1, band2, product_cfg=None):
     if product_cfg:
         band1=product_cfg.band_idx.band(band1)
         band2=product_cfg.band_idx.band(band2)
+    typ1 = data[band1].dtype
+    typ2 = data[band2].dtype
+    if typ1.name.startswith('uint'):
+        nodata = data[band1].nodata
+        data[band1] = data[band1].astype('int32')
+        data[band1].attrs["nodata"] = nodata
+    if typ2.name.startswith('uint'):
+        nodata = data[band2].nodata
+        data[band2] = data[band2].astype('int32')
+        data[band2].attrs["nodata"] = nodata
+    # if typ1.name.startswith('uint') or typ2.name.startswith('uint'):
+        # data = data.astype('int32', copy=False)
     return data[band1] - data[band2]
 
 
@@ -27,6 +39,9 @@ def delta_bands(data, band1, band2, product_cfg=None):
 # pylint: disable=dangerous-default-value
 def norm_diff(data, band1, band2, product_cfg=None, scale_from=None, scale_to=[0,255]):
     # Calculate a normalised difference index.
+    # unscaled = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
+    delta_data = delta_bands(data, band1,band2, product_cfg)
+    sum_data = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
     unscaled = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
     if scale_from:
         scaled = scale_data(unscaled, scale_from, scale_to)

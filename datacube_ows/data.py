@@ -162,8 +162,8 @@ class DataStacker(object):
             merged = None
             for ds in tds.values.item():
                 d = self.read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
+                # Squeeze upconverts uints to int32
                 d = d.squeeze(["time"], drop=True)
-                # GROK - collapse!!!
                 extent_mask = None
                 for band in bands:
                     for f in self._product.extent_mask_func:
@@ -241,6 +241,8 @@ def get_map(args):
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
 
     with cube() as dc:
+        if not dc:
+            raise WMSException("Database connectivity failure")
         # Tiling.
         stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
         datasets = stacker.datasets(dc.index)
@@ -399,11 +401,16 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def get_s3_browser_uris(datasets, s3url="", s3bucket=""):
+def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     uris = []
     for tds in datasets:
         for ds in tds.values.item():
-            uris.append(ds.uris)
+            if pt and ds.extent:
+                if ds.extent.contains(pt):
+                    uris.append(ds.uris)
+            else:
+                uris.append(ds.uris)
+
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
@@ -508,6 +515,8 @@ def feature_info(args):
     # --- Begin code section requiring datacube.
     cfg = get_config()
     with cube() as dc:
+        if not dc:
+            raise WMSException("Database connectivity failure")
         datasets = stacker.datasets(dc.index, all_time=True, point=geo_point)
 
         # Taking the data as a single point so our indexes into the data should be 0,0
@@ -633,11 +642,21 @@ def feature_info(args):
                                 pass
             feature_json["data_available_for_dates"] = []
             for d in datasets.coords["time"].values:
+                dt_datasets = datasets.sel(time=d)
                 dt = datetime.utcfromtimestamp(d.astype(int) * 1e-9)
                 if params.product.is_raw_time_res:
                     dt = solar_date(dt, tz)
-                feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
-            feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
+                pt_native = None
+                for ds in dt_datasets.values.item():
+                    if pt_native is None:
+                        pt_native = pt.to_crs(ds.crs)
+                    if ds.extent and ds.extent.contains(pt_native):
+                        feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
+                        break
+            if ds_at_times:
+                feature_json["data_links"] = sorted(get_s3_browser_uris(ds_at_times, pt_native, s3_url, s3_bucket))
+            else:
+                feature_json["data_links"] = []
             if params.product.feature_info_include_utc_dates:
                 unsorted_dates = []
                 for tds in datasets:

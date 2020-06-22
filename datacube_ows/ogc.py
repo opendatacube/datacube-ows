@@ -240,9 +240,9 @@ def ogc_wcs_impl():
 def ping():
     db_ok = False
     with cube() as dc:
-        # pylint: disable=protected-access
-        with dc.index._db.give_me_a_connection() as conn:
-            try:
+        if dc:
+            # pylint: disable=protected-access
+            with dc.index._db.give_me_a_connection() as conn:
                 results = conn.execute("""
                         SELECT *
                         FROM wms.product_ranges
@@ -250,8 +250,6 @@ def ping():
                 )
                 for r in results:
                     db_ok = True
-            except Exception:
-                pass
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
     else:
@@ -259,12 +257,17 @@ def ping():
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
-def legend(layer, style):
+def legend(layer, style, dates=None):
     cfg = get_config()
     product = cfg.product_index.get(layer)
     if not product:
         return ("Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"}))
-    img = create_legend_for_style(product, style)
+    if dates is None:
+        args = lower_get_args()
+        ndates = int(args.get("ndates", 0))
+    else:
+        ndates = len(dates)
+    img = create_legend_for_style(product, style, ndates)
     if not img:
         return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
     return img

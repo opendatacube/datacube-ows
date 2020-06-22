@@ -4,6 +4,9 @@ datacube-ows
 
 .. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
         :target: https://travis-ci.org/opendatacube/datacube-ows
+        
+.. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
+        :target: https://codecov.io/gh/opendatacube/datacube-ows
 
 Datacube Web Map Service
 
@@ -114,8 +117,11 @@ The folllowing instructions are for installing on a clean Linux system.
 
     pip install --pre -r requirements.txt
 
-* Run `python update_ranges.py --role *datacube_user_role* --schema` to create schema, tables
-  and materialised views used by datacube-ows.
+* Run ::
+
+    python update_ranges.py --role *datacube_owner_role* --schema
+
+  to create schema, tables and materialised views used by datacube-ows.
 
 * Create a configuration file for your service, and all data products you wish to publish in
   it.  See `datacube_ows/ows_cfg_example.py` for examples and documentation of the configuration
@@ -123,18 +129,16 @@ The folllowing instructions are for installing on a clean Linux system.
   and edit as required.  But for production deployments other approaches such as importing
   config as json are possible.
 
-* Run `python update_ranges.py` (in the Datacube virtual environment).
+* Run ``python update_ranges.py`` (in the Datacube virtual environment).
 
-*  When additional datasets are added to the datacube, the following steps will need to be
-   run::
+* When additional datasets are added to the datacube, the following steps will need to be run::
 
-   python update_ranges.py --views --blocking
-   python update_ranges.py
+    python update_ranges.py --views --blocking
+    python update_ranges.py
 
-
-* If you are accessing data on AWS S3 and running `datacube_ows` on Ubuntu you may encounter errors with `GetMap`
+* If you are accessing data on AWS S3 and running `datacube_ows` on Ubuntu you may encounter errors with ``GetMap``
   similar to:
-  `Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.`.
+  ``Unexpected server error: '/vsis3/bucket/path/image.tif' not recognized as a supported file format.``.
   If this occurs run the following commands::
 
     mkdir -p /etc/pki/tls/certs

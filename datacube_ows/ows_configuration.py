@@ -7,6 +7,7 @@
 #
 
 import os
+import math
 from importlib import import_module
 import json
 
@@ -468,8 +469,15 @@ class OWSNamedLayer(OWSLayer):
             self.native_CRS = None
         if not self.native_CRS:
             self.native_CRS = cfg.get("native_crs")
+        elif cfg.get("native_crs") == self.native_CRS:
+            _LOG.debug("Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                       self.name)
+        elif "native_crs" in cfg:
+            _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                         self.name, cfg['native_crs'], self.native_CRS)
+
         if not self.native_CRS:
-            raise ConfigException("No native CRS could be found for layer %s" % self.name)
+            raise ConfigException(f"No native CRS could be found for layer {self.name}")
         if self.native_CRS not in self.global_cfg.published_CRSs:
             raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
                             self.product_name,
@@ -479,19 +487,42 @@ class OWSNamedLayer(OWSLayer):
         try:
             native_bounding_box = self.bboxes[self.native_CRS]
         except KeyError:
-            print("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py" % (self.name, self.native_CRS))
+            _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
+                         self.name,
+                         self.native_CRS)
             self.hide = True
             return
         self.origin_x = native_bounding_box["left"]
         self.origin_y = native_bounding_box["bottom"]
+
         try:
-            self.resolution_x, self.resolution_y = cfg["native_resolution"]
+            self.resolution_x = self.product.definition["storage"]["resolution"][self.native_CRS_def["horizontal_coord"]]
+            self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
         except KeyError:
-            raise ConfigException("No native resolution supplied for WCS enabled layer %s" % self.name)
-        except ValueError:
-            raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
-        except TypeError:
-            raise ConfigException("Invalid native resolution supplied for WCS enabled layer %s" % self.name)
+            self.resolution_x = None
+            self.resolution_y = None
+
+        if self.resolution_x is None:
+            try:
+                self.resolution_x, self.resolution_y = cfg["native_resolution"]
+            except KeyError:
+                raise ConfigException(f"No native resolution supplied for WCS enabled layer {self.name}")
+            except ValueError:
+                raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
+            except TypeError:
+                raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
+        elif "native_resolution" in cfg:
+            config_x, config_y = cfg["native_resolution"]
+            if (
+                    math.isclose(config_x, self.resolution_x, rel_tol=1e-10)
+                and math.isclose(config_y, self.resolution_y, rel_tol=1e-10)
+                ):
+                _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                           self.name)
+            else:
+                _LOG.warning("Native resolution for layer %s is specified in config as %s - overridden to (%.f, %.f) by ODC metadata",
+                             self.name, repr(cfg['native_resolution']), self.resolution_x, self.resolution_y)
+
         if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
             ConfigException("Native (%s) bounding box on layer %s has left %f, right %f (diff %d), but horizontal resolution is %f"
                             % (
@@ -586,7 +617,7 @@ class OWSNamedLayer(OWSLayer):
             self.bboxes = self.extract_bboxes()
         # pylint: disable=broad-except
         except Exception as a:
-            print("get_ranges failed for layer %s: %s" % (self.name, str(a)))
+            _LOG.warning("get_ranges failed for layer %s: %s", self.name, str(a))
             self.hide = True
             self.bboxes = {}
         finally:
@@ -712,10 +743,10 @@ class WCSFormat:
                     )
                 )
             elif "renderer" in fmt:
-                print("Warning: 'renderer' in WCS format declarations is "
+                _LOG.warning("'renderer' in WCS format declarations is "
                       "deprecated. Please review the latest example config "
                       "file and update your config file accordingly. Format %s "
-                      "will be WCS 1 only." % name)
+                      "will be WCS 1 only.", name)
                 renderers.append(
                     WCSFormat(
                         name,
@@ -738,13 +769,9 @@ class WCSFormat:
             for ver, renderer in renderers.items()
         }
         if 1 not in self.renderers:
-            print(
-                f"Warning: No renderer supplied for WCS 1.x for format {self.name}"
-            )
+            _LOG.warning("No renderer supplied for WCS 1.x for format %s", self.name)
         if 2 not in self.renderers:
-            print(
-                f"Warning: No renderer supplied for WCS 2.x for format {self.name}"
-            )
+            _LOG.warning("Warning: No renderer supplied for WCS 2.x for format %s", self.name)
 
     def renderer(self, version):
         if isinstance(version, str):
@@ -881,8 +908,9 @@ class OWSConfig(OWSConfigEntry):
         self.product_index = {}
         self.native_product_index = {}
         with cube() as dc:
-            for lyr_cfg in cfg:
-                self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
+            if dc:
+                for lyr_cfg in cfg:
+                    self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
 
     def response_headers(self, d):
         hdrs = self._response_headers.copy()
