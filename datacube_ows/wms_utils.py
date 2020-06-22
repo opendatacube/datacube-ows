@@ -59,7 +59,7 @@ def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
 
 
 def _get_geobox_xy(args, crs):
-    if get_config().published_CRSs[crs.crs_str]["vertical_coord_first"]:
+    if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
     else:
         minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
@@ -123,8 +123,8 @@ def zoom_factor(args, crs):
 
 def img_coords_to_geopoint(geobox, i, j):
     cfg = get_config()
-    h_coord = cfg.published_CRSs[geobox.crs.crs_str]["horizontal_coord"]
-    v_coord = cfg.published_CRSs[geobox.crs.crs_str]["vertical_coord"]
+    h_coord = cfg.published_CRSs[str(geobox.crs)]["horizontal_coord"]
+    v_coord = cfg.published_CRSs[str(geobox.crs)]["vertical_coord"]
     return geometry.point(geobox.coordinates[h_coord].values[int(i)],
                           geobox.coordinates[v_coord].values[int(j)],
                           geobox.crs)

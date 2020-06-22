@@ -336,13 +336,12 @@ def _write_png(data, pq_data, style, extent_mask, geobox):
     height = geobox.height
     # width, height = img_data.pixel_counts()
 
-
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,
                           height=height,
                           count=len(img_data.data_vars),
-                          transform=Affine.identity(),
+                          transform=None,
                           nodata=0,
                           dtype='uint8') as thing:
             for idx, band in enumerate(img_data.data_vars, start=1):
@@ -359,7 +358,7 @@ def _write_empty(geobox):
                           width=geobox.width,
                           height=geobox.height,
                           count=1,
-                          transform=Affine.identity(),
+                          transform=None,
                           nodata=0,
                           dtype='uint8') as thing:
             pass
@@ -391,7 +390,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
                           width=geobox.width,
                           height=geobox.height,
                           count=len(zoom_fill),
-                          transform=Affine.identity(),
+                          transform=None,
                           nodata=0,
                           dtype='uint8') as thing:
             for idx, fill in enumerate(zoom_fill, start=1):
