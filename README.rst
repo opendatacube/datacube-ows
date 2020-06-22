@@ -4,6 +4,9 @@ datacube-ows
 
 .. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
         :target: https://travis-ci.org/opendatacube/datacube-ows
+        
+.. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
+        :target: https://codecov.io/gh/opendatacube/datacube-ows
 
 Datacube Web Map Service
 

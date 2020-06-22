@@ -399,11 +399,16 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 @log_call
 @opencensus_trace_call(tracer=tracer)
-def get_s3_browser_uris(datasets, s3url="", s3bucket=""):
+def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     uris = []
     for tds in datasets:
         for ds in tds.values.item():
-            uris.append(ds.uris)
+            if pt and ds.extent:
+                if ds.extent.contains(pt):
+                    uris.append(ds.uris)
+            else:
+                uris.append(ds.uris)
+
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
@@ -633,11 +638,21 @@ def feature_info(args):
                                 pass
             feature_json["data_available_for_dates"] = []
             for d in datasets.coords["time"].values:
+                dt_datasets = datasets.sel(time=d)
                 dt = datetime.utcfromtimestamp(d.astype(int) * 1e-9)
                 if params.product.is_raw_time_res:
                     dt = solar_date(dt, tz)
-                feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
-            feature_json["data_links"] = sorted(get_s3_browser_uris(datasets, s3_url, s3_bucket))
+                pt_native = None
+                for ds in dt_datasets.values.item():
+                    if pt_native is None:
+                        pt_native = pt.to_crs(ds.crs)
+                    if ds.extent and ds.extent.contains(pt_native):
+                        feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
+                        break
+            if ds_at_times:
+                feature_json["data_links"] = sorted(get_s3_browser_uris(ds_at_times, pt_native, s3_url, s3_bucket))
+            else:
+                feature_json["data_links"] = []
             if params.product.feature_info_include_utc_dates:
                 unsorted_dates = []
                 for tds in datasets:
