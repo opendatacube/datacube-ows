@@ -1,6 +1,5 @@
 --extra-index-url="https://packages.dea.ga.gov.au"
 datacube[performance,s3]
-coverage<5.0.0
 pytest
 pytest-cov
 pylint==2.4.4
