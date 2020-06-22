@@ -46,7 +46,7 @@ jobs:
       continue-on-error: true
       run: |
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -u root -T ows /bin/sh -c "cd /code;./check-code-all.sh"
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -u ows -T ows /bin/sh -c "cd /code;./check-code-all.sh"
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
     - name: Upload coverage to Codecov
