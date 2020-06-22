@@ -5,6 +5,6 @@ set -x
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
 python3 -m pytest --cov=datacube_ows --cov-report=xml tests/
-cp coverage.xml /mnt/artifacts
+cp /tmp/coverage.xml /mnt/artifacts
 
 set +x
