@@ -60,10 +60,26 @@ To install datacube-ows, run:
 .. _Github repo: https://github.com/opendatacube/datacube-ows
 .. _zip: https://github.com/opendatacube/datacube-ows/archive/master.zip
 
+From sources ( within Docker )
+------------------------------
+
+Build a docker image in the local registry:
+
+.. code-block:: console
+
+    $ docker build -t ows-dev .
+
+Run docker image to start gunicorn with ows. Here the DB
+parameters noted previously are forwared to the docker image entrypoint.
+Note: ``PYTHONPATH`` is pointed to ``/env``, place ``ows_cfg.py`` here.
+
+.. code-block:: console
+
+    $ docker run -e DB_DATABASE=datacube -e DB_HOSTNAME=localhost -e DB_USERNAME=ubuntu -e DB_PASSWORD=ubuntu -e DATACUBE_OWS_CFG=config.ows_cfg.ows_cfg --network=host --mount type=bind,source=/pathtocfg/ows_local_cfg.py,target=/env/config/ows_cfg.py ows-dev
 
 
 From sources ( with Docker Compose and local db)
-------------------------------
+------------------------------------------------
 
 Once you have a copy of the source, you need to create a local version
 of the config file, and edit it to reflect your requirements.
@@ -84,6 +100,9 @@ parameters noted previously are forwared to the docker image entrypoint.
 .. code-block:: console
 
     $ docker-compose up
+
+Conncting to DB via docker
+--------------------------
 
 Connect to the running docker to initialise DB:
 
