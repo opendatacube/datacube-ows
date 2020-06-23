@@ -76,7 +76,7 @@ def test_getcap_badsvc(wms_server):
 
 
 def test_getcap(wms_server):
-    resp = request.urlopen(wms_server.url + "/wms?request=GetCapabilities&service=WMS", timeout=10)
+    resp = request.urlopen(wms_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0", timeout=10)
 
     # Confirm success
     assert resp.code == 200
