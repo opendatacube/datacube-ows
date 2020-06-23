@@ -128,7 +128,9 @@ def main(layers, blocking,
 
 
 def create_views(dc):
-    run_sql(dc, "extent_views/create", database=os.environ.get("DB_DATABASE"))
+    from datacube.config import parse_env_params
+    dbname = parse_env_params()["database"]
+    run_sql(dc, "extent_views/create", database=dbname)
 
 
 def refresh_views(dc, blocking):
