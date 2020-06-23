@@ -57,11 +57,11 @@ jobs:
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
-    - name: Upload Integration coverage to Codecov
+    - name: Upload Integration and Unit-test coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CodeCovToken }}
-        file: ./artifacts/coverage.xml
+        file: ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
         fail_ci_if_error: false
 
 
