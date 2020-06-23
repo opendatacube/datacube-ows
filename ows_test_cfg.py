@@ -1184,7 +1184,7 @@ ows_cfg = {
                     },
                     "wcs": {
                         "native_crs": "EPSG:4326",
-                        "native_resolution": [ 25.0, 25.0 ],
+                        "native_resolution": [ 0.000225, 0.000225 ],
                         "default_bands": [ "red", "green", "blue" ],
                     },
                     "styling": {

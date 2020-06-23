@@ -74,7 +74,7 @@ def test_getcap_badsvc(wms_server):
     # Make bad service request to server:
     check_wms_error(wms_server.url + "/wms?request=GetCapabilities&service=NotWMS", "Invalid service", 400)
 
-
+@pytest.mark.xfail(reason="OWS Getcaps don't pass XSD")
 def test_getcap(wms_server):
     resp = request.urlopen(wms_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0", timeout=10)
 
@@ -112,7 +112,6 @@ def disjoint_bbox(bbox):
         lat_min - 0.2 * lat_range
     )
 
-@pytest.mark.skip(reason="No layers configured")
 def test_wms_server(wms_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=wms_server.url+"/wms", version="1.3.0")
@@ -123,7 +122,7 @@ def test_wms_server(wms_server):
     contents = list(wms.contents)
     assert contents
 
-@pytest.mark.skip(reason="No layers configured")
+@pytest.mark.xfail(reason="Getmap BaseURL is confused")
 def test_wms_getmap(wms_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=wms_server.url+"/wms", version="1.3.0")

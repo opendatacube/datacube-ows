@@ -46,6 +46,7 @@ jobs:
       run: |
         chmod a+rw artifacts
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;python3 /code/update_ranges.py"
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
