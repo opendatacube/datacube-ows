@@ -43,7 +43,6 @@ jobs:
         mv ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
 
     - name: Dockerized Integration Pytest (stage 1)
-      continue-on-error: true
       run: |
         chmod a+rw artifacts
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d

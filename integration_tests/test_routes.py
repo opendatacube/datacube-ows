@@ -7,12 +7,6 @@ def test_db_connect_success(flask_client):
     rv = flask_client.get('/ping')
     assert rv.status_code == 200
 
-def test_db_connect_fail(flask_client, monkeypatch):
-    """Start without a database connection"""
-    monkeypatch.setenv("DB_HOSTNAME","random")
-    rv = flask_client.get('/ping')
-    assert rv.status_code == 500
-
 def test_wcs_base(flask_client):
     """WCS endpoint base"""
 
