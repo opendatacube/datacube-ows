@@ -55,9 +55,9 @@ def check_wms_error(url, expected_error_message=None, expected_status_code=400):
         ex_xsd = get_xsd("exceptions_1_3_0.xsd")
         assert ex_xsd.validate(resp_xml)
 
-        # Confirm error message is appropriate
+        # Confirm error message is appropriate, ignore case
         if expected_error_message:
-            assert resp_xml[0].text.strip() == expected_error_message
+            assert resp_xml[0].text.strip().casefold() == expected_error_message.casefold()
 
 
 def test_no_request(wms_server):
