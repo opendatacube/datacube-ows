@@ -97,6 +97,7 @@ To run the standard Docker image, create a docker volume containing your ows con
         -e DB_HOSTNAME=172.17.0.1 -e DB_PORT=5432 \                # Hostname/IP address and port of ODC postgres database
         -e DB_DATABASE=datacube \                                  # Name of ODC postgres database
         -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
+        -e PYTHONPATH=/code                                        # The default PATH is under env, change this to target /code
         -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
         \                                                          # container at port 8008 on the host machine.
         --mount source=test_cfg,target=/code/datacube_ows/config \ # Mount the docker volume where the config lives
