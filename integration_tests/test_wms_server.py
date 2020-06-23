@@ -62,21 +62,21 @@ def check_wms_error(url, expected_error_message=None, expected_status_code=400):
 
 def test_no_request(wms_server):
     # Make empty request to server:
-    check_wms_error(wms_server.url + "/", "No operation specified", 400)
+    check_wms_error(wms_server.url + "/wms", "No operation specified", 400)
 
 
 def test_invalid_operation(wms_server):
     # Make invalid operation request to server:
-    check_wms_error(wms_server.url + "/?request=NoSuchOperation", "Unrecognised operation: NoSuchOperation", 400)
+    check_wms_error(wms_server.url + "/wms?request=NoSuchOperation", "Unrecognised operation: NoSuchOperation", 400)
 
 
 def test_getcap_badsvc(wms_server):
     # Make bad service request to server:
-    check_wms_error(wms_server.url + "/?request=GetCapabilities&service=NotWMS", "Invalid service", 400)
+    check_wms_error(wms_server.url + "/wms?request=GetCapabilities&service=NotWMS", "Invalid service", 400)
 
 
 def test_getcap(wms_server):
-    resp = request.urlopen(wms_server.url + "/?request=GetCapabilities&service=WMS", timeout=10)
+    resp = request.urlopen(wms_server.url + "/wms?request=GetCapabilities&service=WMS", timeout=10)
 
     # Confirm success
     assert resp.code == 200
@@ -115,7 +115,7 @@ def disjoint_bbox(bbox):
 
 def test_wms_server(wms_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
-    wms = WebMapService(url=wms_server.url, version="1.3.0")
+    wms = WebMapService(url=wms_server.url+"/wms", version="1.3.0")
 
     assert wms.identification.type == "WMS"
 
@@ -126,7 +126,7 @@ def test_wms_server(wms_server):
 
 def test_wms_getmap(wms_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
-    wms = WebMapService(url=wms_server.url, version="1.3.0")
+    wms = WebMapService(url=wms_server.url+"/wms", version="1.3.0")
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
