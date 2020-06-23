@@ -61,7 +61,7 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CodeCovToken }}
-        file: ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
+        file: ./artifacts/coverage.xml,./artifacts/coverage-unit.xml
         fail_ci_if_error: false
 
 
