@@ -89,8 +89,7 @@ To run the standard Docker image, create a docker volume containing your ows con
 
   docker run --rm \
         -e DATACUBE_OWS_CFG=datacube_ows.config.test_cfg.ows_cfg   # Location of config object
-        -e AWS_ACCESS_KEY_ID=THISISNOTAREALAWSKEY \                # AWS ACCESS KEY (if accessing files on S3)
-        -e AWS_SECRET_ACCESS_KEY=THISisNOTaREALawsSECRETaccessKEY \# AWS SECRET ACCESS KEY (if accessing files on S3)
+        -e AWS_NO_SIGN_REQUEST=yes                                 # Allowing access to AWS S3 buckets
         -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
         -e SENTRY_KEY=set5gstgw45gdfgw54t \                        # Key for Sentry logging (optional)
         -e SENTRY_PROJECT=my_datacube_ows_project \                # Project name for Sentry logging (optional)
@@ -131,6 +130,8 @@ The folllowing instructions are for installing on a clean Linux system with esta
 
     PYTHONPATH=.
     DATACUBE_OWS_CFG=ows_cfg_filename.ows_cfg
+    AWS_NO_SIGN_REQUEST=yes
+    AWS_DEFAULT_REGION=ap-southeast-2
 
 * Run ``python update_ranges.py`` (in the Datacube virtual environment).
 
