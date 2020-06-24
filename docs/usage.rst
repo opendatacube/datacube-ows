@@ -7,7 +7,7 @@ As a Python Module
 
 To use datacube-ows in a project::
 
-    import datacube_wms
+    import datacube_ows
 
 As a Web-Service in Docker with Layers deployed
 -----------------------------------------------
@@ -63,21 +63,15 @@ Index a dataset when ``yaml`` file is not available and ONLY ``.json`` file is a
 
 .. note:: The next step will be superseded soon by an OWS sub-command.
 
-Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is within the code directory.
+Update extents of a new product or to update a product in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is within the code directory.
 
 .. code-block:: console
 
-    $ python3 update_ranges.py alos_palsar_mosaic
+    $ datacube-ows-update --views --blocking
+    $ datacube-ows-update alos_palsar_mosaic
 
-Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is outside of the code directory, i.e. `/opt`.
-
-.. code-block:: console
-
-    $ PYTHONPATH=/opt python3 update_ranges.py --product alos_palsar_mosaic --no-calculate-extent
-
-
-Deploy the Digital Earth Africa OWS config available `here <https://github.com/digitalearthafrica/config/blob/master/services/ows.py>`_
-by copying to wms_cfg.py. Ideally load the config outside
+Deploy the Digital Earth Africa OWS config available `here <https://github.com/digitalearthafrica/config/blob/master/services/ows_cfg.py>`_
+by copying to ows_cfg.py. Ideally load the config outside
 a docker container to iterate faster.
 
 Run GetCapabilities via curl to ensure data is present.
