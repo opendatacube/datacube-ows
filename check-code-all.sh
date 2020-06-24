@@ -4,7 +4,7 @@ set -x
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
-python3 update_ranges.py
+datacube-ows-update
 python3 -m pytest --cov=datacube_ows --cov-report=xml integration_tests/
 cp /tmp/coverage.xml /mnt/artifacts
 
