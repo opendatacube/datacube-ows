@@ -20,6 +20,9 @@ parsers:
       method: no
       macro: no
 
+fixes:
+  - /::datacube_ows/"
+
 comment:
   layout: "reach,diff,flags,tree"
   behavior: default
