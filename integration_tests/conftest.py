@@ -15,10 +15,10 @@ def flask_client():
 class generic_obj(object):
     pass
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ows_server(request):
     """
-    Run the WMS server for the duration of these tests
+    Run the OWS server for the duration of these tests
     """
     external_url = os.environ.get("SERVER_URL")
     if external_url:
