@@ -27,7 +27,7 @@ def check_wcs_error(url, expected_error_message=None, expected_status_code=400):
         resp_content = e.fp.read()
         assert expected_error_message in str(resp_content)
         resp_xml = etree.XML(resp_content)
-        assert resp_xml
+        assert resp_xml is not None
 
 
 def test_no_request(ows_server):
