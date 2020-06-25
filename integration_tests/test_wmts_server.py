@@ -65,7 +65,7 @@ def test_wmts_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wmts = WebMapTileService(url=ows_server.url+"/wmts")
 
-    assert wmts.identification.type == "OGS WMTS"
+    assert wmts.identification.type == "OGC WMTS"
     assert wmts.identification.version == "1.0.0"
 
     # Ensure that we have at least some layers available
