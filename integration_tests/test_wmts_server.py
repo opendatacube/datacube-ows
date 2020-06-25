@@ -6,13 +6,12 @@ from imghdr import what
 
 
 def get_xsd(name):
-    xsd_f = request.urlopen("http://schemas.opengis.net/wms/1.3.0/" + name)
+    xsd_f = request.urlopen("http://schemas.opengis.net/wmts/1.0/" + name)
     schema_doc = etree.parse(xsd_f)
-
     return etree.XMLSchema(schema_doc)
 
 
-def check_wcs_error(url, expected_error_message=None, expected_status_code=400):
+def check_wmts_error(url, expected_error_message=None, expected_status_code=400):
     try:
         resp = request.urlopen(url, timeout=10)
 
@@ -36,22 +35,22 @@ def check_wcs_error(url, expected_error_message=None, expected_status_code=400):
 
 def test_no_request(ows_server):
     # Make empty request to server:
-    check_wcs_error(ows_server.url + "/wmts", "No operation specified", 400)
+    check_wmts_error(ows_server.url + "/wmts", "No operation specified", 400)
 
 
 def test_invalid_operation(ows_server):
     # Make invalid operation request to server:
-    check_wcs_error(ows_server.url + "/wmts?request=NoSuchOperation", "Unrecognised operation: NoSuchOperation", 400)
+    check_wmts_error(ows_server.url + "/wmts?request=NoSuchOperation", "Unrecognised operation: NoSuchOperation", 400)
 
 
 def test_getcap_badsvc(ows_server):
     # Make bad service request to server:
-    check_wcs_error(ows_server.url + "/wmts?request=GetCapabilities&service=NotWMTS", "Invalid service", 400)
+    check_wmts_error(ows_server.url + "/wmts?request=GetCapabilities&service=NotWMTS", "Invalid service", 400)
 
 
-@pytest.mark.xfail(reason="OWS Getcaps don't pass XSD")
+# @pytest.mark.xfail(reason="OWS Getcaps don't pass XSD")
 def test_getcap(ows_server):
-    resp = request.urlopen(ows_server.url + "/wmts?request=GetCapabilities&service=WCS&version=1.3.0", timeout=10)
+    resp = request.urlopen(ows_server.url + "/wmts?request=GetCapabilities&service=WMTS&version=1.3.0", timeout=10)
 
     # Confirm success
     assert resp.code == 200
