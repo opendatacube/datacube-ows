@@ -21,7 +21,7 @@ parsers:
       macro: no
 
 fixes:
-  - /::datacube_ows/"
+  - "/::datacube_ows/"
 
 comment:
   layout: "reach,diff,flags,tree"
