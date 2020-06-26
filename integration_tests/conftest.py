@@ -1,5 +1,6 @@
 import os
 import pytest
+from click.testing import CliRunner
 
 from datacube_ows import ogc
 from pytest_localserver.http import WSGIServer
@@ -14,6 +15,7 @@ def flask_client():
 
 class generic_obj(object):
     pass
+
 
 @pytest.fixture(scope="session")
 def ows_server(request):
@@ -30,3 +32,8 @@ def ows_server(request):
         request.addfinalizer(server.stop)
 
     return server
+
+
+@pytest.fixture
+def runner():
+    return CliRunner()
