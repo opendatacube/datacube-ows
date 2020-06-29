@@ -3,10 +3,10 @@ from owslib.wmts import WebMapTileService
 from urllib import request
 from lxml import etree
 from imghdr import what
-
+import requests
 
 def get_xsd(name):
-    xsd_f = request.urlopen("http://schemas.opengis.net/wmts/1.0/" + name)
+    xsd_f = request.urlopen("http://schemas.opengis.net/ows/1.1.0/" + name)
     schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 
@@ -86,14 +86,14 @@ def test_wmts_gettile(ows_server):
     assert tile
 
 
-def test_wms_pattern_generated_gettile(ows_server):
+def test_wmts_pattern_generated_gettile(ows_server):
     wmts = WebMapTileService(url=ows_server.url+"/wmts")
 
     contents = list(wmts.contents)
     test_layer_name = contents[0]
     test_layer_default_style = list(wmts.contents[test_layer_name].styles.keys())[0]
 
-    import requests
+
     resp = requests.head(ows_server.url +"/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={0}&STYLE={6}&TILEMATRIXSET={1}&TILEMATRIX={2}&TILEROW={3}&TILECOL={4}&FORMAT={5}".format(
         test_layer_name,
         "WholeWorld_WebMercator",

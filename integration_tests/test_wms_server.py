@@ -3,6 +3,7 @@ from owslib.wms import WebMapService
 from urllib import request
 from lxml import etree
 from imghdr import what
+import requests
 
 
 
@@ -162,7 +163,6 @@ def test_wms_pattern_generated_getmap(ows_server):
 
     bbox = test_layer.boundingBoxWGS84
 
-    import requests
     resp = requests.head(ows_server.url +"/wms?service=WMS&version=1.3.0&request=GetMap&layers={0}&styles=&width={1}&height={2}&crs={3}&bbox={4}&format={5}&transparent={6}&bgcolor=0xFFFFFF&exceptions=XML&time={7}".format(
         test_layer_name,
         256,
@@ -188,3 +188,50 @@ def test_wms_pattern_generated_getmap(ows_server):
     ), timeout=10)
 
     assert resp.headers.get('content-type') == 'image/png'
+
+
+@pytest.mark.xfail(reason="Getfeatureinfo BaseURL is confused")
+def test_wms_getfeatureinfo(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
+    test_layer_name = contents[0]
+    test_layer = wms.contents[test_layer_name]
+
+    bbox = test_layer.boundingBoxWGS84
+    response = wms.getfeatureinfo(
+        layers=[test_layer_name],
+        srs='EPSG:4326',
+        bbox=enclosed_bbox(bbox),
+        size=(256, 256),
+        format="image/png",
+        query_layers=[test_layer_name],
+        info_format="application/json",
+        xy=(250,250)
+    )
+
+    assert response.code == 200
+
+def test_wms_pattern_generated_getfeatureinfo(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
+    test_layer_name = contents[0]
+    test_layer = wms.contents[test_layer_name]
+
+    bbox = test_layer.boundingBoxWGS84
+
+    resp = requests.head(ows_server.url +"/?srs={3}&transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&styles=&tiled=true&feature_count=101&service=WMS&version=1.1.1&request=GetFeatureInfo&layers={0}&bbox={4}&width={1}&height={2}&query_layers={0}&x=227&y=43&info_format={5}".format(
+        test_layer_name,
+        256,
+        256,
+        "EPSG:4326",
+        enclosed_bbox(bbox, 'string'),
+        "application/json",
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'application/json'

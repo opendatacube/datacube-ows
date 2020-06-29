@@ -65,7 +65,7 @@ def test_wcs1_server(ows_server):
     assert contents
 
 
-@pytest.mark.xfail(reason="Gettile BaseURL is confused")
+@pytest.mark.xfail(reason="GetCoverage BaseURL is confused")
 def test_wcs1_getcoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
