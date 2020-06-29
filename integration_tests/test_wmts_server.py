@@ -3,7 +3,6 @@ from owslib.wmts import WebMapTileService
 from urllib import request
 from lxml import etree
 from imghdr import what
-import requests
 
 def get_xsd(name):
     xsd_f = request.urlopen("http://schemas.opengis.net/ows/1.1.0/" + name)
@@ -67,39 +66,19 @@ def test_wmts_server(ows_server):
     assert contents
 
 
-@pytest.mark.xfail(reason="Gettile BaseURL is confused")
 def test_wmts_gettile(ows_server):
     wmts = WebMapTileService(url=ows_server.url+"/wmts")
 
     contents = list(wmts.contents)
     test_layer_name = contents[0]
-    test_layer = wmts.contents[test_layer_name]
 
     tile = wmts.gettile(
         layer=test_layer_name,
-        tilematrixset='EPSG4326_250m',
+        tilematrixset='WholeWorld_WebMercator',
         tilematrix='0',
         row=0, column=0,
         format="image/png"
     )
 
     assert tile
-
-
-def test_wmts_pattern_generated_gettile(ows_server):
-    wmts = WebMapTileService(url=ows_server.url+"/wmts")
-
-    contents = list(wmts.contents)
-    test_layer_name = contents[0]
-    test_layer_default_style = list(wmts.contents[test_layer_name].styles.keys())[0]
-
-
-    resp = requests.head(ows_server.url +"/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={0}&STYLE={6}&TILEMATRIXSET={1}&TILEMATRIX={2}&TILEROW={3}&TILECOL={4}&FORMAT={5}".format(
-        test_layer_name,
-        "WholeWorld_WebMercator",
-        0, 0, 0,
-        "image/png",
-        test_layer_default_style
-    ), timeout=10)
-
-    assert resp.headers.get('content-type') == 'image/png'
+    assert what("", h=tile.read()) == "png"

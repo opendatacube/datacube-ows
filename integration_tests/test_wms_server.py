@@ -5,7 +5,6 @@ from lxml import etree
 from imghdr import what
 import requests
 
-
 def get_xsd(name):
     xsd_f = open("wms_xsds/" + name)
     schema_doc = etree.parse(xsd_f)
@@ -113,7 +112,6 @@ def test_wms_server(ows_server):
     contents = list(wms.contents)
     assert contents
 
-@pytest.mark.xfail(reason="Getmap BaseURL is confused")
 def test_wms_getmap(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
@@ -150,45 +148,6 @@ def test_wms_getmap(ows_server):
     assert what("", h=img.read()) == "png"
 
 
-def test_wms_pattern_generated_getmap(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WMS service
-    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
-
-    # Ensure that we have at least some layers available
-    contents = list(wms.contents)
-    test_layer_name = contents[0]
-    test_layer = wms.contents[test_layer_name]
-
-    bbox = test_layer.boundingBoxWGS84
-
-    resp = requests.head(ows_server.url +"/wms?service=WMS&version=1.3.0&request=GetMap&layers={0}&styles=&width={1}&height={2}&crs={3}&bbox={4}&format={5}&transparent={6}&bgcolor=0xFFFFFF&exceptions=XML&time={7}".format(
-        test_layer_name,
-        256,
-        256,
-        "EPSG:4326",
-        enclosed_bbox(bbox, 'string'),
-        "image/png",
-        "True",
-        test_layer.timepositions[len(test_layer.timepositions)//2].strip()
-    ), timeout=10)
-
-    assert resp.headers.get('content-type') == 'image/png'
-
-    resp = requests.head(ows_server.url +"/wms?service=WMS&version=1.3.0&request=GetMap&layers={0}&styles=&width={1}&height={2}&crs={3}&bbox={4}&format={5}&transparent={6}&bgcolor=0xFFFFFF&exceptions=XML&time={7}".format(
-        test_layer_name,
-        256,
-        256,
-        "EPSG:4326",
-        disjoint_bbox(bbox, 'string'),
-        "image/png",
-        "True",
-        test_layer.timepositions[len(test_layer.timepositions)//2].strip()
-    ), timeout=10)
-
-    assert resp.headers.get('content-type') == 'image/png'
-
-
-@pytest.mark.xfail(reason="Getfeatureinfo BaseURL is confused")
 def test_wms_getfeatureinfo(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
@@ -210,30 +169,7 @@ def test_wms_getfeatureinfo(ows_server):
         xy=(250,250)
     )
 
-    assert response.code == 200
-
-def test_wms_pattern_generated_getfeatureinfo(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WMS service
-    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
-
-    # Ensure that we have at least some layers available
-    contents = list(wms.contents)
-    test_layer_name = contents[0]
-    test_layer = wms.contents[test_layer_name]
-
-    bbox = test_layer.boundingBoxWGS84
-
-    resp = requests.head(ows_server.url +"/?srs={3}&transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&styles=&tiled=true&feature_count=101&service=WMS&version=1.1.1&request=GetFeatureInfo&layers={0}&bbox={4}&width={1}&height={2}&query_layers={0}&x=227&y=43&info_format={5}".format(
-        test_layer_name,
-        256,
-        256,
-        "EPSG:4326",
-        enclosed_bbox(bbox, 'string'),
-        "application/json",
-    ), timeout=10)
-
-    assert resp.headers.get('content-type') == 'application/json'
-
+    assert response
 
 def test_wms_getlegend(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
@@ -246,8 +182,7 @@ def test_wms_getlegend(ows_server):
     test_layer_styles = wms.contents[test_layer_name].styles
     for style in test_layer_styles:
         # check if this layer has a legend
-        original_url = test_layer_styles[style].get('legend')
-        if original_url:
-            url = original_url.replace("http://localhost/odc_ows", ows_server.url)
-            resp = requests.head(url, allow_redirects=False)
+        legend_url = test_layer_styles[style].get('legend')
+        if legend_url:
+            resp = requests.head(legend_url, allow_redirects=False)
             assert resp.headers.get('content-type') == 'image/png'

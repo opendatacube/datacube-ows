@@ -948,10 +948,12 @@ ows_cfg = {
         # Service URL.
         # A list of fully qualified URLs that the service can return
         # in the GetCapabilities documents based on the requesting url
-        "allowed_urls": [ "http://localhost/odc_ows",
-                          "https://localhost/odc_ows",
-                          "https://alternateurl.domain.org/odc_ows",
-                          "http://127.0.0.1:5000/"],
+        "allowed_urls": [
+            "http://127.0.0.1:5000/",
+            "http://localhost/odc_ows",
+            "https://localhost/odc_ows",
+            "https://alternateurl.domain.org/odc_ows",
+        ],
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",
