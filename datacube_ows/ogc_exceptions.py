@@ -55,7 +55,7 @@ class WMSException(OGCException):
 
 class WMTSException(WMSException):
     version = "1.0.0"
-    schema_url = "http://schemas.opengis.net/wmts/1.0.0/exceptions_1_0_0.xsd"
+    schema_url = "http://schemas.opengis.net/ows/1.1.0/owsExceptionReport.xsd"
 
 
 class WCS1Exception(OGCException):
