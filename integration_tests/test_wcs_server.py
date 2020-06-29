@@ -4,7 +4,7 @@ from owslib.wcs import WebCoverageService
 from urllib import request
 from lxml import etree
 from imghdr import what
-
+import requests
 
 def get_xsd(name):
     # TODO: Get XSD's for different versions
@@ -82,12 +82,25 @@ def test_wcs1_pattern_generated_getcoverage(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
 
-    import requests
     resp = requests.head(ows_server.url +"/wcs?version=1.0.0&request=GetCoverage&service=WCS&Coverage={}&BBox=10%2C40%2C18%2C45&crs=EPSG%3A4326&format=GeoTIFF&width=1024&height=415".format(
         test_layer_name
     ), timeout=10)
 
     assert resp.headers.get('content-type') == 'image/geotiff'
+
+def test_wcs1_pattern_generated_describecoverage(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+
+    resp = requests.head(ows_server.url +"/wcs?service=WCS&version=1.0.0&request=DescribeCoverage&CoverageId={0}&".format(
+        test_layer_name
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'application/xml'
 
 def test_wcs20_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -104,7 +117,7 @@ def test_wcs20_pattern_generated_getcoverage(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
 
-    import requests
+
     resp = requests.head(ows_server.url +"/wcs?version=2.0.0&request=GetCoverage&service=WCS&coverageid={}&subsettingcrs=EPSG%3A4326&format=image/geotiff&scalesize=x(1024),y(415)&subset=y(40,45)&subset=x(10,18)".format(
         test_layer_name
     ), timeout=10)
@@ -119,3 +132,18 @@ def test_wcs21_server(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     assert contents
+
+
+def test_wcs21_pattern_generated_describecoverage(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1")
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+
+    resp = requests.head(ows_server.url +"/wcs?service=WCS&version=2.0.1&request=DescribeCoverage&CoverageId={0}&".format(
+        test_layer_name
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'application/xml'
