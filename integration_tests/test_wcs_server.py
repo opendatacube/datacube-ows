@@ -74,6 +74,7 @@ def test_wcs1_getcoverage(ows_server):
     output = wcs.getCoverage(identifier=contents[0], format='GeoTIFF', bbox=(10,40,18,45), crs='EPSG:4326', width=400, height=300)
 
     assert output
+    assert output.info()['Content-Type'] == 'image/geotiff'
 
 def test_wcs1_pattern_generated_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -143,6 +144,7 @@ def test_wcs21_getcoverage(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    output = wcs.getCoverage(identifier=[contents[0]], format='application/geotiff', subsets=[('Long', 40, 45), ('Lat', 10, 18)])
+    output = wcs.getCoverage(identifier=[contents[0]], format='image/geotiff', subsets=[('Long', 40, 45), ('Lat', 10, 18)])
 
     assert output
+    assert output.info()['Content-Type'] == 'image/geotiff'

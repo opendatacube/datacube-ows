@@ -170,6 +170,7 @@ def test_wms_getfeatureinfo(ows_server):
     )
 
     assert response
+    assert response.info()['Content-Type'] == 'application/json'
 
 def test_wms_getlegend(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
