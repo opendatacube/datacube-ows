@@ -61,18 +61,11 @@ def test_getcap(ows_server):
     assert gc_xds.validate(resp_xml)
 
 
-def enclosed_bbox(bbox, output_format='getmap'):
+def enclosed_bbox(bbox):
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
 
-    if output_format == 'string':
-        return '{1},{0},{3},{2}'.format(
-            lon_min + 0.2 * lon_range,
-            lat_min + 0.2 * lat_range,
-            lon_max - 0.2 * lon_range,
-            lat_max - 0.2 * lat_range
-        )
     return (
         lon_min + 0.2 * lon_range,
         lat_min + 0.2 * lat_range,
@@ -81,19 +74,10 @@ def enclosed_bbox(bbox, output_format='getmap'):
     )
 
 
-def disjoint_bbox(bbox, output_format='getmap'):
+def disjoint_bbox(bbox):
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
-
-
-    if output_format == 'string':
-        return '{1},{0},{3},{2}'.format(
-        lon_min - 0.4 * lon_range,
-        lat_min - 0.4 * lat_range,
-        lon_min - 0.2 * lon_range,
-        lat_min - 0.2 * lat_range
-        )
 
     return (
         lon_min - 0.4 * lon_range,
