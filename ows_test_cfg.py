@@ -148,15 +148,15 @@ style_rgb = {
     # Band values outside this range are clipped to 0 or 255 as appropriate.
     "scale_range": [0.0, 65535.0],
     # Legend section is optional for linear combination styles. If not supplied, no legend is displayed
-    "legend": {
-        # Whether or not to display a legend for this style.
-        # Defaults to False for linear combination styles.
-        "show_legend": True,
-        # A legend cannot be auto-generated for a linear combination style, so a url pointing to
-        # legend PNG image must be supplied if 'show_legend' is True.
-        # Note that legend urls are proxied, not displayed directly to the user.
-        "url": "http://example.com/custom_style_image.png"
-    }
+    # "legend": {
+    #     # Whether or not to display a legend for this style.
+    #     # Defaults to False for linear combination styles.
+    #     "show_legend": True,
+    #     # A legend cannot be auto-generated for a linear combination style, so a url pointing to
+    #     # legend PNG image must be supplied if 'show_legend' is True.
+    #     # Note that legend urls are proxied, not displayed directly to the user.
+    #     "url": "http://example.com/custom_style_image.png"
+    # }
 
 }
 
@@ -573,14 +573,14 @@ style_ndvi = {
     "include_in_feature_info": True,
     # Legend section is optional for non-linear colour-ramped styles.
     # If not supplied, a legend for the style will be automatically generated from the colour ramp.
-    "legend": {
-        # Whether or not to display a legend for this style.
-        # Defaults to True for non-linear colour-ramped styles.
-        "show_legend": True,
-        # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
-        # be used instead.  If 'url' is not supplied, the generated legend is used.
-        "url": "http://example.com/custom_style_image.png"
-    }
+    # "legend": {
+    #     # Whether or not to display a legend for this style.
+    #     # Defaults to True for non-linear colour-ramped styles.
+    #     "show_legend": True,
+    #     # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
+    #     # be used instead.  If 'url' is not supplied, the generated legend is used.
+    #     "url": "http://example.com/custom_style_image.png"
+    # }
 }
 
 # Examples of non-linear colour-ramped style with multi-date support.
@@ -1204,7 +1204,3 @@ ows_cfg = {
         }  ### End of Landsat 8 folder.
     ]  ##### End of "layers" list.
 } #### End of example configuration object
-
-
-
-

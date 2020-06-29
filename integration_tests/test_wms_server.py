@@ -6,8 +6,6 @@ from imghdr import what
 import requests
 
 
-
-
 def get_xsd(name):
     xsd_f = open("wms_xsds/" + name)
     schema_doc = etree.parse(xsd_f)
@@ -235,3 +233,21 @@ def test_wms_pattern_generated_getfeatureinfo(ows_server):
     ), timeout=10)
 
     assert resp.headers.get('content-type') == 'application/json'
+
+
+def test_wms_getlegend(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
+    test_layer_name = contents[0]
+
+    test_layer_styles = wms.contents[test_layer_name].styles
+    for style in test_layer_styles:
+        # check if this layer has a legend
+        original_url = test_layer_styles[style].get('legend')
+        if original_url:
+            url = original_url.replace("http://localhost/odc_ows", ows_server.url)
+            resp = requests.head(url, allow_redirects=False)
+            assert resp.headers.get('content-type') == 'image/png'
