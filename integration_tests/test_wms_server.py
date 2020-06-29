@@ -63,11 +63,18 @@ def test_getcap(ows_server):
     assert gc_xds.validate(resp_xml)
 
 
-def enclosed_bbox(bbox):
+def enclosed_bbox(bbox, output_format='getmap'):
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
 
+    if output_format == 'string':
+        return '{1},{0},{3},{2}'.format(
+            lon_min + 0.2 * lon_range,
+            lat_min + 0.2 * lat_range,
+            lon_max - 0.2 * lon_range,
+            lat_max - 0.2 * lat_range
+        )
     return (
         lon_min + 0.2 * lon_range,
         lat_min + 0.2 * lat_range,
@@ -76,10 +83,19 @@ def enclosed_bbox(bbox):
     )
 
 
-def disjoint_bbox(bbox):
+def disjoint_bbox(bbox, output_format='getmap'):
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
+
+
+    if output_format == 'string':
+        return '{1},{0},{3},{2}'.format(
+        lon_min - 0.4 * lon_range,
+        lat_min - 0.4 * lat_range,
+        lon_min - 0.2 * lon_range,
+        lat_min - 0.2 * lat_range
+        )
 
     return (
         lon_min - 0.4 * lon_range,
@@ -133,3 +149,42 @@ def test_wms_getmap(ows_server):
                      )
     assert img
     assert what("", h=img.read()) == "png"
+
+
+def test_wms_pattern_generated_getmap(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
+    test_layer_name = contents[0]
+    test_layer = wms.contents[test_layer_name]
+
+    bbox = test_layer.boundingBoxWGS84
+
+    import requests
+    resp = requests.head(ows_server.url +"/wms?service=WMS&version=1.3.0&request=GetMap&layers={0}&styles=&width={1}&height={2}&crs={3}&bbox={4}&format={5}&transparent={6}&bgcolor=0xFFFFFF&exceptions=XML&time={7}".format(
+        test_layer_name,
+        256,
+        256,
+        "EPSG:4326",
+        enclosed_bbox(bbox, 'string'),
+        "image/png",
+        "True",
+        test_layer.timepositions[len(test_layer.timepositions)//2].strip()
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'image/png'
+
+    resp = requests.head(ows_server.url +"/wms?service=WMS&version=1.3.0&request=GetMap&layers={0}&styles=&width={1}&height={2}&crs={3}&bbox={4}&format={5}&transparent={6}&bgcolor=0xFFFFFF&exceptions=XML&time={7}".format(
+        test_layer_name,
+        256,
+        256,
+        "EPSG:4326",
+        disjoint_bbox(bbox, 'string'),
+        "image/png",
+        "True",
+        test_layer.timepositions[len(test_layer.timepositions)//2].strip()
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'image/png'
