@@ -65,3 +65,41 @@ def test_wmts_server(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wmts.contents)
     assert contents
+
+
+@pytest.mark.xfail(reason="Gettile BaseURL is confused")
+def test_wmts_gettile(ows_server):
+    wmts = WebMapTileService(url=ows_server.url+"/wmts")
+
+    contents = list(wmts.contents)
+    test_layer_name = contents[0]
+    test_layer = wmts.contents[test_layer_name]
+
+    tile = wmts.gettile(
+        layer=test_layer_name,
+        tilematrixset='EPSG4326_250m',
+        tilematrix='0',
+        row=0, column=0,
+        format="image/png"
+    )
+
+    assert tile
+
+
+def test_wms_pattern_generated_gettile(ows_server):
+    wmts = WebMapTileService(url=ows_server.url+"/wmts")
+
+    contents = list(wmts.contents)
+    test_layer_name = contents[0]
+    test_layer_default_style = list(wmts.contents[test_layer_name].styles.keys())[0]
+
+    import requests
+    resp = requests.head(ows_server.url +"/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={0}&STYLE={6}&TILEMATRIXSET={1}&TILEMATRIX={2}&TILEROW={3}&TILECOL={4}&FORMAT={5}".format(
+        test_layer_name,
+        "WholeWorld_WebMercator",
+        0, 0, 0,
+        "image/png",
+        test_layer_default_style
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'image/png'

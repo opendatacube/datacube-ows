@@ -65,6 +65,30 @@ def test_wcs1_server(ows_server):
     assert contents
 
 
+@pytest.mark.xfail(reason="Gettile BaseURL is confused")
+def test_wcs1_getcoverage(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    output = wcs.getCoverage(identifier=contents[0], format='GeoTIFF', bbox=(10,40,18,45), crs='EPSG:4326', width=400, height=300)
+
+    assert output
+
+def test_wcs1_pattern_generated_getcoverage(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+
+    import requests
+    resp = requests.head(ows_server.url +"/wcs?version=1.0.0&request=GetCoverage&service=WCS&Coverage={}&BBox=10%2C40%2C18%2C45&crs=EPSG%3A4326&format=GeoTIFF&width=1024&height=415".format(
+        test_layer_name
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'image/geotiff'
+
 def test_wcs20_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
@@ -72,6 +96,21 @@ def test_wcs20_server(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     assert contents
+
+@pytest.mark.xfail(reason="returns 500")
+def test_wcs20_pattern_generated_getcoverage(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+
+    import requests
+    resp = requests.head(ows_server.url +"/wcs?version=2.0.0&request=GetCoverage&service=WCS&coverageid={}&subsettingcrs=EPSG%3A4326&format=image/geotiff&scalesize=x(1024),y(415)&subset=y(40,45)&subset=x(10,18)".format(
+        test_layer_name
+    ), timeout=10)
+
+    assert resp.headers.get('content-type') == 'image/geotiff'
+
 
 def test_wcs21_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
