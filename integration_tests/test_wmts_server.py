@@ -1,11 +1,13 @@
 import pytest
 from owslib.wmts import WebMapTileService
+from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
 from imghdr import what
 
-
 def get_xsd(name):
+    # since this function is only being called by getcapabilities set to wmts/1.0.0
+    # the exception schema is available from http://schemas.opengis.net/ows/1.1.0/
     xsd_f = request.urlopen("http://schemas.opengis.net/wmts/1.0/" + name)
     schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
@@ -65,3 +67,41 @@ def test_wmts_server(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wmts.contents)
     assert contents
+
+
+def test_wmts_gettile(ows_server):
+    wmts = WebMapTileService(url=ows_server.url+"/wmts")
+
+    contents = list(wmts.contents)
+    test_layer_name = contents[0]
+
+    tile = wmts.gettile(
+        layer=test_layer_name,
+        tilematrixset='WholeWorld_WebMercator',
+        tilematrix='0',
+        row=0, column=0,
+        format="image/png"
+    )
+
+    assert tile
+    assert what("", h=tile.read()) == "png"
+
+
+def test_wmts_gettile_exception(ows_server):
+    wmts = WebMapTileService(url=ows_server.url+"/wmts")
+
+    contents = list(wmts.contents)
+    test_layer_name = contents[0]
+    try:
+        # supplying an unsupported tilematrixset
+        wmts.gettile(
+            layer=test_layer_name,
+            tilematrixset='WholeWorld_WebMercatorxxx',
+            tilematrix='0',
+            row=0, column=0,
+            format="image/png"
+        )
+    except ServiceException as e:
+        assert 'Invalid Tile Matrix Set:' in str(e)
+    else:
+        assert False

@@ -1,111 +1,10 @@
 # pylint: skip-file
 
-# Example configuration file for datacube_ows.
-#
-# OVERVIEW
-#
-# This file forms the primary documentation for the configuration file format at this stage.
-#
-# The actual configuration is held in a single serialisable object that can be directly
-# declared as a python object or imported from JSON.
-#
-# WHERE IS CONFIGURATION READ FROM?
-#
-# Configuration is read by default from the ows_cfg object in datacube_ows/ows_cfg.py
-#
-# but this can be overridden by setting the $DATACUBE_OWS_CFG environment variable.
-#
-# $DATACUBE_OWS_CFG is interpreted as follows (first matching alternative applies):
-#
-# 1. Has a leading slash, e.g. "/opt/odc_ows_cfg/odc_ows_cfg_prod.json"
-#    Config loaded as json from absolute file path.
-#
-# 2. Contains a slash, e.g. "configs/prod.json"
-#    Config loaded as json from relative file path.
-#
-# 3. Begins with an open brace "{", e.g. "{...}"
-#    Config loaded directly from the environment variable as json (not recommended)
-#
-# 4. Ends in ".json", e.g. "cfg_prod.json"
-#    Config loaded as json from file in working directory.
-#
-# 5. Contains a dot (.), e.g. "package.sub_package.module.cfg_object_name"
-#    Imported as python object (expected to be a dictionary).
-#    N.B. It is up to you that the Python file in question is in your Python path.
-#
-# 6. Valid python object name, e.g. "cfg_prod"
-#    Imported as python object from named object in datacube_ows/ows_cfg.py
-#
-# 7. Blank or not set
-#    Default to import ows_cfg object in datacube_ows/ows_cfg.py as described above.
-#
-# REUSING CHUNKS OF CONFIGURATION
-#
-# Often it is desirable to re-use chunks of configuration in multiple places.  E.g. a set
-# of related data products may share a band index or style definition configurations.
-#
-# If you are loading config as a Python object, this is trivial, as demonstrated in this
-# example file.
-#
-# If you want to reuse chunks of config in json, or wish to combine bits of json config
-# with bits of python config, the following convention applies in both Python and JSON
-# configuration:
-#
-# Any JSON or Python element that forms the full configuration tree or a subset of it,
-# can be supplied in any of the following ways:
-#
-# 1. Directly embed the config content:
-#       {
-#           "a_cfg_entry": 1,
-#           "another_entry": "llama",
-#       }
-#
-# 2. Include a python object (by FQN):
-#       {
-#           "include": "path.to.module.object",
-#           "type": "python"
-#       }
-#
-#       N.B. It is up to you to make sure the included Python file is in your Python Path.
-#            Relative Python imports are not supported.
-#
-# 3. Include a JSON file (by absolute or relative file path):
-#       {
-#           "include": "path/to/file.json",
-#           "type": "json"
-#       }
-#
-#       N.B. Resolution of relative file paths is done in the following order:
-#           a) Relative to the working directory of the web app.
-#           b) If a JSON file is being included from another JSON file, relative to
-#              directory in which the including file resides.
-#
-# Note that this does not just apply to dictionaries. Either of the above include dictionaries
-# could expand to an array, or even to single integer or string.
-#
-# THIS EXAMPLE FILE
-#
-# In this example file, there are some reusable code chunks defined at the top.  The actual
-# config tree is defined as ows_cfg below the reusable chunks.
-#
+# THIS IS A TESTING FILE
+# Please refer to datacube_ows/ows_cfg_example.py for EXAMPLE CONFIG
 
 # REUSABLE CONFIG FRAGMENTS - Band alias maps
 landsat8_bands = {
-    # Supported bands, mapping native band names to a list of possible aliases.
-    # 1. Aliases must be unique for the product.
-    # 2. Band aliases can be used anywhere in the configuration that refers to bands by name.
-    # 3. The native band name MAY be explicitly declared as an alias for the band, but are always treated as
-    # a valid alias.
-    # 4. The band labels used in GetFeatureInfo and WCS responses will be the first declared alias (or the native name
-    # if no aliases are declared.)
-    # 5. Bands NOT listed here will not be included in the GetFeatureInfo output and cannot be referenced
-    # elsewhere in the configuration.
-    # 6. If not specified for a product, defaults to all available bands, using only their native names.
-    # 7. The following are reserved words that may not be used as aliases.  (N.B. If they occur as a native
-    #    band name, an alias should be declared and used in the config in preference to the native name):
-    #               scale_range
-    #               function
-    #
     "red": [],
     "green": [],
     "blue": [ "near_blue" ],
@@ -147,17 +46,6 @@ style_rgb = {
     # The raw band value range to be compressed to an 8 bit range for the output image tiles.
     # Band values outside this range are clipped to 0 or 255 as appropriate.
     "scale_range": [0.0, 65535.0],
-    # Legend section is optional for linear combination styles. If not supplied, no legend is displayed
-    "legend": {
-        # Whether or not to display a legend for this style.
-        # Defaults to False for linear combination styles.
-        "show_legend": True,
-        # A legend cannot be auto-generated for a linear combination style, so a url pointing to
-        # legend PNG image must be supplied if 'show_legend' is True.
-        # Note that legend urls are proxied, not displayed directly to the user.
-        "url": "http://example.com/custom_style_image.png"
-    }
-
 }
 
 style_rgb_cloudmask = {
@@ -478,24 +366,6 @@ style_ndvi = {
     "name": "ndvi",
     "title": "NDVI",
     "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-    # The index function is continuous value from which the heat map is derived.
-    #
-    # Two formats are supported:
-    # 1. A string containing a fully qualified path to a python function
-    #    e.g. "index_function": "datacube_ows.ogc_utils.not_a_real_function_name",
-    #
-    # 2. A dict containing the following elements:
-    #    a) "function" (required): A string containing the fully qualified path to a python function
-    #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
-    #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
-    #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
-    #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
-    #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
-    #       to band names.
-    #
-    # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
-    # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
-    #
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "pass_product_cfg": True,
@@ -571,16 +441,6 @@ style_ndvi = {
     # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
     # Defaults to True.
     "include_in_feature_info": True,
-    # Legend section is optional for non-linear colour-ramped styles.
-    # If not supplied, a legend for the style will be automatically generated from the colour ramp.
-    "legend": {
-        # Whether or not to display a legend for this style.
-        # Defaults to True for non-linear colour-ramped styles.
-        "show_legend": True,
-        # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
-        # be used instead.  If 'url' is not supplied, the generated legend is used.
-        "url": "http://example.com/custom_style_image.png"
-    }
 }
 
 # Examples of non-linear colour-ramped style with multi-date support.
@@ -948,10 +808,12 @@ ows_cfg = {
         # Service URL.
         # A list of fully qualified URLs that the service can return
         # in the GetCapabilities documents based on the requesting url
-        "allowed_urls": [ "http://localhost/odc_ows",
-                          "https://localhost/odc_ows",
-                          "https://alternateurl.domain.org/odc_ows",
-                          "http://127.0.0.1:5000/"],
+        "allowed_urls": [
+            "http://127.0.0.1:5000/",
+            "http://localhost/odc_ows",
+            "https://localhost/odc_ows",
+            "https://alternateurl.domain.org/odc_ows",
+        ],
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",
@@ -1203,8 +1065,4 @@ ows_cfg = {
             ]
         }  ### End of Landsat 8 folder.
     ]  ##### End of "layers" list.
-} #### End of example configuration object
-
-
-
-
+} #### End of test configuration object

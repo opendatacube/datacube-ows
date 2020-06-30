@@ -27,7 +27,7 @@ def ows_server(request):
         server = generic_obj()
         server.url = external_url
     else:
-        server = WSGIServer(application=ogc.app)
+        server = WSGIServer(port='5000', application=ogc.app)
         server.start()
         request.addfinalizer(server.stop)
 
