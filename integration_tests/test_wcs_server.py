@@ -66,7 +66,7 @@ def test_wcs1_server(ows_server):
     assert contents
 
 
-def test_wcs1_getcoverage(ows_server):
+def test_wcs1_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
@@ -88,17 +88,25 @@ def test_wcs1_getcoverage(ows_server):
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
 
-    # output = wcs.getCoverage(
-    #     identifier=contents[0],
-    #     format='netCDF',
-    #     bbox=(10,40,18,45),
-    #     crs='EPSG:4326',
-    #     width=400,
-    #     height=300
-    # )
+@pytest.mark.xfail(reason="returns 500")
+def test_wcs1_getcoverage_netcdf(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
-    # assert output
-    # assert output.info()['Content-Type'] == 'application/x-netcdf'
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+
+    output = wcs.getCoverage(
+        identifier=contents[0],
+        format='netCDF',
+        bbox=(10,40,18,45),
+        crs='EPSG:4326',
+        width=400,
+        height=300
+    )
+
+    assert output
+    assert output.info()['Content-Type'] == 'application/x-netcdf'
 
 
 def test_wcs1_getcoverage_exceptions(ows_server):
