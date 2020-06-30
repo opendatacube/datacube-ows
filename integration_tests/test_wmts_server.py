@@ -6,7 +6,9 @@ from lxml import etree
 from imghdr import what
 
 def get_xsd(name):
-    xsd_f = request.urlopen("http://schemas.opengis.net/ows/1.1.0/" + name)
+    # since this function is only being called by getcapabilities set to wmts/1.0.0
+    # the exception schema is available from http://schemas.opengis.net/ows/1.1.0/
+    xsd_f = request.urlopen("http://schemas.opengis.net/wmts/1.0/" + name)
     schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 
