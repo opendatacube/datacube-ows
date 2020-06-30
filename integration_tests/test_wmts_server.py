@@ -1,5 +1,6 @@
 import pytest
 from owslib.wmts import WebMapTileService
+from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
 from imghdr import what
@@ -82,3 +83,23 @@ def test_wmts_gettile(ows_server):
 
     assert tile
     assert what("", h=tile.read()) == "png"
+
+
+def test_wmts_gettile_exception(ows_server):
+    wmts = WebMapTileService(url=ows_server.url+"/wmts")
+
+    contents = list(wmts.contents)
+    test_layer_name = contents[0]
+    try:
+        # supplying an unsupported tilematrixset
+        wmts.gettile(
+            layer=test_layer_name,
+            tilematrixset='WholeWorld_WebMercatorxxx',
+            tilematrix='0',
+            row=0, column=0,
+            format="image/png"
+        )
+    except ServiceException as e:
+        assert 'Invalid Tile Matrix Set:' in str(e)
+    else:
+        assert False

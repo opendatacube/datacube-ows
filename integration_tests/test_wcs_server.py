@@ -1,6 +1,7 @@
 import pytest
 
 from owslib.wcs import WebCoverageService
+from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
 from imghdr import what
@@ -71,10 +72,115 @@ def test_wcs1_getcoverage(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    output = wcs.getCoverage(identifier=contents[0], format='GeoTIFF', bbox=(10,40,18,45), crs='EPSG:4326', width=400, height=300)
+    test_layer_name = contents[0]
+    test_layer = wcs.contents[test_layer_name]
+
+    output = wcs.getCoverage(
+        identifier=contents[0],
+        format='GeoTIFF',
+        bbox=(10,40,18,45),
+        crs='EPSG:4326',
+        width=400,
+        height=300,
+        timeSequence=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+    )
 
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
+
+    # output = wcs.getCoverage(
+    #     identifier=contents[0],
+    #     format='netCDF',
+    #     bbox=(10,40,18,45),
+    #     crs='EPSG:4326',
+    #     width=400,
+    #     height=300
+    # )
+
+    # assert output
+    # assert output.info()['Content-Type'] == 'application/x-netcdf'
+
+
+def test_wcs1_getcoverage_exceptions(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+    contents = list(wcs.contents)
+
+    try:
+        # test where product name is not available
+        wcs.getCoverage(
+            identifier='nonexistentproduct',
+            format='GeoTIFF',
+            bbox=(10,40,18,45),
+            crs='EPSG:4326',
+            width=400,
+            height=300
+        )
+    except ServiceException as e:
+        assert 'Invalid coverage:' in str(e)
+    else:
+        assert False
+
+    try:
+        # test where  format is not supported
+        wcs.getCoverage(
+            identifier=contents[0],
+            # format='GeoTIFF',
+            bbox=(10,40,18,45),
+            crs='EPSG:4326',
+            width=400,
+            height=300
+        )
+    except ServiceException as e:
+        assert 'Unsupported format:' in str(e)
+    else:
+        assert False
+
+    try:
+        # test where crs is not provided
+        wcs.getCoverage(
+            identifier=contents[0],
+            format='GeoTIFF',
+            bbox=(10,40,18,45),
+            # crs='EPSG:4326',
+            width=400,
+            height=300
+        )
+    except ServiceException as e:
+        assert 'No request CRS specified' in str(e)
+    else:
+        assert False
+
+    try:
+        # test where crs is not supported
+        wcs.getCoverage(
+            identifier=contents[0],
+            format='GeoTIFF',
+            bbox=(10,40,18,45),
+            crs='EPSG:432676',
+            width=400,
+            height=300
+        )
+    except ServiceException as e:
+        assert 'is not a supported CRS' in str(e)
+    else:
+        assert False
+
+    try:
+        # test where bbox is not correctly provided
+        wcs.getCoverage(
+            identifier=contents[0],
+            format='GeoTIFF',
+            # bbox=(10,40,18,45),
+            crs='EPSG:4326',
+            width=400,
+            height=300
+        )
+    except ServiceException as e:
+        assert 'Invalid BBOX parameter' in str(e)
+    else:
+        assert False
+
 
 def test_wcs1_pattern_generated_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -105,8 +211,7 @@ def test_wcs20_pattern_generated_getcoverage(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
 
-
-    resp = requests.head(ows_server.url +"/wcs?version=2.0.0&request=GetCoverage&service=WCS&coverageid={}&subsettingcrs=EPSG%3A4326&format=image/geotiff&scalesize=x(1024),y(415)&subset=y(40,45)&subset=x(10,18)".format(
+    resp = requests.head(ows_server.url +"/wcs?version=2.0.0&request=GetCoverage&service=WCS&CoverageID={}&format=image%2Fgeotiff&subset=y%2840%2C45%29&subset=x%2810%2C18%2".format(
         test_layer_name
     ), timeout=10)
 
@@ -144,7 +249,11 @@ def test_wcs21_getcoverage(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    output = wcs.getCoverage(identifier=[contents[0]], format='image/geotiff', subsets=[('Long', 40, 45), ('Lat', 10, 18)])
+    output = wcs.getCoverage(
+        identifier=[contents[0]],
+        format='image/geotiff',
+        subsets=[('y', 40, 45), ('x', 10, 18)]
+    )
 
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
