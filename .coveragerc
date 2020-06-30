@@ -1,0 +1,6 @@
+# .coveragerc to control coverage.py
+[run]
+data_file = /tmp/.coverage
+
+[xml]
+output = /tmp/coverage.xml

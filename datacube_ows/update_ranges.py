@@ -128,7 +128,13 @@ def main(layers, blocking,
 
 
 def create_views(dc):
-    run_sql(dc, "extent_views/create", database=os.environ.get("DB_DATABASE"))
+    try:
+        from datacube.config import LocalConfig
+        odc_cfg = LocalConfig.find()
+        dbname = odc_cfg.get("db_database")
+    except ImportError:
+        dbname = os.environ.get("DB_DATABASE")
+    run_sql(dc, "extent_views/create", database=dbname)
 
 
 def refresh_views(dc, blocking):

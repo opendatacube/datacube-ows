@@ -27,3 +27,4 @@ bottleneck
 sentry-sdk
 blinker
 pyows
+owslib

@@ -1154,7 +1154,7 @@ ows_cfg = {
                     # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
                     "title": "Level 1 USGS Landsat-8 Public Data Set",
                     "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set",
-                    "name": "ls8_usgs_level1_scene",
+                    "name": "ls8_usgs_level1_scene_layer",
                     "product_name": "ls8_usgs_level1_scene",
                     "bands": landsat8_bands,
                     "resource_limits": standard_resource_limits,
@@ -1184,7 +1184,7 @@ ows_cfg = {
                     },
                     "wcs": {
                         "native_crs": "EPSG:4326",
-                        "native_resolution": [ 25.0, 25.0 ],
+                        "native_resolution": [ 0.000225, 0.000225 ],
                         "default_bands": [ "red", "green", "blue" ],
                     },
                     "styling": {

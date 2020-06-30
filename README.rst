@@ -4,7 +4,7 @@ datacube-ows
 
 .. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
         :target: https://travis-ci.org/opendatacube/datacube-ows
-        
+
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/opendatacube/datacube-ows
 
@@ -84,19 +84,19 @@ To run the standard Docker image, create a docker volume containing your ows con
 
   docker run \
       --rm \
-      opendatacube/wms \
+      opendatacube/ows \
       gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_ows:ogc
 
   docker run --rm \
         -e DATACUBE_OWS_CFG=datacube_ows.config.test_cfg.ows_cfg   # Location of config object
-        -e AWS_ACCESS_KEY_ID=THISISNOTAREALAWSKEY \                # AWS ACCESS KEY (if accessing files on S3)
-        -e AWS_SECRET_ACCESS_KEY=THISisNOTaREALawsSECRETaccessKEY \# AWS SECRET ACCESS KEY (if accessing files on S3)
+        -e AWS_NO_SIGN_REQUEST=yes                                 # Allowing access to AWS S3 buckets
         -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
         -e SENTRY_KEY=set5gstgw45gdfgw54t \                        # Key for Sentry logging (optional)
         -e SENTRY_PROJECT=my_datacube_ows_project \                # Project name for Sentry logging (optional)
         -e DB_HOSTNAME=172.17.0.1 -e DB_PORT=5432 \                # Hostname/IP address and port of ODC postgres database
         -e DB_DATABASE=datacube \                                  # Name of ODC postgres database
         -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
+        -e PYTHONPATH=/code                                        # The default PATH is under env, change this to target /code
         -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
         \                                                          # container at port 8008 on the host machine.
         --mount source=test_cfg,target=/code/datacube_ows/config \ # Mount the docker volume where the config lives
@@ -109,7 +109,7 @@ Manual installation
 
 At the time of writing, pre-built pip-installed configurations also work fairly seemlessly:
 
-The folllowing instructions are for installing on a clean Linux system.
+The folllowing instructions are for installing on a clean Linux system with established ODC environment.
 
 * We currently recommend using pip with pre-built binary packages. Create a
   new python 3.6 or 3.7 virtualenv and run pip install against the supplied
@@ -118,7 +118,6 @@ The folllowing instructions are for installing on a clean Linux system.
     pip install --pre -r requirements.txt
 
 * Run ::
-
     python update_ranges.py --role *datacube_owner_role* --schema
 
   to create schema, tables and materialised views used by datacube-ows.
@@ -127,7 +126,12 @@ The folllowing instructions are for installing on a clean Linux system.
   it.  See `datacube_ows/ows_cfg_example.py` for examples and documentation of the configuration
   format.  The simplest approach is to make a copy of `ows_cfg_example.py` called `ows_cfg.py`
   and edit as required.  But for production deployments other approaches such as importing
-  config as json are possible.
+  config as json are possible::
+
+    PYTHONPATH=.
+    DATACUBE_OWS_CFG=ows_cfg_filename.ows_cfg
+    AWS_NO_SIGN_REQUEST=yes
+    AWS_DEFAULT_REGION=ap-southeast-2
 
 * Run ``python update_ranges.py`` (in the Datacube virtual environment).
 
