@@ -14,8 +14,13 @@ alpha) is calculated independently from the data for that pixel.
 Component styles support the
 `elements common to all styles <cfg_styling.rst#common-elements>`_.
 
-There are two additional settings specific to component styles:
-`scale_range <#style-scale-range>` and `components <#components>`
+There are three additional settings specific to component styles:
+`scale_range <#style-scale-range>`, `components <#components>`
+and `additional_bands <#additional-bands>`_.
+
+Component styles do NOT support automatic legend generation. If you
+want a legend you must provide an external
+`url <cfg_styling.rst#url>`__ to a pre-prepared image.
 
 ----------
 components
@@ -222,7 +227,100 @@ E.g.::
 Callback Function Components
 +++++++++++++++++++++++++++++
 
-TODO
+In a callback function component, the user defines a callback function
+using OWS's `function configuration format <cfg_functions.rst>`_.
+
+The function must take an xarray Dataset containing the raw band data
+and return a xarray DataArray containing the channel data.  It is
+the responsibility to scale it's output to the range 0-255.
+
+The bands needed for callback function components cannot always be
+determined directly from the component definition, so if any component
+in the style is a callback function component, you should ensure all
+needed bands are retrieved by
+using the `additional_bands <#additional-bands>`__ config item if necessary.
+
+E.g.::
+    "components": {
+        "red": {
+            # Red channel is red/blue normalised difference (Ferric Iron index)
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "red",
+                "band2": "blue",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "green": {
+            # Green channel is nir/swir1 normalised difference (Bare Soil index)
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "nir",
+                "band2": "swir1",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "blue": {
+            # Blue channel is swir1/swir2 normalised difference (Clay/Mica index)
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "swir1",
+                "band2": "swir2",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "additional_bands": [ "red", "blue", "nir", "swir1", "swir2" ]
+    },
+
+----------------
+additional_bands
+----------------
+
+The bands needed for a linear combination component can be trivially
+determined from the component definition.  This is not the case for callback
+function components, so if any component in the style is a callback
+function component, (and if any bands needed by the callback function
+component(s) are not already being used by any lineat combination
+components), then these additional required bands must be declared
+with the `additional_bands` list.
+
+The `additional_bands` should be a list of band names or aliases from
+the `band dictionary <cfg_layer.rst#band-dictionary-bands>`_.  It is
+optional (defaults to an empty list).  It is safe (but not
+necessary) to declare bands in `additional_bands` that are used
+directly by a linear combination component in the style.
+
+E.g.::
+    "components": {
+        "red": {
+            # Red channel is red/blue normalised difference (Ferric Iron index)
+            "function": "datacube_ows.band_utils.norm_diff",
+            "pass_product_cfg": True,
+            "kwargs": {
+                "band1": "red",
+                "band2": "blue",
+                "scale_from": [-0.1, 1.0],
+            }
+        },
+        "green": {
+            "green": 1.0
+        },
+        "blue": {
+            "blue": 1.0
+        },
+    },
+    "additional_bands": [
+            # The "Red" band must be declared in the additional bands or the
+            # the Ferric Iron Index will not be able to be calculated.
+            "red",
+            # The "Blue" band is already used by the linear combination
+            # for the blue channel, so it could be left out, but it is
+            # safe to include.
+            "blue"
+    ]
 
 -----------------
 Style scale_range

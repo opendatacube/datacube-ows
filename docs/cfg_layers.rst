@@ -657,7 +657,13 @@ stored in.
 Native Resolution (native_resolution)
 +++++++++++++++++++++++++++++++++++++
 
-The native_resolution is required for WCS-enabled layers.  It is
+In many cases, OWS can determine the native resolution
+directly from the ODC metadata. In such cases the native_resolution
+need not be explicitly provided (and indeed, will be ignored
+if it is.)
+
+A native_resolution is required for WCS-enabled layers where
+is cannot be determined from ODC metadata.  It is
 the number of native CRS units (e.g. degrees, metres) per pixel in
 the horizontal and vertical directions.
 
