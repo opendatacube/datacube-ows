@@ -28,4 +28,3 @@ sentry-sdk
 blinker
 pyows
 owslib
-pytest-helpers-namespace

@@ -90,7 +90,6 @@ def test_wcs1_getcoverage_geotiff(ows_server):
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
 
-# @pytest.mark.xfail(reason="returns 500")
 def test_wcs1_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
@@ -204,11 +203,12 @@ def test_wcs1_pattern_generated_describecoverage(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
 
-    resp = requests.head(ows_server.url +"/wcs?service=WCS&version=1.0.0&request=DescribeCoverage&CoverageId={0}&".format(
+    resp = request.urlopen(ows_server.url +"/wcs?service=WCS&version=1.0.0&request=DescribeCoverage&Coverage={0}&".format(
         test_layer_name
     ), timeout=10)
 
-    assert resp.headers.get('content-type') == 'application/xml'
+    assert 'CoverageDescription' in str(resp.read(300))
+
 
 def test_wcs20_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -249,11 +249,11 @@ def test_wcs21_pattern_generated_describecoverage(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
 
-    resp = requests.head(ows_server.url +"/wcs?service=WCS&version=2.0.1&request=DescribeCoverage&CoverageId={0}&".format(
+    resp = request.urlopen(ows_server.url +"/wcs?service=WCS&version=2.0.1&request=DescribeCoverage&CoverageId={0}&".format(
         test_layer_name
     ), timeout=10)
 
-    assert resp.headers.get('content-type') == 'application/xml'
+    assert 'CoverageDescription' in str(resp.read(300))
 
 
 @pytest.mark.xfail(reason='incomplete url')
