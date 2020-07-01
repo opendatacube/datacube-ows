@@ -29,11 +29,8 @@ from datacube_ows.utils import log_call, group_by_statistical
 
 import logging
 
-from datacube_ows.utils import get_opencensus_tracer, opencensus_trace_call
-
 _LOG = logging.getLogger(__name__)
 
-tracer = get_opencensus_tracer()
 
 class DataStacker(object):
     @log_call
@@ -65,7 +62,6 @@ class DataStacker(object):
         return self._needed_bands
 
     @log_call
-    @opencensus_trace_call(tracer=tracer)
     def datasets(self, index, mask=False, all_time=False, point=None):
         # Return datasets as a time-grouped xarray DataArray. (or None if no datasets)
         # No PQ product, so no PQ datasets.
@@ -113,7 +109,6 @@ class DataStacker(object):
         return datasets
 
     @log_call
-    @opencensus_trace_call(tracer=tracer)
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, **kwargs):
         # pylint: disable=too-many-locals, consider-using-enumerate
         # datasets is an XArray DataArray of datasets grouped by time.
@@ -147,7 +142,6 @@ class DataStacker(object):
             return data
 
     @log_call
-    @opencensus_trace_call(tracer=tracer)
     def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
         # REFACTOR: TODO
@@ -191,7 +185,6 @@ class DataStacker(object):
 
     # Read data for given datasets and measurements per the output_geobox
     @log_call
-    @opencensus_trace_call(tracer=tracer)
     def read_data(self, datasets, measurements, geobox, resampling=Resampling.nearest, **kwargs):
         return datacube.Datacube.load_data(
                 datasets,
@@ -201,7 +194,6 @@ class DataStacker(object):
 
     # Read data for single datasets and measurements per the output_geobox
     @log_call
-    @opencensus_trace_call(tracer=tracer)
     def read_data_for_single_dataset(self, dataset, measurements, geobox, resampling=Resampling.nearest, **kwargs):
         datasets = [dataset]
         if self._product.is_raw_time_res:
@@ -226,7 +218,6 @@ def bbox_to_geom(bbox, crs):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
@@ -329,7 +320,6 @@ def get_map(args):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def _write_png(data, pq_data, style, extent_mask, geobox):
     img_data = style.transform_data(data, pq_data, extent_mask)
     width = geobox.width
@@ -351,7 +341,6 @@ def _write_png(data, pq_data, style, extent_mask, geobox):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def _write_empty(geobox):
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -366,7 +355,6 @@ def _write_empty(geobox):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
@@ -399,7 +387,6 @@ def _write_polygon(geobox, polygon, zoom_fill):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     uris = []
     for tds in datasets:
@@ -436,7 +423,6 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def _make_band_dict(prod_cfg, pixel_dataset, band_list):
     band_dict = {}
     for band in band_list:
@@ -466,7 +452,6 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def _make_derived_band_dict(pixel_dataset, style_index):
     """Creates a dict of values for bands derived by styles.
     This only works for styles with an `index_function` defined.
@@ -493,7 +478,6 @@ def geobox_is_point(geobox):
     return geobox.height == 1 and geobox.width == 1
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def feature_info(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
