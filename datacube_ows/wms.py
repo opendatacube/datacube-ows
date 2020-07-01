@@ -10,14 +10,11 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import get_config
 
 from datacube_ows.legend_generator import legend_graphic
-from datacube_ows.utils import log_call, get_opencensus_tracer, opencensus_trace_call
+from datacube_ows.utils import log_call
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
-tracer = get_opencensus_tracer()
-
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def handle_wms(nocase_args):
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
@@ -37,7 +34,6 @@ def handle_wms(nocase_args):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary

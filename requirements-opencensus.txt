@@ -1,4 +1,0 @@
-opencensus
-opencensus-ext-jaeger
-opencensus-ext-flask
-thrift
