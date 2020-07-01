@@ -7,15 +7,15 @@ OWS Configuration
 Component Styles
 ----------------
 
-Component Styles are `styles<cfg_styling.rst>`_ where
+Component Styles are `styles <cfg_styling.rst>`_ where
 each component channel of the image (red, green, blue and optionally
 alpha) is calculated independently from the data for that pixel.
 
 Component styles support the
-`elements common to all styles<cfg_styling.rst#common-elements>`_.
+`elements common to all styles <cfg_styling.rst#common-elements>`_.
 
 There are two additional settings specific to component styles:
-`scale_range<#style-scale-range>` and `components<#components>`
+`scale_range <#style-scale-range>` and `components <#components>`
 
 ----------
 components
@@ -32,25 +32,25 @@ component channel of the output image::
 Alpha is the opacity of each pixel.  When alpha is 0 the image pixel is
 fully transparent, when 255 fully opaque.  If not provided, the alpha channel
 is assumed to be always fully opaque (unless otherwise masked, e.g. by
-the `extent mask<cfg_layers.rst#extent-mask-function-extent-mask-func>`_
-or `style masking<cfg_styling.rst#bit-flag-masks-pq-masks>`_).
+the `extent mask <cfg_layers.rst#extent-mask-function-extent-mask-func>`_
+or `style masking <cfg_styling.rst#bit-flag-masks-pq-masks>`_).
 
-Calculating the value for each pixel has two steps::
+Calculating the value for each pixel has two steps:
 
 1. Calculate an unscaled channel value.
 
    Each component definition defines either a
-   `linear combination of raw channel data<#linear-combination-components>`_
+   `linear combination of raw channel data <#linear-combination-components>`_
    or a
-   `callback function<#callback-function-components>`_
+   `callback function <#callback-function-components>`_
    (as discussed in detail below) to determine the unscaled value
    for that channel for each pixel.
 
 2. Scale the unscaled value to unsigned 8-bit value (0-255).
 
-   This is defined by the `scale_range<#component-scale-range`_
+   This is defined by the `scale_range <#component-scale-range>`_
    entry for the channel if it exists, or the style-wide
-   `scale_range<#style-scale-range>`_.
+   `scale_range <#style-scale-range>`_.
 
 Component scale_range
 +++++++++++++++++++++
@@ -60,7 +60,7 @@ to an 8 bit range for the output image.  Band values outside
 this range are clipped to 0 or 255.
 
 The component scale_range is optional and if not present defaults
-to the `style-side scale_range<#style-scale-range>`_.
+to the `style-side scale_range <#style-scale-range>`_.
 
 E.g.::
 
@@ -72,6 +72,24 @@ E.g.::
 
 Linear Combination Components
 +++++++++++++++++++++++++++++
+
+In a linear combination component, every entry (apart from
+`scale_range <#component-scale-range>`__) maps a band name or
+alias from the `band dictionary <cfg_layers.rst#bands-dictionary-bands>`_
+to a floating point multiplier.  The pixel data values from these bands
+are then multiplied by these multipliers and summed to produce the
+unscaled channel value.
+
+Examples::
+
+   TODO
+
+
+If you are unfortunate enough to have raw data with a band named "scale_range"
+(or "function" which would cause the component to be treated as a
+`callback function component <#callback-function-components>`_), you can
+still access it here by defining an alias for the band in the
+`band dictionary <cfg_layers.rst#bands-dictionary-bands>`_.
 
 Callback Function Components
 +++++++++++++++++++++++++++++

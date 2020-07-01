@@ -398,7 +398,7 @@ The "image_processing" section is required.  It contains
 entries that control the dataflow of raster image data
 from the ODC to the styling engine.
 
-E.g.
+E.g.::
 
     "image_processing": {
         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
@@ -797,7 +797,7 @@ Styling Section (styling)
 -----------------------------------
 
 The `"styling" section <cfg_styling.rst>`_ describes the WMS and WMTS styles for
-`the layer.
+the layer.
 
 
 

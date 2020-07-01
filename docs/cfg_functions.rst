@@ -11,7 +11,7 @@ Several entries in the OWS configuration allow to specify
 behaviour in an arbitrary way by specifying a Python function
 that may be written by the user.  All these functions can be
 specified using either the `simple <#simple>`_ or
-`advanced<#advanced>`_ formats described below.
+`advanced <#advanced>`_ formats described below.
 
 Simple
 ++++++
@@ -65,7 +65,7 @@ to native band names.  This can be accomplished with the
 "pass_product_cfg" entry, which causes the OWSLayer configuration
 object for the layer to be passed to the function as an
 additional keyword argument "product_cfg".  For examples
-of how to use this see the functions in the ``datacube_ows.band_utils`
+of how to use this see the functions in the ``datacube_ows.band_utils``
 module.
 
 E.g. This is an index function that will compute NDVI on any

@@ -76,6 +76,9 @@ There are four distinct possible types of style.
    there are usually better ways to achieve the same effect on the
    client side.
 
+Each style type has its own specific config entries as described in the
+pages linked above.
+
 ---------------
 Common Elements
 ---------------
@@ -88,9 +91,8 @@ Name
 
 It is always required and must be unique within the layer.
 
-E.g.
+E.g.::
 
-::
     "styles": [
         {"name": "a_style", ...},       # Good.
         {"name": "My Style", ...},      # Poor. (Legal, but the space will need to
@@ -112,9 +114,8 @@ of the style.
 
 All three are always required and must be unique within the layer.
 
-E.g.
+E.g.::
 
-::
     "styles": [
         {
             "name": "simple_rgb",
@@ -215,52 +216,4 @@ E.g.::
          "url": "https://somedomain.com/path/to/legend_image.png",
      }
 
-----------------
-Component Styles
-----------------
-
-In a component style, each component channel of the image (red, green, blue
-and optionally alpha) is calculated independently from the raw data for that
-pixel.
-
-There are two settings specific to component styles:
-`scale_range<#scale-range>` and `components<#components>`
-
-scale_range
-+++++++++++
-
-Defines the raw band value range that will be compressed
-to an 8 bit range for the output image.  Band values outside
-this range are clipped to 0 or 255.
-
-The style-level scale_range applies to all component channels
-that do not set their own component-level scale_range, and that do not
-have a function call back defined. These exceptions are described in
-detail below.
-
-The style-level scale_range is required unless all component channels
-satisfy the exceptions discussed above and described in detail below.
-
-E.g.::
-
-    # raw values less than 15 are clipped to 0 and raw values greater than 3100
-    # are clipped to 255.  Raw values from 15 to 3100 are linearly scaled to the
-    # 8 bit range 0 to 255.
-    
-    "scale_range": [15, 3100],
-
-components
-++++++++++
-
------------------
-Colour Map Styles
------------------
-
-------------------
-Colour Ramp Styles
-------------------
-
--------------
-Hybrid Styles
--------------
 
