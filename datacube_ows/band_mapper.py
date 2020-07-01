@@ -343,8 +343,6 @@ class LinearStyleDef(StyleDefBase):
                         imgband_data += imgband_component
                     else:
                         imgband_data = imgband_component
-                dims = imgband_data.dims
-                imgband_data = self.compress_band(imgband, imgband_data).astype('uint8')
                 imgdata[imgband] = (dims, imgband_data)
         return imgdata
 
