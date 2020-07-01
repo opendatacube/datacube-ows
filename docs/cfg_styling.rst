@@ -52,23 +52,23 @@ Style Types
 
 There are four distinct possible types of style.
 
-1. `Component Styles <#component-styles>`_
+1. `Component Styles <cfg_component_styles.rst>`_
 
    Each component channel of the image (red, green, blue and optionally
    alpha) is calculated independently from the data for that pixel.
 
-2. `Colour Map Styles <#colour-map-styles>`_
+2. `Colour Map Styles <cfg_colourmap_styles.rst>`_
 
    Each pixel is mapped to one particular colour from a fixed pallet
    by applying a logical decision tree to the date for that pixel.
 
-3. `Colour Ramp Styles <#colour-ramp-styles>`_
+3. `Colour Ramp Styles <cfg_colourramp_styles.rst>`_
 
    A single continuous index value is calculated from the data for
    each pixel, and that index value mapped to a graduated colour ramp
    for display.
 
-4. `Hybrid Styles <#hybrid-styles>`_
+4. `Hybrid Styles <cfg_hybrid_styles.rst>`_
 
    A linear combination of a component style and a colour ramp style.
 
@@ -134,7 +134,7 @@ Bit-flag Masks (pq_masks)
 +++++++++++++++++++++++++
 
 The "pq_masks" section allows a style to mask the output image
-by the bit flags defined in the `Flag Processing Section <>`_ for the layer.
+by the bit flags defined in the `Flag Processing Section <cfg_layers.rst#flag-processing-section-flags>`_ for the layer.
 
 The pq_masks section is a list of mask sections, which are OR'd together.  i.e. A pixel
 becomes transparent if it would be made transparent by any of the masks in the list
@@ -181,9 +181,76 @@ E.g.
 Legend
 ++++++
 
+Describes the legend for the style.  Many options only apply for some
+of the styles types and are discussed below with the relevant style type.
+
+The following legend options are supported for all styles:
+
+show_legend
+@@@@@@@@@@@
+
+If True, a legend url is returned for this style. If False, no legend
+url is returned for the style.  Optional - defaults to True if a the
+style type supports auto-legend generation, false otherwise.
+
+If false no other legend configuration entries have any effect.
+
+url
+@@@
+
+An external url pointing to an image file containing the legend. This
+url will not be exposed directly to users, the image file will be
+proxied behind an internal url.
+
+A url is required if `show_legend` is True and the style type does NOT
+support auto-legend generation.
+
+If the style type DOES support auto-legend generation, setting a url
+deactivates legend generation.
+
+E.g.::
+
+     "legend": {
+         "show_legend": True,
+         "url": "https://somedomain.com/path/to/legend_image.png",
+     }
+
 ----------------
 Component Styles
 ----------------
+
+In a component style, each component channel of the image (red, green, blue
+and optionally alpha) is calculated independently from the raw data for that
+pixel.
+
+There are two settings specific to component styles:
+`scale_range<#scale-range>` and `components<#components>`
+
+scale_range
++++++++++++
+
+Defines the raw band value range that will be compressed
+to an 8 bit range for the output image.  Band values outside
+this range are clipped to 0 or 255.
+
+The style-level scale_range applies to all component channels
+that do not set their own component-level scale_range, and that do not
+have a function call back defined. These exceptions are described in
+detail below.
+
+The style-level scale_range is required unless all component channels
+satisfy the exceptions discussed above and described in detail below.
+
+E.g.::
+
+    # raw values less than 15 are clipped to 0 and raw values greater than 3100
+    # are clipped to 255.  Raw values from 15 to 3100 are linearly scaled to the
+    # 8 bit range 0 to 255.
+    
+    "scale_range": [15, 3100],
+
+components
+++++++++++
 
 -----------------
 Colour Map Styles
