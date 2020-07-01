@@ -1,4 +1,5 @@
 import os
+pytest_plugins = ['helpers_namespace']
 import pytest
 from click.testing import CliRunner
 
@@ -37,3 +38,29 @@ def ows_server(request):
 @pytest.fixture
 def runner():
     return CliRunner()
+
+@pytest.helpers.register
+def enclosed_bbox(bbox):
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    return (
+        lon_min + 0.2 * lon_range,
+        lat_min + 0.2 * lat_range,
+        lon_max - 0.2 * lon_range,
+        lat_max - 0.2 * lat_range
+    )
+
+@pytest.helpers.register
+def disjoint_bbox(bbox):
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    return (
+        lon_min - 0.4 * lon_range,
+        lat_min - 0.4 * lat_range,
+        lon_min - 0.2 * lon_range,
+        lat_min - 0.2 * lat_range
+    )

@@ -74,10 +74,13 @@ def test_wcs1_getcoverage_geotiff(ows_server):
     test_layer_name = contents[0]
     test_layer = wcs.contents[test_layer_name]
 
+    bbox = test_layer.boundingBoxWGS84 
+
+
     output = wcs.getCoverage(
         identifier=contents[0],
         format='GeoTIFF',
-        bbox=(10,40,18,45),
+        bbox=pytest.helpers.disjoint_bbox(bbox),
         crs='EPSG:4326',
         width=400,
         height=300,
@@ -87,18 +90,22 @@ def test_wcs1_getcoverage_geotiff(ows_server):
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
 
-@pytest.mark.xfail(reason="returns 500")
+# @pytest.mark.xfail(reason="returns 500")
 def test_wcs1_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    test_layer = wcs.contents[test_layer_name]
+
+    bbox = test_layer.boundingBoxWGS84    
 
     output = wcs.getCoverage(
         identifier=contents[0],
         format='netCDF',
-        bbox=(10,40,18,45),
+        bbox=pytest.helpers.enclosed_bbox(bbox),
         crs='EPSG:4326',
         width=400,
         height=300

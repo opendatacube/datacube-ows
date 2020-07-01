@@ -60,31 +60,6 @@ def test_getcap(ows_server):
     assert gc_xds.validate(resp_xml)
 
 
-def enclosed_bbox(bbox):
-    lon_min, lat_min, lon_max, lat_max = bbox
-    lon_range = lon_max - lon_min
-    lat_range = lat_max - lat_min
-
-    return (
-        lon_min + 0.2 * lon_range,
-        lat_min + 0.2 * lat_range,
-        lon_max - 0.2 * lon_range,
-        lat_max - 0.2 * lat_range
-    )
-
-
-def disjoint_bbox(bbox):
-    lon_min, lat_min, lon_max, lat_max = bbox
-    lon_range = lon_max - lon_min
-    lat_range = lat_max - lat_min
-
-    return (
-        lon_min - 0.4 * lon_range,
-        lat_min - 0.4 * lat_range,
-        lon_min - 0.2 * lon_range,
-        lat_min - 0.2 * lat_range
-    )
-
 def test_wms_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
@@ -109,7 +84,7 @@ def test_wms_getmap(ows_server):
     img = wms.getmap(layers=[test_layer_name],
                      styles=[],
                      srs="EPSG:4326",
-                     bbox=enclosed_bbox(bbox),
+                     bbox=pytest.helpers.enclosed_bbox(bbox),
                      size=(256, 256),
                      format="image/png",
                      transparent=True,
@@ -121,7 +96,7 @@ def test_wms_getmap(ows_server):
     img = wms.getmap(layers=[test_layer_name],
                      styles=[],
                      srs="EPSG:4326",
-                     bbox=disjoint_bbox(bbox),
+                     bbox=pytest.helpers.disjoint_bbox(bbox),
                      size=(256, 256),
                      format="image/png",
                      transparent=True,
@@ -144,7 +119,7 @@ def test_wms_getfeatureinfo(ows_server):
     response = wms.getfeatureinfo(
         layers=[test_layer_name],
         srs='EPSG:4326',
-        bbox=enclosed_bbox(bbox),
+        bbox=pytest.helpers.enclosed_bbox(bbox),
         size=(256, 256),
         format="image/png",
         query_layers=[test_layer_name],
