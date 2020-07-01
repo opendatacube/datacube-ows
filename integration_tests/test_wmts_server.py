@@ -3,7 +3,6 @@ from owslib.wmts import WebMapTileService
 from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
-from imghdr import what
 
 def get_xsd(name):
     # since this function is only being called by getcapabilities set to wmts/1.0.0
@@ -45,7 +44,7 @@ def test_getcap_badsvc(ows_server):
 
 
 @pytest.mark.xfail(reason="OWS Getcaps don't pass XSD")
-def test_getcap(ows_server):
+def test_wmts_getcap(ows_server):
     resp = request.urlopen(ows_server.url + "/wmts?request=GetCapabilities&service=WMTS&version=1.0.0", timeout=10)
 
     # Confirm success
@@ -55,6 +54,17 @@ def test_getcap(ows_server):
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("wmtsGetCapabilities_response.xsd")
     assert gc_xds.validate(resp_xml)
+
+
+def test_wmts_getcap_section(ows_server):
+    section_options = ['all', 'serviceidentification', 'serviceprovider', 'operationsmetadata', 'contents', 'themes']
+    for section in section_options:
+        resp = request.urlopen(ows_server.url + "/wmts?request=GetCapabilities&service=WMTS&version=1.0.0&section={}".format(
+            section
+        ), timeout=10)
+
+        # Confirm success
+        assert resp.code == 200
 
 
 def test_wmts_server(ows_server):
@@ -84,8 +94,7 @@ def test_wmts_gettile(ows_server):
     )
 
     assert tile
-    assert what("", h=tile.read()) == "png"
-
+    assert tile.info()['Content-Type'] == 'image/png'
 
 def test_wmts_gettile_exception(ows_server):
     wmts = WebMapTileService(url=ows_server.url+"/wmts")

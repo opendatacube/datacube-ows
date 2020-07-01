@@ -2,7 +2,6 @@ import pytest
 from owslib.wms import WebMapService
 from urllib import request
 from lxml import etree
-from imghdr import what
 import requests
 
 def get_xsd(name):
@@ -117,7 +116,7 @@ def test_wms_getmap(ows_server):
                      time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
                      )
     assert img
-    assert what("", h=img.read()) == "png"
+    assert img.info()['Content-Type'] == 'image/png'
 
     img = wms.getmap(layers=[test_layer_name],
                      styles=[],
@@ -129,7 +128,7 @@ def test_wms_getmap(ows_server):
                      time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
                      )
     assert img
-    assert what("", h=img.read()) == "png"
+    assert img.info()['Content-Type'] == 'image/png'
 
 
 def test_wms_getfeatureinfo(ows_server):

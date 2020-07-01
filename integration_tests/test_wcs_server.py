@@ -4,7 +4,6 @@ from owslib.wcs import WebCoverageService
 from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
-from imghdr import what
 import requests
 
 def get_xsd(name):
