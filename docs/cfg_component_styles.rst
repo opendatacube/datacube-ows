@@ -50,7 +50,7 @@ Calculating the value for each pixel has two steps:
 
    This is defined by the `scale_range <#component-scale-range>`_
    entry for the channel if it exists, or the style-wide
-   `scale_range <#style-scale-range>`_.
+   `scale_range <#style-scale-range>`__.
 
 
 Linear Combination Components
@@ -65,9 +65,9 @@ unscaled channel value.
 
 The unscaled channel value is then scaled to the
 to an unsigned 8-bit value (0-255) according to
-the  `scale_range <#component-scale-range>`_
+the  `scale_range <#component-scale-range>`__
 entry for the channel if it exists, or the style-wide
-`scale_range <#style-scale-range>`_.
+`scale_range <#style-scale-range>`__.
 
 Component scale_range
 @@@@@@@@@@@@@@@@@@@@@
