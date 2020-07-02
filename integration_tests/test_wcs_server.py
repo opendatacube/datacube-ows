@@ -74,7 +74,7 @@ def test_wcs1_getcoverage_geotiff(ows_server):
     test_layer_name = contents[0]
     test_layer = wcs.contents[test_layer_name]
 
-    bbox = test_layer.boundingBoxWGS84 
+    bbox = test_layer.boundingBoxWGS84
 
 
     output = wcs.getCoverage(
@@ -99,7 +99,7 @@ def test_wcs1_getcoverage_netcdf(ows_server):
     test_layer_name = contents[0]
     test_layer = wcs.contents[test_layer_name]
 
-    bbox = test_layer.boundingBoxWGS84    
+    bbox = test_layer.boundingBoxWGS84
 
     output = wcs.getCoverage(
         identifier=contents[0],
@@ -118,66 +118,62 @@ def test_wcs1_getcoverage_exceptions(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    test_layer = wcs.contents[test_layer_name]
+
+    bbox = test_layer.boundingBoxWGS84
 
     try:
         # test where product name is not available
         wcs.getCoverage(
             identifier='nonexistentproduct',
             format='GeoTIFF',
-            bbox=(10,40,18,45),
+            bbox=pytest.helpers.disjoint_bbox(bbox),
             crs='EPSG:4326',
             width=400,
             height=300
         )
     except ServiceException as e:
         assert 'Invalid coverage:' in str(e)
-    else:
-        assert False
 
     try:
         # test where  format is not supported
         wcs.getCoverage(
             identifier=contents[0],
             # format='GeoTIFF',
-            bbox=(10,40,18,45),
+            bbox=pytest.helpers.disjoint_bbox(bbox),
             crs='EPSG:4326',
             width=400,
             height=300
         )
     except ServiceException as e:
         assert 'Unsupported format:' in str(e)
-    else:
-        assert False
 
     try:
         # test where crs is not provided
         wcs.getCoverage(
             identifier=contents[0],
             format='GeoTIFF',
-            bbox=(10,40,18,45),
+            bbox=pytest.helpers.disjoint_bbox(bbox),
             # crs='EPSG:4326',
             width=400,
             height=300
         )
     except ServiceException as e:
         assert 'No request CRS specified' in str(e)
-    else:
-        assert False
 
     try:
         # test where crs is not supported
         wcs.getCoverage(
             identifier=contents[0],
             format='GeoTIFF',
-            bbox=(10,40,18,45),
+            bbox=pytest.helpers.disjoint_bbox(bbox),
             crs='EPSG:432676',
             width=400,
             height=300
         )
     except ServiceException as e:
         assert 'is not a supported CRS' in str(e)
-    else:
-        assert False
 
     try:
         # test where bbox is not correctly provided
@@ -191,8 +187,6 @@ def test_wcs1_getcoverage_exceptions(ows_server):
         )
     except ServiceException as e:
         assert 'Invalid BBOX parameter' in str(e)
-    else:
-        assert False
 
 
 def test_wcs1_pattern_generated_describecoverage(ows_server):

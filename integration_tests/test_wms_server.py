@@ -106,6 +106,29 @@ def test_wms_getmap(ows_server):
     assert img.info()['Content-Type'] == 'image/png'
 
 
+def test_wms_style_looping_getmap(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
+    test_layer_name = contents[0]
+    test_layer = wms.contents[test_layer_name]
+
+    test_layer_styles = wms.contents[test_layer_name].styles
+    bbox = test_layer.boundingBoxWGS84
+    for style in test_layer_styles:
+        img = wms.getmap(layers=[test_layer_name],
+                            styles=[style],
+                            srs="EPSG:4326",
+                            bbox=pytest.helpers.enclosed_bbox(bbox),
+                            size=(256, 256),
+                            format="image/png",
+                            transparent=True,
+                            time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+                            )
+        assert img.info()['Content-Type'] == 'image/png'
+
 def test_wms_getfeatureinfo(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
