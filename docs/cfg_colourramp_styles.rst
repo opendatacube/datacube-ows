@@ -35,7 +35,7 @@ must be declared in the `needed_bands list <needed-bands-list>`__
 entry.
 
 index_function
-++++++++++++++
+==============
 
 The `index_function` allows the user to declare a callback function
 to calculate the index value using OWS's
@@ -51,7 +51,7 @@ of general purpose band math functions
 are provided in `datacube_ows.band_utils`.
 
 needed_bands list
-+++++++++++++++++
+=================
 
 The `needed_bands` entry must list the names (or aliases) of
 all the bands required by the
@@ -94,7 +94,7 @@ There are three ways to define the colour map:
     style config entry.
 
 Ramp Scale (Range)
-------------------
+==================
 
 For the Matplotlib colour ramps and the default colour ramp, you need to specify
 a value range over which the colour ramp is applied. The `range` element can be set
@@ -109,7 +109,7 @@ E.g.::
     "range": [-1.0, 1.0]
 
 mpl_ramp
---------
+========
 
 You can use any named matplotlib colour ramp, see
 `the matplotlib documentation <https://matplotlib.org/examples/color/colormaps_reference.html>`_ for details.
@@ -124,9 +124,64 @@ E.g.::
     "range": [0.0, 1200.0]
 
 Manual color_ramp
------------------
+=================
 
-TODO
+A colour ramp can be created manually using the `color_ramp` style configuration
+entry.  `color_ramp` should be a list of `colour point definitions <#colour-point-definitions>`_.
+Each colour point definition describes a mapping from a value to a colour.
+
+The list should be sorted in order of ascending value. If the index function value
+for a pixel exactly matches the first colour point
+definition value, then that definition's colour is used.   A pixel with a value
+less than the lowest value in the ramp
+will be the colour of the first colour point.  A pixel with a value greater than than
+the highest value in the ramp will be the colour of the last colour point.
+
+Pixels with index function value in between two colour point values will have
+be coloured a average of the rgb values of those two colour points, weighted
+by the difference between the pixel index function value and the values of the
+two colour points.
+
+Colour Point Definitions
+++++++++++++++++++++++++
+
+Each Colour Point Definition must have a numeric ``value`` and a ``color`` in
+html hex format  (e.g. ``#FFFFFF``, ``#ffffff``, ``#FFF`` and ``#fff`` all refer to pure white).
+
+A Colour Point may also optionally have an ``alpha`` entry
+which should be a floating point entry between 0.0 (fully
+transparent) and 1.0 (fully opaque).  If not provided,
+alpha defaults to fully opaque.
+
+A Colour Point may also have an optional "legend" section
+which affects automatic legend generation, and is discussed below.
+
+E.g.::
+
+     # <0: transparent
+     # 0: black
+     # 0-1: ramping from black to red
+     # 1-10: ramping from red to blue
+     # >10: blue
+     "color_ramp": [
+        {
+            "value": -0.00000000001,
+            "colour": "#000",
+            "alpha": 0.0
+        },
+        {
+            "value": 0.0,
+            "colour": "#000",
+        },
+        {
+            "value": 1.0,
+            "colour": "#F00",
+        },
+        {
+            "value": 10.0,
+            "colour": "#00F",
+        }
+     ],
 
 --------------------
 Legend Configuration
