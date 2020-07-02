@@ -187,4 +187,4 @@ E.g.::
 Legend Configuration
 --------------------
 
-TODO
+Colour-ramp styles support automatic legend generation.
