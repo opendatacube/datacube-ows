@@ -48,34 +48,6 @@ style_rgb = {
     "scale_range": [0.0, 65535.0],
 }
 
-style_rgb_cloudmask = {
-    "name": "cloud_masked_rgb",
-    "title": "Simple RGB with cloud masking",
-    "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud masking",
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 1.0
-        }
-    },
-    # PQ masking example
-    # Pixels with any of the listed flag values are masked out (made transparent).
-    "pq_masks": [
-        {
-            "flags": {
-                "cloud_acca": "no_cloud",
-                "cloud_fmask": "no_cloud",
-            },
-        },
-    ],
-    "scale_range": [0.0, 65535.0],
-}
-
 style_rgb_cloud_and_shadowmask = {
     "name": "cloud_and_shadow_masked_rgb",
     "title": "Simple RGB with cloud and cloud shadow masking",
@@ -233,24 +205,6 @@ style_mineral_content = {
     # "scale_range": [0.0, 3000.0]
 }
 
-# Monochrome single band layers
-style_pure_ls8_coastal_aerosol = {
-    "name": "coastal_aerosol",
-    "title": "Spectral band 1 - Coastal aerosol",
-    "abstract": "Coastal aerosol band, approximately 435nm to 450nm",
-    "components": {
-        "red": {
-            "coastal_aerosol": 1.0
-        },
-        "green": {
-            "coastal_aerosol": 1.0
-        },
-        "blue": {
-            "coastal_aerosol": 1.0
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
 
 style_pure_ls8_blue = {
     "name": "blue",
@@ -269,97 +223,6 @@ style_pure_ls8_blue = {
     },
     "scale_range": [0.0, 65535.0],
 }
-
-style_pure_ls8_green = {
-    "name": "green",
-    "title": "Spectral band 3 - Green",
-    "abstract": "Green band, approximately 534nm to 588nm",
-    "components": {
-        "red": {
-            "green": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "green": 1.0
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
-
-style_pure_ls8_red = {
-    "name": "red",
-    "title": "Spectral band 4 - Red",
-    "abstract": "Red band, roughly 637nm to 672nm",
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "red": 1.0
-        },
-        "blue": {
-            "red": 1.0
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
-
-style_pure_ls8_nir = {
-    "name": "nir",
-    "title": "Spectral band 5 - Near infra-red",
-    "abstract": "Near infra-red band, roughly 853nm to 876nm",
-    "components": {
-        "red": {
-            "nir": 1.0
-        },
-        "green": {
-            "nir": 1.0
-        },
-        "blue": {
-            "nir": 1.0
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
-
-style_pure_ls8_swir1 = {
-    "name": "swir1",
-    "title": "Spectral band 6 - Short wave infra-red 1",
-    "abstract": "Short wave infra-red band 1, roughly 1575nm to 1647nm",
-    "components": {
-        "red": {
-            "swir1": 1.0
-        },
-        "green": {
-            "swir1": 1.0
-        },
-        "blue": {
-            "swir1": 1.0
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
-
-style_pure_ls8_swir2 = {
-    "name": "swir2",
-    "title": "Spectral band 7 - Short wave infra-red 2",
-    "abstract": "Short wave infra-red band 2, roughly 2117nm to 2285nm",
-    "components": {
-        "red": {
-            "swir2": 1.0
-        },
-        "green": {
-            "swir2": 1.0
-        },
-        "blue": {
-            "swir2": 1.0
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
-
 
 # Examples of non-linear colour-ramped styles.
 style_ndvi = {
@@ -629,22 +492,6 @@ style_ndwi = {
         }
     },
     "needed_bands": ["green", "nir"],
-    "range": [0.0, 1.0],
-}
-
-style_ndbi = {
-    "name": "ndbi",
-    "title": "NDBI",
-    "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
-        "kwargs": {
-            "band1": "swir2",
-            "band2": "nir"
-        }
-    },
-    "needed_bands": ["swir2", "nir"],
     "range": [0.0, 1.0],
 }
 
@@ -1052,12 +899,10 @@ ows_cfg = {
                     "styling": {
                         "default_style": "simple_rgb",
                         "styles": [
-                            style_rgb, style_ext_rgb,
+                            style_rgb,
                             style_ls8_allband_false_colour, style_infrared_false_colour,
-                            style_pure_ls8_coastal_aerosol, style_pure_ls8_blue,
-                            style_pure_ls8_green, style_pure_ls8_red,
-                            style_pure_ls8_nir, style_pure_ls8_swir1, style_pure_ls8_swir2,
-                            style_ndvi, style_ndwi, style_ndbi,
+                            style_pure_ls8_blue,
+                            style_ndvi, style_ndwi,
                             style_rgb_ndvi
                         ]
                     }
