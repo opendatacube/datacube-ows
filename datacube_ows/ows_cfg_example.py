@@ -896,7 +896,7 @@ style_wofs_frequency = {
             # If defined this label
             # will include a prefix and suffix
             # string as shown
-            # if label is defined, the scaled valued
+            # if label is defined, the scaled value
             # will be replaced by that string
             "legend": {
                 "prefix": ">",

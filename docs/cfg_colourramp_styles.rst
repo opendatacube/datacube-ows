@@ -19,6 +19,12 @@ Colour-ramp styles support the
 Colour-ramp styles support automatic legend generation. Specialised
 legend configuration is described `below <#legend-configuration>`__.
 
+Note on spelling: I am Australian and spell it "colour".  Most software
+packages use the US spelling "color".  Within the configuration file
+format we use the software conventional spelling, but within the text
+of this documentation, I use the UK/Australian spelling.
+
+
 ---------------------------
 Calculating the Index Value
 ---------------------------
@@ -67,6 +73,58 @@ E.g.::
 ------------
 Colour Ramps
 ------------
+
+There are three ways to define the colour map:
+
+1. Use the default colour ramp (A fairly garish rainbow ramp
+   running from dark purple through blue, green, yellow,
+   orange to dark red.)
+
+   To use the default colour ramp, just use the `range <#ramp-scale-range>`__
+   style config entry.
+
+2. Use a pre-defined MatPlotLib colour ramp.
+
+   To use a MatPlotLib colouor ramp, use the `mpl_ramp <#mpl-ramp>`__
+   and `range <#ramp-scale-range>`__ style config entries.
+
+3. Define your own colour ramp.
+
+    To define a custom colour ramp, use the `color_ramp <#manual-color-ramp>`__
+    style config entry.
+
+Ramp Scale (Range)
+------------------
+
+For the Matplotlib colour ramps and the default colour ramp, you need to specify
+a value range over which the colour ramp is applied. The `range` element can be set
+to a tuple containing the index function values that should be mapped to the lowest
+and highest colour ramp values.
+
+Values outside the configured range are clipped to the closest extreme of the colour
+ramp.
+
+E.g.::
+
+    "range": [-1.0, 1.0]
+
+mpl_ramp
+--------
+
+You can use any named matplotlib colour ramp, see
+`the matplotlib documentation <https://matplotlib.org/examples/color/colormaps_reference.html>`_ for details.
+for a list of supported ramps.
+
+Matplotlib colour ramps run from 0.0 to 1.0 to scale them
+to the output of your index function, define a `range <#ramp-scale-range>`__.
+
+E.g.::
+
+    "mpl_ramp": "RdBu",
+    "range": [0.0, 1200.0]
+
+Manual color_ramp
+-----------------
 
 TODO
 
