@@ -109,8 +109,11 @@ Co-ordinate Reference Systems (published_CRSs)
 The "published_CRSs" entry in the global sections declares the list of Co-ordinate
 Reference Systems supported by the server instance.
 
-It should be a dictionary of dictionaries, with the labels being recognised by GDAL and Proj4
-(ideally EPSG codes, as in the example).  The configuration for each Co-ordinate Reference System
+It should be a dictionary of dictionaries, with the labels being recognised by Proj4
+(ideally EPSG codes, as in the example).  Other CRS formats (i.e. ESRI style WKID)
+can be supported by adding them as aliases in your proj4 configuration.
+
+The configuration for each Co-ordinate Reference System
 contains the following entries:
 
 geographic
