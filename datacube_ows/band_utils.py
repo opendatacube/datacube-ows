@@ -40,8 +40,8 @@ def delta_bands(data, band1, band2, product_cfg=None):
 def norm_diff(data, band1, band2, product_cfg=None, scale_from=None, scale_to=[0,255]):
     # Calculate a normalised difference index.
     # unscaled = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
-    delta_data = delta_bands(data, band1,band2, product_cfg)
-    sum_data = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
+    # delta_data = delta_bands(data, band1,band2, product_cfg)
+    # sum_data = sum_bands(data, band1, band2, product_cfg)
     unscaled = delta_bands(data, band1,band2, product_cfg) / sum_bands(data, band1, band2, product_cfg)
     if scale_from:
         scaled = scale_data(unscaled, scale_from, scale_to)

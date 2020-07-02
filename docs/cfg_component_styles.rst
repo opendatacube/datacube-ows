@@ -227,7 +227,7 @@ E.g.::
 Callback Function Components
 +++++++++++++++++++++++++++++
 
-In a callback function component, the user defines a callback function
+In a callback function component, the user declares a callback function
 using OWS's `function configuration format <cfg_functions.rst>`_.
 
 The function must take an xarray Dataset containing the raw band data
