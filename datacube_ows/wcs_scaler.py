@@ -228,8 +228,8 @@ class WCSScaler:
             self.max.y,
             num = self.size.y
         )
-        x_name = self.crs_def["horizontal_coord"],
-        y_name = self.crs_def["vertical_coord"],
+        x_name = self.crs_def["horizontal_coord"]
+        y_name = self.crs_def["vertical_coord"]
         if self.crs_def["vertical_coord_first"]:
             nparrays = {
                 band: (

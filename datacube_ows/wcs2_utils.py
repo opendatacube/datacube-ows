@@ -227,6 +227,13 @@ def get_coverage_data(request):
                                     WCS2Exception.INVALID_PARAMETER_VALUE,
                                     locator="FORMAT")
 
+        if len(times) > 1 and not fmt.multi_time:
+            raise WCS2Exception(
+                "Format does not support multi-time datasets - "
+                "either constrain the time dimension or choose a different format",
+                WCS2Exception.INVALID_SUBSETTING,
+                locator="FORMAT or SUBSET"
+                                )
         affine = scaler.affine()
         geobox = geometry.GeoBox(scaler.size.x, scaler.size.y,
                                  affine, geometry.CRS(output_crs))
