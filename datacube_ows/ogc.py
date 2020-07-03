@@ -19,7 +19,6 @@ from datacube_ows.wcs1 import handle_wcs1, WCS_REQUESTS
 from datacube_ows.wcs2 import handle_wcs2
 from datacube_ows.wmts import handle_wmts
 from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WCS2Exception, WMSException, WMTSException
-from datacube_ows.utils import opencensus_trace_call, get_jaeger_exporter, get_opencensus_tracer, opencensus_tracing_enabled
 from datacube_ows.cube_pool import cube
 from datacube.utils.rio import set_default_rio_config
 from datacube_ows.ows_configuration import get_config
@@ -50,16 +49,6 @@ if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
 app = Flask(__name__.split('.')[0])
 RequestID(app)
 
-tracer = None
-if opencensus_tracing_enabled():
-    from opencensus.trace import config_integration
-    from opencensus.ext.flask.flask_middleware import FlaskMiddleware
-    tracer = get_opencensus_tracer()
-    integration = ['sqlalchemy']
-    config_integration.trace_integrations(integration, tracer=tracer)
-    jaegerExporter = get_jaeger_exporter()
-    middleware = FlaskMiddleware(app, exporter=jaegerExporter)
-    _LOG.info("Opencensus tracing enabled")
 
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
 # this will mean the root logs will be captured and managed by the gunicorn logger
@@ -194,7 +183,6 @@ def ogc_impl():
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
-@opencensus_trace_call(tracer=tracer)
 def ogc_svc_impl(svc):
     svc_support = OWS_SUPPORTED[svc]
     nocase_args = lower_get_args()

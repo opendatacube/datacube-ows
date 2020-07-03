@@ -22,12 +22,9 @@ from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ogc_utils import ProductLayerException
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.utils import opencensus_trace_call, get_opencensus_tracer
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
 _LOG = logging.getLogger(__name__)
-
-tracer = get_opencensus_tracer()
 
 
 def uniform_crs(crs):
@@ -47,7 +44,6 @@ def uniform_crs(crs):
     return crs
 
 
-@opencensus_trace_call(tracer=tracer)
 def get_coverage_data(request):
     #pylint: disable=too-many-locals, protected-access
 
@@ -273,7 +269,6 @@ def get_coverage_data(request):
     return output, fmt.mime, filename
 
 
-@opencensus_trace_call(tracer=tracer)
 def get_tiff(request, data, crs, product, width, height, affine):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Copied from CEOS.  Does not seem to support multi-time dimension data - is this even possible in GeoTiff?
@@ -339,8 +334,6 @@ def get_tiff(request, data, crs, product, width, height, affine):
                 dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
         return memfile.read()
 
-
-@opencensus_trace_call(tracer=tracer)
 def get_netcdf(request, data, crs):
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = crs # geometry.CRS(response_crs)

@@ -9,15 +9,12 @@ from datacube_ows.wcs1_utils import WCS1GetCoverageRequest, get_coverage_data
 
 from datacube_ows.ows_configuration import get_config
 
-from datacube_ows.utils import log_call, opencensus_trace_call, get_opencensus_tracer
+from datacube_ows.utils import log_call
 
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
-tracer = get_opencensus_tracer()
-
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def handle_wcs1(nocase_args):
     operation = nocase_args.get("request", "").upper()
     if not operation:
@@ -33,7 +30,6 @@ def handle_wcs1(nocase_args):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def get_capabilities(args):
     # TODO: Handle updatesequence request parameter for cache consistency.
     section = args.get("section")
@@ -76,7 +72,6 @@ def get_capabilities(args):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def desc_coverages(args):
     # Extract layer metadata from Datacube.
     cfg = get_config()
@@ -111,7 +106,6 @@ def desc_coverages(args):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def get_coverage(args):
     cfg = get_config()
     req = WCS1GetCoverageRequest(args)

@@ -20,7 +20,6 @@ requirements = [
     'lxml',
     'matplotlib',
     'numpy',
-    'opencensus',
     'Pillow',
     'prometheus_client',
     'psycopg2',

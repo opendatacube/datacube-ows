@@ -24,15 +24,13 @@ from datacube_ows.wcs2_utils import get_coverage_data
 
 from datacube_ows.ows_configuration import get_config
 
-from datacube_ows.utils import log_call, opencensus_trace_call, get_opencensus_tracer
+from datacube_ows.utils import log_call
 
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
-tracer = get_opencensus_tracer()
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def handle_wcs2(nocase_args):
     operation = request.args.get("request", "").upper()
     if not operation:
@@ -48,7 +46,6 @@ def handle_wcs2(nocase_args):
 
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def get_capabilities(args):
     # Extract layer metadata from Datacube.
     cfg = get_config()
@@ -230,7 +227,6 @@ def create_coverage_description(cfg, product):
     )
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def desc_coverages(args):
     cfg = get_config()
 
@@ -277,7 +273,6 @@ import logging
 _LOG = logging.getLogger(__name__)
 
 @log_call
-@opencensus_trace_call(tracer=tracer)
 def get_coverage(args):
     request_obj = kvp_decode_get_coverage(args)
 
