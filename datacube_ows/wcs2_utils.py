@@ -250,10 +250,9 @@ def get_coverage_data(request):
                                 "Please reduce the bounds of your request and try again."
                                 "(max: %d, this request requires: %d)" % (layer.max_datasets_wcs, n_datasets))
         elif n_datasets == 0:
-            output = scaler.empty_dataset(
-                bands,
-                times
-            )
+            raise WCS2Exception("The requested spatio-temporal subsets return no data.",
+                                WCS2Exception.INVALID_SUBSETTING,
+                                http_response=404)
         else:
             if fmt.multi_time and len(times) > 1:
                 # Group by solar day
