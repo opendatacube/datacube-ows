@@ -8,7 +8,7 @@ import requests
 
 def get_xsd(name):
     # TODO: Get XSD's for different versions
-    xsd_f = request.urlopen("http://schemas.opengis.net/wcs/1.0.0/" + name)
+    xsd_f = request.urlopen("http://schemas.opengis.net/wcs/" + name)
     schema_doc = etree.parse(xsd_f)
 
     return etree.XMLSchema(schema_doc)
@@ -45,7 +45,7 @@ def test_getcap_badsvc(ows_server):
     check_wcs_error(ows_server.url + "/wcs?request=GetCapabilities&service=NotWCS", "Invalid service", 400)
 
 
-def test_getcap(ows_server):
+def test_wcs1_getcap(ows_server):
     resp = request.urlopen(ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0", timeout=10)
 
     # Confirm success
@@ -53,7 +53,7 @@ def test_getcap(ows_server):
 
     # Validate XML Schema
     resp_xml = etree.parse(resp.fp)
-    gc_xds = get_xsd("wcsCapabilities.xsd")
+    gc_xds = get_xsd("1.0.0/wcsCapabilities.xsd")
     assert gc_xds.validate(resp_xml)
 
 def test_wcs1_server(ows_server):
@@ -63,7 +63,6 @@ def test_wcs1_server(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     assert contents
-
 
 def test_wcs1_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -189,7 +188,7 @@ def test_wcs1_getcoverage_exceptions(ows_server):
         assert 'Invalid BBOX parameter' in str(e)
 
 
-def test_wcs1_pattern_generated_describecoverage(ows_server):
+def test_wcs1_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
@@ -197,11 +196,10 @@ def test_wcs1_pattern_generated_describecoverage(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
 
-    resp = request.urlopen(ows_server.url +"/wcs?service=WCS&version=1.0.0&request=DescribeCoverage&Coverage={0}&".format(
-        test_layer_name
-    ), timeout=10)
+    resp = wcs.getDescribeCoverage(test_layer_name)
 
-    assert 'CoverageDescription' in str(resp.read(300))
+    gc_xds = get_xsd("1.0.0/describeCoverage.xsd")
+    assert gc_xds.validate(resp)
 
 
 def test_wcs20_server(ows_server):
@@ -212,18 +210,24 @@ def test_wcs20_server(ows_server):
     contents = list(wcs.contents)
     assert contents
 
-@pytest.mark.xfail(reason="returns 500")
-def test_wcs20_pattern_generated_getcoverage(ows_server):
+def test_wcs20_getcoverage(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
+    # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    output = wcs.getCoverage(
+        identifier=[contents[0]],
+        format='image/geotiff',
+        subsets=[('x', 144, 144.3), ('y', -42.4, -42)],
+        # timeSequence=['2019-11-05'],
+        subsettingcrs="EPSG:4326",
+        subset='time("2019-11-05")',
+        scalesize="x(400),y(300)"
+    )
 
-    resp = requests.head(ows_server.url +"/wcs?version=2.0.0&request=GetCoverage&service=WCS&CoverageID={}&format=image%2Fgeotiff&subset=y%2840%2C45%29&subset=x%2810%2C18%2".format(
-        test_layer_name
-    ), timeout=10)
-
-    assert resp.headers.get('content-type') == 'image/geotiff'
+    assert output
+    assert output.info()['Content-Type'] == 'image/geotiff'
 
 
 def test_wcs21_server(ows_server):
@@ -233,6 +237,22 @@ def test_wcs21_server(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     assert contents
+
+
+@pytest.mark.xfail(reason='Failing to pass xsd')
+def test_wcs21_describecoverage(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1")
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+
+    resp = wcs.getDescribeCoverage(test_layer_name)
+
+    # resp_xml = etree.parse(resp.fp)
+    gc_xds = get_xsd("2.0/wcsDescribeCoverage.xsd")
+    assert gc_xds.validate(resp)
 
 
 def test_wcs21_pattern_generated_describecoverage(ows_server):
@@ -250,7 +270,6 @@ def test_wcs21_pattern_generated_describecoverage(ows_server):
     assert 'CoverageDescription' in str(resp.read(300))
 
 
-@pytest.mark.xfail(reason='incomplete url')
 def test_wcs21_getcoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1")
@@ -260,7 +279,11 @@ def test_wcs21_getcoverage(ows_server):
     output = wcs.getCoverage(
         identifier=[contents[0]],
         format='image/geotiff',
-        subsets=[('y', 40, 45), ('x', 10, 18)]
+        subsets=[('x', 144, 144.3), ('y', -42.4, -42)],
+        # timeSequence=['2019-11-05'],
+        subsettingcrs="EPSG:4326",
+        subset='time("2019-11-05")',
+        scalesize="x(400),y(300)"
     )
 
     assert output
