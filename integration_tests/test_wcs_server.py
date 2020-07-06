@@ -210,7 +210,7 @@ def test_wcs20_server(ows_server):
     contents = list(wcs.contents)
     assert contents
 
-def test_wcs20_getcoverage(ows_server):
+def test_wcs20_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
@@ -219,15 +219,50 @@ def test_wcs20_getcoverage(ows_server):
     output = wcs.getCoverage(
         identifier=[contents[0]],
         format='image/geotiff',
-        subsets=[('x', 144, 144.3), ('y', -42.4, -42)],
-        # timeSequence=['2019-11-05'],
+        subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
         subsettingcrs="EPSG:4326",
-        subset='time("2019-11-05")',
-        scalesize="x(400),y(300)"
+        scalesize="x(400),y(300)",
     )
 
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
+
+@pytest.mark.xfail(reason='unsupported format netcdf')
+def test_wcs20_getcoverage_netcdf(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    output = wcs.getCoverage(
+        identifier=[contents[0]],
+        format='netCDF',
+        subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
+        subsettingcrs="EPSG:4326",
+        scalesize="x(400),y(300)",
+    )
+
+    assert output
+    assert output.info()['Content-Type'] == 'application/x-netcdf'
+
+
+def test_wcs20_getcoverage_multidate(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    try:
+        resp = wcs.getCoverage(
+            identifier=[contents[0]],
+            format='image/geotiff',
+            subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05', "2019-12-05")],
+            subsettingcrs="EPSG:4326",
+            scalesize="x(400),y(300)",
+        )
+    except ServiceException as e:
+        assert 'Format does not support multi-time datasets' in str(e)
+
 
 
 def test_wcs21_server(ows_server):
