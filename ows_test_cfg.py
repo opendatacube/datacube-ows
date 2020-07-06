@@ -542,55 +542,12 @@ style_rgb_ndvi = {
 
 standard_resource_limits = {
     "wms": {
-        # WMS/WMTS resource limits
-        #
-        # There are two independent resource limits applied to WMS/WMTS requests.  If either
-        # limit is exceeded, then the actual data is not rendered.  Instead an indicative polygon
-        # showing the extent of the data is rendered.
-        #
-        # The fill-colour of the indicative polygons when either wms/wmts resource limits is exceeded.
-        # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
-        #
-        # (The fourth number in an rgba quadruplet represents opacity with 255 being fully opaque and
-        # 0 being fully transparent.)
-        #
-        # Defaults to [150, 180, 200, 160]
-        "zoomed_out_fill_colour": [150, 180, 200, 160],
-
-        # WMS/WMTS Resource Limit 1: Min zoom factor
-        #
-        # The zoom factor is a dimensionless number calculated from the request in a way that is independent
-        # of the CRS. A higher zoom factor corresponds to a more zoomed in view.
-        #
-        # If the zoom factor of the request is less than the minimum zoom factor (i.e. is zoomed out too far)
-        # then indicative polygons are rendered instead of accessing the actual data.
-        #
-        # Defaults to 300.0
-        "min_zoom_factor": 500.0,
-
-        # Min zoom factor (above) works well for small-tiled requests, (e.g. 256x256 as sent by Terria).
-        # However, for large-tiled requests (e.g. as sent by QGIS), large and intensive queries can still
-        # go through to the datacube.
-        #
-        # max_datasets specifies a maximum number of datasets that a GetMap or GetTile request can retrieve.
-        # Indicatative polygons are displayed if a request exceeds the limits imposed by EITHER max_dataset
-        # OR min_zoom_factor.
-        #
-        # max_datasets should be set in conjunction with min_zoom_factor so that Terria style 256x256
-        # tiled requests respond consistently - you never want to see a mixture of photographic tiles and polygon
-        # tiles at a given zoom level.  i.e. max_datasets should be greater than the number of datasets
-        # required for most intensive possible photographic query given the min_zoom_factor.
-        # Note that the ideal value may vary from product to product depending on the size of the dataset
-        # extents for the product.
-        # Defaults to zero, which is interpreted as no dataset limit.
-        "max_datasets": 6,
+        "zoomed_out_fill_colour": [150,180,200,160],
+        "min_zoom_factor": 35.0,
+        "max_datasets": 16, # Defaults to no dataset limit
     },
     "wcs": {
-        # wcs::max_datasets is the WCS equivalent of wms::max_datasets.  The main requirement for setting this
-        # value is to avoid gateway timeouts on overly large WCS requests (and reduce server load).
-        #
-        # Defaults to zero, which is interpreted as no dataset limit.
-        "max_datasets": 16,
+        # "max_datasets": 16, # Defaults to no dataset limit
     }
 }
 
@@ -863,10 +820,15 @@ ows_cfg = {
                         "default_style": "simple_rgb",
                         "styles": [
                             style_rgb,
-                            style_ls8_allband_false_colour, style_infrared_false_colour,
-                            style_pure_ls8_blue, style_ndvi_cloudmask,
-                            style_ndvi, style_ndwi,style_ext_rgb, style_cloud_mask,
-                            style_rgb_ndvi, style_mineral_content, style_rgb_cloud_and_shadowmask
+                            style_infrared_false_colour,
+                            style_pure_ls8_blue,
+                            style_ndvi,
+                            style_rgb_ndvi
+
+                            # faulty layers
+                            # style_ndvi_cloudmask, style_ext_rgb,  style_ndwi,
+                            # style_mineral_content, style_rgb_cloud_and_shadowmask
+                            # style_cloud_mask, style_ls8_allband_false_colour,
                         ]
                     }
                 } ##### End of ls8_level1_pds product definition.
