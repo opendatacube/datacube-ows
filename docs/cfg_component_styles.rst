@@ -241,6 +241,7 @@ needed bands are retrieved by
 using the `additional_bands <#additional-bands>`__ config item if necessary.
 
 E.g.::
+
     "components": {
         "red": {
             # Red channel is red/blue normalised difference (Ferric Iron index)
@@ -288,12 +289,13 @@ components), then these additional required bands must be declared
 with the `additional_bands` list.
 
 The `additional_bands` should be a list of band names or aliases from
-the `band dictionary <cfg_layer.rst#band-dictionary-bands>`_.  It is
+the `band dictionary <cfg_layer.rst#band-dictionary-bands>`__.  It is
 optional (defaults to an empty list).  It is safe (but not
 necessary) to declare bands in `additional_bands` that are used
 directly by a linear combination component in the style.
 
 E.g.::
+
     "components": {
         "red": {
             # Red channel is red/blue normalised difference (Ferric Iron index)
