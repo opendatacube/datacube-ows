@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from decimal import Decimal, ROUND_HALF_UP
 from xarray import Dataset, DataArray, merge
 import numpy
 from colour import Color
@@ -54,7 +55,6 @@ class StyleDefBase(object):
                     break
 
         self.parse_legend_cfg(style_cfg.get("legend", {}))
-        self.legend_cfg = style_cfg.get("legend", dict())
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 
@@ -350,9 +350,8 @@ class LinearStyleDef(StyleDefBase):
 
 
 UNSCALED_DEFAULT_RAMP = [
-    # TODO: -0.0 is not really different number to 0.0 (does this indicate a specific limit case)
     {
-        "value": -0.0,
+        "value": -1e-24,
         "color": "#000080",
         "alpha": 0.0
     },
@@ -549,14 +548,24 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
 class RgbaColorRamp:
     def __init__(self, product, ramp_cfg):
         if "color_ramp" in ramp_cfg:
-            self.ramp = ramp_cfg["color_ramp"]
+            raw_scaled_ramp = ramp_cfg["color_ramp"]
         else:
             rmin, rmax = ramp_cfg["range"]
             unscaled_ramp = UNSCALED_DEFAULT_RAMP
             if "mpl_ramp" in ramp_cfg:
                 unscaled_ramp = read_mpl_ramp(ramp_cfg["mpl_ramp"])
-            self.ramp = scale_unscaled_ramp(
+            raw_scaled_ramp = scale_unscaled_ramp(
                 rmin, rmax, unscaled_ramp)
+        self.ramp = raw_scaled_ramp
+        legend_cfg = ramp_cfg.get("legend", {})
+        if legend_cfg.get("show_legend", True) and not legend_cfg.get("url"):
+            self.parse_legend(legend_cfg)
+        else:
+            self.auto_legend = False
+
+        if self.auto_legend:
+            pass
+
         values, r, g, b, a = crack_ramp(self.ramp)
         self.values = values
         self.components = {
@@ -565,6 +574,114 @@ class RgbaColorRamp:
             "blue": b,
             "alpha": a
         }
+
+    def parse_legend(self, cfg):
+        def rounder_str(prec):
+            rstr = "1"
+            if prec == 0:
+                return rstr
+            rstr += "."
+            for i in range(prec - 1):
+                rstr += "0"
+            rstr += "1"
+
+        self.auto_legend = True
+        self.legend_units = cfg.get("units","")
+        self.legend_decimal_places = cfg.get("decimal_places", 1)
+        if self.legend_decimal_places < 0:
+            raise ConfigException("decimal_places cannot be negative")
+        self.rounder = Decimal(rounder_str(self.legend_decimal_places))
+        self.parse_legend_range(cfg)
+        self.parse_legend_ticks(cfg)
+        self.parse_legend_tick_labels(cfg)
+
+    def parse_legend_range(self, cfg):
+        if "begin" in cfg:
+            self.legend_begin = Decimal(cfg["begin"])
+        else:
+            self.legend_begin = None
+            for col_def in self.raw_scaled_ramp:
+                if col_def.get("alpha", 1.0) == 1.0:
+                    self.legend_begin = Decimal(col_def["value"])
+                    break
+            if self.legend_begin is None:
+                self.legend_begin = Decimal(self.raw_scaled_ramp[0]["value"])
+
+        if "end" in cfg:
+            self.legend_end = Decimal(cfg["end"])
+        else:
+            self.legend_end = None
+            for col_def in self.raw_scaled_ramp:
+                if col_def.get("alpha", 1.0) == 1.0:
+                    self.legend_end = Decimal(col_def["value"])
+                    break
+            if self.legend_end is None:
+                self.legend_end = Decimal(self.raw_scaled_ramp[0]["value"])
+
+    def parse_legend_ticks(self, cfg):
+        # Ticks
+        ticks = []
+        if "ticks_every" in cfg:
+            delta = Decimal(cfg["ticks_every"])
+            tickval = self.legend_begin
+            while tickval < self.legend_end:
+                ticks.append(tickval)
+                tickval += delta
+            ticks.append(tickval)
+        if "tick_count" in cfg:
+            if ticks:
+                raise ConfigException("Cannot use tick count and ticks_every in the same legend")
+            count = Decimal(int(cfg["tick_count"]))
+            for i in range(0, count + 1):
+                tickval = self.legend_begin + (Decimal(i) / count)
+                ticks.append(tickval.quantize(self.tickval, self.rounder, rounding=ROUND_HALF_UP))
+        if "ticks" in cfg:
+            if ticks:
+                raise ConfigException("Cannot use ticks with tick count or ticks_every in the same legend")
+            ticks = [Decimal(t) for t in cfg["ticks"]]
+
+    def parse_legend_tick_labels(self, cfg):
+        labels = cfg.get("tick_labels", {})
+        defaults = labels.get("default", {})
+        default_prefix = defaults.get("prefix", "")
+        default_suffix = defaults.get("suffix", "")
+        self.tick_labels = []
+        for tick in self.ticks:
+            label_cfg = labels.get(str(tick))
+            if label_cfg:
+                prefix = label_cfg.get("prefix", default_prefix)
+                suffix = label_cfg.get("suffix", default_suffix)
+                label  = label_cfg.get("label", str(tick))
+                self.tick_labels.append(prefix + label + suffix)
+            else:
+                self.tick_labels.append(
+                    default_prefix + str(tick) + default_suffix
+                )
+
+    def get_value(self, data, band):
+        return numpy.interp(data, self.values, self.components[band])
+
+    def get_8bit_value(self, data, band):
+        val = self.get_value(data, band)
+        return (val * 255).astype("unit8")
+
+    def apply(self, data):
+        imgdata = {}
+        for band in self.components:
+            imgdata[band] = (data.dims, self.get_8bit_value(data, band))
+        imgdataset = Dataset(imgdata)
+        return imgdataset
+
+    def color_alpha_at(self, val):
+        color = Color(
+            self.get_value(val, "red"),
+            self.get_value(val, "green"),
+            self.get_value(val, "blue"),
+        )
+        alpha = self.get_value(val, "alpha")
+
+        return color, alpha
+
 
 class RgbaColorRampDef(StyleDefBase):
     auto_legend = True
@@ -588,19 +705,6 @@ class RgbaColorRampDef(StyleDefBase):
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 
-    def get_value(self, data, values, intensities):
-        return numpy.interp(data, values, intensities)
-
-    def apply_colour_ramp(self, data):
-        imgdata = {}
-        for band, intensity in self.color_ramp.components.items():
-            bandnda = self.get_value(data, self.color_ramp.values, intensity)
-            bandnda *= 255
-            bandnda = bandnda.astype("uint8")
-            imgdata[band] = (data.dims, bandnda)
-        imgdataset = Dataset(imgdata)
-        return imgdataset
-
     def apply_masks_and_index(self, data, pq_data, extent_mask, *masks):
         if extent_mask is not None:
             data = data.where(extent_mask)
@@ -611,7 +715,7 @@ class RgbaColorRampDef(StyleDefBase):
 
     def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         d = self.apply_masks_and_index(data, pq_data, extent_mask, *masks)
-        return self.apply_colour_ramp(d)
+        return self.color_ramp.apply(d)
 
     def single_date_legend(self, bytesio):
         colour_ramp_legend(bytesio,
@@ -632,7 +736,7 @@ class RgbaColorRampDef(StyleDefBase):
         def transform_data(self, data, pq_data, extent_mask, *masks):
             xformed_data = self.style.apply_masks_and_index(data, pq_data, extent_mask, *masks)
             agg = self.aggregator(xformed_data)
-            return self.color_ramp.apply_colour_ramp(agg)
+            return self.color_ramp.apply(agg)
 
         def legend(self, bytesio):
             title = self.legend_cfg.get("title", self.range_str() + " Dates")
@@ -699,8 +803,13 @@ def StyleDef(product, cfg):
             return RGBAMappedStyleDef(product, cfg)
         elif cfg.get("color_ramp", False) or cfg.get("range", False):
             return RgbaColorRampDef(product, cfg)
+    except ValueError:
+        raise ConfigException(f"Style Error in product {product.name}, style {cfg.get('name', '??')}")
     except KeyError:
         raise ConfigException("Required field missing in style %s of layer %s" % (
             cfg.get("name", ""),
             product.name
         ))
+    except ConfigException as e:
+        raise ConfigException(f"Style Error ({product.name}:{cfg.get('name', '??')}): {e}")
+
