@@ -584,6 +584,7 @@ class RgbaColorRamp:
             for i in range(prec - 1):
                 rstr += "0"
             rstr += "1"
+            return rstr
 
         self.auto_legend = True
         self.legend_units = cfg.get("units","")
@@ -594,51 +595,61 @@ class RgbaColorRamp:
         self.parse_legend_range(cfg)
         self.parse_legend_ticks(cfg)
         self.parse_legend_tick_labels(cfg)
+        self.legend_legacy = any(
+            legent in cfg
+            for legent in ["major_ticks", "offset", "scale_by", "radix_point"]
+        )
 
     def parse_legend_range(self, cfg):
         if "begin" in cfg:
             self.legend_begin = Decimal(cfg["begin"])
         else:
             self.legend_begin = None
-            for col_def in self.raw_scaled_ramp:
+            for col_def in self.ramp:
                 if col_def.get("alpha", 1.0) == 1.0:
                     self.legend_begin = Decimal(col_def["value"])
                     break
             if self.legend_begin is None:
-                self.legend_begin = Decimal(self.raw_scaled_ramp[0]["value"])
+                self.legend_begin = Decimal(self.ramp[0]["value"])
 
         if "end" in cfg:
             self.legend_end = Decimal(cfg["end"])
         else:
             self.legend_end = None
-            for col_def in self.raw_scaled_ramp:
+            for col_def in self.ramp:
                 if col_def.get("alpha", 1.0) == 1.0:
                     self.legend_end = Decimal(col_def["value"])
                     break
             if self.legend_end is None:
-                self.legend_end = Decimal(self.raw_scaled_ramp[0]["value"])
+                self.legend_end = Decimal(self.ramp[0]["value"])
 
     def parse_legend_ticks(self, cfg):
         # Ticks
         ticks = []
         if "ticks_every" in cfg:
+            if "tick_count" in cfg:
+                raise ConfigException("Cannot use tick count and ticks_every in the same legend")
+            if "ticks" in cfg:
+                raise ConfigException("Cannot use ticks and ticks_every in the same legend")
             delta = Decimal(cfg["ticks_every"])
             tickval = self.legend_begin
             while tickval < self.legend_end:
                 ticks.append(tickval)
                 tickval += delta
             ticks.append(tickval)
-        if "tick_count" in cfg:
-            if ticks:
-                raise ConfigException("Cannot use tick count and ticks_every in the same legend")
-            count = Decimal(int(cfg["tick_count"]))
-            for i in range(0, count + 1):
-                tickval = self.legend_begin + (Decimal(i) / count)
-                ticks.append(tickval.quantize(self.tickval, self.rounder, rounding=ROUND_HALF_UP))
         if "ticks" in cfg:
-            if ticks:
-                raise ConfigException("Cannot use ticks with tick count or ticks_every in the same legend")
+            if "tick_count" in cfg:
+                raise ConfigException("Cannot use tick count and ticks in the same legend")
             ticks = [Decimal(t) for t in cfg["ticks"]]
+        if not ticks:
+            count = int(cfg.get("tick_count", 1))
+            if count < 0:
+                raise ConfigException("tick_count cannot be negative")
+            dcount = Decimal(count)
+            for i in range(0, count + 1):
+                tickval = self.legend_begin + (Decimal(i) / dcount)
+                ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
+        self.ticks = ticks
 
     def parse_legend_tick_labels(self, cfg):
         labels = cfg.get("tick_labels", {})
