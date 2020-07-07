@@ -437,7 +437,7 @@ def read_mpl_ramp(mpl_ramp : str):
     return unscaled_cmap
 
 
-def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, components, map_name,
+def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
                        default_title):
     def custom_label(label, custom_config):
         prefix = custom_config.get("prefix", "")
@@ -451,39 +451,38 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, components, map_name,
     # Also create tick labels based on configuration
     # ticks are also normalized between 0 - 1.0
     # so they are position correctly on the colorbar
-    def create_cdict_ticks(components, cfg):
+    def create_cdict_ticks(cfg, ramp):
         generate = (cfg.get("major_ticks", None) is not None or \
                     cfg.get("scale_by", None) is not None or \
                     cfg.get("radix_point", None) is not None)
 
-        return from_definition(components, cfg, generate)
+        return from_definition(cfg, ramp, generate)
 
     def find_clc(ramp, last=False):
-        l = ramp if not last else reversed(ramp)
+        l = ramp.ramp if not last else reversed(ramp.ramp)
         for index, value in enumerate(l):
-            fwd_index = index if not last else (len(ramp) - (index + 1))
+            fwd_index = index if not last else (len(ramp.ramp) - (index + 1))
             if "legend" in value:
                 return fwd_index
-        return 0 if not last else (len(ramp) - 1)
+        return 0 if not last else (len(ramp.ramp) - 1)
 
-    def from_definition(components, cfg, generate):
+    def from_definition(cfg, ramp, generate):
         tick_mod = cfg.get("major_ticks", 1)
         tick_offset = cfg.get("offset", 0)
         tick_scale = cfg.get("scale_by", 1)
         places = cfg.get("radix_point", 1)
-        ramp = cfg.get("ramp")
 
         start_index = find_clc(ramp) if not generate else 0
-        stop_index = find_clc(ramp, last=True) if not generate else (len(ramp) - 1)
+        stop_index = find_clc(ramp, last=True) if not generate else (len(ramp.ramp) - 1)
 
-        start = ramp[start_index].get("value")
-        stop = ramp[stop_index].get("value")
+        start = ramp.ramp[start_index].get("value")
+        stop = ramp.ramp[stop_index].get("value")
         normalize_factor = stop - start
 
         ticks = dict()
         cdict = dict()
         bands = defaultdict(list)
-        for index, ramp_val in enumerate(ramp):
+        for index, ramp_val in enumerate(ramp.ramp):
             if index < start_index or index > stop_index:
                 continue
 
@@ -506,7 +505,7 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, components, map_name,
                 label = custom_label(value, custom_legend_cfg)
                 ticks[normalized] = label
 
-            for band, intensity in components.items():
+            for band, intensity in ramp.components.items():
                 bands[band].append((normalized, intensity[index], intensity[index]))
 
         for band, blist in bands.items():
@@ -516,9 +515,7 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, components, map_name,
             ticks = None
         return cdict, ticks
 
-    legend_cfg["ramp"] = colour_ramp
-
-    cdict, ticks = create_cdict_ticks(components, legend_cfg)
+    cdict, ticks = create_cdict_ticks(legend_cfg, colour_ramp)
 
     # TODO: Potentially short-circuit this if using string based mpl_ramp
     # custom_map = plt.get_cmap(style_cfg["mpl_ramp"]) should return a LinearSegmentedColormap
@@ -549,21 +546,18 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, components, map_name,
     plt.savefig(bytesio, format='png')
 
 
-class RgbaColorRampDef(StyleDefBase):
-    auto_legend = True
-    def __init__(self, product, style_cfg, defer_multi_date=False):
-        super(RgbaColorRampDef, self).__init__(product, style_cfg)
-
-        if "color_ramp" in style_cfg:
-            self.color_ramp = style_cfg["color_ramp"]
+class RgbaColorRamp:
+    def __init__(self, product, ramp_cfg):
+        if "color_ramp" in ramp_cfg:
+            self.ramp = ramp_cfg["color_ramp"]
         else:
-            rmin, rmax = style_cfg["range"]
+            rmin, rmax = ramp_cfg["range"]
             unscaled_ramp = UNSCALED_DEFAULT_RAMP
-            if "mpl_ramp" in style_cfg:
-                unscaled_ramp = read_mpl_ramp(style_cfg["mpl_ramp"])
-            self.color_ramp = scale_unscaled_ramp(
-                    rmin, rmax, unscaled_ramp)
-        values, r, g, b, a = crack_ramp(self.color_ramp)
+            if "mpl_ramp" in ramp_cfg:
+                unscaled_ramp = read_mpl_ramp(ramp_cfg["mpl_ramp"])
+            self.ramp = scale_unscaled_ramp(
+                rmin, rmax, unscaled_ramp)
+        values, r, g, b, a = crack_ramp(self.ramp)
         self.values = values
         self.components = {
             "red": r,
@@ -571,6 +565,14 @@ class RgbaColorRampDef(StyleDefBase):
             "blue": b,
             "alpha": a
         }
+
+class RgbaColorRampDef(StyleDefBase):
+    auto_legend = True
+    def __init__(self, product, style_cfg, defer_multi_date=False):
+        super(RgbaColorRampDef, self).__init__(product, style_cfg)
+
+        self.color_ramp = RgbaColorRamp(product, style_cfg)
+
         for band in style_cfg["needed_bands"]:
             self.needed_bands.add(self.product.band_idx.band(band))
 
@@ -589,16 +591,14 @@ class RgbaColorRampDef(StyleDefBase):
     def get_value(self, data, values, intensities):
         return numpy.interp(data, values, intensities)
 
-    def apply_colour_ramp(self, data, ramp_values, ramp_components):
+    def apply_colour_ramp(self, data):
         imgdata = {}
-        for band, intensity in ramp_components.items():
-            bandnda = self.get_value(data, ramp_values, intensity)
+        for band, intensity in self.color_ramp.components.items():
+            bandnda = self.get_value(data, self.color_ramp.values, intensity)
             bandnda *= 255
             bandnda = bandnda.astype("uint8")
             imgdata[band] = (data.dims, bandnda)
         imgdataset = Dataset(imgdata)
-        # imgdataset *= 255
-        # imgdataset = imgdataset.astype("uint8")
         return imgdataset
 
     def apply_masks_and_index(self, data, pq_data, extent_mask, *masks):
@@ -611,13 +611,12 @@ class RgbaColorRampDef(StyleDefBase):
 
     def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
         d = self.apply_masks_and_index(data, pq_data, extent_mask, *masks)
-        return self.apply_colour_ramp(d, self.values, self.components)
+        return self.apply_colour_ramp(d)
 
     def single_date_legend(self, bytesio):
         colour_ramp_legend(bytesio,
                            self.legend_cfg,
                            self.color_ramp,
-                           self.components,
                            self.product.name,
                            self.title
                            )
@@ -628,29 +627,12 @@ class RgbaColorRampDef(StyleDefBase):
             super().__init__(style, cfg)
             self.feature_info_label = cfg.get("feature_info_label", None)
 
-            if "color_ramp" in cfg:
-                self.color_ramp = cfg["color_ramp"]
-            else:
-                rmin, rmax = cfg["range"]
-                unscaled_ramp = UNSCALED_DEFAULT_RAMP
-                if "mpl_ramp" in cfg:
-                    unscaled_ramp = read_mpl_ramp(cfg["mpl_ramp"])
-                self.color_ramp = scale_unscaled_ramp(
-                    rmin, rmax,
-                    unscaled_ramp)
-            values, r, g, b, a = crack_ramp(self.color_ramp)
-            self.values = values
-            self.components = {
-                "red": r,
-                "green": g,
-                "blue": b,
-                "alpha": a
-            }
+            self.color_ramp = RgbaColorRamp(style.product, cfg)
 
         def transform_data(self, data, pq_data, extent_mask, *masks):
             xformed_data = self.style.apply_masks_and_index(data, pq_data, extent_mask, *masks)
             agg = self.aggregator(xformed_data)
-            return self.style.apply_colour_ramp(agg, self.values, self.components)
+            return self.color_ramp.apply_colour_ramp(agg)
 
         def legend(self, bytesio):
             title = self.legend_cfg.get("title", self.range_str() + " Dates")
