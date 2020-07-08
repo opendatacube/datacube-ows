@@ -164,25 +164,20 @@ def get_arg(args, argname, verbose_name, lower=False,
     return fmt
 
 
-def get_times_for_product(product, raw_product):
-    chunks = raw_product.split("__")
-    if len(chunks) == 1:
-        ranges = product.ranges
-    else:
-        path = int(chunks[1])
-        ranges = product.sub_ranges[path]
+def get_times_for_product(product):
+    ranges = product.ranges
     return ranges['times']
 
 
-def get_times(args, product, raw_product):
+def get_times(args, product):
     # Time parameter
     times_raw = args.get('time', '')
     times = times_raw.split(',')
 
-    return list([parse_time_item(item, product, raw_product) for item in times])
+    return list([parse_time_item(item, product) for item in times])
 
 
-def parse_time_item(item, product, raw_product):
+def parse_time_item(item, product):
     times = item.split('/')
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
@@ -202,7 +197,7 @@ def parse_time_item(item, product, raw_product):
                 locator="Time parameter")
     elif not times[0]:
         # default to last available time if not supplied.
-        product_times = get_times_for_product(product, raw_product)
+        product_times = get_times_for_product(product)
         return product_times[-1]
     try:
         time = parse(times[0]).date()
@@ -287,13 +282,12 @@ class GetParameters():
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)
-        self.raw_product = self.get_raw_product(args)
 
         self.geometry = _get_polygon(args, self.crs)
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
         # Time parameter
-        self.times = get_times(args, self.product, self.raw_product)
+        self.times = get_times(args, self.product)
 
         self.method_specific_init(args)
 
@@ -302,9 +296,6 @@ class GetParameters():
 
     def get_product(self, args):
         return get_product_from_arg(args)
-
-    def get_raw_product(self, args):
-        return args["layers"].split(",")[0]
 
 
 class GetLegendGraphicParameters():
@@ -329,7 +320,7 @@ class GetLegendGraphicParameters():
                 locator="STYLES parameter"
             )
         # Time parameter
-        self.times = get_times(args, self.product, self.raw_product)
+        self.times = get_times(args, self.product)
 
 
 class GetMapParameters(GetParameters):
@@ -369,9 +360,6 @@ class GetMapParameters(GetParameters):
 class GetFeatureInfoParameters(GetParameters):
     def get_product(self, args):
         return get_product_from_arg(args, "query_layers")
-
-    def get_raw_product(self, args):
-        return args["query_layers"].split(",")[0]
 
     def method_specific_init(self, args):
         # Validate Formata parameter
