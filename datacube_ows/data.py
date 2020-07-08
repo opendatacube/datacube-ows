@@ -494,7 +494,6 @@ def feature_info(args):
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
     tz = tz_for_geometry(geo_point_geobox.geographic_extent)
     stacker = DataStacker(params.product, geo_point_geobox, params.times)
-    #pt = geometry.point(x, y, params.crs)
     # --- Begin code section requiring datacube.
     cfg = get_config()
     with cube() as dc:
