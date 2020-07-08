@@ -438,6 +438,79 @@ def read_mpl_ramp(mpl_ramp : str):
 
 def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
                        default_title):
+    if colour_ramp.legend_legacy:
+        return legacy_colour_ramp_legend(bytesio, legend_cfg,
+                                  colour_ramp, map_name,
+                                  default_title)
+
+    def create_cdict_ticks(cfg, ramp):
+        normalize_factor = ramp.legend_end - ramp.legend_begin
+
+        cdict = dict()
+        bands = defaultdict(list)
+        started = False
+        finished = False
+        for index, ramp_point in enumerate(ramp.ramp):
+            if finished:
+                continue
+
+            value = ramp_point.get("value")
+            normalized = (value - float(ramp.legend_begin)) / float(normalize_factor)
+
+            if not started:
+                if isclose(value, float(ramp.legend_begin), abs_tol=1e-9):
+                    started = True
+                else:
+                    continue
+            if not finished:
+                if isclose(value, float(ramp.legend_end), abs_tol=1e-9):
+                    finished = True
+
+            for band, intensity in ramp.components.items():
+                bands[band].append((normalized, intensity[index], intensity[index]))
+
+        for band, blist in bands.items():
+            cdict[band] = tuple(blist)
+
+        ticks = dict()
+        for tick, tick_lbl in zip(ramp.ticks, ramp.tick_labels):
+            value = float(tick)
+            normalized = (value - float(ramp.legend_begin)) / float(normalize_factor)
+            ticks[normalized] = tick_lbl
+
+        if len(ticks) == 0:
+            ticks = None
+        return cdict, ticks
+
+    cdict, ticks = create_cdict_ticks(legend_cfg, colour_ramp)
+
+    plt.rcdefaults()
+    if colour_ramp.legend_mpl_rcparams:
+        plt.rcParams.update(colour_ramp.legend_mpl_rcparams)
+    fig = plt.figure(figsize=(colour_ramp.legend_width,
+                              colour_ramp.legend_height))
+    ax = fig.add_axes(colour_ramp.legend_strip_location)
+    custom_map = LinearSegmentedColormap(map_name, cdict)
+    color_bar = matplotlib.colorbar.ColorbarBase(
+        ax,
+        cmap=custom_map,
+        orientation="horizontal")
+
+    if ticks is not None:
+        color_bar.set_ticks(list(ticks.keys()))
+        color_bar.set_ticklabels(list(ticks.values()))
+
+    title = colour_ramp.legend_title if colour_ramp.legend_title else default_title
+    if colour_ramp.legend_units:
+        title = title + "(" + colour_ramp.legend_units + ")"
+
+    color_bar.set_label(title)
+
+    plt.savefig(bytesio, format='png')
+
+
+def legacy_colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
+                       default_title):
     def custom_label(label, custom_config):
         prefix = custom_config.get("prefix", "")
         l = custom_config.get("label", label)
@@ -563,9 +636,55 @@ class RgbaColorRamp:
         else:
             self.auto_legend = False
 
-        if self.auto_legend:
-            pass
+        self.crack_ramp()
 
+        if self.auto_legend:
+            fbegin = float(self.legend_begin)
+            fend = float(self.legend_end)
+            begin_in_ramp = False
+            end_in_ramp = False
+            begin_before_idx = None
+            end_before_idx = None
+            for idx, col_point in enumerate(self.ramp):
+                col_val = col_point["value"]
+                if not begin_in_ramp and begin_before_idx is None:
+                    if isclose(col_val, fbegin, abs_tol=1e-9):
+                        begin_in_ramp = True
+                    elif col_val > fbegin:
+                        begin_before_idx = idx
+                if not end_in_ramp and not end_before_idx is None:
+                    if isclose(col_val, fend, abs_tol=1e-9):
+                        end_in_ramp = True
+                    elif col_val > fend:
+                        end_before_idx = idx
+            if not begin_in_ramp:
+                color, alpha = self.color_alpha_at(fbegin)
+                begin_col_point = {
+                    "value": fbegin,
+                    "color": color.get_hex(),
+                    "alpha": alpha
+                }
+                if begin_before_idx is None:
+                    self.ramp.append(begin_col_point)
+                else:
+                    self.ramp.insert(begin_before_idx, begin_col_point)
+                if end_before_idx is not None:
+                    end_before_idx += 1
+            if not end_in_ramp:
+                color, alpha = self.color_alpha_at(fend)
+                end_col_point = {
+                    "value": fend,
+                    "color": color.get_hex(),
+                    "alpha": alpha
+                }
+                if end_before_idx is None:
+                    self.ramp.append(end_col_point)
+                else:
+                    self.ramp.insert(end_before_idx, end_col_point)
+            if not end_in_ramp or not begin_in_ramp:
+                self.crack_ramp()
+
+    def crack_ramp(self):
         values, r, g, b, a = crack_ramp(self.ramp)
         self.values = values
         self.components = {
@@ -587,6 +706,7 @@ class RgbaColorRamp:
             return rstr
 
         self.auto_legend = True
+        self.legend_title = cfg.get("title")
         self.legend_units = cfg.get("units","")
         self.legend_decimal_places = cfg.get("decimal_places", 1)
         if self.legend_decimal_places < 0:
@@ -595,6 +715,7 @@ class RgbaColorRamp:
         self.parse_legend_range(cfg)
         self.parse_legend_ticks(cfg)
         self.parse_legend_tick_labels(cfg)
+        self.parse_legend_matplotlib_args(cfg)
         self.legend_legacy = any(
             legent in cfg
             for legent in ["major_ticks", "offset", "scale_by", "radix_point"]
@@ -606,7 +727,7 @@ class RgbaColorRamp:
         else:
             self.legend_begin = None
             for col_def in self.ramp:
-                if col_def.get("alpha", 1.0) == 1.0:
+                if isclose(col_def.get("alpha", 1.0), 1.0, abs_tol=1e-9):
                     self.legend_begin = Decimal(col_def["value"])
                     break
             if self.legend_begin is None:
@@ -616,12 +737,12 @@ class RgbaColorRamp:
             self.legend_end = Decimal(cfg["end"])
         else:
             self.legend_end = None
-            for col_def in self.ramp:
+            for col_def in reversed(self.ramp):
                 if col_def.get("alpha", 1.0) == 1.0:
                     self.legend_end = Decimal(col_def["value"])
                     break
             if self.legend_end is None:
-                self.legend_end = Decimal(self.ramp[0]["value"])
+                self.legend_end = Decimal(self.ramp[-1]["value"])
 
     def parse_legend_ticks(self, cfg):
         # Ticks
@@ -668,6 +789,12 @@ class RgbaColorRamp:
                 self.tick_labels.append(
                     default_prefix + str(tick) + default_suffix
                 )
+    def parse_legend_matplotlib_args(self, cfg):
+        self.legend_mpl_rcparams = cfg.get("rcParams", {})
+        self.legend_width = cfg.get("width", 4)
+        self.legend_height = cfg.get("height", 1.25)
+        self.legend_strip_location = cfg.get("strip_location",
+                                      [ 0.05, 0.5, 0.9, 0.15])
 
     def get_value(self, data, band):
         return numpy.interp(data, self.values, self.components[band])
@@ -685,9 +812,11 @@ class RgbaColorRamp:
 
     def color_alpha_at(self, val):
         color = Color(
-            self.get_value(val, "red"),
-            self.get_value(val, "green"),
-            self.get_value(val, "blue"),
+            rgb=(
+                self.get_value(val, "red").item(),
+                self.get_value(val, "green").item(),
+                self.get_value(val, "blue").item(),
+            )
         )
         alpha = self.get_value(val, "alpha")
 
