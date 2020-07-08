@@ -494,7 +494,7 @@ def feature_info(args):
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
     tz = tz_for_geometry(geo_point_geobox.geographic_extent)
     stacker = DataStacker(params.product, geo_point_geobox, params.times)
-
+    #pt = geometry.point(x, y, params.crs)
     # --- Begin code section requiring datacube.
     cfg = get_config()
     with cube() as dc:
@@ -632,7 +632,7 @@ def feature_info(args):
                 pt_native = None
                 for ds in dt_datasets.values.item():
                     if pt_native is None:
-                        pt_native = pt.to_crs(ds.crs)
+                        pt_native = geo_point.to_crs(ds.crs)
                     if ds.extent and ds.extent.contains(pt_native):
                         feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
                         break
