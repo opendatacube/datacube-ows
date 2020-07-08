@@ -723,8 +723,10 @@ class RgbaColorRamp:
 
     def parse_legend_range(self, cfg):
         if "begin" in cfg:
+            # pylint: disable=attribute-defined-outside-init
             self.legend_begin = Decimal(cfg["begin"])
         else:
+            # pylint: disable=attribute-defined-outside-init
             self.legend_begin = None
             for col_def in self.ramp:
                 if isclose(col_def.get("alpha", 1.0), 1.0, abs_tol=1e-9):
@@ -734,8 +736,10 @@ class RgbaColorRamp:
                 self.legend_begin = Decimal(self.ramp[0]["value"])
 
         if "end" in cfg:
+            # pylint: disable=attribute-defined-outside-init
             self.legend_end = Decimal(cfg["end"])
         else:
+            # pylint: disable=attribute-defined-outside-init
             self.legend_end = None
             for col_def in reversed(self.ramp):
                 if col_def.get("alpha", 1.0) == 1.0:
@@ -770,6 +774,7 @@ class RgbaColorRamp:
             for i in range(0, count + 1):
                 tickval = self.legend_begin + (Decimal(i) / dcount)
                 ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
+        # pylint: disable=attribute-defined-outside-init
         self.ticks = ticks
 
     def parse_legend_tick_labels(self, cfg):
@@ -777,6 +782,7 @@ class RgbaColorRamp:
         defaults = labels.get("default", {})
         default_prefix = defaults.get("prefix", "")
         default_suffix = defaults.get("suffix", "")
+        # pylint: disable=attribute-defined-outside-init
         self.tick_labels = []
         for tick in self.ticks:
             label_cfg = labels.get(str(tick))
@@ -790,6 +796,7 @@ class RgbaColorRamp:
                     default_prefix + str(tick) + default_suffix
                 )
     def parse_legend_matplotlib_args(self, cfg):
+        # pylint: disable=attribute-defined-outside-init
         self.legend_mpl_rcparams = cfg.get("rcParams", {})
         self.legend_width = cfg.get("width", 4)
         self.legend_height = cfg.get("height", 1.25)
@@ -884,7 +891,6 @@ class RgbaColorRampDef(StyleDefBase):
             colour_ramp_legend(bytesio,
                                self.legend_cfg,
                                self.color_ramp,
-                               self.components,
                                name,
                                title
                                )
