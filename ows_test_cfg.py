@@ -4,17 +4,19 @@
 # Please refer to datacube_ows/ows_cfg_example.py for EXAMPLE CONFIG
 
 # REUSABLE CONFIG FRAGMENTS - Band alias maps
-landsat8_bands = {
-    "red": [],
-    "green": [],
-    "blue": [ "near_blue" ],
-    "nir": [ "near_infrared" ],
-    "swir1": [ "shortwave_infrared_1", "near_shortwave_infrared" ],
-    "swir2": [ "shortwave_infrared_2", "far_shortwave_infrared" ],
-    "coastal_aerosol": [ "far_blue" ],
-    "quality": [ ],
-
-    # N.B. Include pixel quality bands if they are in the main data product.
+ls8_usgs_level1_bands = {
+    "coastal_aerosol": ["band_1"],
+    "blue": ["band_2"],
+    "green": ["band_3"],
+    "red": ["band_4"],
+    "nir": ["band_5"],
+    "swir1": ["band_6"],
+    "swir2": ["band_7"],
+    "panchromatic": ["band_8"],
+    "cirrus": ["band_9"],
+    "lwir1": ["band_10"],
+    "lwir2": ["band_11"],
+    "quality": ["QUALITY"]
 }
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions
@@ -408,45 +410,6 @@ style_ndvi_delta = {
     ]
 }
 
-# Examples of Matplotlib Color-Ramp styles
-style_deform = {
-    "name": "deform",
-    "title": "InSAR Deformation",
-    "abstract": "InSAR Derived Deformation Map",
-    # The range specifies the min and max values for the color ramp.  Required if an explicit color ramp is not
-    # defined.
-    "range": [-110.0, 110.0],
-    # The Matplotlib color ramp. Value specified is a string that indicates a Matplotlib Colour Ramp should be
-    # used. Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
-    # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
-    # kind of ugly) blue-to-red rainbow ramp.
-    "mpl_ramp": "RdBu",
-    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
-    # Defaults to True.
-    "include_in_feature_info": True,
-    # Legend section is optional for non-linear colour-ramped styles.
-    # If not supplied, a legend for the style will be automatically generated from the colour ramp.
-    "legend": {
-        # appended to the title of the legend
-        # if missing will use 'unitless'
-        "units": "mm",
-        # radix places to round tick labels to
-        # set to 0 for ints
-        "radix_point": 0,
-        # values will be scaled by this amount
-        # to generate tick labels
-        # e.g. for a percentage stored as 0 - 1.0
-        # this should be 100
-        # TODO: Make this derive automatically from range as appropriate
-        "scale_by": 1.0,
-        # tick labels will be created for values that
-        # are modulo 0 by this value
-        "major_ticks": 10,
-        ## Use offset to get negative side of the ramp
-        "offset": 0.0
-    }
-}
-
 style_ndvi_cloudmask = {
     "name": "ndvi_cloudmask",
     "title": "NDVI with cloud masking",
@@ -579,55 +542,12 @@ style_rgb_ndvi = {
 
 standard_resource_limits = {
     "wms": {
-        # WMS/WMTS resource limits
-        #
-        # There are two independent resource limits applied to WMS/WMTS requests.  If either
-        # limit is exceeded, then the actual data is not rendered.  Instead an indicative polygon
-        # showing the extent of the data is rendered.
-        #
-        # The fill-colour of the indicative polygons when either wms/wmts resource limits is exceeded.
-        # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
-        #
-        # (The fourth number in an rgba quadruplet represents opacity with 255 being fully opaque and
-        # 0 being fully transparent.)
-        #
-        # Defaults to [150, 180, 200, 160]
-        "zoomed_out_fill_colour": [150, 180, 200, 160],
-
-        # WMS/WMTS Resource Limit 1: Min zoom factor
-        #
-        # The zoom factor is a dimensionless number calculated from the request in a way that is independent
-        # of the CRS. A higher zoom factor corresponds to a more zoomed in view.
-        #
-        # If the zoom factor of the request is less than the minimum zoom factor (i.e. is zoomed out too far)
-        # then indicative polygons are rendered instead of accessing the actual data.
-        #
-        # Defaults to 300.0
-        "min_zoom_factor": 500.0,
-
-        # Min zoom factor (above) works well for small-tiled requests, (e.g. 256x256 as sent by Terria).
-        # However, for large-tiled requests (e.g. as sent by QGIS), large and intensive queries can still
-        # go through to the datacube.
-        #
-        # max_datasets specifies a maximum number of datasets that a GetMap or GetTile request can retrieve.
-        # Indicatative polygons are displayed if a request exceeds the limits imposed by EITHER max_dataset
-        # OR min_zoom_factor.
-        #
-        # max_datasets should be set in conjunction with min_zoom_factor so that Terria style 256x256
-        # tiled requests respond consistently - you never want to see a mixture of photographic tiles and polygon
-        # tiles at a given zoom level.  i.e. max_datasets should be greater than the number of datasets
-        # required for most intensive possible photographic query given the min_zoom_factor.
-        # Note that the ideal value may vary from product to product depending on the size of the dataset
-        # extents for the product.
-        # Defaults to zero, which is interpreted as no dataset limit.
-        "max_datasets": 6,
+        "zoomed_out_fill_colour": [150,180,200,160],
+        "min_zoom_factor": 35.0,
+        "max_datasets": 16, # Defaults to no dataset limit
     },
     "wcs": {
-        # wcs::max_datasets is the WCS equivalent of wms::max_datasets.  The main requirement for setting this
-        # value is to avoid gateway timeouts on overly large WCS requests (and reduce server load).
-        #
-        # Defaults to zero, which is interpreted as no dataset limit.
-        "max_datasets": 16,
+        # "max_datasets": 16, # Defaults to no dataset limit
     }
 }
 
@@ -865,7 +785,7 @@ ows_cfg = {
                     "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set",
                     "name": "ls8_usgs_level1_scene_layer",
                     "product_name": "ls8_usgs_level1_scene",
-                    "bands": landsat8_bands,
+                    "bands": ls8_usgs_level1_bands,
                     "resource_limits": standard_resource_limits,
                     "flags": {
                         "band": "quality",
@@ -900,10 +820,15 @@ ows_cfg = {
                         "default_style": "simple_rgb",
                         "styles": [
                             style_rgb,
-                            style_ls8_allband_false_colour, style_infrared_false_colour,
+                            style_infrared_false_colour,
                             style_pure_ls8_blue,
-                            style_ndvi, style_ndwi,
+                            style_ndvi,
                             style_rgb_ndvi
+
+                            # faulty layers
+                            # style_ndvi_cloudmask, style_ext_rgb,  style_ndwi,
+                            # style_mineral_content, style_rgb_cloud_and_shadowmask
+                            # style_cloud_mask, style_ls8_allband_false_colour,
                         ]
                     }
                 } ##### End of ls8_level1_pds product definition.
