@@ -722,25 +722,22 @@ class RgbaColorRamp:
         )
 
     def parse_legend_range(self, cfg):
+        # pylint: disable=attribute-defined-outside-init
+        self.legend_begin = None
+        # pylint: disable=attribute-defined-outside-init
+        self.legend_end = None
         if "begin" in cfg:
-            # pylint: disable=attribute-defined-outside-init
             self.legend_begin = Decimal(cfg["begin"])
         else:
-            # pylint: disable=attribute-defined-outside-init
-            self.legend_begin = None
             for col_def in self.ramp:
                 if isclose(col_def.get("alpha", 1.0), 1.0, abs_tol=1e-9):
                     self.legend_begin = Decimal(col_def["value"])
                     break
             if self.legend_begin is None:
                 self.legend_begin = Decimal(self.ramp[0]["value"])
-
         if "end" in cfg:
-            # pylint: disable=attribute-defined-outside-init
             self.legend_end = Decimal(cfg["end"])
         else:
-            # pylint: disable=attribute-defined-outside-init
-            self.legend_end = None
             for col_def in reversed(self.ramp):
                 if col_def.get("alpha", 1.0) == 1.0:
                     self.legend_end = Decimal(col_def["value"])
