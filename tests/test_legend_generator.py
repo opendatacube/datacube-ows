@@ -209,3 +209,49 @@ def test_parse_colorramp_legend_ticks():
     assert ramp.tick_labels == ["0.3", "0.9", "1.1", "1.9", "2.0"]
 
 
+def test_parse_colorramp_legend_tick_labels():
+    ramp = RgbaColorRamp(None, {
+        "range": [-1.0, 2.5],
+        "legend": {
+            "begin": "0.0",
+            "end": "2.0",
+            "ticks": ["0.3", "0.5", "0.8", "0.9", "1.0",
+                      "1.1", "1.7", "1.9", "2.0"],
+            "tick_labels": {
+                "default": {
+                    "prefix": "p",
+                    "suffix": "s"
+                },
+                "0.3": {},
+                "0.8": {
+                    "prefix": "",
+                    "suffix": "Zz"
+                },
+                "0.9": {
+                    "suffix": "Zz"
+                },
+                "1.1": {
+                    "prefix": "#",
+                },
+                "1.7": {
+                    "prefix": "pre",
+                    "label": "fixe"
+                },
+                "1.9": {
+                    "label": "o",
+                },
+                "2.0": {
+                    "prefix": ":",
+                    "label": "-",
+                    "suffix": ")",
+                }
+            }
+        }
+    })
+    assert ramp.ticks == [Decimal("0.3"), Decimal("0.5"), Decimal("0.8"),
+              Decimal("0.9"), Decimal("1.0"),
+              Decimal("1.1"), Decimal("1.7"), Decimal("1.9"), Decimal("2.0")]
+    assert ramp.tick_labels == ["p0.3s", "p0.5s", "0.8Zz", "p0.9Zz", "p1.0s",
+                                "#1.1s", "prefixes", "pos", ":-)"]
+
+
