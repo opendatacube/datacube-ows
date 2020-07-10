@@ -619,7 +619,8 @@ def legacy_colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
 
 
 class RgbaColorRamp:
-    def __init__(self, product, ramp_cfg):
+    def __init__(self, style, ramp_cfg):
+        self.style = style
         if "color_ramp" in ramp_cfg:
             raw_scaled_ramp = ramp_cfg["color_ramp"]
         else:
@@ -720,6 +721,9 @@ class RgbaColorRamp:
             legent in cfg
             for legent in ["major_ticks", "offset", "scale_by", "radix_point"]
         )
+        if self.legend_legacy:
+            _LOG.warning("Style %s uses deprecated legend configuration.  Please refer to the documentation and update your config",
+                         self.style.name)
 
     def parse_legend_range(self, cfg):
         # pylint: disable=attribute-defined-outside-init
@@ -834,7 +838,7 @@ class RgbaColorRampDef(StyleDefBase):
     def __init__(self, product, style_cfg, defer_multi_date=False):
         super(RgbaColorRampDef, self).__init__(product, style_cfg)
 
-        self.color_ramp = RgbaColorRamp(product, style_cfg)
+        self.color_ramp = RgbaColorRamp(self, style_cfg)
 
         for band in style_cfg["needed_bands"]:
             self.needed_bands.add(self.product.band_idx.band(band))
@@ -877,7 +881,7 @@ class RgbaColorRampDef(StyleDefBase):
             super().__init__(style, cfg)
             self.feature_info_label = cfg.get("feature_info_label", None)
 
-            self.color_ramp = RgbaColorRamp(style.product, cfg)
+            self.color_ramp = RgbaColorRamp(style, cfg)
 
         def transform_data(self, data, pq_data, extent_mask, *masks):
             xformed_data = self.style.apply_masks_and_index(data, pq_data, extent_mask, *masks)
