@@ -811,7 +811,7 @@ class RgbaColorRamp:
 
     def get_8bit_value(self, data, band):
         val = self.get_value(data, band)
-        return (val * 255).astype("unit8")
+        return (val * 255).astype("uint8")
 
     def apply(self, data):
         imgdata = {}
