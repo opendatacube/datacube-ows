@@ -767,9 +767,11 @@ class RgbaColorRamp:
             count = int(cfg.get("tick_count", 1))
             if count < 0:
                 raise ConfigException("tick_count cannot be negative")
+            delta = self.legend_end - self.legend_begin
             dcount = Decimal(count)
+
             for i in range(0, count + 1):
-                tickval = self.legend_begin + (Decimal(i) / dcount)
+                tickval = self.legend_begin + (Decimal(i) / dcount) * delta
                 ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
         # pylint: disable=attribute-defined-outside-init
         self.ticks = ticks

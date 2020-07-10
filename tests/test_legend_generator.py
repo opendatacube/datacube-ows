@@ -2,12 +2,13 @@ import datacube_ows.legend_generator
 
 import pytest
 import datetime
+from decimal import Decimal
 
 from unittest.mock import patch, MagicMock
 
 import numpy as np
 
-from datacube_ows.band_mapper import StyleDefBase, RgbaColorRampDef
+from datacube_ows.band_mapper import StyleDefBase, RgbaColorRampDef, RgbaColorRamp
 from datacube_ows.ogc_exceptions import WMSException
 
 
@@ -136,3 +137,75 @@ def test_legend_graphic(make_response):
         lg = datacube_ows.legend_generator.legend_graphic(None)
 
         clfs.assert_called_with(lgp.return_value.styles, ndates=1)
+
+
+def test_parse_colorramp_defaults():
+    ramp = RgbaColorRamp(None, {
+        "range": [0.0, 1.0],
+    })
+    assert ramp.legend_begin == Decimal(0.0)
+    assert ramp.legend_end == Decimal(1.0)
+    assert ramp.ticks == [Decimal(0.0), Decimal(1.0)]
+    assert ramp.legend_units == ""
+    assert ramp.tick_labels == ["0.0", "1.0"]
+    assert ramp.legend_width == 4.0
+    assert ramp.legend_height == 1.25
+    assert ramp.legend_strip_location == [0.05, 0.5, 0.9, 0.15]
+
+
+def test_parse_colorramp_legend_beginend():
+    ramp = RgbaColorRamp(None, {
+        "range": [-1.0, 2.5],
+        "legend": {
+            "begin": "0.0",
+            "end": "2.0"
+        }
+    })
+    assert ramp.legend_begin == Decimal("0.0")
+    assert ramp.legend_end == Decimal("2.0")
+    assert ramp.ticks == [Decimal("0.0"), Decimal("2.0")]
+    assert ramp.legend_units == ""
+    assert ramp.tick_labels == ["0.0", "2.0"]
+
+
+def test_parse_colorramp_legend_ticksevery():
+    ramp = RgbaColorRamp(None, {
+        "range": [-1.0, 2.5],
+        "legend": {
+            "begin": "0.0",
+            "end": "2.0",
+            "ticks_every": "0.4"
+        }
+    })
+    assert ramp.ticks == [Decimal("0.0"), Decimal("0.4"), Decimal("0.8"),
+                          Decimal("1.2"), Decimal("1.6"), Decimal("2.0")]
+    assert ramp.tick_labels == ["0.0", "0.4", "0.8", "1.2", "1.6", "2.0"]
+
+
+def test_parse_colorramp_legend_tickcount():
+    ramp = RgbaColorRamp(None, {
+        "range": [-1.0, 2.5],
+        "legend": {
+            "begin": "0.0",
+            "end": "2.0",
+            "tick_count": 2
+        }
+    })
+    assert ramp.ticks == [Decimal("0.0"), Decimal("1.0"), Decimal("2.0")]
+    assert ramp.tick_labels == ["0.0", "1.0", "2.0"]
+
+
+def test_parse_colorramp_legend_ticks():
+    ramp = RgbaColorRamp(None, {
+        "range": [-1.0, 2.5],
+        "legend": {
+            "begin": "0.0",
+            "end": "2.0",
+            "ticks": ["0.3", "0.9", "1.1", "1.9", "2.0"]
+        }
+    })
+    assert ramp.ticks == [Decimal("0.3"), Decimal("0.9"),
+                          Decimal("1.1"), Decimal("1.9"), Decimal("2.0")]
+    assert ramp.tick_labels == ["0.3", "0.9", "1.1", "1.9", "2.0"]
+
+
