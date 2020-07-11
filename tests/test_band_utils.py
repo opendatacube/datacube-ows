@@ -5,7 +5,8 @@ import xarray as xr
 
 from datacube_ows.band_utils import (
     scale_data, sum_bands, norm_diff,
-    constant, single_band, band_quotient
+    constant, single_band, band_quotient,
+    single_band_log
 )
 
 TEST_ARR_1 = np.ones((100,100))
@@ -28,3 +29,9 @@ def test_norm_diff():
 
 def test_constant():
     assert not constant(TEST_XARR, 'b1', 10) is None
+
+def test_band_quotient():
+    assert not band_quotient(TEST_XARR, 'b1', 'b2') is None
+
+def test_single_band_log():
+    assert not single_band_log(TEST_XARR, 'b1', 1.0, 1.0) is None
