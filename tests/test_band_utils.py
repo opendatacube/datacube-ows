@@ -84,9 +84,9 @@ def test_single_band_log(dummy_layer):
     assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0, dummy_layer) is None
 
 
-def test_single_band():
+def test_single_band(dummy_layer):
     assert not single_band(TEST_XARR, "b1") is None
-
+    assert not single_band(TEST_XARR, "b1", dummy_layer) is None
 
 def test_multidate():
     assert not multi_date_delta(TEST_XARR_T) is None
