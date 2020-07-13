@@ -639,7 +639,7 @@ class RgbaColorRamp:
 
         self.crack_ramp()
 
-        if self.auto_legend:
+        if self.auto_legend and not self.legend_legacy:
             fbegin = float(self.legend_begin)
             fend = float(self.legend_end)
             begin_in_ramp = False
