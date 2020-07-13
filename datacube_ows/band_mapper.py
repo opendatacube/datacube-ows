@@ -721,6 +721,16 @@ class RgbaColorRamp:
             legent in cfg
             for legent in ["major_ticks", "offset", "scale_by", "radix_point"]
         )
+        if not self.legend_legacy and all(
+            legent not in cfg
+            for legent in ["begin", "end", "decimal_places", "ticks_every", "tick_count", "tick_labels", "ticks"]
+        ):
+            # No legacy entries, but no new entries either.
+            # Check ramp for legend tips
+            for r in self.ramp:
+                if "legend" in r:
+                    self.legend_legacy = True
+                    break
         if self.legend_legacy:
             _LOG.warning("Style %s uses deprecated legend configuration.  Please refer to the documentation and update your config",
                          self.style.name)
