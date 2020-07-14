@@ -150,7 +150,7 @@ class BandIndex(object):
                 raise ConfigException(f"Duplicate band name/alias: {b} in layer {product}")
             self._idx[b] = b
             for a in aliases:
-                if a in self._idx:
+                if a != b and a in self._idx:
                     raise ConfigException(f"Duplicate band name/alias: {a} in layer {product}")
                 self._idx[a] = b
             self._nodata_vals[b] = self.native_bands['nodata'][b]
