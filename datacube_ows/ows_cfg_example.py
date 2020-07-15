@@ -792,7 +792,9 @@ style_ndvi_delta = {
             # kind of ugly) blue-to-red rainbow ramp.
             "mpl_ramp": "RdBu",
             "legend": {
-
+                # Legend only covers positive part of ramp.
+                "begin": "0.0",
+                "end": "1.0"
             },
             # The feature info label for the multi-date index value.
             "feature_info_label": "ndvi_delta"
@@ -819,23 +821,16 @@ style_deform = {
     # Legend section is optional for non-linear colour-ramped styles.
     # If not supplied, a legend for the style will be automatically generated from the colour ramp.
     "legend": {
-        # appended to the title of the legend
-        # if missing will use 'unitless'
-        "units": "mm",
-        # radix places to round tick labels to
-        # set to 0 for ints
-        "radix_point": 0,
-        # values will be scaled by this amount
-        # to generate tick labels
-        # e.g. for a percentage stored as 0 - 1.0
-        # this should be 100
-        # TODO: Make this derive automatically from range as appropriate
-        "scale_by": 1.0,
+        ## Only use positive part of range.
         # tick labels will be created for values that
         # are modulo 0 by this value
-        "major_ticks": 10,
-        ## Use offset to get negative side of the ramp
-        "offset": 0.0
+        "ticks_every": "10",
+        "begin": "0.0",
+        # appended to the title of the legend
+        "units": "mm",
+        # decimal places for tick labels
+        # set to 0 for ints
+        "decimal_places": 0,
     }
 }
 
