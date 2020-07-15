@@ -385,6 +385,10 @@ UNSCALED_DEFAULT_RAMP = [
 
 
 def scale_unscaled_ramp(rmin, rmax, unscaled):
+    if isinstance(rmin, str):
+        rmin = float(rmin)
+    if isinstance(rmax, str):
+        rmax = float(rmax)
     return [
         {
             "value": (rmax - rmin)*u["value"] + rmin,

@@ -188,3 +188,313 @@ Legend Configuration
 --------------------
 
 Colour-ramp styles support automatic legend generation.
+
+Automatic legend generation can be deactivated using the
+`show_legend` and `url` legend elements
+`common to all styles <cfg_styling.rst#legend>`_.
+(`show_legend` is `True` by default for colour-ramp styles.)
+
+Legend Title
+============
+
+The legend title defaults to the style name, but can be over-ridden:
+
+E.g.::
+
+        "legend": {
+            # Legend title will be display as "This is a nice legend"
+            "title": "This is a nice legend"
+        }
+
+You can optionally set ``units`` for the legend, which are placed in
+parentheses after the title.  The default is to not display units::
+
+        "legend": {
+            # Legend title will be display as "This is a nice legend(%)"
+            "title": "This is a nice legend",
+            "units": "%"
+        }
+
+Legend Range
+============
+
+The legend range defaults to the
+`range <#ramp-scale-range>`_  for the default colour ramp
+or `MatPlotLib color ramps <#mpl_ramp>`_.
+
+For `manual colour ramps <#manual-colour-ramp>`_, the default
+range is between the values of first and last colour point
+definitions in the ramp, **excluding** any leading or trailing
+colour points that are full transparent (alpha=0.0).
+
+To override the default range, use the ``begin`` and/or ``end`` entries
+in the ``legend`` section.  They may be set using integers, numeric strings
+or floats.  The vaguries of floating point arithmetic can cause unexpected
+behaviour with tick generation (discussed below), so it is strongly recommended to use
+numeric strings or integers.
+
+E.g.::
+
+    # Integers, OK
+    "legend": {
+        "begin": 0,
+        "end": 99,
+    },
+
+    # Non-integers
+    # avoid floats as they may cause issues with tick generation.
+    # Use numeric strings instead, like this:
+    "legend": {
+        "begin": "0.0",
+        "end": "0.3",
+    },
+
+Legend Ticks
+============
+
+"Ticks" are the labeled points along the ramp legend. The default behaviour is to
+have exactly two ticks, at the minimum and maximum values.  This can be over-ridden
+by any of the following alternative methods:
+
+Regularly spaced ticks, by size (ticks_every)
++++++++++++++++++++++++++++++++++++++++++++++
+
+Ticks are placed at steps of the indicated size, starting from the beginning of the
+legend range.  As with "begin" and "end", numeric strings should be used
+in preference to floats.
+
+E.g.::
+
+    "legend": {
+        # Ticks at 0.0, 0.5 and 1.0
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.5",
+    }
+
+    "legend": {
+        # Ticks at 0.0, 0.3, 0.6 and 0.9
+        # Note that there will be no tick at the maximum position (1.0)
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.3",
+    }
+
+Regularly spaced ticks, by count (tick_count)
++++++++++++++++++++++++++++++++++++++++++++++
+
+The indicated number of ticks are spread evenly along the legend.  The count includes the
+"end" tick but not the "begin" tick.
+
+E.g.::
+
+    "legend": {
+        # Tick at 0.0 only
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_count": 0,
+    }
+
+    "legend": {
+        # Ticks at 0.0 and 1.0
+        # This is the default behaviour if no tick generation
+        # option is specified
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_count": 1,
+    }
+
+    "legend": {
+        # Ticks at 0.0, 0.2, 0.4, 0.6, 0.8, 1.0
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_count": 5,
+    }
+
+Explicit ticks (ticks)
+++++++++++++++++++++++
+
+Tick locations can also be specified explicitly by setting ``ticks`` to a
+list of values.  Again, please use numeric strings rather than floats.
+
+E.g. the following are not possible with tick_count or ticks_every::
+
+        "legend": {
+            # No ticks at all
+            "begin": "0.0",
+            "end": "1.0",
+            "ticks": []
+        }
+
+        "legend": {
+            # Evenly spaced ticks with no ticks on the extremes of the range.
+            "begin": "0.0",
+            "end": "1.0",
+            "ticks": ["0.2", "0.4", "0.5", "0.6", "0.8"]
+        }
+
+        "legend": {
+            # Unevenly spaced ticks
+            "begin": "-5.0",
+            "end": "5.0",
+            "ticks": ["-5.0", "-1.0", "0.0", "1.0", "5.0"],
+        }
+
+Tick Labels
+===========
+
+Tick labels can be customised as follows:
+
+decimal_places
+++++++++++++++
+
+The number of decimal places to display in tick labels.  The default is one.
+
+E.g.::
+
+        "legend": {
+            # Tick labels: "0.00", "0.25", "0.50", "0.75", "1.00"
+            "begin": "0.00",
+            "end": "1.00",
+            "ticks_every": "0.25",
+            "decimal_places": 2
+        }
+
+        "legend": {
+            # Tick labels: "0", "1", "2", "3", "4", "5"
+            "begin": "0.0",
+            "end": "5.0",
+            "ticks_every": "1.0",
+            "decimal_places": 0
+        }
+
+Prefixes and suffixes
++++++++++++++++++++++
+
+The "default" entry in the "tick_labels" table can set prefixes and suffixes to
+be added to all tick labels.
+
+E.g.::
+
+    "legend": {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.2",
+        "decimal_places": 1,
+        "tick_labels": {
+            # Surround every tick label in square brackets
+            "default": {
+                "prefix": "[",
+                "suffix": "]",
+            }
+        }
+
+Over-riding labels for individual ticks
++++++++++++++++++++++++++++++++++++++++
+
+If a tick's default label (with no prefix or suffix) appears as a key
+in the `tick_labels` dictionary then the prefix, suffix or label of
+that tick label can be overridden.
+
+E.g.::
+
+    "legend": {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.2",
+        "decimal_places": 1,
+        "tick_labels": {
+            # Surround every tick label in square brackets
+            "default": {
+                "prefix": "[",
+                "suffix": "]",
+            },
+            # There is no "0.0" entry, so the 0.0 tick will be labelled "[0.0]"
+            # The 0.2 tick will be labelled "(0.2)"
+            "0.2": {
+                "prefix": "(",
+                "suffix": ")",
+            },
+            # The 0.4 tick will be labelled "[foo]"
+            # (Note the default prefix and suffix are still applied)
+            "0.4": {
+                "label": "foo",
+            },
+            # The 0.6 tick will be labelled "bar" with no prefix or suffix
+            "0.6": {
+                "prefix": "",
+                "label": "bar",
+                "suffix": "",
+            },
+            # The 0.8 tick will be labelled ":-)"
+            "0.8": {
+                "prefix": ":",
+                "label": "-",
+                "suffix": ")",
+            },
+            # There is no "1.0" entry, so the 1.0 tick will be labelled "[1.0]"
+        }
+
+Values passed to MatPlotLib
+===========================
+
+Colour ramp auto-legends are created using the MatPlotLib library. The following
+values are passed directly to the MatPlotLib library. Please refer to the
+`MatPlotLib documentation <https://matplotlib.org/contents.html>`_ for
+further information.
+
+Image Size
+++++++++++
+
+The `width` and `height` values are passed to matplotlib to specify the size
+of the generated image.
+
+The image size defaults to 4 inches wide by 1.25 inches tall.  The default
+dpi for MatPlotLib is 100, so this corresponds to 400x125 pixels unless you
+have over-ridden the default dpi.
+
+E.g.::
+
+    "legend": {
+        "width": 4.5,
+        "height": 2.1
+    }
+
+strip_location
+++++++++++++++
+
+The location of the coloured ramp strip within the legend image can be
+customised with the `strip_location` element.  This should be a tuple
+of four floats which is passed directly to the MatPlotLib Figure.add_axes
+function.
+
+The four floats are expressed as fractions of the width or heigth (i.e.
+are numbers between 0.0 and 1.0).  The values are interpreted as follows:
+[left, bottom, width, height].
+
+The default value is [ 0.05, 0.5, 0.9, 0.15 ]
+
+E.g.::
+
+    "legend": {
+        "strip_location": [ 0.1, 0.4, 0.8, 0.2 ]
+    }
+
+MatPlotLib rc params
+++++++++++++++++++++
+
+Other MatPlotLib customisations (as they would appear in a .matplotlibrc file)
+can be specified with the optional `rcParams` element, defaulting to {}, meaning
+the MatPlotLib defaults for all options.
+
+For a full list of possible options refer to
+`the MatPlotLib documentation <https://matplotlib.org/3.2.2/tutorials/introductory/customizing.html>`__
+
+E.g.::
+
+    "legend": {
+        "rcParams": {
+                 "lines.linewidth": 2,
+                 "font.weight": "bold",
+        },
+    }
