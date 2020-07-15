@@ -679,8 +679,93 @@ style_ndvi_delta = {
     ],
     "include_in_feature_info": True,
     "legend": {
+        # Show the legend (default True for colour ramp styles)
         "show_legend": True,
-    },
+        # Example config for colour ramp style auto-legend generation.
+
+        # The range covered by the legend.
+        # Defaults to the first and last non transparent (alpha != 0.0)
+        # entry in the explicit colour ramp, or the values in the range parameter.
+        # It is recommended that values be supplied as integers or strings rather
+        # than floating point.
+        "begin": "0.0",
+        "end": "1.0",
+        # Ticks.
+        # One of the following alternatives.  All the examples below result in the same tick behaviour, given
+        # the begin and end values above.
+        #
+        # 1. Regularly spaced ticks, by size, starting from the begin tick.
+        "ticks_every": "0.2",
+        # 2. Regularly spaced ticks, by number of ticks, not counting the begin tick, but including the end tick. (int)
+        # "tick_count": 5,
+        # 3. Explicit ticks
+        # "ticks": [ "0.0", "0.2", "0.4", "0.6". "0.8", "1.0"]
+        # Default is a tick_count of 1, which means only the begin and end ticks.
+        # Legend title.  Defaults to the style name.
+        "title": "This is not a legend",
+
+        # Units
+        # added to title of legend in parenthesis, default is to not display units.  To emulate
+        # the previous default behaviour use:
+        "units": "unitless",
+
+        # decimal_places. 1 for "1.0" style labels, 2 for "1.00" and 0 for "1", etc.
+        # (default 1)
+        "decimal_places": 1,
+
+        # tick_labels
+        # Labels for individual ticks can be customised"
+        "tick_labels": {
+            # The special entry "default" allows setting
+            # a prefix and/or suffix for all labels.
+            # Default is no prefix or suffix
+            "default": {
+                # E.g. this encloses every tick label in parentheses.
+                "prefix": "(",
+                "suffix": ")",
+            },
+            # Other entries override the label for individual ticks.
+            # If they do not match a tick, as defined by the tick behaviour
+            # described above, the entry is ignored.  If you are having trouble
+            # getting the right tick value, use the "ticks" option to explicitly
+            # declare your tick locations and make sure you use strings instead of
+            # floats.
+            # The default prefix and suffix can be over-ridden.
+            "0.0": {
+                # E.g. to remove the parentheses for the 0.0 tick
+                "prefix": "",
+                "suffix": "",
+            },
+            # Or the label can changed.  Note that the default prefix and suffix
+            # are still applied unless explicitly over-ridden.
+            # E.g. To display "(max)" for the 1.0 tick:
+            "1.0": {
+                "label": "max"
+            }
+        },
+
+        # MatPlotLib rcparams options.
+        # Defaults to {} (i.e. matplotlib defaults)
+        # See https://matplotlib.org/3.2.2/tutorials/introductory/customizing.html
+        "rcParams": {
+                 "lines.linewidth": 2,
+                 "font.weight": "bold",
+        },
+
+        # Image size (in "inches").
+        # Matplotlib's default dpi is 100, so measured in hundreds of pixels unless the dpi
+        # is over-ridden by the rcParams above.
+        # Default is 4x1.25, i.e. 400x125 pixels
+        "width": 4,
+        "height": 1.25,
+
+        # strip_location
+        # The location and size of the coloured strip, in format:
+        #  [ left, bottom, width, height ], as passed to Matplotlib Figure.add_axes function.
+        # All values as fractions of the width and height.  (i.e. between 0.0 and 1.0)
+        # The default is:
+        "strip_location": [ 0.05, 0.5, 0.9, 0.15 ]
+    } ,
     # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
     "multi_date": [
         # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
@@ -706,6 +791,9 @@ style_ndvi_delta = {
             # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
             # kind of ugly) blue-to-red rainbow ramp.
             "mpl_ramp": "RdBu",
+            "legend": {
+
+            },
             # The feature info label for the multi-date index value.
             "feature_info_label": "ndvi_delta"
         }
@@ -893,35 +981,26 @@ style_wofs_frequency = {
         {
             "value": 1.0,
             "color": "#5700e3",
-            # If defined this label
-            # will include a prefix and suffix
-            # string as shown
-            # if label is defined, the scaled value
-            # will be replaced by that string
-            "legend": {
-                "prefix": ">",
-                #"label": "foo"
-                "suffix": "<"
-            }
         }
     ],
     # defines the format of the legend generated
     # for this style
     "legend": {
-        # appended to the title of the legend
-        # if missing will use 'unitless'
         "units": "%",
-        # radix places to round tick labels to
-        # set to 0 for ints
-        "radix_point": 0,
-        # values will be scaled by this amount
-        # to generate tick labels
-        # e.g. for a percentage stored as 0 - 1.0
-        # this should be 100
-        "scale_by": 100.0,
-        # tick labels will be created for values that
-        # are modulo 0 by this value
-        "major_ticks": 0.1
+        # Formatting 0.0-1.0 data as a percentage
+        # setup ticks every 25% (0.25 raw)
+        "begin": "0.00",
+        "end": "1.00",
+        "ticks_every": "0.25",
+        "decimal_places": 2,
+        # override tick labels.
+        "tick_labels": {
+            "0.00": {"label": "0"},
+            "0.25": {"label": "25"},
+            "0.50": {"label": "50"},
+            "0.75": {"label": "75"},
+            "1.00": {"label": "100"},
+        }
     }
 }
 

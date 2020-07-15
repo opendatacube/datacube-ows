@@ -2,7 +2,6 @@ import pytest
 from owslib.wms import WebMapService
 from urllib import request
 from lxml import etree
-from imghdr import what
 import requests
 
 def get_xsd(name):
@@ -61,31 +60,6 @@ def test_getcap(ows_server):
     assert gc_xds.validate(resp_xml)
 
 
-def enclosed_bbox(bbox):
-    lon_min, lat_min, lon_max, lat_max = bbox
-    lon_range = lon_max - lon_min
-    lat_range = lat_max - lat_min
-
-    return (
-        lon_min + 0.2 * lon_range,
-        lat_min + 0.2 * lat_range,
-        lon_max - 0.2 * lon_range,
-        lat_max - 0.2 * lat_range
-    )
-
-
-def disjoint_bbox(bbox):
-    lon_min, lat_min, lon_max, lat_max = bbox
-    lon_range = lon_max - lon_min
-    lat_range = lat_max - lat_min
-
-    return (
-        lon_min - 0.4 * lon_range,
-        lat_min - 0.4 * lat_range,
-        lon_min - 0.2 * lon_range,
-        lat_min - 0.2 * lat_range
-    )
-
 def test_wms_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
@@ -110,27 +84,54 @@ def test_wms_getmap(ows_server):
     img = wms.getmap(layers=[test_layer_name],
                      styles=[],
                      srs="EPSG:4326",
-                     bbox=enclosed_bbox(bbox),
-                     size=(256, 256),
+                     bbox=pytest.helpers.enclosed_bbox(bbox),
+                     size=(150, 150),
                      format="image/png",
                      transparent=True,
                      time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
                      )
     assert img
-    assert what("", h=img.read()) == "png"
+    assert img.info()['Content-Type'] == 'image/png'
 
     img = wms.getmap(layers=[test_layer_name],
                      styles=[],
                      srs="EPSG:4326",
-                     bbox=disjoint_bbox(bbox),
-                     size=(256, 256),
+                     bbox=pytest.helpers.disjoint_bbox(bbox),
+                     size=(150, 150),
                      format="image/png",
                      transparent=True,
                      time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
                      )
     assert img
-    assert what("", h=img.read()) == "png"
+    assert img.info()['Content-Type'] == 'image/png'
 
+
+def test_wms_style_looping_getmap(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
+    test_layer_name = contents[0]
+    test_layer = wms.contents[test_layer_name]
+
+    test_layer_styles = wms.contents[test_layer_name].styles
+
+    bbox = test_layer.boundingBoxWGS84
+    layer_bbox = pytest.helpers.enclosed_bbox(bbox)
+    layer_time = test_layer.timepositions[len(test_layer.timepositions) // 2].strip()
+
+    for style in test_layer_styles:
+        img = wms.getmap(layers=[test_layer_name],
+                            styles=[style],
+                            srs="EPSG:4326",
+                            bbox=layer_bbox,
+                            size=(150, 150),
+                            format="image/png",
+                            transparent=True,
+                            time=layer_time,
+                            )
+        assert img.info()['Content-Type'] == 'image/png'
 
 def test_wms_getfeatureinfo(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
@@ -145,7 +146,7 @@ def test_wms_getfeatureinfo(ows_server):
     response = wms.getfeatureinfo(
         layers=[test_layer_name],
         srs='EPSG:4326',
-        bbox=enclosed_bbox(bbox),
+        bbox=pytest.helpers.enclosed_bbox(bbox),
         size=(256, 256),
         format="image/png",
         query_layers=[test_layer_name],
