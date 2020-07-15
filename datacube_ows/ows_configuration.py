@@ -767,7 +767,7 @@ class WCSFormat:
         self.extension = extension
         self.multi_time = multi_time
         self.renderers = {
-            int(ver): get_function(renderer)
+            int(ver): FunctionWrapper(None, renderer)
             for ver, renderer in renderers.items()
         }
         if 1 not in self.renderers:
