@@ -57,7 +57,7 @@ RequestID(app)
 # produced by this application
 _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 
-if os.environ.get("prometheus_multiproc_dir", False):
+if os.environ.get("PROMETHEUS_MULTIPROC_DIR", False):
     metrics = GunicornInternalPrometheusMetrics(app)
     _LOG.info("Prometheus metrics enabled")
 
