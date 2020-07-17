@@ -26,6 +26,8 @@ services:
       AWS_DEFAULT_REGION: ${AWS_REGION}
       # Talk to AWS without using credentials
       AWS_NO_SIGN_REQUEST: "${AWS_NO_SIGN_REQUEST}"
+      # Enable Metrics
+      PROMETHEUS_MULTIPROC_DIR: "/tmp/prometheus"
       # Dev flags
       FLASK_APP: /code/datacube_ows/ogc.py
       FLASK_ENV: ${FLASK_ENV}
