@@ -637,7 +637,6 @@ def feature_info(args):
                     if pt_native is None:
                         pt_native = geo_point.to_crs(ds.crs)
                     if ds.extent and ds.extent.contains(pt_native):
-                        # if so then there is data at this date
                         feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
                         break
             if ds_at_times:
