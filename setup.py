@@ -31,7 +31,8 @@ requirements = [
     'timezonefinderL',
     'python-slugify',
     'xarray',
-    'pyows'
+    'pyows',
+    'prometheus-flask-exporter'
 ]
 
 test_requirements = [
