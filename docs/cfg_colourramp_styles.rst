@@ -498,3 +498,70 @@ E.g.::
                  "font.weight": "bold",
         },
     }
+
+-------------------
+Multi-Date Requests
+-------------------
+
+Colour Ramp Styles support customised handlers for
+`multi-date requests <cfg_styling.rst#multi-date>`_.
+
+An aggregator function is defined that takes
+
+aggregator_function
+===================
+
+The `aggegator_function` entry is required for colour ramp style
+multi-date handlers.  It is a function defined using OWS's
+`function configuration format <cfg_functions.rst>`_.
+
+The function is assumed to take a single xarray Dataset with a time dimension.
+The value at each time slice is the output of the `index function <#index-function>`__
+at that time.  The function should return an xarray Dataset with no time
+dimension, containing the data used as an input to the
+`multi-date handler's colour ramp <#multi-date-colour-ramps>`__.
+
+Multi-Date Colour Ramps
+=======================
+
+Each multi-date handler has it's own colour ramp.  It may be defined by
+any of the `colour ramp defintition methods<#colour-ramps`__ described
+above.
+
+Multi-Date Legend
+=================
+
+A legend can be automatically generated for a multi-date
+handler. The ``legend`` section of a colour ramp style
+multi-date handler behaves the same as the single-date
+`legend section <#legend-configuration>`__ described above.
+
+feature_info_label
+==================
+
+The multi-date aggregator function value will be returned in
+multi-date GetFeatureInfo requests for this style, using the
+label declared by the ``feature_info_label`` entry.
+
+E.g. ::
+
+    # A simple index delta (difference) multi-date handler
+    "multi_date": {
+        # Only 2 dates makes sense for delta.
+        "allowed_count_range": [2,2],
+        # Calculating the difference
+        "aggegator_function": {
+            "function": "datacube_ows.band_utils.multi_date_delta",
+        },
+        # The delta colour ramp.
+        "mpl_ramp": "RdBu",
+        "range": [-1.0, 1.0],
+        "legend": {
+            # Ticks at -1.0, -0.5, 0.0, 0.5, 1.0
+            "begin": "-1.0",
+            "end": "1.0",
+            "ticks_every": "0.5"
+        },
+        # The feature info label.
+        "feature_info_label": "ndvi_delta",
+    }

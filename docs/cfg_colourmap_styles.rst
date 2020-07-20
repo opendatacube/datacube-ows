@@ -23,7 +23,7 @@ Colour-map styles support `automatic legend generation <#legend>`_.
 value_map
 ---------
 
-The `value_map` is dictionary mapping bands to a list of `value rules <#value-rules>`_.
+The ``value_map`` is dictionary mapping bands to a list of `value rules <#value-rules>`_.
 The key is a name or alias of a bitmap band.  Multiple bands are possible
 but it is strongly recommended to use only a single band, because the order in which
 rules are processed cannot be guaranteed in a multiple band scenario.
@@ -62,16 +62,16 @@ Value Rules
 Color, Alpha and Mask
 +++++++++++++++++++++
 
-Each rule must have a `color` entry that specifies the appearance of pixels that
-match the rule.  The `color` entry is in html RGB hex format.
+Each rule must have a ``color`` entry that specifies the appearance of pixels that
+match the rule.  The ``color`` entry is in html RGB hex format.
 
-The `alpha` and `mask` entries are optional and allow transparency.  `alpha` should
+The ``alpha`` and ``mask`` entries are optional and allow transparency.  ``alpha`` should
 be a floating point number between 0.0 (fully transparent) and 1.0 (fully opaque)
-and defaults to 1.0 (i.e. fully transparent).  The `mask` entry is boolean (default
-False).  Setting `mask` to true is functionally equivalent to setting `alpha` to
+and defaults to 1.0 (i.e. fully transparent).  The ``mask`` entry is boolean (default
+False).  Setting ``mask`` to true is functionally equivalent to setting ``alpha`` to
 0.0, but uses a more efficient implementation.
 
-`Color` is still required when mask is True, but is not used in this case.
+``color`` is still required when mask is True, but is not used in this case.
 
 E.g.::
 
@@ -112,7 +112,7 @@ Rule Logic (flags)
 The actual logic of the Value Rule is contained in the "flags" entry.
 
 The flags entry is a dictionary with one of three possible formats.  Note
-that formats cannot be combined.  In particular `and` and `or` logic cannot
+that formats cannot be combined.  In particular ``and`` and ``or`` logic cannot
 be combined in a single rule.
 
 Refer to the OpenDataCube metadata for the underlying product for the
@@ -122,7 +122,7 @@ Simple Rules
 @@@@@@@@@@@@
 
 A simple rule allows matching a single bitflag value.
-The `flags` dictionary contains a single entry, the key is a valid bitflag
+The ``flags`` dictionary contains a single entry, the key is a valid bitflag
 for the band, and the value is boolean.
 
 E.g.::
@@ -200,9 +200,9 @@ Legend
 Colour map styles support automatic legend configuration.
 
 Automatic legend generation can be deactivated using the
-`show_legend` and `url` legend elements
+``show_legend`` and ``url`` legend elements
 `common to all styles <cfg_styling.rst#legend>`_.
-(`show_legend` is `True` by default for colour-map styles.)
+(``show_legend`` is ``True`` by default for colour-map styles.)
 
 A patch and label is added to the legend for each value rule in the
 configuration.  See `title and abstract <#title-and-abstract>`_ for
@@ -219,7 +219,7 @@ further information.
 Image Size
 ++++++++++
 
-The `width` and `height` values are passed to matplotlib to specify the size
+The ``width`` and ``height`` values are passed to matplotlib to specify the size
 of the generated image.
 
 The image size defaults to 3 inches wide by 1.25 inches tall.  The default
@@ -237,7 +237,7 @@ MatPlotLib rc params
 ++++++++++++++++++++
 
 Other MatPlotLib customisations (as they would appear in a .matplotlibrc file)
-can be specified with the optional `rcParams` element, defaulting to {}, meaning
+can be specified with the optional ``rcParams`` element, defaulting to {}, meaning
 the MatPlotLib defaults for all options.
 
 For a full list of possible options refer to

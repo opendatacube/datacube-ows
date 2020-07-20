@@ -47,6 +47,57 @@ style "a_style" will be the default.
         ]
     }
 
+multi_date
+==========
+
+The WMS and WMTS specs allow queries over multiple date
+values.  Datacube OWS will generally reject such queries as it
+is generally not clear what such a query means in the
+context of raster satellite data.
+
+Datacube OWS does allow the user to define custom
+extensions for individual styles to define the behaviour
+of multi-date requests.  For example, selecting two
+dates within a particular style might return a representation
+of the difference between the data for those two dates.
+
+Multi-date behaviour is configured using the ``multi_date``
+entry which is a list of multi-date handlers.  `multi_date``
+is optional and defaults to an empty list (no multi-date
+handlers, single date requests supported only).
+
+The format of a multi-date handler varies depending on the
+`style type <#style-types>`__ but a multi-date handler must
+always contain a ``allowed_count_range`` entry which specifies
+the values for which the handler applies. The ``allowed_count_range``
+is a tuple of two integers corresponding the minimum and maximum
+number of dates accepted by that handler.  The allowed count ranges
+of declared multi-date handlers cannot overlap and a multi-date handler
+cannot handle a request with 1 (or 0) dates.
+
+E.g. ::
+
+    "multi_date": [
+        {
+            # This multi-date handler handles requests with 2 dates.
+            "allowed_count_range": [2, 2],
+            ...
+        },
+        {
+            # This multi-date handler handles requests with between 3 and 5 dates.
+            "allowed_count_range": [3, 5],
+            ...
+        },
+        {
+            # ERROR: 1 is not allowed, and 2 is already handled.
+            "allowed_count_range": [1, 2],
+            ...
+        }
+    ],
+
+Currently multi_date is only supported
+for `Colour Ramp styles <cfg_colourramp_styles.rst#multi-date>`__.
+
 Style Types
 ===========
 
