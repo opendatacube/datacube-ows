@@ -389,10 +389,14 @@ def _write_polygon(geobox, polygon, zoom_fill):
 @log_call
 def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     uris = []
+    last_crs = None
     for tds in datasets:
         for ds in tds.values.item():
             if pt and ds.extent:
-                if ds.extent.contains(pt):
+                if ds.crs != last_crs:
+                    pt_native = pt.to_crs(ds.crs)
+                    last_crs = ds.crs
+                if ds.extent.contains(pt_native):
                     uris.append(ds.uris)
             else:
                 uris.append(ds.uris)
@@ -636,7 +640,7 @@ def feature_info(args):
                         feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
                         break
             if ds_at_times:
-                feature_json["data_links"] = sorted(get_s3_browser_uris(ds_at_times, pt_native, s3_url, s3_bucket))
+                feature_json["data_links"] = sorted(get_s3_browser_uris(ds_at_times, pt, s3_url, s3_bucket))
             else:
                 feature_json["data_links"] = []
             if params.product.feature_info_include_utc_dates:
