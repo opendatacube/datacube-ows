@@ -1,2 +1,2 @@
 # For Pycharm 2020.1.2
-pydevd-pycharm~=201.7846.77
+pydevd-pycharm~=201.8538.36
