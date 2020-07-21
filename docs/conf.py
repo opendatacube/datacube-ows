@@ -55,8 +55,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'datacube-wms'
-copyright = u"2017, Gregory Raevski"
+project = u'datacube-ows'
+copyright = u"2020, Geoscience Australia"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -188,7 +188,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'datacube_wmsdoc'
+htmlhelp_basename = 'datacube_owsdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------
@@ -209,8 +209,8 @@ latex_elements = {
 # [howto/manual]).
 latex_documents = [
     ('index', 'datacube_ows.tex',
-     u'datacube-wms Documentation',
-     u'Gregory Raevski', 'manual'),
+     u'datacube-ows Documentation',
+     u'Datacube OWS Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at
@@ -240,8 +240,8 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'datacube_ows',
-     u'datacube-wms Documentation',
-     [u'Gregory Raevski'], 1)
+     u'datacube-ows Documentation',
+     [u'Datacube OWS Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -255,10 +255,10 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'datacube_ows',
-     u'datacube-wms Documentation',
-     u'Gregory Raevski',
+     u'datacube-ows Documentation',
+     u'Datacube OWS Team',
      'datacube_ows',
-     'One line description of project.',
+     'Web Services for the OpenDataCube.',
      'Miscellaneous'),
 ]
 

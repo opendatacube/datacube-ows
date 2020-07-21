@@ -792,7 +792,9 @@ style_ndvi_delta = {
             # kind of ugly) blue-to-red rainbow ramp.
             "mpl_ramp": "RdBu",
             "legend": {
-
+                # Legend only covers positive part of ramp.
+                "begin": "0.0",
+                "end": "1.0"
             },
             # The feature info label for the multi-date index value.
             "feature_info_label": "ndvi_delta"
@@ -819,23 +821,16 @@ style_deform = {
     # Legend section is optional for non-linear colour-ramped styles.
     # If not supplied, a legend for the style will be automatically generated from the colour ramp.
     "legend": {
-        # appended to the title of the legend
-        # if missing will use 'unitless'
-        "units": "mm",
-        # radix places to round tick labels to
-        # set to 0 for ints
-        "radix_point": 0,
-        # values will be scaled by this amount
-        # to generate tick labels
-        # e.g. for a percentage stored as 0 - 1.0
-        # this should be 100
-        # TODO: Make this derive automatically from range as appropriate
-        "scale_by": 1.0,
+        ## Only use positive part of range.
         # tick labels will be created for values that
         # are modulo 0 by this value
-        "major_ticks": 10,
-        ## Use offset to get negative side of the ramp
-        "offset": 0.0
+        "ticks_every": "10",
+        "begin": "0.0",
+        # appended to the title of the legend
+        "units": "mm",
+        # decimal places for tick labels
+        # set to 0 for ints
+        "decimal_places": 0,
     }
 }
 
@@ -1280,11 +1275,6 @@ ows_cfg = {
                 "vertical_coord": "y",
             },
         },
-        # If True the new EXPERIMENTAL materialised views are used for spatio-temporal extents.
-        # If False (the default), the old "update_ranges" tables (and native ODC search methods) are used.
-        # DO NOT SET THIS TO TRUE unless you understand what this means and want to participate
-        # in the experiment!
-        "use_extent_views": False,
     },   #### End of "global" section.
 
     # Config items in the "wms" section apply to the WMS service (and WMTS, which is implemented as a
@@ -1337,9 +1327,6 @@ ows_cfg = {
     # Config items in the "wcs" section apply to the WCS service to all WCS coverages
     # (unless over-ridden).
     "wcs": {
-        # Must be a geographic CRS in the global published_CRSs list.
-        # EPSG:4326 is recommended, but any geographic CRS should work.
-        "default_geographic_CRS": "EPSG:4326",
         # Supported WCS formats
         # NetCDF and GeoTIFF work "out of the box".  Other formats will require writing a Python function
         # to do the rendering.
@@ -1462,10 +1449,10 @@ ows_cfg = {
                         #
                         "band": "pixelquality",
                         # Sometimes the pixel quality band is packaged in a separate ODC product
-                        # If this is the case, you can specify this product with the "flags::dataset"
-                        # element.  If "pq_band" is set but "pq_dataset" is omitted, then the
+                        # If this is the case, you can specify this product with the "flags::product"
+                        # element.  If "flags::band" is set but "flags::product" is omitted, then the
                         # pixel quality band is assumed to be included in the main data product.
-                        "dataset": "ls8_pq_albers",
+                        "product": "ls8_pq_albers",
                         # Flags Fuse func
                         # Determines how multiple dataset arrays are compressed into a single time array for
                         # the PQ layer
