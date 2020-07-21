@@ -105,6 +105,12 @@ jobs:
     - name: Test datacube-ows-update
       run: docker-compose exec -T ows datacube-ows-update
 
+    - name: Test Prometheus Metrics
+      run: |
+        curl --silent --show-error --fail \
+        "localhost:8000/metrics"
+        > /dev/null
+
     # Tag image if this is a tagged build
     # if not use a pseudo tag based on current tag,
     # number of commits since last tag and git hash

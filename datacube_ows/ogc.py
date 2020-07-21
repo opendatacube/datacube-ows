@@ -5,6 +5,7 @@ import warnings
 import sentry_sdk
 from rasterio.errors import NotGeoreferencedWarning
 from sentry_sdk.integrations.flask import FlaskIntegration
+from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
 from time import monotonic
 
@@ -57,8 +58,7 @@ RequestID(app)
 _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 
 if os.environ.get("prometheus_multiproc_dir", False):
-    from datacube_ows.metrics.prometheus import setup_prometheus
-    setup_prometheus(app)
+    metrics = GunicornInternalPrometheusMetrics(app)
     _LOG.info("Prometheus metrics enabled")
 
 if os.environ.get("AWS_DEFAULT_REGION"):

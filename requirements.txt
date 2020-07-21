@@ -29,3 +29,4 @@ blinker
 pyows
 owslib
 pytest-helpers-namespace
+prometheus-flask-exporter
