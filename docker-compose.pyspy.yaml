@@ -19,6 +19,6 @@ services:
       - postgres:postgres
     environment:
       DB_PORT: 5432
-    command: ["py-spy", "record", "--format", "speedscope", "-o", "/mnt/artifacts/profile.svg", "--", "flask", "run", "--host=0.0.0.0", "--port=8000"]
+    command: ["wait-for-db", "py-spy", "record", "--format", "speedscope", "-o", "/mnt/artifacts/profile.svg", "--", "flask", "run", "--host=0.0.0.0", "--port=8000"]
     cap_add:
       - SYS_PTRACE
