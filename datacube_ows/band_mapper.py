@@ -343,7 +343,7 @@ class LinearStyleDef(StyleDefBase):
                         imgband_data += imgband_component
                     else:
                         imgband_data = imgband_component
-                imgdata[imgband] = (dims, imgband_data)
+                imgdata[imgband] = (imgband_data.dims, imgband_data)
         return imgdata
 
 
