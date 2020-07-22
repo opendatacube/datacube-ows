@@ -56,6 +56,16 @@ jobs:
         file: ./artifacts/*.xml
         fail_ci_if_error: false
 
+    - name: run performance profiling with py-spy
+      run: |
+        docker-compose -f docker-compose.yaml -f docker-compose.pyspy.yaml up -d
+        docker-compose -f docker-compose.yaml -f docker-compose.pyspy.yaml down
+
+    - name: Upload profile to artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: profile.svg
+        path: ./artifacts/profile.svg
 
     # Build prod image and tag as latest, connect to pre-indexed database
     - name: Build and run prod OWS images (stage 2)

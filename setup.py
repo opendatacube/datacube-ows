@@ -32,12 +32,13 @@ requirements = [
     'python-slugify',
     'xarray',
     'pyows',
-    'prometheus-flask-exporter'
+    'prometheus-flask-exporter',
+    'py-spy'
 ]
 
 test_requirements = [
     # TODO: put package test requirements here
-    'pytest', 'pytest-cov', 'pytest_localserver', 'owslib', 'mock', 'pep8', 'pylint==1.6.4', 'pytest-helpers-namespace'
+    'pytest', 'pytest-cov', 'pytest_localserver', 'owslib', 'mock', 'pep8', 'pylint==1.6.4', 'pytest-helpers-namespace', 'py-spy'
 ]
 
 setup(
