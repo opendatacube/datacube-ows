@@ -114,10 +114,10 @@ class DataStacker(object):
         # datasets is an XArray DataArray of datasets grouped by time.
         if mask:
             prod = self._product.pq_product
-            measurements = [prod.measurements[self._product.pq_band].copy()]
+            measurements = prod.lookup_measurements([self._product.pq_band])
         else:
             prod = self._product.product
-            measurements = [prod.measurements[name].copy() for name in self.needed_bands()]
+            measurements = prod.lookup_measurements(self.needed_bands())
 
         if manual_merge:
             return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
