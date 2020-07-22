@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Convenience script for running Travis-like checks.
-set -x
+set -ex
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
