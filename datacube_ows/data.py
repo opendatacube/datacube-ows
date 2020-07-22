@@ -596,13 +596,12 @@ def feature_info(args):
                         feature_json["data"].append(date_info)
                     pq_pixel_ds = pqd.isel(**isel_kwargs)
                     # PQ flags
-                    m = params.product.pq_product.measurements[params.product.pq_band]
                     flags = pq_pixel_ds[params.product.pq_band].item()
                     if not flags & ~params.product.info_mask:
                         my_flags = my_flags | flags
                     else:
                         continue
-                    for mk, mv in m["flags_definition"].items():
+                    for mk, mv in params.product.flags_def.items():
                         if mk in params.product.ignore_info_flags:
                             continue
                         bits = mv["bits"]
