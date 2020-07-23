@@ -60,6 +60,11 @@ jobs:
       run: |
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml up -d
 
+    - name: Sleep for 10 seconds
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '10s'
+
     - name: set output container pid
       id: set-output-container-id
       run: |
