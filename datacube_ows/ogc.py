@@ -54,7 +54,6 @@ RequestID(app)
 if not os.environ.get("DEFER_CFG_PARSE", False):
     get_config()
 
-
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
 # this will mean the root logs will be captured and managed by the gunicorn logger
 # allowing you to set the gunicorn log directories and levels for logs
