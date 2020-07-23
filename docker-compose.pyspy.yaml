@@ -8,6 +8,6 @@ services:
   pyspy:
     build: docker/pyspy/
     pid: "host"
-    privileged: "true"
+    privileged: true
     volumes:
     - .:/profiles
