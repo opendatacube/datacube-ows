@@ -343,9 +343,10 @@ class LinearStyleDef(StyleDefBase):
                         imgband_data += imgband_component
                     else:
                         imgband_data = imgband_component
-                dims = imgband_data.dims
-                imgband_data = self.compress_band(imgband, imgband_data).astype('uint8')
-                imgdata[imgband] = (dims, imgband_data)
+                if imgband != "alpha":
+                    imgband_data = self.compress_band(imgband, imgband_data)
+                imgdata[imgband] = (imgband_data.dims,
+                                    imgband_data.astype("uint8"))
         return imgdata
 
 
@@ -387,6 +388,10 @@ UNSCALED_DEFAULT_RAMP = [
 
 
 def scale_unscaled_ramp(rmin, rmax, unscaled):
+    if isinstance(rmin, str):
+        rmin = float(rmin)
+    if isinstance(rmax, str):
+        rmax = float(rmax)
     return [
         {
             "value": (rmax - rmin)*u["value"] + rmin,
@@ -927,8 +932,8 @@ class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
         imgdata = Dataset()
 
         d = data['index_function']
-        for band, intensity in self.components.items():
-            rampdata = self.get_value(d, self.values, intensity)
+        for band, intensity in self.rgb_components.items():
+            rampdata = self.color_ramp.get_value(d, band)
             component_band_data = None
             if band in self.rgb_components:
                 for c_band, c_intensity in self.rgb_components[band].items():
