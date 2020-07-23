@@ -1,5 +1,5 @@
 mixed_1 = {
-    "include": "tests/cfg/simple.json",
+    "include": "cfg/simple.json",
     "type": "json"
 }
 
@@ -7,7 +7,7 @@ mixed_1 = {
 mixed_2 = {
     "test": 5224,
     "subtest": {
-        "include": "tests/cfg/simple.json",
+        "include": "cfg/simple.json",
         "type": "json"
     }
 }
@@ -20,7 +20,7 @@ mixed_3 = {
             "type": "python"
         },
         "test_json": {
-            "include": "tests/cfg/simple.json",
+            "include": "cfg/simple.json",
             "type": "json"
         }
     }

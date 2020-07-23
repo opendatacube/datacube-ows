@@ -1,6 +1,11 @@
 import pytest
 import os
+import sys
 from datacube_ows.ows_configuration import read_config, ConfigException
+
+src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if src_dir not in sys.path:
+    sys.path.append(src_dir)
 
 
 def test_cfg_direct(monkeypatch):
@@ -103,21 +108,21 @@ def test_cfg_py_infinite_2(monkeypatch):
 
 
 def test_cfg_json_simple(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/simple.json")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/simple.json"))
     cfg = read_config()
 
     assert cfg["test"] == 1234
 
 
 def test_cfg_json_nested_1(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_1.json")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/nested_1.json"))
     cfg = read_config()
 
     assert cfg["test"] == 1234
 
 
 def test_cfg_json_nested_2(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_2.json")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/nested_2.json"))
     cfg = read_config()
 
     assert len(cfg) == 2
@@ -137,13 +142,13 @@ def validated_nested_3(cfg):
 
 
 def test_cfg_json_nested_3(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_3.json")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/nested_3.json"))
     cfg = read_config()
     validated_nested_3(cfg)
 
 
 def test_cfg_json_nested_4(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_4.json")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/nested_4.json"))
     cfg = read_config()
 
     assert cfg["test"] == 3222
@@ -157,7 +162,7 @@ def test_cfg_json_nested_4(monkeypatch):
 
 
 def test_cfg_json_infinite_1(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_1.json")   
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/infinite_1.json"))
     try:
         cfg = read_config()
         assert False
@@ -166,7 +171,7 @@ def test_cfg_json_infinite_1(monkeypatch):
 
 
 def test_cfg_json_infinite_2(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_2.json")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/infinite_2.json"))
     try:
         cfg = read_config()
         assert False
@@ -199,7 +204,7 @@ def test_cfg_py_mixed_3(monkeypatch):
 
 
 def test_cfg_json_mixed(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/mixed_nested.json")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", os.path.join(src_dir, "tests/cfg/mixed_nested.json"))
     cfg = read_config()
 
     assert cfg["test"] == 9364
