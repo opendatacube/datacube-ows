@@ -61,8 +61,8 @@ jobs:
       run: |
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml up -d
         echo "::set-env name=CONTAINERNAME::$(docker inspect -f '{{.Name}}' $(docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows)| cut -c2-)"
-        echo "::set-env name=PID::$(docker inspect --format '{{.State.Pid}}' $CONTAINERNAME)"
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy record -o ./artifacts/profile.svg --pid $PID --subprocesses
+        echo "::set-env name=PID::$(docker inspect --format '{{.State.Pid}}' ${{CONTAINERNAME}})"
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy record -o ./artifacts/profile.svg --pid ${{PID}} --subprocesses
         curl "localhost:8000/wms?service=WMS&version=1.3.0&request=GetMap&layers=ls8_usgs_level1_scene_layer&styles=rgb_ndvi&width=150&height=150&crs=EPSG%3A4326&bbox=-43.82093348558336%2C145.040403833046%2C-42.53486321090564%2C147.787537852719&format=image%2Fpng&transparent=TRUE&bgcolor=0xFFFFFF&exceptions=XML&time=2019-07-09"
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml down
 
