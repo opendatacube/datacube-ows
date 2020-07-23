@@ -71,7 +71,7 @@ jobs:
         echo "::set-output name=PID::$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' $(docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows)| cut -c2-))"
 
     - name: Run py-spy profiling
-      timeout-minutes: 2
+      timeout-minutes: 30
       continue-on-error: true
       run: |
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy record -o ./artifacts/profile.svg --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses &
