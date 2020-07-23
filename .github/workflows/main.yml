@@ -72,6 +72,7 @@ jobs:
 
     - name: Run py-spy profiling
       timeout-minutes: 2
+      continue-on-error: true
       run: |
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy record -o ./artifacts/profile.svg --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses &
         while true
