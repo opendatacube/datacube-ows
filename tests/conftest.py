@@ -1,5 +1,8 @@
 import pytest
 
+import os
+os.environ["DEFER_CFG_PARSE"] = True
+
 from datacube_ows.ogc import app
 
 @pytest.fixture
