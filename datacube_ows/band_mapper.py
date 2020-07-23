@@ -932,8 +932,8 @@ class HybridStyleDef(RgbaColorRampDef, LinearStyleDef):
         imgdata = Dataset()
 
         d = data['index_function']
-        for band, intensity in self.components.items():
-            rampdata = self.get_value(d, self.values, intensity)
+        for band, intensity in self.rgb_components.items():
+            rampdata = self.color_ramp.get_value(d, band)
             component_band_data = None
             if band in self.rgb_components:
                 for c_band, c_intensity in self.rgb_components[band].items():
