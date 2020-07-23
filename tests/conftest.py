@@ -1,7 +1,7 @@
 import pytest
 
 import os
-os.environ["DEFER_CFG_PARSE"] = True
+os.environ["DEFER_CFG_PARSE"] = "yes"
 
 from datacube_ows.ogc import app
 

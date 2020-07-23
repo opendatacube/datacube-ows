@@ -51,7 +51,7 @@ app = Flask(__name__.split('.')[0])
 RequestID(app)
 
 # Parse config file
-if not os.environ.get("DEFER_CFG_PARSE", False):
+if not os.environ.get("DEFER_CFG_PARSE"):
     get_config()
 
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
