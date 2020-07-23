@@ -29,42 +29,43 @@ jobs:
     # We build the stage 1 image, then run test on it
     # These tests require extra files we don't want in
     # the production image
-    - name: Build dev OWS image (stage 1)
-      run: |
-        docker build \
-          --target env_builder \
-          --tag    ${ORG}/${IMAGE}:_builder \
-          .
+    # - name: Build dev OWS image (stage 1)
+    #   run: |
+    #     docker build \
+    #       --target env_builder \
+    #       --tag    ${ORG}/${IMAGE}:_builder \
+    #       .
 
-    - name: Test and lint dev OWS image (stage 1)
-      run: |
-        mkdir artifacts
-        docker run -v ${PWD}/artifacts:/mnt/artifacts ${ORG}/${IMAGE}:_builder /bin/sh -c "./check-code.sh"
-        mv ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
+    # - name: Test and lint dev OWS image (stage 1)
+    #   run: |
+    #     mkdir artifacts
+    #     docker run -v ${PWD}/artifacts:/mnt/artifacts ${ORG}/${IMAGE}:_builder /bin/sh -c "./check-code.sh"
+    #     mv ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
 
-    - name: Dockerized Integration Pytest (stage 1)
-      run: |
-        chmod a+rw artifacts
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
+    # - name: Dockerized Integration Pytest (stage 1)
+    #   run: |
+    #     chmod a+rw artifacts
+    #     docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
+    #     docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
+    #     docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
-    - name: Upload All coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CodeCovToken }}
-        file: ./artifacts/*.xml
-        fail_ci_if_error: false
+    # - name: Upload All coverage to Codecov
+    #   uses: codecov/codecov-action@v1
+    #   with:
+    #     token: ${{ secrets.CodeCovToken }}
+    #     file: ./artifacts/*.xml
+    #     fail_ci_if_error: false
 
     - name: setup performance profiling with py-spy
       run: |
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml build
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml up -d
 
     - name: set output container pid
       id: set-output-container-id
       run: |
         echo "::set-output name=PID::$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' $(docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows)| cut -c2-))"
+        echo $(docker ps)
+        echo $(ps -aux)
 
     - name: Run py-spy profiling
       run: |
