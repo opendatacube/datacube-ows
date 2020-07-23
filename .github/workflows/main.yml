@@ -76,7 +76,7 @@ jobs:
       continue-on-error: true
       run: |
         /bin/bash ./test_urls.sh &
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy record -o ./artifacts/profile.svg --duration 30 --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy record -f speedscope -o ./artifacts/profile.svg --duration 30 --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
 
 
     - name: Stop py-spy profiling after timeout (stage 1 - stop profiling)
