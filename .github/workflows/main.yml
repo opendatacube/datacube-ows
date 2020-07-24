@@ -87,7 +87,7 @@ jobs:
     - name: Upload profile to artifact (stage 1 - Upload profiling svg to artifacts)
       uses: actions/upload-artifact@v2
       with:
-        name: profile.svg
+        name: profile.json
         path: ./artifacts/profile.json
 
     # Build prod image and tag as latest, connect to pre-indexed database
