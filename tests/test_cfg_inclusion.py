@@ -178,6 +178,7 @@ def test_cfg_json_infinite_2(monkeypatch):
 
 
 def test_cfg_py_mixed_1(monkeypatch):
+    monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.mixed_nested.mixed_1")
     cfg = read_config()
 
@@ -185,6 +186,7 @@ def test_cfg_py_mixed_1(monkeypatch):
 
 
 def test_cfg_py_mixed_2(monkeypatch):
+    monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.mixed_nested.mixed_2")
     cfg = read_config()
 
@@ -193,6 +195,7 @@ def test_cfg_py_mixed_2(monkeypatch):
 
 
 def test_cfg_py_mixed_3(monkeypatch):
+    monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.mixed_nested.mixed_3")
     cfg = read_config()
 
