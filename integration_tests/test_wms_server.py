@@ -72,7 +72,7 @@ def test_wms_server(ows_server):
 
 def test_wms_getmap(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
-    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
@@ -108,7 +108,7 @@ def test_wms_getmap(ows_server):
 
 def test_wms_style_looping_getmap(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
-    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
