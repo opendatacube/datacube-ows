@@ -6,7 +6,7 @@
       "type": "python"
     },
     "test_json": {
-      "include": "cfg/simple.json",
+      "include": "tests/cfg/simple.json",
       "type": "json"
     }
   }
