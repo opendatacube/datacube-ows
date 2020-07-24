@@ -8,14 +8,14 @@
     {
       "test": 2573,
       "thing": {
-        "include": "tests/cfg/simple.json",
+        "include": "simple.json",
         "type": "json"
       }
     },
     {
       "test": 2574,
       "thing": {
-        "include": "tests/cfg/nested_3.json",
+        "include": "nested_3.json",
         "type": "json"
       }
     }

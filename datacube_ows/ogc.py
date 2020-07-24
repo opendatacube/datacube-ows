@@ -50,6 +50,9 @@ if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
 app = Flask(__name__.split('.')[0])
 RequestID(app)
 
+# Parse config file
+if not os.environ.get("DEFER_CFG_PARSE"):
+    get_config()
 
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
 # this will mean the root logs will be captured and managed by the gunicorn logger

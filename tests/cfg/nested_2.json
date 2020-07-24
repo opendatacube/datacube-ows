@@ -3,7 +3,7 @@
     "test": 88888
   },
   {
-      "include": "tests/cfg/simple.json",
+      "include": "simple.json",
       "type": "json"
   }
 ]
