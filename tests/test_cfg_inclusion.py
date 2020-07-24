@@ -7,6 +7,7 @@ src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
+
 def test_cfg_direct(monkeypatch):
     monkeypatch.setenv("DATACUBE_OWS_CFG", "{\"test\": 12345}")
     cfg = read_config()
