@@ -13,6 +13,8 @@ def no_db(monkeypatch):
     monkeypatch.setenv("DB_USERNAME", "fakeuser")
     monkeypatch.setenv("DB_PASSWORD", "password")
     monkeypatch.setenv("DB_HOSTNAME", "localhost")
+    from datacube_ows.ows_configuration import get_config
+    cfg = get_config(refresh=True)
 
 
 def test_db_connect_fail(monkeypatch, flask_client):
