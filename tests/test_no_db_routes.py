@@ -13,7 +13,6 @@ def test_db_connect_fail(flask_client):
     """Start with a database connection"""
 
     import os
-    env = os.environ
     rv = flask_client.get('/ping')
     assert rv.status_code == 500
 

@@ -14,6 +14,11 @@ ows_cfg = {
                 "vertical_coord_first": True
             },
         },
+        "services": {
+            "wms": True,
+            "wmts": True,
+            "wcs": True
+        },
     },
 
     "wms": {},
