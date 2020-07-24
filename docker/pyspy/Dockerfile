@@ -2,5 +2,5 @@
 FROM python:3.6
 RUN pip install py-spy
 WORKDIR /profiles
-ENTRYPOINT [ "timeout" ]
+ENTRYPOINT [ "py-spy" ]
 CMD []
