@@ -430,9 +430,10 @@ class OWSNamedLayer(OWSLayer):
         self.info_mask = ~0
         if self.pq_products:
             self.pq_product = self.pq_products[0]
-            fd = self.pq_product.measurements[self.pq_band]["flags_definition"]
+            meas = self.pq_product.lookup_measurements([self.pq_band])
+            self.flags_def = meas[self.pq_band]["flags_definition"]
             for bitname in self.ignore_info_flags:
-                bit = fd[bitname]["bits"]
+                bit = self.flags_def[bitname]["bits"]
                 if not isinstance(bit, int):
                     continue
                 flag = 1 << bit

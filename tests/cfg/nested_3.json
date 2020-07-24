@@ -8,7 +8,7 @@
     {
       "test": 22563,
       "thing": {
-        "include": "tests/cfg/simple.json",
+        "include": "simple.json",
         "type": "json"
       }
     },
