@@ -76,7 +76,7 @@ jobs:
       continue-on-error: true
       run: |
         /bin/bash ./test_urls.sh &
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy -s 2 30 py-spy record -f speedscope -o ./artifacts/profile.svg --duration 30 --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy -s 2 30 py-spy record -f speedscope -o ./artifacts/profile.json --duration 30 --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
 
 
     - name: Stop py-spy profiling after timeout (stage 1 - stop profiling)
@@ -88,7 +88,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: profile.svg
-        path: ./artifacts/profile.svg
+        path: ./artifacts/profile.json
 
     # Build prod image and tag as latest, connect to pre-indexed database
     - name: Build and run prod OWS images (stage 2)
