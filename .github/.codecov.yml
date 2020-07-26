@@ -7,7 +7,7 @@ coverage:
       default: # This can be anything, but it needs to exist as the name
         # basic settings
         target: auto
-        threshold: 60%
+        threshold: 70%
   precision: 2
   round: down
   range: "20...100"
