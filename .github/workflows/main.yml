@@ -62,21 +62,26 @@ jobs:
         docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml up -d
 
     - name: Sleep for 10 seconds (stage 1 - wait for services to be ready)
-      uses: jakejarvis/wait-action@master
+      uses: whatnick/wait-action@master
       with:
         time: '10s'
 
     - name: set output container pid (stage 1 - get ows container pid)
       id: set-output-container-id
       run: |
-        echo "::set-output name=PID::$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' $(docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows)| cut -c2-))"
+        echo "::set-output name=PID::$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' \
+        $(docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows) \
+        | cut -c2-))"
 
     - name: Run py-spy profiling (stage 1 - run profiling service)
       timeout-minutes: 1
       continue-on-error: true
       run: |
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml exec -T ows /bin/sh -c "cd /code;./test_urls.sh &"
-        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml run pyspy record -f speedscope -o ./artifacts/profile.json --duration 30 --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
+        exec -T ows /bin/sh -c "cd /code;./test_urls.sh &"
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
+        run pyspy record -f speedscope -o ./artifacts/profile.json --duration 30 \
+        --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
 
 
     - name: Stop py-spy profiling after timeout (stage 1 - stop profiling)
@@ -95,7 +100,7 @@ jobs:
       run: docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up --build --force-recreate -d
 
     - name: Sleep for 10 seconds
-      uses: jakejarvis/wait-action@master
+      uses: whatnick/wait-action@master
       with:
         time: '10s'
 
