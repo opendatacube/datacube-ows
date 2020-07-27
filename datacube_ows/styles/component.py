@@ -3,7 +3,7 @@ from xarray import Dataset
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 
-
+# pylint: disable=abstract-method
 class ComponentStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(ComponentStyleDef, self).__init__(product, style_cfg)
