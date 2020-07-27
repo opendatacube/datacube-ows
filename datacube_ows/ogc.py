@@ -62,6 +62,15 @@ _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 
 if os.environ.get("prometheus_multiproc_dir", False):
     metrics = GunicornInternalPrometheusMetrics(app)
+    full_request_url = metrics.summary(
+        'flask_ows_request_full_url', 'Request summary by request url',
+        labels={
+            'query_request': lambda: request.args.get('request'),
+            'query_service': lambda: request.args.get('service'),
+            'query_layers': lambda: request.args.get('layers'),
+            'query_url': lambda: request.full_path
+        }
+    )
     _LOG.info("Prometheus metrics enabled")
 
 if os.environ.get("AWS_DEFAULT_REGION"):
@@ -145,15 +154,7 @@ def lower_get_args():
     return d
 
 @app.route('/')
-@metrics.summary(
-    'flask_ows_request_full_url', 'Request summary by request url',
-    labels={
-        'query_request': lambda: request.args.get('request'),
-        'query_service': lambda: request.args.get('service'),
-        'query_layers': lambda: request.args.get('layers'),
-        'query_url': lambda: request.full_path
-    }
-)
+@full_request_url
 def ogc_impl():
     #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
@@ -226,15 +227,16 @@ def ogc_svc_impl(svc):
 
 
 @app.route('/wms')
+@full_request_url
 def ogc_wms_impl():
     return ogc_svc_impl("wms")
 
-
+@full_request_url
 @app.route('/wmts')
 def ogc_wmts_impl():
     return ogc_svc_impl("wmts")
 
-
+@full_request_url
 @app.route('/wcs')
 def ogc_wcs_impl():
     return ogc_svc_impl("wcs")
