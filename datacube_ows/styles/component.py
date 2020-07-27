@@ -1,4 +1,5 @@
-from xarray import Dataset
+from xarray import Dataset, DataArray
+import numpy as np
 
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
@@ -87,6 +88,9 @@ class ComponentStyleDef(StyleDefBase):
                         imgband_data += imgband_component
                     else:
                         imgband_data = imgband_component
+                if imgband_data is None:
+                    imgband_data = np.zeros(list(data.dims.values()), 'uint8')
+                    imgband_data = DataArray(imgband_data, data.coords, data.dims.keys())
                 if imgband != "alpha":
                     imgband_data = self.compress_band(imgband, imgband_data)
                 imgdata[imgband] = (imgband_data.dims,
