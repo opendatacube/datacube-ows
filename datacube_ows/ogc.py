@@ -65,7 +65,8 @@ if os.environ.get("prometheus_multiproc_dir", False):
     _LOG.info("Prometheus metrics enabled")
 
 if os.environ.get("AWS_DEFAULT_REGION"):
-    set_default_rio_config(aws=dict(aws_unsigned=True,
+    unsigned = bool(os.environ.get("AWS_NO_SIGN_REQUEST", "yes"))
+    set_default_rio_config(aws=dict(aws_unsigned=unsigned,
                                     region_name="auto"),
                            cloud_defaults=True)
 else:
