@@ -2,7 +2,8 @@
 Test creation of colour maps from matplotlib
 """
 from datacube_ows.ows_cfg_example import style_deform
-from datacube_ows.band_mapper import read_mpl_ramp
+from datacube_ows.styles.ramp import read_mpl_ramp
+
 
 def test_get_mpl_cmap():
     matplotlib_ramp_name = style_deform['mpl_ramp']
