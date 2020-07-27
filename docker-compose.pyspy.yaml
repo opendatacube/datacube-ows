@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  ows:
+    cap_add:
+      - SYS_PTRACE
+
+  pyspy:
+    build: docker/pyspy/
+    pid: "host"
+    privileged: true
+    volumes:
+    - .:/profiles
