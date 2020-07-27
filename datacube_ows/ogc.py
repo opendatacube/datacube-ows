@@ -145,6 +145,15 @@ def lower_get_args():
     return d
 
 @app.route('/')
+@metrics.summary(
+    'flask_ows_request_full_url', 'Request summary by request url',
+    labels={
+        'query_request': lambda: request.args.get('request'),
+        'query_service': lambda: request.args.get('service'),
+        'query_layers': lambda: request.args.get('layers'),
+        'query_url': lambda: request.full_path
+    }
+)
 def ogc_impl():
     #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
