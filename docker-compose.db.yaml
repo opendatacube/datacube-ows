@@ -15,6 +15,8 @@ services:
   # Overwrite ows so it can talk to docker db
   ows:
     network_mode: bridge
+    environment:
+      - prometheus_multiproc_dir=${prometheus_multiproc_dir}
     links:
       - postgres:postgres
     environment:
