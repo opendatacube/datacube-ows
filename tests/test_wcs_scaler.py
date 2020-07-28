@@ -46,53 +46,98 @@ def layer_crs_mock():
             "gml_name": "TEST/NATIVE_CRS"
         },
     }
-    product_layer.native_CRS_def = {
-        "geographic": False,
-        "horizontal_coord": "hortizonal_cults",
-        "vertical_coord": "verbal_tics",
-        "vertical_coord_first": False,
-        "gml_name": "TEST/NATIVE_CRS"
-    }
+    product_layer.native_CRS = "TEST:NATIVE_CRS"
+    product_layer.native_CRS_def = \
+        product_layer.global_cfg.published_CRSs[
+            product_layer.native_CRS
+        ]
     return product_layer
-def test_spatial_parameter(layer_crs_mock):
-    param1 = SpatialParameter(layer_crs_mock, "TEST:CRS")
-    assert param1.y is None
-    assert param1.x is None
-    assert param1["x"] is None
-    assert param1["y"] is None
 
-    param1.set(7, -13)
-    assert param1.x == 7
-    assert param1.y == -13
-    assert param1.longitude == 7
-    assert param1.latitude == -13
-    assert param1.i == 7
-    assert param1.j == -13
-    assert param1.horrible_zonts == 7
-    assert param1.vertex_calories == -13
-    assert param1.hortizonal_cults == 7
-    assert param1.verbal_tics == -13
+
+def test_spatial_parameter_defaults(layer_crs_mock):
+    param = SpatialParameter(layer_crs_mock, "TEST:CRS")
+    assert param.y is None
+    assert param.x is None
+    assert param["x"] is None
+    assert param["y"] is None
+
+
+def test_spatial_parameter_set(layer_crs_mock):
+    param = SpatialParameter(layer_crs_mock, "TEST:CRS")
+    param.set(7, -13)
+    assert param.x == 7
+    assert param.y == -13
+
+
+def test_spatial_parameter_init(layer_crs_mock):
+    param = SpatialParameter(layer_crs_mock, "TEST:CRS", 7, -13)
+    assert param.x == 7
+    assert param.y == -13
+
+
+def test_spatial_parameter_setters(layer_crs_mock):
+    param = SpatialParameter(layer_crs_mock, "TEST:CRS")
+    param.lng = 7
+    param.lat = -13
+    assert param.x == 7
+    assert param.y == -13
+
+def test_spatial_parameter_isdim_1(layer_crs_mock):
+    param = SpatialParameter(layer_crs_mock, "TEST:CRS", 7, -13)
+    assert param.x == 7
+    assert param.y == -13
+    assert param.longitude == 7
+    assert param.latitude == -13
+    assert param.i == 7
+    assert param.j == -13
+    assert param.horrible_zonts == 7
+    assert param.vertex_calories == -13
+    assert param.hortizonal_cults == 7
+    assert param.verbal_tics == -13
     try:
-       _ = param1.horivertal_calzones
+       _ = param.horivertal_calzones
        assert "Should have thrown a WCSScalarUnknownDimension" == False
     except WCSScalerUnknownDimension as e:
        assert e.dim == "horivertal_calzones"
 
-    param2 = SpatialParameter(layer_crs_mock, "EPSG:3577",
-                              x=2, y=-7)
-    assert param2.y == -7
-    assert param2.x == 2
+def test_spatial_parameter_isdim_1(layer_crs_mock):
+    param = SpatialParameter(layer_crs_mock, "EPSG:3577", 2, 7)
 
-    param2.long = 22
-    param2.lat = -77
-
-    assert param2.lat == -77
-    assert param2.long == 22
-    assert param2.hortizonal_cults == 22
-    assert param2.verbal_tics == -77
+    assert param.lat == 7
+    assert param.long == 2
+    assert param.hortizonal_cults == 2
+    assert param.verbal_tics == 7
 
     try:
-        _ = param2.horrible_zonts
+        _ = param.horrible_zonts
         assert "Should have thrown a WCSScalarUnknownDimension" == False
     except WCSScalerUnknownDimension as e:
         assert e.dim == "horrible_zonts"
+
+def test_scaler_constructor(layer_crs_mock):
+    scaler = WCSScaler(layer_crs_mock)
+    assert scaler.crs == "TEST:NATIVE_CRS"
+    assert scaler.crs_def["gml_name"] == "TEST/NATIVE_CRS"
+    scaler = WCSScaler(layer_crs_mock, "EPSG:3577")
+    assert scaler.crs == "EPSG:3577"
+
+def test_scalar_trim(layer_crs_mock):
+    scaler = WCSScaler(layer_crs_mock)
+    scaler.trim("x", 5, 10)
+    assert scaler.dim("x") == (None, 5, 10)
+    assert scaler.subsetted.x
+    assert not scaler.is_slice("x")
+    assert scaler.dim("y") == (None, None, None)
+    assert not scaler.subsetted.y
+    assert not scaler.is_slice("y")
+
+def test_scalar_slice(layer_crs_mock):
+    scaler = WCSScaler(layer_crs_mock)
+    scaler.slice("y", 5)
+    assert scaler.dim("y") == (None, 5, 5)
+    assert scaler.subsetted.y
+    assert scaler.is_slice("y")
+    assert scaler.dim("x") == (None, None, None)
+    assert not scaler.subsetted.x
+    assert not scaler.is_slice("x")
+

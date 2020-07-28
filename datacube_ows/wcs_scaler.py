@@ -104,6 +104,7 @@ class WCSScaler:
     def slice(self, dimension, value):
         self.min[dimension] = value
         self.max[dimension] = value
+        self.subsetted[dimension] = True
 
     def is_slice(self, dim):
         return self.subsetted[dim] and self.min[dim] == self.max[dim]
@@ -114,6 +115,7 @@ class WCSScaler:
     def trim(self, dimension, lower, higher):
         self.min[dimension] = lower
         self.max[dimension] = higher
+        self.subsetted[dimension] = True
 
     def to_crs(self, new_crs):
         grid = self.layer.grids[new_crs]
