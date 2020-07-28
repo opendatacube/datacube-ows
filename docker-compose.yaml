@@ -21,13 +21,13 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       # Where the config file is (must match the volume mount)
       WMS_CONFIG_PATH: /env/config/ows_cfg.py
-      # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env) 
+      # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
       DATACUBE_OWS_CFG: config.ows_cfg.ows_cfg
       AWS_DEFAULT_REGION: ${AWS_REGION}
       # Talk to AWS without using credentials
       AWS_NO_SIGN_REQUEST: "${AWS_NO_SIGN_REQUEST}"
       # Enable Metrics
-      prometheus_multiproc_dir: "/tmp"
+      prometheus_multiproc_dir: ${prometheus_multiproc_dir}
       # Dev flags
       FLASK_APP: /code/datacube_ows/ogc.py
       FLASK_ENV: ${FLASK_ENV}
