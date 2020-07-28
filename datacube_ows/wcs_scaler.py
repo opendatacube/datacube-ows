@@ -7,7 +7,9 @@ class WCSScalerException(Exception):
     pass
 
 class WCSScalerUnknownDimension(WCSScalerException):
-    pass
+    def __init__(self, dim, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dim = dim
 
 class WCSScalerOverspecifiedDimension(WCSScalerException):
     pass
@@ -37,7 +39,7 @@ class SpatialParameter:
         elif dimension in ("y", "j", "lat", "latitude"):
             return False
         else:
-            raise WCSScalerUnknownDimension()
+            raise WCSScalerUnknownDimension(dimension)
 
     def __getitem__(self, dim):
         if self.is_x_dim(dim):
@@ -102,6 +104,7 @@ class WCSScaler:
     def slice(self, dimension, value):
         self.min[dimension] = value
         self.max[dimension] = value
+        self.subsetted[dimension] = True
 
     def is_slice(self, dim):
         return self.subsetted[dim] and self.min[dim] == self.max[dim]
@@ -112,9 +115,12 @@ class WCSScaler:
     def trim(self, dimension, lower, higher):
         self.min[dimension] = lower
         self.max[dimension] = higher
+        self.subsetted[dimension] = True
 
     def to_crs(self, new_crs):
         grid = self.layer.grids[new_crs]
+        skip_x_xform = False
+        skip_y_xform = False
         if self.crs != new_crs:
             if not self.subsetted.x and not self.subsetted.y:
                 # Neither axis subsetted
@@ -125,12 +131,14 @@ class WCSScaler:
                 self.crs = new_crs
             elif not self.subsetted.x or not self.subsetted.y:
                 # One axis subsetted
-                if self.subsetted_x:
-                    self.min.y = self.layer.ranges["bboxes"][new_crs]["bottom"]
-                    self.max.y = self.layer.ranges["bboxes"][new_crs]["top"]
-                if self.subsetted_y:
-                    self.min.x = self.layer.ranges["bboxes"][new_crs]["left"]
-                    self.max.x = self.layer.ranges["bboxes"][new_crs]["right"]
+                if self.subsetted.x:
+                    self.min.y = self.layer.ranges["bboxes"][self.crs]["bottom"]
+                    self.max.y = self.layer.ranges["bboxes"][self.crs]["top"]
+                    skip_y_xform = True
+                if self.subsetted.y:
+                    self.min.x = self.layer.ranges["bboxes"][self.crs]["left"]
+                    self.max.x = self.layer.ranges["bboxes"][self.crs]["right"]
+                    skip_x_xform = True
             else:
                 # Both axes subsetted
                 pass
@@ -169,9 +177,21 @@ class WCSScaler:
                              y + grid["resolution"][1])
                 self.size.set(1, 1)
             else:
-                bbox = geom.to_crs(new_crs_obj).boundingbox
-                self.min.set(bbox.left, bbox.bottom)
-                self.max.set(bbox.right, bbox.top)
+                proj_geom = geom.to_crs(new_crs_obj)
+                bbox = proj_geom.boundingbox
+                if skip_x_xform:
+                    self.min.x = self.layer.ranges["bboxes"][new_crs]["left"]
+                    self.max.x = self.layer.ranges["bboxes"][new_crs]["right"]
+                else:
+                    self.min.x = bbox.left
+                    self.max.x = bbox.right
+                if skip_y_xform:
+                    self.min.y = self.layer.ranges["bboxes"][new_crs]["bottom"]
+                    self.max.y = self.layer.ranges["bboxes"][new_crs]["top"]
+                else:
+                    self.min.y = bbox.bottom
+                    self.max.y = bbox.top
+
                 self.quantise_to_resolution(grid)
             self.crs = new_crs
         else:
@@ -179,7 +199,7 @@ class WCSScaler:
 
     def quantise_to_resolution(self, grid):
         for idx, dim in enumerate("xy"):
-            if self.max[dim] - self.min[dim] < abs(grid["resolution"][idx] * 1.5):
+            if abs(self.max[dim] - self.min[dim]) < abs(grid["resolution"][idx] * 1.5):
                 self.max[dim] = self.min[dim] + grid["resolution"][idx]
                 self.size[dim] = 1
 
