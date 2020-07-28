@@ -1,5 +1,7 @@
 import datetime
 
+from affine import Affine
+
 import pytest
 
 from datacube_ows.ows_configuration import OWSProductLayer, OWSConfig
@@ -274,3 +276,27 @@ def test_transform_two_slices(layer_crs_geom):
     scaler.to_crs("EPSG:3577")
     assert scaler.dim("x") == (1, -1248178.532656371, -1248153.532656371)
     assert scaler.dim("y") == (1, -2202762.0236987285, -2202787.0236987285)
+
+def test_scale_axis(layer_crs_geom):
+    scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
+    scaler.to_crs("EPSG:3577")
+    scaler.scale_axis("x", 2.0)
+    scaler.scale_axis("y", 0.5)
+    assert scaler.dim("x") == (419380, -2407984.8524648934, 2834259.110253384)
+    assert scaler.dim("y") == (85187, -5195512.771063174, -936185.3115191332)
+
+def test_scale_size(layer_crs_geom):
+    scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
+    scaler.to_crs("EPSG:3577")
+    scaler.scale_size("x", 512)
+    scaler.scale_size("y", 512)
+    assert scaler.dim("x") == (512, -2407984.8524648934, 2834259.110253384)
+    assert scaler.dim("y") == (512, -5195512.771063174, -936185.3115191332)
+
+def test_scaler_default(layer_crs_geom):
+    scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
+    scaler.to_crs("EPSG:3577")
+    affine = scaler.affine()
+    assert affine == Affine(
+        24.999971208537733, 0.0, -2407984.8524648934,
+        0.0, -25.000014436231336, -936185.3115191332)
