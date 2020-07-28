@@ -7,7 +7,9 @@ class WCSScalerException(Exception):
     pass
 
 class WCSScalerUnknownDimension(WCSScalerException):
-    pass
+    def __init__(self, dim, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dim = dim
 
 class WCSScalerOverspecifiedDimension(WCSScalerException):
     pass
@@ -37,7 +39,7 @@ class SpatialParameter:
         elif dimension in ("y", "j", "lat", "latitude"):
             return False
         else:
-            raise WCSScalerUnknownDimension()
+            raise WCSScalerUnknownDimension(dimension)
 
     def __getitem__(self, dim):
         if self.is_x_dim(dim):
