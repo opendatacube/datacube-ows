@@ -293,6 +293,15 @@ def test_scale_size(layer_crs_geom):
     assert scaler.dim("x") == (512, -2407984.8524648934, 2834259.110253384)
     assert scaler.dim("y") == (512, -5195512.771063174, -936185.3115191332)
 
+def test_scale_extent(layer_crs_geom):
+    # N.B. We don't really understand what scale_extent is supposed to do.
+    scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
+    scaler.to_crs("EPSG:3577")
+    scaler.scale_extent("x", 150, 450)
+    scaler.scale_extent("y", 0, 300)
+    assert scaler.dim("x") == (300, -2407984.8524648934, 2834259.110253384)
+    assert scaler.dim("y") == (300, -5195512.771063174, -936185.3115191332)
+
 def test_scaler_default(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
