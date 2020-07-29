@@ -11,27 +11,19 @@ metadata_lookup as (
 )
 -- This is the eodataset variant of the temporal extent (from/to variant)
 select
-  dataset_type_ref, id,tstzrange(
-    (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp + interval '1 microsecond'
-  )  as temporal_extent
+  dataset_type_ref, id,
+  case
+    when metadata -> 'extent' ->> 'from_dt' is null then
+      tstzrange(
+        (metadata -> 'extent' ->> 'center_dt') :: timestamp,(metadata -> 'extent' ->> 'center_dt') :: timestamp + interval '1 microsecond'
+      )
+    else
+      tstzrange(
+        (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp + interval '1 microsecond'
+      )
+  end as temporal_extent
 from agdc.dataset where
   metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
-  and
-  metadata -> 'extent' ->> 'from_dt' is not null
-  or
-  metadata -> 'extent' ->> 'to_dt' is not null
-UNION
--- This is the eodataset variant of the temporal extent (center_dt variant)
-select
-  dataset_type_ref, id,tstzrange(
-    (metadata -> 'extent' ->> 'center_dt') :: timestamp,(metadata -> 'extent' ->> 'center_dt') :: timestamp + interval '1 microsecond'
-  )  as temporal_extent
-from agdc.dataset where
-  metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
-  and
-  metadata -> 'extent' ->> 'from_dt' is null
-  and
-  metadata -> 'extent' ->> 'to_dt' is null
 UNION
 -- This is the eo3 variant of the temporal extent, the sample eo3 dataset uses a singleton
 -- timestamp, some other variants use start/end timestamps. From OWS perspective temporal
