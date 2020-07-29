@@ -1,0 +1,46 @@
+from xarray import Dataset
+
+from datacube_ows.styles.component import ComponentStyleDef
+from datacube_ows.styles.ramp import ColorRampDef
+
+
+class HybridStyleDef(ColorRampDef, ComponentStyleDef):
+    auto_legend = False
+    def __init__(self, product, style_cfg):
+        super(HybridStyleDef, self).__init__(product, style_cfg)
+        self.component_ratio = style_cfg["component_ratio"]
+
+    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
+        #pylint: disable=too-many-locals
+        if extent_mask is not None:
+            data = data.where(extent_mask)
+        data = self.apply_masks(data, pq_data)
+
+        if self.index_function is not None:
+            data['index_function'] = (data.dims, self.index_function(data))
+
+        imgdata = Dataset()
+
+        d = data['index_function']
+        for band, intensity in self.rgb_components.items():
+            rampdata = self.color_ramp.get_value(d, band)
+            component_band_data = None
+            if band in self.rgb_components:
+                for c_band, c_intensity in self.rgb_components[band].items():
+                    if callable(c_intensity):
+                        imgband_component_data = c_intensity(data[c_band], c_band, band)
+                    else:
+                        imgband_component_data = data[c_band] * c_intensity
+                    if component_band_data is not None:
+                        component_band_data += imgband_component_data
+                    else:
+                        component_band_data = imgband_component_data
+                    if band != "alpha":
+                        component_band_data = self.compress_band(band, component_band_data)
+                img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
+                                 + self.component_ratio * component_band_data)
+            else:
+                img_band_data = rampdata * 255.0
+            imgdata[band] = (d.dims, img_band_data.astype("uint8"))
+
+        return imgdata

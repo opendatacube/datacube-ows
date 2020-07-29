@@ -5,7 +5,7 @@ from datacube_ows.data import get_s3_browser_uris
 import pytest
 
 from unittest.mock import patch, MagicMock
-from tests.test_band_mapper import product_layer
+from tests.test_styles import product_layer
 from datetime import datetime
 
 import numpy as np
