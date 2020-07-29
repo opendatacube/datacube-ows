@@ -8,7 +8,8 @@ from unittest.mock import patch, MagicMock
 
 import numpy as np
 
-from datacube_ows.band_mapper import StyleDefBase, RgbaColorRampDef, RgbaColorRamp
+from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
+from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.ogc_exceptions import WMSException
 
 
@@ -19,7 +20,7 @@ def prelegend_style():
 
 @pytest.fixture
 def prelegend_colorramp_style():
-    style = RgbaColorRampDef.__new__(RgbaColorRampDef)
+    style = ColorRampDef.__new__(ColorRampDef)
     return style
 
 
@@ -140,7 +141,7 @@ def test_legend_graphic(make_response):
 
 
 def test_parse_colorramp_defaults():
-    ramp = RgbaColorRamp(None, {
+    ramp = ColorRamp(None, {
         "range": [0.0, 1.0],
     })
     assert ramp.legend_begin == Decimal(0.0)
@@ -154,7 +155,7 @@ def test_parse_colorramp_defaults():
 
 
 def test_parse_colorramp_legend_beginend():
-    ramp = RgbaColorRamp(None, {
+    ramp = ColorRamp(None, {
         "range": [-1.0, 2.5],
         "legend": {
             "begin": "0.0",
@@ -169,7 +170,7 @@ def test_parse_colorramp_legend_beginend():
 
 
 def test_parse_colorramp_legend_ticksevery():
-    ramp = RgbaColorRamp(None, {
+    ramp = ColorRamp(None, {
         "range": [-1.0, 2.5],
         "legend": {
             "begin": "0.0",
@@ -183,7 +184,7 @@ def test_parse_colorramp_legend_ticksevery():
 
 
 def test_parse_colorramp_legend_tickcount():
-    ramp = RgbaColorRamp(None, {
+    ramp = ColorRamp(None, {
         "range": [-1.0, 2.5],
         "legend": {
             "begin": "0.0",
@@ -196,7 +197,7 @@ def test_parse_colorramp_legend_tickcount():
 
 
 def test_parse_colorramp_legend_ticks():
-    ramp = RgbaColorRamp(None, {
+    ramp = ColorRamp(None, {
         "range": [-1.0, 2.5],
         "legend": {
             "begin": "0.0",
@@ -210,7 +211,7 @@ def test_parse_colorramp_legend_ticks():
 
 
 def test_parse_colorramp_legend_tick_labels():
-    ramp = RgbaColorRamp(None, {
+    ramp = ColorRamp(None, {
         "range": [-1.0, 2.5],
         "legend": {
             "begin": "0.0",
