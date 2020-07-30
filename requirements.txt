@@ -5,6 +5,7 @@ pytest-cov
 pylint==2.4.4
 flask
 colour
+pandas==1.0.5
 scikit-image
 gevent==1.4.0
 python-slugify
