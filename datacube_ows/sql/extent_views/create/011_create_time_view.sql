@@ -15,11 +15,15 @@ select
   case
     when metadata -> 'extent' ->> 'from_dt' is null then
       tstzrange(
-        (metadata -> 'extent' ->> 'center_dt') :: timestamp,(metadata -> 'extent' ->> 'center_dt') :: timestamp + interval '1 microsecond'
+        (metadata -> 'extent' ->> 'center_dt') :: timestamp,
+        (metadata -> 'extent' ->> 'center_dt') :: timestamp,
+        '[]'
       )
     else
       tstzrange(
-        (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp + interval '1 microsecond'
+        (metadata -> 'extent' ->> 'from_dt') :: timestamp,
+        (metadata -> 'extent' ->> 'to_dt') :: timestamp,
+        '[]'
       )
   end as temporal_extent
 from agdc.dataset where
