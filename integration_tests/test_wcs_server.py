@@ -227,7 +227,6 @@ def test_wcs20_getcoverage_geotiff(ows_server):
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
 
-@pytest.mark.xfail(reason='unsupported format netcdf')
 def test_wcs20_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
@@ -236,7 +235,7 @@ def test_wcs20_getcoverage_netcdf(ows_server):
     contents = list(wcs.contents)
     output = wcs.getCoverage(
         identifier=[contents[0]],
-        format='netCDF',
+        format='application/x-netcdf',
         subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
         subsettingcrs="EPSG:4326",
         scalesize="x(400),y(300)",
