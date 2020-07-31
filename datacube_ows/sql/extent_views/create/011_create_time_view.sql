@@ -9,11 +9,23 @@ with
 metadata_lookup as (
   select id,name from agdc.metadata_type
 )
--- This is the eodataset variant of the temporal extent
+-- This is the eodataset variant of the temporal extent (from/to variant)
 select
-  dataset_type_ref, id,tstzrange(
-    (metadata -> 'extent' ->> 'from_dt') :: timestamp,(metadata -> 'extent' ->> 'to_dt') :: timestamp + interval '1 microsecond'
-  )  as temporal_extent
+  dataset_type_ref, id,
+  case
+    when metadata -> 'extent' ->> 'from_dt' is null then
+      tstzrange(
+        (metadata -> 'extent' ->> 'center_dt') :: timestamp,
+        (metadata -> 'extent' ->> 'center_dt') :: timestamp,
+        '[]'
+      )
+    else
+      tstzrange(
+        (metadata -> 'extent' ->> 'from_dt') :: timestamp,
+        (metadata -> 'extent' ->> 'to_dt') :: timestamp,
+        '[]'
+      )
+  end as temporal_extent
 from agdc.dataset where
   metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
 UNION
