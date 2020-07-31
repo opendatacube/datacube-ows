@@ -4,7 +4,14 @@ xmlns="http://www.opengis.net/ogc"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://www.opengis.net/ogc {{ schema_url }}">
   {% for err in exception.errors %}
-    <ServiceException{% if err.code %} code="{{ err.code }}"{% endif %}{% if err.locator %} locator="{{ err.locator }}"{% endif %}>{{ err.msg }}</ServiceException>
+    <ServiceException{% if err.code %} code="{{ err.code }}"{% endif %}{% if err.locator %} locator="{{ err.locator }}"{% endif %}>
+        {{ err.msg }}
+        {% if err.valid_keys %} - Perhaps you meant one of the following:
+            {% for valid_key in err.valid_keys %}
+                {{ valid_key }}
+            {% endfor %}
+        {% endif %}
+    </ServiceException>
   {% endfor %}
   {% if traceback %}
     <ServiceException>

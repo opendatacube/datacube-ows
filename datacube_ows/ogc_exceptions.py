@@ -16,16 +16,17 @@ class OGCException(Exception):
     schema_url = None
 
     # pylint: disable=super-init-not-called
-    def __init__(self, msg, code=None, locator=None, http_response=400):
+    def __init__(self, msg, valid_keys=None, code=None, locator=None, http_response=400):
         self.http_response = http_response
         self.errors = []
-        self.add_error(msg, code, locator)
+        self.add_error(msg, code, locator, valid_keys)
 
-    def add_error(self, msg, code=None, locator=None):
+    def add_error(self, msg, code=None, locator=None, valid_keys=None):
         self.errors.append({
             "msg": msg,
             "code": code,
-            "locator": locator
+            "locator": locator,
+            "valid_keys": valid_keys
         })
 
     # pylint: disable=dangerous-default-value
