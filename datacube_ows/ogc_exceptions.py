@@ -16,7 +16,7 @@ class OGCException(Exception):
     schema_url = None
 
     # pylint: disable=super-init-not-called
-    def __init__(self, msg, valid_keys=None, code=None, locator=None, http_response=400):
+    def __init__(self, msg, code=None, locator=None, http_response=400, valid_keys=None):
         self.http_response = http_response
         self.errors = []
         self.add_error(msg, code, locator, valid_keys)
