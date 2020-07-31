@@ -1,5 +1,5 @@
 Welcome to datacube-ows's documentation!
-======================================
+========================================
 
 Contents:
 
@@ -8,7 +8,9 @@ Contents:
 
    readme
    installation
+   configuration
    usage
+   environment_variables
    contributing
    history
 
