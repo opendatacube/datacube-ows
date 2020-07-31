@@ -12,6 +12,7 @@ on:
 env:
   ORG: opendatacube
   IMAGE: ows
+  DB_USERNAME: opendatacubeusername
 
 jobs:
   build-and-push:
@@ -97,7 +98,8 @@ jobs:
 
     # Build prod image and tag as latest, connect to pre-indexed database
     - name: Build and run prod OWS images (stage 2)
-      run: docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up --build --force-recreate -d
+      run: |
+        docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up --build --force-recreate -d
 
     - name: Sleep for 10 seconds
       uses: whatnick/wait-action@master
@@ -116,6 +118,11 @@ jobs:
         --retry-max-time 40 \
         "localhost:8000/ping" \
         > /dev/null
+
+    - name: Test datacube-ows-update
+      run: |
+        docker-compose exec -T ows datacube-ows-update --schema --role ${DB_USERNAME}
+        docker-compose exec -T ows datacube-ows-update
 
     - name: Test WMS GetCapabilities
       run: |
@@ -139,9 +146,6 @@ jobs:
         curl --silent --show-error --fail \
         "localhost:8000/?service=WCS&version=2.0.1&request=GetCapabilities"
         > /dev/null
-
-    - name: Test datacube-ows-update
-      run: docker-compose exec -T ows datacube-ows-update
 
     - name: Test Prometheus Metrics
       run: |
