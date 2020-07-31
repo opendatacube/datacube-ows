@@ -143,7 +143,7 @@ def get_product_from_arg(args, argname="layers"):
         raise WMSException("Layer %s is not defined" % layer,
                            WMSException.LAYER_NOT_DEFINED,
                            locator="Layer parameter",
-                           valid_keys=[prod for prod in cfg.product_index.keys()])
+                           valid_keys=cfg.product_index.keys())
     return product
 
 
@@ -345,7 +345,7 @@ class GetMapParameters(GetParameters):
             raise WMSException("Style %s is not defined" % style_r,
                                WMSException.STYLE_NOT_DEFINED,
                                locator="Style parameter",
-                               valid_keys=[style for style in self.product.style_index.keys()])
+                               valid_keys=self.product.style_index.keys())
         cfg = get_config()
         if self.geobox.width > cfg.wms_max_width:
             raise WMSException(f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",

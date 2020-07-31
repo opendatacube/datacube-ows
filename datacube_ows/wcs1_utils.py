@@ -28,35 +28,41 @@ class WCS1GetCoverageRequest():
         if "coverage" not in args:
             raise WCS1Exception("No coverage specified",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="COVERAGE parameter")
+                                locator="COVERAGE parameter",
+                                valid_keys=cfg.product_index.keys())
         self.product_name = args["coverage"]
         self.product = cfg.product_index.get(self.product_name)
         if not self.product or not self.product.wcs:
             raise WCS1Exception("Invalid coverage: %s" % self.product_name,
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
-                                locator="COVERAGE parameter")
+                                locator="COVERAGE parameter",
+                                valid_keys=cfg.product_index.keys())
 
         # Argument: FORMAT (required)
         if "format" not in args:
             raise WCS1Exception("No FORMAT parameter supplied",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="FORMAT parameter")
+                                locator="FORMAT parameter",
+                                valid_keys=cfg.wcs_formats_by_name)
         if args["format"] not in cfg.wcs_formats_by_name:
             raise WCS1Exception("Unsupported format: %s" % args["format"],
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="FORMAT parameter")
+                                locator="FORMAT parameter",
+                                valid_keys=cfg.wcs_formats_by_name)
         self.format = cfg.wcs_formats_by_name[args["format"]]
 
         # Argument: (request) CRS (required)
         if "crs" not in args:
             raise WCS1Exception("No request CRS specified",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="CRS parameter")
+                                locator="CRS parameter",
+                                valid_keys=cfg.published_CRSs.keys())
         self.request_crsid = args["crs"]
         if self.request_crsid not in cfg.published_CRSs:
             raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="CRS parameter")
+                                locator="CRS parameter",
+                                valid_keys=cfg.published_CRSs.keys())
         self.request_crs = geometry.CRS(self.request_crsid)
 
         # Argument: response_crs (optional)
@@ -65,7 +71,8 @@ class WCS1GetCoverageRequest():
             if self.response_crsid not in cfg.published_CRSs:
                 raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="RESPONSE_CRS parameter")
+                                    locator="RESPONSE_CRS parameter",
+                                    valid_keys = cfg.published_CRSs.keys())
             self.response_crs = geometry.CRS(self.response_crsid)
         else:
             self.response_crsid = self.request_crsid
@@ -114,14 +121,16 @@ class WCS1GetCoverageRequest():
                             raise WCS1Exception(
                                 "Time value '%s' not a valid date for coverage %s" % (t, self.product_name),
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="TIME parameter"
+                                locator="TIME parameter",
+                                valid_keys=[d.strptime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
                             )
                         self.times.append(time)
                     except ValueError:
                         raise WCS1Exception(
                             "Time value '%s' not a valid ISO-8601 date" % t,
                             WCS1Exception.INVALID_PARAMETER_VALUE,
-                            locator="TIME parameter"
+                            locator="TIME parameter",
+                            valid_keys=[d.strptime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
                         )
                 self.times.sort()
 
@@ -129,7 +138,8 @@ class WCS1GetCoverageRequest():
                 raise WCS1Exception(
                     "No valid ISO-8601 dates",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                    locator="TIME parameter"
+                    locator="TIME parameter",
+                    valid_keys = [d.strptime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
                 )
             elif len(times) > 1 and not self.format["multi-time"]:
                 raise WCS1Exception(
@@ -150,11 +160,13 @@ class WCS1GetCoverageRequest():
                 except ProductLayerException:
                     raise WCS1Exception("Invalid measurement '%s'" % b,
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
-                                        locator="MEASUREMENTS parameter")
+                                        locator="MEASUREMENTS parameter",
+                                        valid_keys=self.product.band_labels())
             if not bands:
                 raise WCS1Exception("No measurements supplied",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="MEASUREMENTS parameter")
+                                    locator="MEASUREMENTS parameter",
+                                    valid_keys = self.product.band_labels())
         elif "styles" in args and args["styles"]:
             # Use style bands.
             # Non-standard protocol extension.
