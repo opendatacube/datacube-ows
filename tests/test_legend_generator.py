@@ -55,6 +55,7 @@ def test_create_legends_from_styles(make_response):
 
     class fakestyle:
         def __init__(self):
+            self.auto_legend = True
             self.single_date_legend = MagicMock()
             self.single_date_legend.side_effect = fake_img
             self.legend_override_with_url = MagicMock()
