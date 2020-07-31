@@ -40,7 +40,8 @@ def uniform_crs(crs):
     else:
         raise WCS2Exception("Not a CRS: %s" % crs,
                             WCS2Exception.NOT_A_CRS,
-                            locator=crs)
+                            locator=crs,
+                            valid_keys=get_config().published_CRSs.keys())
     return crs
 
 
@@ -54,7 +55,8 @@ def get_coverage_data(request):
     if not layer or not layer.wcs:
         raise WCS2Exception("Invalid coverage: %s" % layer_name,
                             WCS2Exception.NO_SUCH_COVERAGE,
-                            locator="COVERAGE parameter")
+                            locator="COVERAGE parameter",
+                            valid_keys=cfg.product_index.keys())
 
     with cube() as dc:
         if not dc:
@@ -70,14 +72,16 @@ def get_coverage_data(request):
         if subsetting_crs not in cfg.published_CRSs:
             raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
                                 WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
-                                locator=subsetting_crs)
+                                locator=subsetting_crs,
+                                valid_keys=cfg.published_CRSs.keys())
 
         output_crs = uniform_crs(request.output_crs or subsetting_crs or native_crs)
 
         if output_crs not in cfg.published_CRSs:
             raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
                                 WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
-                                locator=output_crs)
+                                locator=output_crs,
+                                valid_keys=cfg.published_CRSs.keys())
 
         #
         # Subsetting/Scaling
@@ -192,20 +196,21 @@ def get_coverage_data(request):
                     if range_subset not in band_labels:
                         raise WCS2Exception('No such field %s' % range_subset,
                                     WCS2Exception.NO_SUCH_FIELD,
-                                    locator=range_subset
+                                    locator=range_subset,
+                                    valid_keys=band_labels
                                     )
                     bands.append(range_subset)
                 else:
                     if range_subset.start not in band_labels:
                         raise WCS2Exception('No such field %s' % range_subset.start,
                                             WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
-                                            locator=range_subset.start
-                                            )
+                                            locator=range_subset.start,
+                                            valid_keys = band_labels)
                     if range_subset.end not in band_labels:
                         raise WCS2Exception('No such field %s' % range_subset.end,
                                             WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
-                                            locator=range_subset.end
-                                            )
+                                            locator=range_subset.end,
+                                            valid_keys = band_labels)
 
                     start = band_labels.index(range_subset.start)
                     end = band_labels.index(range_subset.end)
@@ -225,7 +230,8 @@ def get_coverage_data(request):
             except KeyError:
                 raise WCS2Exception("Unsupported format: %s" % request.format,
                                     WCS2Exception.INVALID_PARAMETER_VALUE,
-                                    locator="FORMAT")
+                                    locator="FORMAT",
+                                    valid_keys=cfg.wcs_formats_by_mime.keys())
 
         if len(times) > 1 and not fmt.multi_time:
             raise WCS2Exception(
