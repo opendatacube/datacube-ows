@@ -29,14 +29,14 @@ class WCS1GetCoverageRequest():
             raise WCS1Exception("No coverage specified",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="COVERAGE parameter",
-                                valid_keys=cfg.product_index.keys())
+                                valid_keys=list(cfg.product_index))
         self.product_name = args["coverage"]
         self.product = cfg.product_index.get(self.product_name)
         if not self.product or not self.product.wcs:
             raise WCS1Exception("Invalid coverage: %s" % self.product_name,
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
                                 locator="COVERAGE parameter",
-                                valid_keys=cfg.product_index.keys())
+                                valid_keys=list(cfg.product_index))
 
         # Argument: FORMAT (required)
         if "format" not in args:
@@ -56,13 +56,13 @@ class WCS1GetCoverageRequest():
             raise WCS1Exception("No request CRS specified",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="CRS parameter",
-                                valid_keys=cfg.published_CRSs.keys())
+                                valid_keys=list(cfg.published_CRSs))
         self.request_crsid = args["crs"]
         if self.request_crsid not in cfg.published_CRSs:
             raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="CRS parameter",
-                                valid_keys=cfg.published_CRSs.keys())
+                                valid_keys=list(cfg.published_CRSs))
         self.request_crs = geometry.CRS(self.request_crsid)
 
         # Argument: response_crs (optional)
@@ -72,7 +72,7 @@ class WCS1GetCoverageRequest():
                 raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESPONSE_CRS parameter",
-                                    valid_keys = cfg.published_CRSs.keys())
+                                    valid_keys=list(cfg.published_CRSs))
             self.response_crs = geometry.CRS(self.response_crsid)
         else:
             self.response_crsid = self.request_crsid

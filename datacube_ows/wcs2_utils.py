@@ -41,7 +41,7 @@ def uniform_crs(crs):
         raise WCS2Exception("Not a CRS: %s" % crs,
                             WCS2Exception.NOT_A_CRS,
                             locator=crs,
-                            valid_keys=get_config().published_CRSs.keys())
+                            valid_keys=list(get_config().published_CRSs))
     return crs
 
 
@@ -56,7 +56,7 @@ def get_coverage_data(request):
         raise WCS2Exception("Invalid coverage: %s" % layer_name,
                             WCS2Exception.NO_SUCH_COVERAGE,
                             locator="COVERAGE parameter",
-                            valid_keys=cfg.product_index.keys())
+                            valid_keys=list(cfg.product_index))
 
     with cube() as dc:
         if not dc:
@@ -73,7 +73,7 @@ def get_coverage_data(request):
             raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
                                 WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
                                 locator=subsetting_crs,
-                                valid_keys=cfg.published_CRSs.keys())
+                                valid_keys=list(cfg.published_CRSs))
 
         output_crs = uniform_crs(request.output_crs or subsetting_crs or native_crs)
 
@@ -81,7 +81,7 @@ def get_coverage_data(request):
             raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
                                 WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
                                 locator=output_crs,
-                                valid_keys=cfg.published_CRSs.keys())
+                                valid_keys=list(cfg.published_CRSs))
 
         #
         # Subsetting/Scaling
@@ -231,7 +231,7 @@ def get_coverage_data(request):
                 raise WCS2Exception("Unsupported format: %s" % request.format,
                                     WCS2Exception.INVALID_PARAMETER_VALUE,
                                     locator="FORMAT",
-                                    valid_keys=cfg.wcs_formats_by_mime.keys())
+                                    valid_keys=list(cfg.wcs_formats_by_mime))
 
         if len(times) > 1 and not fmt.multi_time:
             raise WCS2Exception(
