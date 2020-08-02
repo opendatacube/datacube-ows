@@ -142,7 +142,8 @@ def get_product_from_arg(args, argname="layers"):
     if not product:
         raise WMSException("Layer %s is not defined" % layer,
                            WMSException.LAYER_NOT_DEFINED,
-                           locator="Layer parameter")
+                           locator="Layer parameter",
+                           valid_keys=list(cfg.product_index))
     return product
 
 
@@ -154,13 +155,15 @@ def get_arg(args, argname, verbose_name, lower=False,
     if not fmt:
         raise WMSException("No %s specified" % verbose_name,
                            errcode,
-                           locator="%s parameter" % argname)
+                           locator="%s parameter" % argname,
+                           valid_keys=permitted_values)
 
     if permitted_values:
         if fmt not in permitted_values:
             raise WMSException("%s %s is not supported" % (verbose_name, fmt),
                                errcode,
-                               locator="%s parameter" % argname)
+                               locator="%s parameter" % argname,
+                               valid_keys=permitted_values)
     return fmt
 
 
@@ -265,7 +268,6 @@ def bounding_box_to_geom(bbox, bb_crs, target_crs):
 
 
 class GetParameters():
-    # pylint: disable=dict-keys-not-iterating
     def __init__(self, args):
         self.cfg = get_config()
         # Version
@@ -278,7 +280,7 @@ class GetParameters():
             crs_arg = "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                              errcode=WMSException.INVALID_CRS,
-                             permitted_values=self.cfg.published_CRSs.keys())
+                             permitted_values=list(self.cfg.published_CRSs))
         self.crs = geometry.CRS(self.crsid)
         # Layers
         self.product = self.get_product(args)
@@ -341,7 +343,8 @@ class GetMapParameters(GetParameters):
         if not self.style:
             raise WMSException("Style %s is not defined" % style_r,
                                WMSException.STYLE_NOT_DEFINED,
-                               locator="Style parameter")
+                               locator="Style parameter",
+                               valid_keys=list(self.product.style_index))
         cfg = get_config()
         if self.geobox.width > cfg.wms_max_width:
             raise WMSException(f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",

@@ -48,6 +48,8 @@ def create_legends_from_styles(styles, ndates=0):
             img = get_image_from_url(url)
             if img:
                 imgs.append(img)
+        elif not s.auto_legend:
+            raise WMSException(f"Style {s.name} does not have a legend.")
         else:
             if ndates in [0,1]:
                 bytesio = io.BytesIO()

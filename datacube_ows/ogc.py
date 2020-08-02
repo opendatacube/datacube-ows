@@ -188,13 +188,22 @@ def ogc_impl():
 
 
 def ogc_svc_impl(svc):
-    svc_support = OWS_SUPPORTED[svc]
+    svc_support = OWS_SUPPORTED.get(svc)
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", svc).upper()
 
     # Is service activated in config?
     try:
+        if not svc_support:
+            raise WMSException(f"Invalid service: {svc}",
+                               valid_keys=[
+                                       service.service
+                                       for service in OWS_SUPPORTED.values()
+                                       if service.activated()
+                               ],
+                               code=WMSException.OPERATION_NOT_SUPPORTED,
+                               locator="service parameter")
         if not svc_support.activated():
             raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
 
