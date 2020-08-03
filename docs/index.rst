@@ -11,6 +11,7 @@ Contents:
    configuration
    usage
    environment_variables
+   pyspy
    contributing
    history
 
