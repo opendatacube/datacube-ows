@@ -60,10 +60,19 @@ def create_multiprod_range_entry(dc, product, crses):
         repr(product.product_names)
     ))
     conn = get_sqlconn(dc)
-    txn = conn.begin()
     prodids = [ p.id for p in product.products ]
     wms_name = product.name
 
+    if all(
+            not datasets_exist(dc, p_name)
+            for p_name in product.product_names
+    ):
+        print("Could not find datasets for any product in multiproduct: ", product.name)
+        conn.close()
+        print("Done")
+        return
+
+    txn = conn.begin()
     # Attempt to insert row
     conn.execute("""
         INSERT INTO wms.multiproduct_ranges
@@ -292,7 +301,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
   conn.close()
 
 
-def check_datasets_exist(dc, product_name):
+def datasets_exist(dc, product_name):
   conn = get_sqlconn(dc)
 
   results = conn.execute("""
@@ -344,7 +353,7 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
     else:
         for pname, ows_prods in odc_products.items():
             dc_product = dc.index.products.get_by_name(pname)
-            if check_datasets_exist(dc, dc_product.name):
+            if datasets_exist(dc, dc_product.name):
                 prod_summary = summary
                 for ows_prod in ows_prods["ows"]:
                     if ows_prod:
