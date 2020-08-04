@@ -4,7 +4,9 @@ from owslib.wcs import WebCoverageService
 from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
-import requests
+
+from integration_tests.utils import WCS2Extent
+
 
 def get_xsd(name):
     # TODO: Get XSD's for different versions
@@ -210,16 +212,20 @@ def test_wcs20_server(ows_server):
     contents = list(wcs.contents)
     assert contents
 
+
 def test_wcs20_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    desc_cov = wcs.getDescribeCoverage(contents[0])
+    extent = WCS2Extent(desc_cov)
+    subsets = extent.subsets("EPSG:4326")
     output = wcs.getCoverage(
         identifier=[contents[0]],
         format='image/geotiff',
-        subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
+        subsets=subsets,
         subsettingcrs="EPSG:4326",
         scalesize="x(400),y(300)",
     )
@@ -233,10 +239,13 @@ def test_wcs20_getcoverage_netcdf(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    desc_cov = wcs.getDescribeCoverage(contents[0])
+    extent = WCS2Extent(desc_cov)
+    subsets = extent.subsets("EPSG:4326", first_time=True)
     output = wcs.getCoverage(
         identifier=[contents[0]],
         format='application/x-netcdf',
-        subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
+        subsets=subsets,
         subsettingcrs="EPSG:4326",
         scalesize="x(400),y(300)",
     )
@@ -251,11 +260,14 @@ def test_wcs20_getcoverage_multidate(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    desc_cov = wcs.getDescribeCoverage(contents[0])
+    extent = WCS2Extent(desc_cov)
+    subsets = extent.subsets("EPSG:4326", multi_time=True)
     try:
         resp = wcs.getCoverage(
             identifier=[contents[0]],
             format='image/geotiff',
-            subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05', "2019-12-05")],
+            subsets=subsets,
             subsettingcrs="EPSG:4326",
             scalesize="x(400),y(300)",
         )
@@ -283,6 +295,7 @@ def test_wcs21_describecoverage(ows_server):
     test_layer_name = contents[0]
 
     resp = wcs.getDescribeCoverage(test_layer_name)
+    extent = WCS2Extent(resp)
 
     # resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("2.0/wcsDescribeCoverage.xsd")
@@ -310,13 +323,14 @@ def test_wcs21_getcoverage(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    desc_cov = wcs.getDescribeCoverage(contents[0])
+    extent = WCS2Extent(desc_cov)
+    subsets = extent.subsets("EPSG:4326")
     output = wcs.getCoverage(
         identifier=[contents[0]],
         format='image/geotiff',
-        subsets=[('x', 144, 144.3), ('y', -42.4, -42)],
-        # timeSequence=['2019-11-05'],
+        subsets=subsets,
         subsettingcrs="EPSG:4326",
-        subset='time("2019-11-05")',
         scalesize="x(400),y(300)"
     )
 
