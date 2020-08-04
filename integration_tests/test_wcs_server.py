@@ -5,7 +5,7 @@ from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
 
-from integration_tests.utils import WCS2Extent
+from .utils import WCS20Extent
 
 
 def get_xsd(name):
@@ -220,7 +220,7 @@ def test_wcs20_getcoverage_geotiff(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS2Extent(desc_cov)
+    extent = WCS20Extent(desc_cov)
     subsets = extent.subsets("EPSG:4326")
     output = wcs.getCoverage(
         identifier=[contents[0]],
@@ -240,7 +240,7 @@ def test_wcs20_getcoverage_netcdf(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS2Extent(desc_cov)
+    extent = WCS20Extent(desc_cov)
     subsets = extent.subsets("EPSG:4326", first_time=True)
     output = wcs.getCoverage(
         identifier=[contents[0]],
@@ -261,7 +261,7 @@ def test_wcs20_getcoverage_multidate(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS2Extent(desc_cov)
+    extent = WCS20Extent(desc_cov)
     subsets = extent.subsets("EPSG:4326", multi_time=True)
     try:
         resp = wcs.getCoverage(
@@ -295,7 +295,7 @@ def test_wcs21_describecoverage(ows_server):
     test_layer_name = contents[0]
 
     resp = wcs.getDescribeCoverage(test_layer_name)
-    extent = WCS2Extent(resp)
+    extent = WCS20Extent(resp)
 
     # resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("2.0/wcsDescribeCoverage.xsd")
@@ -324,7 +324,7 @@ def test_wcs21_getcoverage(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS2Extent(desc_cov)
+    extent = WCS20Extent(desc_cov)
     subsets = extent.subsets("EPSG:4326")
     output = wcs.getCoverage(
         identifier=[contents[0]],
