@@ -233,6 +233,10 @@ class WCSScaler:
         x_scale = (self.max.x - self.min.x) / self.size.x
         # Y axis is reversed: image coordinate conventions
         y_scale = (self.min.y - self.max.y) / self.size.y
-        trans_aff = Affine.translation(self.min.x, self.max.y)
-        scale_aff = Affine.scale(x_scale, y_scale)
+        if self.crs_def.get("vertical_coord_first", False):
+            trans_aff = Affine.translation(self.min.y, self.max.x)
+            scale_aff = Affine.scale(y_scale, x_scale)
+        else:
+            trans_aff = Affine.translation(self.min.y, self.max.x)
+            scale_aff = Affine.scale(y_scale, x_scale)
         return trans_aff * scale_aff

@@ -5,7 +5,6 @@ from datetime import datetime, date
 
 import numpy
 import xarray
-from affine import Affine
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
