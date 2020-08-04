@@ -2,6 +2,7 @@ import pytest
 
 from owslib.wcs import WebCoverageService
 from owslib.util import ServiceException
+from requests.exceptions import HTTPError
 from urllib import request
 from lxml import etree
 
@@ -222,16 +223,21 @@ def test_wcs20_getcoverage_geotiff(ows_server):
     desc_cov = wcs.getDescribeCoverage(contents[0])
     extent = WCS20Extent(desc_cov)
     subsets = extent.subsets("EPSG:4326")
-    output = wcs.getCoverage(
-        identifier=[contents[0]],
-        format='image/geotiff',
-        subsets=subsets,
-        subsettingcrs="EPSG:4326",
-        scalesize="x(400),y(300)",
-    )
+    # No way of knowing if we will hit data or not
+    # 404 or success are valid results
+    try:
+        output = wcs.getCoverage(
+            identifier=[contents[0]],
+            format='image/geotiff',
+            subsets=subsets,
+            subsettingcrs="EPSG:4326",
+            scalesize="x(400),y(300)"
+        )
+        assert output
+        assert output.info()['Content-Type'] == 'image/geotiff'
+    except HTTPError as e:
+        assert e.response.status_code == 404
 
-    assert output
-    assert output.info()['Content-Type'] == 'image/geotiff'
 
 def test_wcs20_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -242,16 +248,19 @@ def test_wcs20_getcoverage_netcdf(ows_server):
     desc_cov = wcs.getDescribeCoverage(contents[0])
     extent = WCS20Extent(desc_cov)
     subsets = extent.subsets("EPSG:4326", first_time=True)
-    output = wcs.getCoverage(
-        identifier=[contents[0]],
-        format='application/x-netcdf',
-        subsets=subsets,
-        subsettingcrs="EPSG:4326",
-        scalesize="x(400),y(300)",
-    )
+    try:
+        output = wcs.getCoverage(
+            identifier=[contents[0]],
+            format='application/x-netcdf',
+            subsets=subsets,
+            subsettingcrs="EPSG:4326",
+            scalesize="x(400),y(300)",
+        )
 
-    assert output
-    assert output.info()['Content-Type'] == 'application/x-netcdf'
+        assert output
+        assert output.info()['Content-Type'] == 'application/x-netcdf'
+    except HTTPError as e:
+        assert e.response.status_code == 404
 
 
 def test_wcs20_getcoverage_multidate(ows_server):
@@ -326,13 +335,16 @@ def test_wcs21_getcoverage(ows_server):
     desc_cov = wcs.getDescribeCoverage(contents[0])
     extent = WCS20Extent(desc_cov)
     subsets = extent.subsets("EPSG:4326")
-    output = wcs.getCoverage(
-        identifier=[contents[0]],
-        format='image/geotiff',
-        subsets=subsets,
-        subsettingcrs="EPSG:4326",
-        scalesize="x(400),y(300)"
-    )
+    try:
+        output = wcs.getCoverage(
+            identifier=[contents[0]],
+            format='image/geotiff',
+            subsets=subsets,
+            subsettingcrs="EPSG:4326",
+            scalesize="x(400),y(300)"
+        )
 
-    assert output
-    assert output.info()['Content-Type'] == 'image/geotiff'
+        assert output
+        assert output.info()['Content-Type'] == 'image/geotiff'
+    except HTTPError as e:
+        assert e.response.status_code == 404
