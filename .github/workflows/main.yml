@@ -3,9 +3,15 @@ name: OWS build and push
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.rst'
   pull_request:
     branches: [master]
     types: [synchronize, opened, reopened, ready_for_review]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.rst'
   release:
     types: [created, edited]
 
