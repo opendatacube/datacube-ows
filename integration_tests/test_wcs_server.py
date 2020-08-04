@@ -5,7 +5,7 @@ from owslib.util import ServiceException
 from urllib import request
 from lxml import etree
 
-from .utils import WCS20Extent
+from integration_tests.utils import WCS20Extent
 
 
 def get_xsd(name):
