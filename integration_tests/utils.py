@@ -61,6 +61,6 @@ class WCS20Extent:
 
     @staticmethod
     def subset_bbox(bbox, xstart=0.3, xwidth=0.02, ystart=0.8, ywidth=0.02):
-        x = WCS2Extent.subcoord(bbox[0], bbox[2], xstart, xstart + xwidth)
-        y = WCS2Extent.subcoord(bbox[1], bbox[3], xstart, xstart + xwidth)
+        x = WCS20Extent.subcoord(bbox[0], bbox[2], xstart, xstart + xwidth)
+        y = WCS20Extent.subcoord(bbox[1], bbox[3], xstart, xstart + xwidth)
         return (x[0], y[0], x[1], y[1])
