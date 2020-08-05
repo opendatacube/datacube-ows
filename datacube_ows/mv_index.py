@@ -1,11 +1,12 @@
 from enum import Enum
+import json
 
 from geoalchemy2 import Geometry
-from sqlalchemy import MetaData, Table, select, or_, Column, SMALLINT
+from datacube.utils.geometry import Geometry as ODCGeom
+from sqlalchemy import MetaData, Table, select, or_, Column, SMALLINT, text
 from psycopg2.extras import DateTimeTZRange
 from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
-from sqlalchemy.sql.functions import count
-
+from sqlalchemy.sql.functions import count, func
 
 def get_sqlalc_engine(dc=None, index=None, engine=None):
     if engine:
@@ -16,15 +17,15 @@ def get_sqlalc_engine(dc=None, index=None, engine=None):
         return dc.index._db._engine
     raise NotImplementedError("Give me something to work with here")
 
-_meta = MetaData()
-
-def st_view():
-    return Table('space_time_view', _meta,
+def get_st_view(meta):
+    return Table('space_time_view', meta,
              Column('id', UUID()),
              Column('dataset_type_ref', SMALLINT()),
-             Column('spatial_extent', Geometry(from_text='ST_GeomFromEWKT', name='geometry')),
+             Column('spatial_extent', Geometry(from_text='ST_GeomFromGeoJSON', name='geometry')),
              Column('temporal_extent', TSTZRANGE())
                  )
+_meta = MetaData()
+st_view = get_st_view(_meta)
 
 class MVSelectOpts(Enum):
     """
@@ -33,10 +34,12 @@ class MVSelectOpts(Enum):
     ALL: return all columns, select *, as result set
     IDS: return list of database_ids only.
     COUNT: return a count of matching datasets
+    EXTENT: return full extent of query as a Geometry
     """
     ALL = 0
     IDS = 1
     COUNT = 2
+    EXTENT = 3
 
     def sel(self, stv):
         if self == self.ALL:
@@ -45,6 +48,8 @@ class MVSelectOpts(Enum):
             return [stv.c.id]
         if self == self.COUNT:
             return [count(stv.c.id)]
+        if self == self.EXTENT:
+            return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
         assert False
 
 def mv_search_datasets(dc=None, index=None, engine=None,
@@ -69,7 +74,7 @@ def mv_search_datasets(dc=None, index=None, engine=None,
     :return: See MVSelectOpts doc
     """
     engine = get_sqlalc_engine(dc=dc, index=index, engine=engine)
-    stv = st_view()
+    stv = st_view
     if layer is None:
         raise Exception("Must filter by product/layer")
     prod_ids = [p.id for p in layer.products]
@@ -84,15 +89,23 @@ def mv_search_datasets(dc=None, index=None, engine=None,
             )
         )
     if geom is not None:
-        stv.c.spatial_extent.intersects(geom)
-    # print(s) Print SQL Statement
+        geom_js = json.dumps(geom.json)
+        print(geom_js)
+        s = s.where(stv.c.spatial_extent.intersects(geom_js))
+    print(s) # Print SQL Statement
     conn = engine.connect()
     if sel == MVSelectOpts.ALL:
         return conn.execute(s)
     if sel == MVSelectOpts.IDS:
         return [r[0] for r in conn.execute(s)]
-    if sel == MVSelectOpts.COUNT:
+    if sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
         for r in conn.execute(s):
-            return r[0]
+            if sel == MVSelectOpts.COUNT:
+                return r[0]
+            if sel == MVSelectOpts.EXTENT:
+                geojson = r[0]
+                print("Output:", geojson)
+                return ODCGeom(json.loads(geojson))
+                # return ODCGeom(r[0])
 
     assert False
