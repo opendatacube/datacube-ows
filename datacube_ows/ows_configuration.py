@@ -512,10 +512,10 @@ class OWSNamedLayer(OWSLayer):
             except TypeError:
                 raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
         elif "native_resolution" in cfg:
-            config_x, config_y = cfg["native_resolution"]
+            config_x, config_y = (float(r) for r in cfg["native_resolution"])
             if (
-                    math.isclose(config_x, self.resolution_x, rel_tol=1e-10)
-                and math.isclose(config_y, self.resolution_y, rel_tol=1e-10)
+                    math.isclose(config_x, float(self.resolution_x), rel_tol=1e-10)
+                and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-10)
                 ):
                 _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
                            self.name)
