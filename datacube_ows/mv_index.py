@@ -8,14 +8,8 @@ from psycopg2.extras import DateTimeTZRange
 from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
 from sqlalchemy.sql.functions import count, func
 
-def get_sqlalc_engine(dc=None, index=None, engine=None):
-    if engine:
-        return engine
-    if index:
-        return index._db._engine
-    if dc:
-        return dc.index._db._engine
-    raise NotImplementedError("Give me something to work with here")
+def get_sqlalc_engine(index):
+    return index._db._engine
 
 def get_st_view(meta):
     return Table('space_time_view', meta,
@@ -33,6 +27,7 @@ class MVSelectOpts(Enum):
 
     ALL: return all columns, select *, as result set
     IDS: return list of database_ids only.
+    DATASETS: return list of ODC dataset objects
     COUNT: return a count of matching datasets
     EXTENT: return full extent of query as a Geometry
     """
@@ -40,11 +35,12 @@ class MVSelectOpts(Enum):
     IDS = 1
     COUNT = 2
     EXTENT = 3
+    DATASETS = 4
 
     def sel(self, stv):
         if self == self.ALL:
             return [stv]
-        if self == self.IDS:
+        if self == self.IDS or self == self.DATASETS:
             return [stv.c.id]
         if self == self.COUNT:
             return [count(stv.c.id)]
@@ -52,7 +48,7 @@ class MVSelectOpts(Enum):
             return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
         assert False
 
-def mv_search_datasets(dc=None, index=None, engine=None,
+def mv_search_datasets(index,
                        sel=MVSelectOpts.IDS,
                        times=None,
                        layer=None,
@@ -60,20 +56,16 @@ def mv_search_datasets(dc=None, index=None, engine=None,
     """
     Perform a dataset query via the space_time_view
 
-    :param layer:
+    :param layer: A ows_configuration.OWSNamedLayer object (single or multiproduct)
+    :param index: A datacube index (required)
 
-    A ows_configuration.OWSNamedLayer object (single or multiproduct)
-
-    You must supply one of
-    :param dc: A Datacube object
-    :param index: A datacube index
-    :param engine: An SQLAlchemy engine
     :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
     :param times: A list of pairs of datetimes (with time zone)
     :param geom: A datacube.utils.geometry.Geometry object
+
     :return: See MVSelectOpts doc
     """
-    engine = get_sqlalc_engine(dc=dc, index=index, engine=engine)
+    engine = get_sqlalc_engine(index)
     stv = st_view
     if layer is None:
         raise Exception("Must filter by product/layer")
@@ -90,9 +82,8 @@ def mv_search_datasets(dc=None, index=None, engine=None,
         )
     if geom is not None:
         geom_js = json.dumps(geom.json)
-        print(geom_js)
         s = s.where(stv.c.spatial_extent.intersects(geom_js))
-    print(s) # Print SQL Statement
+    # print(s) # Print SQL Statement
     conn = engine.connect()
     if sel == MVSelectOpts.ALL:
         return conn.execute(s)
@@ -104,8 +95,9 @@ def mv_search_datasets(dc=None, index=None, engine=None,
                 return r[0]
             if sel == MVSelectOpts.EXTENT:
                 geojson = r[0]
-                print("Output:", geojson)
                 return ODCGeom(json.loads(geojson))
-                # return ODCGeom(r[0])
-
+    if sel == MVSelectOpts.DATASETS:
+        return index.datasets.bulk_get(
+                 [r[0] for r in conn.execute(s)]
+        )
     assert False
