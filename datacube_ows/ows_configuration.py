@@ -466,16 +466,15 @@ class OWSNamedLayer(OWSLayer):
         # Native CRS
         try:
             self.native_CRS = self.product.definition["storage"]["crs"]
+            if cfg.get("native_crs") == self.native_CRS:
+                _LOG.debug(
+                    "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                    self.name)
+            else:
+                _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                             self.name, cfg['native_crs'], self.native_CRS)
         except KeyError:
-            self.native_CRS = None
-        if not self.native_CRS:
             self.native_CRS = cfg.get("native_crs")
-        elif cfg.get("native_crs") == self.native_CRS:
-            _LOG.debug("Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                       self.name)
-        elif "native_crs" in cfg:
-            _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
-                         self.name, cfg['native_crs'], self.native_CRS)
 
         if not self.native_CRS:
             raise ConfigException(f"No native CRS could be found for layer {self.name}")
