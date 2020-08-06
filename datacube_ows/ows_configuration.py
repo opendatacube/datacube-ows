@@ -514,17 +514,17 @@ class OWSNamedLayer(OWSLayer):
         elif "native_resolution" in cfg:
             config_x, config_y = (float(r) for r in cfg["native_resolution"])
             if (
-                    math.isclose(config_x, float(self.resolution_x), rel_tol=1e-10)
-                and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-10)
+                    math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
+                and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
                 ):
                 _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
                            self.name)
             else:
-                _LOG.warning("Native resolution for layer %s is specified in config as %s - overridden to (%.f, %.f) by ODC metadata",
+                _LOG.warning("Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
                              self.name, repr(cfg['native_resolution']), self.resolution_x, self.resolution_y)
 
         if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
-            ConfigException("Native (%s) bounding box on layer %s has left %f, right %f (diff %d), but horizontal resolution is %f"
+            ConfigException("Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
                             % (
                                 self.native_CRS,
                                 self.name,
