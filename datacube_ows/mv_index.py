@@ -86,7 +86,9 @@ def mv_search_datasets(index,
                 ]
             )
         )
+    orig_crs = None
     if geom is not None:
+        orig_crs = geom.crs
         if str(geom.crs) != "EPSG:4326":
             geom = geom.to_crs("EPSG:4326")
         geom_js = json.dumps(geom.json)
@@ -103,8 +105,11 @@ def mv_search_datasets(index,
                 return r[0]
             if sel == MVSelectOpts.EXTENT:
                 geojson = r[0]
-                uniongeom = ODCGeom(json.loads(geojson))
-                return uniongeom.intersection(geom)
+                uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
+                intersect = uniongeom.intersection(geom)
+                if orig_crs and orig_crs != "EPSG:4326":
+                    intersect = intersect.to_crs(orig_crs)
+                return intersect
     if sel == MVSelectOpts.DATASETS:
         return index.datasets.bulk_get(
                  [r[0] for r in conn.execute(s)]
