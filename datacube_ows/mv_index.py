@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
 from sqlalchemy.sql.functions import count, func
 
 def get_sqlalc_engine(index):
+    # pylint: disable=protected-access
     return index._db._engine
 
 def get_st_view(meta):
