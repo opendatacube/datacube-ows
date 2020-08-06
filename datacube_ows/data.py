@@ -24,7 +24,7 @@ from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
 from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException, tz_for_geometry, \
     solar_date, year_date_range, month_date_range
-
+from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets
 from datacube_ows.utils import log_call, group_by_statistical
 
 import logging
@@ -68,6 +68,18 @@ class DataStacker(object):
         if not self._product.pq_name and mask:
             return None
 
+        legacy = False
+        if legacy:
+            return self.legacy_datasets(index, mask=mask, all_time=all_time, point=point)
+
+        all_datasets = mv_search_datasets(index, MVSelectOpts.DATASETS,
+                                  layer=self._product,
+                                  times=self._times,
+                                  geom=self._geobox.extent,
+                                  mask=mask)
+        return datacube.Datacube.group_datasets(all_datasets, self.group_by)
+
+    def legacy_datasets(self, index, mask=False, all_time=False, point=None):
         if self._product.multi_product:
             prod_name = self._product.pq_names if mask and self._product.pq_name else self._product.product_names
             query_args = {

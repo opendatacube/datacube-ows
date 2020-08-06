@@ -52,7 +52,8 @@ def mv_search_datasets(index,
                        sel=MVSelectOpts.IDS,
                        times=None,
                        layer=None,
-                       geom=None):
+                       geom=None,
+                       mask=False):
     """
     Perform a dataset query via the space_time_view
 
@@ -62,6 +63,7 @@ def mv_search_datasets(index,
     :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
     :param times: A list of pairs of datetimes (with time zone)
     :param geom: A datacube.utils.geometry.Geometry object
+    :param mask: Bool, if true use the flags product of layer
 
     :return: See MVSelectOpts doc
     """
@@ -69,7 +71,11 @@ def mv_search_datasets(index,
     stv = st_view
     if layer is None:
         raise Exception("Must filter by product/layer")
-    prod_ids = [p.id for p in layer.products]
+    if mask:
+        prod_ids = [p.id for p in layer.pq_products]
+    else:
+        prod_ids = [p.id for p in layer.products]
+
     s = select(sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
     if times is not None:
         s = s.where(
@@ -81,6 +87,8 @@ def mv_search_datasets(index,
             )
         )
     if geom is not None:
+        if str(geom.crs) != "EPSG:4326":
+            geom = geom.to_crs("EPSG:4326")
         geom_js = json.dumps(geom.json)
         s = s.where(stv.c.spatial_extent.intersects(geom_js))
     # print(s) # Print SQL Statement
