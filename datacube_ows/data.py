@@ -62,7 +62,14 @@ class DataStacker(object):
         return self._needed_bands
 
     @log_call
-    def datasets(self, index, mask=False, all_time=False, point=None):
+    def n_datasets(self, index, all_time=False, point=None):
+        return self.datasets(index,
+                             all_time=all_time, point=point,
+                             mode=MVSelectOpts.COUNT)
+    @log_call
+    def datasets(self, index,
+                 mask=False, all_time=False, point=None,
+                 mode=MVSelectOpts.DATASETS):
         # Return datasets as a time-grouped xarray DataArray. (or None if no datasets)
         # No PQ product, so no PQ datasets.
         if not self._product.pq_name and mask:
@@ -72,12 +79,24 @@ class DataStacker(object):
         if legacy:
             return self.legacy_datasets(index, mask=mask, all_time=all_time, point=point)
 
-        all_datasets = mv_search_datasets(index, MVSelectOpts.DATASETS,
+        if point:
+            geom = point
+        else:
+            geom = self._geobox.extent
+
+        if all_time:
+            times = None
+        else:
+            times = self._times
+        result = mv_search_datasets(index, mode,
                                   layer=self._product,
-                                  times=self._times,
-                                  geom=self._geobox.extent,
+                                  times=times,
+                                  geom=geom,
                                   mask=mask)
-        return datacube.Datacube.group_datasets(all_datasets, self.group_by)
+        if mode == MVSelectOpts.DATASETS:
+            return datacube.Datacube.group_datasets(result, self.group_by)
+        else:
+            return result
 
     def legacy_datasets(self, index, mask=False, all_time=False, point=None):
         if self._product.multi_product:
@@ -248,38 +267,23 @@ def get_map(args):
             raise WMSException("Database connectivity failure")
         # Tiling.
         stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
-        datasets = stacker.datasets(dc.index)
-        n_datasets = datasets_in_xarray(datasets)
         zoomed_out = params.zf < params.product.min_zoom
-        too_many_datasets = (params.product.max_datasets_wms > 0
-                             and n_datasets > params.product.max_datasets_wms
-        )
-        if n_datasets == 0:
-            body = _write_empty(params.geobox)
-        elif too_many_datasets:
+        too_many_datasets = False
+        if not zoomed_out:
+            n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+            too_many_datasets = (params.product.max_datasets_wms > 0
+                                 and n_datasets > params.product.max_datasets_wms
+            )
+        if too_many_datasets or zoomed_out:
+            extent  = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
             body = _write_polygon(
                 params.geobox,
-                params.geobox.extent,
+                extent,
                 params.product.zoom_fill)
-        elif zoomed_out:
-            # Zoomed out to far to properly render data.
-            # Construct a polygon which is the union of the extents of the matching datasets.
-            extent = None
-            extent_crs = None
-            for dt in datasets.time.values:
-                tds = datasets.sel(time=dt)
-                for ds in tds.values.item():
-                    if extent:
-                        new_extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
-                        if new_extent.crs != extent_crs:
-                            new_extent = new_extent.to_crs(extent_crs)
-                        extent = extent.union(new_extent)
-                    else:
-                        extent = bbox_to_geom(ds.extent.boundingbox, ds.extent.crs)
-                        extent_crs = extent.crs
-            extent = extent.to_crs(params.crs)
-            body = _write_polygon(params.geobox, extent, params.product.zoom_fill)
+        elif n_datasets == 0:
+            body = _write_empty(params.geobox)
         else:
+            datasets = stacker.datasets(dc.index)
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             data = stacker.data(datasets,
                                 manual_merge=params.product.data_manual_merge,
