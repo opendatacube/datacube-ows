@@ -103,7 +103,8 @@ def mv_search_datasets(index,
                 return r[0]
             if sel == MVSelectOpts.EXTENT:
                 geojson = r[0]
-                return ODCGeom(json.loads(geojson))
+                uniongeom = ODCGeom(json.loads(geojson))
+                return uniongeom.intersection(geom)
     if sel == MVSelectOpts.DATASETS:
         return index.datasets.bulk_get(
                  [r[0] for r in conn.execute(s)]
