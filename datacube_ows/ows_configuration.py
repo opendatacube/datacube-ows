@@ -466,16 +466,15 @@ class OWSNamedLayer(OWSLayer):
         # Native CRS
         try:
             self.native_CRS = self.product.definition["storage"]["crs"]
+            if cfg.get("native_crs") == self.native_CRS:
+                _LOG.debug(
+                    "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                    self.name)
+            else:
+                _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                             self.name, cfg['native_crs'], self.native_CRS)
         except KeyError:
-            self.native_CRS = None
-        if not self.native_CRS:
             self.native_CRS = cfg.get("native_crs")
-        elif cfg.get("native_crs") == self.native_CRS:
-            _LOG.debug("Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                       self.name)
-        elif "native_crs" in cfg:
-            _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
-                         self.name, cfg['native_crs'], self.native_CRS)
 
         if not self.native_CRS:
             raise ConfigException(f"No native CRS could be found for layer {self.name}")
@@ -513,19 +512,19 @@ class OWSNamedLayer(OWSLayer):
             except TypeError:
                 raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
         elif "native_resolution" in cfg:
-            config_x, config_y = cfg["native_resolution"]
+            config_x, config_y = (float(r) for r in cfg["native_resolution"])
             if (
-                    math.isclose(config_x, self.resolution_x, rel_tol=1e-10)
-                and math.isclose(config_y, self.resolution_y, rel_tol=1e-10)
+                    math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
+                and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
                 ):
                 _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
                            self.name)
             else:
-                _LOG.warning("Native resolution for layer %s is specified in config as %s - overridden to (%.f, %.f) by ODC metadata",
+                _LOG.warning("Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
                              self.name, repr(cfg['native_resolution']), self.resolution_x, self.resolution_y)
 
         if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
-            ConfigException("Native (%s) bounding box on layer %s has left %f, right %f (diff %d), but horizontal resolution is %f"
+            ConfigException("Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
                             % (
                                 self.native_CRS,
                                 self.name,
