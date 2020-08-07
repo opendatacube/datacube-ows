@@ -107,9 +107,12 @@ def mv_search_datasets(index,
             if sel == MVSelectOpts.EXTENT:
                 geojson = r[0]
                 uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
-                intersect = uniongeom.intersection(geom)
-                if orig_crs and orig_crs != "EPSG:4326":
-                    intersect = intersect.to_crs(orig_crs)
+                if geom:
+                    intersect = uniongeom.intersection(geom)
+                    if orig_crs and orig_crs != "EPSG:4326":
+                        intersect = intersect.to_crs(orig_crs)
+                else:
+                    intersect = uniongeom
                 return intersect
     if sel == MVSelectOpts.DATASETS:
         return index.datasets.bulk_get(
