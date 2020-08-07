@@ -75,10 +75,6 @@ class DataStacker(object):
         if not self._product.pq_name and mask:
             return None
 
-        legacy = False
-        if legacy:
-            return self.legacy_datasets(index, mask=mask, all_time=all_time, point=point)
-
         if point:
             geom = point
         else:
@@ -97,47 +93,6 @@ class DataStacker(object):
             return datacube.Datacube.group_datasets(result, self.group_by)
         else:
             return result
-
-    def legacy_datasets(self, index, mask=False, all_time=False, point=None):
-        if self._product.multi_product:
-            prod_name = self._product.pq_names if mask and self._product.pq_name else self._product.product_names
-            query_args = {
-                "geopolygon": self._geobox.extent
-            }
-        else:
-            prod_name = self._product.pq_name if mask and self._product.pq_name else self._product.product_name
-            query_args = {
-                "product": prod_name,
-                "geopolygon": self._geobox.extent
-            }
-        if all_time or (mask and self._product.pq_ignore_time):
-            all_datasets = self._dataset_query(index, prod_name, query_args)
-        else:
-            all_datasets = []
-            for th in self._times:
-                query_args["time"] = th
-                all_datasets.extend(self._dataset_query(index, prod_name, query_args))
-        return datacube.Datacube.group_datasets(all_datasets, self.group_by)
-
-    def _dataset_query(self, index, prod_name, query_args):
-        # ODC Dataset Query
-        if self._product.multi_product:
-            queries = []
-            for pn in prod_name:
-                query_args["product"] = pn
-                queries.append(datacube.api.query.Query(**query_args))
-            _LOG.debug("query start %s", datetime.now().time())
-            datasets = []
-            for q in queries:
-                datasets.extend(index.datasets.search_eager(**q.search_terms))
-            _LOG.debug("query stop %s", datetime.now().time())
-        else:
-            query = datacube.api.query.Query(**query_args)
-            _LOG.debug("query start %s", datetime.now().time())
-            datasets = index.datasets.search_eager(**query.search_terms)
-            _LOG.debug("query stop %s", datetime.now().time())
-
-        return datasets
 
     @log_call
     def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, **kwargs):
