@@ -68,21 +68,10 @@ To install datacube-ows, run:
 .. _zip: https://github.com/opendatacube/datacube-ows/archive/master.zip
 
 Update_range natively
---------------------------
+---------------------
 
-Connect to the running docker to initialise DB, go to the directory where ``update_ranges.py`` is
-
-.. code-block:: console
-
-    $ datacube system init
-    $ python update_ranges.py --schema --role ubuntu
-
-Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is within the code directory.
-
-.. code-block:: console
-
-    $ python update_ranges.py --views --blocking
-    $ python update_ranges.py
+Refer to the `database documentation <database.rst>`_ documentation
+for information on how to setup and maintain a Datacube OWS database.
 
 From sources ( within Docker )
 ------------------------------
@@ -112,7 +101,9 @@ of the config file, and edit it to reflect your requirements.
 
     $ vi .env
 
-Create an external PostgreSQL Database for OWS use. Use this as a
+Create an external PostgreSQL Database for OWS use. (See
+the `database documentation <database.rst>`__ for
+more information.)  jUse this as a
 sidecar docker or natively on the host system. The following
 steps assume the database is on the host system for networking
 purposes. Take note of the credentials of the database for
@@ -126,22 +117,21 @@ parameters noted previously are forwared to the docker image entrypoint.
     $ docker-compose up
 
 Update_range via docker
---------------------------
+-----------------------
 
-Connect to the running docker to initialise DB, the update_range file is only available from ``/env/lib/python3.6/site-packages/datacube_ows`` please use ``datacube-ows-update``:
+Connect to the running docker to run datacube-ows-update/update_range.py
+commands (see the `database documentation <database.rst>`__ for more
+information).
+
+E.g. to set up a new database:
 
 .. code-block:: console
 
     $ docker exec -it datacube-ows_ows_1 bash
-    $ datacube system init
-    $ datacube-ows-update --schema --role ubuntu
+    ows_1$ datacube system init
+    ows_1$ datacube-ows-update --schema --role ubuntu
+    ows_1$ datacube-ows-update
 
-Update extents of products in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is within the code directory.
-
-.. code-block:: console
-
-    $ datacube-ows-update --views --blocking
-    $ datacube-ows-update
 
 Validate setup
 --------------
