@@ -231,10 +231,13 @@ def get_map(args):
             )
         if too_many_datasets or zoomed_out:
             extent  = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
-            body = _write_polygon(
-                params.geobox,
-                extent,
-                params.product.zoom_fill)
+            if extent is None:
+                body = _write_empty(params.geobox)
+            else:
+                body = _write_polygon(
+                    params.geobox,
+                    extent,
+                    params.product.zoom_fill)
         elif n_datasets == 0:
             body = _write_empty(params.geobox)
         else:
