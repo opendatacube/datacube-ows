@@ -20,7 +20,7 @@ Features
 
 * Leverages the power of the Open Data Cube, including support for COGs on S3.
 * Supports WMS and WMTS.
-* Experimental support for WCS.
+* Experimental support for WCS (1.0, 2.0, 2.1).
 
 Note on Naming
 --------------
