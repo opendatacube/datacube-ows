@@ -111,7 +111,7 @@ def main(layers, blocking,
             print("WARNING: The 'blocking' flag is "
                   "no longer supported and will be ignored.")
         print("Refreshing materialised views...")
-        refresh_views(dc, blocking)
+        refresh_views(dc)
         print("Done")
         return 0
 
