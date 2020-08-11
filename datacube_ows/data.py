@@ -13,7 +13,7 @@ import re
 
 import datacube
 from datacube.utils import geometry
-from datacube.storage.masking import mask_to_dict
+from datacube.utils.masking import mask_to_dict
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.ogc_exceptions import WMSException
