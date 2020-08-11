@@ -8,6 +8,7 @@ Contents:
 
    readme
    installation
+   database
    configuration
    usage
    environment_variables
