@@ -18,6 +18,7 @@ import numpy as np
 @pytest.fixture
 def product_layer():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
+    product_layer.global_cfg = None
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
@@ -95,6 +96,7 @@ def style_cfg_map():
 @pytest.fixture
 def product_layer_alpha_map():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
+    product_layer.global_cfg = None
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
@@ -318,6 +320,7 @@ def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
 @pytest.fixture
 def product_layer_mask_map():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
+    product_layer.global_cfg = None
     product_layer.name = "test_product"
     product_layer.pq_band = None
     product_layer.product_names = ["test_odc_product"]

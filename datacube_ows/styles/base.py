@@ -1,19 +1,22 @@
 from datacube.utils.masking import make_mask
 
-from datacube_ows.ows_configuration import OWSConfigEntry, OWSIndexedConfigEntry, OWSEntryNotFound
+from datacube_ows.ows_configuration import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 
-class StyleDefBase(OWSIndexedConfigEntry):
+class StyleDefBase(OWSExtensibleConfigEntry):
     INDEX_KEYS = ["layer", "style"]
     auto_legend = False
     include_in_feature_info = False
 
     def __init__(self, product, style_cfg, defer_multi_date=False):
-        super().__init__(style_cfg, keyvals={
-            "layer": product.name,
-            "style": style_cfg["name"]
-        })
+        super().__init__(style_cfg,
+                         global_cfg=product.global_cfg,
+                         keyvals={
+                                "layer": product.name,
+                                "style": style_cfg["name"]
+                         })
+        style_cfg = self._raw_cfg
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
@@ -88,6 +91,7 @@ class StyleDefBase(OWSIndexedConfigEntry):
         auto_legend = False
         def __init__(self, style, cfg):
             super().__init__(cfg)
+            cfg = self._raw_cfg
             self.style = style
             if "allowed_count_range" not in cfg:
                 raise ConfigException("multi_date handler must have an allowed_count_range")

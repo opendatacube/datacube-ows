@@ -17,7 +17,7 @@ from ows import Version
 from slugify import slugify
 
 from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
-    OWSIndexedConfigEntry, OWSEntryNotFound
+    OWSIndexedConfigEntry, OWSEntryNotFound, OWSExtensibleConfigEntry
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -143,9 +143,9 @@ class SuppURL(OWSConfigEntry):
 
 class OWSLayer(OWSConfigEntry):
     named = False
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
+    def __init__(self, cfg, dc, parent_layer=None, *args, **kwargs):
         super().__init__(cfg, *args, **kwargs)
-        self.global_cfg = global_cfg
+        self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
 
         if "title" not in cfg:
@@ -188,7 +188,7 @@ class OWSLayer(OWSConfigEntry):
 
 class OWSFolder(OWSLayer):
     def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
-        super().__init__(cfg, global_cfg, parent_layer, *args, **kwargs)
+        super().__init__(cfg, dc, parent_layer, global_cfg=global_cfg, *args, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.child_layers = []
         if "layers" not in cfg:
@@ -210,14 +210,16 @@ TIMERES_YR  = "year"
 
 TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR]
 
-class OWSNamedLayer(OWSIndexedConfigEntry, OWSLayer):
+class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
     named = True
+
     def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
         self.name = cfg["name"]
         super().__init__(cfg, global_cfg=global_cfg, dc=dc, parent_layer=parent_layer,
                          keyvals={"layer": self.name},
                          *args, **kwargs)
+        cfg = self._raw_cfg
         self.hide = False
         try:
             self.parse_product_names(cfg)

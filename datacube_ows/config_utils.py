@@ -90,7 +90,7 @@ def accum_max(a, b):
 
 
 class OWSConfigEntry:
-    def __init__(self, cfg):
+    def __init__(self, cfg, *args, **kwargs):
         self._raw_cfg = cfg
 
 
@@ -100,8 +100,8 @@ class OWSEntryNotFound(ConfigException):
 class OWSIndexedConfigEntry(OWSConfigEntry):
     INDEX_KEYS = []
 
-    def __init__(self, cfg, keyvals):
-        super().__init__(cfg)
+    def __init__(self, cfg, keyvals, *args, **kwargs):
+        super().__init__(cfg, *args, **kwargs)
 
         for k in self.INDEX_KEYS:
             if k not in keyvals:
@@ -119,3 +119,32 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
     def lookup_impl(cls, cfg, keyvals):
         raise NotImplementedError()
 
+
+def deepinherit(parent, child):
+    for k in parent:
+        if k in child:
+            if isinstance(child[k], dict):
+                # recurse dictionary
+                deepinherit(parent[k], child[k])
+            elif isinstance(child[k], str):
+                # Keep child's version of str
+                pass
+            else:
+                try:
+                    iter(child[k])
+                    # non-str iterable - append child to parent
+                    child[k] = parent[k] + child[k]
+                except TypeError:
+                    # Non-iterable - keep child's version
+                    pass
+        else:
+            child[k] = parent[k]
+
+class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
+    def __init__(self, cfg, keyvals, global_cfg, *args, **kwargs):
+        if "inherits" in cfg:
+            parent = self.lookup(global_cfg, keyvals=cfg["inherits"])
+            cfg_out = deepinherit(parent, cfg)
+        else:
+            cfg_out = cfg
+        super().__init__(cfg_out, keyvals, global_cfg=global_cfg, *args, **kwargs)
