@@ -1,14 +1,15 @@
+import datacube_ows.config_utils
 import datacube_ows.ows_configuration
 from datacube_ows.ows_configuration import BandIndex
 from unittest.mock import patch, MagicMock
 import pytest
 
 def test_accum_max():
-    ret = datacube_ows.ows_configuration.accum_max(1, 3)
+    ret = datacube_ows.config_utils.accum_max(1, 3)
     assert ret == 3
 
 def test_accum_min():
-    ret = datacube_ows.ows_configuration.accum_min(1, 3)
+    ret = datacube_ows.config_utils.accum_min(1, 3)
     assert ret == 1
 
 def test_band_index():

@@ -1,13 +1,15 @@
 from datacube.utils.masking import make_mask
 
+from datacube_ows.ows_configuration import OWSConfigEntry
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 
-class StyleDefBase(object):
+class StyleDefBase(OWSConfigEntry):
     auto_legend = False
     include_in_feature_info = False
 
     def __init__(self, product, style_cfg, defer_multi_date=False):
+        super().__init__(style_cfg)
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
@@ -78,9 +80,10 @@ class StyleDefBase(object):
                 return mdh
         return None
 
-    class MultiDateHandler(object):
+    class MultiDateHandler(OWSConfigEntry):
         auto_legend = False
         def __init__(self, style, cfg):
+            super().__init__(cfg)
             self.style = style
             if "allowed_count_range" not in cfg:
                 raise ConfigException("multi_date handler must have an allowed_count_range")
