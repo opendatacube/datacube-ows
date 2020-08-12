@@ -14,7 +14,7 @@ from ows.util import Version
 from datacube_ows.cube_pool import cube
 from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import ProductLayerException
+from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 
 class WCS1GetCoverageRequest():
@@ -157,7 +157,7 @@ class WCS1GetCoverageRequest():
             for b in bands.split(","):
                 try:
                     self.bands.append(self.product.band_idx.band(b))
-                except ProductLayerException:
+                except ConfigException:
                     raise WCS1Exception("Invalid measurement '%s'" % b,
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
                                         locator="MEASUREMENTS parameter",
