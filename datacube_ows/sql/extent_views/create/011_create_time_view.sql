@@ -28,6 +28,7 @@ select
   end as temporal_extent
 from agdc.dataset where
   metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
+  and archived is null
 UNION
 -- This is the eo3 variant of the temporal extent, the sample eo3 dataset uses a singleton
 -- timestamp, some other variants use start/end timestamps. From OWS perspective temporal
@@ -39,4 +40,6 @@ select
     coalesce(metadata->'properties'->>'dtr:start_datetime', metadata->'properties'->>'datetime'):: timestamp,
     coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp + interval '1 day')
    ) as temporal_extent
-from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard','eo3'))
+from agdc.dataset where
+    metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard','eo3'))
+    and archived is null
