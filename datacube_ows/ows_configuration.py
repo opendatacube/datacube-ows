@@ -218,19 +218,13 @@ class SuppURL(object):
 
 class OWSConfigEntry(object):
     def __init__(self, cfg):
-        self._ingest_dict(cfg)
-
-    def _ingest_dict(self, d):
-        for k,v in d.items():
-            setattr(self, k, v)
-
-    def __getitem__(self, item):
-        return getattr(self, item)
+        self._raw_cfg = cfg
 
 
 class OWSLayer(OWSConfigEntry):
     named = False
     def __init__(self, cfg, global_cfg, dc, parent_layer=None):
+        super().__init__(cfg)
         self.global_cfg = global_cfg
         self.parent_layer = parent_layer
 
@@ -264,7 +258,6 @@ class OWSLayer(OWSConfigEntry):
 
         except KeyError:
             raise ConfigException("Required entry missing in layer %s" % self.title)
-        super().__init__({})
 
     def layer_count(self):
         return 0
@@ -796,6 +789,7 @@ class OWSConfig(OWSConfigEntry):
         if not self.initialised or refresh:
             self.initialised = True
             cfg = read_config()
+            super().__init__(cfg)
             try:
                 self.parse_global(cfg["global"])
             except KeyError as e:
@@ -821,7 +815,6 @@ class OWSConfig(OWSConfigEntry):
                 self.parse_layers(cfg["layers"])
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
-        super().__init__({})
 
     def parse_global(self, cfg):
         self._response_headers = cfg.get("response_headers", {})
