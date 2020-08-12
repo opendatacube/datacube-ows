@@ -89,6 +89,33 @@ def accum_max(a, b):
         return max(a, b)
 
 
-class OWSConfigEntry(object):
+class OWSConfigEntry:
     def __init__(self, cfg):
         self._raw_cfg = cfg
+
+
+class OWSEntryNotFound(ConfigException):
+    pass
+
+class OWSIndexableConfigEntry(OWSConfigEntry):
+    INDEX_KEYS = []
+
+    def __init__(self, cfg, keyvals):
+        super().__init__(cfg)
+
+        for k in self.INDEX_KEYS:
+            if k not in keyvals:
+                raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
+        self.keyvals = keyvals
+
+    @classmethod
+    def lookup(cls, keyvals):
+        for k in cls.INDEX_KEYS:
+            if k not in keyvals:
+                raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
+        return cls.lookup_impl()
+
+    @classmethod
+    def lookup_impl(cls, keyvals):
+        raise NotImplementedError()
+
