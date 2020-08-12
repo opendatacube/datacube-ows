@@ -1,15 +1,19 @@
 from datacube.utils.masking import make_mask
 
-from datacube_ows.ows_configuration import OWSConfigEntry
+from datacube_ows.ows_configuration import OWSConfigEntry, OWSIndexedConfigEntry, OWSEntryNotFound
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 
-class StyleDefBase(OWSConfigEntry):
+class StyleDefBase(OWSIndexedConfigEntry):
+    INDEX_KEYS = ["layer", "style"]
     auto_legend = False
     include_in_feature_info = False
 
     def __init__(self, product, style_cfg, defer_multi_date=False):
-        super().__init__(style_cfg)
+        super().__init__(style_cfg, keyvals={
+            "layer": product.name,
+            "style": style_cfg["name"]
+        })
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
@@ -115,6 +119,18 @@ class StyleDefBase(OWSConfigEntry):
 
         def legend(self, bytesio):
             return False
+
+    @classmethod
+    def lookup_impl(cls, cfg, keyvals):
+        try:
+            prod = cfg.product_index[keyvals["layer"]]
+        except KeyError:
+            raise OWSEntryNotFound("No layer named {keyvals['layer']}")
+
+        try:
+            return prod.style_index[keyvals['style']]
+        except KeyError:
+            raise OWSEntryNotFound(f"No style named {keyvals['style']} in layer {keyvals['layer']}")
 
 
 class StyleMask(object):
