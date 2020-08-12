@@ -31,7 +31,10 @@ corners as
   (metadata #>> '{extent, coord, ul, lon}') as ul_lon,
   (metadata #>> '{extent, coord, ur, lat}') as ur_lat,
   (metadata #>> '{extent, coord, ur, lon}') as ur_lon
-   from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus')))
+   from agdc.dataset where
+        metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
+        and archived is null
+    )
 select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
         lon_begin, lat_begin, lon_end, lat_begin,  lon_end, lat_end,
         lon_begin, lat_end, lon_begin, lat_begin)::geometry
@@ -54,4 +57,6 @@ select id,
         ),
         4326
       ) as spatial_extent
- from agdc.dataset where metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard'))
+ from agdc.dataset where
+        metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard'))
+        and archived is null
