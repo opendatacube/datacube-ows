@@ -293,7 +293,7 @@ def get_coverage_data(req):
                               req.times,
                               bands=req.bands)
         n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-        if n_datasets > 0:
+        if n_datasets == 0:
             # Return an empty coverage file with full metadata?
             cfg = get_config()
             x_range = (req.minx, req.maxx)
