@@ -97,7 +97,7 @@ class OWSConfigEntry:
 class OWSEntryNotFound(ConfigException):
     pass
 
-class OWSIndexableConfigEntry(OWSConfigEntry):
+class OWSIndexedConfigEntry(OWSConfigEntry):
     INDEX_KEYS = []
 
     def __init__(self, cfg, keyvals):
@@ -109,13 +109,13 @@ class OWSIndexableConfigEntry(OWSConfigEntry):
         self.keyvals = keyvals
 
     @classmethod
-    def lookup(cls, keyvals):
+    def lookup(cls, cfg, keyvals):
         for k in cls.INDEX_KEYS:
             if k not in keyvals:
                 raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
-        return cls.lookup_impl()
+        return cls.lookup_impl(cfg, keyvals)
 
     @classmethod
-    def lookup_impl(cls, keyvals):
+    def lookup_impl(cls, cfg, keyvals):
         raise NotImplementedError()
 

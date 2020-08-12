@@ -16,7 +16,8 @@ from collections.abc import Mapping
 from ows import Version
 from slugify import slugify
 
-from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry
+from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
+    OWSIndexedConfigEntry, OWSEntryNotFound
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -142,8 +143,8 @@ class SuppURL(OWSConfigEntry):
 
 class OWSLayer(OWSConfigEntry):
     named = False
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
-        super().__init__(cfg)
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
+        super().__init__(cfg, *args, **kwargs)
         self.global_cfg = global_cfg
         self.parent_layer = parent_layer
 
@@ -186,8 +187,8 @@ class OWSLayer(OWSConfigEntry):
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
-        super().__init__(cfg, global_cfg, parent_layer)
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
+        super().__init__(cfg, global_cfg, parent_layer, *args, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.child_layers = []
         if "layers" not in cfg:
@@ -209,11 +210,14 @@ TIMERES_YR  = "year"
 
 TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR]
 
-class OWSNamedLayer(OWSLayer):
+class OWSNamedLayer(OWSIndexedConfigEntry, OWSLayer):
+    INDEX_KEYS = ["layer"]
     named = True
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
-        super().__init__(cfg, global_cfg, dc, parent_layer)
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
         self.name = cfg["name"]
+        super().__init__(cfg, global_cfg=global_cfg, dc=dc, parent_layer=parent_layer,
+                         keyvals={"layer": self.name},
+                         *args, **kwargs)
         self.hide = False
         try:
             self.parse_product_names(cfg)
@@ -583,6 +587,13 @@ class OWSNamedLayer(OWSLayer):
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
+
+    @classmethod
+    def lookup_impl(cls, cfg, keyvals):
+        try:
+            return cfg.global_cfg.product_index[keyvals["layer"]]
+        except KeyError:
+            raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
 
 
 class OWSProductLayer(OWSNamedLayer):
