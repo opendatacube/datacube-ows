@@ -555,8 +555,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             return {}
         bboxes = {}
         for crs_id, bbox in self._ranges["bboxes"].items():
-            if crs_id in self.global_cfg["published_CRSs"]:
-                if self.global_cfg["published_CRSs"][crs_id].get("vertical_coord_first"):
+            if crs_id in self.global_cfg.published_CRSs:
+                if self.global_cfg.published_CRSs[crs_id].get("vertical_coord_first"):
                     bboxes[crs_id] = {
                         "right": bbox["bottom"],
                          "left": bbox["top"],
