@@ -285,7 +285,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
   conn.execute("""
     UPDATE wms.product_ranges
-    SET bboxes = %(bbox)::jsonb
+    SET bboxes = %(bbox)s::jsonb
     WHERE id=%(p_id)s
     """, {
     "bbox": Json(
