@@ -9,13 +9,17 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     auto_legend = False
     include_in_feature_info = False
 
-    def __init__(self, product, style_cfg, defer_multi_date=False):
+    def __init__(self, product, style_cfg, defer_multi_date=False, local_band_map = None):
         super().__init__(style_cfg,
                          global_cfg=product.global_cfg,
                          keyvals={
                                 "layer": product.name,
                                 "style": style_cfg["name"]
                          })
+        if local_band_map:
+            self.local_band_map = local_band_map
+        else:
+            self.local_band_map = {}
         style_cfg = self._raw_cfg
         self.product = product
         self.name = style_cfg["name"]
@@ -24,7 +28,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.masks = [StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", [])]
         self.needed_bands = set()
         for band in self.product.always_fetch_bands:
-            self.needed_bands.add(band)
+            self.needed_bands.add(self.local_band(band))
 
         if self.masks:
             for i, product_name in enumerate(product.product_names):
@@ -35,6 +39,11 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
+
+    def local_band(self, band):
+        if band in self.local_band_map:
+            return self.local_band_map[band]
+        return band
 
     def parse_multi_date(self, cfg):
         self.multi_date_handlers = []

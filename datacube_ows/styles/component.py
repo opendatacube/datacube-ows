@@ -6,8 +6,8 @@ from datacube_ows.styles.base import StyleDefBase
 
 # pylint: disable=abstract-method
 class ComponentStyleDef(StyleDefBase):
-    def __init__(self, product, style_cfg):
-        super(ComponentStyleDef, self).__init__(product, style_cfg)
+    def __init__(self, product, style_cfg, local_band_map=None):
+        super().__init__(product, style_cfg, local_band_map)
         self.rgb_components = {}
         for imgband in ["red", "green", "blue", "alpha"]:
             components = style_cfg["components"].get(imgband)
@@ -19,7 +19,7 @@ class ComponentStyleDef(StyleDefBase):
             if "function" in components:
                 self.rgb_components[imgband] = FunctionWrapper(self.product, components)
                 for b in style_cfg["additional_bands"]:
-                    self.needed_bands.add(b)
+                    self.needed_bands.add(self.local_band(b))
             else:
                 self.rgb_components[imgband] = self.dealias_components(components)
 
@@ -55,7 +55,7 @@ class ComponentStyleDef(StyleDefBase):
         if comp_in is None:
             return None
         else:
-            return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
+            return { self.product.band_idx.band(self.local_band(band_alias)): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
 
     def compress_band(self, component_name, imgband_data):
         sc_min = self.component_scale_ranges[component_name]["min"]
