@@ -87,8 +87,8 @@ def create_multiprod_range_entry(dc, product, crses):
     conn.execute("""
         UPDATE wms.multiproduct_ranges
         SET lat_min = subq.lat_min,
-            lat_max = subq.lat_max, 
-            lon_min = subq.lon_min, 
+            lat_max = subq.lat_max,
+            lon_min = subq.lon_min,
             lon_max = subq.lon_max
         FROM (
             select min(lat_min) as lat_min,
@@ -189,6 +189,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
         SELECT st_extent(stv.spatial_extent) as bbox
         FROM public.space_time_view stv
         WHERE stv.dataset_type_ref = %(p_id)s
+        AND stv.dataset_type_ref = pr.id
       ) as subq
       WHERE pr.id = %(p_id)s
       """,
@@ -206,9 +207,9 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
       results = conn.execute(
           """
-          select  
+          select
                 array_agg(temporal_extent)
-          from public.space_time_view 
+          from public.space_time_view
           WHERE dataset_type_ref = %(p_id)s
           """,
           {"p_id": prodid}
@@ -239,7 +240,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
                 lower(temporal_extent), upper(temporal_extent),
                 ST_X(ST_Centroid(spatial_extent)),
                 ST_Y(ST_Centroid(spatial_extent))
-          from public.space_time_view 
+          from public.space_time_view
           WHERE dataset_type_ref = %(p_id)s
           """ %
           {"p_id": prodid}
@@ -389,7 +390,7 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
         if path is not None:
             results = conn.execute("""
                 SELECT *
-                FROM wms.sub_product_ranges 
+                FROM wms.sub_product_ranges
                 WHERE product_id=%s and sub_product_id=%s""",
                                    prod_id, path
                                   )
