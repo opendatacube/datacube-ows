@@ -324,9 +324,9 @@ style_mineral_content = {
             #    a) "function" (required): A string containing the fully qualified path to a python function
             #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
             #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
-            #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
-            #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
-            #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+            #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, a band mapping function is passed
+            #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
+            #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
             #       to band names.
             #
             # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
@@ -336,7 +336,7 @@ style_mineral_content = {
             # to normalise the output to 0-255.
             #
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "red",
                 "band2": "blue",
@@ -345,7 +345,7 @@ style_mineral_content = {
         },
         "green": {
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "nir",
                 "band2": "swir1",
@@ -354,7 +354,7 @@ style_mineral_content = {
         },
         "blue": {
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "swir1",
                 "band2": "swir2",
@@ -515,9 +515,9 @@ style_ndvi = {
     #    a) "function" (required): A string containing the fully qualified path to a python function
     #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
     #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
-    #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
-    #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
-    #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+    #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, a band mapping function is passed
+    #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
+    #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
     #       to band names.
     #
     # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
@@ -525,7 +525,7 @@ style_ndvi = {
     #
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -617,7 +617,7 @@ style_ndvi_delta = {
     "abstract": "Normalised Difference Vegetation Index - with delta support",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -840,7 +840,7 @@ style_ndvi_cloudmask = {
     "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -872,7 +872,7 @@ style_ndwi = {
     "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "green",
             "band2": "nir"
@@ -888,7 +888,7 @@ style_ndbi = {
     "abstract": "Normalised Difference Buildup Index - a derived index that correlates with the existence of urbanisation",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "swir2",
             "band2": "nir"
@@ -905,7 +905,7 @@ style_wofs_frequency = {
     "needed_bands": ["frequency"],
     "index_function": {
         "function": "datacube_ows.band_utils.single_band",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band": "frequency",
         }
@@ -1009,7 +1009,7 @@ style_cloud_mask = {
     "abstract": "Highlight pixels with cloud.",
     "index_function": {
         "function": "datacube_ows.band_utils.constant",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band": "red",
             "const": "0.1"
@@ -1054,7 +1054,7 @@ style_rgb_ndvi = {
     "component_ratio": 0.6,
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -1464,9 +1464,9 @@ ows_cfg = {
                         #    a) "function" (required): A string containing the fully qualified path to a python function
                         #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
                         #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
-                        #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
-                        #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
-                        #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+                        #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, a band mapping function is passed
+                        #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
+                        #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
                         #       to band names.
                         #
                         # Passed directly to the datacube load_data function.  Defaults to None.
@@ -1592,7 +1592,7 @@ ows_cfg = {
                         "include_custom": {
                             "timeseries": {
                                 "function": "datacube_ows.ogc_utils.feature_info_url_template",
-                                "pass_product_cfg": False,
+                                "mapped_bands": False,
                                 "kwargs": {
                                     "template": "https://host.domain/path/{data['f_id']:06}.csv"
                                 }

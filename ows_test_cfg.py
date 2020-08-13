@@ -159,9 +159,9 @@ style_mineral_content = {
             #    a) "function" (required): A string containing the fully qualified path to a python function
             #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
             #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
-            #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
-            #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
-            #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+            #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, the band mapping function is passed
+            #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
+            #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
             #       to band names.
             #
             # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
@@ -171,7 +171,7 @@ style_mineral_content = {
             # to normalise the output to 0-255.
             #
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "red",
                 "band2": "blue",
@@ -180,7 +180,7 @@ style_mineral_content = {
         },
         "green": {
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "nir",
                 "band2": "swir1",
@@ -189,7 +189,7 @@ style_mineral_content = {
         },
         "blue": {
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "swir1",
                 "band2": "swir2",
@@ -233,7 +233,7 @@ style_ndvi = {
     "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -315,7 +315,7 @@ style_ndvi_delta = {
     "abstract": "Normalised Difference Vegetation Index - with delta support",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -416,7 +416,7 @@ style_ndvi_cloudmask = {
     "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -448,7 +448,7 @@ style_ndwi = {
     "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "green",
             "band2": "nir"
@@ -468,7 +468,7 @@ style_cloud_mask = {
     "abstract": "Highlight pixels with cloud.",
     "index_function": {
         "function": "datacube_ows.band_utils.constant",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band": "red",
             "const": "0.1"
@@ -513,7 +513,7 @@ style_rgb_ndvi = {
     "component_ratio": 0.6,
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"

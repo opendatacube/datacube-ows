@@ -75,8 +75,8 @@ The "args" and "kwargs" entries allow the configuration files
 to pass constant values to additional positional and keyword
 arguments of the function in the standard python manner.
 
-pass_product_cfg
-++++++++++++++++
+mapped_bands
++++++++++++
 
 A common use case passing band names to generic band-math
 functions for
@@ -88,10 +88,11 @@ In order for this to work with
 it it necessary for the function
 to have access to the band alias dictionary to convert aliases
 to native band names.  This can be accomplished with the
-"pass_product_cfg" entry, which causes the OWSLayer configuration
-object for the layer to be passed to the function as an
-additional keyword argument "product_cfg".  Refer to the
-source code for the band_utils functions discussed below
+"mapped_bands" entry, which causes a function that maps
+band aliases to native band names the layer to be passed
+to the function as an additional keyword argument "band_mapper".
+
+Refer to the source code for the band_utils functions discussed below
 for examples.
 
 band_utils functions
@@ -104,7 +105,7 @@ functions.
 
 Most take the names (or aliases) of the bands they are
 to operate on as keyword arguments.  If you use aliases you
-must set `pass_product_cfg <#pass-product-cfg>` to
+must set `mapped_bands <#mapped-bands>` to
 True.
 
 datacube_ows.band_utils.sum_bands
@@ -149,7 +150,7 @@ in the band dictionary:
 
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -164,7 +165,7 @@ scaled from -0.1 to 1.0 in the red channel:
     "components": {
         "red": {
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "nir",
                 "band2": "red",
