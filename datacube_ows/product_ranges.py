@@ -189,8 +189,8 @@ def create_range_entry(dc, product, crses, summary_product=False):
         SELECT st_extent(stv.spatial_extent) as bbox
         FROM public.space_time_view stv
         WHERE stv.dataset_type_ref = %(p_id)s
-        AND stv.dataset_type_ref = pr.id
       ) as subq
+      WHERE pr.id = %(p_id)s
       """,
       {"p_id": prodid})
 
