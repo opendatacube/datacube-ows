@@ -19,8 +19,17 @@ ls8_usgs_level1_bands = {
     "quality": ["QUALITY"]
 }
 
-# REUSABLE CONFIG FRAGMENTS - Style definitions
+bands_ls = {
+    "red": [ "red" ],
+    "green": [ "green" ],
+    "blue": [ "blue" ],
+    "nir": [ "nir", "near_infrared" ],
+    "swir1": [ "swir1", "shortwave_infrared_1", "near_shortwave_infrared" ],
+    "swir2": [ "swir2", "shortwave_infrared_2", "far_shortwave_infrared" ],
+}
 
+
+# REUSABLE CONFIG FRAGMENTS - Style definitions
 # Examples of styles which are linear combinations of the available spectral bands.
 style_rgb = {
     # Machine readable style name. (required.  Must be unique within a layer.)
@@ -552,6 +561,41 @@ standard_resource_limits = {
 }
 
 
+
+style_ls_simple_rgb = {
+        "name": "simple_rgb",
+        "title": "Simple RGB",
+        "abstract": "Simple true-colour image, using the red, green and blue bands",
+        "components": {
+            "red": {
+                "red": 1.0
+            },
+            "green": {
+                "green": 1.0
+            },
+            "blue": {
+                "blue": 1.0
+            }
+        },
+        "scale_range": [0.0, 3000.0]
+}
+
+# Describes a style which uses several bitflags to create a style
+
+# REUSABLE CONFIG FRAGMENTS - resource limit declarations
+
+standard_resource_limits = {
+    "wms": {
+        "zoomed_out_fill_colour": [150,180,200,160],
+        "min_zoom_factor": 35.0,
+        "max_datasets": 16, # Defaults to no dataset limit
+    },
+    "wcs": {
+        # "max_datasets": 16, # Defaults to no dataset limit
+    }
+}
+
+
 # MAIN CONFIGURATION OBJECT
 
 ows_cfg = {
@@ -739,26 +783,13 @@ ows_cfg = {
     #    is also a coverage, that may be requested in WCS DescribeCoverage or WCS GetCoverage requests.
     "layers": [
         {
-            # NOTE: This layer is a folder - it is NOT "named layer" that can be selected in GetMap requests
-            # Every layer must have a human-readable title
-            "title": "Landsat 8",
-            # Top level layers must have a human-readable abstract. The abstract is optional for child-layers - defaulting
-            # to that of the parent layer.
-            "abstract": "Images from the Landsat 8 satellite",
-            # NOTE: Folder-layers do not have a layer "name".
-
-            # Keywords are optional, but can be added at any folder level and are cumulative.
-            # A layer combines its own keywords, the keywords of it's parent (and grandparent, etc) layers,
-            # and any keywords defined in the global section above.
-            #
+            "title": "Landsat",
+            "abstract": "Images from the Landsat satellite",
             "keywords": [
                 "landsat",
                 "landsat8",
+                "landsat7"
             ],
-            # Attribution.  This entire section is optional.  If provided, it overrides any
-            #               attribution defined in the wms section above or any higher layers, and
-            #               applies to this layer and all child layers under this layer unless itself
-            #               overridden.
             "attribution": {
                 # Attribution must contain at least one of ("title", "url" and "logo")
                 # A human readable title for the attribution - e.g. the name of the attributed organisation
@@ -777,7 +808,6 @@ ows_cfg = {
                     "format": "image/png",
                 }
             },
-            # Folder-type layers include a list of sub-layers
             "layers": [
                 {
                     # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
@@ -831,8 +861,110 @@ ows_cfg = {
                             # style_cloud_mask, style_ls8_allband_false_colour,
                         ]
                     }
-                } ##### End of ls8_level1_pds product definition.
+                }, ##### End of ls8_level1_pds product definition.
+                {
+                    "title": "Surface Reflectance 25m Annual Geomedian (Landsat 8 and 7)",
+                    "name": "ls_nbart_geomedian_annual_combined",
+                    "abstract": """
+Data is only visible at higher resolutions; when zoomed-out the available area will be displayed
+as a shaded region. The surface reflectance geometric median (geomedian) is a pixel composite
+mosaic of a time series of earth observations. The value of a pixel in a an annual geomedian
+image is the statistical median of all observations for that pixel from a calendar year.
+Annual mosaics are available for the following years:
+Landsat 8: 2013 to 2017;
+For more information, see http://pid.geoscience.gov.au/dataset/ga/120374
+For service status information, see https://status.dea.ga.gov.au
+                    """,
+                    "bands": bands_ls,
+                    "multi_product": True,
+                    "product_names": [ "ls8_nbart_geomedian_annual", "ls7_nbart_geomedian_annual" ],
+                    # "time_resolution": 'year',
+                    "resource_limits": standard_resource_limits,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": True,
+                    },
+                    "wcs": {
+                        "native_crs": "EPSG:3577",
+                        "native_resolution": [25, -25],
+                        "default_bands": ["red", "green", "blue"]
+                    },
+                    "styling": {
+                        "default_style": "simple_rgb",
+                        "styles": [
+                            style_ls_simple_rgb,
+                        ]
+                    }
+                },
+                {
+                    "title": "Surface Reflectance 25m Annual Geomedian (Landsat 8)",
+                    "name": "ls8_nbart_geomedian_annual",
+                    "abstract": """
+Data is only visible at higher resolutions; when zoomed-out the available area will be displayed
+as a shaded region. The surface reflectance geometric median (geomedian) is a pixel composite
+mosaic of a time series of earth observations. The value of a pixel in a an annual geomedian
+image is the statistical median of all observations for that pixel from a calendar year.
+Annual mosaics are available for the following years:
+Landsat 8: 2013 to 2017;
+For more information, see http://pid.geoscience.gov.au/dataset/ga/120374
+For service status information, see https://status.dea.ga.gov.au
+                    """,
+                    "product_name": "ls8_nbart_geomedian_annual",
+                    "bands": bands_ls,
+                    # "time_resolution": 'year',
+                    "resource_limits": standard_resource_limits,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": True,
+                    },
+                    "wcs": {
+                        "native_crs": "EPSG:3577",
+                        "native_resolution": [25, -25],
+                        "default_bands": ["red", "green", "blue"]
+                    },
+                    "styling": {
+                        "default_style": "simple_rgb",
+                        "styles": [
+                            style_ls_simple_rgb,
+                        ]
+                    }
+                },
+                {
+                    "title": "Surface Reflectance 25m Annual Geomedian (Landsat 7)",
+                    "name": "ls7_nbart_geomedian_annual",
+                    "abstract": """
+Data is only visible at higher resolutions; when zoomed-out the available area will be displayed
+as a shaded region. The surface reflectance geometric median (geomedian) is a pixel composite
+mosaic of a time series of earth observations. The value of a pixel in a an annual geomedian
+image is the statistical median of all observations for that pixel from a calendar year.
+Annual mosaics are available for the following years:
+Landsat 7: 2000 to 2017;
+For more information, see http://pid.geoscience.gov.au/dataset/ga/120374
+For service status information, see https://status.dea.ga.gov.au
+                    """,
+                    "product_name": "ls7_nbart_geomedian_annual",
+                    "bands": bands_ls,
+                    "resource_limits": standard_resource_limits,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": True,
+                    },
+                    "wcs": {
+                        "native_crs": "EPSG:3577",
+                        "native_resolution": [25, -25],
+                        "default_bands": ["red", "green", "blue"]
+                    },
+                    "styling": {
+                        "default_style": "simple_rgb",
+                        "styles": [
+                            style_ls_simple_rgb,
+                        ]
+                    }
+                },
             ]
-        }  ### End of Landsat 8 folder.
+        }  ### End of Landsat folder.
     ]  ##### End of "layers" list.
 } #### End of test configuration object
