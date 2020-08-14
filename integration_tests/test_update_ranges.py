@@ -22,6 +22,7 @@ def test_update_version(runner):
 
 def test_update_ranges_product(runner):
     result = runner.invoke(main,["ls8_usgs_level1_scene_layer"])
+    assert result.output i= "ERROR"
     assert result.exit_code == 0
 
 def test_update_ranges(runner):
