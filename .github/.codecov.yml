@@ -23,6 +23,9 @@ parsers:
 fixes:
   - "/code::"
 
+ignore:
+  - "/code/ows_cfg_example.py"  # ignore cfg_example as it serves as reference
+
 comment:
   layout: "reach,diff,flags,tree"
   behavior: default
