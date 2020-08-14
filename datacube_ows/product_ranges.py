@@ -13,24 +13,6 @@ import json
 
 from datacube_ows.utils import get_sqlconn
 
-def get_odc_products(dc, any_product, odc_only=False):
-    if isinstance(any_product, OWSNamedLayer):
-        return any_product.products
-    elif isinstance(any_product, str):
-        dc_product = dc.index.products.get_by_name(any_product)
-        if odc_only:
-            ows_product = None
-        else:
-            ows_product = get_config().product_index.get(any_product)
-        if ows_product:
-            if dc_product and [dc_product] == ows_product.products:
-                # The same!
-                return [dc_product]
-            print("Updating OWS product %s (ODC Products: []).  If you meant the ODC product %s, please use the --odc-only flag.")
-            return ows_product.products
-    else:
-        # Assume ODC product
-        return [any_product]
 
 def get_crsids(cfg=None):
     if not cfg:
