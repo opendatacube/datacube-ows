@@ -7,21 +7,21 @@ from datacube_ows.update_ranges import main
 
 def test_updates_ranges_schema(runner):
     result = runner.invoke(main,["--schema","--role",os.getenv("DB_USERNAME")])
-    assert 'ERROR' not in result.output
+    assert 'Cannot find SQL resource' not in result.output
     assert result.exit_code == 0
 
 def test_update_ranges_views(runner):
     result = runner.invoke(main,["--views","--blocking"])
-    assert 'ERROR' not in result.output
+    assert 'Cannot find SQL resource' not in result.output
     assert result.exit_code == 0
 
     result = runner.invoke(main,["--views"])
-    assert 'ERROR' not in result.output
+    assert 'Cannot find SQL resource' not in result.output
     assert result.exit_code == 0
 
 def test_update_version(runner):
     result = runner.invoke(main,["--version"])
-    assert 'ERROR' not in result.output
+    assert 'Open Data Cube Open Web Services (datacube-ows) version' in result.output
     assert result.exit_code == 0
 
 def test_update_ranges_product(runner):
