@@ -19,13 +19,14 @@ ls8_usgs_level1_bands = {
     "quality": ["QUALITY"]
 }
 
-bands_ls = {
-    "red": [ "red" ],
-    "green": [ "green" ],
-    "blue": [ "blue" ],
-    "nir": [ "nir", "near_infrared" ],
-    "swir1": [ "swir1", "shortwave_infrared_1", "near_shortwave_infrared" ],
-    "swir2": [ "swir2", "shortwave_infrared_2", "far_shortwave_infrared" ],
+bands_fc = {
+    "BS": [ "bare_soil" ],
+    "PV": [ "photosynthetic_vegetation", "green_vegetation" ],
+    "NPV": [ "non_photosynthetic_vegetation", "brown_vegetation" ],
+}
+
+bands_wofs_obs = {
+    "water": [],
 }
 
 
@@ -544,24 +545,6 @@ style_rgb_ndvi = {
     "scale_range": [0.0, 65535.0],
     # N.B. The "pq_mask" section works the same as for the style types above.
 }
-
-# Describes a style which uses several bitflags to create a style
-
-# REUSABLE CONFIG FRAGMENTS - resource limit declarations
-
-standard_resource_limits = {
-    "wms": {
-        "zoomed_out_fill_colour": [150,180,200,160],
-        "min_zoom_factor": 35.0,
-        "max_datasets": 16, # Defaults to no dataset limit
-    },
-    "wcs": {
-        # "max_datasets": 16, # Defaults to no dataset limit
-    }
-}
-
-
-
 style_ls_simple_rgb = {
         "name": "simple_rgb",
         "title": "Simple RGB",
@@ -580,6 +563,151 @@ style_ls_simple_rgb = {
         "scale_range": [0.0, 3000.0]
 }
 
+style_fc_simple = {
+    "name": "simple_fc",
+    "title": "Fractional Cover",
+    "abstract": "Fractional cover representation, with green vegetation in green, dead vegetation in blue, and bare soil in red",
+    "components": {
+        "red": {
+            "BS": 1.0
+        },
+        "green": {
+            "PV": 1.0
+        },
+        "blue": {
+            "NPV": 1.0
+        }
+    },
+    "scale_range": [0.0, 100.0],
+    "pq_masks": [
+        {
+            "flags": {
+                'dry': True
+            },
+        },
+        {
+            "flags": {
+                "terrain_or_low_angle": False,
+                "high_slope": False,
+                "cloud_shadow": False,
+                "cloud": False,
+                "sea": False
+            }
+        },
+    ]
+}
+
+style_wofs_obs = {
+    "name": "observations",
+    "title": "Observations",
+    "abstract": "Observations",
+    "value_map": {
+        "water": [
+            {
+                "title": "Invalid",
+                "abstract": "Slope or Cloud",
+                "flags": {
+                    "or": {
+                      "terrain_or_low_angle": True,
+                      "cloud_shadow": True,
+                      "cloud": True,
+                      "high_slope": True,
+                      "noncontiguous": True
+                    }
+                },
+                "color": "#707070"
+            },
+            {
+                # Possible Sea Glint, also mark as invalid
+                "title": "",
+                "abstract": "",
+                "flags": {
+                    "dry": True,
+                    "sea": True
+                },
+                "color": "#707070"
+            },
+            {
+                "title": "Dry",
+                "abstract": "Dry",
+                "flags": {
+                    "dry": True,
+                    "sea": False,
+                },
+                "color": "#D99694"
+            },
+            {
+                "title": "Wet",
+                "abstract": "Wet or Sea",
+                "flags": {
+                  "or": {
+                    "wet": True,
+                    "sea": True
+                  }
+                },
+                "color": "#4F81BD"
+            }
+        ]
+    }
+}
+
+style_wofs_obs_wet_only = {
+    "name": "wet",
+    "title": "Wet Only",
+    "abstract": "Wet Only",
+    "value_map": {
+        "water": [
+            {
+                "title": "Invalid",
+                "abstract": "Slope or Cloud",
+                "flags": {
+                    "or": {
+                      "terrain_or_low_angle": True,
+                      "cloud_shadow": True,
+                      "cloud": True,
+                      "high_slope": True,
+                      "noncontiguous": True
+                    }
+                },
+                "color": "#707070",
+                "mask": True
+            },
+            {
+                # Possible Sea Glint, also mark as invalid
+                "title": "",
+                "abstract": "",
+                "flags": {
+                    "dry": True,
+                    "sea": True
+                },
+                "color": "#707070",
+                "mask": True
+            },
+            {
+                "title": "Dry",
+                "abstract": "Dry",
+                "flags": {
+                    "dry": True,
+                    "sea": False,
+                },
+                "color": "#D99694",
+                "mask": True
+            },
+            {
+                "title": "Wet",
+                "abstract": "Wet or Sea",
+                "flags": {
+                  "or": {
+                    "wet": True,
+                    "sea": True
+                  }
+                },
+                "color": "#4F81BD"
+            }
+        ]
+    }
+}
+
 # Describes a style which uses several bitflags to create a style
 
 # REUSABLE CONFIG FRAGMENTS - resource limit declarations
@@ -595,6 +723,19 @@ standard_resource_limits = {
     }
 }
 
+
+reslim_aster = {
+    "wms": {
+        "zoomed_out_fill_colour": [150,180,200,160],
+        "min_zoom_factor": 10.0,
+        # "max_datasets": 16, # Defaults to no dataset limit
+    },
+    "wcs": {
+        # "max_datasets": 16, # Defaults to no dataset limit
+    }
+}
+
+reslim_wofs_obs = standard_resource_limits
 
 # MAIN CONFIGURATION OBJECT
 
@@ -862,109 +1003,198 @@ ows_cfg = {
                         ]
                     }
                 }, ##### End of ls8_level1_pds product definition.
-                {
-                    "title": "Surface Reflectance 25m Annual Geomedian (Landsat 8 and 7)",
-                    "name": "ls_nbart_geomedian_annual_combined",
-                    "abstract": """
-Data is only visible at higher resolutions; when zoomed-out the available area will be displayed
-as a shaded region. The surface reflectance geometric median (geomedian) is a pixel composite
-mosaic of a time series of earth observations. The value of a pixel in a an annual geomedian
-image is the statistical median of all observations for that pixel from a calendar year.
-Annual mosaics are available for the following years:
-Landsat 8: 2013 to 2017;
-For more information, see http://pid.geoscience.gov.au/dataset/ga/120374
+            ]
+        },  ### End of Landsat folder.
+        {
+            "title": "Fractional Cover",
+            "abstract": """
+Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
+Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena. To be considered in the FCP product a pixel must have had at least 10 clear observations over the year.
 For service status information, see https://status.dea.ga.gov.au
-                    """,
-                    "bands": bands_ls,
+""",
+            "layers": [
+                {
+                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Landsat 5)",
+                    "name": "ls5_fc_albers",
+                    "abstract": """
+Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
+Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena.
+This product contains Fractional Cover dervied from the Landsat 5 satellite
+For service status information, see https://status.dea.ga.gov.au
+""",
+                    "product_name": "ls5_fc_albers",
+                    "bands": bands_fc,
+                    "resource_limits": reslim_aster,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [ ],
+                        "manual_merge": False,
+                    },
+                    "flags": {
+                        "band": "water",
+                        "product": "wofs_albers",
+                        "ignore_time": False,
+                        "ignore_info_flags": [],
+                        "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                    },
+                    "wcs": {
+                        "native_crs": "EPSG:3577",
+                        "default_bands": ["BS", "PV", "NPV"],
+                        "native_resolution": [ 25, -25 ],
+                    },
+                    "styling": {
+                        "default_style": "simple_fc",
+                        "styles": [
+                            style_fc_simple,
+                        ]
+                    }
+                },
+                {
+                    "title": "Water Observations from Space 25m albers (WOfS Daily Observations)",
+                    "name": "wofs_albers",
+                    "abstract": """
+Water Observations from Space (WOfS) provides surface water observations derived from satellite imagery for all of Australia. The current product (Version 2.1.5) includes observations taken from 1986 to the present, from the Landsat 5, 7 and 8 satellites. WOfS covers all of mainland Australia and Tasmania but excludes off-shore Territories.
+The WOfS product allows users to get a better understanding of where water is normally present in a landscape, where water is seldom observed, and where inundation has occurred occasionally.
+Data is provided as Water Observation Feature Layers (WOFLs), in a 1 to 1 relationship with the input satellite data. Hence there is one WOFL for each satellite dataset processed for the occurrence of water. The details of the WOfS algorithm and derived statistics are available at http://dx.doi.org/10.1016/j.rse.2015.11.003.
+For service status information, see https://status.dea.ga.gov.au
+""",
+                    "product_name": "wofs_albers",
+                    "bands": bands_wofs_obs,
+                    "resource_limits": reslim_wofs_obs,
+                    "dynamic": True,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_bitflag",
+                        "always_fetch_bands": [ ],
+                        "manual_merge": False,
+                        "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                    },
+                    "wcs": {
+                        "native_crs": "EPSG:3577",
+                        "native_resolution": [25, -25],
+                        "default_bands": ["water"]
+                    },
+                    "styling": {
+                        "default_style": "observations",
+                        "styles": [
+                            style_wofs_obs,
+                            style_wofs_obs_wet_only
+                        ]
+                    }
+                },
+                {
+                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Landsat 7)",
+                    "name": "ls7_fc_albers",
+                    "abstract": """
+Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
+Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena.
+This product contains Fractional Cover dervied from the Landsat 7 satellite
+For service status information, see https://status.dea.ga.gov.au
+""",
+                    "product_name": "ls7_fc_albers",
+                    "bands": bands_fc,
+                    "resource_limits": reslim_aster,
+                    "dynamic": True,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [ ],
+                        "manual_merge": False,
+                    },
+                    "flags": {
+                        "band": "water",
+                        "product": "wofs_albers",
+                        "ignore_time": False,
+                        "ignore_info_flags": [],
+                        "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                    },
+                    "wcs": {
+                        "native_crs": "EPSG:3577",
+                        "default_bands": ["BS", "PV", "NPV"],
+                        "native_resolution": [ 25, -25 ],
+                    },
+                    "styling": {
+                        "default_style": "simple_fc",
+                        "styles": [
+                            style_fc_simple,
+                        ]
+                    }
+                },
+                {
+                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Landsat 8)",
+                    "name": "ls8_fc_albers",
+                    "abstract": """
+Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
+Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena.
+This product contains Fractional Cover dervied from the Landsat 8 satellite
+For service status information, see https://status.dea.ga.gov.au
+""",
+                    "product_name": "ls8_fc_albers",
+                    "bands": bands_fc,
+                    "resource_limits": reslim_aster,
+                    "dynamic": True,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [ ],
+                        "manual_merge": False,
+                    },
+                    "flags": {
+                        "band": "water",
+                        "product": "wofs_albers",
+                        "ignore_time": False,
+                        "ignore_info_flags": [],
+                        "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                    },
+                    "wcs": {
+                        "native_crs": "EPSG:3577",
+                        "default_bands": ["BS", "PV", "NPV"],
+                        "native_resolution": [ 25, -25 ],
+                    },
+                    "styling": {
+                        "default_style": "simple_fc",
+                        "styles": [
+                            style_fc_simple,
+                        ]
+                    }
+                },
+                {
+                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Combined)",
+                    "name": "fc_albers_combined",
+                    "abstract": """
+Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region. Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena. This product contains Fractional Cover dervied from the Landsat 5, 7 and 8 satellites For service status information, see https://status.dea.ga.gov.au
+""",
                     "multi_product": True,
-                    "product_names": [ "ls8_nbart_geomedian_annual", "ls7_nbart_geomedian_annual" ],
-                    # "time_resolution": 'year',
-                    "resource_limits": standard_resource_limits,
+                    "product_names": [ "ls5_fc_albers", "ls7_fc_albers", "ls8_fc_albers" ],
+                    "bands": bands_fc,
+                    "resource_limits": reslim_aster,
+                    "dynamic": True,
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": True,
+                        "always_fetch_bands": [ ],
+                        "manual_merge": False,
+                    },
+                    "flags": {
+                        "band": "water",
+                        "products": ['wofs_albers', 'wofs_albers', 'wofs_albers'],
+                        "ignore_time": False,
+                        "ignore_info_flags": [],
+                        "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
                     },
                     "wcs": {
                         "native_crs": "EPSG:3577",
-                        "native_resolution": [25, -25],
-                        "default_bands": ["red", "green", "blue"]
+                        "default_bands": ["BS", "PV", "NPV"],
+                        "native_resolution": [ 25, -25 ],
                     },
                     "styling": {
-                        "default_style": "simple_rgb",
+                        "default_style": "simple_fc",
                         "styles": [
-                            style_ls_simple_rgb,
-                        ]
-                    }
-                },
-                {
-                    "title": "Surface Reflectance 25m Annual Geomedian (Landsat 8)",
-                    "name": "ls8_nbart_geomedian_annual",
-                    "abstract": """
-Data is only visible at higher resolutions; when zoomed-out the available area will be displayed
-as a shaded region. The surface reflectance geometric median (geomedian) is a pixel composite
-mosaic of a time series of earth observations. The value of a pixel in a an annual geomedian
-image is the statistical median of all observations for that pixel from a calendar year.
-Annual mosaics are available for the following years:
-Landsat 8: 2013 to 2017;
-For more information, see http://pid.geoscience.gov.au/dataset/ga/120374
-For service status information, see https://status.dea.ga.gov.au
-                    """,
-                    "product_name": "ls8_nbart_geomedian_annual",
-                    "bands": bands_ls,
-                    # "time_resolution": 'year',
-                    "resource_limits": standard_resource_limits,
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": True,
-                    },
-                    "wcs": {
-                        "native_crs": "EPSG:3577",
-                        "native_resolution": [25, -25],
-                        "default_bands": ["red", "green", "blue"]
-                    },
-                    "styling": {
-                        "default_style": "simple_rgb",
-                        "styles": [
-                            style_ls_simple_rgb,
-                        ]
-                    }
-                },
-                {
-                    "title": "Surface Reflectance 25m Annual Geomedian (Landsat 7)",
-                    "name": "ls7_nbart_geomedian_annual",
-                    "abstract": """
-Data is only visible at higher resolutions; when zoomed-out the available area will be displayed
-as a shaded region. The surface reflectance geometric median (geomedian) is a pixel composite
-mosaic of a time series of earth observations. The value of a pixel in a an annual geomedian
-image is the statistical median of all observations for that pixel from a calendar year.
-Annual mosaics are available for the following years:
-Landsat 7: 2000 to 2017;
-For more information, see http://pid.geoscience.gov.au/dataset/ga/120374
-For service status information, see https://status.dea.ga.gov.au
-                    """,
-                    "product_name": "ls7_nbart_geomedian_annual",
-                    "bands": bands_ls,
-                    "resource_limits": standard_resource_limits,
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": True,
-                    },
-                    "wcs": {
-                        "native_crs": "EPSG:3577",
-                        "native_resolution": [25, -25],
-                        "default_bands": ["red", "green", "blue"]
-                    },
-                    "styling": {
-                        "default_style": "simple_rgb",
-                        "styles": [
-                            style_ls_simple_rgb,
+                            style_fc_simple,
                         ]
                     }
                 },
             ]
-        }  ### End of Landsat folder.
+        },
     ]  ##### End of "layers" list.
 } #### End of test configuration object

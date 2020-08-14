@@ -74,3 +74,8 @@ def product_name():
 @pytest.fixture
 def role_name():
     return os.getenv("DB_USERNAME")
+
+
+@pytest.fixture
+def multiproduct_name():
+    return "fc_albers_combined"
