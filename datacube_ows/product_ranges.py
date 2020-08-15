@@ -190,6 +190,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
         FROM public.space_time_view stv
         WHERE stv.dataset_type_ref = %(p_id)s
       ) as subq
+      WHERE pr.id = %(p_id)s
       """,
       {"p_id": prodid})
 
@@ -268,9 +269,9 @@ def create_range_entry(dc, product, crses, summary_product=False):
   results = list(conn.execute("""
     SELECT lat_min,lat_max,lon_min,lon_max
     FROM wms.product_ranges
-    WHERE id=%s
+    WHERE id=%(p_id)s
     """,
-    prodid))
+      {"p_id": prodid}))
 
   r = results[0]
 
@@ -284,10 +285,10 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
   conn.execute("""
     UPDATE wms.product_ranges
-    SET bboxes = %s::jsonb
-    WHERE id=%s
-    """,
-    Json(
+    SET bboxes = %(bbox)s::jsonb
+    WHERE id=%(p_id)s
+    """, {
+    "bbox": Json(
       {crsid: {"top": box.to_crs(crs).boundingbox.top,
                "bottom": box.to_crs(crs).boundingbox.bottom,
                "left": box.to_crs(crs).boundingbox.left,
@@ -295,7 +296,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
         for crsid, crs in crses.items()
        }
     ),
-    product.id)
+    "p_id": product.id})
 
   txn.commit()
   conn.close()
