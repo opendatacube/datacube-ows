@@ -364,8 +364,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.data_urls = SuppURL.parse_list(cfg.get("data", []))
 
     def parse_styling(self, cfg):
-        self.styles = list([ StyleDef(self, s) for s in cfg["styles"]])
-        self.style_index = { s.name: s for s in self.styles }
+        self.styles = []
+        self.style_index = {}
+        for scfg in cfg["styles"]:
+            style = StyleDef(self, scfg)
+            self.styles.append(style)
+            self.style_index[style.name] = style
         if "default_style" in cfg:
             if cfg["default_style"] not in self.style_index:
                 raise ConfigException("Default style %s is not in the 'styles' for layer %s" % (
@@ -590,8 +594,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
 
+    def lookup(self, cfg, keyvals, subs=None):
+        if not subs and "layer" not in keyvals:
+            subs = {
+                "layer": self.product
+            }
     @classmethod
-    def lookup_impl(cls, cfg, keyvals):
+    def lookup_impl(cls, cfg, keyvals, keyval_subs=None):
         try:
             return cfg.global_cfg.product_index[keyvals["layer"]]
         except KeyError:

@@ -15,9 +15,14 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                          keyvals={
                                 "layer": product.name,
                                 "style": style_cfg["name"]
+                         },
+                         keyval_subs={
+                             "layer": {
+                                 product.name: product
+                             }
                          })
         style_cfg = self._raw_cfg
-        self.local_band_map = style_cfg.get("band_map")
+        self.local_band_map = style_cfg.get("band_map", {})
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
@@ -130,12 +135,25 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         def legend(self, bytesio):
             return False
 
+    def lookup(self, cfg, keyvals, subs=None):
+        if subs is None:
+            subs = {}
+        if "layer" not in keyvals and "layer" not in subs:
+            keyvals["layer"] = self.product.name
+        return super().lookup(cfg, keyvals, subs)
+
     @classmethod
-    def lookup_impl(cls, cfg, keyvals):
-        try:
-            prod = cfg.product_index[keyvals["layer"]]
-        except KeyError:
-            raise OWSEntryNotFound("No layer named {keyvals['layer']}")
+    def lookup_impl(cls, cfg, keyvals, subs=None):
+        if subs is None:
+            subs = {}
+        prod = None
+        if "layer" in subs:
+            prod = subs["layer"].get(keyvals["layer"])
+        if not prod:
+            try:
+                prod = cfg.product_index[keyvals["layer"]]
+            except KeyError:
+                raise OWSEntryNotFound(f"No layer named {keyvals['layer']}")
 
         try:
             return prod.style_index[keyvals['style']]

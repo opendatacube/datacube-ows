@@ -109,23 +109,23 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
                 raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
         self.keyvals = keyvals
 
-    @classmethod
-    def lookup(cls, cfg, keyvals):
-        for k in cls.INDEX_KEYS:
+    def lookup(self, cfg, keyvals, subs=None):
+        if subs is None:
+            subs = {}
+        for k in self.INDEX_KEYS:
             if k not in keyvals:
                 raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
-        return cls.lookup_impl(cfg, keyvals)
+        return self.lookup_impl(cfg, keyvals, subs)
 
     @classmethod
-    def lookup_impl(cls, cfg, keyvals):
+    def lookup_impl(cls, cfg, keyvals, subs=None):
         raise NotImplementedError()
 
 
 class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
-    def __init__(self, cfg, keyvals, global_cfg, *args, **kwargs):
+    def __init__(self, cfg, keyvals, global_cfg, keyval_subs=None, *args, **kwargs):
         if "inherits" in cfg:
-            parent = self.lookup(global_cfg, keyvals=cfg["inherits"])
-            cfg_out = deepinherit(parent, cfg)
-        else:
-            cfg_out = cfg
-        super().__init__(cfg_out, keyvals, global_cfg=global_cfg, *args, **kwargs)
+            parent = self.lookup(global_cfg, keyvals=cfg["inherits"], subs=keyval_subs)
+            deepinherit(parent._raw_cfg, cfg)
+        super().__init__(cfg, keyvals, global_cfg=global_cfg, *args, **kwargs)
+
