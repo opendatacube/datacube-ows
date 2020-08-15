@@ -9,18 +9,15 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     auto_legend = False
     include_in_feature_info = False
 
-    def __init__(self, product, style_cfg, defer_multi_date=False, local_band_map = None):
+    def __init__(self, product, style_cfg, defer_multi_date=False):
         super().__init__(style_cfg,
                          global_cfg=product.global_cfg,
                          keyvals={
                                 "layer": product.name,
                                 "style": style_cfg["name"]
                          })
-        if local_band_map:
-            self.local_band_map = local_band_map
-        else:
-            self.local_band_map = {}
         style_cfg = self._raw_cfg
+        self.local_band_map = style_cfg.get("band_map")
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
