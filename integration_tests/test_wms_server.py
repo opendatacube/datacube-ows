@@ -106,6 +106,40 @@ def test_wms_getmap(ows_server):
     assert img.info()['Content-Type'] == 'image/png'
 
 
+def test_wms_multiproduct_getmap(ows_server, multiproduct_name):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0", timeout=120)
+
+    # Run test against dedicated multiproduct
+    test_layer = wms.contents[multiproduct_name]
+
+    bbox = test_layer.boundingBoxWGS84
+
+    img = wms.getmap(layers=[multiproduct_name],
+                     styles=[],
+                     srs="EPSG:3577",
+                     bbox=pytest.helpers.enclosed_bbox(bbox),
+                     size=(150, 150),
+                     format="image/png",
+                     transparent=True,
+                     time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+                     )
+    assert img
+    assert img.info()['Content-Type'] == 'image/png'
+
+    img = wms.getmap(layers=[multiproduct_name],
+                     styles=[],
+                     srs="EPSG:3577",
+                     bbox=pytest.helpers.disjoint_bbox(bbox),
+                     size=(150, 150),
+                     format="image/png",
+                     transparent=True,
+                     time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+                     )
+    assert img
+    assert img.info()['Content-Type'] == 'image/png'
+
+
 def test_wms_style_looping_getmap(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0", timeout=120)

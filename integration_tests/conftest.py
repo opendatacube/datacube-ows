@@ -64,3 +64,18 @@ def disjoint_bbox(bbox):
         lon_min - 0.2 * lon_range,
         lat_min - 0.2 * lat_range
     )
+
+
+@pytest.fixture
+def product_name():
+    return "ls8_usgs_level1_scene_layer"
+
+
+@pytest.fixture
+def role_name():
+    return os.getenv("DB_USERNAME")
+
+
+@pytest.fixture
+def multiproduct_name():
+    return "fc_albers_combined"

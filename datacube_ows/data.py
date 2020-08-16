@@ -634,6 +634,8 @@ def feature_info(args):
                 for ds in dt_datasets.values.item():
                     if pt_native is None:
                         pt_native = geo_point.to_crs(ds.crs)
+                    elif pt_native.crs != ds.crs:
+                        pt_native = geo_point.to_crs(ds.crs)
                     if ds.extent and ds.extent.contains(pt_native):
                         feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
                         break

@@ -13,24 +13,6 @@ import json
 
 from datacube_ows.utils import get_sqlconn
 
-def get_odc_products(dc, any_product, odc_only=False):
-    if isinstance(any_product, OWSNamedLayer):
-        return any_product.products
-    elif isinstance(any_product, str):
-        dc_product = dc.index.products.get_by_name(any_product)
-        if odc_only:
-            ows_product = None
-        else:
-            ows_product = get_config().product_index.get(any_product)
-        if ows_product:
-            if dc_product and [dc_product] == ows_product.products:
-                # The same!
-                return [dc_product]
-            print("Updating OWS product %s (ODC Products: []).  If you meant the ODC product %s, please use the --odc-only flag.")
-            return ows_product.products
-    else:
-        # Assume ODC product
-        return [any_product]
 
 def get_crsids(cfg=None):
     if not cfg:
@@ -87,8 +69,8 @@ def create_multiprod_range_entry(dc, product, crses):
     conn.execute("""
         UPDATE wms.multiproduct_ranges
         SET lat_min = subq.lat_min,
-            lat_max = subq.lat_max, 
-            lon_min = subq.lon_min, 
+            lat_max = subq.lat_max,
+            lon_min = subq.lon_min,
             lon_max = subq.lon_max
         FROM (
             select min(lat_min) as lat_min,
@@ -190,6 +172,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
         FROM public.space_time_view stv
         WHERE stv.dataset_type_ref = %(p_id)s
       ) as subq
+      WHERE pr.id = %(p_id)s
       """,
       {"p_id": prodid})
 
@@ -205,9 +188,9 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
       results = conn.execute(
           """
-          select  
+          select
                 array_agg(temporal_extent)
-          from public.space_time_view 
+          from public.space_time_view
           WHERE dataset_type_ref = %(p_id)s
           """,
           {"p_id": prodid}
@@ -238,7 +221,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
                 lower(temporal_extent), upper(temporal_extent),
                 ST_X(ST_Centroid(spatial_extent)),
                 ST_Y(ST_Centroid(spatial_extent))
-          from public.space_time_view 
+          from public.space_time_view
           WHERE dataset_type_ref = %(p_id)s
           """ %
           {"p_id": prodid}
@@ -268,9 +251,9 @@ def create_range_entry(dc, product, crses, summary_product=False):
   results = list(conn.execute("""
     SELECT lat_min,lat_max,lon_min,lon_max
     FROM wms.product_ranges
-    WHERE id=%s
+    WHERE id=%(p_id)s
     """,
-    prodid))
+      {"p_id": prodid}))
 
   r = results[0]
 
@@ -284,10 +267,10 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
   conn.execute("""
     UPDATE wms.product_ranges
-    SET bboxes = %s::jsonb
-    WHERE id=%s
-    """,
-    Json(
+    SET bboxes = %(bbox)s::jsonb
+    WHERE id=%(p_id)s
+    """, {
+    "bbox": Json(
       {crsid: {"top": box.to_crs(crs).boundingbox.top,
                "bottom": box.to_crs(crs).boundingbox.bottom,
                "left": box.to_crs(crs).boundingbox.left,
@@ -295,7 +278,7 @@ def create_range_entry(dc, product, crses, summary_product=False):
         for crsid, crs in crses.items()
        }
     ),
-    product.id)
+    "p_id": product.id})
 
   txn.commit()
   conn.close()
@@ -388,7 +371,7 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
         if path is not None:
             results = conn.execute("""
                 SELECT *
-                FROM wms.sub_product_ranges 
+                FROM wms.sub_product_ranges
                 WHERE product_id=%s and sub_product_id=%s""",
                                    prod_id, path
                                   )
