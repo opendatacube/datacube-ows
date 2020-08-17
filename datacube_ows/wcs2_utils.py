@@ -20,7 +20,7 @@ from ows.wcs.v20 import (
 from datacube_ows.cube_pool import get_cube, release_cube, cube
 from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ogc_utils import ProductLayerException
+from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
@@ -248,8 +248,7 @@ def get_coverage_data(request):
                               geobox,
                               times,
                               bands=bands)
-        datasets = stacker.datasets(dc.index)
-        n_datasets = datasets_in_xarray(datasets)
+        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
 
         if layer.max_datasets_wcs > 0 and n_datasets > layer.max_datasets_wcs:
             raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
@@ -259,13 +258,14 @@ def get_coverage_data(request):
             raise WCS2Exception("The requested spatio-temporal subsets return no data.",
                                 WCS2Exception.INVALID_SUBSETTING,
                                 http_response=404)
-        else:
-            if fmt.multi_time and len(times) > 1:
-                # Group by solar day
-                group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
-                datasets = dc.group_datasets(datasets, group_by)
 
-            output = stacker.data(datasets, skip_corrections=True)
+        datasets = stacker.datasets(dc.index)
+        if fmt.multi_time and len(times) > 1:
+            # Group by solar day
+            group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
+            datasets = dc.group_datasets(datasets, group_by)
+
+        output = stacker.data(datasets, skip_corrections=True)
 
     #
     # TODO: configurable

@@ -24,9 +24,10 @@ Materialised Views over ODC Indexes
 The materialised views provide a dataset level extent index
 using PostGIS <https://postgis.net>`_ datatypes.
 
-These views are currently used only as an intermediate calculation
-step to populate the Layer Extent Cache, as described below, however
-there are plans to make much more extensive direct use of them.
+These views are used only as an intermediate calculation
+step to populate the Layer Extent Cache, as described below,
+and for doing dataset queries for GetMap, GetFeatureInfo
+and GetCoverage requests.
 
 It is hoped that this layer will eventually be implemented as tables
 maintained as part of the core ODC index.  Currently it must be
@@ -65,6 +66,10 @@ Note that the last step of the view refresh (joining the time
 and space views into a single space-time view) is done
 CONCURRENTLY. This means that it may not take effect until
 some minutes after ``datacube-ows-update`` exits.
+
+DO NOT ATTEMPT TO REFRESH VIEWS NON-CONCURRENTLY IN A PRODUCTION
+ENVIRONMENT. This will leave OWS broken and unable to respond to
+requests until the refresh is complete.
 
 In a production environment you should not be refreshing views
 much more than 3 or 4 times a day unless your database is very small.

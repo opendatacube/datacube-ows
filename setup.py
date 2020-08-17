@@ -30,6 +30,7 @@ requirements = [
     'scikit-image',
     'timezonefinderL',
     'python-slugify',
+    'geoalchemy',
     'xarray',
     'pyows',
     'prometheus-flask-exporter'
