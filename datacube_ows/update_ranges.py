@@ -14,7 +14,7 @@ import click
 
 @click.command()
 @click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
-@click.option("--blocking/--no-blocking", is_flag=True, default=False, help="In conjunction with --views, controls whether the materialised view refresh is blocking or concurrent. (defaults to concurrent)")
+@click.option("--blocking/--no-blocking", is_flag=True, default=False, help="Obsolete")
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products" )
@@ -107,8 +107,11 @@ def main(layers, blocking,
         print("Done")
         return 0
     elif views:
+        if blocking:
+            print("WARNING: The 'blocking' flag is "
+                  "no longer supported and will be ignored.")
         print("Refreshing materialised views...")
-        refresh_views(dc, blocking)
+        refresh_views(dc)
         print("Done")
         return 0
 
@@ -137,14 +140,8 @@ def create_views(dc):
     run_sql(dc, "extent_views/create", database=dbname)
 
 
-def refresh_views(dc, blocking):
-    if blocking:
-        blocking = ""
-        print("N.B. Blocking refresh. Spacetime view will be locked until completion.")
-    else:
-        blocking = "CONCURRENTLY"
-        print("N.B. Concurrent refresh. Refresh will not take place immediately.")
-    run_sql(dc, "extent_views/refresh", blocking=blocking)
+def refresh_views(dc):
+    run_sql(dc, "extent_views/refresh")
 
 
 def create_schema(dc, role):
