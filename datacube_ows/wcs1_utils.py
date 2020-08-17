@@ -16,6 +16,7 @@ from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.mv_index import MVSelectOpts
 
 class WCS1GetCoverageRequest():
     version = Version(1,0,0)
@@ -291,9 +292,9 @@ def get_coverage_data(req):
                               req.geobox,
                               req.times,
                               bands=req.bands)
-        datasets = stacker.datasets(dc.index)
-        if not datasets:
-            # TODO: Return an empty coverage file with full metadata?
+        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+        if n_datasets == 0:
+            # Return an empty coverage file with full metadata?
             cfg = get_config()
             x_range = (req.minx, req.maxx)
             y_range = (req.miny, req.maxy)
@@ -336,12 +337,11 @@ def get_coverage_data(req):
 
             return data
 
-        n_datasets = datasets_in_xarray(datasets)
         if req.product.max_datasets_wcs > 0 and n_datasets > req.product.max_datasets_wcs:
             raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
                                 "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
-
+        datasets = stacker.datasets(index=dc.index)
         stacker = DataStacker(req.product,
                               req.geobox,
                               req.times,
