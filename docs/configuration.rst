@@ -208,12 +208,12 @@ activated (specified in the `global services <https://datacube-ows.readthedocs.i
 section), or if the default values for all entries are acceptable.
 
 The `wcs <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html>`_ section must be supplied if the WCS service is
-activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
+activated (specified in the `global services <cfg_global#service-selection-services>`_
 section).
 
 There is no separate section for WMTS as WMTS is implemented as a thin wrapper around the WMS implementation.
 
-The `layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ section contains a list of layer configurations.  The configured layers define the
+The `layers <cfg_layers.html>`_ section contains a list of layer configurations.  The configured layers define the
 layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour. The layers section
 is always required.
 
