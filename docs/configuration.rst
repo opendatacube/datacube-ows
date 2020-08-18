@@ -197,23 +197,23 @@ At the top level, the Datacube OWS configuration is a single dictionary with the
      ]
   }
 
-The `global <cfg_global.rst>`_ section contains configuration that
+The `global <cfg_global>`_ section contains configuration that
 applies to the whole server across all services and layers.
-The `global <cfg_global.rst>`_ section is always required.
+The `global <cfg_global>`_ section is always required.
 
-The `wms <cfg_wms.rst>`_ section contains configuration that applies to the WMS/WMTS
+The `wms <cfg_wms>`_ section contains configuration that applies to the WMS/WMTS
 services aross all layers.
-The `wms <cfg_wms.rst>`_ section can be omitted if only the WCS service is
-activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
+The `wms <cfg_wms>`_ section can be omitted if only the WCS service is
+activated (specified in the `global services <cfg_global#service-selection-services>`_
 section), or if the default values for all entries are acceptable.
 
-The `wcs <cfg_wcs.rst>`_ section must be supplied if the WCS service is
-activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
+The `wcs <cfg_wcs>`_ section must be supplied if the WCS service is
+activated (specified in the `global services <cfg_global#service-selection-services>`_
 section).
 
 There is no separate section for WMTS as WMTS is implemented as a thin wrapper around the WMS implementation.
 
-The `layers <cfg_layers.rst>`_ section contains a list of layer configurations.  The configured layers define the
+The `layers <cfg_layers>`_ section contains a list of layer configurations.  The configured layers define the
 layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour. The layers section
 is always required.
 
