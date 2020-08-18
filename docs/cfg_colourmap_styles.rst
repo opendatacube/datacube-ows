@@ -7,12 +7,12 @@ OWS Configuration
 Colour-Map Styles
 -----------------
 
-Colour-map Styles are `styles <cfg_styling.rst>`_ where
+Colour-map Styles are `styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ where
 each pixel is mapped to one particular colour from a fixed pallet
 by applying a logical decision tree to the flag data for that pixel.
 
 Colour-map styles support the
-`elements common to all styles <cfg_styling.rst#common-elements>`_.
+`elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
 
 Colour-map styles also have `value_map <#value_map>`_ entry that describes
 how the colour of individual pixels is determined.
@@ -201,7 +201,7 @@ Colour map styles support automatic legend configuration.
 
 Automatic legend generation can be deactivated using the
 ``show_legend`` and ``url`` legend elements
-`common to all styles <cfg_styling.rst#legend>`_.
+`common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#legend>`_.
 (``show_legend`` is ``True`` by default for colour-map styles.)
 
 A patch and label is added to the legend for each value rule in the

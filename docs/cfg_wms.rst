@@ -8,7 +8,7 @@ WMS Section
 --------------
 
 The "wms" section of the `root configuration object
-<configuration.rst>`_
+<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 contains config entries that apply
 to the WMS/WMTS services for all layers.
 

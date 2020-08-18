@@ -8,7 +8,7 @@ Layers Section
 --------------
 
 The "layers" section of the `root configuration object
-<configuration.rst>`_
+<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 contains definitions of the various layers (WMS/WMTS)
 and coverages (WCS) that installation serves.
 
@@ -75,7 +75,7 @@ and cumulative.  A layer will advertise all of:
 
 * The keywords defined for all parent folder layers in the layer hierarchy.
 
-* The keywords defined in the `global keywords <cfg_global.rst#optional-metadata>`_ section.
+* The keywords defined in the `global keywords <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#optional-metadata>`_ section.
 
 E.g.:
 
@@ -94,12 +94,12 @@ Attribution is optional and is used by WMS only.
 
 Attribution is hierarchical - if not supplied the setting from the closest parent
 layer that has an attribution is used.  Or if no parent layers supply an attribution
-either then the default value defined in `the wms section <cfg_wms.rst#default-attribution-attribution>`_
+either then the default value defined in `the wms section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#default-attribution-attribution>`_
 is used.  Or if there is no default value defined either, no attribution will be
 reported.
 
 The structure of the attribution section is the same as described in
-`the wms section <cfg_wms.rst#default-attribution-attribution>`_.
+`the wms section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#default-attribution-attribution>`_.
 
 Folder Layers
 =============
@@ -424,7 +424,7 @@ use:
 
 If this is not appropriate or possible for your data, you can
 set an alternative function using OWS's `function configuration format
-<cfg_functions.rst>`_.  Some sample functions are included in ``datacube_ows.ogc_utils``.
+<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.  Some sample functions are included in ``datacube_ows.ogc_utils``.
 
 The function is assumed to take two arguments, data (an xarray Dataset) and
 band (a band name).  (Plus any additional arguments you may be passing in
@@ -463,7 +463,7 @@ Fuse Function (fuse_func)
 
 Determines how multiple dataset arrays are compressed into a
 single time array. Specified using OWS's `function configuration
-format <cfg_functions.rst>`_.
+format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 
 The fuse function is passed through to directly to the datacube
 load_data() function - refer to the Open Data Cube documentation
@@ -650,7 +650,7 @@ Sentinel-2 data is usually packaged like this.)  In this case
 you must manually declare a "native" CRS (if WCS is active).
 This can be any CRS
 declared in the `global published_CRSs section
-<cfg_global.rst#co-ordinate-reference-systems-published_CRSs>`_
+<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published_CRSs>`_
 and need not be related to the CRSs that the data is actually
 stored in.
 
@@ -690,7 +690,7 @@ Identifiers Section (identifiers)
 ---------------------------------
 
 The identifiers section is optional.  It is a dictionary mapping names from the
-`WMS authorities section <cfg_wms.rst#identifier-authorities-authorities>`_
+`WMS authorities section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#identifier-authorities-authorities>`_
 to an identifier for this layer, issued by each of those authorities.
 
 E.g.
@@ -766,7 +766,7 @@ Include Custom Info (include_custom)
 
 Determines how multiple dataset arrays are compressed into a
 single time array. Specified using OWS's `function configuration
-format <cfg_functions.rst>`_.
+format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 
 "include_custom" allows custom data to be included in GetFeatureInfo responses. It
 is optional and defaults to an empty dictionary (i.e. no custom data.)
@@ -777,7 +777,7 @@ default (e.g. "data", "data_available_for_dates", "data_links") - if you use one
 these keys, the defined custom data will REPLACE the default data for these keys.
 
 The values for the dictionary entries are Python functions specified using
-OWS's `function configuration format <cfg_functions.rst>`_.
+OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 
 The specified function(s) are expected to be passed a dictionary of band values
 (as parameter "data") and can return any data that can be serialised to JSON.
@@ -802,7 +802,7 @@ E.g.
 Styling Section (styling)
 -----------------------------------
 
-The `"styling" section <cfg_styling.rst>`_ describes the WMS and WMTS styles for
+The `"styling" section <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ describes the WMS and WMTS styles for
 the layer.
 
 
