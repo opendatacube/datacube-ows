@@ -2,6 +2,18 @@
 OWS Configuration
 =================
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   cfg_global
+   cfg_wms
+   cfg_wcs
+   cfg_functions
+   cfg_layers
+   cfg_styling
+   cfg_*_styles.rst
+
 .. contents:: Table of Contents
 
 .. _introduction:
