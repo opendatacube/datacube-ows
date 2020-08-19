@@ -8,7 +8,7 @@ Global Section
 --------------
 
 The "global" section of the `root configuration object
-<configuration.rst>`_
+<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 contains config entries that apply
 to all services and all layers/coverages.
 
