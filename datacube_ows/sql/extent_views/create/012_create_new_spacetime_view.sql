@@ -1,4 +1,4 @@
--- Creating NEW combined SPACE-TIME Materialised View",
+-- Creating NEW combined SPACE-TIME Materialised View
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS space_time_view_new (ID, dataset_type_ref, spatial_extent, temporal_extent)
 AS
