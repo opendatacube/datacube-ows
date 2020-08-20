@@ -6,7 +6,8 @@ from requests.exceptions import HTTPError
 from urllib import request
 from lxml import etree
 
-from integration_tests.utils import WCS20Extent
+from datacube_ows.ows_configuration import get_config
+from integration_tests.utils import WCS20Extent, ODCExtent
 
 
 def get_xsd(name):
@@ -114,6 +115,17 @@ def test_wcs1_getcoverage_netcdf(ows_server):
 
     assert output
     assert output.info()['Content-Type'] == 'application/x-netcdf'
+
+
+def test_extent_utils():
+    cfg = get_config()
+    for lyr in cfg.product_index.values():
+        layer = lyr
+        break
+    ext = ODCExtent(layer)
+    times, extent = ext.subsets(space=ODCExtent.FULL_LAYER_EXTENT, time=ODCExtent.FIRST)
+    assert len(times) == 1
+    assert extent == ext.full_extent
 
 
 def test_wcs1_getcoverage_exceptions(ows_server):

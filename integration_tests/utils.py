@@ -1,3 +1,8 @@
+import enum
+
+from datacube_ows.cube_pool import cube
+from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets
+
 class WCS20Extent:
     def __init__(self, desc_cov):
         env = desc_cov[0].find("{http://www.opengis.net/gml/3.2}boundedBy")[0]
@@ -64,3 +69,107 @@ class WCS20Extent:
         x = WCS20Extent.subcoord(bbox[0], bbox[2], xstart, xstart + xwidth)
         y = WCS20Extent.subcoord(bbox[1], bbox[3], xstart, xstart + xwidth)
         return (x[0], y[0], x[1], y[1])
+
+
+class ODCExtent:
+    class TimeRequestTypes(enum.Enum):
+        FIRST = 0
+        SECOND = 1
+        LAST  = -1
+        SECOND_LAST  = -2
+        MIDDLE = 100
+        FIRST_TWO = 200
+        LAST_TWO = -200
+
+        def slice(self, ls):
+            try:
+                if self == self.MIDDLE:
+                    i = len(ls) // 2
+                    return ls[i:i+1]
+                elif self == self.FIRST_TWO:
+                    return ls[0:1]
+                elif self == self.LAST_TWO:
+                    return ls[-2:]
+                elif self == self.LAST:
+                    return ls[-1:]
+                else:
+                    return ls[self.value:self.value+1]
+            except IndexError:
+                return []
+
+        def is_multi(self):
+            return self in (self.FIRST_TWO, self.LAST_TWO)
+
+    FIRST = TimeRequestTypes.FIRST
+    SECOND = TimeRequestTypes.SECOND
+    LAST  = TimeRequestTypes.LAST
+    SECOND_LAST  = TimeRequestTypes.SECOND_LAST
+    MIDDLE = TimeRequestTypes.MIDDLE
+    FIRST_TWO = TimeRequestTypes.FIRST_TWO
+    LAST_TWO = TimeRequestTypes.LAST_TWO
+
+    class SpaceRequestType(enum.Enum):
+        FULL_LAYER_EXTENT = 0
+        FULL_EXTENT_FOR_TIMES = 1
+        CENTRAL_SUBSET_FOR_TIMES = 2
+        OFFSET_SUBSET_FOR_TIMES = 3
+        EDGE_SUBSET_FOR_TIMES = 4
+        OUTSIDE_OF_FULL_EXTENT = -1
+        IN_FULL_BUT_OUTSIDE_OF_TIMES = -2
+
+        def needs_full_extent(self):
+            return self in (
+                self.FULL_LAYER_EXTENT,
+                self.OUTSIDE_OF_FULL_EXTENT,
+                self.IN_FULL_BUT_OUTSIDE_OF_TIMES
+            )
+
+        def needs_time_extent(self):
+            return self not in (
+                self.FULL_LAYER_EXTENT,
+                self.OUTSIDE_OF_FULL_EXTENT
+            )
+
+    FULL_LAYER_EXTENT = SpaceRequestType.FULL_EXTENT_FOR_TIMES
+    FULL_EXTENT_FOR_TIMES = SpaceRequestType.FULL_EXTENT_FOR_TIMES
+    CENTRAL_SUBSET_FOR_TIMES = SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES
+    OFFSET_SUBSET_FOR_TIMES = SpaceRequestType.OFFSET_SUBSET_FOR_TIMES
+    EDGE_SUBSET_FOR_TIMES = SpaceRequestType.EDGE_SUBSET_FOR_TIMES
+    OUTSIDE_OF_FULL_EXTENT = SpaceRequestType.OUTSIDE_OF_FULL_EXTENT
+    IN_FULL_BUT_OUTSIDE_OF_TIMES = SpaceRequestType.IN_FULL_BUT_OUTSIDE_OF_TIMES
+
+    def __init__(self, layer):
+        self.layer = layer
+        self.native_crs = layer.native_crs
+        self.full_extent = None
+
+    def subsets(self,
+                space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
+                time=TimeRequestTypes.LAST,
+                width_ratio=0.02,
+                height_ratio=0.02):
+        times = time.slice(self.layer.ranges["times"])
+
+        extent = None
+        with cube() as dc:
+            if space.needs_full_extent() and not self.full_extent:
+                self.full_extent = mv_search_datasets(dc.index,
+                                                 layer=self.layer,
+                                                 sel=MVSelectOpts.EXTENT)
+            if space.needs_time_extent():
+                time_extent = mv_search_datasets(dc.index,
+                                                 layer=self.layer,
+                                                 sel=MVSelectOpts.EXTENT,
+                                                 times=times)
+            else:
+                time_extent = None
+
+            if space == self.FULL_LAYER_EXTENT:
+                extent = self.full_extent
+            elif space == self.FULL_EXTENT_FOR_TIMES:
+                extent = time_extent
+            elif space == self.OUTSIDE_OF_FULL_EXTENT:
+                bbox = self.full_extent.boundingbox
+                thing = bbox
+        return extent, times
+
