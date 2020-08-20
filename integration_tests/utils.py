@@ -140,7 +140,7 @@ class ODCExtent:
 
     def __init__(self, layer):
         self.layer = layer
-        self.native_crs = layer.native_crs
+        self.native_crs = layer.native_CRS
         self.full_extent = None
 
     def subsets(self,
@@ -148,8 +148,8 @@ class ODCExtent:
                 time=TimeRequestTypes.LAST,
                 width_ratio=0.02,
                 height_ratio=0.02):
-        times = time.slice(self.layer.ranges["times"])
-
+        ext_times = time.slice(self.layer.ranges["times"])
+        search_times = [t for t in ext_times]
         extent = None
         with cube() as dc:
             if space.needs_full_extent() and not self.full_extent:

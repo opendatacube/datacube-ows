@@ -118,7 +118,7 @@ def test_wcs1_getcoverage_netcdf(ows_server):
 
 
 def test_extent_utils():
-    cfg = get_config()
+    cfg = get_config(refresh=True)
     for lyr in cfg.product_index.values():
         layer = lyr
         break
