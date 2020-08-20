@@ -8,7 +8,7 @@ Styling Section
 ---------------
 
 The "styling" sub-section of a `layer configuration section
-<cfg_layers.rst>`_
+<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_
 contains definitions of the various styles
 that layer supports.
 
@@ -96,30 +96,30 @@ E.g. ::
     ],
 
 Currently multi_date is only supported
-for `Colour Ramp styles <cfg_colourramp_styles.rst#multi-date>`__.
+for `Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date>`__.
 
 Style Types
 ===========
 
 There are four distinct possible types of style.
 
-1. `Component Styles <cfg_component_styles.rst>`_
+1. `Component Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_component_styles.html>`_
 
    Each component channel of the image (red, green, blue and optionally
    alpha) is calculated independently from the data for that pixel.
 
-2. `Colour Map Styles <cfg_colourmap_styles.rst>`_
+2. `Colour Map Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourmap_styles.html>`_
 
    Each pixel is mapped to one particular colour from a fixed pallet
    by applying a logical decision tree to the date for that pixel.
 
-3. `Colour Ramp Styles <cfg_colourramp_styles.rst>`_
+3. `Colour Ramp Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html>`_
 
    A single continuous index value is calculated from the data for
    each pixel, and that index value mapped to a graduated colour ramp
    for display.
 
-4. `Hybrid Styles <cfg_hybrid_styles.rst>`_
+4. `Hybrid Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_hybrid_styles.html>`_
 
    A linear combination of a component style and a colour ramp style.
 
@@ -186,7 +186,7 @@ Bit-flag Masks (pq_masks)
 +++++++++++++++++++++++++
 
 The "pq_masks" section allows a style to mask the output image
-by the bit flags defined in the `Flag Processing Section <cfg_layers.rst#flag-processing-section-flags>`_ for the layer.
+by the bit flags defined in the `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_ for the layer.
 
 The pq_masks section is a list of mask sections, which are OR'd together.  i.e. A pixel
 becomes transparent if it would be made transparent by any of the masks in the list
