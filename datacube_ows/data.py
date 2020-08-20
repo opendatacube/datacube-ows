@@ -48,15 +48,12 @@ class DataStacker(object):
             self._needed_bands = self._product.band_idx.native_bands.index
 
         self.raw_times = times
-        if self._product.is_month_time_res:
-            self._times = list([month_date_range(t) for t in times])
-            self.group_by = group_by_statistical()
-        elif self._product.is_year_time_res:
-            self._times = list([year_date_range(t) for t in times])
-            self.group_by = group_by_statistical()
-        else:
-            self._times = list([local_solar_date_range(geobox, t) for t in times])
-            self.group_by = "solar_day"
+        self._times = [
+                self._product.search_times(
+                        t, self._geobox)
+                for t in times
+        ]
+        self.group_by = self._product.dataset_groupby()
 
     def needed_bands(self):
         return self._needed_bands

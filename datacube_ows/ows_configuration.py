@@ -18,9 +18,12 @@ from slugify import slugify
 
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
+from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
+    year_date_range
 
 import logging
+
+from datacube_ows.utils import group_by_statistical
 
 _LOG = logging.getLogger(__name__)
 
@@ -668,6 +671,20 @@ class OWSNamedLayer(OWSLayer):
     @property
     def is_year_time_res(self):
         return self.time_resolution == TIMERES_YR
+
+    def search_times(self, t, geobox):
+        if self.is_month_time_res:
+            return month_date_range(t)
+        elif self.is_year_time_res:
+            return year_date_range(t)
+        else:
+            return local_solar_date_range(t, geobox)
+
+    def dataset_groupby(self):
+        if self.is_raw_time_res:
+            return "solar_day"
+        else:
+            return group_by_statistical()
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
