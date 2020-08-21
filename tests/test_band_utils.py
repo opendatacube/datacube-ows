@@ -94,3 +94,8 @@ def test_multidate():
 
 def test_ndci():
     assert not sentinel2_ndci(TEST_XARR, "b1", "b2", "b1", "b2") is None
+
+
+def test_single_band_offset_log(dummy_layer):
+    assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0) is None
+    assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0, dummy_layer) is None
