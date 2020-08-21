@@ -1,6 +1,9 @@
 from __future__ import division
 
+import numpy
+
 # Style index functions
+
 def scale_data(imgband_data, scale_from, scale_to):
     sc_min, sc_max = scale_from
     tc_min, tc_max = scale_to
@@ -100,3 +103,12 @@ def single_band_log(data, band, scale_factor, exponent, product_cfg=None):
     return scale_factor * ( (data[band] ** exponent) - 1.0)
 
 
+def single_band_offset_log(data, band, offset=None, product_cfg=None):
+    if product_cfg:
+        band = product_cfg.band_idx.band(band)
+    d = data[band]
+    if offset is None:
+        d = numpy.log1p(d)
+    else:
+        d = data[band] + offset
+    return numpy.log(d)
