@@ -100,15 +100,14 @@ def multi_date_delta(data):
 def single_band_log(data, band, scale_factor, exponent, product_cfg=None):
     if product_cfg:
         band = product_cfg.band_idx.band(band)
-    return scale_factor * ( (data[band] ** exponent) - 1.0)
+    d = data[band]
+    return scale_factor * ( (d ** exponent) - 1.0)
 
 
-def single_band_offset_log(data, band, offset=None, product_cfg=None):
+def single_band_offset_log(data, band, scale=1.0, offset=None, product_cfg=None):
     if product_cfg:
         band = product_cfg.band_idx.band(band)
     d = data[band]
-    if offset is None:
-        d = numpy.log1p(d)
-    else:
+    if offset is not None:
         d = data[band] + offset
-    return numpy.log(d)
+    return numpy.log1p(d*scale)
