@@ -678,7 +678,7 @@ class OWSNamedLayer(OWSLayer):
         elif self.is_year_time_res:
             return year_date_range(t)
         else:
-            return local_solar_date_range(t, geobox)
+            return local_solar_date_range(geobox, t)
 
     def dataset_groupby(self):
         if self.is_raw_time_res:
