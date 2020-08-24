@@ -104,10 +104,14 @@ def single_band_log(data, band, scale_factor, exponent, product_cfg=None):
     return scale_factor * ( (d ** exponent) - 1.0)
 
 
-def single_band_offset_log(data, band, scale=1.0, offset=None, product_cfg=None):
+def single_band_offset_log(data, band, scale=1.0, scale_from=None, offset=None, product_cfg=None):
+    scale_to = [0,255]
     if product_cfg:
         band = product_cfg.band_idx.band(band)
     d = data[band]
     if offset is not None:
         d = data[band] + offset
-    return numpy.log1p(d*scale)
+    unscaled =  numpy.log1p(d*scale)
+    if scale_from:
+        return scale_data(unscaled, scale_from, scale_to)
+    return unscaled
