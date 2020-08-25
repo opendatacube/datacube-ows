@@ -33,6 +33,10 @@ class StyleDefBase(object):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
     def to_mask(self, pq_data, extra_mask=None):
+        date_count = len(pq_data.coords["time"])
+        if date_count == 1:
+            extra_mask = extra_mask.squeeze(dim="time", drop=True)
+            pq_data = pq_data.squeeze(dim="time", drop=True)
         result = extra_mask
         if pq_data is not None:
             for mask in self.masks:
@@ -56,22 +60,17 @@ class StyleDefBase(object):
         mask = self.to_mask(pq_data)
         return self.apply_mask(data, mask)
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_data(self, data, mask):
         date_count = len(data.coords["time"])
+        if mask is not None:
+            data = self.apply_mask(data, mask)
         if date_count == 1:
-            if pq_data is not None:
-                pq_data = pq_data.squeeze(dim="time", drop=True)
-            if extent_mask is not None:
-                extent_mask = extent_mask.squeeze(dim="time", drop=True)
-            return self.transform_single_date_data(data.squeeze(dim="time", drop=True),
-                                                   pq_data,
-                                                   extent_mask,
-                                                   *masks)
+            return self.transform_single_date_data(data.squeeze(dim="time", drop=True))
         mdh = self.get_multi_date_handler(date_count)
-        return mdh.transform_data(data, pq_data, extent_mask, *masks)
+        return mdh.transform_data(data)
 
-    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
-        pass
+    def transform_single_date_data(self, data):
+        raise NotImplementedError()
 
     def parse_legend_cfg(self, cfg):
         self.show_legend = cfg.get("show_legend", self.auto_legend)
@@ -114,7 +113,8 @@ class StyleDefBase(object):
             if self.min_count == self.max_count:
                 return str(self.min_count)
             return f"{self.min_count}-{self.max_count}"
-        def transform_data(self, data, pq_data, extent_mask, *masks):
+
+        def transform_data(self, data):
             raise NotImplementedError()
 
         def parse_legend_cfg(self, cfg):
