@@ -32,17 +32,29 @@ class StyleDefBase(object):
         for mb_cfg in cfg.get("multi_date", []):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
-    def apply_masks(self, data, pq_data):
+    def to_mask(self, pq_data):
+        result = None
         if pq_data is not None:
-            net_mask = None
             for mask in self.masks:
                 odc_mask = make_mask(pq_data, **mask.flags)
                 mask_data = getattr(odc_mask, self.product.pq_band)
                 if mask.invert:
                     mask_data = ~mask_data
-                for band in data.data_vars:
-                    data[band] = data[band].where(mask_data)
+                if result is None:
+                    result = mask_data
+                else:
+                    result = result & mask_data
+        return result
+
+    def apply_mask(self, data, mask):
+        if mask is not None:
+            for band in data.data_vars:
+                data[band] = data[band].where(mask)
         return data
+
+    def apply_masks(self, data, pq_data):
+        mask = self.to_mask(pq_data)
+        return self.apply_mask(data, mask)
 
     def transform_data(self, data, pq_data, extent_mask, *masks):
         date_count = len(data.coords["time"])
