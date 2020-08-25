@@ -14,7 +14,7 @@ from datacube_ows.band_utils import (
     band_quotient_sum,
     single_band_log,
     sentinel2_ndci,
-    multi_date_delta,
+    multi_date_delta, single_band_offset_log,
 )
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
@@ -94,3 +94,9 @@ def test_multidate():
 
 def test_ndci():
     assert not sentinel2_ndci(TEST_XARR, "b1", "b2", "b1", "b2") is None
+
+
+def test_single_band_offset_log(dummy_layer):
+    assert not single_band_offset_log(TEST_XARR, "b1") is None
+    assert not single_band_offset_log(TEST_XARR, "b1", offset=0.5) is None
+    assert not single_band_offset_log(TEST_XARR, "b1", product_cfg=dummy_layer) is None
