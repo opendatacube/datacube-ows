@@ -292,7 +292,7 @@ def get_map(args):
 
 @log_call
 def _write_png(data, pq_data, style, extent_mask, geobox):
-    mask = style.to_mask(pq_data, extent_mask)
+    mask = style.to_mask(data, pq_data, extent_mask)
     img_data = style.transform_data(data, mask)
     width = geobox.width
     height = geobox.height

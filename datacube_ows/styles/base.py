@@ -32,11 +32,20 @@ class StyleDefBase(object):
         for mb_cfg in cfg.get("multi_date", []):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
-    def to_mask(self, pq_data, extra_mask=None):
-        date_count = len(pq_data.coords["time"])
-        if date_count == 1:
-            extra_mask = extra_mask.squeeze(dim="time", drop=True)
-            pq_data = pq_data.squeeze(dim="time", drop=True)
+    def to_mask(self, data, pq_data, extra_mask=None):
+        date_count = len(data.coords["time"])
+        if date_count > 1:
+            mdh = self.get_multi_date_handler(date_count)
+            if extra_mask is not None:
+                extra_mask = mdh.collapse_mask(extra_mask)
+            if pq_data is not None:
+                pq_data = mdh.collapse_mask(pq_data)
+        else:
+            if extra_mask is not None:
+                extra_mask = extra_mask.squeeze(dim="time", drop=True)
+            if pq_data is not None:
+                pq_data = pq_data.squeeze(dim="time", drop=True)
+
         result = extra_mask
         if pq_data is not None:
             for mask in self.masks:
@@ -57,7 +66,7 @@ class StyleDefBase(object):
         return data
 
     def apply_masks(self, data, pq_data):
-        mask = self.to_mask(pq_data)
+        mask = self.to_mask(data, pq_data)
         return self.apply_mask(data, mask)
 
     def transform_data(self, data, mask):
@@ -124,6 +133,18 @@ class StyleDefBase(object):
 
         def legend(self, bytesio):
             return False
+
+        # Defaults to an "AND" over time - data only where all dates have data.
+        # Override for "OR" functionality.
+        def collapse_mask(self, mask):
+            collapsed = None
+            for dt in mask.coords["time"].values:
+                m = mask.sel(time=dt)
+                if collapsed is None:
+                    collapsed = m
+                else:
+                    collapsed = collapsed & m
+            return collapsed
 
 
 class StyleMask(object):
