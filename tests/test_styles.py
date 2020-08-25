@@ -241,19 +241,19 @@ def test_alpha_style_map(
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 127).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 255).all()
 
@@ -385,7 +385,7 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
-        data = style_def.transform_data(ds, None, None)
+        data = style_def.transform_data(ds, None)
         r = data["red"]
         g = data["green"]
         b = data["blue"]
