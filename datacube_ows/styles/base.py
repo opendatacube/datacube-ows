@@ -32,8 +32,8 @@ class StyleDefBase(object):
         for mb_cfg in cfg.get("multi_date", []):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
-    def to_mask(self, pq_data):
-        result = None
+    def to_mask(self, pq_data, extra_mask=None):
+        result = extra_mask
         if pq_data is not None:
             for mask in self.masks:
                 odc_mask = make_mask(pq_data, **mask.flags)
