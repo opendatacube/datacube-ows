@@ -2,6 +2,9 @@ from __future__ import absolute_import, division, print_function
 from contextlib import contextmanager
 from datacube import Datacube
 from threading import Lock
+import logging
+
+_LOG = logging.getLogger(__name__)
 
 import logging
 _LOG = logging.getLogger(__name__)
