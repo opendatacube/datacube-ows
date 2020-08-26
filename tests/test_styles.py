@@ -237,11 +237,13 @@ def test_alpha_style_map(
     da = DataArray(band, name='foo')
     dst = Dataset(data_vars={'foo': da})
     ds = concat([dst], times)
+    npmap = np.array([True, True, True])
+    damap = DataArray(npmap)
 
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
-        result = style_def.transform_data(ds, None)
+        result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
@@ -253,7 +255,7 @@ def test_alpha_style_map(
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
-        result = style_def.transform_data(ds, None)
+        result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 255).all()
 
@@ -383,9 +385,12 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
     dst = Dataset(data_vars={'foo': da})
     ds = concat([dst], times)
 
+    npmap = np.array([True, True, True, True, True, True])
+    damap = DataArray(npmap)
+
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
-        data = style_def.transform_data(ds, None)
+        data = style_def.transform_data(ds, damap)
         r = data["red"]
         g = data["green"]
         b = data["blue"]
