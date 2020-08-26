@@ -65,10 +65,6 @@ class StyleDefBase(object):
                 data[band] = data[band].where(mask)
         return data
 
-    def apply_masks(self, data, pq_data):
-        mask = self.to_mask(data, pq_data)
-        return self.apply_mask(data, mask)
-
     def transform_data(self, data, mask):
         date_count = len(data.coords["time"])
         if mask is not None:
