@@ -160,7 +160,7 @@ class ODCExtent:
                 time_extent = mv_search_datasets(dc.index,
                                                  layer=self.layer,
                                                  sel=MVSelectOpts.EXTENT,
-                                                 times=times)
+                                                 times=search_times)
             else:
                 time_extent = None
 
@@ -170,6 +170,5 @@ class ODCExtent:
                 extent = time_extent
             elif space == self.OUTSIDE_OF_FULL_EXTENT:
                 bbox = self.full_extent.boundingbox
-                thing = bbox
-        return extent, times
+        return extent, ext_times
 
