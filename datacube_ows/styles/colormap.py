@@ -58,20 +58,17 @@ class ColorMapStyleDef(StyleDefBase):
         return mask
 
 
-    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data):
         # pylint: disable=too-many-locals, too-many-branches
         # extent mask data per band to preseve nodata
         _LOG.debug("transform begin %s", datetime.now())
-        if extent_mask is not None:
-            for band in data.data_vars:
-                try:
-                    data[band] = data[band].where(extent_mask, other=data[band].attrs['nodata'])
-                except AttributeError:
-                    data[band] = data[band].where(extent_mask)
+        #if extent_mask is not None:
+        #    for band in data.data_vars:
+        ##        try:
+        #            data[band] = data[band].where(extent_mask, other=data[band].attrs['nodata'])
+        #        except AttributeError:
+        #            data[band] = data[band].where(extent_mask)
 
-        _LOG.debug("extent mask complete %s", str(datetime.now()))
-        data = self.apply_masks(data, pq_data)
-        _LOG.debug("mask complete %s", str(datetime.now()))
         imgdata = Dataset()
         for cfg_band, values in self.value_map.items():
             # Run through each item
