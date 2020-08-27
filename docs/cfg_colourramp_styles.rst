@@ -8,13 +8,13 @@ OWS Configuration
 Colour-Ramp Styles
 ------------------
 
-Colour-ramp Styles are `styles <cfg_styling.rst>`_ where
+Colour-ramp Styles are `styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ where
 a single continuous index value is calculated from the raw data for
 each pixel, and that index value is mapped to a graduated colour ramp
 for display.
 
 Colour-ramp styles support the
-`elements common to all styles <cfg_styling.rst#common-elements>`_.
+`elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
 
 Colour-ramp styles support automatic legend generation. Specialised
 legend configuration is described `below <#legend-configuration>`__.
@@ -39,14 +39,14 @@ index_function
 
 The `index_function` allows the user to declare a callback function
 to calculate the index value using OWS's
-`function configuration format <cfg_functions.rst>`_.
+`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 The function is expected to take an xarray Dataset containing all the
 bands in the `needed_bands list <needed-bands-list>`__ (plus any additional
 arguments handled by the
-`function configuration format <cfg_functions.rst>`_); and returns
+`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_); and returns
 an xarray Dataset containing the index value.
 
-A `small library <cfg_functions.rst#band-utils-functions>`_
+A `small library <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html#band-utils-functions>`_
 of general purpose band math functions
 are provided in `datacube_ows.band_utils`.
 
@@ -191,7 +191,7 @@ Colour-ramp styles support automatic legend generation.
 
 Automatic legend generation can be deactivated using the
 `show_legend` and `url` legend elements
-`common to all styles <cfg_styling.rst#legend>`_.
+`common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#legend>`_.
 (`show_legend` is `True` by default for colour-ramp styles.)
 
 Legend Title
@@ -504,7 +504,7 @@ Multi-Date Requests
 -------------------
 
 Colour Ramp Styles support customised handlers for
-`multi-date requests <cfg_styling.rst#multi-date>`_.
+`multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_.
 
 An aggregator function is defined that takes
 
@@ -513,7 +513,7 @@ aggregator_function
 
 The `aggegator_function` entry is required for colour ramp style
 multi-date handlers.  It is a function defined using OWS's
-`function configuration format <cfg_functions.rst>`_.
+`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 
 The function is assumed to take a single xarray Dataset with a time dimension.
 The value at each time slice is the output of the `index function <#index-function>`__

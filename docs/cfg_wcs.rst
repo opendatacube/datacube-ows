@@ -8,12 +8,12 @@ WCS Section
 --------------
 
 The ``wcs`` section of the `root configuration object
-<configuration.rst>`_
+<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 contains config entries that apply
 to the WCS services for all coverages.
 
 The ``wcs`` section must be supplied if the WCS service is
-activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
+activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section).
 
 
@@ -23,7 +23,7 @@ Supported output formats (formats)
 Specifies the supported WCS output formats.
 
 This section must be supplied if the WCS service is
-activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
+activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section) and must contain at least one output format.
 
 Support for GeoTIFF and and NetCDF is included in datacube_ows.  Adding
@@ -54,7 +54,7 @@ NetCDF formats and look something like this:
             }
         },
 
-Renderer is set using OWS's `function configuration format <cfg_functions.rst>`_.
+Renderer is set using OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 The function is expected to take:
   * A WCSRequest object
   * An xarray.DataArray to render
@@ -70,7 +70,7 @@ Specifies the default output format to use if the user does not
 specify a format.
 
 This entry must be supplied if the WCS service is
-activated (specified in the `global services <cfg_global.rst#service-selection-services>`_
+activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section) and must contain the name of one of the formats in
 defined in the
 `formats <#supported-output-formats-formats>`_ section.

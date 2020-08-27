@@ -47,15 +47,12 @@ class DataStacker(object):
             self._needed_bands = self._product.band_idx.native_bands.index
 
         self.raw_times = times
-        if self._product.is_month_time_res:
-            self._times = list([month_date_range(t) for t in times])
-            self.group_by = group_by_statistical()
-        elif self._product.is_year_time_res:
-            self._times = list([year_date_range(t) for t in times])
-            self.group_by = group_by_statistical()
-        else:
-            self._times = list([local_solar_date_range(geobox, t) for t in times])
-            self.group_by = "solar_day"
+        self._times = [
+                self._product.search_times(
+                        t, self._geobox)
+                for t in times
+        ]
+        self.group_by = self._product.dataset_groupby()
 
     def needed_bands(self):
         return self._needed_bands
@@ -294,22 +291,35 @@ def get_map(args):
 
 @log_call
 def _write_png(data, pq_data, style, extent_mask, geobox):
-    img_data = style.transform_data(data, pq_data, extent_mask)
+    mask = style.to_mask(data, pq_data, extent_mask)
+    img_data = style.transform_data(data, mask)
     width = geobox.width
     height = geobox.height
-    # width, height = img_data.pixel_counts()
+    band_index = {
+        "red": 1,
+        "green": 2,
+        "blue": 3,
+        "alpha": 4,
+    }
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,
                           height=height,
-                          count=len(img_data.data_vars),
+                          count=4,
                           transform=None,
-                          nodata=0,
                           dtype='uint8') as thing:
-            for idx, band in enumerate(img_data.data_vars, start=1):
-                thing.write_band(idx, img_data[band].values)
-
+            masked = False
+            for band in img_data.data_vars:
+                idx = band_index[band]
+                band_data = img_data[band].values
+                if band == "alpha" and mask is not None:
+                    band_data = numpy.where(mask, band_data, 0)
+                    masked = True
+                thing.write_band(idx, band_data)
+            if not masked and mask is not None:
+                alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+                thing.write_band(4, alpha_mask)
         return memfile.read()
 
 

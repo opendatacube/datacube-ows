@@ -2,6 +2,9 @@ from __future__ import absolute_import, division, print_function
 from contextlib import contextmanager
 from datacube import Datacube
 from threading import Lock
+import logging
+
+_LOG = logging.getLogger(__name__)
 
 class CubePool():
     _instances = {}
@@ -31,7 +34,8 @@ class CubePool():
             c = self._new_cube()
             self._cubes[c] = True
         # pylint: disable=broad-except
-        except Exception:
+        except Exception as e:
+            _LOG.error("ODC initialisation failed: %s", str(e))
             c = None
         finally:
             self._cubes_lock.release()
