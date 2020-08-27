@@ -879,7 +879,7 @@ class OWSConfig(OWSConfigEntry):
                 "horizontal_coord": crsdef.get("horizontal_coord", "longitude"),
                 "vertical_coord": crsdef.get("vertical_coord", "latitude"),
                 "vertical_coord_first": crsdef.get("vertical_coord_first", False),
-                "gml_name": make_gml_name[crs_str],
+                "gml_name": make_gml_name(crs_str),
                 "alias_of": None
             }
             self.published_CRSs[crs_str] = self.internal_CRSs[crs_str]
