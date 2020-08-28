@@ -93,6 +93,18 @@ def test_wms_getmap(ows_server):
     assert img
     assert img.info()['Content-Type'] == 'image/png'
 
+    img = wms.getmap(layers=[test_layer_name],
+                     styles=[],
+                     srs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
+                     bbox=pytest.helpers.enclosed_bbox(bbox),
+                     size=(150, 150),
+                     format="image/png",
+                     transparent=True,
+                     time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+                     )
+    assert img
+    assert img.info()['Content-Type'] == 'image/png'
+
 
 def test_wms_multiproduct_getmap(ows_server, multiproduct_name):
     # Use owslib to confirm that we have a somewhat compliant WMS service
