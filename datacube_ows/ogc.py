@@ -21,7 +21,7 @@ from datacube_ows.wcs2 import handle_wcs2
 from datacube_ows.wmts import handle_wmts
 from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WCS2Exception, WMSException, WMTSException
 from datacube_ows.cube_pool import cube
-from datacube.utils.aws import configure_s3_access
+from datacube.utils.rio import set_default_rio_config
 from datacube_ows.ows_configuration import get_config
 
 import logging
@@ -66,16 +66,21 @@ if os.environ.get("prometheus_multiproc_dir", False):
 
 if os.environ.get("AWS_DEFAULT_REGION"):
     env_nosign = os.environ.get("AWS_NO_SIGN_REQUEST", "yes")
-    if env_nosign.lower() in ("n", "f", "no", "false"):
+    unsigned = bool(env_nosign)
+    if not unsigned or env_nosign.lower() in ("n", "f", "no", "false", "0"):
         unsigned = False
+        # set env variable to comply with gdal
+        os.environ["AWS_NO_SIGN_REQUEST"] = "NO"
     else:
-        unsigned = bool(env_nosign)
-    if unsigned:
         # Workaround for rasterio bug
         os.environ["AWS_ACCESS_KEY_ID"] = "fake"
         os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
-    credentials = configure_s3_access(aws_unsigned=True)
+
+    set_default_rio_config(aws=dict(aws_unsigned=unsigned,
+                                    region_name="auto"),
+                           cloud_defaults=True)
 else:
+    set_default_rio_config()
     _LOG.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
 # Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
