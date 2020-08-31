@@ -65,6 +65,7 @@ def ows_init_libs():
 
     # Prometheus
     if os.environ.get("prometheus_multiproc_dir", False):
+        #pylint: disable=global-statement
         global metrics
         metrics = GunicornInternalPrometheusMetrics(app)
         _LOG.info("Prometheus metrics enabled")
@@ -200,6 +201,7 @@ def ogc_impl():
     except OGCException as e:
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
+    #pylint: disable=broad-except
     except Exception as e:
         tb = sys.exc_info()[2]
         ogc_e = WMSException("Unexpected server error: %s" % str(e), http_response=500)
@@ -239,6 +241,7 @@ def ogc_svc_impl(svc):
         return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
+    # pylint: disable=broad-except
     except Exception as e:
         tb = sys.exc_info()[2]
         ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
