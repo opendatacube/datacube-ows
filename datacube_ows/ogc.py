@@ -66,11 +66,12 @@ if os.environ.get("prometheus_multiproc_dir", False):
 
 if os.environ.get("AWS_DEFAULT_REGION"):
     env_nosign = os.environ.get("AWS_NO_SIGN_REQUEST", "yes")
-    if env_nosign.lower() in ("n", "f", "no", "false"):
+    unsigned = bool(env_nosign)
+    if not unsigned or env_nosign.lower() in ("n", "f", "no", "false", "0"):
         unsigned = False
+        # set env variable to comply with gdal
+        os.environ["AWS_NO_SIGN_REQUEST"] = "NO"
     else:
-        unsigned = bool(env_nosign)
-    if unsigned:
         # Workaround for rasterio bug
         os.environ["AWS_ACCESS_KEY_ID"] = "fake"
         os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
