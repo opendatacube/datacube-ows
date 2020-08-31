@@ -966,7 +966,6 @@ ows_cfg = {
                         "band": "quality",
                         "ignore_time": False,
                         "ignore_info_flags": [],
-                        "manual_merge": True,
                     },
                     "image_processing": {
                         # Extent mask function
@@ -981,7 +980,6 @@ ows_cfg = {
                         # is the case here.
                         "always_fetch_bands": [ "quality" ],
                         "fuse_func": None,
-                        "manual_merge": True,
                         # Apply corrections for solar angle, for "Level 1" products.
                         # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
                         "apply_solar_corrections": True
@@ -1034,7 +1032,6 @@ For service status information, see https://status.dea.ga.gov.au
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [ ],
-                        "manual_merge": False,
                     },
                     "flags": {
                         "band": "water",
@@ -1071,7 +1068,6 @@ For service status information, see https://status.dea.ga.gov.au
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_bitflag",
                         "always_fetch_bands": [ ],
-                        "manual_merge": False,
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
                     },
                     "wcs": {
@@ -1104,7 +1100,6 @@ For service status information, see https://status.dea.ga.gov.au
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [ ],
-                        "manual_merge": False,
                     },
                     "flags": {
                         "band": "water",
@@ -1142,7 +1137,6 @@ For service status information, see https://status.dea.ga.gov.au
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [ ],
-                        "manual_merge": False,
                     },
                     "flags": {
                         "band": "water",
@@ -1177,7 +1171,6 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [ ],
-                        "manual_merge": False,
                     },
                     "flags": {
                         "band": "water",

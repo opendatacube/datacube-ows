@@ -1480,10 +1480,6 @@ ows_cfg = {
                         # Values of flags listed here are not included in GetFeatureInfo responses.
                         # (defaults to empty list)
                         "ignore_info_flags": [],
-                        # Set to true if the pq product dataset extents include nodata regions.
-                        #
-                        # Default to False.
-                        "manual_merge": False,
                     },
                     # The image_processing section must be supplied.
                     "image_processing": {
@@ -1511,9 +1507,6 @@ ows_cfg = {
                         #
                         # Defaults to None.
                         "fuse_func": None,
-                        # Set to true if the band product dataset extents include nodata regions.
-                        # Defaults to False.
-                        "manual_merge": False,
                         # Apply corrections for solar angle, for "Level 1" products.
                         # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
                         "apply_solar_corrections": False,
@@ -1647,7 +1640,6 @@ ows_cfg = {
                         "band": "quality",
                         "ignore_time": False,
                         "ignore_info_flags": [],
-                        "manual_merge": True,
                     },
                     "image_processing": {
                         # Extent mask function
@@ -1662,7 +1654,6 @@ ows_cfg = {
                         # is the case here.
                         "always_fetch_bands": [ "quality" ],
                         "fuse_func": None,
-                        "manual_merge": True,
                         # Apply corrections for solar angle, for "Level 1" products.
                         # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
                         "apply_solar_corrections": True
@@ -1740,13 +1731,11 @@ ows_cfg = {
                         "band": "quality",
                         "ignore_time": False,
                         "ignore_info_flags": [],
-                        "manual_merge": False,
                     },
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [ ],
                         "fuse_func": None,
-                        "manual_merge": False,
                         "apply_solar_corrections": False,
                     },
                     "wcs": {
@@ -1792,7 +1781,6 @@ ows_cfg = {
                 "extent_mask_func": "datacube_ows.ogc_utils.mask_by_extent_flag",
                 "always_fetch_bands": [ "extent" ],
                 "fuse_func": None,
-                "manual_merge": False,
                 "apply_solar_corrections": False,
             },
             "wcs": {
