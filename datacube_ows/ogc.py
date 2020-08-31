@@ -26,33 +26,11 @@ from datacube_ows.ows_configuration import get_config
 
 import logging
 
-# pylint: disable=invalid-name, broad-except
-
-
-
-if os.environ.get("PYDEV_DEBUG"):
-    import pydevd_pycharm
-    pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
-
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
 handler.addFilter(RequestIDLogFilter())
 _LOG = logging.getLogger()
 _LOG.addHandler(handler)
-
-if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
-    sentry_sdk.init(
-        dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
-        integrations = [FlaskIntegration()]
-    )
-    _LOG.info("Sentry logging enabled")
-
-app = Flask(__name__.split('.')[0])
-RequestID(app)
-
-# Parse config file
-if not os.environ.get("DEFER_CFG_PARSE"):
-    get_config()
 
 # If invoked using Gunicorn, link our root logger to the gunicorn logger
 # this will mean the root logs will be captured and managed by the gunicorn logger
@@ -60,27 +38,61 @@ if not os.environ.get("DEFER_CFG_PARSE"):
 # produced by this application
 _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
 
-if os.environ.get("prometheus_multiproc_dir", False):
-    metrics = GunicornInternalPrometheusMetrics(app)
-    _LOG.info("Prometheus metrics enabled")
-
-if os.environ.get("AWS_DEFAULT_REGION"):
-    env_nosign = os.environ.get("AWS_NO_SIGN_REQUEST", "yes")
-    unsigned = bool(env_nosign)
-    if not unsigned or env_nosign.lower() in ("n", "f", "no", "false", "0"):
-        unsigned = False
-        # set env variable to comply with gdal
-        os.environ["AWS_NO_SIGN_REQUEST"] = "NO"
-    else:
-        # Workaround for rasterio bug
-        os.environ["AWS_ACCESS_KEY_ID"] = "fake"
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
-    credentials = configure_s3_access(aws_unsigned=True)
-else:
-    _LOG.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
-
 # Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
 warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
+
+# For Prometheus
+metrics = None
+
+def ows_init_libs():
+    # Startup initialisation of libraries controlled by environment variables
+    #
+    # Move to a function to facilitate unit testing.
+    # Should be done in a more flexible pluggable way.
+
+    # PYCHARM Debugging
+    if os.environ.get("PYDEV_DEBUG"):
+        import pydevd_pycharm
+        pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+
+    # Sentry
+    if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
+        sentry_sdk.init(
+            dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
+            integrations = [FlaskIntegration()]
+        )
+        _LOG.info("Sentry logging enabled")
+
+    # Prometheus
+    if os.environ.get("prometheus_multiproc_dir", False):
+        metrics = GunicornInternalPrometheusMetrics(app)
+        _LOG.info("Prometheus metrics enabled")
+
+    # Boto3/AWS
+    if os.environ.get("AWS_DEFAULT_REGION"):
+        env_nosign = os.environ.get("AWS_NO_SIGN_REQUEST", "yes")
+        unsigned = bool(env_nosign)
+        if not unsigned or env_nosign.lower() in ("n", "f", "no", "false", "0"):
+            unsigned = False
+            # set env variable to comply with gdal
+            os.environ["AWS_NO_SIGN_REQUEST"] = "NO"
+        else:
+            # Workaround for rasterio bug
+            os.environ["AWS_ACCESS_KEY_ID"] = "fake"
+            os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
+        credentials = configure_s3_access(aws_unsigned=unsigned)
+    else:
+        _LOG.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
+
+ows_init_libs()
+
+# Parse config file
+if not os.environ.get("DEFER_CFG_PARSE"):
+    get_config()
+
+app = Flask(__name__.split('.')[0])
+RequestID(app)
+
 
 class SupportedSvcVersion(object):
     def __init__(self, service, version, router, exception_class):
