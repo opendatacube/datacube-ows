@@ -201,8 +201,7 @@ def ogc_impl():
     except OGCException as e:
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
-    #pylint: disable=broad-except
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         tb = sys.exc_info()[2]
         ogc_e = WMSException("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
@@ -241,8 +240,7 @@ def ogc_svc_impl(svc):
         return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
-    # pylint: disable=broad-except
-    except Exception as e:
+    except Exception as e: #pylint: disable=broad-except
         tb = sys.exc_info()[2]
         ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
