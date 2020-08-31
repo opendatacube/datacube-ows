@@ -404,7 +404,6 @@ E.g.::
         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
         "always_fetch_bands": "pixel_qa",
         "fuse_func": None,
-        "manual_merge": False,
         "apply_solar_corrections": True
     }
 
@@ -471,13 +470,6 @@ for calling conventions.
 
 Optional - default is to not use a fuse function.
 
-Manual Merge (manual_merge)
-+++++++++++++++++++++++++++
-
-"manual_merge" is an optional boolean flag (defaults to False).  If True,
-data for each dataset is fused in OWS outside of ODC.  This is rarely what
-you want, but may work better for some metadata types.
-
 Apply Solar Corrections (apply_solar_corrections)
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -517,7 +509,6 @@ E.g.
         "band": "pixelquality",
         "product": "ls8_pq",
         "fuse_func": "datacube.helpers.ga_pq_fuser",
-        "manual_merge": False,
         "ignore_info_flags": ["noisy"],
         "ignore_time": False
     }
@@ -590,14 +581,6 @@ Only applies if the flag band is read from a separate product
 (or product).  Equivalent to the `fuse function in the
 image_processing section <#fuse-function-fuse_func>`_.
 Always optional - defaults to None.
-
-Manual Flag Merge (manual_merge)
-++++++++++++++++++++++++++++++++
-
-Only applies if the flag band is read from a separate product
-(or product).  Equivalent to the `manual merge in the
-image_processing section <#manual-merge-manual_merge>`_.
-Optional - defaults to False.
 
 Ignore Time (ignore_time)
 +++++++++++++++++++++++++
