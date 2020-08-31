@@ -65,6 +65,7 @@ def ows_init_libs():
 
     # Prometheus
     if os.environ.get("prometheus_multiproc_dir", False):
+        global metrics
         metrics = GunicornInternalPrometheusMetrics(app)
         _LOG.info("Prometheus metrics enabled")
 
