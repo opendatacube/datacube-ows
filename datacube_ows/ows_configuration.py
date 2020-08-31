@@ -392,7 +392,10 @@ class OWSNamedLayer(OWSLayer):
         raw_afb = cfg.get("always_fetch_bands", [])
         self.always_fetch_bands = list([ self.band_idx.band(b) for b in raw_afb ])
         self.solar_correction = cfg.get("apply_solar_corrections", False)
-        self.data_manual_merge = cfg.get("manual_merge", False)
+        if cfg.get("manual_merge", False):
+            _LOG.warning(
+                        "Ignoring image_processing::manual_merge for layer %s.  Manual merge is no longer supported.",
+                        self.name)
         if cfg.get("fuse_func"):
             self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
         else:
@@ -413,14 +416,16 @@ class OWSNamedLayer(OWSLayer):
                 self.pq_fuse_func = None
             self.pq_ignore_time = cfg.get("ignore_time", False)
             self.ignore_info_flags = cfg.get("ignore_info_flags", [])
-            self.pq_manual_merge = cfg.get("manual_merge", False)
+            if cfg.get("manual_merge", False):
+                _LOG.warning(
+                    "flags::manual_merge for layer %s. Manual Merge no longer supported.",
+                    self.name)
         else:
             self.pq_names = []
             self.pq_name = None
             self.pq_band = None
             self.pq_ignore_time = False
             self.ignore_info_flags = []
-            self.pq_manual_merge = False
         self.pq_products = []
 
         if self.pq_names:

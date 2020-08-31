@@ -92,7 +92,7 @@ class DataStacker(object):
             return result
 
     @log_call
-    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, **kwargs):
+    def data(self, datasets, mask=False, skip_corrections=False, **kwargs):
         # pylint: disable=too-many-locals, consider-using-enumerate
         # datasets is an XArray DataArray of datasets grouped by time.
         if mask:
@@ -102,9 +102,7 @@ class DataStacker(object):
             prod = self._product.product
             measurements = prod.lookup_measurements(self.needed_bands())
 
-        if manual_merge:
-            return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
-        elif self._product.solar_correction and not mask and not skip_corrections:
+        if self._product.solar_correction and not mask and not skip_corrections:
             # Merge performed already by dataset extent, but we need to
             # process the data for the datasets individually to do solar correction.
             merged = None
@@ -123,48 +121,6 @@ class DataStacker(object):
         else:
             data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
             return data
-
-    @log_call
-    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
-        # pylint: disable=too-many-locals, too-many-branches
-        # REFACTOR: TODO
-        # manual merge
-        if mask:
-            bands = [self._product.pq_band]
-        else:
-            bands = self.needed_bands()
-        time_slices = []
-        for dt in datasets.time.values:
-            tds = datasets.sel(time=dt)
-            merged = None
-            for ds in tds.values.item():
-                d = self.read_data_for_single_dataset(ds, measurements, self._geobox, **kwargs)
-                # Squeeze upconverts uints to int32
-                d = d.squeeze(["time"], drop=True)
-                extent_mask = None
-                for band in bands:
-                    for f in self._product.extent_mask_func:
-                        if extent_mask is None:
-                            extent_mask = f(d, band)
-                        else:
-                            extent_mask &= f(d, band)
-                dm = d.where(extent_mask)
-                if self._product.solar_correction and not mask and not skip_corrections:
-                    for band in bands:
-                        if band != self._product.pq_band:
-                            dm[band] = solar_correct_data(dm[band], ds)
-                if merged is None:
-                    merged = dm
-                else:
-                    merged = merged.combine_first(dm)
-            if mask:
-                merged = merged.astype('uint8', copy=True)
-                for band in bands:
-                    merged[band].attrs = d[band].attrs
-            time_slices.append(merged)
-
-        result = xarray.concat(time_slices, datasets.time)
-        return result
 
     # Read data for given datasets and measurements per the output_geobox
     @log_call
@@ -241,7 +197,6 @@ def get_map(args):
             datasets = stacker.datasets(dc.index)
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             data = stacker.data(datasets,
-                                manual_merge=params.product.data_manual_merge,
                                 fuse_func=params.product.fuse_func)
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             if params.style.masks:
@@ -258,7 +213,6 @@ def get_map(args):
                     if n_pq_datasets > 0:
                         pq_data = stacker.data(pq_datasets,
                                                mask=True,
-                                               manual_merge=params.product.pq_manual_merge,
                                                fuse_func=params.product.pq_fuse_func)
                     else:
                         pq_data = None
@@ -266,20 +220,19 @@ def get_map(args):
                 pq_data = None
 
             extent_mask = None
-            if not params.product.data_manual_merge:
-                td_masks = []
-                for npdt in data.time.values:
-                    td = data.sel(time=npdt)
-                    td_ext_mask = None
-                    for band in params.style.needed_bands:
-                        for f in params.product.extent_mask_func:
-                            if td_ext_mask is None:
-                                td_ext_mask = f(td, band)
-                            else:
-                                td_ext_mask &= f(td, band)
-                    td_masks.append(td_ext_mask)
-                extent_mask = xarray.concat(td_masks, dim=data.time)
-                #    extent_mask.add_time(td.time, ext_mask)
+            td_masks = []
+            for npdt in data.time.values:
+                td = data.sel(time=npdt)
+                td_ext_mask = None
+                for band in params.style.needed_bands:
+                    for f in params.product.extent_mask_func:
+                        if td_ext_mask is None:
+                            td_ext_mask = f(td, band)
+                        else:
+                            td_ext_mask &= f(td, band)
+                td_masks.append(td_ext_mask)
+            extent_mask = xarray.concat(td_masks, dim=data.time)
+            #    extent_mask.add_time(td.time, ext_mask)
 
             if not data or (params.style.masks and not pq_data):
                 body = _write_empty(params.geobox)
@@ -507,7 +460,6 @@ def feature_info(args):
             # ds_at_times["time"].attrs["units"] = 'seconds since 1970-01-01 00:00:00'
             if ds_at_times:
                 data = stacker.data(ds_at_times, skip_corrections=True,
-                                    manual_merge=params.product.data_manual_merge,
                                     fuse_func=params.product.fuse_func
                                     )
                 for dt in data.time.values:
