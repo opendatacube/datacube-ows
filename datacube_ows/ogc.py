@@ -63,13 +63,6 @@ def ows_init_libs():
         )
         _LOG.info("Sentry logging enabled")
 
-    # Prometheus
-    if os.environ.get("prometheus_multiproc_dir", False):
-        #pylint: disable=global-statement
-        global metrics
-        metrics = GunicornInternalPrometheusMetrics(app)
-        _LOG.info("Prometheus metrics enabled")
-
     # Boto3/AWS
     if os.environ.get("AWS_DEFAULT_REGION"):
         env_nosign = os.environ.get("AWS_NO_SIGN_REQUEST", "yes")
@@ -94,6 +87,11 @@ if not os.environ.get("DEFER_CFG_PARSE"):
 
 app = Flask(__name__.split('.')[0])
 RequestID(app)
+
+# Prometheus
+if os.environ.get("prometheus_multiproc_dir", False):
+    metrics = GunicornInternalPrometheusMetrics(app)
+    _LOG.info("Prometheus metrics enabled")
 
 
 class SupportedSvcVersion(object):
