@@ -7,6 +7,8 @@ from itertools import chain
 
 from dateutil.parser import parse
 from urllib.parse import urlparse
+
+from flask import request
 from timezonefinderL import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
@@ -247,3 +249,15 @@ def ls8_subproduct(ds):
 
 def feature_info_url_template(data, template):
     return template.format(data=data)
+
+
+def lower_get_args():
+    # Get parameters in WMS are case-insensitive, and intended to be single use.
+    # Spec does not specify which instance should be used if a parameter is provided more than once.
+    # This function uses the LAST instance.
+    d = {}
+    for k in request.args.keys():
+        kl = k.lower()
+        for v in request.args.getlist(k):
+            d[kl] = v
+    return d
