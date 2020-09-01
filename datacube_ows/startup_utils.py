@@ -14,6 +14,18 @@ from datacube_ows.ows_configuration import get_config
 
 import logging
 
+__all__ = [
+    'initialise_logger',
+    'initialise_ignorable_warnings',
+    'initialise_debugging',
+    'initialise_sentry',
+    'initialise_aws_credentials',
+    'parse_config_file',
+    'initialise_flask',
+    'initialise_prometheus',
+    'initialise_prometheus_register',
+]
+
 def initialise_logger(name=None):
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
