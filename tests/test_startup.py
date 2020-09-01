@@ -9,7 +9,7 @@ def test_fake_creds(monkeypatch):
     initialise_aws_credentials()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
     monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "false")
-    with patch("datacube_ows.ogc.configure_s3_access") as s3a:
+    with patch("datacube_ows.startup_utils.configure_s3_access") as s3a:
         s3a.return_value = None
         initialise_aws_credentials()
         assert os.getenv("AWS_NO_SIGN_REQUEST") == "NO"
