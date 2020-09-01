@@ -148,12 +148,12 @@ def get_service_base_url(allowed_urls, request_url):
 
 
 # Collects additional headers from flask request objects
-def capture_headers(request, args_dict):
-    args_dict['referer'] = request.headers.get('Referer', None)
-    args_dict['origin'] = request.headers.get('Origin', None)
-    args_dict['requestid'] = request.environ.get("FLASK_REQUEST_ID")
-    args_dict['host'] = request.headers.get('Host', None)
-    args_dict['url_root'] = request.url_root
+def capture_headers(req, args_dict):
+    args_dict['referer'] = req.headers.get('Referer', None)
+    args_dict['origin'] = req.headers.get('Origin', None)
+    args_dict['requestid'] = req.environ.get("FLASK_REQUEST_ID")
+    args_dict['host'] = req.headers.get('Host', None)
+    args_dict['url_root'] = req.url_root
 
     return args_dict
 

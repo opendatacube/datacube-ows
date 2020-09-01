@@ -15,6 +15,7 @@ from datacube_ows.cube_pool import cube
 from datacube_ows.protocol_versions import supported_versions
 
 # See startup_utils.py for initialisation methods called at startup.
+#pylint: disable=wildcard-import,unused-wildcard-import
 from datacube_ows.startup_utils import *
 
 # Logging intialisation
