@@ -404,7 +404,7 @@ E.g.::
         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
         "always_fetch_bands": "pixel_qa",
         "fuse_func": None,
-        "manual_merge": False,
+        "manual_merge": True,
         "apply_solar_corrections": True
     }
 
@@ -476,21 +476,18 @@ Manual Merge (manual_merge)
 
 "manual_merge" is an optional boolean flag (defaults to False).  If True,
 data for each dataset is fused in OWS outside of ODC.  This is rarely what
-you want, but may work better for some metadata types.
+you want, but is required for solar angle corrections.
 
 Apply Solar Corrections (apply_solar_corrections)
 +++++++++++++++++++++++++++++++++++++++++++++++++
-
-WARNING: apply_solar_corrections has not been actively used
-or tested for some time and may currently be broken. Use at
-your own risk, but feel free to raise a github issue if it
-doesn't work for you.
 
 "apply_solar_corrections" is an optional boolean flag (defaults to False).
 If True, corrections for local solar angle at the time of image
 capture are applied to all bands.
 
 This should not be used on "Level 2" or analysis-ready datacube products.
+
+"apply_solar_corrections" requires manual_merge to also be set.
 
 -------------------------------
 Flag Processing Section (flags)
