@@ -249,21 +249,18 @@ def get_map(args):
             else:
                 pq_data = None
 
-            extent_mask = None
-            if not params.product.data_manual_merge:
-                td_masks = []
-                for npdt in data.time.values:
-                    td = data.sel(time=npdt)
-                    td_ext_mask = None
-                    for band in params.style.needed_bands:
-                        for f in params.product.extent_mask_func:
-                            if td_ext_mask is None:
-                                td_ext_mask = f(td, band)
-                            else:
-                                td_ext_mask &= f(td, band)
-                    td_masks.append(td_ext_mask)
-                extent_mask = xarray.concat(td_masks, dim=data.time)
-                #    extent_mask.add_time(td.time, ext_mask)
+            td_masks = []
+            for npdt in data.time.values:
+                td = data.sel(time=npdt)
+                td_ext_mask = None
+                for band in params.style.needed_bands:
+                    for f in params.product.extent_mask_func:
+                        if td_ext_mask is None:
+                            td_ext_mask = f(td, band)
+                        else:
+                            td_ext_mask &= f(td, band)
+                td_masks.append(td_ext_mask)
+            extent_mask = xarray.concat(td_masks, dim=data.time)
 
             if not data or (params.style.masks and not pq_data):
                 body = _write_empty(params.geobox)
@@ -295,6 +292,7 @@ def _write_png(data, pq_data, style, extent_mask, geobox):
                           transform=None,
                           dtype='uint8') as thing:
             masked = False
+            last_band = None
             for band in img_data.data_vars:
                 idx = band_index[band]
                 band_data = img_data[band].values
@@ -302,8 +300,13 @@ def _write_png(data, pq_data, style, extent_mask, geobox):
                     band_data = numpy.where(mask, band_data, 0)
                     masked = True
                 thing.write_band(idx, band_data)
-            if not masked and mask is not None:
-                alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+                last_band = band_data
+            if not masked:
+                if mask is None:
+                    alpha_mask = numpy.empty(last_band.shape)
+                    alpha_mask.fill(255)
+                else:
+                    alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
                 thing.write_band(4, alpha_mask)
         return memfile.read()
 

@@ -981,7 +981,7 @@ ows_cfg = {
                         # is the case here.
                         "always_fetch_bands": [ "quality" ],
                         "fuse_func": None,
-                        "manual_merge": True,
+                        # "manual_merge": True,
                         # Apply corrections for solar angle, for "Level 1" products.
                         # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
                         "apply_solar_corrections": True
