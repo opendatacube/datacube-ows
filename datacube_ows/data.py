@@ -104,22 +104,6 @@ class DataStacker(object):
 
         if manual_merge:
             return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
-        elif self._product.solar_correction and not mask and not skip_corrections:
-            # Merge performed already by dataset extent, but we need to
-            # process the data for the datasets individually to do solar correction.
-            merged = None
-            for ds in datasets:
-                d = self.read_data(ds, measurements, self._geobox, **kwargs)
-                for band in self.needed_bands():
-                    if band != self._product.pq_band:
-                        # No idea why pylint suddenly doesn't like this statement
-                        # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
-                        d[band] = solar_correct_data(d[band], ds)
-                if merged is None:
-                    merged = d
-                else:
-                    merged = merged.combine_first(d)
-            return merged
         else:
             data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
             return data
