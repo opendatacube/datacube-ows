@@ -7,6 +7,8 @@ from itertools import chain
 
 from dateutil.parser import parse
 from urllib.parse import urlparse
+
+from flask import request
 from timezonefinderL import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
@@ -146,12 +148,12 @@ def get_service_base_url(allowed_urls, request_url):
 
 
 # Collects additional headers from flask request objects
-def capture_headers(request, args_dict):
-    args_dict['referer'] = request.headers.get('Referer', None)
-    args_dict['origin'] = request.headers.get('Origin', None)
-    args_dict['requestid'] = request.environ.get("FLASK_REQUEST_ID")
-    args_dict['host'] = request.headers.get('Host', None)
-    args_dict['url_root'] = request.url_root
+def capture_headers(req, args_dict):
+    args_dict['referer'] = req.headers.get('Referer', None)
+    args_dict['origin'] = req.headers.get('Origin', None)
+    args_dict['requestid'] = req.environ.get("FLASK_REQUEST_ID")
+    args_dict['host'] = req.headers.get('Host', None)
+    args_dict['url_root'] = req.url_root
 
     return args_dict
 
@@ -247,3 +249,15 @@ def ls8_subproduct(ds):
 
 def feature_info_url_template(data, template):
     return template.format(data=data)
+
+
+def lower_get_args():
+    # Get parameters in WMS are case-insensitive, and intended to be single use.
+    # Spec does not specify which instance should be used if a parameter is provided more than once.
+    # This function uses the LAST instance.
+    d = {}
+    for k in request.args.keys():
+        kl = k.lower()
+        for v in request.args.getlist(k):
+            d[kl] = v
+    return d

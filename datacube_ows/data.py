@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
 import json
-from datetime import datetime, date
+from datetime import datetime
 
 import numpy
+import numpy.ma
 import xarray
-from affine import Affine
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
@@ -22,10 +22,10 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
-from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException, tz_for_geometry, \
-    solar_date, year_date_range, month_date_range
+from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
+    solar_date
 from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets
-from datacube_ows.utils import log_call, group_by_statistical
+from datacube_ows.utils import log_call
 
 import logging
 
@@ -104,22 +104,6 @@ class DataStacker(object):
 
         if manual_merge:
             return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
-        elif self._product.solar_correction and not mask and not skip_corrections:
-            # Merge performed already by dataset extent, but we need to
-            # process the data for the datasets individually to do solar correction.
-            merged = None
-            for ds in datasets:
-                d = self.read_data(ds, measurements, self._geobox, **kwargs)
-                for band in self.needed_bands():
-                    if band != self._product.pq_band:
-                        # No idea why pylint suddenly doesn't like this statement
-                        # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
-                        d[band] = solar_correct_data(d[band], ds)
-                if merged is None:
-                    merged = d
-                else:
-                    merged = merged.combine_first(d)
-            return merged
         else:
             data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
             return data
@@ -143,6 +127,8 @@ class DataStacker(object):
                 d = d.squeeze(["time"], drop=True)
                 extent_mask = None
                 for band in bands:
+                    if self._product.pq_band == band:
+                        continue
                     for f in self._product.extent_mask_func:
                         if extent_mask is None:
                             extent_mask = f(d, band)
@@ -265,21 +251,27 @@ def get_map(args):
             else:
                 pq_data = None
 
-            extent_mask = None
-            if not params.product.data_manual_merge:
-                td_masks = []
-                for npdt in data.time.values:
-                    td = data.sel(time=npdt)
-                    td_ext_mask = None
-                    for band in params.style.needed_bands:
-                        for f in params.product.extent_mask_func:
+            td_masks = []
+            for npdt in data.time.values:
+                td = data.sel(time=npdt)
+                td_ext_mask = None
+                for band in params.style.needed_bands:
+                    if params.product.pq_band != band:
+                        if params.product.data_manual_merge:
                             if td_ext_mask is None:
-                                td_ext_mask = f(td, band)
+                                td_ext_mask = numpy.isnan(td[band])
                             else:
-                                td_ext_mask &= f(td, band)
-                    td_masks.append(td_ext_mask)
-                extent_mask = xarray.concat(td_masks, dim=data.time)
-                #    extent_mask.add_time(td.time, ext_mask)
+                                td_ext_mask &= numpy.isnan(td[band])
+                        else:
+                            for f in params.product.extent_mask_func:
+                                if td_ext_mask is None:
+                                    td_ext_mask = f(td, band)
+                                else:
+                                    td_ext_mask &= f(td, band)
+                if params.product.data_manual_merge:
+                    td_ext_mask = xarray.DataArray(td_ext_mask)
+                td_masks.append(td_ext_mask)
+            extent_mask = xarray.concat(td_masks, dim=data.time)
 
             if not data or (params.style.masks and not pq_data):
                 body = _write_empty(params.geobox)
@@ -292,22 +284,41 @@ def get_map(args):
 
 @log_call
 def _write_png(data, pq_data, style, extent_mask, geobox):
-    img_data = style.transform_data(data, pq_data, extent_mask)
+    mask = style.to_mask(data, pq_data, extent_mask)
+    img_data = style.transform_data(data, mask)
     width = geobox.width
     height = geobox.height
-    # width, height = img_data.pixel_counts()
+    band_index = {
+        "red": 1,
+        "green": 2,
+        "blue": 3,
+        "alpha": 4,
+    }
 
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,
                           height=height,
-                          count=len(img_data.data_vars),
+                          count=4,
                           transform=None,
-                          nodata=0,
                           dtype='uint8') as thing:
-            for idx, band in enumerate(img_data.data_vars, start=1):
-                thing.write_band(idx, img_data[band].values)
-
+            masked = False
+            last_band = None
+            for band in img_data.data_vars:
+                idx = band_index[band]
+                band_data = img_data[band].values
+                if band == "alpha" and mask is not None:
+                    band_data = numpy.where(mask, band_data, 0)
+                    masked = True
+                thing.write_band(idx, band_data)
+                last_band = band_data
+            if not masked:
+                if mask is None:
+                    alpha_mask = numpy.empty(last_band.shape)
+                    alpha_mask.fill(255)
+                else:
+                    alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+                thing.write_band(4, alpha_mask)
         return memfile.read()
 
 

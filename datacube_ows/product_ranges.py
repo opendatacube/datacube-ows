@@ -17,11 +17,11 @@ from datacube_ows.utils import get_sqlconn
 def get_crsids(cfg=None):
     if not cfg:
         cfg = get_config()
-    return cfg.published_CRSs.keys()
+    return cfg.internal_CRSs.keys()
 
 
 def get_crses(cfg=None):
-    return  {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(cfg)}
+    return {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(cfg)}
 
 
 def jsonise_bbox(bbox):
@@ -353,6 +353,7 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
 
 
 def get_ranges(dc, product, path=None, is_dc_product=False):
+    cfg = product.global_cfg
     conn = get_sqlconn(dc)
     if not is_dc_product and product.multi_product:
         if path is not None:
@@ -400,6 +401,6 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
             "start_time": times[0],
             "end_time": times[-1],
             "time_set": set(times),
-            "bboxes": result["bboxes"]
+            "bboxes": cfg.alias_bboxes(result["bboxes"])
         }
     return None

@@ -27,7 +27,7 @@ from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 _LOG = logging.getLogger(__name__)
 
 
-def uniform_crs(crs):
+def uniform_crs(cfg, crs):
     " Helper function to transform a URL style EPSG definition to an 'EPSG:nnn' one "
     if crs.startswith('http://www.opengis.net/def/crs/EPSG/'):
         code = crs.rpartition('/')[-1]
@@ -36,6 +36,8 @@ def uniform_crs(crs):
         code = crs.rpartition(':')[-1]
         crs = 'EPSG:%s' % code
     elif crs.startswith('EPSG'):
+        pass
+    elif crs in cfg.published_CRSs:
         pass
     else:
         raise WCS2Exception("Not a CRS: %s" % crs,
@@ -66,8 +68,8 @@ def get_coverage_data(request):
         #
 
         native_crs = layer.native_CRS
-        subsetting_crs = uniform_crs(request.subsetting_crs or native_crs)
-        output_crs = uniform_crs(request.output_crs or subsetting_crs)
+        subsetting_crs = uniform_crs(cfg, request.subsetting_crs or native_crs)
+        output_crs = uniform_crs(cfg, request.output_crs or subsetting_crs)
 
         if subsetting_crs not in cfg.published_CRSs:
             raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
@@ -75,7 +77,7 @@ def get_coverage_data(request):
                                 locator=subsetting_crs,
                                 valid_keys=list(cfg.published_CRSs))
 
-        output_crs = uniform_crs(request.output_crs or subsetting_crs or native_crs)
+        output_crs = uniform_crs(cfg, request.output_crs or subsetting_crs or native_crs)
 
         if output_crs not in cfg.published_CRSs:
             raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
@@ -242,7 +244,7 @@ def get_coverage_data(request):
                                 )
         affine = scaler.affine()
         geobox = geometry.GeoBox(scaler.size.x, scaler.size.y,
-                                 affine, geometry.CRS(output_crs))
+                                 affine, cfg.crs(output_crs))
 
         stacker = DataStacker(layer,
                               geobox,

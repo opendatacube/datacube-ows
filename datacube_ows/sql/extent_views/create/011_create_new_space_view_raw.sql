@@ -1,8 +1,8 @@
--- Creating SPACE Materialised View (Slowest step!)
+-- Creating NEW SPACE Materialised View (Slowest step!)
 
 -- Spatial extents per dataset (to be created as a column of the space-time table)
 -- Try all different locations for spatial extents and UNION them
-CREATE MATERIALIZED VIEW IF NOT EXISTS space_view (ID, spatial_extent)
+CREATE MATERIALIZED VIEW IF NOT EXISTS space_view_new (ID, spatial_extent)
 AS
 with
 -- Crib metadata to use as for string matching various types

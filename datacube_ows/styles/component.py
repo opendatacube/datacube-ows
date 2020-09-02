@@ -65,10 +65,7 @@ class ComponentStyleDef(StyleDefBase):
         return normalized * 255
 
 
-    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
-        if extent_mask is not None:
-            data = data.where(extent_mask)
-        data = self.apply_masks(data, pq_data)
+    def transform_single_date_data(self, data):
         imgdata = Dataset()
         for imgband, components in self.rgb_components.items():
             if callable(components):

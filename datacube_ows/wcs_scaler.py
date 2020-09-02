@@ -146,7 +146,7 @@ class WCSScaler:
         if self.crs != new_crs:
             is_point = False
             # Prepare geometry for transformation
-            old_crs_obj = geometry.CRS(self.crs)
+            old_crs_obj = self.cfg.crs(self.crs)
             if self.is_slice("x") and self.is_slice("y"):
                 geom = geometry.point(self.min.x, self.min.y, old_crs_obj)
                 is_point = True
@@ -167,7 +167,7 @@ class WCSScaler:
                     ),
                     old_crs_obj
                 )
-            new_crs_obj = geometry.CRS(new_crs)
+            new_crs_obj = self.cfg.crs(new_crs)
             grid = self.layer.grids[new_crs]
             if is_point:
                 prj_pt = geom.to_crs(new_crs_obj)
