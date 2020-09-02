@@ -393,6 +393,11 @@ class OWSNamedLayer(OWSLayer):
         self.always_fetch_bands = list([ self.band_idx.band(b) for b in raw_afb ])
         self.solar_correction = cfg.get("apply_solar_corrections", False)
         self.data_manual_merge = cfg.get("manual_merge", False)
+        if self.solar_correction and not self.data_manual_merge:
+            raise ConfigException("Solar correction requires manual_merge.")
+        if self.data_manual_merge and not self.solar_correction:
+            _LOG.warning("Manual merge is only recommended where solar correction is required.")
+
         if cfg.get("fuse_func"):
             self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
         else:
