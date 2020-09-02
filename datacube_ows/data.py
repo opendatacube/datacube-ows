@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
 import json
-from datetime import datetime, date
+from datetime import datetime
 
 import numpy
+import numpy.ma
 import xarray
-from affine import Affine
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
@@ -22,10 +22,10 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
-from datacube_ows.ogc_utils import local_solar_date_range, dataset_center_time, ConfigException, tz_for_geometry, \
-    solar_date, year_date_range, month_date_range
+from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
+    solar_date
 from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets
-from datacube_ows.utils import log_call, group_by_statistical
+from datacube_ows.utils import log_call
 
 import logging
 
@@ -127,6 +127,8 @@ class DataStacker(object):
                 d = d.squeeze(["time"], drop=True)
                 extent_mask = None
                 for band in bands:
+                    if self._product.pq_band == band:
+                        continue
                     for f in self._product.extent_mask_func:
                         if extent_mask is None:
                             extent_mask = f(d, band)
@@ -254,11 +256,20 @@ def get_map(args):
                 td = data.sel(time=npdt)
                 td_ext_mask = None
                 for band in params.style.needed_bands:
-                    for f in params.product.extent_mask_func:
-                        if td_ext_mask is None:
-                            td_ext_mask = f(td, band)
+                    if params.product.pq_band != band:
+                        if params.product.data_manual_merge:
+                            if td_ext_mask is None:
+                                td_ext_mask = numpy.isnan(td[band])
+                            else:
+                                td_ext_mask &= numpy.isnan(td[band])
                         else:
-                            td_ext_mask &= f(td, band)
+                            for f in params.product.extent_mask_func:
+                                if td_ext_mask is None:
+                                    td_ext_mask = f(td, band)
+                                else:
+                                    td_ext_mask &= f(td, band)
+                if params.product.data_manual_merge:
+                    td_ext_mask = xarray.DataArray(td_ext_mask)
                 td_masks.append(td_ext_mask)
             extent_mask = xarray.concat(td_masks, dim=data.time)
 
