@@ -103,10 +103,12 @@ def test_single_band_offset_log(dummy_layer):
     assert not single_band_offset_log(TEST_XARR, "b1", offset=0.5) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale=100) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0]) is None
+    assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]) is None
     assert not single_band_offset_log(TEST_XARR, "b1", product_cfg=dummy_layer) is None
 
 
 def test_single_band_arcsec(dummy_layer):
     assert not single_band_arcsec(TEST_XARR, "b1") is None
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is None
+    assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is None
     assert not single_band_arcsec(TEST_XARR, "b1", product_cfg=dummy_layer) is None
