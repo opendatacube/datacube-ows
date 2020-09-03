@@ -86,7 +86,10 @@ def crack_ramp(ramp):
 
 def read_mpl_ramp(mpl_ramp : str):
     unscaled_cmap = []
-    cmap = plt.get_cmap(mpl_ramp)
+    try:
+        cmap = plt.get_cmap(mpl_ramp)
+    except:
+        raise ConfigException(f"Invalid Matplotlib name: {mpl_ramp}")
     val_range = numpy.arange(0.1, 1.1, 0.1)
     rgba_hex = to_hex(cmap(0.0))
     unscaled_cmap.append(
