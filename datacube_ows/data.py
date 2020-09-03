@@ -259,9 +259,9 @@ def get_map(args):
                     if params.product.pq_band != band:
                         if params.product.data_manual_merge:
                             if td_ext_mask is None:
-                                td_ext_mask = numpy.isnan(td[band])
+                                td_ext_mask = ~numpy.isnan(td[band])
                             else:
-                                td_ext_mask &= numpy.isnan(td[band])
+                                td_ext_mask &= ~numpy.isnan(td[band])
                         else:
                             for f in params.product.extent_mask_func:
                                 if td_ext_mask is None:
