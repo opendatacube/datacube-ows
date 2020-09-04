@@ -20,6 +20,7 @@ from datacube_ows.cube_pool import cube
 from datacube_ows.ogc_exceptions import WMSException
 
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
 from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
@@ -191,6 +192,7 @@ def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     params = GetMapParameters(args)
+    qprof = QueryProfiler(params.ows_stats)
     n_dates = len(params.times)
     if n_dates == 1:
         mdh = None
@@ -199,7 +201,7 @@ def get_map(args):
         if mdh is None:
             raise WMSException("Style %s does not support GetMap requests with %d dates" % (params.style.name, n_dates),
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
-
+    qprof["n_dates"] = n_dates
     with cube() as dc:
         if not dc:
             raise WMSException("Database connectivity failure")
@@ -208,49 +210,76 @@ def get_map(args):
         zoomed_out = params.zf < params.product.min_zoom
         too_many_datasets = False
         if not zoomed_out:
+            qprof.start_event("count-datasets")
             n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+            qprof.end_event("count-datasets")
+            qprof["n_datasets"] = n_datasets
             too_many_datasets = (params.product.max_datasets_wms > 0
                                  and n_datasets > params.product.max_datasets_wms
             )
         if too_many_datasets or zoomed_out:
+            qprof["too_many_datasets"] = too_many_datasets
+            qprof["zoomed_out"] = zoomed_out
+            qprof.start_event("extent-in-query")
             extent  = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
+            qprof.start_event("extent-in-query")
             if extent is None:
+                qprof["write_action"] = "No extent: Write Empty"
+                qprof.start_event("write")
                 body = _write_empty(params.geobox)
+                qprof.end_event("write")
             else:
+                qprof["write_action"] = "Polygon"
+                qprof.start_event("write")
                 body = _write_polygon(
                     params.geobox,
                     extent,
                     params.product.zoom_fill)
+                qprof.end_event("write")
         elif n_datasets == 0:
+            qprof["write_action"] = "No datsets: Write Empty"
+            qprof.start_event("write")
             body = _write_empty(params.geobox)
+            qprof.end_event("write")
         else:
+            qprof.start_event("fetch-datasets")
             datasets = stacker.datasets(dc.index)
+            qprof.end_event("fetch-datasets")
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
+            qprof.start_event("load-data")
             data = stacker.data(datasets,
                                 manual_merge=params.product.data_manual_merge,
                                 fuse_func=params.product.fuse_func)
+            qprof.end_event("load-data")
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             if params.style.masks:
                 if params.product.pq_name == params.product.name:
+                    qprof.start_event("build-pq-xarray")
                     pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
                     pq_data = xarray.Dataset({params.product.pq_band: pq_band_data},
                                              coords=data[params.product.pq_band].coords
                                              )
                     flag_def = data[params.product.pq_band].flags_definition
                     pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
+                    qprof.end_event("build-pq-xarray")
                 else:
-                    pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time)
-                    n_pq_datasets = datasets_in_xarray(pq_datasets)
+                    qprof.start_event("load-pq-xarray")
+                    n_pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time, mode=MVSelectOpts.COUNT)
                     if n_pq_datasets > 0:
+                        pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time,
+                                                             mode=MVSelectOpts.DATASETS)
                         pq_data = stacker.data(pq_datasets,
                                                mask=True,
                                                manual_merge=params.product.pq_manual_merge,
                                                fuse_func=params.product.pq_fuse_func)
                     else:
                         pq_data = None
+                    qprof.end_event("load-pq-xarray")
+                    qprof["n_pq_datasets"] = n_pq_datasets
             else:
                 pq_data = None
 
+            qprof.start_event("build-masks")
             td_masks = []
             for npdt in data.time.values:
                 td = data.sel(time=npdt)
@@ -272,20 +301,35 @@ def get_map(args):
                     td_ext_mask = xarray.DataArray(td_ext_mask)
                 td_masks.append(td_ext_mask)
             extent_mask = xarray.concat(td_masks, dim=data.time)
+            qprof.end_event("build-masks")
 
             if not data or (params.style.masks and not pq_data):
+                qprof["write_action"] = "No Data: Write Empty"
                 body = _write_empty(params.geobox)
             else:
-                body = _write_png(data, pq_data, params.style, extent_mask, params.geobox)
-                
-    cfg = get_config()
+                qprof["write_action"] = "Write Data"
+                body = _write_png(data, pq_data, params.style, extent_mask, params.geobox, qprof)
+
+    if params.ows_stats:
+        return json_response(qprof.profile())
+    else:
+        return png_response(body)
+
+
+def png_response(body, cfg=None):
+    if not cfg:
+        cfg = get_config()
     return body, 200, cfg.response_headers({"Content-Type": "image/png"})
 
 
 @log_call
-def _write_png(data, pq_data, style, extent_mask, geobox):
+def _write_png(data, pq_data, style, extent_mask, geobox, qprof):
+    qprof.start_event("combine-masks")
     mask = style.to_mask(data, pq_data, extent_mask)
+    qprof.end_event("combine-masks")
+    qprof.start_event("apply-style")
     img_data = style.transform_data(data, mask)
+    qprof.end_event("apply-style")
     width = geobox.width
     height = geobox.height
     band_index = {
@@ -304,6 +348,7 @@ def _write_png(data, pq_data, style, extent_mask, geobox):
                           dtype='uint8') as thing:
             masked = False
             last_band = None
+            qprof.start_event("write")
             for band in img_data.data_vars:
                 idx = band_index[band]
                 band_data = img_data[band].values
@@ -319,6 +364,7 @@ def _write_png(data, pq_data, style, extent_mask, geobox):
                 else:
                     alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
                 thing.write_band(4, alpha_mask)
+            qprof.end_event("write")
         return memfile.read()
 
 
@@ -647,4 +693,9 @@ def feature_info(args):
             }
         ]
     }
+    return json_response(result, cfg)
+
+def json_response(result, cfg=None):
+    if not cfg:
+        cfg = get_config()
     return json.dumps(result), 200, cfg.response_headers({"Content-Type": "application/json"})
