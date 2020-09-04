@@ -356,6 +356,8 @@ class GetMapParameters(GetParameters):
         # Zoom factor
         self.zf = zoom_factor(args, self.crs)
 
+        self.ows_stats = bool(args.get("ows_stats"))
+
         # TODO: Do we need to make resampling method configurable?
         self.resampling = Resampling.nearest
 
