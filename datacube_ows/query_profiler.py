@@ -5,6 +5,8 @@ class QueryProfiler:
         self.active = active
         self._events = {}
         self._stats = {}
+        if active:
+            self.start_event("query")
 
     def start_event(self, name):
         if self.active:
@@ -23,6 +25,7 @@ class QueryProfiler:
     def profile(self):
         result = {}
         if self.active:
+            self.end_event("query")
             result["profile"] = {}
             for name, rng in self._events.items():
                 if rng[0] and rng[1]:
