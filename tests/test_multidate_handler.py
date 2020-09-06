@@ -1,26 +1,32 @@
-from datacube_ows.styles.base import StyleDefBase
 import numpy as np
 import pandas as pd
 import xarray as xr
+import pytest
+
+from datacube_ows.styles.base import StyleDefBase
+from datacube_ows.ogc_utils import ConfigException
+
 
 def test_multidate_handler():
     # TODO: Consolidate these into a fixture
-    class fake_data:
+    class FakeData:
         def __init__(self):
             self.nodata = np.nan
+
         def item(self):
             return np.nan
 
-    class fake_dataset:
+    class FakeDataset:
         def __getitem__(self, key):
-            return fake_data()
+            return FakeData()
 
-    class fake_mdh_style:
+    class FakeMdhStyle:
         include_in_feature_info = True
+
         def __init__(self):
             self.product = "test"
             self.needed_bands = ["test"]
-            self.index_function = lambda x: fake_data()
+            self.index_function = lambda x: FakeData()
 
     data = np.random.randint(0, 255, size=(4, 3), dtype=np.uint8)
     locs = ["IA", "IL", "IN"]
@@ -28,11 +34,45 @@ def test_multidate_handler():
     fake_mask = xr.DataArray(data, coords=[times, locs], dims=["time", "space"])
 
     fake_cfg = {
-        "allowed_count_range" : [0, 10],
-        "aggregator_function" : "datacube_ows.band_utils.multi_date_delta"
+        "allowed_count_range": [0, 10],
+        "aggregator_function": "datacube_ows.band_utils.multi_date_delta",
     }
 
-    mdh = StyleDefBase.MultiDateHandler(fake_mdh_style(), fake_cfg)
+    mdh = StyleDefBase.MultiDateHandler(FakeMdhStyle(), fake_cfg)
     assert mdh is not None
     assert not mdh.legend(None)
     assert mdh.collapse_mask(fake_mask) is not None
+    assert isinstance(mdh.range_str(), str)
+    assert mdh.applies_to(2)
+    assert not mdh.applies_to(11)
+
+    with pytest.raises(ConfigException) as excinfo:
+        bad_mdh = StyleDefBase.MultiDateHandler(FakeMdhStyle(), {})
+
+    assert "must have an allowed_count_range" in str(excinfo.value)
+
+    with pytest.raises(ConfigException) as excinfo:
+        bad_mdh = StyleDefBase.MultiDateHandler(
+            FakeMdhStyle(), {"allowed_count_range": [0, 5, 10],}
+        )
+
+    assert "allowed_count_range must have 2" in str(excinfo.value)
+
+    with pytest.raises(ConfigException) as excinfo:
+        bad_mdh = StyleDefBase.MultiDateHandler(
+            FakeMdhStyle(), {"allowed_count_range": [10, 5],}
+        )
+
+    assert "minimum must be less than equal to maximum" in str(excinfo.value)
+
+    with pytest.raises(ConfigException) as excinfo:
+        bad_mdh = StyleDefBase.MultiDateHandler(
+            FakeMdhStyle(), {"allowed_count_range": [0, 10],}
+        )
+
+    assert "Aggregator function is required" in str(excinfo.value)
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        mdh.transform_data(None)
+
+    assert str(excinfo) == "<ExceptionInfo NotImplementedError() tblen=2>"
