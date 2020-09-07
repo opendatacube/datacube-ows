@@ -15,12 +15,8 @@ def StyleDef(product, cfg):
             return ColorMapStyleDef(product, cfg)
         elif cfg.get("color_ramp", False) or cfg.get("range", False):
             return ColorRampDef(product, cfg)
-    except ValueError:
-        raise ConfigException(f"Style Error in product {product.name}, style {cfg.get('name', '??')}")
     except KeyError:
         raise ConfigException("Required field missing in style %s of layer %s" % (
             cfg.get("name", ""),
             product.name
         ))
-    except ConfigException as e:
-        raise ConfigException(f"Style Error ({product.name}:{cfg.get('name', '??')}): {e}")
