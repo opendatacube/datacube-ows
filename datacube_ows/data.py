@@ -221,7 +221,7 @@ def get_map(args):
             qprof["too_many_datasets"] = too_many_datasets
             qprof["zoomed_out"] = zoomed_out
             qprof.start_event("extent-in-query")
-            extent  = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
+            extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
             qprof.start_event("extent-in-query")
             if extent is None:
                 qprof["write_action"] = "No extent: Write Empty"
@@ -382,6 +382,25 @@ def _write_empty(geobox):
         return memfile.read()
 
 
+def get_coordlist(polygon):
+    if polygon.type == 'Polygon':
+        coordinates_list = [polygon.json["coordinates"]]
+    elif polygon.type == 'MultiPolygon':
+        coordinates_list = polygon.json["coordinates"]
+    # Use recursion to handle Geometry collection
+    elif polygon.type == "GeometryCollection":
+        coordinates_list = []
+        for geom in polygon:
+            odc_geom = geom
+            # FIXME: There are no type hints this could be shapely or odc
+            if not isinstance(geom, geometry.Geometry):
+                odc_geom = geometry.Geometry(geom)
+            coordinates_list.append(get_coordlist(odc_geom))
+    else:
+        raise Exception("Unexpected extent/geobox polygon geometry type: %s" % polygon.type)
+    return coordinates_list
+
+
 @log_call
 def _write_polygon(geobox, polygon, zoom_fill):
     geobox_ext = geobox.extent
@@ -389,12 +408,7 @@ def _write_polygon(geobox, polygon, zoom_fill):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
     else:
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
-        if polygon.type == 'Polygon':
-            coordinates_list = [polygon.json["coordinates"]]
-        elif polygon.type == 'MultiPolygon':
-            coordinates_list = polygon.json["coordinates"]
-        else:
-            raise Exception("Unexpected extent/geobox polygon geometry type: %s" % polygon.type)
+        coordinates_list = get_coordlist(polygon)
         for polygon_coords in coordinates_list:
             pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
             rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords],
