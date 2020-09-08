@@ -7,6 +7,7 @@ import datacube_ows.styles.ramp
 from datacube_ows.styles import StyleDef
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
+from datacube_ows.ogc_utils import ConfigException
 
 from xarray import DataArray, Dataset, concat
 from unittest.mock import patch
@@ -215,6 +216,16 @@ def test_correct_style_linear(product_layer, style_cfg_lin):
     style_def = StyleDef(product_layer, style_cfg_lin)
 
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
+
+def test_style_exceptions(product_layer, style_cfg_map : dict):
+    style_no_name = dict(style_cfg_map)
+    style_no_name.pop('name', None)
+    with pytest.raises(ConfigException) as excinfo:
+        style_def = StyleDef(product_layer, style_no_name)
+
+    assert "Required field missing in" in str(excinfo.value)
+    
+
 
 def test_correct_style_map(product_layer, style_cfg_map):
     style_def = StyleDef(product_layer, style_cfg_map)

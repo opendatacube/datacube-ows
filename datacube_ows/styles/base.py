@@ -114,10 +114,13 @@ class StyleDefBase(object):
         def applies_to(self, count):
             return (self.min_count <= count and self.max_count >= count)
 
-        def range_str(self):
+        def __repr__(self):
             if self.min_count == self.max_count:
                 return str(self.min_count)
             return f"{self.min_count}-{self.max_count}"
+
+        def range_str(self):
+            return self.__repr__()
 
         def transform_data(self, data):
             raise NotImplementedError()

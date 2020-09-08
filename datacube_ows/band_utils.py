@@ -100,15 +100,33 @@ def multi_date_delta(data):
 def single_band_log(data, band, scale_factor, exponent, product_cfg=None):
     if product_cfg:
         band = product_cfg.band_idx.band(band)
-    return scale_factor * ( (data[band] ** exponent) - 1.0)
+    d = data[band]
+    return scale_factor * ( (d ** exponent) - 1.0)
 
 
-def single_band_offset_log(data, band, offset=None, product_cfg=None):
+def single_band_arcsec(data, band, scale_from=None, scale_to=None, product_cfg=None):
+    if scale_from is not None and scale_to is None:
+        scale_to = [0,255]
     if product_cfg:
         band = product_cfg.band_idx.band(band)
     d = data[band]
-    if offset is None:
-        d = numpy.log1p(d)
-    else:
+    unscaled = numpy.arccos(1/(d + 1))
+    if scale_from:
+        return scale_data(unscaled, scale_from, scale_to)
+    return unscaled
+
+
+def single_band_offset_log(data, band, scale=1.0, scale_from=None, scale_to=None, offset=None, product_cfg=None):
+    if scale_from is not None and scale_to is None:
+        scale_to = [0,255]
+    if product_cfg:
+        band = product_cfg.band_idx.band(band)
+    d = data[band]
+    if offset is not None:
         d = data[band] + offset
-    return numpy.log(d)
+        unscaled =  numpy.log(d*scale)
+    else:
+        unscaled =  numpy.log1p(d*scale)
+    if scale_from:
+        return scale_data(unscaled, scale_from, scale_to)
+    return unscaled

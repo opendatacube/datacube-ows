@@ -115,6 +115,18 @@ def test_wcs1_getcoverage_netcdf(ows_server):
     assert output
     assert output.info()['Content-Type'] == 'application/x-netcdf'
 
+    output = wcs.getCoverage(
+        identifier=contents[0],
+        format='netCDF',
+        bbox=pytest.helpers.enclosed_bbox(bbox),
+        crs='I-CANT-BELIEVE-ITS-NOT-EPSG:4326',
+        width=400,
+        height=300
+    )
+
+    assert output
+    assert output.info()['Content-Type'] == 'application/x-netcdf'
+
 
 def test_wcs1_getcoverage_exceptions(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -239,6 +251,7 @@ def test_wcs20_getcoverage_geotiff(ows_server):
         assert e.response.status_code == 404
 
 
+
 def test_wcs20_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
@@ -261,6 +274,24 @@ def test_wcs20_getcoverage_netcdf(ows_server):
         assert output.info()['Content-Type'] == 'application/x-netcdf'
     except HTTPError as e:
         assert e.response.status_code == 404
+
+
+def test_wcs20_getcoverage_crs_alias(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    output = wcs.getCoverage(
+        identifier=[contents[0]],
+        format='application/x-netcdf',
+        subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
+        subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
+        scalesize="x(400),y(300)",
+    )
+
+    assert output
+    assert output.info()['Content-Type'] == 'application/x-netcdf'
 
 
 def test_wcs20_getcoverage_multidate(ows_server):
