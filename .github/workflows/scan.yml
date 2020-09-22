@@ -1,0 +1,56 @@
+---
+name: Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+env:
+  IMAGE_NAME: opendatacube/ows
+
+jobs:
+  cve-scanner:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout git
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          branch: master
+
+      - name: Get unstable git tag
+        run: >
+          echo ::set-env name=UNSTABLE_TAG::$(git describe --tags)
+
+      - name: Log the unstable tag
+        run: echo $UNSTABLE_TAG
+
+      - name: Build unstable + latest Docker image tag
+        if: github.event_name != 'release'
+        uses: whoan/docker-build-with-cache-action@v4
+        with:
+          image_name: ${{ env.IMAGE_NAME }}
+          image_tag: ${{ env.UNSTABLE_TAG }},latest
+          build_extra_args: "--build-arg=ENVIRONMENT=deployment"
+          push_image_and_stages: false
+
+      - name: Run vulnerability scanner
+        if: github.event_name != 'release'
+        uses: aquasecurity/trivy-action@0.0.6
+        with:
+          image-ref: "${{ env.IMAGE_NAME }}:${{ env.UNSTABLE_TAG }}"
+          format: "table"
+          exit-code: "1"
+          severity: "CRITICAL,HIGH"
+
+      - name: Notify Slack for Failures
+        uses: rtCamp/action-slack-notify@v2.1.0
+        if: failure()
+        env:
+          SLACK_CHANNEL: ga-wms-ops
+          SLACK_ICON: "https://github.com/docker.png?size=48"
+          SLACK_COLOR: "#482de1"
+          SLACK_MESSAGE: ""
+          SLACK_TITLE: CVE Scan alert
+          SLACK_USERNAME: OWS Scanner
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
