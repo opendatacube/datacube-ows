@@ -5,6 +5,9 @@ datacube-ows
 .. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
         :target: https://travis-ci.org/opendatacube/datacube-ows
 
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Scan/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22Scan%22
+
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/opendatacube/datacube-ows
 
