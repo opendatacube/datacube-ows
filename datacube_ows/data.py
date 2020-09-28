@@ -234,7 +234,8 @@ def get_map(args):
                 body = _write_polygon(
                     params.geobox,
                     extent,
-                    params.product.zoom_fill)
+                    params.product.zoom_fill,
+                    params.product)
                 qprof.end_event("write")
         elif n_datasets == 0:
             qprof["write_action"] = "No datsets: Write Empty"
@@ -383,7 +384,7 @@ def _write_empty(geobox):
 
 
 @log_call
-def _write_polygon(geobox, polygon, zoom_fill):
+def _write_polygon(geobox, polygon, zoom_fill, layer):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
@@ -393,6 +394,17 @@ def _write_polygon(geobox, polygon, zoom_fill):
             coordinates_list = [polygon.json["coordinates"]]
         elif polygon.type == 'MultiPolygon':
             coordinates_list = polygon.json["coordinates"]
+        elif polygon.type == 'GeometryCollection':
+            coordinates_list = []
+            for geom in polygon.json["geometries"]:
+                if geom["type"] == "Polygon":
+                    coordinates_list.append(geom["coordinates"])
+                elif geom["type"] == "MultiPolygon":
+                    coordinates_list.extend(geom["coordinates"])
+                else:
+                    _LOG.warning("Extent contains non-polygon GeometryType (%s in GeometryCollection - ignoring), layer: %s",
+                                 geom["type"],
+                                 layer.name)
         else:
             raise Exception("Unexpected extent/geobox polygon geometry type: %s" % polygon.type)
         for polygon_coords in coordinates_list:
