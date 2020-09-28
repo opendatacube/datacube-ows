@@ -27,7 +27,7 @@ select
       )
   end as temporal_extent
 from agdc.dataset where
-  metadata_type_ref in (select id from metadata_lookup where name in ('eo','eo_s2_nrt', 'gqa_eo','eo_plus')
+  metadata_type_ref in (select id from metadata_lookup where name in ('eo','eo_s2_nrt', 'gqa_eo','eo_plus'))
   and archived is null
 UNION
 -- This is the eo3 variant of the temporal extent, the sample eo3 dataset uses a singleton
