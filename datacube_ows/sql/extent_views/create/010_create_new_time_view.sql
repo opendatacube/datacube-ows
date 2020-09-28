@@ -38,7 +38,8 @@ UNION
 select
   dataset_type_ref, id,tstzrange(
     coalesce(metadata->'properties'->>'dtr:start_datetime', metadata->'properties'->>'datetime'):: timestamp,
-    coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp + interval '1 day')
+    coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp),
+    []
    ) as temporal_extent
 from agdc.dataset where
     metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard','eo3'))
