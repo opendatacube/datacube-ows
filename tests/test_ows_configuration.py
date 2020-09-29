@@ -7,9 +7,15 @@ def test_accum_max():
     ret = datacube_ows.ows_configuration.accum_max(1, 3)
     assert ret == 3
 
+    ret = datacube_ows.ows_configuration.accum_max(None, None)
+    assert ret is None
+
 def test_accum_min():
     ret = datacube_ows.ows_configuration.accum_min(1, 3)
     assert ret == 1
+
+    ret = datacube_ows.ows_configuration.accum_min(None, None)
+    assert ret is None
 
 def test_band_index():
     dc = MagicMock()
