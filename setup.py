@@ -33,7 +33,9 @@ requirements = [
     'geoalchemy',
     'xarray',
     'pyows',
-    'prometheus-flask-exporter'
+    'prometheus-flask-exporter',
+    #
+    'setuptools_scm'
 ]
 
 test_requirements = [
