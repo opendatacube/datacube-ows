@@ -68,6 +68,8 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python :: 3.5',
     ],
+    setup_requires=['setuptools_scm'],
+    use_scm_version=True,
     test_suite='tests',
     tests_require=test_requirements
 )
