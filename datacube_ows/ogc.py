@@ -6,6 +6,7 @@ from time import monotonic
 from flask import g, render_template, request
 from flask_log_request_id import current_request_id
 
+from datacube_ows import __version__
 from datacube_ows.legend_generator import create_legend_for_style
 from datacube_ows.ogc_utils import capture_headers, resp_headers, get_service_base_url, lower_get_args
 from datacube_ows.wms import WMS_REQUESTS
@@ -73,7 +74,13 @@ def ogc_impl():
             cfg = get_config()
             url = nocase_args.get('Host', nocase_args['url_root'])
             base_url = get_service_base_url(cfg.allowed_urls, url)
-            return (render_template("index.html", cfg=cfg, supported=OWS_SUPPORTED, base_url=base_url),
+            return (render_template(
+                            "index.html",
+                            cfg=cfg,
+                            supported=OWS_SUPPORTED,
+                            base_url=base_url,
+                            version=__version__,
+                    ),
                     200,
                     resp_headers({"Content-Type": "text/html"}))
     except OGCException as e:

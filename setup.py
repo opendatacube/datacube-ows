@@ -33,7 +33,9 @@ requirements = [
     'geoalchemy',
     'xarray',
     'pyows',
-    'prometheus-flask-exporter'
+    'prometheus-flask-exporter',
+    #
+    'setuptools_scm'
 ]
 
 test_requirements = [
@@ -68,6 +70,8 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python :: 3.5',
     ],
+    setup_requires=['setuptools_scm'],
+    use_scm_version=True,
     test_suite='tests',
     tests_require=test_requirements
 )

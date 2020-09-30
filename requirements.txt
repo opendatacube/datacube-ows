@@ -32,3 +32,4 @@ pyows
 owslib
 pytest-helpers-namespace
 prometheus-flask-exporter
+setuptools_scm
