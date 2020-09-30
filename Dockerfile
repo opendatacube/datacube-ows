@@ -16,8 +16,6 @@ RUN mkdir -p /code
 WORKDIR /code
 ADD . /code
 
-RUN ls -la /code
-
 RUN echo "version=\"`python setup.py --version`\"" > datacube_ows/_version.py
 RUN pip install .
 
