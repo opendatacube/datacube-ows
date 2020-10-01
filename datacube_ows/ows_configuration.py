@@ -116,24 +116,6 @@ def import_python_obj(path):
     return obj
 
 
-def accum_min(a, b):
-    if a is None:
-        return b
-    elif b is None:
-        return a
-    else:
-        return min(a, b)
-
-
-def accum_max(a, b):
-    if a is None:
-        return b
-    elif b is None:
-        return a
-    else:
-        return max(a, b)
-
-
 class BandIndex(object):
     def __init__(self, product, band_cfg, dc):
         self.product = product
