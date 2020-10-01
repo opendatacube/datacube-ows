@@ -234,7 +234,8 @@ def get_map(args):
                 body = _write_polygon(
                     params.geobox,
                     extent,
-                    params.product.zoom_fill)
+                    params.product.zoom_fill,
+                    params.product)
                 qprof.end_event("write")
         elif n_datasets == 0:
             qprof["write_action"] = "No datsets: Write Empty"
@@ -381,20 +382,36 @@ def _write_empty(geobox):
             pass
         return memfile.read()
 
+def get_coordlist(geo, layer_name):
+    if geo.type == 'Polygon':
+        coordinates_list = [geo.json["coordinates"]]
+    elif geo.type == 'MultiPolygon':
+        coordinates_list = geo.json["coordinates"]
+    elif geo.type == 'GeometryCollection':
+        coordinates_list = []
+        for geom in geo.json["geometries"]:
+            if geom["type"] == "Polygon":
+                coordinates_list.append(geom["coordinates"])
+            elif geom["type"] == "MultiPolygon":
+                coordinates_list.extend(geom["coordinates"])
+            else:
+                _LOG.warning(
+                    "Extent contains non-polygon GeometryType (%s in GeometryCollection - ignoring), layer: %s",
+                    geom["type"],
+                    layer_name)
+    else:
+        raise Exception("Unexpected extent/geobox polygon geometry type: %s in layer %s" % (geo.type, layer_name))
+    return coordinates_list
+
 
 @log_call
-def _write_polygon(geobox, polygon, zoom_fill):
+def _write_polygon(geobox, polygon, zoom_fill, layer):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
     else:
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
-        if polygon.type == 'Polygon':
-            coordinates_list = [polygon.json["coordinates"]]
-        elif polygon.type == 'MultiPolygon':
-            coordinates_list = polygon.json["coordinates"]
-        else:
-            raise Exception("Unexpected extent/geobox polygon geometry type: %s" % polygon.type)
+        coordinates_list = get_coordlist(polygon, layer.name)
         for polygon_coords in coordinates_list:
             pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
             rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords],
