@@ -125,7 +125,17 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
 class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     def __init__(self, cfg, keyvals, global_cfg, keyval_subs=None, *args, **kwargs):
         if "inherits" in cfg:
-            parent = self.lookup(global_cfg, keyvals=cfg["inherits"], subs=keyval_subs)
-            deepinherit(parent._raw_cfg, cfg)
+            lookup = True
+            for k in self.INDEX_KEYS:
+                if k not in cfg["inherits"]:
+                    lookup = False
+                    break
+            if lookup:
+                parent = self.lookup(global_cfg, keyvals=cfg["inherits"], subs=keyval_subs)
+                parent_cfg = parent._raw_cfg
+            else:
+                parent_cfg = cfg["inherits"]
+            deepinherit(parent_cfg, cfg)
+
         super().__init__(cfg, keyvals, global_cfg=global_cfg, *args, **kwargs)
 

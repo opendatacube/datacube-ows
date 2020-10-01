@@ -15,7 +15,7 @@ class ComponentStyleDef(StyleDefBase):
                 if imgband == "alpha":
                     continue
                 else:
-                    raise ConfigException("No components defined for %s band" % imgband)
+                    raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
             if "function" in components:
                 self.rgb_components[imgband] = FunctionWrapper(self.product, components)
                 for b in style_cfg["additional_bands"]:
