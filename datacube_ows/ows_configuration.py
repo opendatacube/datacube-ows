@@ -147,7 +147,7 @@ class SuppURL(OWSConfigEntry):
 
 class OWSLayer(OWSConfigEntry):
     named = False
-    def __init__(self, cfg, dc, parent_layer=None, *args, **kwargs):
+    def __init__(self, cfg, dc, *args, parent_layer=None, **kwargs):
         super().__init__(cfg, *args, **kwargs)
         self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
@@ -191,7 +191,7 @@ class OWSLayer(OWSConfigEntry):
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
+    def __init__(self, cfg, global_cfg, dc, *args, parent_layer=None, **kwargs):
         super().__init__(cfg, dc, parent_layer, global_cfg=global_cfg, *args, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.child_layers = []
@@ -218,7 +218,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
     named = True
 
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None, *args, **kwargs):
+    def __init__(self, cfg, global_cfg, dc, *args, parent_layer=None, **kwargs):
         self.name = cfg["name"]
         super().__init__(cfg, global_cfg=global_cfg, dc=dc, parent_layer=parent_layer,
                          keyvals={"layer": self.name},
@@ -623,7 +623,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 "layer": self.product
             }
     @classmethod
-    def lookup_impl(cls, cfg, keyvals, keyval_subs=None):
+    def lookup_impl(cls, cfg, keyvals, subs=None):
         try:
             return cfg.global_cfg.product_index[keyvals["layer"]]
         except KeyError:

@@ -7,6 +7,7 @@ from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException
 
 
+# pylint: disable=dangerous-default-value
 def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
     # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
     # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
@@ -122,8 +123,9 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
         raise NotImplementedError()
 
 
+# pylint: disable=abstract-method
 class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
-    def __init__(self, cfg, keyvals, global_cfg, keyval_subs=None, *args, **kwargs):
+    def __init__(self, cfg, keyvals, global_cfg, *args, keyval_subs=None, **kwargs):
         if "inherits" in cfg:
             lookup = True
             for k in self.INDEX_KEYS:

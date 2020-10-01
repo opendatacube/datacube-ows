@@ -189,7 +189,7 @@ class FunctionWrapper:
                 if hasattr(product_or_style_cfg, "band_idx"):
                     # NamedLayer
                     b_idx = product_or_style_cfg.band_idx
-                    self.band_mapper = lambda b: b_idx.band(b)
+                    self.band_mapper = b_idx.band
                 else:
                     # Style
                     b_idx = product_or_style_cfg.product.band_idx
