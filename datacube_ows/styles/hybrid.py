@@ -10,12 +10,8 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
         super(HybridStyleDef, self).__init__(product, style_cfg)
         self.component_ratio = style_cfg["component_ratio"]
 
-    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
+    def transform_single_date_data(self, data):
         #pylint: disable=too-many-locals
-        if extent_mask is not None:
-            data = data.where(extent_mask)
-        data = self.apply_masks(data, pq_data)
-
         if self.index_function is not None:
             data['index_function'] = (data.dims, self.index_function(data))
 

@@ -5,6 +5,9 @@ datacube-ows
 .. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
         :target: https://travis-ci.org/opendatacube/datacube-ows
 
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Scan/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22Scan%22
+
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/opendatacube/datacube-ows
 
@@ -179,7 +182,8 @@ Local Postgres database
 1. create an empty database and db_user
 2. run `datacube system init` after creating a datacube config file
 3. A product added to your datacube `datacube product add url` some examples are here: https://github.com/GeoscienceAustralia/dea-config/tree/master/dev/products
-4. Index datasets into your product for example refer to https://github.com/opendatacube/datacube-ows/blob/master/docs/usage.rst ::
+4. Index datasets into your product for example refer to https://datacube-ows.readthedocs.io/en/latest/usage.html
+::
   aws s3 ls s3://deafrica-data/jaxa/alos_palsar_mosaic/2017/ --recursive \
   | grep yaml | awk '{print $4}' \
   | xargs -n1 -I {} datacube dataset add s3://deafrica-data/{}

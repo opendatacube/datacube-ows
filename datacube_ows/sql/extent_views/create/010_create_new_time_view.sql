@@ -1,8 +1,8 @@
--- Creating TIME Materialised View
+-- Creating NEW TIME Materialised View (start of hard work)
 
 -- Try all different locations for temporal extents and UNION them
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS time_view (dataset_type_ref, ID, temporal_extent)
+CREATE MATERIALIZED VIEW IF NOT EXISTS time_view_new (dataset_type_ref, ID, temporal_extent)
 AS
 with
 -- Crib metadata to use as for string matching various types
@@ -38,7 +38,8 @@ UNION
 select
   dataset_type_ref, id,tstzrange(
     coalesce(metadata->'properties'->>'dtr:start_datetime', metadata->'properties'->>'datetime'):: timestamp,
-    coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp + interval '1 day')
+    coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp),
+    '[]'
    ) as temporal_extent
 from agdc.dataset where
     metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard','eo3'))

@@ -86,7 +86,10 @@ def crack_ramp(ramp):
 
 def read_mpl_ramp(mpl_ramp : str):
     unscaled_cmap = []
-    cmap = plt.get_cmap(mpl_ramp)
+    try:
+        cmap = plt.get_cmap(mpl_ramp)
+    except:
+        raise ConfigException(f"Invalid Matplotlib name: {mpl_ramp}")
     val_range = numpy.arange(0.1, 1.1, 0.1)
     rgba_hex = to_hex(cmap(0.0))
     unscaled_cmap.append(
@@ -536,16 +539,13 @@ class ColorRampDef(StyleDefBase):
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 
-    def apply_masks_and_index(self, data, pq_data, extent_mask, *masks):
-        if extent_mask is not None:
-            data = data.where(extent_mask)
-        data = self.apply_masks(data, pq_data)
+    def apply_index(self, data):
         index_data = self.index_function(data)
         data['index_function'] = (index_data.dims, index_data)
         return data["index_function"]
 
-    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
-        d = self.apply_masks_and_index(data, pq_data, extent_mask, *masks)
+    def transform_single_date_data(self, data):
+        d = self.apply_index(data)
         return self.color_ramp.apply(d)
 
     def single_date_legend(self, bytesio):
@@ -564,8 +564,8 @@ class ColorRampDef(StyleDefBase):
 
             self.color_ramp = ColorRamp(style, cfg)
 
-        def transform_data(self, data, pq_data, extent_mask, *masks):
-            xformed_data = self.style.apply_masks_and_index(data, pq_data, extent_mask, *masks)
+        def transform_data(self, data):
+            xformed_data = self.style.apply_index(data)
             agg = self.aggregator(xformed_data)
             return self.color_ramp.apply(agg)
 

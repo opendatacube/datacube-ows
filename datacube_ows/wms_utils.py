@@ -281,7 +281,7 @@ class GetParameters():
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                              errcode=WMSException.INVALID_CRS,
                              permitted_values=list(self.cfg.published_CRSs))
-        self.crs = geometry.CRS(self.crsid)
+        self.crs = self.cfg.crs(self.crsid)
         # Layers
         self.product = self.get_product(args)
 
@@ -355,6 +355,8 @@ class GetMapParameters(GetParameters):
 
         # Zoom factor
         self.zf = zoom_factor(args, self.crs)
+
+        self.ows_stats = bool(args.get("ows_stats"))
 
         # TODO: Do we need to make resampling method configurable?
         self.resampling = Resampling.nearest

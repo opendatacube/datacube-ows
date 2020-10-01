@@ -817,6 +817,9 @@ ows_cfg = {
                 "geographic": True,
                 "vertical_coord_first": True
             },
+            "I-CANT-BELIEVE-ITS-NOT-EPSG:4326": {
+                "alias": "EPSG:4326"
+            },
             "EPSG:3577": {  # GDA-94, internal representation
                 "geographic": False,
                 "horizontal_coord": "x",

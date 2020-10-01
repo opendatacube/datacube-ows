@@ -52,34 +52,50 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         for mb_cfg in cfg.get("multi_date", []):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
-    def apply_masks(self, data, pq_data):
+    def to_mask(self, data, pq_data, extra_mask=None):
+        date_count = len(data.coords["time"])
+        if date_count > 1:
+            mdh = self.get_multi_date_handler(date_count)
+            if extra_mask is not None:
+                extra_mask = mdh.collapse_mask(extra_mask)
+            if pq_data is not None:
+                pq_data = mdh.collapse_mask(pq_data)
+        else:
+            if extra_mask is not None:
+                extra_mask = extra_mask.squeeze(dim="time", drop=True)
+            if pq_data is not None:
+                pq_data = pq_data.squeeze(dim="time", drop=True)
+
+        result = extra_mask
         if pq_data is not None:
-            net_mask = None
             for mask in self.masks:
                 odc_mask = make_mask(pq_data, **mask.flags)
                 mask_data = getattr(odc_mask, self.product.pq_band)
                 if mask.invert:
                     mask_data = ~mask_data
-                for band in data.data_vars:
-                    data[band] = data[band].where(mask_data)
+                if result is None:
+                    result = mask_data
+                else:
+                    result = result & mask_data
+        return result
+
+    def apply_mask(self, data, mask):
+        if mask is not None:
+            for band in data.data_vars:
+                data[band] = data[band].where(mask)
         return data
 
-    def transform_data(self, data, pq_data, extent_mask, *masks):
+    def transform_data(self, data, mask):
         date_count = len(data.coords["time"])
+        if mask is not None:
+            data = self.apply_mask(data, mask)
         if date_count == 1:
-            if pq_data is not None:
-                pq_data = pq_data.squeeze(dim="time", drop=True)
-            if extent_mask is not None:
-                extent_mask = extent_mask.squeeze(dim="time", drop=True)
-            return self.transform_single_date_data(data.squeeze(dim="time", drop=True),
-                                                   pq_data,
-                                                   extent_mask,
-                                                   *masks)
+            return self.transform_single_date_data(data.squeeze(dim="time", drop=True))
         mdh = self.get_multi_date_handler(date_count)
-        return mdh.transform_data(data, pq_data, extent_mask, *masks)
+        return mdh.transform_data(data)
 
-    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
-        pass
+    def transform_single_date_data(self, data):
+        raise NotImplementedError()
 
     def parse_legend_cfg(self, cfg):
         self.show_legend = cfg.get("show_legend", self.auto_legend)
@@ -120,11 +136,15 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         def applies_to(self, count):
             return (self.min_count <= count and self.max_count >= count)
 
-        def range_str(self):
+        def __repr__(self):
             if self.min_count == self.max_count:
                 return str(self.min_count)
             return f"{self.min_count}-{self.max_count}"
-        def transform_data(self, data, pq_data, extent_mask, *masks):
+
+        def range_str(self):
+            return self.__repr__()
+
+        def transform_data(self, data):
             raise NotImplementedError()
 
         def parse_legend_cfg(self, cfg):
@@ -134,6 +154,18 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
         def legend(self, bytesio):
             return False
+
+        # Defaults to an "AND" over time - data only where all dates have data.
+        # Override for "OR" functionality.
+        def collapse_mask(self, mask):
+            collapsed = None
+            for dt in mask.coords["time"].values:
+                m = mask.sel(time=dt)
+                if collapsed is None:
+                    collapsed = m
+                else:
+                    collapsed = collapsed & m
+            return collapsed
 
     def lookup(self, cfg, keyvals, subs=None):
         if subs is None:

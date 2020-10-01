@@ -64,7 +64,7 @@ class WCS1GetCoverageRequest():
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="CRS parameter",
                                 valid_keys=list(cfg.published_CRSs))
-        self.request_crs = geometry.CRS(self.request_crsid)
+        self.request_crs = cfg.crs(self.request_crsid)
 
         # Argument: response_crs (optional)
         if "response_crs" in args:
@@ -75,6 +75,7 @@ class WCS1GetCoverageRequest():
                                     locator="RESPONSE_CRS parameter",
                                     valid_keys=list(cfg.published_CRSs))
             self.response_crs = geometry.CRS(self.response_crsid)
+            self.response_crs = cfg.crs(self.response_crsid)
         else:
             self.response_crsid = self.request_crsid
             self.response_crs = self.request_crs

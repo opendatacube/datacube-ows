@@ -7,6 +7,7 @@ import datacube_ows.styles.ramp
 from datacube_ows.styles import StyleDef
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
+from datacube_ows.ogc_utils import ConfigException
 
 from xarray import DataArray, Dataset, concat
 from unittest.mock import patch
@@ -218,6 +219,16 @@ def test_correct_style_linear(product_layer, style_cfg_lin):
 
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
 
+def test_style_exceptions(product_layer, style_cfg_map : dict):
+    style_no_name = dict(style_cfg_map)
+    style_no_name.pop('name', None)
+    with pytest.raises(ConfigException) as excinfo:
+        style_def = StyleDef(product_layer, style_no_name)
+
+    assert "Required field missing in" in str(excinfo.value)
+    
+
+
 def test_correct_style_map(product_layer, style_cfg_map):
     style_def = StyleDef(product_layer, style_cfg_map)
 
@@ -239,23 +250,25 @@ def test_alpha_style_map(
     da = DataArray(band, name='foo')
     dst = Dataset(data_vars={'foo': da})
     ds = concat([dst], times)
+    npmap = np.array([True, True, True])
+    damap = DataArray(npmap)
 
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 127).all()
 
         style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
-        result = style_def.transform_data(ds, None, None)
+        result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 255).all()
 
@@ -386,9 +399,12 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
     dst = Dataset(data_vars={'foo': da})
     ds = concat([dst], times)
 
+    npmap = np.array([True, True, True, True, True, True])
+    damap = DataArray(npmap)
+
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
-        data = style_def.transform_data(ds, None, None)
+        data = style_def.transform_data(ds, damap)
         r = data["red"]
         g = data["green"]
         b = data["blue"]

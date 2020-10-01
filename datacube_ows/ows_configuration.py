@@ -16,13 +16,17 @@ from collections.abc import Mapping
 from ows import Version
 from slugify import slugify
 
+from datacube.utils import geometry
 from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
     OWSIndexedConfigEntry, OWSEntryNotFound, OWSExtensibleConfigEntry
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
+from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
+    year_date_range
 
 import logging
+
+from datacube_ows.utils import group_by_statistical
 
 _LOG = logging.getLogger(__name__)
 
@@ -307,6 +311,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.always_fetch_bands = list([ self.band_idx.band(b) for b in raw_afb ])
         self.solar_correction = cfg.get("apply_solar_corrections", False)
         self.data_manual_merge = cfg.get("manual_merge", False)
+        if self.solar_correction and not self.data_manual_merge:
+            raise ConfigException("Solar correction requires manual_merge.")
+        if self.data_manual_merge and not self.solar_correction:
+            _LOG.warning("Manual merge is only recommended where solar correction is required.")
+
         if cfg.get("fuse_func"):
             self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
         else:
@@ -591,6 +600,20 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def is_year_time_res(self):
         return self.time_resolution == TIMERES_YR
 
+    def search_times(self, t, geobox):
+        if self.is_month_time_res:
+            return month_date_range(t)
+        elif self.is_year_time_res:
+            return year_date_range(t)
+        else:
+            return local_solar_date_range(geobox, t)
+
+    def dataset_groupby(self):
+        if self.is_raw_time_res:
+            return "solar_day"
+        else:
+            return group_by_statistical()
+
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
 
@@ -777,19 +800,28 @@ class OWSConfig(OWSConfigEntry):
             self.fees = "none"
         if not self.access_constraints:
             self.access_constraints = "none"
-        self.published_CRSs = {}
-        for crs_str, crsdef in cfg["published_CRSs"].items():
-            if crs_str.startswith("EPSG:"):
-                gml_name = "http://www.opengis.net/def/crs/EPSG/0/" + crs_str[5:]
+        def make_gml_name(name):
+            if name.startswith("EPSG:"):
+                return f"http://www.opengis.net/def/crs/EPSG/0/{name[5:]}"
             else:
-                gml_name = crs_str
-            self.published_CRSs[crs_str] = {
+                return name
+
+        self.published_CRSs = {}
+        self.internal_CRSs = {}
+        CRS_aliases = {}
+        for crs_str, crsdef in cfg["published_CRSs"].items():
+            if "alias" in crsdef:
+                CRS_aliases[crs_str] = crsdef
+                continue
+            self.internal_CRSs[crs_str] = {
                 "geographic": crsdef["geographic"],
                 "horizontal_coord": crsdef.get("horizontal_coord", "longitude"),
                 "vertical_coord": crsdef.get("vertical_coord", "latitude"),
                 "vertical_coord_first": crsdef.get("vertical_coord_first", False),
-                "gml_name": gml_name
+                "gml_name": make_gml_name(crs_str),
+                "alias_of": None
             }
+            self.published_CRSs[crs_str] = self.internal_CRSs[crs_str]
             if self.published_CRSs[crs_str]["geographic"]:
                 if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
                     raise Exception("Published CRS {} is geographic"
@@ -797,6 +829,16 @@ class OWSConfig(OWSConfigEntry):
                 if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
                     raise Exception("Published CRS {} is geographic"
                                     "but has a vertical coordinate that is not 'latitude'".format(crs_str))
+        for alias, alias_def in CRS_aliases.items():
+            target_crs = alias_def["alias"]
+            if target_crs not in self.published_CRSs:
+                _LOG.warning("CRS %s defined as alias for %s, which is not a published CRS - skipping",
+                             alias, target_crs)
+                continue
+            target_def = self.published_CRSs[target_crs]
+            self.published_CRSs[alias] = target_def.copy()
+            self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
+            self.published_CRSs[alias]["alias_of"] = target_crs
 
     def parse_wms(self, cfg):
         if not self.wms and not self.wmts:
@@ -847,6 +889,29 @@ class OWSConfig(OWSConfigEntry):
             if dc:
                 for lyr_cfg in cfg:
                     self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
+
+    def alias_bboxes(self, bboxes):
+        out = {}
+        for crsid, crsdef in self.published_CRSs.items():
+            a_crsid = crsdef["alias_of"]
+            if a_crsid:
+                if a_crsid in bboxes:
+                    out[crsid] = bboxes[a_crsid]
+            else:
+                if crsid in bboxes:
+                    out[crsid] = bboxes[crsid]
+        return out
+
+    def crs(self, crsid):
+        if crsid not in self.published_CRSs:
+            raise ConfigException(f"CRS {crsid} is not published")
+        crs_def = self.published_CRSs[crsid]
+        crs_alias = crs_def["alias_of"]
+        if crs_alias:
+            use_crs = crs_alias
+        else:
+            use_crs = crsid
+        return geometry.CRS(use_crs)
 
     def response_headers(self, d):
         hdrs = self._response_headers.copy()
