@@ -147,8 +147,8 @@ class SuppURL(OWSConfigEntry):
 
 class OWSLayer(OWSConfigEntry):
     named = False
-    def __init__(self, cfg, dc, *args, parent_layer=None, **kwargs):
-        super().__init__(cfg, *args, **kwargs)
+    def __init__(self, cfg, dc, parent_layer=None, **kwargs):
+        super().__init__(cfg, **kwargs)
         self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
 
@@ -191,8 +191,8 @@ class OWSLayer(OWSConfigEntry):
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, dc, *args, parent_layer=None, **kwargs):
-        super().__init__(cfg, dc, parent_layer, global_cfg=global_cfg, *args, **kwargs)
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None, **kwargs):
+        super().__init__(cfg, dc, parent_layer, global_cfg=global_cfg, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.child_layers = []
         if "layers" not in cfg:
@@ -218,11 +218,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
     named = True
 
-    def __init__(self, cfg, global_cfg, dc, *args, parent_layer=None, **kwargs):
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None, **kwargs):
         self.name = cfg["name"]
         super().__init__(cfg, global_cfg=global_cfg, dc=dc, parent_layer=parent_layer,
                          keyvals={"layer": self.name},
-                         *args, **kwargs)
+                         **kwargs)
         cfg = self._raw_cfg
         self.hide = False
         try:
