@@ -188,7 +188,7 @@ def style_cfg_ramp():
         "needed_bands": ["foo"],
         "index_function": {
             "function": "datacube_ows.band_utils.constant",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "const": "0.1"
             }
@@ -205,7 +205,7 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
     style_cfg_lin["range"] = [1, 2]
     style_cfg_lin["index_function"] = {
         "function": "datacube_ows.band_utils.constant",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "const": "0.1"
         }
