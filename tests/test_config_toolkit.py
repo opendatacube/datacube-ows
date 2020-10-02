@@ -35,7 +35,8 @@ def test_deepinherit_deep():
             "spice": "nutmeg",
             "c": {
                 "wing": "chicken"
-            }
+            },
+            "z": [ 11 ]
         }
     }
     deepinherit(parent, child)
@@ -44,3 +45,4 @@ def test_deepinherit_deep():
     assert child["b"]["fruit"] == "grapes"
     assert child["b"]["c"]["foo"] == "bar"
     assert child["b"]["c"]["wing"] == "chicken"
+    assert child["b"]["z"] == [44, 42, 53, 11]

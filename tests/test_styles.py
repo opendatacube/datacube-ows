@@ -1,13 +1,9 @@
 import datetime
 
-import datacube_ows.styles.colormap
-import datacube_ows.styles.component
-import datacube_ows.styles.hybrid
-import datacube_ows.styles.ramp
-from datacube_ows.styles import StyleDef
 
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 from datacube_ows.ogc_utils import ConfigException
+import datacube_ows.styles
 
 from xarray import DataArray, Dataset, concat
 from unittest.mock import patch
@@ -187,12 +183,34 @@ def style_cfg_ramp():
         "abstract": "This is a Test Style for Datacube WMS",
         "needed_bands": ["foo"],
         "index_function": {
-            "function": "datacube_ows.band_utils.constant",
-            "mapped_bands": True,
+            "function": "datacube_ows.band_utils.single_band",
+            "mapped_bands": False,
             "kwargs": {
-                "const": "0.1"
+                "band": "foo"
             }
         },
+        "color_ramp": [
+            {"value": 0.0, "color": "#FFFFFF", "alpha": 0.0},
+            {"value": 1.0, "color": "#000000", "alpha": 1.0}
+        ]
+    }
+    return cfg
+
+@pytest.fixture
+def style_cfg_ramp_mapped():
+    cfg = {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["foo"],
+        "index_function": {
+            "function": "datacube_ows.band_utils.single_band",
+            "mapped_bands": True,
+            "kwargs": {
+                "band": "bar"
+            }
+        },
+        "band_map": { "bar": "foo"},
         "color_ramp": [
             {"value": 0.0, "color": "#FFFFFF", "alpha": 0.0},
             {"value": 1.0, "color": "#000000", "alpha": 1.0}
@@ -210,12 +228,12 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
             "const": "0.1"
         }
     }
-    style_def = StyleDef(product_layer, style_cfg_lin)
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
     assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
 
 def test_correct_style_linear(product_layer, style_cfg_lin):
-    style_def = StyleDef(product_layer, style_cfg_lin)
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
 
@@ -223,14 +241,14 @@ def test_style_exceptions(product_layer, style_cfg_map : dict):
     style_no_name = dict(style_cfg_map)
     style_no_name.pop('name', None)
     with pytest.raises(ConfigException) as excinfo:
-        style_def = StyleDef(product_layer, style_no_name)
+        style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
 
     assert "Required field missing in" in str(excinfo.value)
     
 
 
 def test_correct_style_map(product_layer, style_cfg_map):
-    style_def = StyleDef(product_layer, style_cfg_map)
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_map)
 
     assert isinstance(style_def, datacube_ows.styles.colormap.ColorMapStyleDef)
 
@@ -254,19 +272,19 @@ def test_alpha_style_map(
     damap = DataArray(npmap)
 
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
-        style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
+        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
         result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
-        style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
+        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
 
         result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 127).all()
 
-        style_def = StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
+        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
         result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
@@ -274,14 +292,20 @@ def test_alpha_style_map(
 
 
 def test_correct_style_ramp(product_layer, style_cfg_ramp):
-    style_def = StyleDef(product_layer, style_cfg_ramp)
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
+
+def test_bandmapped_style_ramp(product_layer, style_cfg_ramp_mapped):
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_mapped)
+
+    assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
+    assert style_def.local_band("bar") == "foo"
 
 def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     style_cfg_lin["scale_range"] = [-3000, 3000]
 
-    style_def = StyleDef(product_layer, style_cfg_lin)
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
     assert style_def.scale_min == -3000
     assert style_def.scale_max == 3000
@@ -300,7 +324,7 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
 def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin):
     style_cfg_lin["scale_range"] = [-3000, 3000]
 
-    style_def = StyleDef(product_layer, style_cfg_lin)
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
     assert style_def.scale_min == -3000
     assert style_def.scale_max == 3000
@@ -320,7 +344,7 @@ def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
     del style_cfg_lin["scale_range"]
     style_cfg_lin["scale_factor"] = 2.5
 
-    style_def = StyleDef(product_layer, style_cfg_lin)
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
     assert style_def.scale_min == 0.0
     assert style_def.scale_max == 637.5
@@ -403,7 +427,7 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
     damap = DataArray(npmap)
 
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
-        style_def = StyleDef(product_layer_mask_map, style_cfg_map_mask)
+        style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask)
         data = style_def.transform_data(ds, damap)
         r = data["red"]
         g = data["green"]
