@@ -60,6 +60,16 @@ style_rgb = {
     "scale_range": [0.0, 65535.0],
 }
 
+style_rgb_clone = {
+    "inherits": {
+        "layer": "ls8_usgs_level1_scene_layer",
+        "style": "simple_rgb"
+    },
+    "name": "simple_rgb_clone",
+    "title": "Simple RGB Clone",
+    "scale_range": [0.0, 20000.0],
+}
+
 style_rgb_cloud_and_shadowmask = {
     "name": "cloud_and_shadow_masked_rgb",
     "title": "Simple RGB with cloud and cloud shadow masking",
@@ -994,7 +1004,7 @@ ows_cfg = {
                     "styling": {
                         "default_style": "simple_rgb",
                         "styles": [
-                            style_rgb,
+                            style_rgb, style_rgb_clone,
                             style_infrared_false_colour,
                             style_pure_ls8_blue,
                             style_ndvi,
@@ -1007,6 +1017,14 @@ ows_cfg = {
                         ]
                     }
                 }, ##### End of ls8_level1_pds product definition.
+                {
+                    "inherits": {
+                        "layer": "ls8_usgs_level1_scene_layer",
+                    },
+                    "title": "Level 1 USGS Landsat-8 Public Data Set Clone",
+                    "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
+                    "name": "ls8_usgs_level1_scene_layer_clone",
+                }
             ]
         },  ### End of Landsat folder.
         {
