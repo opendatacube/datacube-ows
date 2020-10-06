@@ -93,3 +93,6 @@ class ComponentStyleDef(StyleDefBase):
                 imgdata[imgband] = (imgband_data.dims,
                                     imgband_data.astype("uint8"))
         return imgdata
+
+
+StyleDefBase.register_subclass(ComponentStyleDef, "components")

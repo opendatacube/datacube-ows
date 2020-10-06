@@ -242,10 +242,8 @@ def test_style_exceptions(product_layer, style_cfg_map : dict):
     style_no_name.pop('name', None)
     with pytest.raises(ConfigException) as excinfo:
         style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
-
-    assert "Required field missing in" in str(excinfo.value)
-    
-
+    with pytest.raises(KeyError) as excinfo:
+        style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
 
 def test_correct_style_map(product_layer, style_cfg_map):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_map)
