@@ -141,6 +141,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                     break
             if lookup:
                 parent = cls.lookup_impl(global_cfg, keyvals=cfg["inherits"], subs=keyval_subs)
+                # pylint: disable=protected-access
                 parent_cfg = parent._raw_cfg
             else:
                 parent_cfg = cfg["inherits"]
