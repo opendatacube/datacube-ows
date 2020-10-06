@@ -240,8 +240,6 @@ def test_correct_style_linear(product_layer, style_cfg_lin):
 def test_style_exceptions(product_layer, style_cfg_map : dict):
     style_no_name = dict(style_cfg_map)
     style_no_name.pop('name', None)
-    with pytest.raises(ConfigException) as excinfo:
-        style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
     with pytest.raises(KeyError) as excinfo:
         style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
 

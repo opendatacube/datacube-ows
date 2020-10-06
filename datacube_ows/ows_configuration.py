@@ -625,7 +625,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     @classmethod
     def lookup_impl(cls, cfg, keyvals, subs=None):
         try:
-            return cfg.global_cfg.product_index[keyvals["layer"]]
+            return cfg.product_index[keyvals["layer"]]
         except KeyError:
             raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
 

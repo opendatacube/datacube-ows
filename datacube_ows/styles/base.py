@@ -11,10 +11,16 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
     def __new__(cls, product=None, style_cfg=None, defer_multi_date=False):
         if product and style_cfg:
+            cls.expand_inherit(style_cfg, global_cfg=product.global_cfg,
+                               keyval_subs={
+                                   "layer": {
+                                       product.name: product
+                                   }
+                               })
             subclass = cls.determine_subclass(style_cfg)
             if not subclass:
                 raise ConfigException(f"Invalid style in layer {product.name} - could not determine style type")
-            return object.__new__(subclass)
+            return super().__new__(subclass)
         return super().__new__(cls)
 
     def __init__(self, product, style_cfg, defer_multi_date=False):

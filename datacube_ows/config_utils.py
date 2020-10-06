@@ -125,19 +125,25 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
 
 # pylint: disable=abstract-method
 class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
-    def __init__(self, cfg, keyvals, global_cfg, *args, keyval_subs=None, **kwargs):
-        if "inherits" in cfg:
+    def __init__(self, cfg, keyvals, global_cfg, *args, keyval_subs=None, expanded=False, **kwargs):
+        if not expanded:
+            cfg = self.expand_inherit(cfg, global_cfg, keyval_subs=keyval_subs)
+
+        super().__init__(cfg, keyvals, global_cfg=global_cfg, *args, **kwargs)
+
+    @classmethod
+    def expand_inherit(cls, cfg, global_cfg, keyval_subs=None):
+        if "inherits" in cfg and not cfg.get("inheritance_expanded"):
             lookup = True
-            for k in self.INDEX_KEYS:
+            for k in cls.INDEX_KEYS:
                 if k not in cfg["inherits"]:
                     lookup = False
                     break
             if lookup:
-                parent = self.lookup(global_cfg, keyvals=cfg["inherits"], subs=keyval_subs)
+                parent = cls.lookup_impl(global_cfg, keyvals=cfg["inherits"], subs=keyval_subs)
                 parent_cfg = parent._raw_cfg
             else:
                 parent_cfg = cfg["inherits"]
             deepinherit(parent_cfg, cfg)
-
-        super().__init__(cfg, keyvals, global_cfg=global_cfg, *args, **kwargs)
-
+            cfg["inheritance_expanded"] = True
+        return cfg

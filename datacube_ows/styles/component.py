@@ -25,7 +25,7 @@ class ComponentStyleDef(StyleDefBase):
 
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
-            self.scale_min, self.scale_max = style_cfg["scale_range"]
+            self.scale_min, self.scale_max = style_cfg["scale_range"][-2:]
         elif self.scale_factor:
             self.scale_min = 0.0
             self.scale_max = 255.0 * self.scale_factor
