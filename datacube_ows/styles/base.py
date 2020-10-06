@@ -3,9 +3,17 @@ from datacube.utils.masking import make_mask
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 
-class StyleDefBase(object):
+class StyleDefBase:
     auto_legend = False
     include_in_feature_info = False
+
+    def __new__(cls, product=None, style_cfg={}, defer_multi_date=False):
+        if product and style_cfg:
+            subclass = cls.determine_subclass(style_cfg)
+            if not subclass:
+                raise ConfigException(f"Invalid style in layer {product.name} - could not determine style type")
+            return object.__new__(subclass)
+        return super().__new__(cls)
 
     def __init__(self, product, style_cfg, defer_multi_date=False):
         self.product = product
@@ -94,6 +102,23 @@ class StyleDefBase(object):
                 return mdh
         return None
 
+    @classmethod
+    def register_subclass(cls, subclass, triggers, priority=False):
+        if isinstance(triggers, str):
+            triggers = [triggers]
+        if priority:
+            style_class_priority_reg.append([subclass, triggers])
+        else:
+            style_class_reg.append([subclass, triggers])
+
+    @classmethod
+    def determine_subclass(cls, cfg):
+        for sub, triggers in style_class_priority_reg + style_class_reg:
+            for trig in triggers:
+                if trig in cfg:
+                    return sub
+        return None
+
     class MultiDateHandler(object):
         auto_legend = False
         def __init__(self, style, cfg):
@@ -145,6 +170,9 @@ class StyleDefBase(object):
                     collapsed = collapsed & m
             return collapsed
 
+
+style_class_priority_reg = []
+style_class_reg = []
 
 class StyleMask(object):
     def __init__(self, flags, invert=False):

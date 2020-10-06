@@ -1,5 +1,6 @@
 from xarray import Dataset
 
+from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.component import ComponentStyleDef
 from datacube_ows.styles.ramp import ColorRampDef
 
@@ -40,3 +41,6 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
             imgdata[band] = (d.dims, img_band_data.astype("uint8"))
 
         return imgdata
+
+
+StyleDefBase.register_subclass(HybridStyleDef, "component_ratio", priority=True)
