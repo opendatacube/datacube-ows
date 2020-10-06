@@ -6,7 +6,7 @@ from datacube_ows.ogc_utils import ConfigException
 import datacube_ows.styles
 
 from xarray import DataArray, Dataset, concat
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -15,7 +15,7 @@ import numpy as np
 @pytest.fixture
 def product_layer():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
-    product_layer.global_cfg = None
+    product_layer.global_cfg = MagicMock()
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
@@ -36,6 +36,10 @@ def product_layer():
         "azure": "red",
         "fake": "fake",
     }
+    product_layer.global_cfg.product_index = {
+        "test_product": product_layer
+    }
+    product_layer.style_index = {}
     return product_layer
 
 
@@ -47,12 +51,25 @@ def style_cfg_lin():
         "abstract": "This is a Test Style for Datacube WMS",
         "needed_bands": ["red", "green", "blue"],
         "scale_factor": 1.0,
-        "scale_range": [1, 2],
         "components": {
             "red": {"red": 1.0},
             "green": {"green": 1.0},
             "blue": {"blue": 1.0}
         }
+    }
+    return cfg
+
+
+@pytest.fixture
+def style_cfg_lin_clone():
+    cfg = {
+        "inherits": {
+            "style": "test_style",
+        },
+        "name": "test_style_2",
+        "title": "Test Style 2",
+        "scale_factor": None,
+        "scale_range": [0, 12000],
     }
     return cfg
 
@@ -232,10 +249,12 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
 
     assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
 
-def test_correct_style_linear(product_layer, style_cfg_lin):
+def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
-
+    product_layer.style_index[style_def.name] = style_def
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
+    style_def_clone = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
+    assert isinstance(style_def_clone, datacube_ows.styles.component.ComponentStyleDef)
 
 def test_style_exceptions(product_layer, style_cfg_map : dict):
     style_no_name = dict(style_cfg_map)
@@ -337,7 +356,6 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     assert compressed[2] == 255
 
 def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
-    del style_cfg_lin["scale_range"]
     style_cfg_lin["scale_factor"] = 2.5
 
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)

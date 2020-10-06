@@ -16,7 +16,8 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                                    "layer": {
                                        product.name: product
                                    }
-                               })
+                               },
+                               keyval_defaults={"layer": product.name})
             subclass = cls.determine_subclass(style_cfg)
             if not subclass:
                 raise ConfigException(f"Invalid style in layer {product.name} - could not determine style type")
@@ -34,6 +35,9 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                              "layer": {
                                  product.name: product
                              }
+                         },
+                         keyval_defaults={
+                             "layer": product.name
                          })
         style_cfg = self._raw_cfg
         self.local_band_map = style_cfg.get("band_map", {})
@@ -206,7 +210,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         return super().lookup(cfg, keyvals, subs)
 
     @classmethod
-    def lookup_impl(cls, cfg, keyvals, subs=None):
+    def lookup_impl(cls, cfg, keyvals, subs=None, product=None):
         if subs is None:
             subs = {}
         prod = None

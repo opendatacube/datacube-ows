@@ -125,22 +125,30 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
 
 # pylint: disable=abstract-method
 class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
-    def __init__(self, cfg, keyvals, global_cfg, *args, keyval_subs=None, expanded=False, **kwargs):
+    def __init__(self, cfg, keyvals, global_cfg, *args,
+                 keyval_subs=None, keyval_defaults=None, expanded=False, **kwargs):
         if not expanded:
-            cfg = self.expand_inherit(cfg, global_cfg, keyval_subs=keyval_subs)
+            cfg = self.expand_inherit(cfg, global_cfg,
+                                      keyval_subs=keyval_subs, keyval_defaults=keyval_defaults)
 
         super().__init__(cfg, keyvals, global_cfg=global_cfg, *args, **kwargs)
 
     @classmethod
-    def expand_inherit(cls, cfg, global_cfg, keyval_subs=None):
+    def expand_inherit(cls, cfg, global_cfg, keyval_subs=None, keyval_defaults=None):
         if "inherits" in cfg and not cfg.get("inheritance_expanded"):
             lookup = True
+            # Precludes e.g. defaulting style lookup to current layer.
+            lookup_keys = {}
             for k in cls.INDEX_KEYS:
-                if k not in cfg["inherits"]:
+                if k not in cfg["inherits"] and k not in keyval_defaults:
                     lookup = False
                     break
+                if k in cfg["inherits"]:
+                    lookup_keys[k] = cfg["inherits"][k]
+                else:
+                    lookup_keys[k] = keyval_defaults[k]
             if lookup:
-                parent = cls.lookup_impl(global_cfg, keyvals=cfg["inherits"], subs=keyval_subs)
+                parent = cls.lookup_impl(global_cfg, keyvals=lookup_keys, subs=keyval_subs)
                 # pylint: disable=protected-access
                 parent_cfg = parent._raw_cfg
             else:
