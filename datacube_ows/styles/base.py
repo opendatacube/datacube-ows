@@ -7,7 +7,7 @@ class StyleDefBase:
     auto_legend = False
     include_in_feature_info = False
 
-    def __new__(cls, product=None, style_cfg={}, defer_multi_date=False):
+    def __new__(cls, product=None, style_cfg=None, defer_multi_date=False):
         if product and style_cfg:
             subclass = cls.determine_subclass(style_cfg)
             if not subclass:
