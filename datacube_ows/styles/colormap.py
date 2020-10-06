@@ -123,3 +123,6 @@ class ColorMapStyleDef(StyleDefBase):
         plt.axis('off')
         legend = plt.legend(handles=patches, loc='center', frameon=False)
         plt.savefig(bytesio, format='png')
+
+
+StyleDefBase.register_subclass(ColorMapStyleDef, "value_map")

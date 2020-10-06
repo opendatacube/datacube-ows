@@ -579,3 +579,7 @@ class ColorRampDef(StyleDefBase):
                                title
                                )
             return True
+
+StyleDefBase.register_subclass(ColorRampDef,
+                               ("range", "color_ramp")
+)
