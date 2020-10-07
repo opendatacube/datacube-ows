@@ -135,7 +135,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
 
     @classmethod
     def expand_inherit(cls, cfg, global_cfg, keyval_subs=None, keyval_defaults=None):
-        if "inherits" in cfg and not cfg.get("inheritance_expanded"):
+        if "inherits" in cfg:
             lookup = True
             # Precludes e.g. defaulting style lookup to current layer.
             lookup_keys = {}
@@ -153,6 +153,6 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                 parent_cfg = parent._raw_cfg
             else:
                 parent_cfg = cfg["inherits"]
-            deepinherit(parent_cfg, cfg)
+            cfg = deepinherit(parent_cfg, cfg)
             cfg["inheritance_expanded"] = True
         return cfg

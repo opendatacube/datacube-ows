@@ -808,7 +808,7 @@ Inheritance
 -----------
 
 Named layers may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
 from previously defined layers.
 
 To lookup a layer by name use the "layer" element in the inherits section:

@@ -252,9 +252,14 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
 def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
     product_layer.style_index[style_def.name] = style_def
-    assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
+
+
+def test_style_inheritance(product_layer, style_cfg_lin, style_cfg_lin_clone):
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
+    product_layer.style_index[style_def.name] = style_def
     style_def_clone = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
     assert isinstance(style_def_clone, datacube_ows.styles.component.ComponentStyleDef)
+    assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
 
 
 def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone):

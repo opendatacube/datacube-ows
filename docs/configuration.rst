@@ -247,11 +247,16 @@ the
 `relevant <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>#inheritance`_
 sections for details.
 
-The copying and updating of the parent configuration object is recursive.
+The copying and updating of the parent configuration object is recursive
 
 Note that a layer or style can only inherit by name from a parent layer or style that has already
 been parsed by the config parser - i.e. it must appear earlier in the definition of the layers section.
 This restriction can be avoided using direct inheritance.
+
+Care should be taken of the special handling of lists in configuration:
+
+1. If the child entry is an empty list, this will replace the parent entry, resulting in an empty list.
+2. If the c
 
 General Config Structure
 ------------------------

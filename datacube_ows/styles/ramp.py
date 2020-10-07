@@ -521,7 +521,7 @@ class ColorRampDef(StyleDefBase):
     auto_legend = True
     def __init__(self, product, style_cfg, defer_multi_date=False):
         super(ColorRampDef, self).__init__(product, style_cfg)
-
+        style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
 
         for band in style_cfg["needed_bands"]:

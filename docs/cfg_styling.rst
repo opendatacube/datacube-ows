@@ -51,7 +51,7 @@ Inheritance
 ===========
 
 Styles may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
 from previously defined styles.
 
 To lookup a style by name use the "style" and "layer" element in the inherits section.

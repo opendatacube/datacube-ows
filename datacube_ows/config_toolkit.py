@@ -1,20 +1,37 @@
+from copy import deepcopy
+
+
 def deepinherit(parent, child):
-    for k in parent:
-        if k in child:
-            if isinstance(child[k], dict):
-                # recurse dictionary
-                deepinherit(parent[k], child[k])
-            elif isinstance(child[k], str):
-                # Keep child's version of str
-                pass
-            else:
-                try:
-                    iter(child[k])
-                    # non-str iterable - append child to parent
-                    child[k] = parent[k] + child[k]
-                except TypeError:
-                    # Non-iterable - keep child's version
-                    pass
+    expanded = deepcopy(parent)
+    deepupdate(expanded, child)
+    return expanded
+
+
+def deepupdate(target, src):
+    for k in src:
+        if isinstance(src[k], dict):
+            if k not in target:
+                target[k] = {}
+            # recurse dictionary
+            deepupdate(target[k], src[k])
+        elif isinstance(src[k], str):
+            # Use child's version of str
+            target[k] = src[k]
         else:
-            child[k] = parent[k]
+            try:
+                iter(src[k])
+                # non-str iterable
+                if not src[k]:
+                    # Empty list - replace target list
+                    target[k] = []
+                elif isinstance(src[k][0], int) or isinstance(src[k][0], float):
+                    # Array of numbers or floats - replace target list
+                    target[k] = src[k]
+                else:
+                    # iterables of other types - append child to parent
+                    target[k] = target[k] + src[k]
+            except TypeError:
+                # Non-iterable - Use child's version
+                target[k] = src[k]
+
 

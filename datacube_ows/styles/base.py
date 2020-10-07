@@ -11,7 +11,8 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
     def __new__(cls, product=None, style_cfg=None, defer_multi_date=False):
         if product and style_cfg:
-            cls.expand_inherit(style_cfg, global_cfg=product.global_cfg,
+            style_cfg = cls.expand_inherit(style_cfg, global_cfg=product.global_cfg,
+
                                keyval_subs={
                                    "layer": {
                                        product.name: product

@@ -8,6 +8,7 @@ from datacube_ows.styles.base import StyleDefBase
 class ComponentStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg, local_band_map=None):
         super().__init__(product, style_cfg, local_band_map)
+        style_cfg = self._raw_cfg
         self.rgb_components = {}
         for imgband in ["red", "green", "blue", "alpha"]:
             components = style_cfg["components"].get(imgband)
@@ -25,7 +26,7 @@ class ComponentStyleDef(StyleDefBase):
 
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
-            self.scale_min, self.scale_max = style_cfg["scale_range"][-2:]
+            self.scale_min, self.scale_max = style_cfg["scale_range"]
         elif self.scale_factor:
             self.scale_min = 0.0
             self.scale_max = 255.0 * self.scale_factor
