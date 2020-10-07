@@ -53,6 +53,16 @@ def dummy_layer():
     product_layer.band_idx._idx = {"b1": "b1", "b2": "b2"}
     return product_layer
 
+@pytest.fixture
+def band_mapper():
+    idx = {
+        "b1": "b1",
+        "b2": "b2",
+        "b1a": "b1",
+        "b2a": "b2",
+    }
+    return lambda b: idx[b]
+
 
 def test_scale_data():
     assert not scale_data(TEST_ARR_1, [0.0, 1.0], [0.0, 1.0]) is None
@@ -62,33 +72,33 @@ def test_sum_bands():
     assert not sum_bands(TEST_XARR, "b1", "b2") is None
 
 
-def test_norm_diff(dummy_layer):
+def test_norm_diff(band_mapper):
     assert not norm_diff(TEST_XARR, "b1", "b2") is None
-    assert not norm_diff(TEST_XARR, "b1", "b2", dummy_layer, scale_from=[0, 1]) is None
+    assert not norm_diff(TEST_XARR, "b1a", "b2", band_mapper, scale_from=[0, 1]) is None
 
 
-def test_constant(dummy_layer):
+def test_constant(band_mapper):
     assert not constant(TEST_XARR, "b1", 10) is None
-    assert not constant(TEST_XARR, "b1", 10, dummy_layer) is None
+    assert not constant(TEST_XARR, "b1a", 10, band_mapper) is None
 
 
-def test_band_quotient(dummy_layer):
+def test_band_quotient(band_mapper):
     assert not band_quotient(TEST_XARR, "b1", "b2") is None
-    assert not band_quotient(TEST_XARR, "b1", "b2", dummy_layer) is None
+    assert not band_quotient(TEST_XARR, "b1", "b2", band_mapper) is None
 
 
 def test_band_quotient_sum():
     assert not band_quotient_sum(TEST_XARR, "b1", "b2", "b1", "b2") is None
 
 
-def test_single_band_log(dummy_layer):
+def test_single_band_log(band_mapper):
     assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0) is None
-    assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0, dummy_layer) is None
+    assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0, band_mapper) is None
 
 
-def test_single_band(dummy_layer):
+def test_single_band(band_mapper):
     assert not single_band(TEST_XARR, "b1") is None
-    assert not single_band(TEST_XARR, "b1", dummy_layer) is None
+    assert not single_band(TEST_XARR, "b1", band_mapper) is None
 
 def test_multidate():
     assert not multi_date_delta(TEST_XARR_T) is None
@@ -98,17 +108,17 @@ def test_ndci():
     assert not sentinel2_ndci(TEST_XARR, "b1", "b2", "b1", "b2") is None
 
 
-def test_single_band_offset_log(dummy_layer):
+def test_single_band_offset_log(band_mapper):
     assert not single_band_offset_log(TEST_XARR, "b1") is None
     assert not single_band_offset_log(TEST_XARR, "b1", offset=0.5) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale=100) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0]) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", product_cfg=dummy_layer) is None
+    assert not single_band_offset_log(TEST_XARR, "b1", band_mapper=band_mapper) is None
 
 
-def test_single_band_arcsec(dummy_layer):
+def test_single_band_arcsec(band_mapper):
     assert not single_band_arcsec(TEST_XARR, "b1") is None
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is None
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is None
-    assert not single_band_arcsec(TEST_XARR, "b1", product_cfg=dummy_layer) is None
+    assert not single_band_arcsec(TEST_XARR, "b1", band_mapper=band_mapper) is None

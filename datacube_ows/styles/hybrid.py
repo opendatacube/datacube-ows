@@ -9,6 +9,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
     auto_legend = False
     def __init__(self, product, style_cfg):
         super(HybridStyleDef, self).__init__(product, style_cfg)
+        style_cfg = self._raw_cfg
         self.component_ratio = style_cfg["component_ratio"]
 
     def transform_single_date_data(self, data):

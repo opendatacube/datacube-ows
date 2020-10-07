@@ -803,4 +803,28 @@ The `"styling" section <https://datacube-ows.readthedocs.io/en/latest/cfg_stylin
 the layer.
 
 
+-----------
+Inheritance
+-----------
 
+Named layers may be
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
+from previously defined layers.
+
+To lookup a layer by name use the "layer" element in the inherits section:
+
+::
+
+    layer2 = {
+        "inherits": {
+            "layer": "layer1"
+        },
+        "name": "layer2",
+        "title": "Layer 2",
+        "abstract": "Layer 2",
+        "product_name": "product2"
+    }
+
+Note that a layer can only inherit by name from a parent layer that has already been parsed
+by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
+can be avoided using direct inheritance.

@@ -169,23 +169,34 @@ class ConfigException(Exception):
 
 # Function wrapper for configurable functional elements
 
-class FunctionWrapper(object):
-    def __init__(self,  product_cfg, func_cfg):
+class FunctionWrapper:
+    def __init__(self,  product_or_style_cfg, func_cfg):
         if callable(func_cfg):
             raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
         elif isinstance(func_cfg, str):
             self._func = get_function(func_cfg)
             self._args = []
             self._kwargs = {}
-            self.product_cfg = None
+            self.band_mapper = None
         else:
             self._func = get_function(func_cfg["function"])
             self._args = func_cfg.get("args", [])
             self._kwargs = func_cfg.get("kwargs", {})
-            if func_cfg.get("pass_product_cfg", False):
-                self.product_cfg = product_cfg
+            if "pass_product_cfg" in func_cfg:
+                print("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
+                      "'mapped_bands'.  Please update your config accordingly")
+            if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
+                if hasattr(product_or_style_cfg, "band_idx"):
+                    # NamedLayer
+                    b_idx = product_or_style_cfg.band_idx
+                    self.band_mapper = b_idx.band
+                else:
+                    # Style
+                    b_idx = product_or_style_cfg.product.band_idx
+                    delocaliser = product_or_style_cfg.local_band
+                    self.band_mapper = lambda b: b_idx.band(delocaliser(b))
             else:
-                self.product_cfg = None
+                self.band_mapper = None
 
     def __call__(self, *args, **kwargs):
         if args and self._args:
@@ -202,8 +213,8 @@ class FunctionWrapper(object):
         else:
             calling_kwargs = self._kwargs
 
-        if self.product_cfg:
-            calling_kwargs["product_cfg"] = self.product_cfg
+        if self.band_mapper:
+            calling_kwargs["band_mapper"] = self.band_mapper
 
 
         return self._func(*calling_args, **calling_kwargs)

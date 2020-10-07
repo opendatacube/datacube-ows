@@ -18,6 +18,7 @@ class ColorMapStyleDef(StyleDefBase):
 
     def __init__(self, product, style_cfg):
         super(ColorMapStyleDef, self).__init__(product, style_cfg)
+        style_cfg = self._raw_cfg
         self.value_map = style_cfg["value_map"]
         for band in self.value_map.keys():
             self.needed_bands.add(self.product.band_idx.band(band))

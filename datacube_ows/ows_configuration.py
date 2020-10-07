@@ -11,12 +11,14 @@ import math
 from importlib import import_module
 import json
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 from ows import Version
 from slugify import slugify
 
 from datacube.utils import geometry
+from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
+    OWSIndexedConfigEntry, OWSEntryNotFound, OWSExtensibleConfigEntry
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
@@ -51,91 +53,11 @@ def read_config():
 
 
 # pylint: disable=dangerous-default-value
-def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
-    # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
-    # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
-    if cwd is None:
-        cwd = os.getcwd()
-    if isinstance(cfg_unexpanded, Mapping):
-        if "include" in cfg_unexpanded:
-            if cfg_unexpanded["include"] in inclusions:
-                raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
-            ninclusions = inclusions.copy()
-            ninclusions.append(cfg_unexpanded["include"])
-            # Perform expansion
-            if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
-                # JSON Expansion
-                raw_path = cfg_unexpanded["include"]
-                try:
-                    # Try in actual working directory
-                    json_obj = load_json_obj(raw_path)
-                    abs_path = os.path.abspath(cfg_unexpanded["include"])
-                    cwd = os.path.dirname(abs_path)
-                # pylint: disable=broad-except
-                except Exception:
-                    json_obj = None
-                if json_obj is None:
-                    path = os.path.join(cwd, raw_path)
-                    try:
-                        # Try in inherited working directory
-                        json_obj = load_json_obj(path)
-                        abs_path = os.path.abspath(path)
-                        cwd = os.path.dirname(abs_path)
-                    # pylint: disable=broad-except
-                    except Exception:
-                        json_obj = None
-                if json_obj is None:
-                    raise ConfigException("Could not find json file %s" % raw_path)
-                return cfg_expand(load_json_obj(abs_path), cwd=cwd, inclusions=ninclusions)
-            elif cfg_unexpanded["type"] == "python":
-                # Python Expansion
-                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
-            else:
-                raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
-        else:
-            return { k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k,v in cfg_unexpanded.items()  }
-    elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
-        return list([cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded ])
-    else:
-        return cfg_unexpanded
 
 
-def load_json_obj(path):
-    with open(path) as json_file:
-        return json.load(json_file)
-
-
-def import_python_obj(path):
-    """Imports a python dictionary by fully-qualified path
-
-    :return: a Callable object, or None
-    """
-    mod_name, obj_name = path.rsplit('.', 1)
-    mod = import_module(mod_name)
-    obj = getattr(mod, obj_name)
-    return obj
-
-
-def accum_min(a, b):
-    if a is None:
-        return b
-    elif b is None:
-        return a
-    else:
-        return min(a, b)
-
-
-def accum_max(a, b):
-    if a is None:
-        return b
-    elif b is None:
-        return a
-    else:
-        return max(a, b)
-
-
-class BandIndex(object):
+class BandIndex(OWSConfigEntry):
     def __init__(self, product, band_cfg, dc):
+        super().__init__(band_cfg)
         self.product = product
         self.product_name = product.name
         self.native_bands = dc.list_measurements().loc[self.product_name]
@@ -184,8 +106,9 @@ class BandIndex(object):
         return [self.nodata_val(b) for b in self.native_bands.index if b in self.band_cfg]
 
 
-class AttributionCfg(object):
+class AttributionCfg(OWSConfigEntry):
     def __init__(self, cfg):
+        super().__init__(cfg)
         self.title = cfg.get("title")
         self.url = cfg.get("url")
         logo = cfg.get("logo")
@@ -208,7 +131,7 @@ class AttributionCfg(object):
             return cls(cfg)
 
 
-class SuppURL(object):
+class SuppURL(OWSConfigEntry):
     @classmethod
     def parse_list(cls, cfg):
         if not cfg:
@@ -216,26 +139,17 @@ class SuppURL(object):
         return [ cls(u) for u in cfg ]
 
     def __init__(self, cfg):
+        super().__init__(cfg)
         self.url = cfg["url"]
         self.format = cfg["format"]
 
 
-class OWSConfigEntry(object):
-    def __init__(self, cfg):
-        self._ingest_dict(cfg)
-
-    def _ingest_dict(self, d):
-        for k,v in d.items():
-            setattr(self, k, v)
-
-    def __getitem__(self, item):
-        return getattr(self, item)
-
 
 class OWSLayer(OWSConfigEntry):
     named = False
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
-        self.global_cfg = global_cfg
+    def __init__(self, cfg, dc, parent_layer=None, **kwargs):
+        super().__init__(cfg, **kwargs)
+        self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
 
         if "title" not in cfg:
@@ -268,7 +182,6 @@ class OWSLayer(OWSConfigEntry):
 
         except KeyError:
             raise ConfigException("Required entry missing in layer %s" % self.title)
-        super().__init__({})
 
     def layer_count(self):
         return 0
@@ -278,8 +191,8 @@ class OWSLayer(OWSConfigEntry):
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
-        super().__init__(cfg, global_cfg, parent_layer)
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None, **kwargs):
+        super().__init__(cfg, dc, parent_layer, global_cfg=global_cfg, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.child_layers = []
         if "layers" not in cfg:
@@ -301,11 +214,16 @@ TIMERES_YR  = "year"
 
 TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR]
 
-class OWSNamedLayer(OWSLayer):
+class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
+    INDEX_KEYS = ["layer"]
     named = True
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None):
-        super().__init__(cfg, global_cfg, dc, parent_layer)
+
+    def __init__(self, cfg, global_cfg, dc, parent_layer=None, **kwargs):
         self.name = cfg["name"]
+        super().__init__(cfg, global_cfg=global_cfg, dc=dc, parent_layer=parent_layer,
+                         keyvals={"layer": self.name},
+                         **kwargs)
+        cfg = self._raw_cfg
         self.hide = False
         try:
             self.parse_product_names(cfg)
@@ -455,8 +373,12 @@ class OWSNamedLayer(OWSLayer):
         self.data_urls = SuppURL.parse_list(cfg.get("data", []))
 
     def parse_styling(self, cfg):
-        self.styles = list([ StyleDef(self, s) for s in cfg["styles"]])
-        self.style_index = { s.name: s for s in self.styles }
+        self.styles = []
+        self.style_index = {}
+        for scfg in cfg["styles"]:
+            style = StyleDef(self, scfg)
+            self.styles.append(style)
+            self.style_index[style.name] = style
         if "default_style" in cfg:
             if cfg["default_style"] not in self.style_index:
                 raise ConfigException("Default style %s is not in the 'styles' for layer %s" % (
@@ -646,8 +568,8 @@ class OWSNamedLayer(OWSLayer):
             return {}
         bboxes = {}
         for crs_id, bbox in self._ranges["bboxes"].items():
-            if crs_id in self.global_cfg["published_CRSs"]:
-                if self.global_cfg["published_CRSs"][crs_id].get("vertical_coord_first"):
+            if crs_id in self.global_cfg.published_CRSs:
+                if self.global_cfg.published_CRSs[crs_id].get("vertical_coord_first"):
                     bboxes[crs_id] = {
                         "right": bbox["bottom"],
                          "left": bbox["top"],
@@ -694,6 +616,18 @@ class OWSNamedLayer(OWSLayer):
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
+
+    def lookup(self, cfg, keyvals, subs=None):
+        if not subs and "layer" not in keyvals:
+            subs = {
+                "layer": self.product
+            }
+    @classmethod
+    def lookup_impl(cls, cfg, keyvals, subs=None):
+        try:
+            return cfg.product_index[keyvals["layer"]]
+        except KeyError:
+            raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
 
 
 class OWSProductLayer(OWSNamedLayer):
@@ -819,6 +753,7 @@ class OWSConfig(OWSConfigEntry):
         if not self.initialised or refresh:
             self.initialised = True
             cfg = read_config()
+            super().__init__(cfg)
             try:
                 self.parse_global(cfg["global"])
             except KeyError as e:
@@ -844,7 +779,6 @@ class OWSConfig(OWSConfigEntry):
                 self.parse_layers(cfg["layers"])
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
-        super().__init__({})
 
     def parse_global(self, cfg):
         self._response_headers = cfg.get("response_headers", {})
