@@ -227,14 +227,30 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         try:
             self.parse_product_names(cfg)
+            if len(self.product_names) < 1:
+                raise ConfigException(f"No products declared in layer {self.name}")
+            if len(self.lowres_product_names) not in (0, len(self.product_names)):
+                raise ConfigException(f"Lengths of product_names and lowres_product_names do not match in layer {self.name}")
             self.products = []
-            for prod_name in self.product_names:
+            self.lowres_products = []
+            for i, prod_name in enumerate(self.product_names):
+                if self.lowres_product_names:
+                    lowres_prod_name = self.lowres_product_names[i]
+                else:
+                    lowres_prod_name = None
                 if "__" in prod_name:
+                    # I think this was for subproducts which are currently broken
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
                 product = dc.index.products.get_by_name(prod_name)
                 if not product:
                     raise ConfigException("Could not find product %s in datacube" % prod_name)
                 self.products.append(product)
+                if lowres_prod_name:
+                    product = dc.index.products.get_by_name(lowres_prod_name)
+                    if not product:
+                        raise ConfigException("Could not find product %s in datacube" % prod_name)
+                    self.lowres_products.append(product)
+
             self.product = self.products[0]
             self.definition = self.product.definition
 
@@ -635,7 +651,13 @@ class OWSProductLayer(OWSNamedLayer):
 
     def parse_product_names(self, cfg):
         self.product_name = cfg["product_name"]
-        self.product_names = [ self.product_name ]
+        self.product_names = [self.product_name]
+
+        self.lowres_product_name  = cfg.get("lowres_product_name")
+        if self.lowres_product_name:
+            self.lowres_product_names = [self.lowres_product_name]
+        else:
+            self.lowres_product_names = []
 
     def parse_pq_names(self, cfg):
         # pylint: disable=attribute-defined-outside-init
@@ -659,6 +681,11 @@ class OWSMultiProductLayer(OWSNamedLayer):
     def parse_product_names(self, cfg):
         self.product_names = cfg["product_names"]
         self.product_name = self.product_names[0]
+        self.lowres_product_names = cfg.get("low_res_product_names", [])
+        if self.lowres_product_names:
+            self.lowres_product_name = self.low_res_product_names[0]
+        else:
+            self.lowres_product_name = None
 
     def parse_pq_names(self, cfg):
         # pylint: disable=attribute-defined-outside-init
