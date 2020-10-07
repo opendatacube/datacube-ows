@@ -1,6 +1,6 @@
 import datetime
 
-
+from datacube_ows.config_utils import OWSEntryNotFound
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 from datacube_ows.ogc_utils import ConfigException
 import datacube_ows.styles
@@ -255,6 +255,36 @@ def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone)
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
     style_def_clone = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
     assert isinstance(style_def_clone, datacube_ows.styles.component.ComponentStyleDef)
+
+
+def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone):
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
+    product_layer.style_index[style_def.name] = style_def
+    style_cfg_lin_clone["inherits"]["layer"] = "fake_layer"
+    try:
+        style_def_clone = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
+        assert "Expected exception not thrown" == False
+    except OWSEntryNotFound:
+        pass
+    try:
+        style = datacube_ows.styles.StyleDef.lookup_impl(product_layer.global_cfg,
+                                                         keyvals={
+                                                             "style": "test_style",
+                                                             "layer": "fake-layer"
+                                                         })
+        assert style == "Expected exception not thrown"
+    except OWSEntryNotFound:
+        pass
+    try:
+        style = datacube_ows.styles.StyleDef.lookup_impl(product_layer.global_cfg,
+                                                 keyvals={
+                                                     "style": "fake_style",
+                                                     "layer": "test_product"
+                                                 },
+                                                subs={"layer": {"test_product": product_layer}})
+        assert style == "Expected exception not thrown"
+    except OWSEntryNotFound:
+        pass
 
 def test_style_exceptions(product_layer, style_cfg_map : dict):
     style_no_name = dict(style_cfg_map)

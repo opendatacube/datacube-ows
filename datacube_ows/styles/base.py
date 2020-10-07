@@ -210,8 +210,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         return super().lookup(cfg, keyvals, subs)
 
     @classmethod
-    # pylint: disable=arguments-differ
-    def lookup_impl(cls, cfg, keyvals, subs=None, product=None):
+    def lookup_impl(cls, cfg, keyvals, subs=None):
         if subs is None:
             subs = {}
         prod = None
