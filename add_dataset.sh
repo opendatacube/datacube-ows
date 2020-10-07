@@ -1,3 +1,0 @@
-datacube dataset add https://data.dea.ga.gov.au/L2/sentinel-2-nrt/S2MSIARD/2020-07-09/S2A_OPER_MSI_ARD_TL_EPAE_20200709T024238_A026354_T53KQA_N02.09/ARD-METADATA.yaml
-datacube dataset add https://data.dea.ga.gov.au/L2/sentinel-2-nrt/S2MSIARD/2020-07-09/S2B_OPER_MSI_ARD_TL_EPAE_20200709T013652_A017445_T55JEL_N02.09/ARD-METADATA.yaml
-datacube dataset add https://data.dea.ga.gov.au/L2/sentinel-2-nrt/S2MSIARD/2020-09-29/S2A_OPER_MSI_ARD_TL_EPAE_20200929T012652_A027526_T56LQP_N02.09/ARD-METADATA.yaml
