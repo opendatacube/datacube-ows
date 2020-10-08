@@ -355,12 +355,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.pq_manual_merge = cfg.get("manual_merge", False)
         else:
             self.pq_names = []
+            self.pq_lowres_names = []
             self.pq_name = None
             self.pq_band = None
             self.pq_ignore_time = False
             self.ignore_info_flags = []
             self.pq_manual_merge = False
         self.pq_products = []
+        self.pq_lowres_products = []
 
         if self.pq_names:
             for pqn in self.pq_names:
@@ -674,6 +676,13 @@ class OWSProductLayer(OWSNamedLayer):
             self.pq_name = self.product_name
         self.pq_names = [ self.pq_name ]
 
+        if "lowres_product" in cfg:
+            self.pq_lowres_name = cfg["lowres_product"]
+            self.pq_lowres_names = [self.pq_lowres_name]
+        else:
+            self.pq_lowres_name = self.lowres_product_name
+            self.pq_lowres_names = self.lowres_product_names
+
 
 class OWSMultiProductLayer(OWSNamedLayer):
     multi_product = True
@@ -701,6 +710,13 @@ class OWSMultiProductLayer(OWSNamedLayer):
         else:
             self.pq_names = list(self.product_names)
         self.pq_name = self.pq_names[0]
+
+        if "lowres_products" in cfg:
+            self.pq_lowres_names = cfg["lowres_products"]
+            self.pq_lowres_name = self.pq_names[0]
+        else:
+            self.pq_lowres_names = list(self.lowres_product_names)
+            self.pq_lowres_name = self.lowres_product_name
 
 
 def parse_ows_layer(cfg, global_cfg, dc, parent_layer=None):
