@@ -55,6 +55,7 @@ class DataStacker(object):
                 for t in times
         ]
         self.group_by = self._product.dataset_groupby()
+        self.resource_limited = False
 
     def needed_bands(self):
         return self._needed_bands
@@ -86,7 +87,9 @@ class DataStacker(object):
                                   layer=self._product,
                                   times=times,
                                   geom=geom,
-                                  mask=mask)
+                                  mask=mask,
+                                  resource_limited=self.resource_limited
+                                    )
         if mode == MVSelectOpts.DATASETS:
             return datacube.Datacube.group_datasets(result, self.group_by)
         else:
@@ -218,11 +221,14 @@ def get_map(args):
                                  and n_datasets > params.product.max_datasets_wms
             )
         if too_many_datasets or zoomed_out:
+            stacker.resource_limited = True
             qprof["too_many_datasets"] = too_many_datasets
             qprof["zoomed_out"] = zoomed_out
+
+        if stacker.resource_limited and not params.product.lowres_product_names:
             qprof.start_event("extent-in-query")
-            extent  = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
-            qprof.start_event("extent-in-query")
+            extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
+            qprof.end_event("extent-in-query")
             if extent is None:
                 qprof["write_action"] = "No extent: Write Empty"
                 qprof.start_event("write")
@@ -243,6 +249,10 @@ def get_map(args):
             body = _write_empty(params.geobox)
             qprof.end_event("write")
         else:
+            if stacker.resource_limited:
+                    qprof.start_event("count-summary-datasets")
+                    qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+                    qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
             datasets = stacker.datasets(dc.index)
             qprof.end_event("fetch-datasets")
