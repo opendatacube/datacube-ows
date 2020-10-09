@@ -21,16 +21,18 @@ def product_layer():
     product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["red", "green", "blue"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
+    product_layer.band_idx.product = product_layer
     product_layer.band_idx.band_cfg = {
         "red": [ "crimson", "foo", ],
         "green": [ ],
-        "blue": [ "azure" ],
+        "blue": [ "azure", "bar" ],
         "fake": []
     }
     product_layer.band_idx._idx = {
         "red": "red",
         "crimson": "red",
         "foo": "red",
+        "bar": "blue",
         "green": "green",
         "blue": "blue",
         "azure": "red",
@@ -214,6 +216,16 @@ def style_cfg_ramp():
     return cfg
 
 @pytest.fixture
+def style_cfg_ramp_clone(style_cfg_ramp):
+    cfg = {
+        "inherits": style_cfg_ramp,
+        "name": "test_style2",
+        "title": "Test Style 2",
+        "needed_bands": ["bar"],
+    }
+    return cfg
+
+@pytest.fixture
 def style_cfg_ramp_mapped():
     cfg = {
         "name": "test_style",
@@ -343,6 +355,11 @@ def test_alpha_style_map(
 
 def test_correct_style_ramp(product_layer, style_cfg_ramp):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp)
+
+    assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
+
+def test_inherited_style_ramp(product_layer, style_cfg_ramp_clone):
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_clone)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
 
