@@ -75,9 +75,9 @@ def mv_search_datasets(index,
     if layer is None:
         raise Exception("Must filter by product/layer")
     if mask and resource_limited:
-            prod_ids = [p.id for p in layer.pq_lowres_products]
+        prod_ids = [p.id for p in layer.pq_lowres_products]
     elif mask:
-            prod_ids = [p.id for p in layer.pq_products]
+        prod_ids = [p.id for p in layer.pq_products]
     elif resource_limited:
         prod_ids = [p.id for p in layer.lowres_products]
     else:

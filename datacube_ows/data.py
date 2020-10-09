@@ -249,9 +249,9 @@ def get_map(args):
             qprof.end_event("write")
         else:
             if stacker.resource_limited:
-                    qprof.start_event("count-summary-datasets")
-                    qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-                    qprof.end_event("count-summary-datasets")
+                qprof.start_event("count-summary-datasets")
+                qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+                qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
             datasets = stacker.datasets(dc.index)
             qprof.end_event("fetch-datasets")
