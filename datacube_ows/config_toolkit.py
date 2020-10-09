@@ -29,7 +29,10 @@ def deepupdate(target, src):
                     target[k] = src[k]
                 else:
                     # iterables of other types - append child to parent
-                    target[k] = target[k] + src[k]
+                    if k in target:
+                        target[k] = target[k] + src[k]
+                    else:
+                        target[k] = src[k]
             except TypeError:
                 # Non-iterable - Use child's version
                 target[k] = src[k]
