@@ -211,15 +211,14 @@ def get_map(args):
         # Tiling.
         stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
         zoomed_out = params.zf < params.product.min_zoom
-        too_many_datasets = False
-        if not zoomed_out:
-            qprof.start_event("count-datasets")
-            n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-            qprof.end_event("count-datasets")
-            qprof["n_datasets"] = n_datasets
-            too_many_datasets = (params.product.max_datasets_wms > 0
-                                 and n_datasets > params.product.max_datasets_wms
-            )
+        qprof["zoom_factor"] = params.zf
+        qprof.start_event("count-datasets")
+        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+        qprof.end_event("count-datasets")
+        qprof["n_datasets"] = n_datasets
+        too_many_datasets = (params.product.max_datasets_wms > 0
+                             and n_datasets > params.product.max_datasets_wms
+                             )
         if too_many_datasets or zoomed_out:
             stacker.resource_limited = True
             qprof["too_many_datasets"] = too_many_datasets
