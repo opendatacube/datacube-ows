@@ -79,8 +79,10 @@ def test_bidx_p_label(minimal_prod):
     assert bidx.band_label("foo") == "bar"
     assert bidx.band_label("bar") == "bar"
     assert bidx.band_label("baz") == "bar"
-    with pytest.raises(IndexError):
+    with pytest.raises(ConfigException) as excinfo:
         bidx.band_label("splat")
+    assert "Unknown band name/alias" in str(excinfo.value)
+    assert "splat" in str(excinfo.value)
 
 
 @pytest.fixture
