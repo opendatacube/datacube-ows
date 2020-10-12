@@ -108,10 +108,10 @@ class BandIndex(OWSConfigEntry):
         return self._nodata_vals[name]
 
     def band_labels(self):
-        return [self.band_label(b) for b in self.native_bands.index if b in self.band_cfg]
+        return [self.band_label(b) for b in self.band_cfg]
 
     def band_nodata_vals(self):
-        return [self.nodata_val(b) for b in self.native_bands.index if b in self.band_cfg]
+        return [self.nodata_val(b) for b in self.band_cfg if b in self.band_cfg]
 
 
 class AttributionCfg(OWSConfigEntry):

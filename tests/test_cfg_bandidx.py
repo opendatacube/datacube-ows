@@ -1,5 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock
+
+from datacube_ows.config_utils import OWSConfigNotReady
+from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import BandIndex
 
 
@@ -10,7 +13,7 @@ def minimal_prod():
     return product
 
 
-def test_band_index_p_minimal(minimal_prod):
+def test_bidx_p_minimal(minimal_prod):
     bidx = BandIndex(minimal_prod, None)
     assert bidx.product_name == "foo"
     assert bidx.band_cfg == {}
@@ -18,30 +21,88 @@ def test_band_index_p_minimal(minimal_prod):
     assert not bidx.ready
 
 
-def test_band_index():
+def test_bidx_p_unready(minimal_prod):
+    bidx = BandIndex(minimal_prod, {
+        "foo": ["foo"]
+    })
+    with pytest.raises(OWSConfigNotReady) as excinfo:
+        x = bidx.native_bands
+    assert "native_bands" in str(excinfo.value)
+    with pytest.raises(OWSConfigNotReady) as excinfo:
+        x = bidx.nodata_val("foo")
+    assert "_nodata_vals" in str(excinfo.value)
+
+def test_bidx_p_duplicates(minimal_prod):
+    with pytest.raises(ConfigException) as excinfo:
+        bidx = BandIndex(minimal_prod, {
+            "foo": ["bar"],
+            "bar": ["baz"]
+        })
+    assert "Duplicate band name/alias" in str(excinfo.value)
+    assert "bar" in str(excinfo.value)
+    with pytest.raises(ConfigException) as excinfo:
+        bidx = BandIndex(minimal_prod, {
+            "foo": ["bar"],
+            "boo": ["bar"]
+        })
+    assert "Duplicate band name/alias" in str(excinfo.value)
+    assert "bar" in str(excinfo.value)
+
+def test_bidx_p_band(minimal_prod):
+    bidx = BandIndex(minimal_prod, {
+        "foo": ["bar", "baz"],
+    })
+    assert bidx.band("foo") == "foo"
+    assert bidx.band("bar") == "foo"
+    assert bidx.band("baz") == "foo"
+    with pytest.raises(ConfigException) as excinfo:
+        bidx.band_label("splat")
+    assert "Unknown band name/alias" in str(excinfo.value)
+    assert "splat" in str(excinfo.value)
+
+def test_bidx_p_band_labels(minimal_prod):
+    bidx = BandIndex(minimal_prod, {
+        "foo": ["bar", "foo", "baz"],
+        "zing": ["pow", "splat"],
+        "oof": [],
+    })
+    bls = bidx.band_labels()
+    assert "bar" in bls
+    assert "pow" in bls
+    assert "oof" in bls
+    assert len(bls) == 3
+
+def test_bidx_p_label(minimal_prod):
+    bidx = BandIndex(minimal_prod, {
+        "foo": ["bar", "baz"],
+    })
+    assert bidx.band_label("foo") == "bar"
+    assert bidx.band_label("bar") == "bar"
+    assert bidx.band_label("baz") == "bar"
+    with pytest.raises(IndexError):
+        bidx.band_label("splat")
+
+
+@pytest.fixture
+def minimal_dc():
     dc = MagicMock()
-    prod = MagicMock()
-    prod.name = "prod_name"
     nb = MagicMock()
     nb.index = ['band1', 'band2', 'band3', 'band4']
-    nb.get.return_val = {
+    nb.__getitem__.return_value = {
         "band1": -999,
         "band2": -999,
         "band3": -999,
         "band4": -999,
     }
     dc.list_measurements().loc = {
-        "prod_name": nb
+        "foo": nb
     }
+    return dc
 
-    foo =dc.list_measurements().loc["prod_name"]
 
-    cfg = {
-        "band1": [],
-        "band2": ["alias1"],
-        "band3": ["alias2", "alias3"],
-        "band4": ["band4", "alias4"],
-    }
+def test_bidx_makeready(minimal_prod, minimal_dc):
+    bidx = BandIndex(minimal_prod, None)
+    bidx.make_ready(minimal_dc)
+    assert bidx.band("band1") == "band1"
+    assert bidx.nodata_val("band1") == -999
 
-    bidx = BandIndex(prod, cfg)
-    bidx.make_ready(dc)
