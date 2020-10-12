@@ -16,11 +16,13 @@ from datacube_ows.ogc_exceptions import WMSException
 @pytest.fixture
 def prelegend_style():
     style = StyleDefBase.__new__(StyleDefBase)
+    style._unready_attributes = []
     return style
 
 @pytest.fixture
 def prelegend_colorramp_style():
     style = ColorRampDef.__new__(ColorRampDef)
+    style._unready_attributes = []
     return style
 
 

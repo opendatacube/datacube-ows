@@ -93,31 +93,28 @@ def accum_max(a, b):
 class OWSConfigNotReady(ConfigException):
     pass
 
-
 # Base classes for configuration objecta
 class OWSConfigEntry:
     # Parse and validate the json but don't access the database.
     def __init__(self, cfg, *args, **kwargs):
+        self._unready_attributes = set()
         self._raw_cfg = cfg
         self.ready = False
-        self._unready_attributes = set()
 
     def declare_unready(self, name):
         self._unready_attributes.add(name)
 
-    def __hasattr__(self, name):
-        if name in self._unready_attributes:
-            return False
-        else:
-            return super().__hasattr__(name)
-
     def __getattribute__(self, name):
-        if name in self._unready_attributes:
+        if name == "_unready_attributes":
+            pass
+        elif hasattr(self, "_unready_attributes") and name in self._unready_attributes:
             raise OWSConfigNotReady(f"The following parameters have not been initialised: {self._unready_attributes}")
-        return super().__getattribute__(name)
+        return object.__getattribute__(self, name)
 
     def __setattr__(self, name, val):
-        if name in self._unready_attributes:
+        if name == "_unready_attributes":
+            pass
+        elif hasattr(self, "_unready_attributes") and name in self._unready_attributes:
             self._unready_attributes.remove(name)
         super().__setattr__(name, val)
 

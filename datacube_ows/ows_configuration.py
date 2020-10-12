@@ -59,24 +59,29 @@ class BandIndex(OWSConfigEntry):
         self.product_name = product.name
         if band_cfg is None:
             self.band_cfg = {}
-            for b in self.native_bands.index:
-                self.band_cfg[b] = []
         else:
             self.band_cfg = band_cfg
         self._idx = {}
-        for b, aliases in self.band_cfg.items():
-            if b in self._idx:
-                raise ConfigException(f"Duplicate band name/alias: {b} in layer {product.name}")
-            self._idx[b] = b
-            for a in aliases:
-                if a != b and a in self._idx:
-                    raise ConfigException(f"Duplicate band name/alias: {a} in layer {product.name}")
-                self._idx[a] = b
+        self.add_aliases(self.band_cfg)
         self.declare_unready("native_bands")
         self.declare_unready("_nodata_vals")
 
+    def add_aliases(self, cfg):
+            for b, aliases in cfg.items():
+                if b in self._idx:
+                    raise ConfigException(f"Duplicate band name/alias: {b} in layer {self.product_name}")
+                self._idx[b] = b
+                for a in aliases:
+                    if a != b and a in self._idx:
+                        raise ConfigException(f"Duplicate band name/alias: {a} in layer {self.product_name}")
+                    self._idx[a] = b
+
     def make_ready(self, dc):
         self.native_bands = dc.list_measurements().loc[self.product_name]
+        if self._raw_cfg is None:
+            for b in self.native_bands.index:
+                self.band_cfg[b] = []
+            self.add_aliases(self.band_cfg)
         self._nodata_vals = {}
         for b, aliases in self.band_cfg.items():
             if b not in self.native_bands.index:
