@@ -52,15 +52,11 @@ def read_config():
     return cfg_expand(cfg, cwd=cwd)
 
 
-# pylint: disable=dangerous-default-value
-
-
 class BandIndex(OWSConfigEntry):
-    def __init__(self, product, band_cfg, dc):
+    def __init__(self, product, band_cfg):
         super().__init__(band_cfg)
         self.product = product
         self.product_name = product.name
-        self.native_bands = dc.list_measurements().loc[self.product_name]
         if band_cfg is None:
             self.band_cfg = {}
             for b in self.native_bands.index:
@@ -68,20 +64,27 @@ class BandIndex(OWSConfigEntry):
         else:
             self.band_cfg = band_cfg
         self._idx = {}
-        self._nodata_vals = {}
         for b, aliases in self.band_cfg.items():
-            if b not in self.native_bands.index:
-                raise ConfigException(f"Unknown band: {b} in layer {product}")
             if b in self._idx:
-                raise ConfigException(f"Duplicate band name/alias: {b} in layer {product}")
+                raise ConfigException(f"Duplicate band name/alias: {b} in layer {product.name}")
             self._idx[b] = b
             for a in aliases:
                 if a != b and a in self._idx:
-                    raise ConfigException(f"Duplicate band name/alias: {a} in layer {product}")
+                    raise ConfigException(f"Duplicate band name/alias: {a} in layer {product.name}")
                 self._idx[a] = b
+        self.declare_unready("native_bands")
+        self.declare_unready("_nodata_vals")
+
+    def make_ready(self, dc):
+        self.native_bands = dc.list_measurements().loc[self.product_name]
+        self._nodata_vals = {}
+        for b, aliases in self.band_cfg.items():
+            if b not in self.native_bands.index:
+                raise ConfigException(f"Unknown band: {b} in layer {self.product.name}")
             self._nodata_vals[b] = self.native_bands['nodata'][b]
             if isinstance(self._nodata_vals[b], str) and self._nodata_vals[b].lower() == "nan":
                 self._nodata_vals[b] = float("nan")
+        super().make_ready(dc)
 
     def band(self, name_alias):
         if name_alias not in self._idx:
@@ -246,7 +249,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.dynamic = cfg.get("dynamic", False)
         self.force_range_update(dc)
         # TODO: sub-ranges
-        self.band_idx = BandIndex(self.product, cfg.get("bands"), dc)
+        self.band_idx = BandIndex(self.product, cfg.get("bands"))
+        self.band_idx.make_ready(dc)
         try:
             self.parse_resource_limits(cfg.get("resource_limits", {}))
         except KeyError:
