@@ -2,8 +2,14 @@
 datacube-ows
 ===============================
 
-.. image:: https://github.com/opendatacube/datacube-ows/workflows/OWS%20build%20and%20push/badge.svg
-        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22OWS+build+and+push%22
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Linting/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ALinting
+
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Tests/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ATests
+
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Docker/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ADocker
         
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Scan/badge.svg
         :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22Scan%22
