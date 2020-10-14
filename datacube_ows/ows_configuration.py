@@ -229,7 +229,7 @@ class OWSFolder(OWSLayer):
         for lyr in self.unready_layers:
             try:
                 lyr.make_ready(dc, *args, **kwargs)
-                self.child_layers.append[lyr]
+                self.child_layers.append(lyr)
             except ConfigException as e:
                 _LOG.error("Could not load layer: %s", str(e))
                 still_unready.append(lyr)
@@ -307,7 +307,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         if self.global_cfg.wcs:
             try:
-                self.parse_wcs(cfg.get("wcs"), dc)
+                self.parse_wcs(cfg.get("wcs"))
             except KeyError:
                 raise ConfigException("Missing required config items in wcs section for layer %s" % self.name)
 
@@ -323,6 +323,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
+    # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         for prod_name in self.product_names:
             if "__" in prod_name:
@@ -340,6 +341,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         super().make_ready(dc, *args, **kwargs)
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_resource_limits(self, cfg):
         wms_cfg = cfg.get("wms", {})
         wcs_cfg = cfg.get("wcs", {})
@@ -348,6 +350,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.max_datasets_wms = wms_cfg.get("max_datasets", 0)
         self.max_datasets_wcs = wcs_cfg.get("max_datasets", 0)
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_image_processing(self, cfg):
         emf_cfg = cfg["extent_mask_func"]
         if isinstance(emf_cfg, Mapping) or isinstance(emf_cfg, str):
@@ -368,14 +371,17 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.fuse_func = None
 
+    # pylint: disable=attribute-defined-outside-init
     def ready_image_processing(self, dc):
         self.always_fetch_bands = list([ self.band_idx.band(b) for b in self.raw_afb ])
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_feature_info(self, cfg):
         self.feature_info_include_utc_dates = cfg.get("include_utc_dates", False)
         custom = cfg.get("include_custom", {})
         self.feature_info_custom_includes = { k: FunctionWrapper(self, v) for k,v in custom.items() }
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg):
         if cfg:
             self.parse_pq_names(cfg)
@@ -400,6 +406,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("info_mask")
         self.pq_products = []
 
+    # pylint: disable=attribute-defined-outside-init
     def ready_flags(self, dc):
         if self.pq_names:
             for pqn in self.pq_names:
@@ -423,10 +430,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.pq_product = None
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):
         self.feature_list_urls = SuppURL.parse_list(cfg.get("features", []))
         self.data_urls = SuppURL.parse_list(cfg.get("data", []))
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_styling(self, cfg):
         self.styles = []
         self.style_index = {}
@@ -443,6 +452,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.default_style = self.styles[0]
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_wcs(self, cfg):
         if cfg is None:
             self.wcs = False
@@ -450,7 +460,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.wcs = True
         # Native CRS
-        self.cfg_native_crs == cfg.get("native_crs")
+        self.cfg_native_crs = cfg.get("native_crs")
         self.declare_unready("native_crs")
         self.declare_unready("native_CRS_def")
 
@@ -475,6 +485,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.native_format = self.global_cfg.native_wcs_format
 
+    # pylint: disable=attribute-defined-outside-init
     def ready_wcs(self, dc):
         # Native CRS
         try:
