@@ -858,6 +858,7 @@ class OWSConfig(OWSConfigEntry):
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
 
+    #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.product_index = {}
         self.native_product_index = {}
