@@ -157,7 +157,7 @@ class SuppURL(OWSConfigEntry):
 
 class OWSLayer(OWSConfigEntry):
     named = False
-    def __init__(self, cfg, dc, parent_layer=None, **kwargs):
+    def __init__(self, cfg, parent_layer=None, **kwargs):
         super().__init__(cfg, **kwargs)
         self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
@@ -196,26 +196,44 @@ class OWSLayer(OWSConfigEntry):
     def layer_count(self):
         return 0
 
+    def unready_layer_count(self):
+        return 0
+
     def __str__(self):
         return "OWSLayer Config: %s" % self.title
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None, **kwargs):
-        super().__init__(cfg, dc, parent_layer, global_cfg=global_cfg, **kwargs)
+    def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
+        super().__init__(cfg, parent_layer, global_cfg=global_cfg, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
+        self.unready_layers = []
         self.child_layers = []
         if "layers" not in cfg:
             raise ConfigException("No layers section in folder layer %s" % self.title)
         for lyr_cfg in cfg["layers"]:
             try:
-                lyr = parse_ows_layer(lyr_cfg, global_cfg, dc, parent_layer=self)
-                self.child_layers.append(lyr)
+                lyr = parse_ows_layer(lyr_cfg, global_cfg, parent_layer=self)
+                self.unready_layers.append(lyr)
             except ConfigException as e:
-                _LOG.error("Could not load layer: %s", str(e))
+                _LOG.error("Could not parse layer: %s", str(e))
+
+    def unready_layer_count(self):
+        return sum([ l.layer_count() for l in self.unready_layers ])
 
     def layer_count(self):
         return sum([ l.layer_count() for l in self.child_layers ])
+
+    def make_ready(self, dc, *args, **kwargs):
+        still_unready = []
+        for lyr in self.unready_layers:
+            try:
+                lyr.make_ready(dc, *args, **kwargs)
+                self.child_layers.append[lyr]
+            except ConfigException as e:
+                _LOG.error("Could not load layer: %s", str(e))
+                still_unready.append(lyr)
+        super().make_ready(dc, *args, **kwargs)
 
 
 TIMERES_RAW = "raw"
@@ -228,42 +246,43 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
     named = True
 
-    def __init__(self, cfg, global_cfg, dc, parent_layer=None, **kwargs):
-        self.name = cfg["name"]
-        super().__init__(cfg, global_cfg=global_cfg, dc=dc, parent_layer=parent_layer,
-                         keyvals={"layer": self.name},
+    def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
+        name = cfg["name"]
+        super().__init__(cfg, global_cfg=global_cfg, parent_layer=parent_layer,
+                         keyvals={"layer": name},
                          **kwargs)
+        self.name = name
         cfg = self._raw_cfg
+        self.name = cfg["name"]
         self.hide = False
         try:
             self.parse_product_names(cfg)
-            self.products = []
             for prod_name in self.product_names:
                 if "__" in prod_name:
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
-                product = dc.index.products.get_by_name(prod_name)
-                if not product:
-                    raise ConfigException("Could not find product %s in datacube" % prod_name)
-                self.products.append(product)
-            self.product = self.products[0]
-            self.definition = self.product.definition
-
-            self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
-            if self.time_resolution not in TIMERES_VALS:
-                raise ConfigException("Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
+        self.declare_unready("products")
+        self.declare_unready("product")
+        self.declare_unready("definition")
+
+        self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
+        if self.time_resolution not in TIMERES_VALS:
+            raise ConfigException(
+                "Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
         self.dynamic = cfg.get("dynamic", False)
-        self.force_range_update(dc)
+
+        self.declare_unready("_ranges")
+        self.declare_unready("bboxes")
+        self.declare_unready("hide")
         # TODO: sub-ranges
         self.band_idx = BandIndex(self.product, cfg.get("bands"))
-        self.band_idx.make_ready(dc)
         try:
             self.parse_resource_limits(cfg.get("resource_limits", {}))
         except KeyError:
             raise ConfigException("Missing required config items in resource limits for layer %s" % self.name)
         try:
-            self.parse_flags(cfg.get("flags", {}), dc)
+            self.parse_flags(cfg.get("flags", {}))
         except KeyError:
             raise ConfigException("Missing required config items in flags section for layer %s" % self.name)
         try:
@@ -304,6 +323,23 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
+    def make_ready(self, dc, *args, **kwargs):
+        for prod_name in self.product_names:
+            if "__" in prod_name:
+                raise ConfigException("Product names cannot contain a double underscore '__'.")
+            product = dc.index.products.get_by_name(prod_name)
+            if not product:
+                raise ConfigException("Could not find product %s in datacube" % prod_name)
+            self.products.append(product)
+        self.product = self.products[0]
+        self.force_range_update(dc)
+        self.band_idx.make_ready(dc)
+        self.ready_flags(dc)
+        self.ready_image_processing(dc)
+        self.ready_wcs(dc)
+
+        super().make_ready(dc, *args, **kwargs)
+
     def parse_resource_limits(self, cfg):
         wms_cfg = cfg.get("wms", {})
         wcs_cfg = cfg.get("wcs", {})
@@ -318,8 +354,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.extent_mask_func = [ FunctionWrapper(self, emf_cfg) ]
         else:
             self.extent_mask_func = list([ FunctionWrapper(self, emf) for emf in emf_cfg ])
-        raw_afb = cfg.get("always_fetch_bands", [])
-        self.always_fetch_bands = list([ self.band_idx.band(b) for b in raw_afb ])
+        self.raw_afb = cfg.get("always_fetch_bands", [])
+        self.declare_unready("always_fetch_bands")
         self.solar_correction = cfg.get("apply_solar_corrections", False)
         self.data_manual_merge = cfg.get("manual_merge", False)
         if self.solar_correction and not self.data_manual_merge:
@@ -332,12 +368,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.fuse_func = None
 
+    def ready_image_processing(self, dc):
+        self.always_fetch_bands = list([ self.band_idx.band(b) for b in self.raw_afb ])
+
     def parse_feature_info(self, cfg):
         self.feature_info_include_utc_dates = cfg.get("include_utc_dates", False)
         custom = cfg.get("include_custom", {})
         self.feature_info_custom_includes = { k: FunctionWrapper(self, v) for k,v in custom.items() }
 
-    def parse_flags(self, cfg, dc):
+    def parse_flags(self, cfg):
         if cfg:
             self.parse_pq_names(cfg)
             self.pq_band = cfg["band"]
@@ -355,8 +394,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.pq_ignore_time = False
             self.ignore_info_flags = []
             self.pq_manual_merge = False
+        self.declare_unready("pq_products")
+        self.declare_unready("pq_product")
+        self.declare_unready("flags_def")
+        self.declare_unready("info_mask")
         self.pq_products = []
 
+    def ready_flags(self, dc):
         if self.pq_names:
             for pqn in self.pq_names:
                 if pqn is not None:
@@ -399,31 +443,58 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.default_style = self.styles[0]
 
-    def parse_wcs(self, cfg, dc):
+    def parse_wcs(self, cfg):
         if cfg is None:
             self.wcs = False
             return
         else:
             self.wcs = True
         # Native CRS
+        self.cfg_native_crs == cfg.get("native_crs")
+        self.declare_unready("native_crs")
+        self.declare_unready("native_CRS_def")
+
+        # Rectified Grids
+        self.declare_unready("origin_x")
+        self.declare_unready("origin_y")
+        self.cfg_native_resolution = cfg.get("native_resolution")
+        self.declare_unready("resolution_x")
+        self.declare_unready("resolution_y")
+        self.declare_unready("grid_high_x")
+        self.declare_unready("grid_high_y")
+        self.declare_unready("grids")
+        # Band management
+        self.wcs_raw_default_bands = cfg["default_bands"]
+        self.declare_unready("wcs_default_bands")
+
+        # Native format
+        if "native_format" in cfg:
+            self.native_format = cfg["native_format"]
+            if self.native_format not in self.global_cfg.wcs_formats_by_name:
+                raise ConfigException("WCS native format for layer %s is not in supported formats list" % self.product_name)
+        else:
+            self.native_format = self.global_cfg.native_wcs_format
+
+    def ready_wcs(self, dc):
+        # Native CRS
         try:
             self.native_CRS = self.product.definition["storage"]["crs"]
-            if cfg.get("native_crs") == self.native_CRS:
+            if self.cfg_native_crs == self.native_CRS:
                 _LOG.debug(
                     "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
                     self.name)
             else:
                 _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
-                             self.name, cfg['native_crs'], self.native_CRS)
+                             self.name, self.cfg_native_crs, self.native_CRS)
         except KeyError:
-            self.native_CRS = cfg.get("native_crs")
+            self.native_CRS = self.cfg_native_crs
 
         if not self.native_CRS:
             raise ConfigException(f"No native CRS could be found for layer {self.name}")
         if self.native_CRS not in self.global_cfg.published_CRSs:
             raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
-                            self.product_name,
-                            self.native_CRS))
+                self.product_name,
+                self.native_CRS))
         self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
         # Prepare Rectified Grids
         try:
@@ -438,7 +509,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.origin_y = native_bounding_box["bottom"]
 
         try:
-            self.resolution_x = self.product.definition["storage"]["resolution"][self.native_CRS_def["horizontal_coord"]]
+            self.resolution_x = self.product.definition["storage"]["resolution"][
+                self.native_CRS_def["horizontal_coord"]]
             self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
         except KeyError:
             self.resolution_x = None
@@ -446,47 +518,52 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         if self.resolution_x is None:
             try:
-                self.resolution_x, self.resolution_y = cfg["native_resolution"]
+                if self.cfg_native_resolution is None:
+                    raise KeyError
+                self.resolution_x, self.resolution_y = self.cfg_native_resolution
             except KeyError:
                 raise ConfigException(f"No native resolution supplied for WCS enabled layer {self.name}")
             except ValueError:
                 raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
             except TypeError:
                 raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
-        elif "native_resolution" in cfg:
-            config_x, config_y = (float(r) for r in cfg["native_resolution"])
+        elif self.cfg_native_resolution:
+            config_x, config_y = (float(r) for r in self.cfg_native_resolution)
             if (
                     math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
-                and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
-                ):
-                _LOG.debug("Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                           self.name)
+                    and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
+            ):
+                _LOG.debug(
+                    "Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                    self.name)
             else:
-                _LOG.warning("Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
-                             self.name, repr(cfg['native_resolution']), self.resolution_x, self.resolution_y)
+                _LOG.warning(
+                    "Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
+                    self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
 
         if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
-            ConfigException("Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
-                            % (
-                                self.native_CRS,
-                                self.name,
-                                native_bounding_box["left"],
-                                native_bounding_box["right"],
-                                native_bounding_box["right"] - native_bounding_box["left"],
-                                self.resolution_x
-
-                            ))
+            ConfigException(
+                "Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
+                % (
+                    self.native_CRS,
+                    self.name,
+                    native_bounding_box["left"],
+                    native_bounding_box["right"],
+                    native_bounding_box["right"] - native_bounding_box["left"],
+                    self.resolution_x
+                ))
         if (native_bounding_box["top"] - native_bounding_box["bottom"]) < self.resolution_x:
-            ConfigException("Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
-                            % (
-                                self.native_CRS,
-                                self.name,
-                                native_bounding_box["bottom"],
-                                native_bounding_box["top"],
-                                native_bounding_box["top"] - native_bounding_box["bottom"],
-                                self.resolution_y
+            ConfigException(
+                "Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
+                % (
+                    self.native_CRS,
+                    self.name,
+                    native_bounding_box["bottom"],
+                    native_bounding_box["top"],
+                    native_bounding_box["top"] - native_bounding_box["bottom"],
+                    self.resolution_y
 
-            ))
+                ))
         self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
         self.grid_high_y = int((
                                        native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
@@ -516,29 +593,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         (bbox["top"] - bbox["bottom"]) / self.grid_high_y
                     )
                 }
-
         # Band management
-        self.wcs_default_bands = [self.band_idx.band(b) for b in cfg["default_bands"]]
-        # Cache some metadata from the datacube
-        try:
-            bands = dc.list_measurements().loc[self.product_name]
-        except KeyError:
-            raise ConfigException("Datacube.list_measurements() not returning measurements for product %s" %
-                                  self.product_name)
-        self.bands = bands.index.values
-        try:
-            self.nodata_values = bands['nodata'].values
-        except KeyError:
-            raise ConfigException("Datacube has no 'nodata' values for bands in product %s" % self.product_name)
-        self.nodata_dict = {a: b for a, b in zip(self.bands, self.nodata_values)}
-
-        # Native format
-        if "native_format" in cfg:
-            self.native_format = cfg["native_format"]
-            if self.native_format not in self.global_cfg.wcs_formats_by_name:
-                raise ConfigException("WCS native format for layer %s is not in supported formats list" % self.product_name)
-        else:
-            self.native_format = self.global_cfg.native_wcs_format
+        self.wcs_default_bands = [self.band_idx.band(b) for b in self.wcs_raw_default_bands]
 
     def parse_product_names(self, cfg):
         raise NotImplementedError()
@@ -687,14 +743,14 @@ class OWSMultiProductLayer(OWSNamedLayer):
         self.pq_name = self.pq_names[0]
 
 
-def parse_ows_layer(cfg, global_cfg, dc, parent_layer=None):
+def parse_ows_layer(cfg, global_cfg, parent_layer=None):
     if cfg.get("name", None):
         if cfg.get("multi_product", False):
-            return OWSMultiProductLayer(cfg, global_cfg, dc, parent_layer)
+            return OWSMultiProductLayer(cfg, global_cfg, parent_layer)
         else:
-            return OWSProductLayer(cfg, global_cfg, dc, parent_layer)
+            return OWSProductLayer(cfg, global_cfg, parent_layer)
     else:
-        return OWSFolder(cfg, global_cfg, dc, parent_layer)
+        return OWSFolder(cfg, global_cfg, parent_layer)
 
 
 class WCSFormat:
@@ -762,9 +818,9 @@ class OWSConfig(OWSConfigEntry):
 
     def __init__(self, refresh=False):
         if not self.initialised or refresh:
-            self.initialised = True
             cfg = read_config()
             super().__init__(cfg)
+            self.initialised = True
             try:
                 self.parse_global(cfg["global"])
             except KeyError as e:
@@ -790,6 +846,13 @@ class OWSConfig(OWSConfigEntry):
                 self.parse_layers(cfg["layers"])
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
+
+    def make_ready(self, dc, *args, **kwargs):
+        self.product_index = {}
+        self.native_product_index = {}
+        for lyr in self.layers:
+            lyr.make_ready(dc *args, **kwargs)
+        super().make_ready(dc, *args, **kwargs)
 
     def parse_global(self, cfg):
         self._response_headers = cfg.get("response_headers", {})
@@ -894,12 +957,10 @@ class OWSConfig(OWSConfigEntry):
 
     def parse_layers(self, cfg):
         self.layers = []
-        self.product_index = {}
-        self.native_product_index = {}
-        with cube() as dc:
-            if dc:
-                for lyr_cfg in cfg:
-                    self.layers.append(parse_ows_layer(lyr_cfg, self, dc))
+        self.declare_unready("product_index")
+        self.declare_unready("native_product_index")
+        for lyr_cfg in cfg:
+            self.layers.append(parse_ows_layer(lyr_cfg, self))
 
     def alias_bboxes(self, bboxes):
         out = {}
@@ -931,4 +992,8 @@ class OWSConfig(OWSConfigEntry):
 
 
 def get_config(refresh=False):
-    return OWSConfig(refresh=refresh)
+    cfg = OWSConfig(refresh=refresh)
+    if not cfg.ready:
+        with cube() as dc:
+            cfg.make_ready(dc)
+    return cfg

@@ -102,6 +102,8 @@ class OWSConfigEntry:
         self.ready = False
 
     def declare_unready(self, name):
+        if self.ready:
+            raise ConfigException(f"Cannot declare {name} as unready on a ready object")
         self._unready_attributes.add(name)
 
     def __getattribute__(self, name):
