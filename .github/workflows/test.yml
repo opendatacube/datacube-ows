@@ -1,0 +1,98 @@
+---
+name: Tests
+
+on:
+  pull_request:
+    paths:
+      - '**'
+
+  push:
+    paths:
+      - '**'
+
+env:
+  ORG: opendatacube
+  IMAGE: ows
+  DB_USERNAME: opendatacubeusername
+
+jobs:
+  unit-integration-performance-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # We build the stage 1 image, then run test on it
+      # These tests require extra files we don't want in
+      # the production image
+      # We build the stage 1 image, then run test on it
+      # These tests require extra files we don't want in
+      # the production image
+      - name: Build dev OWS image (stage 1 - unit test builder)
+        run: |
+          docker build \
+            --target env_builder \
+            --tag    ${ORG}/${IMAGE}:_builder \
+            .
+
+      - name: Test and lint dev OWS image (stage 1 - unit test)
+        run: |
+          mkdir artifacts
+          docker run -v ${PWD}/artifacts:/mnt/artifacts ${ORG}/${IMAGE}:_builder /bin/sh -c "./check-code.sh"
+          mv ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
+
+      - name: Dockerized Integration Pytest (stage 1 - integration test)
+        run: |
+          chmod a+rw artifacts
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
+
+      - name: Upload All coverage to Codecov (stage 1 - upload coverage result)
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CodeCovToken }}
+          file: ./artifacts/*.xml
+          fail_ci_if_error: false
+
+      # Run performance profiling
+      - name: setup performance profiling with py-spy (stage 1 - run profiling containers)
+        run: |
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml up -d
+
+      - name: Sleep for 10 seconds (stage 1 - wait for services to be ready)
+        uses: whatnick/wait-action@master
+        with:
+          time: '10s'
+
+      - name: set output container pid (stage 1 - get ows container pid)
+        id: set-output-container-id
+        run: |
+          echo "::set-output name=PID::$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' \
+          $(docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows) \
+          | cut -c2-))"
+
+      - name: Run py-spy profiling (stage 1 - run profiling service)
+        timeout-minutes: 1
+        continue-on-error: true
+        run: |
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
+          exec -T ows /bin/sh -c "cd /code;./test_urls.sh &"
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
+          run pyspy record -f speedscope -o ./artifacts/profile.json --duration 30 \
+          --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
+
+
+      - name: Stop py-spy profiling after timeout (stage 1 - stop profiling)
+        run: |
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml down
+
+
+      - name: Upload profile to artifact (stage 1 - Upload profiling svg to artifacts)
+        uses: actions/upload-artifact@v2
+        with:
+          name: profile.json
+          path: ./artifacts/profile.json
+    
