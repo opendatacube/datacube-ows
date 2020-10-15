@@ -10,6 +10,7 @@ from datacube_ows.ows_configuration import BandIndex
 def minimal_prod():
     product = MagicMock()
     product.name = "foo"
+    product.product_name = "foo"
     return product
 
 
@@ -90,21 +91,30 @@ def minimal_dc():
     dc = MagicMock()
     nb = MagicMock()
     nb.index = ['band1', 'band2', 'band3', 'band4']
-    nb.__getitem__.return_value = {
+    nb["foo"]["nodata"] = {
         "band1": -999,
         "band2": -999,
         "band3": -999,
         "band4": -999,
     }
-    dc.list_measurements().loc = {
+    lmo = MagicMock()
+    lmo.loc = {
         "foo": nb
     }
+    dc.list_measurements.return_value = lmo
     return dc
 
 
 def test_bidx_makeready(minimal_prod, minimal_dc):
-    bidx = BandIndex(minimal_prod, None)
+    bidx = BandIndex(minimal_prod, {
+        "band1": [],
+        "band2": ["alias2"],
+        "band3": ["alias3", "band3"],
+        "band4": ["band4", "alias4"]
+    })
     bidx.make_ready(minimal_dc)
+    assert bidx.ready
     assert bidx.band("band1") == "band1"
-    assert bidx.nodata_val("band1") == -999
-
+    assert bidx.band("alias2") == "band2"
+    assert bidx.band("band3") == "band3"
+    assert bidx.band("alias4") == "band4"

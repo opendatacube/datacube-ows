@@ -53,7 +53,7 @@ class ComponentStyleDef(StyleDefBase):
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.rgb_components = {}
-        for band, component in self.raw_rgb_components:
+        for band, component in self.raw_rgb_components.items():
             if not component or callable(component):
                 self.rgb_components[band] = component
             else:

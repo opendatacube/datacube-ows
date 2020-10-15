@@ -78,7 +78,7 @@ class BandIndex(OWSConfigEntry):
 
     def make_ready(self, dc, *args, **kwargs):
         # pylint: disable=attribute-defined-outside-init
-        self.native_bands = dc.list_measurements().loc[self.product_name]
+        self.native_bands = dc.list_measurements().loc[self.product.product_name]
         if self._raw_cfg is None:
             for b in self.native_bands.index:
                 self.band_cfg[b] = []
@@ -95,7 +95,7 @@ class BandIndex(OWSConfigEntry):
 
     def band(self, name_alias):
         if name_alias not in self._idx:
-            raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product}")
+            raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
         return self._idx[name_alias]
 
     def band_label(self, name_alias):
@@ -231,8 +231,9 @@ class OWSFolder(OWSLayer):
                 lyr.make_ready(dc, *args, **kwargs)
                 self.child_layers.append(lyr)
             except ConfigException as e:
-                _LOG.error("Could not load layer: %s", str(e))
+                _LOG.error("Could not load layer %s: %s", lyr.title, str(e))
                 still_unready.append(lyr)
+        self.unready_layers = still_unready
         super().make_ready(dc, *args, **kwargs)
 
 
@@ -276,10 +277,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("bboxes")
         self.declare_unready("hide")
         # TODO: sub-ranges
-        try:
-            self.band_idx = BandIndex(self, cfg.get("bands"))
-        except Exception as e:
-            raise ConfigException("Ooops! %s" % str(e))
+        self.band_idx = BandIndex(self, cfg.get("bands"))
         try:
             self.parse_resource_limits(cfg.get("resource_limits", {}))
         except KeyError:
@@ -320,10 +318,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
         else:
             self.sub_product_extractor = None
+        # And finally, add to the global product index.
+        self.global_cfg.product_index[self.name] = self
 
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
+        self.products = []
         for prod_name in self.product_names:
             if "__" in prod_name:
                 raise ConfigException("Product names cannot contain a double underscore '__'.")
@@ -332,16 +333,16 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise ConfigException("Could not find product %s in datacube" % prod_name)
             self.products.append(product)
         self.product = self.products[0]
+        self.definition = self.product.definition
         self.force_range_update(dc)
         self.band_idx.make_ready(dc)
         self.ready_flags(dc)
         self.ready_image_processing(dc)
-        self.ready_wcs(dc)
+        if self.global_cfg.wcs:
+            self.ready_wcs(dc)
         for style in self.styles:
             style.make_ready(dc, *args, **kwargs)
 
-        # And finally, add to the global product index.
-        self.global_cfg.product_index[self.name] = self
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
@@ -434,6 +435,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 flag = 1 << bit
                 self.info_mask &= ~flag
         else:
+            self.flags_def = None
             self.pq_product = None
 
     # pylint: disable=attribute-defined-outside-init
@@ -467,7 +469,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.wcs = True
         # Native CRS
         self.cfg_native_crs = cfg.get("native_crs")
-        self.declare_unready("native_crs")
+        self.declare_unready("native_CRS")
         self.declare_unready("native_CRS_def")
 
         # Rectified Grids
@@ -493,125 +495,126 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_wcs(self, dc):
-        # Native CRS
-        try:
-            self.native_CRS = self.product.definition["storage"]["crs"]
-            if self.cfg_native_crs == self.native_CRS:
-                _LOG.debug(
-                    "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                    self.name)
-            else:
-                _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
-                             self.name, self.cfg_native_crs, self.native_CRS)
-        except KeyError:
-            self.native_CRS = self.cfg_native_crs
-
-        if not self.native_CRS:
-            raise ConfigException(f"No native CRS could be found for layer {self.name}")
-        if self.native_CRS not in self.global_cfg.published_CRSs:
-            raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
-                self.product_name,
-                self.native_CRS))
-        self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
-        # Prepare Rectified Grids
-        try:
-            native_bounding_box = self.bboxes[self.native_CRS]
-        except KeyError:
-            _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
-                         self.name,
-                         self.native_CRS)
-            self.hide = True
-            return
-        self.origin_x = native_bounding_box["left"]
-        self.origin_y = native_bounding_box["bottom"]
-
-        try:
-            self.resolution_x = self.product.definition["storage"]["resolution"][
-                self.native_CRS_def["horizontal_coord"]]
-            self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
-        except KeyError:
-            self.resolution_x = None
-            self.resolution_y = None
-
-        if self.resolution_x is None:
+        if self.wcs:
+            # Native CRS
             try:
-                if self.cfg_native_resolution is None:
-                    raise KeyError
-                self.resolution_x, self.resolution_y = self.cfg_native_resolution
+                self.native_CRS = self.product.definition["storage"]["crs"]
+                if self.cfg_native_crs == self.native_CRS:
+                    _LOG.debug(
+                        "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                        self.name)
+                else:
+                    _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                                 self.name, self.cfg_native_crs, self.native_CRS)
             except KeyError:
-                raise ConfigException(f"No native resolution supplied for WCS enabled layer {self.name}")
-            except ValueError:
-                raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
-            except TypeError:
-                raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
-        elif self.cfg_native_resolution:
-            config_x, config_y = (float(r) for r in self.cfg_native_resolution)
-            if (
-                    math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
-                    and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
-            ):
-                _LOG.debug(
-                    "Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                    self.name)
-            else:
-                _LOG.warning(
-                    "Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
-                    self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
+                self.native_CRS = self.cfg_native_crs
 
-        if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
-            ConfigException(
-                "Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
-                % (
-                    self.native_CRS,
-                    self.name,
-                    native_bounding_box["left"],
-                    native_bounding_box["right"],
-                    native_bounding_box["right"] - native_bounding_box["left"],
-                    self.resolution_x
-                ))
-        if (native_bounding_box["top"] - native_bounding_box["bottom"]) < self.resolution_x:
-            ConfigException(
-                "Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
-                % (
-                    self.native_CRS,
-                    self.name,
-                    native_bounding_box["bottom"],
-                    native_bounding_box["top"],
-                    native_bounding_box["top"] - native_bounding_box["bottom"],
-                    self.resolution_y
+            if not self.native_CRS:
+                raise ConfigException(f"No native CRS could be found for layer {self.name}")
+            if self.native_CRS not in self.global_cfg.published_CRSs:
+                raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
+                    self.product_name,
+                    self.native_CRS))
+            self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
+            # Prepare Rectified Grids
+            try:
+                native_bounding_box = self.bboxes[self.native_CRS]
+            except KeyError:
+                _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
+                             self.name,
+                             self.native_CRS)
+                self.hide = True
+                return
+            self.origin_x = native_bounding_box["left"]
+            self.origin_y = native_bounding_box["bottom"]
 
-                ))
-        self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
-        self.grid_high_y = int((
-                                       native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+            try:
+                self.resolution_x = self.product.definition["storage"]["resolution"][
+                    self.native_CRS_def["horizontal_coord"]]
+                self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
+            except KeyError:
+                self.resolution_x = None
+                self.resolution_y = None
 
-        if self.grid_high_x == 0:
-            err_str = f"Grid High X is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
-            raise ConfigException(err_str)
-        if self.grid_high_y == 0:
-            err_str = f"Grid High y is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: x_res={self.resolution_y}"
-            raise ConfigException(err_str)
-        self.grids = {}
-        for crs, crs_def in self.global_cfg.published_CRSs.items():
-            if crs == self.native_CRS:
-                self.grids[crs] = {
-                    "origin": (self.origin_x, self.origin_y),
-                    "resolution": (self.resolution_x, self.resolution_y),
-                }
-            else:
+            if self.resolution_x is None:
                 try:
-                    bbox = self.bboxes[crs]
+                    if self.cfg_native_resolution is None:
+                        raise KeyError
+                    self.resolution_x, self.resolution_y = self.cfg_native_resolution
                 except KeyError:
-                    continue
-                self.grids[crs] = {
-                    "origin": (bbox["left"], bbox["bottom"]),
-                    "resolution": (
-                        (bbox["right"] - bbox["left"]) / self.grid_high_x,
-                        (bbox["top"] - bbox["bottom"]) / self.grid_high_y
-                    )
-                }
-        # Band management
-        self.wcs_default_bands = [self.band_idx.band(b) for b in self.wcs_raw_default_bands]
+                    raise ConfigException(f"No native resolution supplied for WCS enabled layer {self.name}")
+                except ValueError:
+                    raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
+                except TypeError:
+                    raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
+            elif self.cfg_native_resolution:
+                config_x, config_y = (float(r) for r in self.cfg_native_resolution)
+                if (
+                        math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
+                        and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
+                ):
+                    _LOG.debug(
+                        "Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                        self.name)
+                else:
+                    _LOG.warning(
+                        "Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
+                        self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
+
+            if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
+                ConfigException(
+                    "Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
+                    % (
+                        self.native_CRS,
+                        self.name,
+                        native_bounding_box["left"],
+                        native_bounding_box["right"],
+                        native_bounding_box["right"] - native_bounding_box["left"],
+                        self.resolution_x
+                    ))
+            if (native_bounding_box["top"] - native_bounding_box["bottom"]) < self.resolution_x:
+                ConfigException(
+                    "Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
+                    % (
+                        self.native_CRS,
+                        self.name,
+                        native_bounding_box["bottom"],
+                        native_bounding_box["top"],
+                        native_bounding_box["top"] - native_bounding_box["bottom"],
+                        self.resolution_y
+
+                    ))
+            self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
+            self.grid_high_y = int((
+                                           native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+
+            if self.grid_high_x == 0:
+                err_str = f"Grid High X is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
+                raise ConfigException(err_str)
+            if self.grid_high_y == 0:
+                err_str = f"Grid High y is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: x_res={self.resolution_y}"
+                raise ConfigException(err_str)
+            self.grids = {}
+            for crs, crs_def in self.global_cfg.published_CRSs.items():
+                if crs == self.native_CRS:
+                    self.grids[crs] = {
+                        "origin": (self.origin_x, self.origin_y),
+                        "resolution": (self.resolution_x, self.resolution_y),
+                    }
+                else:
+                    try:
+                        bbox = self.bboxes[crs]
+                    except KeyError:
+                        continue
+                    self.grids[crs] = {
+                        "origin": (bbox["left"], bbox["bottom"]),
+                        "resolution": (
+                            (bbox["right"] - bbox["left"]) / self.grid_high_x,
+                            (bbox["top"] - bbox["bottom"]) / self.grid_high_y
+                        )
+                    }
+            # Band management
+            self.wcs_default_bands = [self.band_idx.band(b) for b in self.wcs_raw_default_bands]
 
     def parse_product_names(self, cfg):
         raise NotImplementedError()
@@ -866,10 +869,8 @@ class OWSConfig(OWSConfigEntry):
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
-        self.product_index = {}
         self.native_product_index = {}
-        for lyr in self.layers:
-            lyr.make_ready(dc, *args, **kwargs)
+        self.root_layer_folder.make_ready(dc, *args, **kwargs)
         super().make_ready(dc, *args, **kwargs)
 
     def parse_global(self, cfg):
@@ -974,11 +975,17 @@ class OWSConfig(OWSConfigEntry):
         # self.create_wcs_grid = False
 
     def parse_layers(self, cfg):
-        self.layers = []
-        self.declare_unready("product_index")
+        self.product_index = {}
         self.declare_unready("native_product_index")
-        for lyr_cfg in cfg:
-            self.layers.append(parse_ows_layer(lyr_cfg, self))
+        self.root_layer_folder = OWSFolder({
+            "title": "Root Folder (hidden)",
+            "abstract": ".",
+            "layers": cfg
+        }, self, None)
+
+    @property
+    def layers(self):
+        return self.root_layer_folder.child_layers
 
     def alias_bboxes(self, bboxes):
         out = {}
