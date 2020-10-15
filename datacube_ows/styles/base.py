@@ -47,19 +47,26 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
         self.masks = [StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", [])]
-        self.needed_bands = set()
-        for band in self.product.always_fetch_bands:
-            self.needed_bands.add(self.local_band(band))
-
-        if self.masks:
-            for i, product_name in enumerate(product.product_names):
-                if not self.product.pq_names or self.product.pq_names[i] == product_name:
-                    self.needed_bands.add(self.product.pq_band)
-                    break
+        self.raw_needed_bands = set()
+        self.declare_unready("needed_bands")
 
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
+
+    # pylint: disable=attribute-defined-outside-init
+    def make_ready(self, dc, *args, **kwargs):
+        self.needed_bands = set()
+        for band in self.raw_needed_bands:
+            self.needed_bands.add(self.local_band(band))
+        for band in self.product.always_fetch_bands:
+            self.needed_bands.add(band)
+        if self.masks:
+            for i, product_name in enumerate(self.product.product_names):
+                if not self.product.pq_names or self.product.pq_names[i] == product_name:
+                    self.needed_bands.add(self.product.pq_band)
+                    break
+        super().make_ready(dc, *args, **kwargs)
 
     def local_band(self, band):
         if band in self.local_band_map:
@@ -116,6 +123,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     def transform_single_date_data(self, data):
         raise NotImplementedError()
 
+    # pylint: disable=attribute-defined-outside-init
     def parse_legend_cfg(self, cfg):
         self.show_legend = cfg.get("show_legend", self.auto_legend)
         self.legend_url_override = cfg.get('url', None)
@@ -183,6 +191,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         def transform_data(self, data):
             raise NotImplementedError()
 
+        # pylint: disable=attribute-defined-outside-init
         def parse_legend_cfg(self, cfg):
             self.show_legend = cfg.get("show_legend", self.auto_legend)
             self.legend_url_override = cfg.get('url', None)

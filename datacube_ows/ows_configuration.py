@@ -53,10 +53,10 @@ def read_config():
 
 
 class BandIndex(OWSConfigEntry):
-    def __init__(self, product, band_cfg):
+    def __init__(self, layer, band_cfg):
         super().__init__(band_cfg)
-        self.product = product
-        self.product_name = product.name
+        self.product = layer
+        self.product_name = layer.name
         if band_cfg is None:
             self.band_cfg = {}
         else:
@@ -276,7 +276,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("bboxes")
         self.declare_unready("hide")
         # TODO: sub-ranges
-        self.band_idx = BandIndex(self.product, cfg.get("bands"))
+        try:
+            self.band_idx = BandIndex(self, cfg.get("bands"))
+        except Exception as e:
+            raise ConfigException("Ooops! %s" % str(e))
         try:
             self.parse_resource_limits(cfg.get("resource_limits", {}))
         except KeyError:
@@ -318,10 +321,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.sub_product_extractor = None
 
-        # And finally, add to the global product index.
-        self.global_cfg.product_index[self.name] = self
-        if not self.multi_product:
-            self.global_cfg.native_product_index[self.product_name] = self
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
@@ -338,6 +337,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.ready_flags(dc)
         self.ready_image_processing(dc)
         self.ready_wcs(dc)
+        for style in self.styles:
+            style.make_ready(dc, *args, **kwargs)
+
+        # And finally, add to the global product index.
+        self.global_cfg.product_index[self.name] = self
+        if not self.multi_product:
+            self.global_cfg.native_product_index[self.product_name] = self
 
         super().make_ready(dc, *args, **kwargs)
 
@@ -863,7 +869,7 @@ class OWSConfig(OWSConfigEntry):
         self.product_index = {}
         self.native_product_index = {}
         for lyr in self.layers:
-            lyr.make_ready(dc *args, **kwargs)
+            lyr.make_ready(dc, *args, **kwargs)
         super().make_ready(dc, *args, **kwargs)
 
     def parse_global(self, cfg):
