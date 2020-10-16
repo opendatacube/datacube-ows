@@ -21,7 +21,7 @@ class ColorMapStyleDef(StyleDefBase):
         style_cfg = self._raw_cfg
         self.value_map = style_cfg["value_map"]
         for band in self.value_map.keys():
-            self.needed_bands.add(self.product.band_idx.band(band))
+            self.raw_needed_bands.add(band)
 
     @staticmethod
     def reint(data):
