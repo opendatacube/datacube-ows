@@ -24,7 +24,8 @@ class ComponentStyleDef(StyleDefBase):
             else:
                 self.raw_rgb_components[imgband] = components
                 for k in components.keys():
-                    self.raw_needed_bands.add(k)
+                    if k != "scale_range":
+                        self.raw_needed_bands.add(k)
         self.declare_unready("rgb_components")
 
         self.scale_factor = style_cfg.get("scale_factor")
