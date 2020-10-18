@@ -79,7 +79,7 @@ class BandIndex(OWSConfigEntry):
     def make_ready(self, dc, *args, **kwargs):
         # pylint: disable=attribute-defined-outside-init
         self.native_bands = dc.list_measurements().loc[self.product.product_name]
-        if self._raw_cfg is None:
+        if not self._raw_cfg:
             for b in self.native_bands.index:
                 self.band_cfg[b] = []
             self.add_aliases(self.band_cfg)
