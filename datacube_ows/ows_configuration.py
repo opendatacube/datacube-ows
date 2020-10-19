@@ -169,33 +169,29 @@ class OWSLayer(OWSConfigEntry):
         if "title" not in cfg:
             raise ConfigException("Layer without title found under parent layer %s" % str(parent_layer))
         self.title = cfg["title"]
-        try:
-            if "abstract" in cfg:
-                self.abstract = cfg["abstract"]
-            elif parent_layer:
-                self.abstract = parent_layer.abstract
-            else:
-                raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
-            # Accumulate keywords
-            self.keywords = set()
-            if self.parent_layer:
-                for word in self.parent_layer.keywords:
-                    self.keywords.add(word)
-            else:
-                for word in self.global_cfg.keywords:
-                    self.keywords.add(word)
-            for word in cfg.get("keywords", []):
+        if "abstract" in cfg:
+            self.abstract = cfg["abstract"]
+        elif parent_layer:
+            self.abstract = parent_layer.abstract
+        else:
+            raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
+        # Accumulate keywords
+        self.keywords = set()
+        if self.parent_layer:
+            for word in self.parent_layer.keywords:
                 self.keywords.add(word)
-            # Inherit or override attribution
-            if "attribution" in cfg:
-                self.attribution = AttributionCfg.parse(cfg.get("attribution"))
-            elif parent_layer:
-                self.attribution = self.parent_layer.attribution
-            else:
-                self.attribution = self.global_cfg.attribution
-
-        except KeyError:
-            raise ConfigException("Required entry missing in layer %s" % self.title)
+        else:
+            for word in self.global_cfg.keywords:
+                self.keywords.add(word)
+        for word in cfg.get("keywords", []):
+            self.keywords.add(word)
+        # Inherit or override attribution
+        if "attribution" in cfg:
+            self.attribution = AttributionCfg.parse(cfg.get("attribution"))
+        elif parent_layer:
+            self.attribution = self.parent_layer.attribution
+        else:
+            self.attribution = self.global_cfg.attribution
 
     def layer_count(self):
         return 0
