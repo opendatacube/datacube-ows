@@ -107,3 +107,49 @@ def test_cfg_attrib_all_flds(minimal_dc):
     assert attrib.logo_height == 150
     attrib.make_ready(minimal_dc)
     assert attrib.ready
+
+
+def test_surl_empty():
+    supps = SuppURL.parse_list(None)
+    assert supps == []
+    supps = SuppURL.parse_list([])
+    assert supps == []
+
+
+def test_surl_no_url():
+    with pytest.raises(KeyError):
+        supps = SuppURL.parse_list([
+            {
+                "format": "text/html"
+            }
+        ])
+
+
+def test_surl_no_format():
+    with pytest.raises(KeyError):
+        supps = SuppURL.parse_list([
+            {
+                "url": "http://test.url/path"
+            }
+        ])
+
+
+def test_surl_full(minimal_dc):
+    supps = SuppURL.parse_list([
+        {
+            "url": "http://test.url/path",
+            "format": "text/html"
+        },
+        {
+            "url": "http://test.url/another_path",
+            "format": "text/plain"
+        },
+    ])
+    assert len(supps) == 2
+    assert supps[0].url == "http://test.url/path"
+    assert supps[1].url == "http://test.url/another_path"
+    assert supps[0].format == "text/html"
+    assert supps[1].format == "text/plain"
+    supps[0].make_ready(minimal_dc)
+    assert supps[0].ready
+    assert not supps[1].ready
