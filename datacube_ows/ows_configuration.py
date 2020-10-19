@@ -319,11 +319,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def make_ready(self, dc, *args, **kwargs):
         self.products = []
         for prod_name in self.product_names:
-            if "__" in prod_name:
-                raise ConfigException("Product names cannot contain a double underscore '__'.")
             product = dc.index.products.get_by_name(prod_name)
             if not product:
-                raise ConfigException("Could not find product %s in datacube" % prod_name)
+                raise ConfigException(f"Could not find product {prod_name} in datacube for layer {self.name}")
             self.products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
@@ -446,9 +444,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.style_index[style.name] = style
         if "default_style" in cfg:
             if cfg["default_style"] not in self.style_index:
-                raise ConfigException("Default style %s is not in the 'styles' for layer %s" % (
-                    cfg["default_style"], self.name
-                ))
+                raise ConfigException(f"Default style {cfg['default_style']} is not in the 'styles' for layer {self.name}")
             self.default_style = self.style_index[cfg["default_style"]]
         else:
             self.default_style = self.styles[0]

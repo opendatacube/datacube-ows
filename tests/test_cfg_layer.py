@@ -223,6 +223,30 @@ def test_no_product_name(minimal_layer_cfg, minimal_global_cfg):
     assert "a_layer" in str(excinfo.value)
 
 
+def test_bad_product_name(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_dc.index.products.get_by_name.return_value = None
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with pytest.raises(ConfigException) as excinfo:
+        lyr.make_ready(dc=minimal_dc)
+    assert "Could not find product" in str(excinfo.value)
+    assert "foo" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+def test_manual_merge(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["image_processing"]["manual_merge"] = True
+    minimal_layer_cfg["image_processing"]["apply_solar_corrections"] = False
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert not lyr.ready
+    minimal_layer_cfg["image_processing"]["manual_merge"] = False
+    minimal_layer_cfg["image_processing"]["apply_solar_corrections"] = True
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "Solar correction requires manual_merge" in str(excinfo.value)
+
+
 def test_bad_timeres(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["time_resolution"] = "prime_ministers"
     with pytest.raises(ConfigException) as excinfo:
@@ -277,6 +301,22 @@ def test_no_styles(minimal_layer_cfg, minimal_global_cfg):
     assert "styles" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
 
+
+def test_bad_default_style(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["styling"]["default_style"] = "nonexistent"
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "not in the 'styles'" in str(excinfo.value)
+    assert "nonexistent" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
+def test_no_default_style(minimal_layer_cfg, minimal_global_cfg):
+    del minimal_layer_cfg["styling"]["default_style"]
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                      global_cfg=minimal_global_cfg)
+    assert lyr.default_style.name == 'band1'
 
 def test_no_wcs_default_bands(minimal_layer_cfg, minimal_global_cfg):
     minimal_global_cfg.wcs = True
