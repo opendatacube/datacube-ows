@@ -277,18 +277,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("hide")
         # TODO: sub-ranges
         self.band_idx = BandIndex(self, cfg.get("bands"))
-        try:
-            self.parse_resource_limits(cfg.get("resource_limits", {}))
-        except KeyError:
-            raise ConfigException("Missing required config items in resource limits for layer %s" % self.name)
+        self.parse_resource_limits(cfg.get("resource_limits", {}))
         try:
             self.parse_flags(cfg.get("flags", {}))
-        except KeyError:
-            raise ConfigException("Missing required config items in flags section for layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException(f"Missing required config ({str(e)}) in flags section for layer {self.name}")
         try:
             self.parse_image_processing(cfg["image_processing"])
-        except KeyError:
-            raise ConfigException("Missing required config items in image processing section for layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException(f"Missing required config ({str(e)}) in image processing section for layer {self.name}")
         self.identifiers = cfg.get("identifiers", {})
         for auth in self.identifiers.keys():
             if auth not in self.global_cfg.authorities:
