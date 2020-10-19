@@ -254,7 +254,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                          **kwargs)
         self.name = name
         cfg = self._raw_cfg
-        self.name = cfg["name"]
         self.hide = False
         try:
             self.parse_product_names(cfg)

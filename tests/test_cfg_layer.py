@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.ows_configuration import OWSLayer, OWSFolder
+from datacube_ows.ows_configuration import OWSLayer, OWSFolder, parse_ows_layer
 
 @pytest.fixture
 def minimal_global_cfg():
@@ -164,4 +164,40 @@ def test_make_ready_catch_errors(minimal_global_cfg, minimal_dc):
     assert len(lyr.child_layers) == 0
     assert lyr.ready
 
+
+@pytest.fixture
+def minimal_layer_cfg():
+    return {
+        "title": "The Title",
+        "abstract": "The Abstract",
+        "name": "a_layer",
+        "product_name": "foo",
+        "image_processing": {
+            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+        },
+        "styling": {
+            "default_style": "band1",
+            "styles": [
+                {
+                    "name": "band1",
+                    "title": "Single Band Test Style",
+                    "abstract": "",
+                    "components": {
+                        "red": {"band1": 1.0},
+                        "green": {"band1": 1.0},
+                        "blue": {"band1": 1.0},
+                    },
+                    "scale_range": [0, 1024]
+                }
+            ]
+        }
+    }
+
+def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert lyr.name == "a_layer"
+    assert not lyr.ready
+    lyr.make_ready(minimal_dc)
+    assert lyr.ready
 
