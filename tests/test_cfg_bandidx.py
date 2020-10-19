@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from datacube_ows.config_utils import OWSConfigNotReady
 from datacube_ows.ogc_utils import ConfigException
@@ -84,25 +84,6 @@ def test_bidx_p_label(minimal_prod):
         bidx.band_label("splat")
     assert "Unknown band name/alias" in str(excinfo.value)
     assert "splat" in str(excinfo.value)
-
-
-@pytest.fixture
-def minimal_dc():
-    dc = MagicMock()
-    nb = MagicMock()
-    nb.index = ['band1', 'band2', 'band3', 'band4']
-    nb.__getitem__.return_value = {
-        "band1": -999,
-        "band2": -999,
-        "band3": float("nan"),
-        "band4": "nan",
-    }
-    lmo = MagicMock()
-    lmo.loc = {
-        "foo": nb
-    }
-    dc.list_measurements.return_value = lmo
-    return dc
 
 
 def test_bidx_makeready(minimal_prod, minimal_dc):

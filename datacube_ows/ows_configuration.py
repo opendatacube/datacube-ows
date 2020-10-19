@@ -122,6 +122,8 @@ class AttributionCfg(OWSConfigEntry):
         self.title = cfg.get("title")
         self.url = cfg.get("url")
         logo = cfg.get("logo")
+        if not self.title and not self.url and not logo:
+            raise ConfigException("At least one of title, url and logo is required in an attribution definition")
         if not logo:
             self.logo_width = None
             self.logo_height = None
@@ -132,6 +134,8 @@ class AttributionCfg(OWSConfigEntry):
             self.logo_height = logo.get("height")
             self.logo_url = logo.get("url")
             self.logo_fmt = logo.get("format")
+            if not self.logo_url or not self.logo_fmt:
+                raise ConfigException("url and format must both be specified in an attribution logo.")
 
     @classmethod
     def parse(cls, cfg):
