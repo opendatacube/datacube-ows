@@ -289,31 +289,28 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.identifiers = cfg.get("identifiers", {})
         for auth in self.identifiers.keys():
             if auth not in self.global_cfg.authorities:
-                raise ConfigException("Identifier with non-declared authority: %s" % repr(auth))
-        try:
-            self.parse_urls(cfg.get("urls", {}))
-        except KeyError:
-            raise ConfigException("Missing required config items in urls section for layer %s" % self.name)
+                raise ConfigException(f"Identifier with non-declared authority: {auth} in layer {self.name}")
+        self.parse_urls(cfg.get("urls", {}))
         self.parse_feature_info(cfg.get("feature_info", {}))
-
         self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
         try:
             self.parse_styling(cfg["styling"])
-        except KeyError:
-            raise ConfigException("Missing required config items in styling section for layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException(f"Missing required config item {e} in styling section for layer {self.name}")
 
         if self.global_cfg.wcs:
             try:
                 self.parse_wcs(cfg.get("wcs"))
-            except KeyError:
-                raise ConfigException("Missing required config items in wcs section for layer %s" % self.name)
+            except KeyError as e:
+                raise ConfigException(f"Missing required config item {e} in wcs section for layer {self.name}")
 
-        sub_prod_cfg = cfg.get("sub_products", {})
-        self.sub_product_label = sub_prod_cfg.get("label")
-        if "extractor" in sub_prod_cfg:
-            self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
-        else:
-            self.sub_product_extractor = None
+#       Sub-products have been broken for some time.
+#        sub_prod_cfg = cfg.get("sub_products", {})
+#        self.sub_product_label = sub_prod_cfg.get("label")
+#        if "extractor" in sub_prod_cfg:
+#            self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
+#        else:
+#            self.sub_product_extractor = None
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
 

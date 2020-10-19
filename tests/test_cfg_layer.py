@@ -9,6 +9,10 @@ def minimal_global_cfg():
     global_cfg=MagicMock()
     global_cfg.keywords = {"global"}
     global_cfg.attribution = "Global Attribution"
+    global_cfg.authorities = {
+        "auth0": "http://test.url/auth0",
+        "auth1": "http://test.url/auth1",
+    }
     return global_cfg
 
 
@@ -210,6 +214,15 @@ def test_double_underscore_product_name(minimal_layer_cfg, minimal_global_cfg):
     assert "double underscore" in str(excinfo.value)
 
 
+def test_no_product_name(minimal_layer_cfg, minimal_global_cfg):
+    del minimal_layer_cfg["product_name"]
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "product names" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
 def test_bad_timeres(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["time_resolution"] = "prime_ministers"
     with pytest.raises(ConfigException) as excinfo:
@@ -240,5 +253,41 @@ def test_img_proc_no_extent_func(minimal_layer_cfg, minimal_global_cfg):
     assert "required" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "extent_mask_func" in str(excinfo.value)
+
+
+def test_id_badauth(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["identifiers"] = {
+        "auth0": "5318008",
+        "authn": "mnnnmnnh"
+    }
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "non-declared authority" in str(excinfo.value)
+    assert "authn" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
+def test_no_styles(minimal_layer_cfg, minimal_global_cfg):
+    del minimal_layer_cfg["styling"]["styles"]
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "Missing required" in str(excinfo.value)
+    assert "styles" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
+def test_no_wcs_default_bands(minimal_layer_cfg, minimal_global_cfg):
+    minimal_global_cfg.wcs = True
+    minimal_layer_cfg["wcs"] = {}
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "Missing required" in str(excinfo.value)
+    assert "wcs" in str(excinfo.value)
+    assert "default_bands" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
 
 
