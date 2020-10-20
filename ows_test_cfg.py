@@ -7,9 +7,9 @@
 ls8_usgs_level1_bands = {
     "coastal_aerosol": ["band_1"],
     "blue": ["band_2"],
-    "green": ["band_3"],
-    "red": ["band_4"],
-    "nir": ["band_5"],
+    "green": ["band_3", "green"],
+    "red": ["band_4", "pink"],
+    "nir": ["nir", "band_5"],
     "swir1": ["band_6"],
     "swir2": ["band_7"],
     "panchromatic": ["band_8"],
@@ -46,7 +46,7 @@ style_rgb = {
             # Band aliases may be used here.
             # Values are multipliers.  The should add to 1.0 for each component to preserve overall brightness levels,
             # but this is not enforced.
-            "red": 1.0
+            "pink": 1.0
         },
         "green": {
             "green": 1.0
