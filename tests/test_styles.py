@@ -369,7 +369,7 @@ def test_bandmapped_style_ramp(product_layer, style_cfg_ramp_mapped):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_mapped)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
-    assert style_def.local_band("bar") == "foo"
+    assert style_def.local_band("bar") == "red"
 
 def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     style_cfg_lin["scale_range"] = [-3000, 3000]

@@ -70,8 +70,8 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
     def local_band(self, band):
         if band in self.local_band_map:
-            return self.local_band_map[band]
-        return band
+            band = self.local_band_map[band]
+        return self.product.band_idx.band(band)
 
     def parse_multi_date(self, cfg):
         self.multi_date_handlers = []
