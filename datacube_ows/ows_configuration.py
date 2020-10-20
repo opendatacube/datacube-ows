@@ -478,7 +478,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if "native_format" in cfg:
             self.native_format = cfg["native_format"]
             if self.native_format not in self.global_cfg.wcs_formats_by_name:
-                raise ConfigException("WCS native format for layer %s is not in supported formats list" % self.product_name)
+                raise ConfigException(f"WCS native format {self.native_format} for layer {self.name} is not in supported formats list")
         else:
             self.native_format = self.global_cfg.native_wcs_format
 

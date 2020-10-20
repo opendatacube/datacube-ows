@@ -204,6 +204,7 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     assert not lyr.ready
     lyr.make_ready(minimal_dc)
     assert lyr.ready
+    assert "a_layer" in str(lyr)
 
 
 def test_double_underscore_product_name(minimal_layer_cfg, minimal_global_cfg):
@@ -330,4 +331,14 @@ def test_no_wcs_default_bands(minimal_layer_cfg, minimal_global_cfg):
     assert "a_layer" in str(excinfo.value)
 
 
-
+def test_invalid_native_format(minimal_layer_cfg, minimal_global_cfg):
+    minimal_global_cfg.wcs = True
+    minimal_layer_cfg["wcs"] = {
+        "default_bands": ["band1", "band2"],
+        "native_format": "geosplunge"
+    }
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "a_layer" in str(excinfo.value)
+    assert "geosplunge" in str(excinfo.value)
