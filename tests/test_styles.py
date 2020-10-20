@@ -15,12 +15,14 @@ import numpy as np
 @pytest.fixture
 def product_layer():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
+    product_layer._unready_attributes = []
     product_layer.global_cfg = MagicMock()
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["red", "green", "blue"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
+    product_layer.band_idx._unready_attributes = []
     product_layer.band_idx.product = product_layer
     product_layer.band_idx.band_cfg = {
         "red": [ "crimson", "foo", ],
@@ -367,7 +369,7 @@ def test_bandmapped_style_ramp(product_layer, style_cfg_ramp_mapped):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_mapped)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
-    assert style_def.local_band("bar") == "foo"
+    assert style_def.local_band("bar") == "red"
 
 def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     style_cfg_lin["scale_range"] = [-3000, 3000]
