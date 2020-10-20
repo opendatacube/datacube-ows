@@ -79,7 +79,7 @@ class BandIndex(OWSConfigEntry):
     def make_ready(self, dc, *args, **kwargs):
         # pylint: disable=attribute-defined-outside-init
         self.native_bands = dc.list_measurements().loc[self.product.product_name]
-        if self._raw_cfg is None:
+        if not self._raw_cfg:
             for b in self.native_bands.index:
                 self.band_cfg[b] = []
             self.add_aliases(self.band_cfg)
@@ -122,6 +122,8 @@ class AttributionCfg(OWSConfigEntry):
         self.title = cfg.get("title")
         self.url = cfg.get("url")
         logo = cfg.get("logo")
+        if not self.title and not self.url and not logo:
+            raise ConfigException("At least one of title, url and logo is required in an attribution definition")
         if not logo:
             self.logo_width = None
             self.logo_height = None
@@ -132,6 +134,8 @@ class AttributionCfg(OWSConfigEntry):
             self.logo_height = logo.get("height")
             self.logo_url = logo.get("url")
             self.logo_fmt = logo.get("format")
+            if not self.logo_url or not self.logo_fmt:
+                raise ConfigException("url and format must both be specified in an attribution logo.")
 
     @classmethod
     def parse(cls, cfg):
@@ -165,33 +169,29 @@ class OWSLayer(OWSConfigEntry):
         if "title" not in cfg:
             raise ConfigException("Layer without title found under parent layer %s" % str(parent_layer))
         self.title = cfg["title"]
-        try:
-            if "abstract" in cfg:
-                self.abstract = cfg["abstract"]
-            elif parent_layer:
-                self.abstract = parent_layer.abstract
-            else:
-                raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
-            # Accumulate keywords
-            self.keywords = set()
-            if self.parent_layer:
-                for word in self.parent_layer.keywords:
-                    self.keywords.add(word)
-            else:
-                for word in self.global_cfg.keywords:
-                    self.keywords.add(word)
-            for word in cfg.get("keywords", []):
+        if "abstract" in cfg:
+            self.abstract = cfg["abstract"]
+        elif parent_layer:
+            self.abstract = parent_layer.abstract
+        else:
+            raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
+        # Accumulate keywords
+        self.keywords = set()
+        if self.parent_layer:
+            for word in self.parent_layer.keywords:
                 self.keywords.add(word)
-            # Inherit or override attribution
-            if "attribution" in cfg:
-                self.attribution = AttributionCfg.parse(cfg.get("attribution"))
-            elif parent_layer:
-                self.attribution = self.parent_layer.attribution
-            else:
-                self.attribution = self.global_cfg.attribution
-
-        except KeyError:
-            raise ConfigException("Required entry missing in layer %s" % self.title)
+        else:
+            for word in self.global_cfg.keywords:
+                self.keywords.add(word)
+        for word in cfg.get("keywords", []):
+            self.keywords.add(word)
+        # Inherit or override attribution
+        if "attribution" in cfg:
+            self.attribution = AttributionCfg.parse(cfg.get("attribution"))
+        elif parent_layer:
+            self.attribution = self.parent_layer.attribution
+        else:
+            self.attribution = self.global_cfg.attribution
 
     def layer_count(self):
         return 0
@@ -254,7 +254,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                          **kwargs)
         self.name = name
         cfg = self._raw_cfg
-        self.name = cfg["name"]
         self.hide = False
         try:
             self.parse_product_names(cfg)
@@ -278,46 +277,40 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("hide")
         # TODO: sub-ranges
         self.band_idx = BandIndex(self, cfg.get("bands"))
-        try:
-            self.parse_resource_limits(cfg.get("resource_limits", {}))
-        except KeyError:
-            raise ConfigException("Missing required config items in resource limits for layer %s" % self.name)
+        self.parse_resource_limits(cfg.get("resource_limits", {}))
         try:
             self.parse_flags(cfg.get("flags", {}))
-        except KeyError:
-            raise ConfigException("Missing required config items in flags section for layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException(f"Missing required config ({str(e)}) in flags section for layer {self.name}")
         try:
             self.parse_image_processing(cfg["image_processing"])
-        except KeyError:
-            raise ConfigException("Missing required config items in image processing section for layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException(f"Missing required config ({str(e)}) in image processing section for layer {self.name}")
         self.identifiers = cfg.get("identifiers", {})
         for auth in self.identifiers.keys():
             if auth not in self.global_cfg.authorities:
-                raise ConfigException("Identifier with non-declared authority: %s" % repr(auth))
-        try:
-            self.parse_urls(cfg.get("urls", {}))
-        except KeyError:
-            raise ConfigException("Missing required config items in urls section for layer %s" % self.name)
+                raise ConfigException(f"Identifier with non-declared authority: {auth} in layer {self.name}")
+        self.parse_urls(cfg.get("urls", {}))
         self.parse_feature_info(cfg.get("feature_info", {}))
-
         self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
         try:
             self.parse_styling(cfg["styling"])
-        except KeyError:
-            raise ConfigException("Missing required config items in styling section for layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException(f"Missing required config item {e} in styling section for layer {self.name}")
 
         if self.global_cfg.wcs:
             try:
                 self.parse_wcs(cfg.get("wcs"))
-            except KeyError:
-                raise ConfigException("Missing required config items in wcs section for layer %s" % self.name)
+            except KeyError as e:
+                raise ConfigException(f"Missing required config item {e} in wcs section for layer {self.name}")
 
-        sub_prod_cfg = cfg.get("sub_products", {})
-        self.sub_product_label = sub_prod_cfg.get("label")
-        if "extractor" in sub_prod_cfg:
-            self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
-        else:
-            self.sub_product_extractor = None
+#       Sub-products have been broken for some time.
+#        sub_prod_cfg = cfg.get("sub_products", {})
+#        self.sub_product_label = sub_prod_cfg.get("label")
+#        if "extractor" in sub_prod_cfg:
+#            self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
+#        else:
+#            self.sub_product_extractor = None
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
 
@@ -326,11 +319,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def make_ready(self, dc, *args, **kwargs):
         self.products = []
         for prod_name in self.product_names:
-            if "__" in prod_name:
-                raise ConfigException("Product names cannot contain a double underscore '__'.")
             product = dc.index.products.get_by_name(prod_name)
             if not product:
-                raise ConfigException("Could not find product %s in datacube" % prod_name)
+                raise ConfigException(f"Could not find product {prod_name} in datacube for layer {self.name}")
             self.products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
@@ -453,9 +444,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.style_index[style.name] = style
         if "default_style" in cfg:
             if cfg["default_style"] not in self.style_index:
-                raise ConfigException("Default style %s is not in the 'styles' for layer %s" % (
-                    cfg["default_style"], self.name
-                ))
+                raise ConfigException(f"Default style {cfg['default_style']} is not in the 'styles' for layer {self.name}")
             self.default_style = self.style_index[cfg["default_style"]]
         else:
             self.default_style = self.styles[0]
@@ -489,7 +478,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if "native_format" in cfg:
             self.native_format = cfg["native_format"]
             if self.native_format not in self.global_cfg.wcs_formats_by_name:
-                raise ConfigException("WCS native format for layer %s is not in supported formats list" % self.product_name)
+                raise ConfigException(f"WCS native format {self.native_format} for layer {self.name} is not in supported formats list")
         else:
             self.native_format = self.global_cfg.native_wcs_format
 

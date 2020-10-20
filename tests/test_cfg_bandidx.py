@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from datacube_ows.config_utils import OWSConfigNotReady
 from datacube_ows.ogc_utils import ConfigException
@@ -86,25 +86,6 @@ def test_bidx_p_label(minimal_prod):
     assert "splat" in str(excinfo.value)
 
 
-@pytest.fixture
-def minimal_dc():
-    dc = MagicMock()
-    nb = MagicMock()
-    nb.index = ['band1', 'band2', 'band3', 'band4']
-    nb["foo"]["nodata"] = {
-        "band1": -999,
-        "band2": -999,
-        "band3": -999,
-        "band4": -999,
-    }
-    lmo = MagicMock()
-    lmo.loc = {
-        "foo": nb
-    }
-    dc.list_measurements.return_value = lmo
-    return dc
-
-
 def test_bidx_makeready(minimal_prod, minimal_dc):
     bidx = BandIndex(minimal_prod, {
         "band1": [],
@@ -118,3 +99,26 @@ def test_bidx_makeready(minimal_prod, minimal_dc):
     assert bidx.band("alias2") == "band2"
     assert bidx.band("band3") == "band3"
     assert bidx.band("alias4") == "band4"
+
+def test_bidx_makeready_default(minimal_prod, minimal_dc):
+    bidx = BandIndex(minimal_prod, {})
+    bidx.make_ready(minimal_dc)
+    assert bidx.ready
+    assert bidx.band("band1") == "band1"
+    assert bidx.band("band2") == "band2"
+    assert bidx.band("band3") == "band3"
+    assert bidx.band("band4") == "band4"
+    assert bidx.nodata_val("band1") == -999
+    assert isinstance(bidx.nodata_val("band4"), float)
+
+def test_bidx_makeready_invalid_band(minimal_prod, minimal_dc):
+    bidx = BandIndex(minimal_prod, {
+        "band1": ["band1", "valid"],
+        "bandx": ["invalid"]
+    })
+    assert bidx.band("valid") == "band1"
+    assert bidx.band("invalid") == "bandx"
+    with pytest.raises(ConfigException) as excinfo:
+        bidx.make_ready(minimal_dc)
+    assert "Unknown band" in str(excinfo.value)
+    assert "bandx" in str(excinfo.value)
