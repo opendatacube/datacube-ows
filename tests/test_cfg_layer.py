@@ -197,6 +197,35 @@ def minimal_layer_cfg():
         }
     }
 
+@pytest.fixture
+def minimal_multiprod_cfg():
+    return {
+        "title": "The Title",
+        "abstract": "The Abstract",
+        "name": "a_layer",
+        "multi_product": True,
+        "product_names": ["foo", "bar"],
+        "image_processing": {
+            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+        },
+        "styling": {
+            "default_style": "band1",
+            "styles": [
+                {
+                    "name": "band1",
+                    "title": "Single Band Test Style",
+                    "abstract": "",
+                    "components": {
+                        "red": {"band1": 1.0},
+                        "green": {"band1": 1.0},
+                        "blue": {"band1": 1.0},
+                    },
+                    "scale_range": [0, 1024]
+                }
+            ]
+        }
+    }
+
 def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
@@ -205,6 +234,15 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert "a_layer" in str(lyr)
+    assert len(lyr.low_res_products) == 0
+
+
+def test_lowres_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_layer_cfg["low_res_product_name"] = "smol_foo"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    lyr.make_ready(minimal_dc)
+    assert len(lyr.low_res_products) == 1
 
 
 def test_double_underscore_product_name(minimal_layer_cfg, minimal_global_cfg):
@@ -233,6 +271,35 @@ def test_bad_product_name(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     assert "Could not find product" in str(excinfo.value)
     assert "foo" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
+
+
+def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
+    lyr = parse_ows_layer(minimal_multiprod_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert lyr.name == "a_layer"
+    assert not lyr.ready
+    lyr.make_ready(minimal_dc)
+    assert lyr.ready
+    assert "a_layer" in str(lyr)
+
+
+def test_multi_product_lowres(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
+    minimal_multiprod_cfg["low_res_product_names"] = ["smol_foo", "smol_bar"]
+    lyr = parse_ows_layer(minimal_multiprod_cfg,
+                              global_cfg=minimal_global_cfg)
+    lyr.make_ready(minimal_dc)
+    assert len(lyr.products) == 2
+    assert len(lyr.low_res_products) == 2
+
+
+def test_multi_product_name_mismatch(minimal_multiprod_cfg, minimal_global_cfg):
+    minimal_multiprod_cfg["low_res_product_names"] = ["smol_foo"]
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_multiprod_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "low_res_product_names" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
 
 def test_manual_merge(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["image_processing"]["manual_merge"] = True

@@ -23,7 +23,8 @@ def minimal_dc():
     }
     lmo = MagicMock()
     lmo.loc = {
-        "foo": nb
+        "foo": nb,
+        "bar": nb,
     }
     dc.list_measurements.return_value = lmo
     return dc
