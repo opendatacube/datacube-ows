@@ -252,7 +252,7 @@ or for multi-product layers:
     "low_res_product_names": ["summary_product_1", "summary_product_2"]
 
 The conditions under which to switch to the low-resolution product(s)
-are defined in the `resource_limits <#resource_limits_resource_limits>`_
+are defined in the `resource_limits <#resource-limits-resource-limits>`_
 section, discussed below.
 
 ---------------------------------
@@ -382,7 +382,7 @@ the list.  The entry is optional and defaults to (150, 180, 200, 160) -
 a semi-transparent light blue.
 
 Note that this entry has no effect if
-`low-resolution summary product(s) <#low_resolution_summary_products_low_res_product_name_s>`_
+`low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
 have been declared for the product.
 
 +++++++++++++++
