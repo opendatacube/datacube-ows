@@ -326,6 +326,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.products = []
+        self.lowres_products = []
         for i, prod_name in enumerate(self.product_names):
             if self.lowres_product_names:
                 lowres_prod_name = self.lowres_product_names[i]
