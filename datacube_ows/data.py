@@ -224,7 +224,7 @@ def get_map(args):
             qprof["too_many_datasets"] = too_many_datasets
             qprof["zoomed_out"] = zoomed_out
 
-        if stacker.resource_limited and not params.product.lowres_product_names:
+        if stacker.resource_limited and not params.product.low_res_product_names:
             qprof.start_event("extent-in-query")
             extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
             qprof.end_event("extent-in-query")
