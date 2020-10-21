@@ -221,6 +221,40 @@ E.g.
         ...
     }
 
+---------------------------------------------------------
+Low-Resolution Summary Products - low_res_product_name(s)
+---------------------------------------------------------
+
+If available, a parallel low-resolution summary product can be configured to
+be used for heavily zoomed-back queries that would require excessive
+Disk or S3 I/O to access from the main high-resolution product.
+
+This is done with the optional low_res_product_name entry (or for
+multi-product layers, the low_res_product_names entry) which is
+set to the ODC product name of the summary product (or list of ODC product
+names for multi-product layers)
+For multi-product
+layers, the low_res_product_names list must map directly to the product_names
+list, if provided.
+
+E.g.
+
+::
+
+    "product_name": "main_product",
+    "low_res_product_name": "summary_product",
+
+or for multi-product layers:
+
+::
+
+    "product_names": ["main_product_1", "main_product_2"]
+    "low_res_product_names": ["summary_product_1", "summary_product_2"]
+
+The conditions under which to switch to the low-resolution product(s)
+are defined in the ``resource_limits <#resource_limits_resource_limits>``_
+section, discussed below.
+
 ---------------------------------
 Time Resolution (time_resolution)
 ---------------------------------
@@ -346,6 +380,10 @@ It should be list of integers between 0 and 255.  There should be either
 three (red, green, blue) or four (red, green, blue, alpha) integers in
 the list.  The entry is optional and defaults to (150, 180, 200, 160) -
 a semi-transparent light blue.
+
+Note that this entry has no effect if
+`low-resolution summary product(s) <#low_resolution_summary_products_low_res_product_name_s>`_
+have been declared for the product.
 
 +++++++++++++++
 min_zoom_factor
