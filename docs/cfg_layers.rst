@@ -252,7 +252,7 @@ or for multi-product layers:
     "low_res_product_names": ["summary_product_1", "summary_product_2"]
 
 The conditions under which to switch to the low-resolution product(s)
-are defined in the ``resource_limits <#resource_limits_resource_limits>``_
+are defined in the `resource_limits <#resource_limits_resource_limits>`_
 section, discussed below.
 
 ---------------------------------
