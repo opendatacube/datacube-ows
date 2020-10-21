@@ -257,38 +257,22 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         try:
             self.parse_product_names(cfg)
-            for prod_name in self.product_names:
             if len(self.product_names) < 1:
                 raise ConfigException(f"No products declared in layer {self.name}")
             if len(self.lowres_product_names) not in (0, len(self.product_names)):
                 raise ConfigException(f"Lengths of product_names and lowres_product_names do not match in layer {self.name}")
             self.products = []
             self.lowres_products = []
-            for i, prod_name in enumerate(self.product_names):
-                if self.lowres_product_names:
-                    lowres_prod_name = self.lowres_product_names[i]
-                else:
-                    lowres_prod_name = None
+            for prod_name in self.product_names:
                 if "__" in prod_name:
                     # I think this was for subproducts which are currently broken
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
         self.declare_unready("products")
+        self.declare_unready("lowres_products")
         self.declare_unready("product")
         self.declare_unready("definition")
-                product = dc.index.products.get_by_name(prod_name)
-                if not product:
-                    raise ConfigException("Could not find product %s in datacube" % prod_name)
-                self.products.append(product)
-                if lowres_prod_name:
-                    product = dc.index.products.get_by_name(lowres_prod_name)
-                    if not product:
-                        raise ConfigException("Could not find product %s in datacube" % prod_name)
-                    self.lowres_products.append(product)
-
-            self.product = self.products[0]
-            self.definition = self.product.definition
 
         self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
         if self.time_resolution not in TIMERES_VALS:
@@ -342,11 +326,20 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.products = []
-        for prod_name in self.product_names:
+        for i, prod_name in enumerate(self.product_names):
+            if self.lowres_product_names:
+                lowres_prod_name = self.lowres_product_names[i]
+            else:
+                lowres_prod_name = None
             product = dc.index.products.get_by_name(prod_name)
             if not product:
                 raise ConfigException(f"Could not find product {prod_name} in datacube for layer {self.name}")
             self.products.append(product)
+            if lowres_prod_name:
+                product = dc.index.products.get_by_name(lowres_prod_name)
+                if not product:
+                    raise ConfigException("Could not find product %s in datacube" % prod_name)
+                self.lowres_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
         self.force_range_update(dc)
