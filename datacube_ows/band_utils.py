@@ -68,11 +68,16 @@ def single_band(data, band, band_mapper=None):
     return data[band]
 
 
-def band_quotient(data, band1, band2, band_mapper=None):
+def band_quotient(data, band1, band2, band_mapper=None, scale_from=None, scale_to=[0,255]):
     if band_mapper:
         band1=band_mapper(band1)
         band2=band_mapper(band2)
-    return data[band1] / data[band2]
+    unscaled = data[band1] / data[band2]
+    if scale_from:
+        scaled = scale_data(unscaled, scale_from, scale_to)
+    else:
+        scaled = unscaled
+    return scaled
 
 
 def band_quotient_sum(data, band1a, band1b, band2a, band2b, band_mapper=None):

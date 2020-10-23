@@ -31,9 +31,12 @@ from datacube_ows.utils import group_by_statistical
 _LOG = logging.getLogger(__name__)
 
 
-def read_config():
-    cfg_env = os.environ.get("DATACUBE_OWS_CFG")
+def read_config(path=None):
     cwd = None
+    if path:
+        cfg_env = path
+    else:
+        cfg_env = os.environ.get("DATACUBE_OWS_CFG")
     if not cfg_env:
         from datacube_ows.ows_cfg import ows_cfg as cfg
     elif "/" in cfg_env or cfg_env.endswith(".json"):
@@ -866,9 +869,10 @@ class OWSConfig(OWSConfigEntry):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, refresh=False):
+    def __init__(self, refresh=False, cfg=None):
         if not self.initialised or refresh:
-            cfg = read_config()
+            if not cfg:
+                cfg = read_config()
             super().__init__(cfg)
             self.initialised = True
             try:
