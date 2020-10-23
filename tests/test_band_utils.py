@@ -17,6 +17,7 @@ from datacube_ows.band_utils import (
     multi_date_delta,
     single_band_offset_log,
     single_band_arcsec,
+    radar_vegetation_index
 )
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
@@ -122,3 +123,8 @@ def test_single_band_arcsec(band_mapper):
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is None
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is None
     assert not single_band_arcsec(TEST_XARR, "b1", band_mapper=band_mapper) is None
+
+
+def test_rvi(band_mapper):
+    assert not radar_vegetation_index(TEST_XARR, "b1", "b2") is None
+    assert not radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper) is None

@@ -132,3 +132,13 @@ def single_band_offset_log(data, band, scale=1.0, scale_from=None, scale_to=None
     if scale_from:
         return scale_data(unscaled, scale_from, scale_to)
     return unscaled
+
+
+def radar_vegetation_index(data, band_hv, band_hh, band_mapper=None):
+    if band_mapper:
+        band_hv = band_mapper(band_hv)
+        band_hh = band_mapper(band_hh)
+    hv_sq = data[band_hv]*data[band_hv]
+    hh_sq = data[band_hh]*data[band_hh]
+    return (hv_sq * 4.0) / (hh_sq + hv_sq)
+
