@@ -2,9 +2,15 @@
 datacube-ows
 ===============================
 
-.. image:: https://img.shields.io/travis/opendatacube/datacube-ows.svg
-        :target: https://travis-ci.org/opendatacube/datacube-ows
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Linting/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ALinting
 
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Tests/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ATests
+
+.. image:: https://github.com/opendatacube/datacube-ows/workflows/Docker/badge.svg
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ADocker
+        
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Scan/badge.svg
         :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22Scan%22
 

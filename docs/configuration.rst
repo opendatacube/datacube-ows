@@ -175,6 +175,89 @@ can be supplied in any of the following ways:
 Note that this does not just apply when the included python or json entity is a dictionary/object.
 Any of the above include directives could expand to an array, or even to single integer or string.
 
+Configuration Inheritance
+-------------------------
+
+Sometimes you want to *almost* reuse a piece of configuration - e.g. you want a layer
+that is almost the same as an existing layer but with a handful of minor differences.
+Configuration inheritance addresses this use-case.
+
+Given a fully defined named configuration object that supports inheritance:
+
+::
+
+    parent_obj = {
+        "name": "obj1",
+        "foo": "bar",
+        "zing": "blat",
+    }
+
+You can easily define a new almost identical named object by inheriting from parent_obj,
+either directly:
+
+::
+
+    direct_child_obj = {
+        "inherits": parent_obj,
+        "name": "obj2",
+        "foo": "pow",
+    }
+
+Or by name:
+
+::
+
+    byname_child_obj = {
+        "inherits": {
+            "obj": "obj1",
+        },
+        "name": "obj3",
+        "foo": "pow",
+    }
+
+Direct inheritance can also be achieved via inclusion, as described above.
+Note that this is the only way to achieve direct inheritance in json. E.g.:
+
+::
+
+    include_direct_child_obj = {
+        "inherits": {
+            "include": "path.to.module.obj1",
+            "type": "python"
+        },
+        "name": "obj4",
+        "foo": "pow"
+    }
+
+In all three cases, the child object:
+
+1. creates a new unique name for itself,
+2. overrides the value of "foo" to "pow", and
+3. inherits the parent value of "zing" (by not explicitly overriding it).
+
+The child objects can also be used in turn as the parents of subsequent layers,
+as long as cyclic dependencies are avoided.
+
+There are two types of named configuration object that support inheritance:
+named `Layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ and
+`styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_.
+The exact way to inherit by name differs depending on the object type so
+`see <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>#inheritance`_
+the
+`relevant <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>#inheritance`_
+sections for details.
+
+The copying and updating of the parent configuration object is recursive
+
+Note that a layer or style can only inherit by name from a parent layer or style that has already
+been parsed by the config parser - i.e. it must appear earlier in the definition of the layers section.
+This restriction can be avoided using direct inheritance.
+
+Care should be taken of the special handling of lists in configuration:
+
+1. If the child entry is an empty list, this will replace the parent entry, resulting in an empty list.
+2. If the c
+
 General Config Structure
 ------------------------
 
@@ -213,7 +296,8 @@ section).
 
 There is no separate section for WMTS as WMTS is implemented as a thin wrapper around the WMS implementation.
 
-The `layers <cfg_layers.html>`_ section contains a list of layer configurations.  The configured layers define the
+The `layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ section
+contains a list of layer configurations.  The configured layers define the
 layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour. The layers section
 is always required.
 

@@ -61,7 +61,7 @@ def test_wcs1_getcap(ows_server):
 
 def test_wcs1_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -69,7 +69,7 @@ def test_wcs1_server(ows_server):
 
 def test_wcs1_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -94,7 +94,7 @@ def test_wcs1_getcoverage_geotiff(ows_server):
 
 def test_wcs1_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -130,7 +130,7 @@ def test_wcs1_getcoverage_netcdf(ows_server):
 
 def test_wcs1_getcoverage_exceptions(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     test_layer = wcs.contents[test_layer_name]
@@ -205,7 +205,7 @@ def test_wcs1_getcoverage_exceptions(ows_server):
 
 def test_wcs1_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -219,7 +219,7 @@ def test_wcs1_describecoverage(ows_server):
 
 def test_wcs20_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -228,7 +228,7 @@ def test_wcs20_server(ows_server):
 
 def test_wcs20_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -254,7 +254,7 @@ def test_wcs20_getcoverage_geotiff(ows_server):
 
 def test_wcs20_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -278,7 +278,7 @@ def test_wcs20_getcoverage_netcdf(ows_server):
 
 def test_wcs20_getcoverage_crs_alias(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -296,7 +296,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
 
 def test_wcs20_getcoverage_multidate(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -318,7 +318,7 @@ def test_wcs20_getcoverage_multidate(ows_server):
 
 def test_wcs21_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -328,7 +328,7 @@ def test_wcs21_server(ows_server):
 @pytest.mark.xfail(reason='Failing to pass xsd')
 def test_wcs21_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -344,7 +344,7 @@ def test_wcs21_describecoverage(ows_server):
 
 def test_wcs21_pattern_generated_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -359,7 +359,7 @@ def test_wcs21_pattern_generated_describecoverage(ows_server):
 
 def test_wcs21_getcoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1")
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)

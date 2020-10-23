@@ -1,5 +1,6 @@
 from xarray import Dataset
 
+from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.component import ComponentStyleDef
 from datacube_ows.styles.ramp import ColorRampDef
 
@@ -8,6 +9,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
     auto_legend = False
     def __init__(self, product, style_cfg):
         super(HybridStyleDef, self).__init__(product, style_cfg)
+        style_cfg = self._raw_cfg
         self.component_ratio = style_cfg["component_ratio"]
 
     def transform_single_date_data(self, data):
@@ -40,3 +42,6 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
             imgdata[band] = (d.dims, img_band_data.astype("uint8"))
 
         return imgdata
+
+
+StyleDefBase.register_subclass(HybridStyleDef, "component_ratio", priority=True)
