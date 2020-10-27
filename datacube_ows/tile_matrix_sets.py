@@ -4,7 +4,9 @@ class TileMatrixSet:
     def __init__(self, identifier, crs_name,
                  top_left, tile_size,
                  scale_set,
-                 layer_suffix,
+                 identifier_suffix,
+                 title_suffix,
+                 unit_coefficients=(1.0, 1.0),
                  initial_matrix_exponents=(0,0),
                  wkss=None,
                  force_raw_crs_name=False,):
@@ -16,7 +18,9 @@ class TileMatrixSet:
         self.scale_set = scale_set
         self.tile_size = tile_size
         self.initial_matrix_exponents = initial_matrix_exponents
-        self.layer_suffix = layer_suffix
+        self.unit_coefficients = unit_coefficients
+        self.identifier_suffix = identifier_suffix
+        self.title_suffix = title_suffix
 
     @property
     def crs_display(self):
@@ -25,6 +29,19 @@ class TileMatrixSet:
         if self.crs_name[:5] == "EPSG:":
             return f"urn:ogc:def:crs:EPSG::{self.crs_name[5:]}"
         return self.crs_name
+
+    def exponent(self, idx, scale_no):
+        init = self.initial_matrix_exponents[idx]
+        exponent = scale_no - init
+        if exponent < 0:
+            return 0
+        return scale_no
+
+    def width_exponent(self, scale_no):
+        return self.exponent(0, scale_no)
+
+    def height_exponent(self, scale_no):
+        return self.exponent(1, scale_no)
 
 # Scale denominators for WebMercator QuadTree Scale Set, starting from zoom level 0.
 # Currently goes to zoom level 14, where the pixel size at the equator is ~10m (i.e. Sentinel2 resolution)
@@ -56,9 +73,10 @@ google_web_mercator = TileMatrixSet(
     (256, 256),
     WebMercScaleSet,
     "webmerc",
+    "",
     wkss="urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible",
 )
 
-supported_tile_matrix_sets = [
+supportable_tile_matrix_sets = [
     google_web_mercator,
 ]
