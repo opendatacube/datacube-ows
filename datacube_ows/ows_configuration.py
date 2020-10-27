@@ -23,6 +23,7 @@ from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
     year_date_range
+from datacube_ows.tile_matrix_sets import supported_tile_matrix_sets
 
 import logging
 
@@ -966,6 +967,12 @@ class OWSConfig(OWSConfigEntry):
             self.published_CRSs[alias] = target_def.copy()
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
+
+        self.supported_tile_matrix_sets = []
+        if self.wmts:
+            for tms in supported_tile_matrix_sets:
+                if tms.crs_name in self.published_CRSs:
+                    self.supported_tile_matrix_sets.append(tms)
 
     def parse_wms(self, cfg):
         if not self.wms and not self.wmts:
