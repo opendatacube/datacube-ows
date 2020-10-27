@@ -133,8 +133,7 @@ def wmts_args_to_wms(args, cfg):
     if tms is None:
         raise WMTSException("Invalid Tile Matrix Set: " + tileMatrixSet)
 
-    if cfg.published_CRSs[tms.crs_name]["vertical_coord_first"]:
-        _LOG.warning("Potential Coordinate ordering issue")
+    crs_cfg = cfg.published_CRSs[tms.crs_name]
     try:
         tileMatrix = int(tileMatrix)
         if tileMatrix < 0 or tileMatrix >= len(tms.scale_set):
@@ -149,20 +148,24 @@ def wmts_args_to_wms(args, cfg):
         col = int(col)
     except ValueError:
         raise WMTSException("Invalid Tile Col: " + col)
-
+    pixel = [row, col]
+    tile_size = tms.tile_size
     matrix_origin = tms.top_left
     scale_denominator = tms.scale_set[tileMatrix]
-    pixel_span = [ scale_denominator * 0.00028 * u for u in tms.unit_coefficients]
-    tile_span = [ pixel_span[i] * tms.tile_size[i] for i in range(2)]
+    pixel_span = (scale_denominator * 0.00028 * u for u in tms.unit_coefficients)
+    tile_span = [ ps * ts for ps, ts in zip(pixel_span, tile_size)]
 
-    left  = matrix_origin[0] + col * tile_span[0]
-    right = left + tile_span[0]
-    upper = matrix_origin[1] - row * tile_span[1]
-    lower = upper - tile_span[1]
+    mins = [mo + p * ts for mo, p, ts in zip(matrix_origin, pixel, tile_span)]
+    maxs = [m + ts for m, ts in zip(mins, tile_span)]
 
-    wms_args["bbox"] = "%f,%f,%f,%f" % (
-        left, lower, right, upper
-    )
+    if crs_cfg["vertical_coord_first"]:
+        wms_args["bbox"] = "%f,%f,%f,%f" % (
+            mins[0], mins[1], maxs[0], maxs[1]
+        )
+    else:
+        wms_args["bbox"] = "%f,%f,%f,%f" % (
+            mins[1], mins[0], maxs[1], maxs[0]
+        )
 
     # GetFeatureInfo only args
     if "i" in args:

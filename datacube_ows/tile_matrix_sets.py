@@ -4,9 +4,7 @@ class TileMatrixSet:
     def __init__(self, identifier, crs_name,
                  top_left, tile_size,
                  scale_set,
-                 identifier_suffix,
-                 title_suffix,
-                 unit_coefficients=(1.0, 1.0),
+                 unit_coefficients=(1.0, -1.0),
                  initial_matrix_exponents=(0,0),
                  wkss=None,
                  force_raw_crs_name=False,):
@@ -19,8 +17,6 @@ class TileMatrixSet:
         self.tile_size = tile_size
         self.initial_matrix_exponents = initial_matrix_exponents
         self.unit_coefficients = unit_coefficients
-        self.identifier_suffix = identifier_suffix
-        self.title_suffix = title_suffix
 
     @property
     def crs_display(self):
@@ -72,8 +68,6 @@ google_web_mercator = TileMatrixSet(
     (-20037508.3427892, 20037508.3427892),
     (256, 256),
     WebMercScaleSet,
-    "webmerc",
-    "",
     wkss="urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible",
 )
 
