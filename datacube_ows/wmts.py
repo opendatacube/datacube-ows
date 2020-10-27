@@ -148,11 +148,11 @@ def wmts_args_to_wms(args, cfg):
         col = int(col)
     except ValueError:
         raise WMTSException("Invalid Tile Col: " + col)
-    pixel = [row, col]
+    pixel = [col, row]
     tile_size = tms.tile_size
     matrix_origin = tms.top_left
     scale_denominator = tms.scale_set[tileMatrix]
-    pixel_span = (scale_denominator * 0.00028 * u for u in tms.unit_coefficients)
+    pixel_span = [scale_denominator * 0.00028 * u for u in tms.unit_coefficients]
     tile_span = [ ps * ts for ps, ts in zip(pixel_span, tile_size)]
 
     mins = [mo + p * ts for mo, p, ts in zip(matrix_origin, pixel, tile_span)]
@@ -160,11 +160,11 @@ def wmts_args_to_wms(args, cfg):
 
     if crs_cfg["vertical_coord_first"]:
         wms_args["bbox"] = "%f,%f,%f,%f" % (
-            mins[0], mins[1], maxs[0], maxs[1]
+            maxs[1], mins[0], mins[1], maxs[0]
         )
     else:
         wms_args["bbox"] = "%f,%f,%f,%f" % (
-            mins[1], mins[0], maxs[1], maxs[0]
+            mins[0], maxs[1], maxs[0], mins[1]
         )
 
     # GetFeatureInfo only args
