@@ -31,7 +31,7 @@ class TileMatrixSet:
         exponent = scale_no - init
         if exponent < 0:
             return 0
-        return scale_no
+        return exponent
 
     def width_exponent(self, scale_no):
         return self.exponent(0, scale_no)
@@ -44,7 +44,7 @@ class TileMatrixSet:
 # Taken from the WMTS 1.0.0 spec, Annex E.4
 # Don't even think about changing these numbers unless you really, really know what you are doing.
 
-WebMercScaleSet = [
+webmerc_scale_set = [
     559082264.0287178,
     279541132.0143589,
     139770566.0071794,
@@ -62,15 +62,42 @@ WebMercScaleSet = [
     34123.67334159654,
 ]
 
+vicgrid_geocortex_scale_set = [
+    7559538.928601667,
+    3779769.4643008336,
+    1889884.7321504168,
+    944942.3660752084,
+    472471.1830376042,
+    236235.5915188021,
+    94494.23660752083,
+    47247.11830376041,
+    23623.559151880207,
+    9449.423660752083,
+    4724.711830376042,
+    2362.355915188021,
+    1181.1779575940104,
+    755.9538928601667,
+]
+
 google_web_mercator = TileMatrixSet(
     "WholeWorld_WebMercator",
     "EPSG:3857",
     (-20037508.3427892, 20037508.3427892),
     (256, 256),
-    WebMercScaleSet,
+    webmerc_scale_set,
     wkss="urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible",
+)
+
+vicgrid_geocortex_compatible = TileMatrixSet(
+    "EPSG:3111",
+    "EPSG:3111",
+    (1786000.0, 3081000.0),
+    (512, 512),
+    vicgrid_geocortex_scale_set,
+    initial_matrix_exponents=(-1, 0),
 )
 
 supportable_tile_matrix_sets = [
     google_web_mercator,
+    vicgrid_geocortex_compatible,
 ]

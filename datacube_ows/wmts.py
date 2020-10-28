@@ -120,7 +120,6 @@ def wmts_args_to_wms(args, cfg):
         "height": 256,
         "format": format_,
         "exceptions": "application/vnd.ogc.se_xml",
-        "crs": "EPSG:3857",
         "requestid": args["requestid"]
     }
 
@@ -133,6 +132,7 @@ def wmts_args_to_wms(args, cfg):
     if tms is None:
         raise WMTSException("Invalid Tile Matrix Set: " + tileMatrixSet)
 
+    wms_args["crs"] = tms.crs_name
     crs_cfg = cfg.published_CRSs[tms.crs_name]
     try:
         tileMatrix = int(tileMatrix)
