@@ -23,7 +23,7 @@ from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
     year_date_range
-from datacube_ows.tile_matrix_sets import supportable_tile_matrix_sets
+from datacube_ows.tile_matrix_sets import TileMatrixSet
 
 import logging
 
@@ -902,6 +902,16 @@ class OWSConfig(OWSConfigEntry):
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
 
+            try:
+                if self.wmts:
+                    self.parse_wmts(cfg.get("wmts", {}))
+                else:
+                    self.parse_wmts({})
+            except KeyError as e:
+                raise ConfigException(
+                    "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
+                )
+
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.native_product_index = {}
@@ -968,12 +978,6 @@ class OWSConfig(OWSConfigEntry):
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
 
-        self.supported_tile_matrix_sets = []
-        if self.wmts:
-            for tms in supportable_tile_matrix_sets:
-                if tms.crs_name in self.published_CRSs:
-                    self.supported_tile_matrix_sets.append(tms)
-
     def parse_wms(self, cfg):
         if not self.wms and not self.wmts:
             cfg = {}
@@ -1014,6 +1018,19 @@ class OWSConfig(OWSConfigEntry):
         # shouldn't need to keep these?
         # self.dummy_wcs_grid = False
         # self.create_wcs_grid = False
+
+    def parse_wmts(self, cfg):
+        tms_cfgs = TileMatrixSet.default_tm_sets.copy()
+        if "tile_matrix_sets" in cfg:
+            for identifier, tms in cfg["tile_matrix_sets"].items():
+                tms_cfgs[identifier] = tms
+        self.tile_matrix_sets = {}
+        for identifier, tms in tms_cfgs.items():
+            if len(identifier.split()) != 1:
+                raise ConfigException(f"Invalid identifier: {identifier}")
+            if identifier in self.tile_matrix_sets:
+                raise ConfigException(f"Tile matrix set identifiers must be unique: {identifier}")
+            self.tile_matrix_sets[identifier] = TileMatrixSet(identifier, tms, self)
 
     def parse_layers(self, cfg):
         self.product_index = {}

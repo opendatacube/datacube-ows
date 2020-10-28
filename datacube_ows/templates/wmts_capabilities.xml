@@ -155,15 +155,15 @@
                 <Value>{{ t }}</Value>
                 {% endfor %}
             </Dimension>
-            {% for tms in cfg.supported_tile_matrix_sets %}
+            {% for tms in cfg.tile_matrix_sets.keys() %}
             <TileMatrixSetLink>
-                <TileMatrixSet>{{ tms.identifier }}</TileMatrixSet>
+                <TileMatrixSet>{{ tms }}</TileMatrixSet>
             </TileMatrixSetLink>
             {% endfor %}
         </Layer>
         {% endif %}
         {% endfor %}
-        {% for tms in cfg.supported_tile_matrix_sets %}
+        {% for tms in cfg.tile_matrix_sets.values() %}
         <TileMatrixSet>
             <ows:Identifier>{{ tms.identifier }}</ows:Identifier>
             <ows:SupportedCRS>{{ tms.crs_display }}</ows:SupportedCRS>

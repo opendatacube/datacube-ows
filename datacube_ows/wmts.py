@@ -123,11 +123,12 @@ def wmts_args_to_wms(args, cfg):
         "requestid": args["requestid"]
     }
 
-    tms = None
-    for _tms in cfg.supported_tile_matrix_sets:
-        if tileMatrixSet == _tms.identifier or tileMatrixSet == _tms.wkss:
-            tms = _tms
-            break
+    tms = cfg.tile_matrix_sets.get(tileMatrixSet)
+    if not tms:
+        for _tms in cfg.tile_matrix_sets.values():
+            if tileMatrixSet == _tms.wkss:
+                tms = _tms
+                break
 
     if tms is None:
         raise WMTSException("Invalid Tile Matrix Set: " + tileMatrixSet)
