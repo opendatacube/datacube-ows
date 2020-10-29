@@ -132,7 +132,8 @@ vertical_coord_first:
 
 This section is required and must contain at least one geographical coordinate system (EPSG:4326 -
 aka WGS-84 is strongly recommended, but any geographical coordinate system will do).  The
-non-geographic Web Mercator CRS (EPSG:3857) is also strongly recommended.
+non-geographic Web Mercator CRS (EPSG:3857) is also strongly recommended, and is required
+if WMTS is activated.
 
 E.g.:
 

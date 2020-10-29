@@ -1258,7 +1258,8 @@ ows_cfg = {
         "access_constraints": "",
         # Supported co-ordinate reference systems. Any coordinate system supported by GDAL and Proj.4J can be used.
         # At least one CRS must be included.  At least one geographic CRS must be included if WCS is active.
-        # Web Mercator (EPSG:3857) and WGS-84 (EPSG:4326) are strongly recommended, but not required.
+        # WGS-84 (EPSG:4326) is strongly recommended, but not required.
+        # Web Mercator (EPSG:3857) is strongly recommended, but is only required if WMTS is active.
         "published_CRSs": {
             "EPSG:3857": {  # Web Mercator
                 "geographic": False,
@@ -1323,6 +1324,59 @@ ows_cfg = {
             "idsrus": "https://www.identifiers-r-us.com",
         }
     }, ####  End of "wms" section.
+
+    # Config items in the "wmts" section apply to the WMTS service only.
+    # Note that most items in the "wms" section apply to the WMTS service
+    # as well as the WMS service.
+    #
+    # Config items in the "wmts" section apply to all WMTS layers. All
+    # entries are optional and the entire section may be omitted.
+    "wmts": {
+        # Datacube-ows always supports the standard "Google Maps" style
+        # EPSG:3857-based tile matrix set.
+        # If you require a custom tile matrix set (or sets) you can
+        # define them here.
+        "tile_matrix_sets": {
+            # Example custom tile matrix set
+            # Vic Grid (EPSG:3111) GeoCortex compatible tile matrix set
+            # The key is the identifier for the Tile Matrix Set in WMTS instance.
+            "vicgrid": {
+                # The CRS of the Tile Matrix Set
+                "crs": "EPSG:3111",
+                # The coordinates (in the CRS above) of the upper-left
+                # corner of the tile matrix set.
+                "matrix_origin": (1786000.0, 3081000.0),
+                # The size of tiles (must not exceed the WMS maximum tile size)
+                "tile_size": (512, 512),
+                # The scale denominators (as defined in the WMTS spec) for
+                # the various zoom level from right out, to zoomed right in.
+                "scale_set": [
+                    7559538.928601667,
+                    3779769.4643008336,
+                    1889884.7321504168,
+                    944942.3660752084,
+                    472471.1830376042,
+                    236235.5915188021,
+                    94494.23660752083,
+                    47247.11830376041,
+                    23623.559151880207,
+                    9449.423660752083,
+                    4724.711830376042,
+                    2362.355915188021,
+                    1181.1779575940104,
+                    755.9538928601667,
+                ],
+                # Defaults to (0,0), which means the first tile matrix
+                # will have 1 tile (1x1), then doubling each time
+                # (then 2x2, 4x4, 8x8, 16x16, etc.)
+                #
+                # (1, 0) means the width  of the first tile matrix has
+                # is 2**1 = 2
+                # So tiles side by side (2x1) (then 4x2, 8x4, 16x8, etc.)
+                "matrix_exponent_initial_offsets": (1, 0),
+            },
+        }
+    },
 
     # Config items in the "wcs" section apply to the WCS service to all WCS coverages
     # (unless over-ridden).

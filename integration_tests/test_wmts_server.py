@@ -96,6 +96,23 @@ def test_wmts_gettile(ows_server):
     assert tile
     assert tile.info()['Content-Type'] == 'image/png'
 
+def test_wmts_gettile_wkss(ows_server):
+    wmts = WebMapTileService(url=ows_server.url+"/wmts")
+
+    contents = list(wmts.contents)
+    test_layer_name = contents[0]
+
+    tile = wmts.gettile(
+        layer=test_layer_name,
+        tilematrixset="urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible",
+        tilematrix='0',
+        row=0, column=0,
+        format="image/png"
+    )
+
+    assert tile
+    assert tile.info()['Content-Type'] == 'image/png'
+
 def test_wmts_gettile_exception(ows_server):
     wmts = WebMapTileService(url=ows_server.url+"/wmts")
 
