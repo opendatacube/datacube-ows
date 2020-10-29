@@ -25,19 +25,19 @@ webmerc_scale_set = [
 ]
 
 
-def validate_2d_array(array, id, label, typ):
+def validate_2d_array(array, ident, label, typ):
     try:
         if len(array) != 2:
-            raise ConfigException(f"In tile matrix set {id}, {label} must have two values: f{array}")
-        validate_array_typ(array, id, label, typ)
+            raise ConfigException(f"In tile matrix set {ident}, {label} must have two values: f{array}")
+        validate_array_typ(array, ident, label, typ)
     except TypeError:
-        raise ConfigException(f"In tile matrix set {id}, {label} must be a list of two values: f{array}")
+        raise ConfigException(f"In tile matrix set {ident}, {label} must be a list of two values: f{array}")
 
 
-def validate_array_typ(array, id, label, typ):
+def validate_array_typ(array, ident, label, typ):
     for elem in array:
         if not isinstance(elem, typ):
-            raise ConfigException(f"In tile matrix set {id}, {label} has non-{typ.__name__} value of type {elem.__class__.__name__}: {elem}")
+            raise ConfigException(f"In tile matrix set {ident}, {label} has non-{typ.__name__} value of type {elem.__class__.__name__}: {elem}")
 
 
 class TileMatrixSet(OWSConfigEntry):
