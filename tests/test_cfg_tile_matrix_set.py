@@ -9,6 +9,7 @@ from datacube_ows.tile_matrix_sets import TileMatrixSet
 def wwwm_tms_cfg():
     return TileMatrixSet.default_tm_sets["WholeWorld_WebMercator"].copy()
 
+
 @pytest.fixture
 def tmsmin_global_cfg():
     gcfg = MagicMock()
