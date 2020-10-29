@@ -174,7 +174,7 @@
                 <TileMatrix>
                     <ows:Identifier>{{ loop.index0 }}</ows:Identifier>
                     <ScaleDenominator>{{ denom }}</ScaleDenominator>
-                    <TopLeftCorner>{{ tms.top_left[0] }} {{ tms.top_left[1] }}</TopLeftCorner>
+                    <TopLeftCorner>{{ tms.matrix_origin[0] }} {{ tms.matrix_origin[1] }}</TopLeftCorner>
                     <TileWidth>{{ tms.tile_size[0] }}</TileWidth>
                     <TileHeight>{{ tms.tile_size[1] }}</TileHeight>
                     <MatrixWidth>{{ 2 ** tms.width_exponent(loop.index0) }}</MatrixWidth>
