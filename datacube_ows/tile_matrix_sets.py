@@ -59,8 +59,8 @@ class TileMatrixSet(OWSConfigEntry):
         self.crs_name = cfg["crs"]
         if self.crs_name not in self.global_cfg.published_CRSs:
             raise ConfigException(f"Tile matrix set {identifier} has unpublished CRS: {self.crs_name}")
-        self.top_left = cfg["matrix_origin"]
-        validate_2d_array(self.top_left, identifier, "Matrix origin", float)
+        self.matrix_origin = cfg["matrix_origin"]
+        validate_2d_array(self.matrix_origin, identifier, "Matrix origin", float)
         self.tile_size = cfg["tile_size"]
         validate_2d_array(self.tile_size, identifier, "Tile size", int)
         self.scale_set = cfg["scale_set"]
@@ -76,6 +76,10 @@ class TileMatrixSet(OWSConfigEntry):
         validate_2d_array(self.initial_matrix_exponents, identifier, "Initial matrix exponents", int)
         self.unit_coefficients = cfg.get("unit_coefficients", (1.0, -1.0))
         validate_2d_array(self.unit_coefficients, identifier, "Unit coefficients", float)
+
+    @property
+    def crs_cfg(self):
+        return self.global_cfg.published_CRSs[self.crs_name]
 
     @property
     def crs_display(self):
@@ -97,4 +101,23 @@ class TileMatrixSet(OWSConfigEntry):
 
     def height_exponent(self, scale_no):
         return self.exponent(1, scale_no)
+
+    def wms_bbox_coords(self, tile_matrix, row, col):
+        # Convert WMTS params to coordinate window for WMS
+        pixel = [col, row]
+        scale_denominator = self.scale_set[tile_matrix]
+        pixel_span = [scale_denominator * 0.00028 * u for u in self.unit_coefficients]
+        tile_span = [ps * ts for ps, ts in zip(pixel_span, self.tile_size)]
+
+        mins = [mo + p * ts for mo, p, ts in zip(self.matrix_origin, pixel, tile_span)]
+        maxs = [m + ts for m, ts in zip(mins, tile_span)]
+
+        if self.crs_cfg["vertical_coord_first"]:
+            return (
+                maxs[1], mins[0], mins[1], maxs[0]
+            )
+        else:
+            return (
+                mins[0], maxs[1], maxs[0], mins[1]
+            )
 
