@@ -1373,7 +1373,7 @@ ows_cfg = {
                 # (1, 0) means the width  of the first tile matrix has
                 # is 2**1 = 2
                 # So tiles side by side (2x1) (then 4x2, 8x4, 16x8, etc.)
-                "initial_matrix_exponents": (1, 0),
+                "matrix_exponent_initial_offsets": (1, 0),
             },
         }
     },
