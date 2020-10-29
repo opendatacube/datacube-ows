@@ -26,9 +26,13 @@ webmerc_scale_set = [
 
 
 def validate_2d_array(array, id, label, typ):
-    if len(array) != 2:
-        raise ConfigException(f"In tile matrix set {id}, {label} must have two values: f{array}")
-    validate_array_typ(array, id, label, typ)
+    try:
+        if len(array) != 2:
+            raise ConfigException(f"In tile matrix set {id}, {label} must have two values: f{array}")
+        validate_array_typ(array, id, label, typ)
+    except TypeError:
+        raise ConfigException(f"In tile matrix set {id}, {label} must be a list of two values: f{array}")
+
 
 def validate_array_typ(array, id, label, typ):
     for elem in array:
@@ -63,7 +67,9 @@ class TileMatrixSet(OWSConfigEntry):
         try:
             validate_array_typ(self.scale_set, identifier, "Scale set", float)
         except TypeError:
-            raise ConfigException(f"In tile matrix set {identifier}, scale_set is not iterable")
+            raise ConfigException(f"In tile matrix set {identifier}, scale_set is not a list")
+        if len(self.scale_set) < 1:
+            raise ConfigException(f"Tile matrix set {identifier} has no scale denominators in scale_set")
         self.force_raw_crs_name = bool(cfg.get("force_raw_crs_name", False))
         self.wkss = cfg.get("wkss")
         self.initial_matrix_exponents = cfg.get("initial_matrix_exponents", (0,0))
@@ -91,28 +97,4 @@ class TileMatrixSet(OWSConfigEntry):
 
     def height_exponent(self, scale_no):
         return self.exponent(1, scale_no)
-
-
-vicgrid_geocortex_compatible_cfg = {
-    "crs": "EPSG:3111",
-    "matrix_origin": (1786000.0, 3081000.0),
-    "tile_size": (512, 512),
-    "scale_set": [
-        7559538.928601667,
-        3779769.4643008336,
-        1889884.7321504168,
-        944942.3660752084,
-        472471.1830376042,
-        236235.5915188021,
-        94494.23660752083,
-        47247.11830376041,
-        23623.559151880207,
-        9449.423660752083,
-        4724.711830376042,
-        2362.355915188021,
-        1181.1779575940104,
-        755.9538928601667,
-    ],
-    "initial_matrix_exponents": (-1, 0),
-}
 

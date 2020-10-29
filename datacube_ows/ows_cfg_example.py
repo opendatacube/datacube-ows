@@ -1258,7 +1258,8 @@ ows_cfg = {
         "access_constraints": "",
         # Supported co-ordinate reference systems. Any coordinate system supported by GDAL and Proj.4J can be used.
         # At least one CRS must be included.  At least one geographic CRS must be included if WCS is active.
-        # Web Mercator (EPSG:3857) and WGS-84 (EPSG:4326) are strongly recommended, but not required.
+        # WGS-84 (EPSG:4326) is strongly recommended, but not required.
+        # Web Mercator (EPSG:3857) is strongly recommended, but is only required if WMTS is active.
         "published_CRSs": {
             "EPSG:3857": {  # Web Mercator
                 "geographic": False,
