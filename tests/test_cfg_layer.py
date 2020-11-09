@@ -396,6 +396,19 @@ def test_flag_bad_prod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     assert "a_layer" in str(excinfo.value)
 
 
+def test_flag_bad_lrprod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_layer_cfg["flags"] = {
+        "product": "foo",
+        "low_res_product": "foolookupfail",
+        "band": "band1"
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    with pytest.raises(ConfigException) as excinfo:
+        lyr.make_ready(dc=minimal_dc)
+    assert "foolookupfail" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
 def test_flag_info_mask(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     minimal_layer_cfg["flags"] = {
         "product": "foo",
