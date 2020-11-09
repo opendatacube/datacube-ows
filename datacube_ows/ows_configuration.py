@@ -433,7 +433,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 if pqn is not None:
                     pq_product = dc.index.products.get_by_name(pqn)
                     if pq_product is None:
-                        raise ConfigException("Could not find pq_product %s for %s in database" % (pqn, self.name))
+                        raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
                     self.pq_products.append(pq_product)
 
         self.info_mask = ~0

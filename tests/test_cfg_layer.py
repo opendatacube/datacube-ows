@@ -358,6 +358,18 @@ def test_flag_no_band(minimal_layer_cfg, minimal_global_cfg):
     assert "band" in str(excinfo.value)
 
 
+def test_flag_bad_prod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_layer_cfg["flags"] = {
+        "product": "foolookupfail",
+        "band": "band1"
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    with pytest.raises(ConfigException) as excinfo:
+        lyr.make_ready(dc=minimal_dc)
+    assert "foolookupfail" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
 def test_img_proc_no_extent_func(minimal_layer_cfg, minimal_global_cfg):
     del minimal_layer_cfg["image_processing"]["extent_mask_func"]
     with pytest.raises(ConfigException) as excinfo:
