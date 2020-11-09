@@ -49,3 +49,82 @@ def minimal_dc():
     dc.index.products.get_by_name = product_by_name
     return dc
 
+
+@pytest.fixture
+def minimal_global_cfg():
+    global_cfg=MagicMock()
+    global_cfg.keywords = {"global"}
+    global_cfg.attribution = "Global Attribution"
+    global_cfg.authorities = {
+        "auth0": "http://test.url/auth0",
+        "auth1": "http://test.url/auth1",
+    }
+    return global_cfg
+
+
+@pytest.fixture
+def minimal_parent():
+    parent = MagicMock()
+    parent.abstract = "Parent Abstract"
+    parent.keywords = {"global", "parent"}
+    parent.attribution = "Parent Attribution"
+    return parent
+
+
+@pytest.fixture
+def minimal_layer_cfg():
+    return {
+        "title": "The Title",
+        "abstract": "The Abstract",
+        "name": "a_layer",
+        "product_name": "foo",
+        "image_processing": {
+            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+        },
+        "styling": {
+            "default_style": "band1",
+            "styles": [
+                {
+                    "name": "band1",
+                    "title": "Single Band Test Style",
+                    "abstract": "",
+                    "components": {
+                        "red": {"band1": 1.0},
+                        "green": {"band1": 1.0},
+                        "blue": {"band1": 1.0},
+                    },
+                    "scale_range": [0, 1024]
+                }
+            ]
+        }
+    }
+
+
+@pytest.fixture
+def minimal_multiprod_cfg():
+    return {
+        "title": "The Title",
+        "abstract": "The Abstract",
+        "name": "a_layer",
+        "multi_product": True,
+        "product_names": ["foo", "bar"],
+        "image_processing": {
+            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+        },
+        "styling": {
+            "default_style": "band1",
+            "styles": [
+                {
+                    "name": "band1",
+                    "title": "Single Band Test Style",
+                    "abstract": "",
+                    "components": {
+                        "red": {"band1": 1.0},
+                        "green": {"band1": 1.0},
+                        "blue": {"band1": 1.0},
+                    },
+                    "scale_range": [0, 1024]
+                }
+            ]
+        }
+    }
