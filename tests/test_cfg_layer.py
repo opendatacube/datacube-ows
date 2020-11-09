@@ -370,6 +370,22 @@ def test_flag_bad_prod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     assert "a_layer" in str(excinfo.value)
 
 
+def test_flag_info_mask(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_layer_cfg["flags"] = {
+        "product": "foo",
+        "band": "band4",
+        "ignore_info_flags": ["moo", "blat", "zap"]
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    lyr.make_ready(dc=minimal_dc)
+    assert not 1 & lyr.info_mask
+    assert 2 & lyr.info_mask
+    assert not 4 & lyr.info_mask
+    assert 8 & lyr.info_mask
+    assert not 16 & lyr.info_mask
+    assert 32 & lyr.info_mask
+
+
 def test_img_proc_no_extent_func(minimal_layer_cfg, minimal_global_cfg):
     del minimal_layer_cfg["image_processing"]["extent_mask_func"]
     with pytest.raises(ConfigException) as excinfo:
@@ -442,3 +458,4 @@ def test_invalid_native_format(minimal_layer_cfg, minimal_global_cfg):
                               global_cfg=minimal_global_cfg)
     assert "a_layer" in str(excinfo.value)
     assert "geosplunge" in str(excinfo.value)
+

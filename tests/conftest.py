@@ -31,7 +31,21 @@ def minimal_dc():
     def product_by_name(s):
         if 'lookupfail' in s:
             return None
-        else:
-            return MagicMock()
+        mprod  = MagicMock()
+        flag_def = {
+            "moo":   {"bits": 0},
+            "floop": {"bits": 1},
+            "blat":  {"bits": 2},
+            "pow":   {"bits": 3},
+            "zap":   {"bits": 4},
+            "dang":  {"bits": 5},
+        }
+        mprod.lookup_measurements.return_value = {
+            "band4": {
+                "flags_definition": flag_def
+            }
+        }
+        return mprod
     dc.index.products.get_by_name = product_by_name
     return dc
+

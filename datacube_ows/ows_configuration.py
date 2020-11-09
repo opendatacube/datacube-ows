@@ -720,6 +720,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             subs = {
                 "layer": self.product
             }
+        return super().lookup(cfg, keyvals, subs)
     @classmethod
     def lookup_impl(cls, cfg, keyvals, subs=None):
         try:
