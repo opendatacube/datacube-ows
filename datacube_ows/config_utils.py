@@ -73,27 +73,11 @@ def import_python_obj(path):
     return obj
 
 
-def accum_min(a, b):
-    if a is None:
-        return b
-    elif b is None:
-        return a
-    else:
-        return min(a, b)
-
-
-def accum_max(a, b):
-    if a is None:
-        return b
-    elif b is None:
-        return a
-    else:
-        return max(a, b)
-
 class OWSConfigNotReady(ConfigException):
     pass
 
-# Base classes for configuration objecta
+
+# Base classes for configuration objects
 class OWSConfigEntry:
     # Parse and validate the json but don't access the database.
     def __init__(self, cfg, *args, **kwargs):

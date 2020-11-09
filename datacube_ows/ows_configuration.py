@@ -261,14 +261,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         try:
             self.parse_product_names(cfg)
-            if len(self.product_names) < 1:
-                raise ConfigException(f"No products declared in layer {self.name}")
             if len(self.low_res_product_names) not in (0, len(self.product_names)):
                 raise ConfigException(f"Lengths of product_names and low_res_product_names do not match in layer {self.name}")
             for prod_name in self.product_names:
                 if "__" in prod_name:
                     # I think this was for subproducts which are currently broken
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
+        except IndexError:
+            raise ConfigException(f"No products declared in layer {self.name}")
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
         self.declare_unready("products")
@@ -341,7 +341,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if low_res_prod_name:
                 product = dc.index.products.get_by_name(low_res_prod_name)
                 if not product:
-                    raise ConfigException("Could not find product %s in datacube" % prod_name)
+                    raise ConfigException(f"Could not find product {low_res_prod_name} in datacube for layer {self.name}")
                 self.low_res_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
@@ -433,8 +433,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 if pqn is not None:
                     pq_product = dc.index.products.get_by_name(pqn)
                     if pq_product is None:
-                        raise ConfigException("Could not find pq_product %s for %s in database" % (pqn, self.name))
+                        raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
                     self.pq_products.append(pq_product)
+        if self.pq_low_res_names:
+            for pqn in self.pq_low_res_names:
+                if pqn is not None:
+                    pq_product = dc.index.products.get_by_name(pqn)
+                    if pq_product is None:
+                        raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
+                    self.pq_low_res_products.append(pq_product)
 
         self.info_mask = ~0
         if self.pq_products:
@@ -720,6 +727,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             subs = {
                 "layer": self.product
             }
+        return super().lookup(cfg, keyvals, subs)
     @classmethod
     def lookup_impl(cls, cfg, keyvals, subs=None):
         try:
@@ -757,6 +765,7 @@ class OWSProductLayer(OWSNamedLayer):
         self.pq_names = [ self.pq_name ]
 
         if "low_res_product" in cfg:
+            self.pq_low_res_name = cfg.get("low_res_product")
             self.pq_low_res_names = [self.pq_low_res_name]
         else:
             self.pq_low_res_names = self.low_res_product_names
@@ -789,7 +798,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
             self.pq_names = list(self.product_names)
         self.pq_name = self.pq_names[0]
 
-        if "lowres_products" in cfg:
+        if "low_res_products" in cfg:
             self.pq_low_res_names = cfg["low_res_products"]
             self.pq_low_res_name = self.pq_names[0]
         else:
