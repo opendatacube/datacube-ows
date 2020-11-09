@@ -263,15 +263,36 @@ def test_no_product_name(minimal_layer_cfg, minimal_global_cfg):
 
 
 def test_bad_product_name(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_layer_cfg["product_name"] = "foolookupfail"
     minimal_dc.index.products.get_by_name.return_value = None
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     with pytest.raises(ConfigException) as excinfo:
         lyr.make_ready(dc=minimal_dc)
     assert "Could not find product" in str(excinfo.value)
-    assert "foo" in str(excinfo.value)
+    assert "foolookupfail" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
 
+
+def test_bad_lowres_product_name(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_layer_cfg["low_res_product_name"] = "smolfoolookupfail"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with pytest.raises(ConfigException) as excinfo:
+        lyr.make_ready(dc=minimal_dc)
+    assert "Could not find product" in str(excinfo.value)
+    assert "smolfoolookupfail" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
+def test_noprod_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
+    minimal_multiprod_cfg["product_names"] = []
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_multiprod_cfg,
+                          global_cfg=minimal_global_cfg)
+
+    assert "a_layer" in str(excinfo.value)
+    assert "No products declared" in str(excinfo.value)
 
 def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
     lyr = parse_ows_layer(minimal_multiprod_cfg,

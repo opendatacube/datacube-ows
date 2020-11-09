@@ -27,4 +27,11 @@ def minimal_dc():
         "bar": nb,
     }
     dc.list_measurements.return_value = lmo
+
+    def product_by_name(s):
+        if 'lookupfail' in s:
+            return None
+        else:
+            return MagicMock()
+    dc.index.products.get_by_name = product_by_name
     return dc

@@ -261,14 +261,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         try:
             self.parse_product_names(cfg)
-            if len(self.product_names) < 1:
-                raise ConfigException(f"No products declared in layer {self.name}")
             if len(self.low_res_product_names) not in (0, len(self.product_names)):
                 raise ConfigException(f"Lengths of product_names and low_res_product_names do not match in layer {self.name}")
             for prod_name in self.product_names:
                 if "__" in prod_name:
                     # I think this was for subproducts which are currently broken
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
+        except IndexError:
+            raise ConfigException(f"No products declared in layer {self.name}")
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
         self.declare_unready("products")
@@ -341,7 +341,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if low_res_prod_name:
                 product = dc.index.products.get_by_name(low_res_prod_name)
                 if not product:
-                    raise ConfigException("Could not find product %s in datacube" % prod_name)
+                    raise ConfigException(f"Could not find product {low_res_prod_name} in datacube for layer {self.name}")
                 self.low_res_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
