@@ -307,10 +307,36 @@ def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal
 def test_multi_product_lowres(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
     minimal_multiprod_cfg["low_res_product_names"] = ["smol_foo", "smol_bar"]
     lyr = parse_ows_layer(minimal_multiprod_cfg,
-                              global_cfg=minimal_global_cfg)
+                          global_cfg=minimal_global_cfg)
     lyr.make_ready(minimal_dc)
     assert len(lyr.products) == 2
     assert len(lyr.low_res_products) == 2
+
+
+def test_multi_product_pq(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
+    minimal_multiprod_cfg["flags"] = {
+        "product": ["flag_foo", "flag_bar"],
+        "band": "band4",
+    }
+    lyr = parse_ows_layer(minimal_multiprod_cfg,
+                          global_cfg=minimal_global_cfg)
+    lyr.make_ready(minimal_dc)
+    assert len(lyr.products) == 2
+    assert len(lyr.pq_products) == 2
+
+
+def test_multi_product_lrpq(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
+    minimal_multiprod_cfg["flags"] = {
+        "products": ["flag_foo", "flag_bar"],
+        "low_res_products": ["smol_flag_foo", "smol_flag_bar"],
+        "band": "band4",
+    }
+    lyr = parse_ows_layer(minimal_multiprod_cfg,
+                              global_cfg=minimal_global_cfg)
+    lyr.make_ready(minimal_dc)
+    assert len(lyr.products) == 2
+    assert len(lyr.pq_products) == 2
+    assert len(lyr.pq_low_res_products) == 2
 
 
 def test_multi_product_name_mismatch(minimal_multiprod_cfg, minimal_global_cfg):

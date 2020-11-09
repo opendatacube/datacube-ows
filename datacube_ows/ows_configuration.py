@@ -435,6 +435,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     if pq_product is None:
                         raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
                     self.pq_products.append(pq_product)
+        if self.pq_low_res_names:
+            for pqn in self.pq_low_res_names:
+                if pqn is not None:
+                    pq_product = dc.index.products.get_by_name(pqn)
+                    if pq_product is None:
+                        raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
+                    self.pq_low_res_products.append(pq_product)
 
         self.info_mask = ~0
         if self.pq_products:
@@ -758,6 +765,7 @@ class OWSProductLayer(OWSNamedLayer):
         self.pq_names = [ self.pq_name ]
 
         if "low_res_product" in cfg:
+            self.pq_low_res_name = cfg.get("low_res_product")
             self.pq_low_res_names = [self.pq_low_res_name]
         else:
             self.pq_low_res_names = self.low_res_product_names
@@ -790,7 +798,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
             self.pq_names = list(self.product_names)
         self.pq_name = self.pq_names[0]
 
-        if "lowres_products" in cfg:
+        if "low_res_products" in cfg:
             self.pq_low_res_names = cfg["low_res_products"]
             self.pq_low_res_name = self.pq_names[0]
         else:
