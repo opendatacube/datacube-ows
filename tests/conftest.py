@@ -24,6 +24,8 @@ def minimal_dc():
     }
     lmo = MagicMock()
     lmo.loc = {
+        "foo_nativeres": nb,
+        "foo_nonativeres": nb,
         "foo_badnativecrs": nb,
         "foo_nativecrs": nb,
         "foo_nonativecrs": nb,
@@ -49,23 +51,24 @@ def minimal_dc():
                 "flags_definition": flag_def
             }
         }
+        mprod.definition = {"storage": {}}
         if 'nonativecrs' in s:
-            mprod.definition = {
-                "storage": {
-                }
-            }
+            pass
         elif 'badnativecrs' in s:
-            mprod.definition = {
-                "storage": {
-                    "crs": "EPSG:9999"
-                }
-            }
+            mprod.definition["storage"]["crs"] = "EPSG:9999"
         elif 'nativecrs' in s:
-            mprod.definition = {
-                "storage": {
-                    "crs": "EPSG:4326"
-                }
+            mprod.definition["storage"]["crs"] = "EPSG:4326"
+        else:
+            pass
+        if 'nonativeres' in s:
+            pass
+        elif 'nativeres' in s:
+            mprod.definition["storage"]["resolution"] = {
+                "latitude": 0.001,
+                "longitude": 0.001,
             }
+        else:
+            pass
         return mprod
     dc.index.products.get_by_name = product_by_name
     return dc
@@ -209,9 +212,8 @@ def mock_range():
         "end_time": times[-1],
         "time_set": set(times),
         "bboxes": {
-            "top": 0.1,
-            "bottom": -0.1,
-            "left": 0.1,
-            "right": -0.1,
+            "EPSG:4326": {"top": 0.1, "bottom": -0.1, "left": 0.1, "right": -0.1,},
+            "EPSG:3577": {"top": 0.1, "bottom": -0.1, "left": 0.1, "right": -0.1,},
+            "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": 0.1, "right": -0.1,},
         }
     }

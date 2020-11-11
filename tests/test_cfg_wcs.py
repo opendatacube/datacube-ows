@@ -65,3 +65,21 @@ def test_native_crs_unpublished(minimal_global_cfg, minimal_layer_cfg, minimal_d
     assert "EPSG:9999" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "not in published CRSs" in str(excinfo.value)
+
+
+def test_no_native_resolution(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
+    minimal_global_cfg.wcs = True
+    minimal_layer_cfg["wcs"] = {
+        "native_crs": "EPSG:4326",
+        "default_bands": ["band1", "band2", "band3"],
+    }
+    minimal_layer_cfg["product_name"] = "foo_nonativeres"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        with pytest.raises(ConfigException) as excinfo:
+            lyr.make_ready(minimal_dc)
+    assert "a_layer" in str(excinfo.value)
+    assert "No native resolution" in str(excinfo.value)
+
