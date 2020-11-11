@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -23,6 +24,8 @@ def minimal_dc():
     }
     lmo = MagicMock()
     lmo.loc = {
+        "foo_nativecrs": nb,
+        "foo_nonativecrs": nb,
         "foo": nb,
         "bar": nb,
     }
@@ -45,6 +48,17 @@ def minimal_dc():
                 "flags_definition": flag_def
             }
         }
+        if 'nonativecrs' in s:
+            mprod.definition = {
+                "storage": {
+                }
+            }
+        elif 'nativecrs' in s:
+            mprod.definition = {
+                "storage": {
+                    "crs": "EPSG:4326"
+                }
+            }
         return mprod
     dc.index.products.get_by_name = product_by_name
     return dc
@@ -58,6 +72,48 @@ def minimal_global_cfg():
     global_cfg.authorities = {
         "auth0": "http://test.url/auth0",
         "auth1": "http://test.url/auth1",
+    }
+    global_cfg.published_CRSs = {
+        "EPSG:3857": {  # Web Mercator
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+            "vertical_coord_first": False,
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857",
+            "alias_of": None,
+        },
+        "EPSG:4326": {  # WGS-84
+            "geographic": True,
+            "vertical_coord_first": True,
+            "horizontal_coord": "longitude",
+            "vertical_coord": "latitude",
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "alias_of": None,
+        },
+        "EPSG:3577": {
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+            "vertical_coord_first": False,
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577",
+            "alias_of": None,
+        },
+        "TEST:CRS": {
+            "geographic": False,
+            "horizontal_coord": "horrible_zonts",
+            "vertical_coord": "vertex_calories",
+            "vertical_coord_first": False,
+            "gml_name": "TEST/CRS",
+            "alias_of": None,
+        },
+        "TEST:NATIVE_CRS": {
+            "geographic": False,
+            "horizontal_coord": "hortizonal_cults",
+            "vertical_coord": "verbal_tics",
+            "vertical_coord_first": False,
+            "gml_name": "TEST/NATIVE_CRS",
+            "alias_of": None,
+        },
     }
     return global_cfg
 
@@ -126,5 +182,29 @@ def minimal_multiprod_cfg():
                     "scale_range": [0, 1024]
                 }
             ]
+        }
+    }
+
+@pytest.fixture
+def mock_range():
+    times = [datetime.datetime(2010, 1, 1), datetime.datetime(2010, 1, 2)]
+    return {
+        "lat": {
+            "min": -0.1,
+            "max": 0.1,
+        },
+        "lon": {
+            "min": -0.1,
+            "max": 0.1,
+        },
+        "times": times,
+        "start_time": times[0],
+        "end_time": times[-1],
+        "time_set": set(times),
+        "bboxes": {
+            "top": 0.1,
+            "bottom": -0.1,
+            "left": 0.1,
+            "right": -0.1,
         }
     }

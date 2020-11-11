@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSLayer, OWSFolder, parse_ows_layer
@@ -149,13 +149,16 @@ def test_make_ready_catch_errors(minimal_global_cfg, minimal_dc):
     assert lyr.ready
 
 
-def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    lyr.make_ready(minimal_dc)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
     assert lyr.ready
+    assert not lyr.hide
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
 
@@ -217,13 +220,16 @@ def test_noprod_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_
     assert "a_layer" in str(excinfo.value)
     assert "No products declared" in str(excinfo.value)
 
-def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
+def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc, mock_range):
     lyr = parse_ows_layer(minimal_multiprod_cfg,
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    lyr.make_ready(minimal_dc)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
     assert lyr.ready
+    assert not lyr.hide
     assert "a_layer" in str(lyr)
 
 

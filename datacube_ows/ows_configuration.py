@@ -284,7 +284,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
-        self.declare_unready("hide")
         # TODO: sub-ranges
         self.band_idx = BandIndex(self, cfg.get("bands"))
         self.parse_resource_limits(cfg.get("resource_limits", {}))
@@ -357,7 +356,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
-        super().make_ready(dc, *args, **kwargs)
+        if not self.hide:
+            super().make_ready(dc, *args, **kwargs)
 
     # pylint: disable=attribute-defined-outside-init
     def parse_resource_limits(self, cfg):
@@ -513,7 +513,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_wcs(self, dc):
-        if self.wcs:
+        if self.global_cfg.wcs and self.wcs:
             # Native CRS
             try:
                 self.native_CRS = self.product.definition["storage"]["crs"]
