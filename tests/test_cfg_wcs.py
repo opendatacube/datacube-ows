@@ -1,3 +1,4 @@
+import math
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -82,4 +83,59 @@ def test_no_native_resolution(minimal_global_cfg, minimal_layer_cfg, minimal_dc,
             lyr.make_ready(minimal_dc)
     assert "a_layer" in str(excinfo.value)
     assert "No native resolution" in str(excinfo.value)
+
+
+def test_no_native_resolution_noniter(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
+    minimal_global_cfg.wcs = True
+    minimal_layer_cfg["wcs"] = {
+        "native_crs": "EPSG:4326",
+        "default_bands": ["band1", "band2", "band3"],
+        "native_resolution": 45,
+    }
+    minimal_layer_cfg["product_name"] = "foo_nonativeres"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        with pytest.raises(ConfigException) as excinfo:
+            lyr.make_ready(minimal_dc)
+    assert "a_layer" in str(excinfo.value)
+    assert "Invalid native resolution" in str(excinfo.value)
+
+
+def test_no_native_resolution_badlen(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
+    minimal_global_cfg.wcs = True
+    minimal_layer_cfg["wcs"] = {
+        "native_crs": "EPSG:4326",
+        "default_bands": ["band1", "band2", "band3"],
+        "native_resolution": [33,45,2234],
+    }
+    minimal_layer_cfg["product_name"] = "foo_nonativeres"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        with pytest.raises(ConfigException) as excinfo:
+            lyr.make_ready(minimal_dc)
+    assert "a_layer" in str(excinfo.value)
+    assert "Invalid native resolution" in str(excinfo.value)
+
+
+def test_native_resolution_mismatch(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
+    minimal_global_cfg.wcs = True
+    minimal_layer_cfg["wcs"] = {
+        "native_crs": "EPSG:4326",
+        "default_bands": ["band1", "band2", "band3"],
+        "native_resolution": [0.1, 0.1],
+    }
+    minimal_layer_cfg["product_name"] = "foo_nativeres"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
+    assert not lyr.hide
+    assert lyr.ready
+    assert math.isclose(lyr.resolution_x, 0.001, rel_tol=1e-8)
+    assert math.isclose(lyr.resolution_y, 0.001, rel_tol=1e-8)
 
