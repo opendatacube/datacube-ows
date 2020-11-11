@@ -1,28 +1,8 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSLayer, OWSFolder, parse_ows_layer
-
-@pytest.fixture
-def minimal_global_cfg():
-    global_cfg=MagicMock()
-    global_cfg.keywords = {"global"}
-    global_cfg.attribution = "Global Attribution"
-    global_cfg.authorities = {
-        "auth0": "http://test.url/auth0",
-        "auth1": "http://test.url/auth1",
-    }
-    return global_cfg
-
-
-@pytest.fixture
-def minimal_parent():
-    parent = MagicMock()
-    parent.abstract = "Parent Abstract"
-    parent.keywords = {"global", "parent"}
-    parent.attribution = "Parent Attribution"
-    return parent
 
 def test_minimal_layer_create(minimal_global_cfg):
     lyr = OWSLayer({
@@ -169,70 +149,16 @@ def test_make_ready_catch_errors(minimal_global_cfg, minimal_dc):
     assert lyr.ready
 
 
-@pytest.fixture
-def minimal_layer_cfg():
-    return {
-        "title": "The Title",
-        "abstract": "The Abstract",
-        "name": "a_layer",
-        "product_name": "foo",
-        "image_processing": {
-            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-        },
-        "styling": {
-            "default_style": "band1",
-            "styles": [
-                {
-                    "name": "band1",
-                    "title": "Single Band Test Style",
-                    "abstract": "",
-                    "components": {
-                        "red": {"band1": 1.0},
-                        "green": {"band1": 1.0},
-                        "blue": {"band1": 1.0},
-                    },
-                    "scale_range": [0, 1024]
-                }
-            ]
-        }
-    }
-
-@pytest.fixture
-def minimal_multiprod_cfg():
-    return {
-        "title": "The Title",
-        "abstract": "The Abstract",
-        "name": "a_layer",
-        "multi_product": True,
-        "product_names": ["foo", "bar"],
-        "image_processing": {
-            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-        },
-        "styling": {
-            "default_style": "band1",
-            "styles": [
-                {
-                    "name": "band1",
-                    "title": "Single Band Test Style",
-                    "abstract": "",
-                    "components": {
-                        "red": {"band1": 1.0},
-                        "green": {"band1": 1.0},
-                        "blue": {"band1": 1.0},
-                    },
-                    "scale_range": [0, 1024]
-                }
-            ]
-        }
-    }
-
-def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    lyr.make_ready(minimal_dc)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
     assert lyr.ready
+    assert not lyr.hide
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
 
@@ -294,13 +220,16 @@ def test_noprod_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_
     assert "a_layer" in str(excinfo.value)
     assert "No products declared" in str(excinfo.value)
 
-def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
+def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc, mock_range):
     lyr = parse_ows_layer(minimal_multiprod_cfg,
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    lyr.make_ready(minimal_dc)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
     assert lyr.ready
+    assert not lyr.hide
     assert "a_layer" in str(lyr)
 
 
@@ -387,6 +316,19 @@ def test_flag_no_band(minimal_layer_cfg, minimal_global_cfg):
 def test_flag_bad_prod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     minimal_layer_cfg["flags"] = {
         "product": "foolookupfail",
+        "band": "band1"
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    with pytest.raises(ConfigException) as excinfo:
+        lyr.make_ready(dc=minimal_dc)
+    assert "foolookupfail" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
+def test_flag_bad_lrprod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+    minimal_layer_cfg["flags"] = {
+        "product": "foo",
+        "low_res_product": "foolookupfail",
         "band": "band1"
     }
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)

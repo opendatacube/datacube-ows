@@ -284,7 +284,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
-        self.declare_unready("hide")
         # TODO: sub-ranges
         self.band_idx = BandIndex(self, cfg.get("bands"))
         self.parse_resource_limits(cfg.get("resource_limits", {}))
@@ -357,7 +356,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
-        super().make_ready(dc, *args, **kwargs)
+        if not self.hide:
+            super().make_ready(dc, *args, **kwargs)
 
     # pylint: disable=attribute-defined-outside-init
     def parse_resource_limits(self, cfg):
@@ -440,7 +440,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 if pqn is not None:
                     pq_product = dc.index.products.get_by_name(pqn)
                     if pq_product is None:
-                        raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
+                        raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.name} in datacube")
                     self.pq_low_res_products.append(pq_product)
 
         self.info_mask = ~0
@@ -513,7 +513,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_wcs(self, dc):
-        if self.wcs:
+        if self.global_cfg.wcs and self.wcs:
             # Native CRS
             try:
                 self.native_CRS = self.product.definition["storage"]["crs"]
@@ -530,9 +530,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if not self.native_CRS:
                 raise ConfigException(f"No native CRS could be found for layer {self.name}")
             if self.native_CRS not in self.global_cfg.published_CRSs:
-                raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
-                    self.product_name,
-                    self.native_CRS))
+                raise ConfigException(f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs")
             self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
             # Prepare Rectified Grids
             try:
@@ -607,7 +605,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                                            native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
 
             if self.grid_high_x == 0:
-                err_str = f"Grid High X is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
+                err_str = f"Grid High x is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
                 raise ConfigException(err_str)
             if self.grid_high_y == 0:
                 err_str = f"Grid High y is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: x_res={self.resolution_y}"
@@ -661,7 +659,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         finally:
             if not ext_dc:
                 release_cube(dc)
-
     @property
     def ranges(self):
         if self.dynamic:
@@ -674,20 +671,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         bboxes = {}
         for crs_id, bbox in self._ranges["bboxes"].items():
             if crs_id in self.global_cfg.published_CRSs:
-                if self.global_cfg.published_CRSs[crs_id].get("vertical_coord_first"):
-                    bboxes[crs_id] = {
-                        "right": bbox["bottom"],
-                         "left": bbox["top"],
-                         "top": bbox["left"],
-                         "bottom": bbox["right"]
-                     }
-                else:
-                    bboxes[crs_id] = {
-                        "right": bbox["right"],
-                        "left": bbox["left"],
-                        "top": bbox["top"],
-                        "bottom": bbox["bottom"]
-                    }
+                # Assume we've already handled coordinate swapping for
+                # Vertical-coord first CRSs.   Top is top, left is left.
+                bboxes[crs_id] = {
+                    "right": bbox["right"],
+                    "left": bbox["left"],
+                    "top": bbox["top"],
+                    "bottom": bbox["bottom"]
+                }
         return bboxes
 
     def layer_count(self):
