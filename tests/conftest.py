@@ -212,8 +212,8 @@ def mock_range():
         "end_time": times[-1],
         "time_set": set(times),
         "bboxes": {
-            "EPSG:4326": {"top": 0.1, "bottom": -0.1, "left": 0.1, "right": -0.1,},
-            "EPSG:3577": {"top": 0.1, "bottom": -0.1, "left": 0.1, "right": -0.1,},
-            "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": 0.1, "right": -0.1,},
+            "EPSG:4326": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1,},
+            "EPSG:3577": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1,},
+            "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1,},
         }
     }

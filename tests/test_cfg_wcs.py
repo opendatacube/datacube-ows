@@ -139,3 +139,38 @@ def test_native_resolution_mismatch(minimal_global_cfg, minimal_layer_cfg, minim
     assert math.isclose(lyr.resolution_x, 0.001, rel_tol=1e-8)
     assert math.isclose(lyr.resolution_y, 0.001, rel_tol=1e-8)
 
+
+def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
+    minimal_global_cfg.wcs = True
+    minimal_layer_cfg["wcs"] = {
+        "native_crs": "EPSG:4326",
+        "default_bands": ["band1", "band2", "band3"],
+    }
+    minimal_layer_cfg["product_name"] = "foo_nativeres"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    mock_range["bboxes"]["EPSG:4326"] = {
+        "top": 0.1, "bottom": 0.1,
+        "left": -0.1, "right": 0.1,
+    }
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        with pytest.raises(ConfigException) as excinfo:
+            lyr.make_ready(minimal_dc)
+    assert not lyr.ready
+    assert "Grid High y is zero" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+    assert "EPSG:4326" in str(excinfo.value)
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    mock_range["bboxes"]["EPSG:4326"] = {
+        "top": 0.1, "bottom": -0.1,
+        "left": -0.1, "right": -0.1,
+    }
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        with pytest.raises(ConfigException) as excinfo:
+            lyr.make_ready(minimal_dc)
+    assert "Grid High x is zero" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+    assert "EPSG:4326" in str(excinfo.value)
