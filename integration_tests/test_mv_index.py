@@ -27,10 +27,10 @@ def test_time_search():
     lyr = list(cfg.product_index.values())[0]
     time = lyr.ranges["times"][-1]
     geom = box(
-        lyr.bboxes["EPSG:4326"]["bottom"],
         lyr.bboxes["EPSG:4326"]["left"],
-        lyr.bboxes["EPSG:4326"]["top"],
+        lyr.bboxes["EPSG:4326"]["bottom"],
         lyr.bboxes["EPSG:4326"]["right"],
+        lyr.bboxes["EPSG:4326"]["top"],
         "EPSG:4326")
 
     time_rng = local_solar_date_range(MockGeobox(geom), time)
@@ -66,10 +66,10 @@ def test_extent_and_spatial():
     cfg = get_config()
     lyr = list(cfg.product_index.values())[0]
     layer_ext_bbx = (
-        lyr.bboxes["EPSG:4326"]["bottom"],
         lyr.bboxes["EPSG:4326"]["left"],
-        lyr.bboxes["EPSG:4326"]["top"],
+        lyr.bboxes["EPSG:4326"]["bottom"],
         lyr.bboxes["EPSG:4326"]["right"],
+        lyr.bboxes["EPSG:4326"]["top"],
         )
     small_bbox = pytest.helpers.enclosed_bbox(layer_ext_bbx)
     layer_ext_geom = box(layer_ext_bbx[0],
