@@ -530,9 +530,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if not self.native_CRS:
                 raise ConfigException(f"No native CRS could be found for layer {self.name}")
             if self.native_CRS not in self.global_cfg.published_CRSs:
-                raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
-                    self.product_name,
-                    self.native_CRS))
+                raise ConfigException(f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs")
             self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
             # Prepare Rectified Grids
             try:
@@ -661,7 +659,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         finally:
             if not ext_dc:
                 release_cube(dc)
-
     @property
     def ranges(self):
         if self.dynamic:

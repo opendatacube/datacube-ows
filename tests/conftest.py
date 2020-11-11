@@ -24,6 +24,7 @@ def minimal_dc():
     }
     lmo = MagicMock()
     lmo.loc = {
+        "foo_badnativecrs": nb,
         "foo_nativecrs": nb,
         "foo_nonativecrs": nb,
         "foo": nb,
@@ -51,6 +52,12 @@ def minimal_dc():
         if 'nonativecrs' in s:
             mprod.definition = {
                 "storage": {
+                }
+            }
+        elif 'badnativecrs' in s:
+            mprod.definition = {
+                "storage": {
+                    "crs": "EPSG:9999"
                 }
             }
         elif 'nativecrs' in s:
