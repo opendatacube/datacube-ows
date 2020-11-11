@@ -19,7 +19,7 @@ jobs:
 
       - name: Get unstable git tag
         run: >
-          echo ::set-env name=UNSTABLE_TAG::$(git describe --tags)
+          echo "UNSTABLE_TAG=$(git describe --tags)" >> $GITHUB_ENV
 
       - name: Log the unstable tag
         run: echo $UNSTABLE_TAG
