@@ -23,6 +23,7 @@ from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
     year_date_range
+from datacube_ows.tile_matrix_sets import TileMatrixSet
 
 import logging
 
@@ -260,14 +261,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         try:
             self.parse_product_names(cfg)
-            if len(self.product_names) < 1:
-                raise ConfigException(f"No products declared in layer {self.name}")
             if len(self.low_res_product_names) not in (0, len(self.product_names)):
                 raise ConfigException(f"Lengths of product_names and low_res_product_names do not match in layer {self.name}")
             for prod_name in self.product_names:
                 if "__" in prod_name:
                     # I think this was for subproducts which are currently broken
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
+        except IndexError:
+            raise ConfigException(f"No products declared in layer {self.name}")
         except KeyError:
             raise ConfigException("Required product names entry missing in named layer %s" % self.name)
         self.declare_unready("products")
@@ -283,7 +284,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
-        self.declare_unready("hide")
         # TODO: sub-ranges
         self.band_idx = BandIndex(self, cfg.get("bands"))
         self.parse_resource_limits(cfg.get("resource_limits", {}))
@@ -340,7 +340,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if low_res_prod_name:
                 product = dc.index.products.get_by_name(low_res_prod_name)
                 if not product:
-                    raise ConfigException("Could not find product %s in datacube" % prod_name)
+                    raise ConfigException(f"Could not find product {low_res_prod_name} in datacube for layer {self.name}")
                 self.low_res_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
@@ -356,7 +356,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
-        super().make_ready(dc, *args, **kwargs)
+        if not self.hide:
+            super().make_ready(dc, *args, **kwargs)
 
     # pylint: disable=attribute-defined-outside-init
     def parse_resource_limits(self, cfg):
@@ -432,8 +433,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 if pqn is not None:
                     pq_product = dc.index.products.get_by_name(pqn)
                     if pq_product is None:
-                        raise ConfigException("Could not find pq_product %s for %s in database" % (pqn, self.name))
+                        raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
                     self.pq_products.append(pq_product)
+        if self.pq_low_res_names:
+            for pqn in self.pq_low_res_names:
+                if pqn is not None:
+                    pq_product = dc.index.products.get_by_name(pqn)
+                    if pq_product is None:
+                        raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.name} in datacube")
+                    self.pq_low_res_products.append(pq_product)
 
         self.info_mask = ~0
         if self.pq_products:
@@ -505,7 +513,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_wcs(self, dc):
-        if self.wcs:
+        if self.global_cfg.wcs and self.wcs:
             # Native CRS
             try:
                 self.native_CRS = self.product.definition["storage"]["crs"]
@@ -522,9 +530,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if not self.native_CRS:
                 raise ConfigException(f"No native CRS could be found for layer {self.name}")
             if self.native_CRS not in self.global_cfg.published_CRSs:
-                raise ConfigException("Native CRS for product %s (%s) not in published CRSs" % (
-                    self.product_name,
-                    self.native_CRS))
+                raise ConfigException(f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs")
             self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
             # Prepare Rectified Grids
             try:
@@ -599,7 +605,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                                            native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
 
             if self.grid_high_x == 0:
-                err_str = f"Grid High X is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
+                err_str = f"Grid High x is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
                 raise ConfigException(err_str)
             if self.grid_high_y == 0:
                 err_str = f"Grid High y is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: x_res={self.resolution_y}"
@@ -653,7 +659,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         finally:
             if not ext_dc:
                 release_cube(dc)
-
     @property
     def ranges(self):
         if self.dynamic:
@@ -666,20 +671,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         bboxes = {}
         for crs_id, bbox in self._ranges["bboxes"].items():
             if crs_id in self.global_cfg.published_CRSs:
-                if self.global_cfg.published_CRSs[crs_id].get("vertical_coord_first"):
-                    bboxes[crs_id] = {
-                        "right": bbox["bottom"],
-                         "left": bbox["top"],
-                         "top": bbox["left"],
-                         "bottom": bbox["right"]
-                     }
-                else:
-                    bboxes[crs_id] = {
-                        "right": bbox["right"],
-                        "left": bbox["left"],
-                        "top": bbox["top"],
-                        "bottom": bbox["bottom"]
-                    }
+                # Assume we've already handled coordinate swapping for
+                # Vertical-coord first CRSs.   Top is top, left is left.
+                bboxes[crs_id] = {
+                    "right": bbox["right"],
+                    "left": bbox["left"],
+                    "top": bbox["top"],
+                    "bottom": bbox["bottom"]
+                }
         return bboxes
 
     def layer_count(self):
@@ -719,6 +718,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             subs = {
                 "layer": self.product
             }
+        return super().lookup(cfg, keyvals, subs)
     @classmethod
     def lookup_impl(cls, cfg, keyvals, subs=None):
         try:
@@ -756,6 +756,7 @@ class OWSProductLayer(OWSNamedLayer):
         self.pq_names = [ self.pq_name ]
 
         if "low_res_product" in cfg:
+            self.pq_low_res_name = cfg.get("low_res_product")
             self.pq_low_res_names = [self.pq_low_res_name]
         else:
             self.pq_low_res_names = self.low_res_product_names
@@ -788,7 +789,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
             self.pq_names = list(self.product_names)
         self.pq_name = self.pq_names[0]
 
-        if "lowres_products" in cfg:
+        if "low_res_products" in cfg:
             self.pq_low_res_names = cfg["low_res_products"]
             self.pq_low_res_name = self.pq_names[0]
         else:
@@ -882,14 +883,14 @@ class OWSConfig(OWSConfigEntry):
                     "Missing required config entry in 'global' section: %s" % str(e)
                 )
 
-            if self.wms:
+            if self.wms or self.wmts:
                 self.parse_wms(cfg.get("wms", {}))
             else:
                 self.parse_wms({})
 
             if self.wcs:
                 try:
-                    self.parse_wcs(cfg["wcs"])
+                    self.parse_wcs(cfg.get("wcs"))
                 except KeyError as e:
                     raise ConfigException(
                         "Missing required config entry in 'wcs' section (with WCS enabled): %s" % str(e)
@@ -900,6 +901,16 @@ class OWSConfig(OWSConfigEntry):
                 self.parse_layers(cfg["layers"])
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
+
+            try:
+                if self.wmts:
+                    self.parse_wmts(cfg.get("wmts", {}))
+                else:
+                    self.parse_wmts({})
+            except KeyError as e:
+                raise ConfigException(
+                    "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
+                )
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
@@ -951,11 +962,11 @@ class OWSConfig(OWSConfigEntry):
             self.published_CRSs[crs_str] = self.internal_CRSs[crs_str]
             if self.published_CRSs[crs_str]["geographic"]:
                 if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
-                    raise Exception("Published CRS {} is geographic"
-                                    "but has a horizontal coordinate that is not 'longitude'".format(crs_str))
+                    raise ConfigException(f"Published CRS {crs_str} is geographic"
+                                    "but has a horizontal coordinate that is not 'longitude'")
                 if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
-                    raise Exception("Published CRS {} is geographic"
-                                    "but has a vertical coordinate that is not 'latitude'".format(crs_str))
+                    raise ConfigException(f"Published CRS {crs_str} is geographic"
+                                    "but has a vertical coordinate that is not 'latitude'")
         for alias, alias_def in CRS_aliases.items():
             target_crs = alias_def["alias"]
             if target_crs not in self.published_CRSs:
@@ -996,7 +1007,7 @@ class OWSConfig(OWSConfigEntry):
 
             self.native_wcs_format = cfg["native_format"]
             if self.native_wcs_format not in self.wcs_formats_by_name:
-                raise Exception("Configured native WCS format not a supported format.")
+                raise ConfigException(f"Configured native WCS format ({self.native_wcs_format}) not a supported format.")
         else:
             self.default_geographic_CRS = None
             self.default_geographic_CRS_def = None
@@ -1007,6 +1018,19 @@ class OWSConfig(OWSConfigEntry):
         # shouldn't need to keep these?
         # self.dummy_wcs_grid = False
         # self.create_wcs_grid = False
+
+    def parse_wmts(self, cfg):
+        tms_cfgs = TileMatrixSet.default_tm_sets.copy()
+        if "tile_matrix_sets" in cfg:
+            for identifier, tms in cfg["tile_matrix_sets"].items():
+                tms_cfgs[identifier] = tms
+        self.tile_matrix_sets = {}
+        for identifier, tms in tms_cfgs.items():
+            if len(identifier.split()) != 1:
+                raise ConfigException(f"Invalid identifier: {identifier}")
+            if identifier in self.tile_matrix_sets:
+                raise ConfigException(f"Tile matrix set identifiers must be unique: {identifier}")
+            self.tile_matrix_sets[identifier] = TileMatrixSet(identifier, tms, self)
 
     def parse_layers(self, cfg):
         self.product_index = {}

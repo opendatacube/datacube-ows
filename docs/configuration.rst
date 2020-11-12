@@ -8,6 +8,7 @@ OWS Configuration
 
    cfg_global
    cfg_wms
+   cfg_wmts
    cfg_wcs
    cfg_functions
    cfg_layers
@@ -272,6 +273,9 @@ At the top level, the Datacube OWS configuration is a single dictionary with the
      "wms": {
          # Configuration specific to the WMS and WMTS services goes here.
      },
+     "wmts": {
+         # Configuration specific to the WMTS service goes here.
+     },
      "wcs": {
          # Configuration specific to the WCS service goes here.
      },
@@ -286,15 +290,20 @@ The `global <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html>`_ se
 
 The `wms <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html>`_ section contains configuration that applies to the WMS/WMTS
 services aross all layers.
+The `wmts <https://datacube-ows.readthedocs.io/en/latest/cfg_wmts.html>`_ section contains configuration that applies to the WMTS
+services aross all layers.
 The `wms <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html>`_ section can be omitted if only the WCS service is
 activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section), or if the default values for all entries are acceptable.
+
+The `wmts <https://datacube-ows.readthedocs.io/en/latest/cfg_wmts.html>`_ section is optional.
 
 The `wcs <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html>`_ section must be supplied if the WCS service is
 activated (specified in the `global services <cfg_global#service-selection-services>`_
 section).
 
-There is no separate section for WMTS as WMTS is implemented as a thin wrapper around the WMS implementation.
+WMTS is implemented as a thin wrapper around the WMS implementation. Therefore configuration in the
+WMS section generally applies equally to WMTS.
 
 The `layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ section
 contains a list of layer configurations.  The configured layers define the

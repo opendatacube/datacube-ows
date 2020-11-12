@@ -8,6 +8,11 @@ if src_dir not in sys.path:
     sys.path.append(src_dir)
 
 
+def test_cfg_inject():
+    cfg = read_config('{"test": 12345}')
+    assert cfg["test"] == 12345
+
+
 def test_cfg_direct(monkeypatch):
     monkeypatch.setenv("DATACUBE_OWS_CFG", "{\"test\": 12345}")
     cfg = read_config()
