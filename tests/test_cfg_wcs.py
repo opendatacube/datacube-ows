@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.ows_configuration import OWSLayer, OWSFolder, parse_ows_layer
+from datacube_ows.ows_configuration import OWSLayer, OWSFolder, parse_ows_layer, WCSFormat
 
 
 def test_native_crs_mismatch(minimal_global_cfg, minimal_layer_cfg, minimal_dc):
@@ -174,3 +174,18 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
     assert "Grid High x is zero" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "EPSG:4326" in str(excinfo.value)
+
+
+def test_wcs_renderer_detection():
+    fmt = WCSFormat(
+        "GeoTIFF",
+        "image/geotiff",
+        "tif",
+        {
+            "1": "datacube_ows.wcs1_utils.get_tiff",
+            "2": "datacube_ows.wcs2_utils.get_tiff",
+        },
+        False
+    )
+    r = fmt.renderer("2.1.0")
+    assert r == fmt.renderers[2]
