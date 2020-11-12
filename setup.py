@@ -33,7 +33,9 @@ requirements = [
     'geoalchemy',
     'xarray',
     'pyows',
-    'prometheus-flask-exporter'
+    'prometheus-flask-exporter',
+    #
+    'setuptools_scm'
 ]
 
 test_requirements = [
@@ -51,8 +53,8 @@ setup(
     entry_points={
         'console_scripts': [
             'datacube-ows=datacube_ows.wsgi:main',
-            'datacube-ows-update-old=datacube_ows.update_ranges_old:main',
-            'datacube-ows-update=datacube_ows.update_ranges:main'
+            'datacube-ows-update=datacube_ows.update_ranges:main',
+            'datacube-ows-cfg-parse=datacube_ows.cfg_parser:main'
         ]
     },
     packages=find_packages(),
@@ -68,6 +70,8 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python :: 3.5',
     ],
+    setup_requires=['setuptools_scm'],
+    use_scm_version=True,
     test_suite='tests',
     tests_require=test_requirements
 )

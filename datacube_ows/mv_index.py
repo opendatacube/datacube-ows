@@ -54,7 +54,8 @@ def mv_search_datasets(index,
                        times=None,
                        layer=None,
                        geom=None,
-                       mask=False):
+                       mask=False,
+                       resource_limited=False):
     """
     Perform a dataset query via the space_time_view
 
@@ -65,6 +66,7 @@ def mv_search_datasets(index,
     :param times: A list of pairs of datetimes (with time zone)
     :param geom: A datacube.utils.geometry.Geometry object
     :param mask: Bool, if true use the flags product of layer
+    :param resource_limited: Bool, if true use low-res summary products
 
     :return: See MVSelectOpts doc
     """
@@ -72,8 +74,12 @@ def mv_search_datasets(index,
     stv = st_view
     if layer is None:
         raise Exception("Must filter by product/layer")
-    if mask:
+    if mask and resource_limited and layer.pq_low_res_products:
+        prod_ids = [p.id for p in layer.pq_low_res_products]
+    elif mask:
         prod_ids = [p.id for p in layer.pq_products]
+    elif resource_limited and layer.low_res_products:
+        prod_ids = [p.id for p in layer.low_res_products]
     else:
         prod_ids = [p.id for p in layer.products]
 

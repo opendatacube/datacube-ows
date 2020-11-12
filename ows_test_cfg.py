@@ -7,9 +7,9 @@
 ls8_usgs_level1_bands = {
     "coastal_aerosol": ["band_1"],
     "blue": ["band_2"],
-    "green": ["band_3"],
-    "red": ["band_4"],
-    "nir": ["band_5"],
+    "green": ["band_3", "green"],
+    "red": ["band_4", "pink"],
+    "nir": ["nir", "band_5"],
     "swir1": ["band_6"],
     "swir2": ["band_7"],
     "panchromatic": ["band_8"],
@@ -46,7 +46,7 @@ style_rgb = {
             # Band aliases may be used here.
             # Values are multipliers.  The should add to 1.0 for each component to preserve overall brightness levels,
             # but this is not enforced.
-            "red": 1.0
+            "pink": 1.0
         },
         "green": {
             "green": 1.0
@@ -58,6 +58,16 @@ style_rgb = {
     # The raw band value range to be compressed to an 8 bit range for the output image tiles.
     # Band values outside this range are clipped to 0 or 255 as appropriate.
     "scale_range": [0.0, 65535.0],
+}
+
+style_rgb_clone = {
+    "inherits": {
+        "layer": "ls8_usgs_level1_scene_layer",
+        "style": "simple_rgb"
+    },
+    "name": "simple_rgb_clone",
+    "title": "Simple RGB Clone",
+    "scale_range": [0.0, 20000.0],
 }
 
 style_rgb_cloud_and_shadowmask = {
@@ -169,9 +179,9 @@ style_mineral_content = {
             #    a) "function" (required): A string containing the fully qualified path to a python function
             #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
             #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
-            #    d) "pass_product_cfg" (optional): Boolean (defaults to False). If true, the relevant ProductLayerConfig is passed
-            #       to the function as a keyword argument named "product_cfg".  This is useful if you are passing band aliases
-            #       to the function in the args or kwargs.  The product_cfg allows the index function to convert band aliases to
+            #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, the band mapping function is passed
+            #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
+            #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
             #       to band names.
             #
             # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
@@ -181,7 +191,7 @@ style_mineral_content = {
             # to normalise the output to 0-255.
             #
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "red",
                 "band2": "blue",
@@ -190,7 +200,7 @@ style_mineral_content = {
         },
         "green": {
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "nir",
                 "band2": "swir1",
@@ -199,7 +209,7 @@ style_mineral_content = {
         },
         "blue": {
             "function": "datacube_ows.band_utils.norm_diff",
-            "pass_product_cfg": True,
+            "mapped_bands": True,
             "kwargs": {
                 "band1": "swir1",
                 "band2": "swir2",
@@ -243,7 +253,7 @@ style_ndvi = {
     "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -325,7 +335,7 @@ style_ndvi_delta = {
     "abstract": "Normalised Difference Vegetation Index - with delta support",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -426,7 +436,7 @@ style_ndvi_cloudmask = {
     "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -458,7 +468,7 @@ style_ndwi = {
     "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "green",
             "band2": "nir"
@@ -478,7 +488,7 @@ style_cloud_mask = {
     "abstract": "Highlight pixels with cloud.",
     "index_function": {
         "function": "datacube_ows.band_utils.constant",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band": "red",
             "const": "0.1"
@@ -523,7 +533,7 @@ style_rgb_ndvi = {
     "component_ratio": 0.6,
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
-        "pass_product_cfg": True,
+        "mapped_bands": True,
         "kwargs": {
             "band1": "nir",
             "band2": "red"
@@ -817,6 +827,9 @@ ows_cfg = {
                 "geographic": True,
                 "vertical_coord_first": True
             },
+            "I-CANT-BELIEVE-ITS-NOT-EPSG:4326": {
+                "alias": "EPSG:4326"
+            },
             "EPSG:3577": {  # GDA-94, internal representation
                 "geographic": False,
                 "horizontal_coord": "x",
@@ -991,7 +1004,7 @@ ows_cfg = {
                     "styling": {
                         "default_style": "simple_rgb",
                         "styles": [
-                            style_rgb,
+                            style_rgb, style_rgb_clone,
                             style_infrared_false_colour,
                             style_pure_ls8_blue,
                             style_ndvi,
@@ -1004,6 +1017,14 @@ ows_cfg = {
                         ]
                     }
                 }, ##### End of ls8_level1_pds product definition.
+                {
+                    "inherits": {
+                        "layer": "ls8_usgs_level1_scene_layer",
+                    },
+                    "title": "Level 1 USGS Landsat-8 Public Data Set Clone",
+                    "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
+                    "name": "ls8_usgs_level1_scene_layer_clone",
+                }
             ]
         },  ### End of Landsat folder.
         {

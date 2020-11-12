@@ -7,6 +7,8 @@ from itertools import chain
 
 from dateutil.parser import parse
 from urllib.parse import urlparse
+
+from flask import request
 from timezonefinderL import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
@@ -146,12 +148,12 @@ def get_service_base_url(allowed_urls, request_url):
 
 
 # Collects additional headers from flask request objects
-def capture_headers(request, args_dict):
-    args_dict['referer'] = request.headers.get('Referer', None)
-    args_dict['origin'] = request.headers.get('Origin', None)
-    args_dict['requestid'] = request.environ.get("FLASK_REQUEST_ID")
-    args_dict['host'] = request.headers.get('Host', None)
-    args_dict['url_root'] = request.url_root
+def capture_headers(req, args_dict):
+    args_dict['referer'] = req.headers.get('Referer', None)
+    args_dict['origin'] = req.headers.get('Origin', None)
+    args_dict['requestid'] = req.environ.get("FLASK_REQUEST_ID")
+    args_dict['host'] = req.headers.get('Host', None)
+    args_dict['url_root'] = req.url_root
 
     return args_dict
 
@@ -167,23 +169,34 @@ class ConfigException(Exception):
 
 # Function wrapper for configurable functional elements
 
-class FunctionWrapper(object):
-    def __init__(self,  product_cfg, func_cfg):
+class FunctionWrapper:
+    def __init__(self,  product_or_style_cfg, func_cfg):
         if callable(func_cfg):
             raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
         elif isinstance(func_cfg, str):
             self._func = get_function(func_cfg)
             self._args = []
             self._kwargs = {}
-            self.product_cfg = None
+            self.band_mapper = None
         else:
             self._func = get_function(func_cfg["function"])
             self._args = func_cfg.get("args", [])
             self._kwargs = func_cfg.get("kwargs", {})
-            if func_cfg.get("pass_product_cfg", False):
-                self.product_cfg = product_cfg
+            if "pass_product_cfg" in func_cfg:
+                print("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
+                      "'mapped_bands'.  Please update your config accordingly")
+            if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
+                if hasattr(product_or_style_cfg, "band_idx"):
+                    # NamedLayer
+                    b_idx = product_or_style_cfg.band_idx
+                    self.band_mapper = b_idx.band
+                else:
+                    # Style
+                    b_idx = product_or_style_cfg.product.band_idx
+                    delocaliser = product_or_style_cfg.local_band
+                    self.band_mapper = lambda b: b_idx.band(delocaliser(b))
             else:
-                self.product_cfg = None
+                self.band_mapper = None
 
     def __call__(self, *args, **kwargs):
         if args and self._args:
@@ -200,8 +213,8 @@ class FunctionWrapper(object):
         else:
             calling_kwargs = self._kwargs
 
-        if self.product_cfg:
-            calling_kwargs["product_cfg"] = self.product_cfg
+        if self.band_mapper:
+            calling_kwargs["band_mapper"] = self.band_mapper
 
 
         return self._func(*calling_args, **calling_kwargs)
@@ -247,3 +260,15 @@ def ls8_subproduct(ds):
 
 def feature_info_url_template(data, template):
     return template.format(data=data)
+
+
+def lower_get_args():
+    # Get parameters in WMS are case-insensitive, and intended to be single use.
+    # Spec does not specify which instance should be used if a parameter is provided more than once.
+    # This function uses the LAST instance.
+    d = {}
+    for k in request.args.keys():
+        kl = k.lower()
+        for v in request.args.getlist(k):
+            d[kl] = v
+    return d

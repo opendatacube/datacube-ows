@@ -95,8 +95,8 @@ def test_wms_getmap(ows_server):
 
     img = wms.getmap(layers=[test_layer_name],
                      styles=[],
-                     srs="EPSG:4326",
-                     bbox=pytest.helpers.disjoint_bbox(bbox),
+                     srs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
+                     bbox=pytest.helpers.enclosed_bbox(bbox),
                      size=(150, 150),
                      format="image/png",
                      transparent=True,
@@ -127,18 +127,6 @@ def test_wms_multiproduct_getmap(ows_server, multiproduct_name):
     assert img
     assert img.info()['Content-Type'] == 'image/png'
 
-    img = wms.getmap(layers=[multiproduct_name],
-                     styles=[],
-                     srs="EPSG:3577",
-                     bbox=pytest.helpers.disjoint_bbox(bbox),
-                     size=(150, 150),
-                     format="image/png",
-                     transparent=True,
-                     time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
-                     )
-    assert img
-    assert img.info()['Content-Type'] == 'image/png'
-
 
 def test_wms_style_looping_getmap(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
@@ -157,14 +145,14 @@ def test_wms_style_looping_getmap(ows_server):
 
     for style in test_layer_styles:
         img = wms.getmap(layers=[test_layer_name],
-                            styles=[style],
-                            srs="EPSG:4326",
-                            bbox=layer_bbox,
-                            size=(150, 150),
-                            format="image/png",
-                            transparent=True,
-                            time=layer_time,
-                            )
+                         styles=[style],
+                         srs="EPSG:4326",
+                         bbox=layer_bbox,
+                         size=(150, 150),
+                         format="image/png",
+                         transparent=True,
+                         time=layer_time,
+                         )
         assert img.info()['Content-Type'] == 'image/png'
 
 def test_wms_getfeatureinfo(ows_server):

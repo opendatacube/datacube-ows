@@ -47,6 +47,32 @@ style "a_style" will be the default.
         ]
     }
 
+Inheritance
+===========
+
+Styles may be
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
+from previously defined styles.
+
+To lookup a style by name use the "style" and "layer" element in the inherits section.
+(The layer section is optional and defaults to the layer of the new style:
+
+::
+
+    new_style = {
+        "inherits": {
+            "layer": "layer1",
+            "style": "old_style"
+        },
+        "name": "new_style",
+        "title": "New Style",
+        ... # Other overrides.
+    }
+
+Note that a style can only inherit by name from a parent style that has already been parsed
+by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
+can be avoided using direct inheritance.
+
 multi_date
 ==========
 

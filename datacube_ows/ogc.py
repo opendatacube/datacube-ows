@@ -1,149 +1,48 @@
-from __future__ import absolute_import, division, print_function
 import sys
 import traceback
-import warnings
-import sentry_sdk
-from rasterio.errors import NotGeoreferencedWarning
-from sentry_sdk.integrations.flask import FlaskIntegration
-from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
 from time import monotonic
 
-from flask import Flask, request, g, render_template
-from flask_log_request_id import RequestID, RequestIDLogFilter, current_request_id
-import os
+from flask import g, render_template, request
+from flask_log_request_id import current_request_id
 
+from datacube_ows import __version__
 from datacube_ows.legend_generator import create_legend_for_style
-from datacube_ows.ogc_utils import capture_headers, resp_headers, get_service_base_url
-from datacube_ows.wms import handle_wms, WMS_REQUESTS
-from datacube_ows.wcs1 import handle_wcs1, WCS_REQUESTS
-from datacube_ows.wcs2 import handle_wcs2
-from datacube_ows.wmts import handle_wmts
-from datacube_ows.ogc_exceptions import OGCException, WCS1Exception, WCS2Exception, WMSException, WMTSException
+from datacube_ows.ogc_utils import capture_headers, resp_headers, get_service_base_url, lower_get_args
+from datacube_ows.wms import WMS_REQUESTS
+from datacube_ows.wcs1 import WCS_REQUESTS
+from datacube_ows.ogc_exceptions import OGCException, WMSException
 from datacube_ows.cube_pool import cube
-from datacube.utils.rio import set_default_rio_config
+from datacube_ows.protocol_versions import supported_versions
 from datacube_ows.ows_configuration import get_config
 
-import logging
+# See startup_utils.py for initialisation methods called at startup.
+#pylint: disable=wildcard-import,unused-wildcard-import
+from datacube_ows.startup_utils import *
 
-# pylint: disable=invalid-name, broad-except
+# Logging intialisation
+_LOG = initialise_logger()
+initialise_ignorable_warnings()
 
+# Initialisation of external libraries - controlled by environment variables.
+initialise_debugging(_LOG)
+initialise_sentry(_LOG)
+initialise_aws_credentials(_LOG)
 
+# Prepare parsed configuration object
+parse_config_file()
 
-if os.environ.get("PYDEV_DEBUG"):
-    import pydevd_pycharm
-    pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+# Initialise Flask
+app = initialise_flask(__name__)
 
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
-handler.addFilter(RequestIDLogFilter())
-_LOG = logging.getLogger()
-_LOG.addHandler(handler)
+# Initialisation of external libraries that depend on Flask
+# (controlled by environment variables)
+metrics = initialise_prometheus(app, _LOG)
 
-if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
-    sentry_sdk.init(
-        dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
-        integrations = [FlaskIntegration()]
-    )
-    _LOG.info("Sentry logging enabled")
+# Protocol/Version lookup table
+OWS_SUPPORTED = supported_versions()
 
-app = Flask(__name__.split('.')[0])
-RequestID(app)
-
-# Parse config file
-if not os.environ.get("DEFER_CFG_PARSE"):
-    get_config()
-
-# If invoked using Gunicorn, link our root logger to the gunicorn logger
-# this will mean the root logs will be captured and managed by the gunicorn logger
-# allowing you to set the gunicorn log directories and levels for logs
-# produced by this application
-_LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
-
-if os.environ.get("prometheus_multiproc_dir", False):
-    metrics = GunicornInternalPrometheusMetrics(app)
-    _LOG.info("Prometheus metrics enabled")
-
-if os.environ.get("AWS_DEFAULT_REGION"):
-    unsigned = bool(os.environ.get("AWS_NO_SIGN_REQUEST", "yes"))
-    set_default_rio_config(aws=dict(aws_unsigned=unsigned,
-                                    region_name="auto"),
-                           cloud_defaults=True)
-else:
-    set_default_rio_config()
-    _LOG.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
-
-# Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
-warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
-
-class SupportedSvcVersion(object):
-    def __init__(self, service, version, router, exception_class):
-        self.service = service.lower()
-        self.service_upper = service.upper()
-        self.version = version
-        self.version_parts = version.split(".")
-        assert len(self.version_parts) == 3
-        self.router = router
-        self.exception_class = exception_class
-
-
-class SupportedSvc(object):
-    def __init__(self, versions, default_exception_class=None):
-        self.versions = sorted(versions, key=lambda x: x.version_parts)
-        assert len(self.versions) > 0
-        self.service = self.versions[0].service
-        self.service_upper = self.versions[0].service_upper
-        assert self.service.upper() == self.service_upper
-        assert self.service == self.service_upper.lower()
-        for v in self.versions[1:]:
-            assert v.service == self.service
-            assert v.service_upper == self.service_upper
-        if default_exception_class:
-            self.default_exception_class = default_exception_class
-        else:
-            self.default_exception_class = self.versions[0].exception_class
-
-    def negotiated_version(self, request_version):
-        if not request_version:
-            return self.versions[-1]
-        rv_parts = request_version.split(".")
-        for v in reversed(self.versions):
-            if rv_parts >= v.version_parts:
-                return v
-        # The constructor asserted that self.versions is not empty, so this is safe.
-        #pylint: disable=undefined-loop-variable
-        return v
-
-    def activated(self):
-        cfg = get_config()
-        return getattr(cfg, self.service)
-
-
-OWS_SUPPORTED = {
-    "wms": SupportedSvc([
-        SupportedSvcVersion("wms", "1.3.0", handle_wms, WMSException),
-    ]),
-    "wmts": SupportedSvc([
-        SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException),
-    ]),
-    "wcs": SupportedSvc([
-        SupportedSvcVersion("wcs", "1.0.0", handle_wcs1, WCS1Exception),
-        SupportedSvcVersion("wcs", "2.0.0", handle_wcs2, WCS2Exception),
-        SupportedSvcVersion("wcs", "2.1.0", handle_wcs2, WCS2Exception),
-    ]),
-}
-
-
-def lower_get_args():
-    # Get parameters in WMS are case-insensitive, and intended to be single use.
-    # Spec does not specify which instance should be used if a parameter is provided more than once.
-    # This function uses the LAST instance.
-    d = {}
-    for k in request.args.keys():
-        kl = k.lower()
-        for v in request.args.getlist(k):
-            d[kl] = v
-    return d
+# Flask Routes
 
 @app.route('/')
 def ogc_impl():
@@ -175,13 +74,19 @@ def ogc_impl():
             cfg = get_config()
             url = nocase_args.get('Host', nocase_args['url_root'])
             base_url = get_service_base_url(cfg.allowed_urls, url)
-            return (render_template("index.html", cfg=cfg, supported=OWS_SUPPORTED, base_url=base_url),
+            return (render_template(
+                            "index.html",
+                            cfg=cfg,
+                            supported=OWS_SUPPORTED,
+                            base_url=base_url,
+                            version=__version__,
+                    ),
                     200,
                     resp_headers({"Content-Type": "text/html"}))
     except OGCException as e:
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         tb = sys.exc_info()[2]
         ogc_e = WMSException("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
@@ -220,7 +125,7 @@ def ogc_svc_impl(svc):
         return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
-    except Exception as e:
+    except Exception as e: #pylint: disable=broad-except
         tb = sys.exc_info()[2]
         ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
@@ -275,14 +180,18 @@ def legend(layer, style, dates=None):
         return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
     return img
 
+# Flask middleware
+
 @app.after_request
 def append_request_id(response):
     response.headers.add("X-REQUEST-ID", current_request_id())
     return response
 
+
 @app.before_request
 def start_timer():
     g.ogc_start_time = monotonic()
+
 
 @app.after_request
 def log_time_and_request_response(response):
@@ -293,16 +202,4 @@ def log_time_and_request_response(response):
 
 # Note: register your default metrics after all routes have been set up.
 # Also note, that Gauge metrics registered as default will track the /metrics endpoint, and this can't be disabled at the moment.
-
-if os.environ.get("prometheus_multiproc_dir", False):
-    metrics.register_default(
-        metrics.summary(
-            'flask_ows_request_full_url', 'Request summary by request url',
-            labels={
-                'query_request': lambda: request.args.get('request'),
-                'query_service': lambda: request.args.get('service'),
-                'query_layers': lambda: request.args.get('layers'),
-                'query_url': lambda: request.full_path
-            }
-        )
-    )
+initialise_prometheus_register(metrics)

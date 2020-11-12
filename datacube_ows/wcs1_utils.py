@@ -14,7 +14,7 @@ from ows.util import Version
 from datacube_ows.cube_pool import cube
 from datacube_ows.data import DataStacker, datasets_in_xarray
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import ProductLayerException
+from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.mv_index import MVSelectOpts
 
@@ -64,7 +64,7 @@ class WCS1GetCoverageRequest():
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="CRS parameter",
                                 valid_keys=list(cfg.published_CRSs))
-        self.request_crs = geometry.CRS(self.request_crsid)
+        self.request_crs = cfg.crs(self.request_crsid)
 
         # Argument: response_crs (optional)
         if "response_crs" in args:
@@ -75,6 +75,7 @@ class WCS1GetCoverageRequest():
                                     locator="RESPONSE_CRS parameter",
                                     valid_keys=list(cfg.published_CRSs))
             self.response_crs = geometry.CRS(self.response_crsid)
+            self.response_crs = cfg.crs(self.response_crsid)
         else:
             self.response_crsid = self.request_crsid
             self.response_crs = self.request_crs
@@ -158,7 +159,7 @@ class WCS1GetCoverageRequest():
             for b in bands.split(","):
                 try:
                     self.bands.append(self.product.band_idx.band(b))
-                except ProductLayerException:
+                except ConfigException:
                     raise WCS1Exception("Invalid measurement '%s'" % b,
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
                                         locator="MEASUREMENTS parameter",
@@ -314,7 +315,7 @@ def get_coverage_data(req):
                 nparrays = {
                     band: (("time", yname, xname),
                            numpy.full((len(req.times), len(yvals), len(xvals)),
-                                      req.product.nodata_dict[band])
+                                      req.product.band_idx.nodata_val(band))
                           )
                     for band in req.bands
                 }
@@ -322,7 +323,7 @@ def get_coverage_data(req):
                 nparrays = {
                     band: (("time", xname, yname),
                            numpy.full((len(req.times), len(xvals), len(yvals)),
-                                      req.product.nodata_dict[band])
+                                      req.product.band_idx.nodata_val(band))
                           )
                     for band in req.bands
                 }

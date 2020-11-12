@@ -6,22 +6,27 @@ from datacube_ows.styles.base import StyleDefBase
 
 # pylint: disable=abstract-method
 class ComponentStyleDef(StyleDefBase):
-    def __init__(self, product, style_cfg):
-        super(ComponentStyleDef, self).__init__(product, style_cfg)
-        self.rgb_components = {}
+    def __init__(self, product, style_cfg, local_band_map=None):
+        super().__init__(product, style_cfg, local_band_map)
+        style_cfg = self._raw_cfg
+        self.raw_rgb_components = {}
         for imgband in ["red", "green", "blue", "alpha"]:
             components = style_cfg["components"].get(imgband)
             if components is None:
                 if imgband == "alpha":
                     continue
                 else:
-                    raise ConfigException("No components defined for %s band" % imgband)
+                    raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
             if "function" in components:
-                self.rgb_components[imgband] = FunctionWrapper(self.product, components)
+                self.raw_rgb_components[imgband] = FunctionWrapper(self.product, components)
                 for b in style_cfg["additional_bands"]:
-                    self.needed_bands.add(b)
+                    self.raw_needed_bands.add(b)
             else:
-                self.rgb_components[imgband] = self.dealias_components(components)
+                self.raw_rgb_components[imgband] = components
+                for k in components.keys():
+                    if k != "scale_range":
+                        self.raw_needed_bands.add(k)
+        self.declare_unready("rgb_components")
 
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
@@ -46,16 +51,21 @@ class ComponentStyleDef(StyleDefBase):
                     "max": self.scale_max,
                 }
 
-        for imgband in ["red", "green", "blue", "alpha" ]:
-            if imgband in self.rgb_components and not callable(self.rgb_components[imgband]):
-                for band in self.rgb_components[imgband].keys():
-                    self.needed_bands.add(band)
+    # pylint: disable=attribute-defined-outside-init
+    def make_ready(self, dc, *args, **kwargs):
+        self.rgb_components = {}
+        for band, component in self.raw_rgb_components.items():
+            if not component or callable(component):
+                self.rgb_components[band] = component
+            else:
+                self.rgb_components[band] = self.dealias_components(component)
+        super().make_ready(dc, *args, **kwargs)
 
     def dealias_components(self, comp_in):
         if comp_in is None:
             return None
         else:
-            return { self.product.band_idx.band(band_alias): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
+            return { self.product.band_idx.band(self.local_band(band_alias)): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
 
     def compress_band(self, component_name, imgband_data):
         sc_min = self.component_scale_ranges[component_name]["min"]
@@ -65,10 +75,7 @@ class ComponentStyleDef(StyleDefBase):
         return normalized * 255
 
 
-    def transform_single_date_data(self, data, pq_data, extent_mask, *masks):
-        if extent_mask is not None:
-            data = data.where(extent_mask)
-        data = self.apply_masks(data, pq_data)
+    def transform_single_date_data(self, data):
         imgdata = Dataset()
         for imgband, components in self.rgb_components.items():
             if callable(components):
@@ -96,3 +103,6 @@ class ComponentStyleDef(StyleDefBase):
                 imgdata[imgband] = (imgband_data.dims,
                                     imgband_data.astype("uint8"))
         return imgdata
+
+
+StyleDefBase.register_subclass(ComponentStyleDef, "components")

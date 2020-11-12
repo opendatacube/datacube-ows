@@ -32,7 +32,7 @@ corners as
   (metadata #>> '{extent, coord, ur, lat}') as ur_lat,
   (metadata #>> '{extent, coord, ur, lon}') as ur_lon
    from agdc.dataset where
-        metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
+        metadata_type_ref in (select id from metadata_lookup where name in ('eo','eo_s2_nrt','gqa_eo','eo_plus'))
         and archived is null
     )
 select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',

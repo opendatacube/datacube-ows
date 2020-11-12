@@ -19,37 +19,43 @@ def layer_crs_nongeom():
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857"
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857",
+            "alias_of": None,
         },
         "EPSG:4326": {  # WGS-84
             "geographic": True,
             "vertical_coord_first": True,
             "horizontal_coord": "longitude",
             "vertical_coord": "latitude",
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326"
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "alias_of": None,
         },
         "EPSG:3577": {
             "geographic": False,
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577"
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577",
+            "alias_of": None,
         },
         "TEST:CRS": {
             "geographic": False,
             "horizontal_coord": "horrible_zonts",
             "vertical_coord": "vertex_calories",
             "vertical_coord_first": False,
-            "gml_name": "TEST/CRS"
+            "gml_name": "TEST/CRS",
+            "alias_of": None,
         },
         "TEST:NATIVE_CRS": {
             "geographic": False,
             "horizontal_coord": "hortizonal_cults",
             "vertical_coord": "verbal_tics",
             "vertical_coord_first": False,
-            "gml_name": "TEST/NATIVE_CRS"
+            "gml_name": "TEST/NATIVE_CRS",
+            "alias_of": None,
         },
     }
+    product_layer.global_cfg.internal_CRSs = product_layer.global_cfg.published_CRSs
     product_layer.native_CRS = "TEST:NATIVE_CRS"
     product_layer.native_CRS_def = \
         product_layer.global_cfg.published_CRSs[
@@ -69,23 +75,27 @@ def layer_crs_geom():
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857"
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857",
+            "alias_of": False
         },
         "EPSG:4326": {  # WGS-84
             "geographic": True,
             "vertical_coord_first": True,
             "horizontal_coord": "longitude",
             "vertical_coord": "latitude",
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326"
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "alias_of": False
         },
         "EPSG:3577": {
             "geographic": False,
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577"
+            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577",
+            "alias_of": False
         },
     }
+    product_layer.global_cfg.internal_CRSs = product_layer.global_cfg.published_CRSs
     product_layer.native_CRS = "EPSG:3577"
     product_layer.native_CRS_def = \
         product_layer.global_cfg.published_CRSs[

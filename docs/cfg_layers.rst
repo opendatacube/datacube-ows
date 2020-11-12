@@ -221,6 +221,40 @@ E.g.
         ...
     }
 
+---------------------------------------------------------
+Low-Resolution Summary Products - low_res_product_name(s)
+---------------------------------------------------------
+
+If available, a parallel low-resolution summary product can be configured to
+be used for heavily zoomed-back queries that would require excessive
+Disk or S3 I/O to access from the main high-resolution product.
+
+This is done with the optional low_res_product_name entry (or for
+multi-product layers, the low_res_product_names entry) which is
+set to the ODC product name of the summary product (or list of ODC product
+names for multi-product layers)
+For multi-product
+layers, the low_res_product_names list must map directly to the product_names
+list, if provided.
+
+E.g.
+
+::
+
+    "product_name": "main_product",
+    "low_res_product_name": "summary_product",
+
+or for multi-product layers:
+
+::
+
+    "product_names": ["main_product_1", "main_product_2"]
+    "low_res_product_names": ["summary_product_1", "summary_product_2"]
+
+The conditions under which to switch to the low-resolution product(s)
+are defined in the `resource_limits <#resource-limits-resource-limits>`_
+section, discussed below.
+
 ---------------------------------
 Time Resolution (time_resolution)
 ---------------------------------
@@ -347,6 +381,10 @@ three (red, green, blue) or four (red, green, blue, alpha) integers in
 the list.  The entry is optional and defaults to (150, 180, 200, 160) -
 a semi-transparent light blue.
 
+Note that this entry has no effect if
+`low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+have been declared for the product.
+
 +++++++++++++++
 min_zoom_factor
 +++++++++++++++
@@ -404,7 +442,7 @@ E.g.::
         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
         "always_fetch_bands": "pixel_qa",
         "fuse_func": None,
-        "manual_merge": False,
+        "manual_merge": True,
         "apply_solar_corrections": True
     }
 
@@ -476,21 +514,18 @@ Manual Merge (manual_merge)
 
 "manual_merge" is an optional boolean flag (defaults to False).  If True,
 data for each dataset is fused in OWS outside of ODC.  This is rarely what
-you want, but may work better for some metadata types.
+you want, but is required for solar angle corrections.
 
 Apply Solar Corrections (apply_solar_corrections)
 +++++++++++++++++++++++++++++++++++++++++++++++++
-
-WARNING: apply_solar_corrections has not been actively used
-or tested for some time and may currently be broken. Use at
-your own risk, but feel free to raise a github issue if it
-doesn't work for you.
 
 "apply_solar_corrections" is an optional boolean flag (defaults to False).
 If True, corrections for local solar angle at the time of image
 capture are applied to all bands.
 
 This should not be used on "Level 2" or analysis-ready datacube products.
+
+"apply_solar_corrections" requires manual_merge to also be set.
 
 -------------------------------
 Flag Processing Section (flags)
@@ -806,4 +841,28 @@ The `"styling" section <https://datacube-ows.readthedocs.io/en/latest/cfg_stylin
 the layer.
 
 
+-----------
+Inheritance
+-----------
 
+Named layers may be
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
+from previously defined layers.
+
+To lookup a layer by name use the "layer" element in the inherits section:
+
+::
+
+    layer2 = {
+        "inherits": {
+            "layer": "layer1"
+        },
+        "name": "layer2",
+        "title": "Layer 2",
+        "abstract": "Layer 2",
+        "product_name": "product2"
+    }
+
+Note that a layer can only inherit by name from a parent layer that has already been parsed
+by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
+can be avoided using direct inheritance.

@@ -27,7 +27,7 @@ select
       )
   end as temporal_extent
 from agdc.dataset where
-  metadata_type_ref in (select id from metadata_lookup where name in ('eo','gqa_eo','eo_plus'))
+  metadata_type_ref in (select id from metadata_lookup where name in ('eo','eo_s2_nrt', 'gqa_eo','eo_plus'))
   and archived is null
 UNION
 -- This is the eo3 variant of the temporal extent, the sample eo3 dataset uses a singleton
@@ -38,7 +38,8 @@ UNION
 select
   dataset_type_ref, id,tstzrange(
     coalesce(metadata->'properties'->>'dtr:start_datetime', metadata->'properties'->>'datetime'):: timestamp,
-    coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp + interval '1 day')
+    coalesce((metadata->'properties'->>'dtr:end_datetime'):: timestamp,(metadata->'properties'->>'datetime'):: timestamp),
+    '[]'
    ) as temporal_extent
 from agdc.dataset where
     metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard','eo3'))
