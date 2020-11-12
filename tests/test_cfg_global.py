@@ -51,6 +51,7 @@ def test_wcs_no_native_format(minimal_global_raw_cfg, wcs_global_cfg):
     assert "wcs" in str(excinfo.value)
 
 def test_no_services(minimal_global_raw_cfg):
+    OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {
         "wms": False,
         "wmts": False,
