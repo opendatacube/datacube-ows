@@ -883,7 +883,7 @@ class OWSConfig(OWSConfigEntry):
                     "Missing required config entry in 'global' section: %s" % str(e)
                 )
 
-            if self.wms:
+            if self.wms or self.wmts:
                 self.parse_wms(cfg.get("wms", {}))
             else:
                 self.parse_wms({})

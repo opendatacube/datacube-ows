@@ -217,3 +217,54 @@ def mock_range():
             "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1,},
         }
     }
+
+
+@pytest.fixture
+def minimal_global_raw_cfg():
+    return {
+        "global": {
+            "title": "Test Title",
+            "info_url": "https://my.domain.com/about_us",
+            "allowed_urls": [
+                "http://localhost",
+                "http://unsecure.domain.com/odc",
+                "https://secure.domain.com/ows",
+            ],
+            "published_CRSs": {
+                "EPSG:3857": {  # Web Mercator
+                     "geographic": False,
+                     "horizontal_coord": "x",
+                     "vertical_coord": "y",
+                },
+                "EPSG:4326": {  # WGS-84
+                    "geographic": True,
+                    "vertical_coord_first": True
+                },
+            },
+        },
+        "layers": []
+    }
+
+@pytest.fixture
+def wcs_global_cfg():
+    return {
+        "formats": {
+            # Key is the format name, as used in DescribeCoverage XML
+            "GeoTIFF": {
+                "renderer": "datacube_ows.wcs_utils.get_tiff",
+                # The MIME type of the image, as used in the Http Response.
+                "mime": "image/geotiff",
+                # The file extension to add to the filename.
+                "extension": "tif",
+                # Whether or not the file format supports multiple time slices.
+                "multi-time": False
+            },
+            "netCDF": {
+                "renderer": "datacube_ows.wcs_utils.get_netcdf",
+                "mime": "application/x-netcdf",
+                "extension": "nc",
+                "multi-time": True,
+            }
+        },
+        "native_format": "GeoTIFF",
+    }
