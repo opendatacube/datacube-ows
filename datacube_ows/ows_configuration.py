@@ -883,14 +883,14 @@ class OWSConfig(OWSConfigEntry):
                     "Missing required config entry in 'global' section: %s" % str(e)
                 )
 
-            if self.wms:
+            if self.wms or self.wmts:
                 self.parse_wms(cfg.get("wms", {}))
             else:
                 self.parse_wms({})
 
             if self.wcs:
                 try:
-                    self.parse_wcs(cfg["wcs"])
+                    self.parse_wcs(cfg.get("wcs"))
                 except KeyError as e:
                     raise ConfigException(
                         "Missing required config entry in 'wcs' section (with WCS enabled): %s" % str(e)
@@ -962,11 +962,11 @@ class OWSConfig(OWSConfigEntry):
             self.published_CRSs[crs_str] = self.internal_CRSs[crs_str]
             if self.published_CRSs[crs_str]["geographic"]:
                 if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
-                    raise Exception("Published CRS {} is geographic"
-                                    "but has a horizontal coordinate that is not 'longitude'".format(crs_str))
+                    raise ConfigException(f"Published CRS {crs_str} is geographic"
+                                    "but has a horizontal coordinate that is not 'longitude'")
                 if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
-                    raise Exception("Published CRS {} is geographic"
-                                    "but has a vertical coordinate that is not 'latitude'".format(crs_str))
+                    raise ConfigException(f"Published CRS {crs_str} is geographic"
+                                    "but has a vertical coordinate that is not 'latitude'")
         for alias, alias_def in CRS_aliases.items():
             target_crs = alias_def["alias"]
             if target_crs not in self.published_CRSs:
@@ -1007,7 +1007,7 @@ class OWSConfig(OWSConfigEntry):
 
             self.native_wcs_format = cfg["native_format"]
             if self.native_wcs_format not in self.wcs_formats_by_name:
-                raise Exception("Configured native WCS format not a supported format.")
+                raise ConfigException(f"Configured native WCS format ({self.native_wcs_format}) not a supported format.")
         else:
             self.default_geographic_CRS = None
             self.default_geographic_CRS_def = None
