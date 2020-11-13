@@ -6,9 +6,6 @@ import logging
 
 _LOG = logging.getLogger(__name__)
 
-import logging
-_LOG = logging.getLogger(__name__)
-
 
 class CubePool():
     _instances = {}
