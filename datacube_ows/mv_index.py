@@ -123,7 +123,6 @@ def mv_search_datasets(index,
                     intersect = uniongeom
                 return intersect
     if sel == MVSelectOpts.DATASETS:
-        return index.datasets.bulk_get(
-                 [r[0] for r in conn.execute(s)]
-        )
+        ids = [r[0] for r in conn.execute(s)]
+        return index.datasets.bulk_get(ids)
     assert False

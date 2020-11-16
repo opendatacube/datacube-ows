@@ -6,7 +6,7 @@ from requests.exceptions import HTTPError
 from urllib import request
 from lxml import etree
 
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import get_config, OWSConfig
 from integration_tests.utils import WCS20Extent, ODCExtent
 
 
@@ -130,12 +130,16 @@ def test_wcs1_getcoverage_netcdf(ows_server):
 
 
 def test_extent_utils():
+    OWSConfig._instance = None
     cfg = get_config(refresh=True)
+    layer = None
     for lyr in cfg.product_index.values():
-        layer = lyr
-        break
+        if lyr.ready:
+            layer = lyr
+            break
+    assert layer is not None
     ext = ODCExtent(layer)
-    times, extent = ext.subsets(space=ODCExtent.FULL_LAYER_EXTENT, time=ODCExtent.FIRST)
+    extent, times = ext.subsets(space=ODCExtent.FULL_LAYER_EXTENT, time=ODCExtent.FIRST)
     assert len(times) == 1
     assert extent == ext.full_extent
 

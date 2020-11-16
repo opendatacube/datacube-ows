@@ -5,6 +5,7 @@ import datetime
 from importlib import import_module
 from itertools import chain
 
+from affine import Affine
 from dateutil.parser import parse
 from urllib.parse import urlparse
 
@@ -272,3 +273,13 @@ def lower_get_args():
         for v in request.args.getlist(k):
             d[kl] = v
     return d
+
+
+def create_geobox(
+        crs,
+        minx, miny,
+        maxx, maxy,
+        width, height,
+):
+    affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
+    return geometry.GeoBox(width, height, affine, crs)

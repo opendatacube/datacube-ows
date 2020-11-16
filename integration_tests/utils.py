@@ -149,7 +149,7 @@ class ODCExtent:
                 width_ratio=0.02,
                 height_ratio=0.02):
         ext_times = time.slice(self.layer.ranges["times"])
-        search_times = [t for t in ext_times]
+        search_times = [self.layer.search_times(t) for t in ext_times]
         extent = None
         with cube() as dc:
             if space.needs_full_extent() and not self.full_extent:
