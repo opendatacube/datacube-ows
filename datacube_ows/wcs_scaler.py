@@ -233,10 +233,12 @@ class WCSScaler:
         x_scale = (self.max.x - self.min.x) / self.size.x
         # Y axis is reversed: image coordinate conventions
         y_scale = (self.min.y - self.max.y) / self.size.y
-        if self.crs_def.get("vertical_coord_first", False):
-            trans_aff = Affine.translation(self.min.y, self.max.x)
-            scale_aff = Affine.scale(y_scale, x_scale)
-        else:
-            trans_aff = Affine.translation(self.min.y, self.max.x)
-            scale_aff = Affine.scale(y_scale, x_scale)
+        #if self.crs_def["vertical_coord_first"]:
+            # This should probably happen, but can't because PostGIS wants
+            # coords to be horizontal first, regardless of what the CRS says.
+            # trans_aff = Affine.translation(self.min.y, self.max.x)
+            # scale_aff = Affine.scale(y_scale, x_scale)
+        #else:
+        trans_aff = Affine.translation(self.min.x, self.max.y)
+        scale_aff = Affine.scale(x_scale, y_scale)
         return trans_aff * scale_aff
