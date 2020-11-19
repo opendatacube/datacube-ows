@@ -34,11 +34,19 @@ class WCS20Extent:
         else:
             time = ('time', self.time[1])
 
-        return [
-            ('x', bbox[0], bbox[2]),
-            ('y', bbox[1], bbox[3]),
-            time
-        ]
+        if crs in ["EPSG:4326"]:
+            # Vertical coordinate First
+            return [
+                ('x', bbox[1], bbox[3]),
+                ('y', bbox[0], bbox[2]),
+                time
+            ]
+        else:
+            return [
+                ('x', bbox[0], bbox[2]),
+                ('y', bbox[1], bbox[3]),
+                time
+            ]
 
     def native_bbox(self):
         return (
