@@ -110,7 +110,7 @@ def test_wcs1_getcoverage_netcdf(ows_server):
         bbox=pytest.helpers.enclosed_bbox(bbox),
         crs='EPSG:4326',
         width=400,
-        height=300
+        height=300,
     )
 
     assert output
