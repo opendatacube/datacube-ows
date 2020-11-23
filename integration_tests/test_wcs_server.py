@@ -134,14 +134,24 @@ def test_extent_utils():
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
-        if lyr.ready:
+        if lyr.ready and not lyr.hide:
             layer = lyr
             break
+    assert layer
+    assert layer.ready and not layer.hide
     assert layer is not None
     ext = ODCExtent(layer)
-    extent, times = ext.subsets(space=ODCExtent.FULL_LAYER_EXTENT, time=ODCExtent.FIRST)
-    assert len(times) == 1
+    extent, first_times = ext.subsets(space=ODCExtent.FULL_LAYER_EXTENT, time=ODCExtent.FIRST)
+    assert len(first_times) == 1
+    assert extent
     assert extent == ext.full_extent
+    extent, last_times = ext.subsets(space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST)
+    assert len(last_times) == 1
+    assert extent.area <= ext.full_extent.area
+    assert first_times[0] < last_times[0]
+    extent, times = ext.subsets(space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST)
+    assert len(times) == 1
+    assert extent.area < ext.full_extent.area
 
 
 def test_wcs1_getcoverage_exceptions(ows_server):
@@ -240,6 +250,10 @@ def test_wcs20_server(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     assert contents
+
+    # Test DescribeCoverage
+    desc_cov = wcs.getDescribeCoverage(contents[0])
+    assert desc_cov
 
 
 def test_wcs20_getcoverage_geotiff(ows_server):
