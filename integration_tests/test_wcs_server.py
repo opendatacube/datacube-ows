@@ -265,28 +265,25 @@ def test_wcs20_server(ows_server):
 
 
 def test_wcs20_getcoverage_geotiff(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS20Extent(desc_cov)
-    subsets = extent.subsets("EPSG:4326")
-    # No way of knowing if we will hit data or not
-    # 404 or success are valid results
-    try:
-        output = wcs.getCoverage(
-            identifier=[contents[0]],
-            format='image/geotiff',
-            subsets=subsets,
-            subsettingcrs="EPSG:4326",
-            scalesize="x(400),y(300)"
-        )
-        assert output
-        assert output.info()['Content-Type'] == 'image/geotiff'
-    except HTTPError as e:
-        assert e.response.status_code == 404
+    layer = cfg.product_index[contents[0]]
+    assert layer.ready and not layer.hide
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST, "EPSG:4326")
+    output = wcs.getCoverage(
+        identifier=[layer.name],
+        format='image/geotiff',
+        subsets=subsets,
+        subsettingcrs="EPSG:4326",
+        scalesize="x(400),y(300)"
+    )
+    assert output
+    assert output.info()['Content-Type'] == 'image/geotiff'
 
 
 

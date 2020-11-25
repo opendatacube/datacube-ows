@@ -239,12 +239,32 @@ class ODCExtent:
         self.native_crs = layer.native_CRS
         self.full_extent = None
 
+    def wcs2_subsets(self,
+                space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
+                time=TimeRequestTypes.LAST,
+                crs="EPSG:4326"):
+        extent, times = self.subsets(space, time)
+        ext_time = time.slice(self.layer.ranges["times"])
+        if len(times) == 1:
+            time_sub = ("time", times[0].strftime("%Y-%m-%d"))
+        else:
+            time_sub = ("time", times[0].strftime("%Y-%m-%d"), times[-1].strftime("%Y-%m-%d"))
+        if crs == "EPSG:4326":
+            crs_extent = extent
+        else:
+            crs_extent = extent.to_crs(crs)
+        crs_bbox = crs_extent.boundingbox
+        return (
+            ('x', min(crs_bbox.left, crs_bbox.right), max(crs_bbox.left, crs_bbox.right)),
+            ('y', min(crs_bbox.top, crs_bbox.bottom), max(crs_bbox.top, crs_bbox.bottom)),
+            time_sub
+        )
+
     def subsets(self,
                 space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
                 time=TimeRequestTypes.LAST):
         ext_times = time.slice(self.layer.ranges["times"])
         search_times = [self.layer.search_times(t) for t in ext_times]
-        extent = None
         with cube() as dc:
             if space.needs_full_extent() and not self.full_extent:
                 self.full_extent = mv_search_datasets(dc.index,
