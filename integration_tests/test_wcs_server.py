@@ -288,37 +288,39 @@ def test_wcs20_getcoverage_geotiff(ows_server):
 
 
 def test_wcs20_getcoverage_netcdf(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS20Extent(desc_cov)
-    subsets = extent.subsets("EPSG:4326", first_time=True)
-    try:
-        output = wcs.getCoverage(
-            identifier=[contents[0]],
-            format='application/x-netcdf',
-            subsets=subsets,
-            subsettingcrs="EPSG:4326",
-            scalesize="x(400),y(300)",
-        )
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326")
+    output = wcs.getCoverage(
+        identifier=[layer.name],
+        format='application/x-netcdf',
+        subsets=subsets,
+        subsettingcrs="EPSG:4326",
+        scalesize="x(400),y(300)",
+    )
 
-        assert output
-        assert output.info()['Content-Type'] == 'application/x-netcdf'
-    except HTTPError as e:
-        assert e.response.status_code == 404
+    assert output
+    assert output.info()['Content-Type'] == 'application/x-netcdf'
 
 
 def test_wcs20_getcoverage_crs_alias(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, "EPSG:4326")
     output = wcs.getCoverage(
-        identifier=[contents[0]],
+        identifier=[layer.name],
         format='application/x-netcdf',
         subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
@@ -329,15 +331,16 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
     assert output.info()['Content-Type'] == 'application/x-netcdf'
 
 
-def test_wcs20_getcoverage_multidate(ows_server):
+def test_wcs20_getcoverage_multidate_geotiff(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS20Extent(desc_cov)
-    subsets = extent.subsets("EPSG:4326", multi_time=True)
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326")
     try:
         resp = wcs.getCoverage(
             identifier=[contents[0]],
@@ -349,6 +352,24 @@ def test_wcs20_getcoverage_multidate(ows_server):
     except ServiceException as e:
         assert 'Format does not support multi-time datasets' in str(e)
 
+
+def test_wcs20_getcoverage_multidate_netcdf(ows_server):
+    cfg = get_config(refresh=True)
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326")
+    resp = wcs.getCoverage(
+        identifier=[contents[0]],
+        format='application/x-netcdf',
+        subsets=subsets,
+        subsettingcrs="EPSG:4326",
+        scalesize="x(400),y(300)",
+    )
 
 
 def test_wcs21_server(ows_server):
