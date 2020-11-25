@@ -145,13 +145,21 @@ def test_extent_utils():
     assert len(first_times) == 1
     assert extent
     assert extent == ext.full_extent
-    extent, last_times = ext.subsets(space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST)
+    ft_extent, last_times = ext.subsets(space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST)
     assert len(last_times) == 1
-    assert extent.area <= ext.full_extent.area
+    assert ft_extent.area < ext.full_extent.area
     assert first_times[0] < last_times[0]
-    extent, times = ext.subsets(space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST)
+    extent, times = ext.subsets(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.LAST)
     assert len(times) == 1
     assert extent.area < ext.full_extent.area
+    assert extent.area < ft_extent.area
+    assert ext.full_extent.contains(extent)
+    extent, times = ext.subsets(space=ODCExtent.OUTSIDE_OF_FULL_EXTENT, time=ODCExtent.SECOND)
+    assert len(times) == 1
+    assert not ext.full_extent.intersects(extent)
+    extent, times = ext.subsets(space=ODCExtent.IN_FULL_BUT_OUTSIDE_OF_TIMES, time=ODCExtent.LAST)
+    assert not ft_extent.intersects(extent)
+    assert ext.full_extent.contains(extent)
 
 
 def test_wcs1_getcoverage_exceptions(ows_server):

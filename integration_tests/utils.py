@@ -1,5 +1,9 @@
 import enum
 
+from datacube.utils.geometry import BoundingBox, Geometry
+from datacube.utils.geometry._base import wrap_shapely
+from shapely.ops import triangulate, unary_union
+
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets
 
@@ -79,6 +83,30 @@ class WCS20Extent:
         return (x[0], y[0], x[1], y[1])
 
 
+def geom_from_bbox(bbox, crs="EPSG:4326"):
+    geojson = {"type": "Polygon", "coordinates": [[
+        bbox.points[0],
+        bbox.points[1],
+        bbox.points[3],
+        bbox.points[2],
+        bbox.points[0],
+    ]]}
+    return Geometry(geojson, crs=crs)
+
+def simplify_geom(geom_in, crs="EPSG:4326"):
+    geom = geom_in
+    # Pick biggest polygon from multipolygon
+    if geom.type == 'MultiPolygon':
+        geom = max(geom, key=lambda x: x.area)
+    # Triangulate
+    rawtriangles = list(triangulate(geom.geom))
+    triangles = list(filter(lambda x: geom_in.geom.contains(x.representative_point()) and x.area/geom.area > 0.1, rawtriangles))
+    geom = unary_union(triangles)
+    if geom.type == 'MultiPolygon':
+        geom = max(geom, key=lambda x: x.area)
+    return Geometry(geom, crs=crs)
+
+
 class ODCExtent:
     class TimeRequestTypes(enum.Enum):
         FIRST = 0
@@ -138,6 +166,66 @@ class ODCExtent:
                 self.OUTSIDE_OF_FULL_EXTENT
             )
 
+        def subset(self, time_extent, full_extent):
+            if self == self.FULL_LAYER_EXTENT:
+                return full_extent
+            if self == self.FULL_EXTENT_FOR_TIMES:
+                return time_extent
+            if self == self.OUTSIDE_OF_FULL_EXTENT:
+                full_bbox = full_extent.boundingbox
+                width = full_bbox.right - full_bbox.left
+                height = full_bbox.top - full_bbox.bottom
+                outside_bbox = BoundingBox(top=full_bbox.top + height, bottom=full_bbox.top + height*0.8,
+                                           left=full_bbox.left - width, right=full_bbox.right - width*0.8)
+                return geom_from_bbox(outside_bbox)
+            if self == self.IN_FULL_BUT_OUTSIDE_OF_TIMES:
+                outside_times = full_extent.difference(time_extent)
+                outside_times = simplify_geom(outside_times)
+                sub = self.CENTRAL_SUBSET_FOR_TIMES.subset(outside_times, full_extent)
+                return sub
+
+            bbox = time_extent.boundingbox
+            width = bbox.right - bbox.left
+            height = bbox.top - bbox.bottom
+            if width < 0 or height < 0:
+                print("I think this should still work, but I haven't worked through it properly")
+            # Slice on vertical coordinate (horizontal slice)
+            centre_y = (bbox.top + bbox.bottom) / 2
+            if self == self.CENTRAL_SUBSET_FOR_TIMES:
+                hslice_bbox = BoundingBox(left=bbox.left, right=bbox.right,
+                                          top=centre_y + 0.02*height, bottom=centre_y - 0.02*height)
+                hslice_geom = geom_from_bbox(hslice_bbox)
+                hslice_geom = hslice_geom.intersection(time_extent)
+            elif self == self.OFFSET_SUBSET_FOR_TIMES:
+                offset_y = centre_y + 0.35*height
+                hslice_bbox = BoundingBox(left=bbox.left, right=bbox.right,
+                                          top=offset_y + 0.02 * height, bottom=offset_y - 0.02 * height)
+                hslice_geom = geom_from_bbox(hslice_bbox)
+                hslice_geom = hslice_geom.intersection(time_extent)
+            else: # if self == self.EDGE_SUBSET_FOR_TIMES:
+                hslice_bbox = BoundingBox(left=bbox.left, right=bbox.right,
+                                          top=bbox.bottom + 0.02 * height, bottom=bbox.bottom)
+                hslice_geom = geom_from_bbox(hslice_bbox)
+                hslice_geom = hslice_geom.intersection(time_extent)
+            # Slice on horizontal coordinate (vertical slice)
+            slice_bbox = hslice_geom.boundingbox
+            centre_x = (slice_bbox.left + slice_bbox.right) / 2
+            if self == self.CENTRAL_SUBSET_FOR_TIMES:
+                vslice_bbox = BoundingBox(left=centre_x - 0.02*width, right=centre_x + 0.02*width,
+                                          top=slice_bbox.top, bottom=slice_bbox.bottom)
+                vslice_geom = geom_from_bbox(vslice_bbox)
+            elif self == self.OFFSET_SUBSET_FOR_TIMES:
+                offset_x = centre_x + 0.25*height
+                vslice_bbox = BoundingBox(left=offset_x - 0.02*width, right=offset_x + 0.02*width,
+                                          top=slice_bbox.top, bottom=slice_bbox.bottom)
+                vslice_geom = geom_from_bbox(hslice_bbox)
+            else: # if self == self.EDGE_SUBSET_FOR_TIMES:
+                vslice_bbox = BoundingBox(left=slice_bbox.left, right=slice_bbox.left + 0.02*width,
+                                          top=slice_bbox.top, bottom=slice_bbox.bottom)
+                vslice_geom = geom_from_bbox(hslice_bbox)
+
+            return vslice_geom
+
     FULL_LAYER_EXTENT = SpaceRequestType.FULL_LAYER_EXTENT
     FULL_EXTENT_FOR_TIMES = SpaceRequestType.FULL_EXTENT_FOR_TIMES
     CENTRAL_SUBSET_FOR_TIMES = SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES
@@ -153,9 +241,7 @@ class ODCExtent:
 
     def subsets(self,
                 space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
-                time=TimeRequestTypes.LAST,
-                width_ratio=0.02,
-                height_ratio=0.02):
+                time=TimeRequestTypes.LAST):
         ext_times = time.slice(self.layer.ranges["times"])
         search_times = [self.layer.search_times(t) for t in ext_times]
         extent = None
@@ -172,11 +258,7 @@ class ODCExtent:
             else:
                 time_extent = None
 
-            if space == self.FULL_LAYER_EXTENT:
-                extent = self.full_extent
-            elif space == self.FULL_EXTENT_FOR_TIMES:
-                extent = time_extent
-            elif space == self.OUTSIDE_OF_FULL_EXTENT:
-                bbox = self.full_extent.boundingbox
+            extent = space.subset(time_extent, self.full_extent)
+
         return extent, ext_times
 
