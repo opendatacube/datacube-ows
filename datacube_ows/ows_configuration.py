@@ -22,7 +22,7 @@ from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_o
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
-    year_date_range
+    year_date_range, create_geobox
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 
 import logging
@@ -696,12 +696,19 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def is_year_time_res(self):
         return self.time_resolution == TIMERES_YR
 
-    def search_times(self, t, geobox):
+    def search_times(self, t, geobox=None):
         if self.is_month_time_res:
             return month_date_range(t)
         elif self.is_year_time_res:
             return year_date_range(t)
         else:
+            if not geobox:
+                bbox = self.ranges["bboxes"][self.native_CRS]
+                geobox=create_geobox(
+                    self.native_CRS,
+                    bbox["left"], bbox["bottom"], bbox["right"],bbox["top"],
+                    1, 1
+                )
             return local_solar_date_range(geobox, t)
 
     def dataset_groupby(self):
@@ -866,7 +873,7 @@ class OWSConfig(OWSConfigEntry):
     initialised = False
 
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
+        if not cls._instance or kwargs.get("refresh"):
             cls._instance = super().__new__(cls)
         return cls._instance
 

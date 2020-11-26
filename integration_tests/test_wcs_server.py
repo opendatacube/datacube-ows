@@ -2,9 +2,14 @@ import pytest
 
 from owslib.wcs import WebCoverageService
 from owslib.util import ServiceException
+import requests
+from requests.exceptions import HTTPError
 from urllib import request
 from lxml import etree
-import requests
+
+from datacube_ows.ows_configuration import get_config, OWSConfig
+from integration_tests.utils import WCS20Extent, ODCExtent
+
 
 def get_xsd(name):
     # TODO: Get XSD's for different versions
@@ -106,7 +111,7 @@ def test_wcs1_getcoverage_netcdf(ows_server):
         bbox=pytest.helpers.enclosed_bbox(bbox),
         crs='EPSG:4326',
         width=400,
-        height=300
+        height=300,
     )
 
     assert output
@@ -123,6 +128,39 @@ def test_wcs1_getcoverage_netcdf(ows_server):
 
     assert output
     assert output.info()['Content-Type'] == 'application/x-netcdf'
+
+
+def test_extent_utils():
+    OWSConfig._instance = None
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    assert layer.ready and not layer.hide
+    assert layer is not None
+    ext = ODCExtent(layer)
+    extent, first_times = ext.subsets(space=ODCExtent.FULL_LAYER_EXTENT, time=ODCExtent.FIRST)
+    assert len(first_times) == 1
+    assert extent
+    assert extent == ext.full_extent
+    ft_extent, last_times = ext.subsets(space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST)
+    assert len(last_times) == 1
+    assert ft_extent.area < ext.full_extent.area
+    assert first_times[0] < last_times[0]
+    extent, times = ext.subsets(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.LAST)
+    assert len(times) == 1
+    assert extent.area < ext.full_extent.area
+    assert extent.area < ft_extent.area
+    assert ext.full_extent.contains(extent)
+    extent, times = ext.subsets(space=ODCExtent.OUTSIDE_OF_FULL_EXTENT, time=ODCExtent.SECOND)
+    assert len(times) == 1
+    assert not ext.full_extent.intersects(extent)
+    extent, times = ext.subsets(space=ODCExtent.IN_FULL_BUT_OUTSIDE_OF_TIMES, time=ODCExtent.LAST)
+    assert not ft_extent.intersects(extent)
+    assert ext.full_extent.contains(extent)
 
 
 def test_wcs1_getcoverage_exceptions(ows_server):
@@ -222,34 +260,48 @@ def test_wcs20_server(ows_server):
     contents = list(wcs.contents)
     assert contents
 
+    # Test DescribeCoverage
+    desc_cov = wcs.getDescribeCoverage(contents[0])
+    assert desc_cov
+
+
 def test_wcs20_getcoverage_geotiff(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    assert layer.ready and not layer.hide
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST, "EPSG:4326")
     output = wcs.getCoverage(
-        identifier=[contents[0]],
+        identifier=[layer.name],
         format='image/geotiff',
-        subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
+        subsets=subsets,
         subsettingcrs="EPSG:4326",
-        scalesize="x(400),y(300)",
+        scalesize="x(400),y(300)"
     )
-
     assert output
     assert output.info()['Content-Type'] == 'image/geotiff'
 
 
+
 def test_wcs20_getcoverage_netcdf(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326")
     output = wcs.getCoverage(
-        identifier=[contents[0]],
+        identifier=[layer.name],
         format='application/x-netcdf',
-        subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
+        subsets=subsets,
         subsettingcrs="EPSG:4326",
         scalesize="x(400),y(300)",
     )
@@ -259,13 +311,17 @@ def test_wcs20_getcoverage_netcdf(ows_server):
 
 
 def test_wcs20_getcoverage_crs_alias(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, "EPSG:4326")
     output = wcs.getCoverage(
-        identifier=[contents[0]],
+        identifier=[layer.name],
         format='application/x-netcdf',
         subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05')],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
@@ -276,17 +332,21 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
     assert output.info()['Content-Type'] == 'application/x-netcdf'
 
 
-def test_wcs20_getcoverage_multidate(ows_server):
+def test_wcs20_getcoverage_multidate_geotiff(ows_server):
+    cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326")
     try:
         resp = wcs.getCoverage(
             identifier=[contents[0]],
             format='image/geotiff',
-            subsets=[('x', 144, 144.3), ('y', -42.4, -42), ('time', '2019-11-05', "2019-12-05")],
+            subsets=subsets,
             subsettingcrs="EPSG:4326",
             scalesize="x(400),y(300)",
         )
@@ -294,62 +354,83 @@ def test_wcs20_getcoverage_multidate(ows_server):
         assert 'Format does not support multi-time datasets' in str(e)
 
 
+def test_wcs20_getcoverage_multidate_netcdf(ows_server):
+    cfg = get_config(refresh=True)
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326")
+    resp = wcs.getCoverage(
+        identifier=[contents[0]],
+        format='application/x-netcdf',
+        subsets=subsets,
+        subsettingcrs="EPSG:4326",
+        scalesize="x(400),y(300)",
+    )
+
 
 def test_wcs21_server(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
-
+    # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
+    r = requests.get(ows_server.url + '/wcs', params={
+        "request": "GetCapabilities",
+        "version": "2.1.0",
+        "service": "WCS"
+    })
+    assert r.status_code == 200
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            assert lyr.name in r.text
     # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    assert contents
+    assert layer
 
 
-@pytest.mark.xfail(reason='Failing to pass xsd')
 def test_wcs21_describecoverage(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
-
-    # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    test_layer_name = contents[0]
-
-    resp = wcs.getDescribeCoverage(test_layer_name)
-
-    # resp_xml = etree.parse(resp.fp)
-    gc_xds = get_xsd("2.0/wcsDescribeCoverage.xsd")
-    assert gc_xds.validate(resp)
-
-
-def test_wcs21_pattern_generated_describecoverage(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
-
-    # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    test_layer_name = contents[0]
-
-    resp = request.urlopen(ows_server.url +"/wcs?service=WCS&version=2.0.1&request=DescribeCoverage&CoverageId={0}&".format(
-        test_layer_name
-    ), timeout=10)
-
-    assert 'CoverageDescription' in str(resp.read(300))
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
+    r = requests.get(ows_server.url + '/wcs', params={
+        "request": "DescribeCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS"
+    })
+    assert r.status_code == 200
+    # ETree hangs parsing schema!
+#   gc_xds = get_xsd("2.1/gml/wcsDescribeCoverage.xsd")
+#   assert gc_xds.validate(r.text)
 
 
 def test_wcs21_getcoverage(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, crs="EPSG:4326")
 
-    # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    output = wcs.getCoverage(
-        identifier=[contents[0]],
-        format='image/geotiff',
-        subsets=[('x', 144, 144.3), ('y', -42.4, -42)],
-        # timeSequence=['2019-11-05'],
-        subsettingcrs="EPSG:4326",
-        subset='time("2019-11-05")',
-        scalesize="x(400),y(300)"
-    )
-
-    assert output
-    assert output.info()['Content-Type'] == 'image/geotiff'
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    })
+    assert r.status_code == 200

@@ -6,6 +6,7 @@ import logging
 
 _LOG = logging.getLogger(__name__)
 
+
 class CubePool():
     _instances = {}
     _cubes = None

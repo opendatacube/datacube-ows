@@ -118,6 +118,7 @@ def get_capabilities(args):
                 ])
             )
             for product in cfg.product_index.values()
+            if product.ready and not product.hide and product.wcs
         ],
         formats_supported=[
             fmt.mime
