@@ -2,6 +2,7 @@ import pytest
 
 from owslib.wcs import WebCoverageService
 from owslib.util import ServiceException
+import requests
 from requests.exceptions import HTTPError
 from urllib import request
 from lxml import etree
@@ -373,65 +374,63 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server):
 
 
 def test_wcs21_server(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
-
+    # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
+    r = requests.get(ows_server.url + '/wcs', params={
+        "request": "GetCapabilities",
+        "version": "2.1.0",
+        "service": "WCS"
+    })
+    assert r.status_code == 200
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            assert lyr.name in r.text
     # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    assert contents
+    assert layer
 
 
-@pytest.mark.xfail(reason='Failing to pass xsd')
 def test_wcs21_describecoverage(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
-
-    # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    test_layer_name = contents[0]
-
-    resp = wcs.getDescribeCoverage(test_layer_name)
-    extent = WCS20Extent(resp)
-
-    # resp_xml = etree.parse(resp.fp)
-    gc_xds = get_xsd("2.0/wcsDescribeCoverage.xsd")
-    assert gc_xds.validate(resp)
-
-
-def test_wcs21_pattern_generated_describecoverage(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
-
-    # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    test_layer_name = contents[0]
-
-    resp = request.urlopen(ows_server.url +"/wcs?service=WCS&version=2.0.1&request=DescribeCoverage&CoverageId={0}&".format(
-        test_layer_name
-    ), timeout=10)
-
-    assert 'CoverageDescription' in str(resp.read(300))
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
+    r = requests.get(ows_server.url + '/wcs', params={
+        "request": "DescribeCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS"
+    })
+    assert r.status_code == 200
+    # ETree hangs parsing schema!
+#   gc_xds = get_xsd("2.1/gml/wcsDescribeCoverage.xsd")
+#   assert gc_xds.validate(r.text)
 
 
 def test_wcs21_getcoverage(ows_server):
-    # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.1", timeout=120)
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, crs="EPSG:4326")
 
-    # Ensure that we have at least some layers available
-    contents = list(wcs.contents)
-    desc_cov = wcs.getDescribeCoverage(contents[0])
-    extent = WCS20Extent(desc_cov)
-    subsets = extent.subsets("EPSG:4326")
-    try:
-        output = wcs.getCoverage(
-            identifier=[contents[0]],
-            format='image/geotiff',
-            subsets=subsets,
-            subsettingcrs="EPSG:4326",
-            scalesize="x(400),y(300)"
-        )
-
-        assert output
-        assert output.info()['Content-Type'] == 'image/geotiff'
-    except HTTPError as e:
-        assert e.response.status_code == 404
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    })
+    assert r.status_code == 200
