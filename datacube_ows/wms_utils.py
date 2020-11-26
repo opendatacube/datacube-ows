@@ -309,18 +309,22 @@ class GetLegendGraphicParameters():
                               errcode=WMSException.INVALID_FORMAT,
                               lower=True,
                               permitted_values=["image/png"])
-        # Styles
-        try:
-            self.styles = [
-                self.product.style_index[style_name]
-                for style_name in args.get("styles", "").split(",")
-            ]
-        except KeyError as e:
-            raise WMSException(
-                f"Style {e} not valid for layer.",
-                WMSException.STYLE_NOT_DEFINED,
-                locator="STYLES parameter"
-            )
+        arg_styles = args.get("styles", None)
+        if arg_styles:
+            # Styles
+            try:
+                self.styles = [
+                    self.product.style_index[style_name]
+                    for style_name in arg_styles.split(",")
+                ]
+            except KeyError as e:
+                raise WMSException(
+                    f"Style {e} not valid for layer.",
+                    WMSException.STYLE_NOT_DEFINED,
+                    locator="STYLES parameter"
+                )
+        else:
+            self.styles = [self.product.default_style]
         # Time parameter
         self.times = get_times(args, self.product)
 
