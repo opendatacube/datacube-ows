@@ -120,11 +120,12 @@ At the time of writing, pre-built pip-installed configurations also work fairly 
 
 The folllowing instructions are for installing on a clean Linux system with established ODC environment.
 
-* We currently recommend using pip with pre-built binary packages. Create a
-  new python 3.6 or 3.7 virtualenv and run pip install against the supplied
-  requirements.txt::
+* Create a
+  new python 3.6 or 3.8 virtualenv and run pip install against the supplied
+  requirements.txt (The --pre flag solves some problems in 3.6 but causes
+  problems in 3.8.)::
 
-    pip install --pre -r requirements.txt
+    pip install [--pre] -r requirements.txt
 
 * Run ::
     python update_ranges.py --role *datacube_owner_role* --schema

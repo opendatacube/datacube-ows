@@ -46,10 +46,10 @@ def enclosed_bbox(bbox):
     lat_range = lat_max - lat_min
 
     return (
-        lon_min + 0.2 * lon_range,
-        lat_min + 0.2 * lat_range,
-        lon_max - 0.2 * lon_range,
-        lat_max - 0.2 * lat_range
+        lon_min + 0.45 * lon_range,
+        lat_min + 0.45 * lat_range,
+        lon_max - 0.45 * lon_range,
+        lat_max - 0.45 * lat_range
     )
 
 @pytest.helpers.register

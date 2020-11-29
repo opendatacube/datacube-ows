@@ -22,7 +22,7 @@ from datacube.utils import geometry
 import math
 
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.ogc_utils import solar_date
+from datacube_ows.ogc_utils import solar_date, create_geobox
 from datacube_ows.ogc_exceptions import WMSException
 
 RESAMPLING_METHODS = {
@@ -82,8 +82,11 @@ def _get_geobox(args, src_crs, dst_crs=None):
         )
 
     out_crs = src_crs if dst_crs is None else dst_crs
-    affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
-    return geometry.GeoBox(width, height, affine, out_crs)
+    return create_geobox(
+        out_crs,
+        minx, miny, maxx, maxy,
+        width, height
+    )
 
 
 def _get_polygon(args, crs):
