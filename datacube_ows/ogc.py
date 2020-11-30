@@ -175,7 +175,11 @@ def legend(layer, style, dates=None):
         ndates = int(args.get("ndates", 0))
     else:
         ndates = len(dates)
-    img = create_legend_for_style(product, style, ndates)
+    try:
+        img = create_legend_for_style(product, style, ndates)
+    except WMSException as e:
+        return (str(e), e.http_response, resp_headers({"Content-Type": "text/plain"}))
+
     if not img:
         return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
     return img
