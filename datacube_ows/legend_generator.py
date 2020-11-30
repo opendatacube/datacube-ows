@@ -28,7 +28,7 @@ def legend_graphic(args):
     img = create_legends_from_styles(params.styles,
                         ndates=len(params.times))
     if img is None:
-        raise WMSException("No legend is available for this request")
+        raise WMSException("No legend is available for this request", http_response=404)
     return img
 
 
@@ -49,7 +49,7 @@ def create_legends_from_styles(styles, ndates=0):
             if img:
                 imgs.append(img)
         elif not s.auto_legend:
-            raise WMSException(f"Style {s.name} does not have a legend.")
+            raise WMSException(f"Style {s.name} does not have a legend.", http_response=404)
         else:
             if ndates in [0,1]:
                 bytesio = io.BytesIO()

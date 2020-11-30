@@ -194,3 +194,30 @@ def test_wms_getlegend(ows_server):
         if legend_url:
             resp = requests.head(legend_url, allow_redirects=False)
             assert resp.headers.get('content-type') == 'image/png'
+
+def test_wms_getlegendgraphic(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WMS service
+    wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
+
+    # Ensure that we have at least some layers available
+    contents = list(wms.contents)
+    test_layer_name = contents[0]
+
+    test_layer_styles = wms.contents[test_layer_name].styles
+    for style in test_layer_styles:
+        # check if this layer has a legend
+        legend_url = test_layer_styles[style].get('legend')
+        url = ows_server.url+"/wms"
+        resp = requests.get(url, allow_redirects=False, params={
+            "request": "GetLegendGraphic",
+            "layer": test_layer_name,
+            "version": "1.3.0",
+            "service": "WMS",
+            "styles": style,
+            "format": "image/png"
+        })
+        if legend_url:
+            assert resp.headers.get('content-type') == 'image/png'
+            assert resp.status_code == 200
+        else:
+            assert resp.status_code == 404
