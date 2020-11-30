@@ -11,10 +11,6 @@ from datacube import Datacube
 @click.option("--version", is_flag=True, default=False, help="Show OWS version number and exit")
 @click.option("-p", "--parse-only", is_flag=True, default=False, help="Only parse the syntax of the config file - do not validate against database")
 def main(version, parse_only, paths):
-    #layers, blocking,
-    #     merge_only, summary,
-    #     schema, views, role, version,
-    #     product, multiproduct, calculate_extent):
     """Test configuration files
 
     Valid invocations:
