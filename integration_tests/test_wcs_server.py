@@ -19,9 +19,12 @@ def get_xsd(name):
     return etree.XMLSchema(schema_doc)
 
 
-def check_wcs_error(url, expected_error_message=None, expected_status_code=400):
+def check_wcs_error(url, expected_error_message=None, expected_status_code=400, params=None):
     try:
-        resp = request.urlopen(url, timeout=10)
+        if params:
+            resp = request.urlopen(url, params=params, timeout=10)
+        else:
+            resp = request.urlopen(url, timeout=10)
 
         # Should not get here
         assert False
@@ -69,6 +72,45 @@ def test_wcs1_server(ows_server):
     contents = list(wcs.contents)
     assert contents
 
+
+def test_wcs1_getcov_nocov(ows_server):
+    check_wcs_error(ows_server.url + "/wcs", params={
+                        "request": "GetCoverage",
+                        "service": "WCS",
+                        "version": "1.0.0",
+                    },
+                    expected_error_message="No coverage specified",
+                    expected_status_code=400)
+
+
+def test_wcs1_getcov_nofmt(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+    },
+                    expected_error_message="No FORMAT parameter supplied",
+                    expected_status_code=500)
+
+def test_wcs1_getcov_bad_respcrs(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    check_wcs_error(ows_server.url + "/wcs", params={
+                        "request": "GetCoverage",
+                        "service": "WCS",
+                        "version": "1.0.0",
+                        "coverage": test_layer_name,
+                        "crs": 'EPSG:4326',
+                        "response_crs": 'PEGS:2346',
+                    },
+                    expected_error_message="PEGS:2346 is not a supported CRS",
+                    expected_status_code=500)
+
 def test_wcs1_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
@@ -86,6 +128,33 @@ def test_wcs1_getcoverage_geotiff(ows_server):
         format='GeoTIFF',
         bbox=pytest.helpers.disjoint_bbox(bbox),
         crs='EPSG:4326',
+        width=400,
+        height=300,
+        timeSequence=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+    )
+
+    assert output
+    assert output.info()['Content-Type'] == 'image/geotiff'
+
+
+def test_wcs1_getcoverage_geotiff_respcrs(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    test_layer = wcs.contents[test_layer_name]
+
+    bbox = test_layer.boundingBoxWGS84
+
+
+    output = wcs.getCoverage(
+        identifier=contents[0],
+        format='GeoTIFF',
+        bbox=pytest.helpers.disjoint_bbox(bbox),
+        crs='EPSG:4326',
+        response_crs='EPSG:3857',
         width=400,
         height=300,
         timeSequence=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
