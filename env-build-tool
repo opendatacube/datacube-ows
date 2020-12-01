@@ -1,0 +1,141 @@
+#!/bin/bash
+
+set -o errexit
+set -o noclobber
+set -o pipefail
+set -o nounset
+
+# TODO: be smarter about pinned pre-compiled dependencies
+#  Problem:
+#    1. We pre-compile some geo libs like rasterio,fiona...
+#    2. All commands here prefer pre-compiled wheels even if user explicitly requested different version
+#    3. Only GDAL libs needs to be pinned to certain version, others can be re-compiled with more recent/older versions
+#
+#  Currently user will need to `rm /wheels/rasterio*whl` to get a different
+#  version of rasterio installed, there must be an easier mechanism for this use
+#  case.
+#
+
+# download/compile wheels from requirements.txt
+#   wheels that are in /wheels will be copied through and not re-compiled
+cmd_wheels () {
+    local requirements="${1:-/conf/requirements.txt}"
+    local dst_wheels="${2:-/wheels}"
+    local src_wheels="${WHEELS:-/wheels}"
+    local bins="$(mktemp /tmp/bins-XXXX.txt)"
+
+    find "${src_wheels}" -type f -name "*whl" >> "${bins}"
+
+    pip wheel \
+        --no-cache-dir \
+        --find-links="${src_wheels}" \
+        --constraint="${bins}" \
+        --requirement="${requirements}" \
+        --wheel-dir="${dst_wheels}"
+
+    rm "${bins}"
+}
+
+# Construct environment from /wheels folder only, no downloads
+#
+cmd_new_no_index () {
+    local requirements="${1:-/conf/requirements.txt}"
+    local env="${2:-/env}"
+    local wheels="${3:-/wheels}"
+
+    mkdir -p "${env}"
+    python3 -m venv "${env}"
+    local pip="${env}/bin/pip"
+    $pip install --upgrade 'pip==20.2.4' setuptools wheel
+    $pip install \
+         --find-links="${wheels}" \
+         --no-cache-dir \
+         --no-index \
+         --requirement="${requirements}"
+}
+
+
+# Construct environment from requirements.txt and some pre-compiled wheels
+#
+cmd_new () {
+    local requirements="${1:-/conf/requirements.txt}"
+    local env="${2:-/env}"
+    local wheels="${3:-/wheels}"
+
+    local bins="$(mktemp /tmp/bins-XXXX.txt)"
+
+    find "${wheels}" -type f -name "*whl" >> "${bins}"
+
+    mkdir -p "${env}"
+    python3 -m venv "${env}"
+    local pip="${env}/bin/pip"
+    $pip install --upgrade 'pip==20.2.4' setuptools wheel
+
+    $pip install \
+        --no-cache-dir \
+        --find-links="${wheels}" \
+        --constraint="${bins}" \
+        --requirement="${requirements}"
+
+    rm "${bins}"
+}
+
+# Install more libs into existing environment
+cmd_extend () {
+    local requirements="${1:-/conf/requirements.txt}"
+    local env="${2:-/env}"
+    local wheels="${3:-/wheels}"
+
+    local bins="$(mktemp /tmp/bins-XXXX.txt)"
+    find "${wheels}" -type f -name "*whl" >> "${bins}"
+
+    mkdir -p "${env}"
+    python3 -m venv "${env}"
+    local pip="${env}/bin/pip"
+    $pip install --upgrade 'pip==20.2.4' setuptools wheel
+    $pip install \
+         --find-links="${wheels}" \
+         --constraint="${bins}" \
+         --no-cache-dir \
+         --requirement="${requirements}"
+
+    rm "${bins}"
+}
+
+cmd_help () {
+    echo 'env-build-tool <wheels|new|new_no_index|extend|help> ARGS
+
+Download or compile the required wheels into `wheel_dir`
+  > env-build-tool wheels <requirements.txt> <wheel_dir:/wheels>
+
+Make a new python environment from the requirements and wheels_dir
+  > env-build-tool new <requirements.txt> <env:/env> <wheel_dir:/wheels>
+
+Make a new python environment from the requirements and wheels_dir (No Downloads)
+  > env-build-tool new_no_index <requirements.txt <env:/env> <wheel_dir:/wheels>
+
+Add packages to an existing python environment
+  > env-build-tool extend <requirements.txt> <env:/env> <wheel_dir:/wheels>
+
+'
+}
+
+
+cmd_main () {
+   local cmd="${1:-help}"
+   shift || true # Always succeed, so that we display help text on no args
+
+   case "${cmd}" in
+       wheels|extend|new|new_no_index|help)
+           "cmd_${cmd}" $@
+           ;;
+       *)
+           echo "ERROR: No such command \"${cmd}\""
+           echo
+           cmd_help
+           exit 1
+           ;;
+   esac
+}
+
+cmd_main $@
