@@ -6,8 +6,6 @@ FROM opendatacube/geobase:wheels${V_BASE} as env_builder
 ARG py_env_path
 
 COPY requirements.txt /
-# Hotfix env-build-tool for the pip backwards-compatibility breakage
-COPY env-build-tool /usr/local/bin/env-build-tool
 RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
 
 ENV PATH=${py_env_path}/bin:$PATH \
