@@ -70,7 +70,7 @@ class WCS1GetCoverageRequest():
         if "response_crs" in args:
             self.response_crsid = args["response_crs"]
             if self.response_crsid not in cfg.published_CRSs:
-                raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
+                raise WCS1Exception("%s is not a supported CRS" % self.response_crsid,
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESPONSE_CRS parameter",
                                     valid_keys=list(cfg.published_CRSs))
@@ -157,18 +157,20 @@ class WCS1GetCoverageRequest():
             bands = args["measurements"]
             self.bands = []
             for b in bands.split(","):
+                if not b:
+                    continue
                 try:
                     self.bands.append(self.product.band_idx.band(b))
                 except ConfigException:
-                    raise WCS1Exception("Invalid measurement '%s'" % b,
+                    raise WCS1Exception(f"Invalid measurement: {b}",
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
                                         locator="MEASUREMENTS parameter",
-                                        valid_keys=self.product.band_labels())
+                                        valid_keys=self.product.band_idx.band_labels())
             if not bands:
                 raise WCS1Exception("No measurements supplied",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="MEASUREMENTS parameter",
-                                    valid_keys = self.product.band_labels())
+                                    valid_keys = self.product.band_idx.band_labels())
         elif "styles" in args and args["styles"]:
             # Use style bands.
             # Non-standard protocol extension.
@@ -188,14 +190,14 @@ class WCS1GetCoverageRequest():
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
-            raise WCS1Exception("Unsupported exception format: " % args["exceptions"],
+            raise WCS1Exception(f"Unsupported exception format: {args['exceptions']}",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="EXCEPTIONS parameter")
 
         # Argument: INTERPOLATION (optional only nearest-neighbour currently supported.)
         #      If 'none' is supported in future, validation of width/height/res will need to change.
         if "interpolation" in args and args["interpolation"] != "nearest neighbor":
-            raise WCS1Exception("Unsupported interpolation method: " % args["interpolation"],
+            raise WCS1Exception(f'Unsupported interpolation method: {args["interpolation"]}',
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="INTERPOLATION parameter")
 
