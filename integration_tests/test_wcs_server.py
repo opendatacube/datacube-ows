@@ -81,11 +81,11 @@ def test_wcs1_getcov_nofmt(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     check_wcs_error(ows_server.url + "/wcs", params={
-        "request": "GetCoverage",
-        "service": "WCS",
-        "version": "1.0.0",
-        "coverage": test_layer_name,
-    },
+                        "request": "GetCoverage",
+                        "service": "WCS",
+                        "version": "1.0.0",
+                        "coverage": test_layer_name,
+                    },
                     expected_error_message="No FORMAT parameter supplied",
                     expected_status_code=400)
 
@@ -94,15 +94,52 @@ def test_wcs1_getcov_bad_respcrs(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "response_crs": 'PEGS:2346',
+        "format": 'GeoTIFF',
+    },
+                    expected_error_message="PEGS:2346 is not a supported CRS",
+                    expected_status_code=400)
+
+def test_wcs1_getcov_nobbox(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+    },
+                    expected_error_message="No BBOX parameter supplied",
+                    expected_status_code=400)
+
+def test_wcs1_getcov_badexception(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST)
+    check_wcs_error(ows_server.url + "/wcs", params={
                         "request": "GetCoverage",
                         "service": "WCS",
                         "version": "1.0.0",
                         "coverage": test_layer_name,
                         "crs": 'EPSG:4326',
-                        "response_crs": 'PEGS:2346',
                         "format": 'GeoTIFF',
+                        "bbox": extents["bbox"],
+                        "time": extents["times"],
+                        "exceptions": "spam",
+                        "measurements": "red,green,blue"
                     },
-                    expected_error_message="PEGS:2346 is not a supported CRS",
+                    expected_error_message="Unsupported exception format: spam",
                     expected_status_code=400)
 
 def test_wcs1_getcoverage_geotiff(ows_server):

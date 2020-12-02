@@ -239,12 +239,30 @@ class ODCExtent:
         self.native_crs = layer.native_CRS
         self.full_extent = None
 
+    def wcs1_args(self,
+                     space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
+                     time=TimeRequestTypes.LAST,
+                     crs="EPSG:4326"):
+        extent, times = self.subsets(space, time)
+        if len(times) == 1:
+            time_strs = (times[0].strftime("%Y-%m-%d"),)
+        else:
+            time_strs = (times[0].strftime("%Y-%m-%d"), times[-1].strftime("%Y-%m-%d"))
+        if crs == "EPSG:4326":
+            crs_extent = extent
+        else:
+            crs_extent = extent.to_crs(crs)
+        crs_bbox = crs_extent.boundingbox
+        return {
+            "bbox": f"{min(crs_bbox.left,crs_bbox.right)},{min(crs_bbox.top,crs_bbox.bottom)},{max(crs_bbox.left,crs_bbox.right)},{max(crs_bbox.top,crs_bbox.bottom)}",
+            "times": time_strs
+        }
+
     def wcs2_subsets(self,
                      space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
                      time=TimeRequestTypes.LAST,
                      crs="EPSG:4326"):
         extent, times = self.subsets(space, time)
-        ext_time = time.slice(self.layer.ranges["times"])
         if len(times) == 1:
             time_sub = ("time", times[0].strftime("%Y-%m-%d"))
         else:
@@ -265,7 +283,6 @@ class ODCExtent:
                 time=TimeRequestTypes.LAST,
                 crs="EPSG:4326"):
         extent, times = self.subsets(space, time)
-        ext_time = time.slice(self.layer.ranges["times"])
         if len(times) == 1:
             time_sub = f'time("{times[0].strftime("%Y-%m-%d")}")'
         else:

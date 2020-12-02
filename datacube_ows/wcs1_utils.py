@@ -188,7 +188,7 @@ class WCS1GetCoverageRequest():
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
-            raise WCS1Exception("Unsupported exception format: " % args["exceptions"],
+            raise WCS1Exception(f"Unsupported exception format: {args['exceptions']}",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="EXCEPTIONS parameter")
 
