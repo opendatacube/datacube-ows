@@ -4,6 +4,7 @@ from owslib.wcs import WebCoverageService
 from owslib.util import ServiceException
 import requests
 from requests.exceptions import HTTPError
+import requests
 from urllib import request
 from lxml import etree
 
@@ -20,22 +21,14 @@ def get_xsd(name):
 
 
 def check_wcs_error(url, expected_error_message=None, expected_status_code=400, params=None):
-    try:
-        if params:
-            resp = request.urlopen(url, params=params, timeout=10)
-        else:
-            resp = request.urlopen(url, timeout=10)
+    if params is None:
+        params = {}
+    resp = requests.get(url, params=params, timeout=10.0)
+    assert resp.status_code == expected_status_code
 
-        # Should not get here
-        assert False
-    except Exception as e:
-        # Validate status code
-        assert e.getcode() == expected_status_code
-
-        resp_content = e.fp.read()
-        assert expected_error_message in str(resp_content)
-        resp_xml = etree.XML(resp_content)
-        assert resp_xml is not None
+    assert expected_error_message in resp.text
+    resp_xml = etree.XML(resp.content)
+    assert resp_xml is not None
 
 
 def test_no_request(ows_server):
@@ -94,7 +87,7 @@ def test_wcs1_getcov_nofmt(ows_server):
         "coverage": test_layer_name,
     },
                     expected_error_message="No FORMAT parameter supplied",
-                    expected_status_code=500)
+                    expected_status_code=400)
 
 def test_wcs1_getcov_bad_respcrs(ows_server):
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
@@ -107,9 +100,10 @@ def test_wcs1_getcov_bad_respcrs(ows_server):
                         "coverage": test_layer_name,
                         "crs": 'EPSG:4326',
                         "response_crs": 'PEGS:2346',
+                        "format": 'GeoTIFF',
                     },
                     expected_error_message="PEGS:2346 is not a supported CRS",
-                    expected_status_code=500)
+                    expected_status_code=400)
 
 def test_wcs1_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service

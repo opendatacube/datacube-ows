@@ -70,7 +70,7 @@ class WCS1GetCoverageRequest():
         if "response_crs" in args:
             self.response_crsid = args["response_crs"]
             if self.response_crsid not in cfg.published_CRSs:
-                raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
+                raise WCS1Exception("%s is not a supported CRS" % self.response_crsid,
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESPONSE_CRS parameter",
                                     valid_keys=list(cfg.published_CRSs))
