@@ -503,7 +503,7 @@ Note that this is different behaviour to not including a dataset_cache_rules ele
         "dataset_cache_rules": [
             {
                 "min_datasets": 4,
-                "max-age": 86400,  # 86400 seconds = 24 hours
+                "max_age": 86400,  # 86400 seconds = 24 hours
             },
         ]
     }
@@ -522,11 +522,11 @@ Cache-control header is returned according to the number of datasets hit:
         "dataset_cache_rules": [
             {
                 "min_datasets": 4,
-                "max-age": 86400,  # 86400 seconds = 24 hours
+                "max_age": 86400,  # 86400 seconds = 24 hours
             },
             {
                 "min_datasets": 8,
-                "max-age": 604800,  # 604800 seconds = 1 week
+                "max_age": 604800,  # 604800 seconds = 1 week
             },
         ]
     }

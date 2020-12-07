@@ -1203,12 +1203,12 @@ standard_resource_limits = {
                 # less than the min_datasets of the next rule (4-7 in this example)
                 "min_datasets": 4, # Must be greater than zero.  Blank tiles (0 datasets) are NEVER cached
                 # The cache-control max-age for this rule, in seconds.
-                "max-age": 86400,  # 86400 seconds = 24 hours
+                "max_age": 86400,  # 86400 seconds = 24 hours
             },
             {
                 # Rules must be sorted in ascending order of min_datasets values.
                 "min_datasets": 8,
-                "max-age": 604800,  # 604800 seconds = 1 week
+                "max_age": 604800,  # 604800 seconds = 1 week
             },
             # If a resource limit is exceeded, no-cache applies.
             # Summarising the cache-control results for this example:
