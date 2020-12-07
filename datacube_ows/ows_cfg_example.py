@@ -2,6 +2,10 @@
 
 # Example configuration file for datacube_ows.
 #
+# For detailed formal documentation see:
+#
+#   https://datacube-ows.readthedocs.io/en/latest/configuration.html
+#
 # OVERVIEW
 #
 # This file forms the primary documentation for the configuration file format at this stage.
@@ -1142,8 +1146,8 @@ standard_resource_limits = {
         # WMS/WMTS resource limits
         #
         # There are two independent resource limits applied to WMS/WMTS requests.  If either
-        # limit is exceeded, then the actual data is not rendered.  Instead an indicative polygon
-        # showing the extent of the data is rendered.
+        # limit is exceeded, then either the low-resolution summary product is used if one is defined, otherwise
+        # indicative polygon showing the extent of the data is rendered.
         #
         # The fill-colour of the indicative polygons when either wms/wmts resource limits is exceeded.
         # Triplets (rgb) or quadruplets (rgba) of integers 0-255.
@@ -1180,7 +1184,39 @@ standard_resource_limits = {
         # Note that the ideal value may vary from product to product depending on the size of the dataset
         # extents for the product.
         # Defaults to zero, which is interpreted as no dataset limit.
-        "max_datasets": 6,
+        "max_datasets": 10,
+        # Dataset cache rules.
+        #
+        # The number of datasets accessed by a GetMap/GetTile/GetCoverage query can be used to control
+        # the cache-control headers returned by the query.
+        #
+        # Special cases:
+        #
+        # 1. No dataset_cache_rules element: Never return a cache-control header
+        # 2. dataset_cache_rules set to an empty list []:  Return no-cache for all queries.
+        # 3. General case: refer to comments embedded in example below.
+        "dataset_cache_rules": [
+            # Where number of datasets less than the min_datasets element of the first cache rule  (0-3 in this example):
+            #       no-cache.
+            {
+                # Where number of datasets greater than or equal to the min_datasets value for this rule AND
+                # less than the min_datasets of the next rule (4-7 in this example)
+                "min_datasets": 4, # Must be greater than zero.  Blank tiles (0 datasets) are NEVER cached
+                # The cache-control max-age for this rule, in seconds.
+                "max-age": 86400,  # 86400 seconds = 24 hours
+            },
+            {
+                # Rules must be sorted in ascending order of min_datasets values.
+                "min_datasets": 8,
+                "max-age": 604800,  # 604800 seconds = 1 week
+            },
+            # If a resource limit is exceeded, no-cache applies.
+            # Summarising the cache-control results for this example:
+            # 0-3 datasets: no-cache
+            # 4-7 datasets: max-age: 86400
+            # 8-10 datasets: max-age: 604800
+            # 11+ datasets:  no-cache (over-limit behaviour.  Low-resolution summary product or shaded polygons.)
+        ]
     },
     "wcs": {
         # wcs::max_datasets is the WCS equivalent of wms::max_datasets.  The main requirement for setting this
@@ -1188,6 +1224,8 @@ standard_resource_limits = {
         #
         # Defaults to zero, which is interpreted as no dataset limit.
         "max_datasets": 16,
+        # dataset_cache_rules can be set independently for WCS requests.  This example omits it, so
+        # WCS GetCoverage requests will always return no cache-control header.
     }
 }
 
