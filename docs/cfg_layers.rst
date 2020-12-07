@@ -335,8 +335,14 @@ Resource Limits (resource_limits)
 Some requests require more CPU and memory resources than are
 available (or that the system administrator wishes to make
 available to a single request).  Datacube-ows provides several
-mechanisms to help allow expensive requests to terminate
-early, avoiding excessive resource consumption.
+mechanisms to avoid excessive resource consumption by either:
+
+1. progressively increasing the cache-control header max-age value to
+allow expensive requests to be cached for longer and prevent cheap
+requests from flooding the cache; and/or
+
+2. terminating potentially expensive queries early, preventing them
+from consuming excessive resources.
 
 These mechanisms are configured in the "resource_limits" section,
 which is a dictionary with two independent sub-sections
@@ -351,11 +357,31 @@ E.g.
     "resource_limits": {
         "wms": {
             "zoomed_out_fill_colour": [150, 180, 200, 160],
-            "min_zoom_factor: 500.0,
-            "max_datasets": 6
+            "min_zoom_factor": 300.0,
+            "max_datasets": 12,
+            "dataset_cache_rules": [
+                {
+                    "min_datasets": 5,
+                    "max_age": 60*60*24,
+                },
+                {
+                    "min_datasets": 9,
+                    "max_age": 60*60*24*14,
+                }
+            ],
         },
         "wcs": {
-            "max_datasets": 16
+            "max_datasets": 18,
+            "dataset_cache_rules": [
+                {
+                    "min_datasets": 5,
+                    "max_age": 60*60*24,
+                },
+                {
+                    "min_datasets": 9,
+                    "max_age": 60*60*24*14,
+                }
+            ],
         }
     }
 
@@ -363,8 +389,17 @@ Resource Limits (wms)
 +++++++++++++++++++++
 
 When a WMS GetMap (WMTS GetTile) request exceeds a configured resource
-limit setting, a tile containing a shaded polygon indicating where data
-is available but not the actual data.
+limit setting, one of the following will occur depending on the value
+of the `low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+setting.
+
+If a low-resolution summary product has been defined, then requests that exceed
+any configured resource limits will be served from the low-resolution summary
+product instead of the main data product.
+
+If no low-resolution summary product is defined, then requests that exceed
+any configured resource limits will return a tile containing a shaded polygon
+indicating where data is available but not the actual data.
 
 The user experience is typically that a shaded polygon showing the extent
 of available data is displayed when zoomed out to the full product extent,
@@ -419,6 +454,90 @@ specifies the maximum number of Open Datacube datasets that can be read
 from during the request.  A value of zero is interpreted to mean "no maximum
 dataset limit" and is the default.
 
++++++++++++++++++++
+dataset_cache_rules
++++++++++++++++++++
+
+Caching behaviour is based purely on the number of datasets (not zoom factor)
+and is controlled using the ``dataset_cache_rules`` element.
+
+If the dataset_cache_rules element is not supplied, no cache-control header
+is issued on any GetMap/GetTile responses.
+
+If supplied, it consists of a list of cache rule dictionaries.  Each cache rule
+dictionary consists of two elements: ``min_datasets`` - an integer declaring the minimum
+number of retrieved datasets the rule applies to, and ``max_age`` - an integer declaring the
+cache-control max-age value (in seconds) that will be returned for responses covered by
+the rule. Cache rules must be declared in ascending order of the min_datasets element.
+The min_datasets element must be less than the max_datasets resource limit if one is defined.
+
+GetMap/GetTile requests that either load no datasets (i.e. a blank transparent tile) or exceed
+either of the resource limits (i.e. return either a shaded extent polygon or hit
+the low-resolution summary product)
+
+
+E.g.
+::
+
+    {
+        "max_datasets": 12,
+    }
+
+No dataset_cache_rules element.  No cache-control headers are returned on any GetMap requests.
+
+::
+
+    {
+        "max_datasets": 12,
+        "dataset_cache_rules": [
+        ]
+    }
+
+Dataset_cache_rules set to an empty list.  Cache-control header will be "no-cache" on all GetMap requests.
+Note that this is different behaviour to not including a dataset_cache_rules element at all.
+
+::
+
+    {
+        "max_datasets": 12,
+        "dataset_cache_rules": [
+            {
+                "min_datasets": 4,
+                "max-age": 86400,  # 86400 seconds = 24 hours
+            },
+        ]
+    }
+
+Cache-control header is returned according to the number of datasets hit:
+
+* 0-3 datasets: no-cache
+* 4-12 datasets: max-age: 86400
+* 13+ datasets:  no-cache   (high resource fallback - polygons or low-res summary product)
+
+
+::
+
+    {
+        "max_datasets": 12,
+        "dataset_cache_rules": [
+            {
+                "min_datasets": 4,
+                "max-age": 86400,  # 86400 seconds = 24 hours
+            },
+            {
+                "min_datasets": 8,
+                "max-age": 604800,  # 604800 seconds = 1 week
+            },
+        ]
+    }
+
+Cache-control header is returned according to the number of datasets hit:
+
+* 0-3 datasets: no-cache
+* 4-7 datasets: max-age: 86400
+* 8-12 datasets: max-age: 604800
+* 13+ datasets:  no-cache   (high resource fallback - polygons or low-res summary product)
+
 Resource Limits (wcs)
 +++++++++++++++++++++
 
@@ -427,6 +546,10 @@ limit setting, an error is returned to the user.
 
 The only resource limit available to WCS currently is max_datasets,
 which works the same as in wms, `described above <#max_datasets>`_.
+
+The `dataset_cache_rules <#dataset_cache_rules>`_ element is also
+supported for WCS.  It behaves for WCS GetCoverage requests as
+documented above for WMS GetMap and WMTS GetTile requests.
 
 -------------------------------------------
 Image Processing Section (image_processing)
