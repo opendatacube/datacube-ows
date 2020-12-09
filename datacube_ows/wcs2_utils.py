@@ -279,8 +279,12 @@ def get_coverage_data(request):
     else:
         output = fmt.renderer(request.version)(request, output, output_crs)
 
-    filename = '%s.%s' % (request.coverage_id, fmt.extension)
-    return output, fmt.mime, filename
+    headers = {
+        "Content-Type": fmt.mime,
+        'content-disposition': f'attachment; filename={request.coverage_id}.{fmt.extension}',
+    }
+    headers.update(layer.wcs_cache_rules.cache_headers(n_datasets))
+    return output, headers
 
 
 def get_tiff(request, data, crs, product, width, height, affine):

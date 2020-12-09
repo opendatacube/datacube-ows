@@ -277,12 +277,9 @@ _LOG = logging.getLogger(__name__)
 def get_coverage(args):
     request_obj = kvp_decode_get_coverage(args)
 
-    output, mime, filename = get_coverage_data(request_obj)
+    output, headers = get_coverage_data(request_obj)
     return (
         output,
         200,
-        resp_headers({
-            "Content-Type": mime,
-            'content-disposition': 'attachment; filename=%s' % filename
-        })
+        headers
     )
