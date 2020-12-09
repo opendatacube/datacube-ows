@@ -350,7 +350,7 @@ def get_coverage_data(req):
                               req.times,
                               bands=req.bands)
         output = stacker.data(datasets, skip_corrections=True)
-        return output
+        return n_datasets, output
 
 
 def get_tiff(req, data):

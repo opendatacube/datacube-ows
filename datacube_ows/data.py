@@ -326,9 +326,11 @@ def get_map(args):
         return png_response(body, extra_headers=params.product.wms_cache_rules.cache_headers(n_datasets))
 
 
-def png_response(body, cfg=None, extra_headers={}):
+def png_response(body, cfg=None, extra_headers=None):
     if not cfg:
         cfg = get_config()
+    if extra_headers is None:
+        extra_headers = {}
     headers = {"Content-Type": "image/png"}
     headers.update(extra_headers)
     headers = cfg.response_headers(headers)
