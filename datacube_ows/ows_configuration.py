@@ -278,12 +278,13 @@ class CacheControlRules(OWSConfigEntry):
     def cache_headers(self, n_datasets):
         if not self.use_caching:
             return {}
+        assert n_datasets >= 0
         if n_datasets == 0 or n_datasets > self.max_datasets:
             return {"cache-control": "no-cache"}
         rule = None
         for r in self.rules:
             if n_datasets < r["min_datasets"]:
-                return rule
+                break
             rule = r
         if rule:
             return {"cache-control": f"max-age={rule['max_age']}"}
