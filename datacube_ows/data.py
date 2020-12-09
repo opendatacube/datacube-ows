@@ -219,6 +219,8 @@ def get_map(args):
         too_many_datasets = (params.product.max_datasets_wms > 0
                              and n_datasets > params.product.max_datasets_wms
                              )
+        if qprof.active:
+            qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
         if too_many_datasets or zoomed_out:
             stacker.resource_limited = True
             qprof["too_many_datasets"] = too_many_datasets
