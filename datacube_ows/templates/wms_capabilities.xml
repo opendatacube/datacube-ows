@@ -54,6 +54,18 @@
         </EX_GeographicBoundingBox>
         {% for crsid, bbox in lyr.bboxes.items() %}
             <BoundingBox CRS="{{ crsid }}"
+                 {% if bbox.vertical_coord_first %}
+                     {% if bbox.bottom < bbox.top %}
+                         minx="{{ bbox.bottom }}" maxx="{{ bbox.top }}"
+                     {% else %}
+                         minx="{{ bbox.top }}" maxx="{{ bbox.bottom }}"
+                     {% endif %}
+                     {% if bbox.left < bbox.right %}
+                         miny="{{ bbox.left }}" maxy="{{ bbox.right }}"
+                     {% else %}
+                         miny="{{ bbox.right }}" maxy="{{ bbox.left }}"
+                     {% endif %}
+                 {% else %}
                     {% if bbox.left < bbox.right %}
                          minx="{{ bbox.left }}" maxx="{{ bbox.right }}"
                     {% else %}
@@ -64,6 +76,7 @@
                     {% else %}
                          miny="{{ bbox.top }}" maxy="{{ bbox.bottom }}"
                     {% endif %}
+                {% endif %}
             />
         {% endfor %}
         {% if lyr_ranges.times|length > 1 %}
