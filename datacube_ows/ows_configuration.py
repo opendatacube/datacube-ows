@@ -677,7 +677,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     "right": bbox["right"],
                     "left": bbox["left"],
                     "top": bbox["top"],
-                    "bottom": bbox["bottom"]
+                    "bottom": bbox["bottom"],
+                    "vertical_coord_first": self.global_cfg.published_CRSs[crs_id]["vertical_coord_first"]
                 }
         return bboxes
 
