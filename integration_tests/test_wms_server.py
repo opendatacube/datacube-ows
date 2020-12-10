@@ -60,6 +60,22 @@ def test_getcap(ows_server):
     assert gc_xds.validate(resp_xml)
 
 
+def test_getcap_coord_order(ows_server):
+    resp = request.urlopen(ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0", timeout=10)
+
+    # Confirm success
+    assert resp.code == 200
+
+    # Validate XML Schema
+    resp_xml = etree.parse(resp.fp)
+    root = resp_xml.getroot()
+    layers = root.findall(".//{http://www.opengis.net/wms}Layer[@queryable='1']")
+    for layer in layers:
+        wLong = layer.findall(".//{http://www.opengis.net/wms}westBoundLongitude")[0]
+        geo_bbox = layer.findall("./{http://www.opengis.net/wms}BoundingBox[@CRS='EPSG:4326']")[0]
+        assert wLong.text == geo_bbox.attrib["miny"]
+
+
 def test_wms_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url+"/wms", version="1.3.0")
