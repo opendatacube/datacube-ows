@@ -325,13 +325,18 @@ def get_map(args):
     if params.ows_stats:
         return json_response(qprof.profile())
     else:
-        return png_response(body)
+        return png_response(body, extra_headers=params.product.wms_cache_rules.cache_headers(n_datasets))
 
 
-def png_response(body, cfg=None):
+def png_response(body, cfg=None, extra_headers=None):
     if not cfg:
         cfg = get_config()
-    return body, 200, cfg.response_headers({"Content-Type": "image/png"})
+    if extra_headers is None:
+        extra_headers = {}
+    headers = {"Content-Type": "image/png"}
+    headers.update(extra_headers)
+    headers = cfg.response_headers(headers)
+    return body, 200, cfg.response_headers(headers)
 
 
 @log_call

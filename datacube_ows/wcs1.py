@@ -113,7 +113,12 @@ def get_coverage(args):
         raise WCS1Exception("Multi-time requests are not currently supported for WCS1",
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="Time parameter")
-    data = get_coverage_data(req)
+    n_datasets, data = get_coverage_data(req)
+    headers = {
+        "Content-Type": req.format.mime,
+        'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format.extension)
+    }
+    headers.update(req.product.wcs_cache_rules.cache_headers(n_datasets))
     return (
         req.format.renderer(req.version)(req, data),
         200,

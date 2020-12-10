@@ -338,7 +338,7 @@ def get_coverage_data(req):
                 }
             ).astype("int16")
 
-            return data
+            return n_datasets, data
 
         if req.product.max_datasets_wcs > 0 and n_datasets > req.product.max_datasets_wcs:
             raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
@@ -350,7 +350,7 @@ def get_coverage_data(req):
                               req.times,
                               bands=req.bands)
         output = stacker.data(datasets, skip_corrections=True)
-        return output
+        return n_datasets, output
 
 
 def get_tiff(req, data):
