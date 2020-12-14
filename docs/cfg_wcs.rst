@@ -27,8 +27,8 @@ activated (specified in the `global services <https://datacube-ows.readthedocs.i
 section) and must contain at least one output format.
 
 Support for GeoTIFF and and NetCDF is included in datacube_ows.  Adding
-another format would require writing a new python method to render
-the output images.
+another format would require writing a new python methods to render
+the output images for WCS1 and WCS2.
 
 For 99% of users, then, this section should configure for GeoTIFF and
 NetCDF formats and look something like this:
@@ -38,7 +38,10 @@ NetCDF formats and look something like this:
     "formats": {
             # Key is the format name, as used in DescribeCoverage XML
             "GeoTIFF": {
-                "renderer": "datacube_ows.wcs_utils.get_tiff",
+                "renderers": {
+                    "1: "datacube_ows.wcs1_utils.get_tiff",
+                    "2: "datacube_ows.wcs2_utils.get_tiff",
+                },
                 # The MIME type of the image, as used in the Http Response.
                 "mime": "image/geotiff",
                 # The file extension to add to the filename.
@@ -47,7 +50,9 @@ NetCDF formats and look something like this:
                 "multi-time": False
             },
             "netCDF": {
-                "renderer": "datacube_ows.wcs_utils.get_netcdf",
+                "renderers": {
+                    "1": "datacube_ows.wcs1_utils.get_netcdf",
+                    "2": "datacube_ows.wcs2_utils.get_netcdf",
                 "mime": "application/x-netcdf",
                 "extension": "nc",
                 "multi-time": True,

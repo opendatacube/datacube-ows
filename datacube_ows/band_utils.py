@@ -125,8 +125,8 @@ def single_band_offset_log(data, band, scale=1.0, scale_from=None, scale_to=None
         band = band_mapper(band)
     d = data[band]
     if offset is not None:
-        d = data[band] + offset
-        unscaled =  numpy.log(d*scale)
+        d = data[band] * scale + offset
+        unscaled =  numpy.log(d)
     else:
         unscaled =  numpy.log1p(d*scale)
     if scale_from:

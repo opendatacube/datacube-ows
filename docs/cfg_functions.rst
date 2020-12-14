@@ -76,7 +76,7 @@ to pass constant values to additional positional and keyword
 arguments of the function in the standard python manner.
 
 mapped_bands
-+++++++++++
+++++++++++++
 
 A common use case passing band names to generic band-math
 functions for
@@ -108,39 +108,52 @@ to operate on as keyword arguments.  If you use aliases you
 must set `mapped_bands <#mapped-bands>` to
 True.
 
-datacube_ows.band_utils.sum_bands
+1. datacube_ows.band_utils.sum_bands
     Sums two bands, passed as keyword arguments "band1" and "band2".
 
-datacube_ows.band_utils.delta_bands
+#. datacube_ows.band_utils.delta_bands
     Sums two bands, passed as keyword arguments "band1" and "band2".
 
     (band2 is subtracted from band1.  i.e. band1 - band2)
 
-datacube_ows.band_utils.norm_diff
+#. datacube_ows.band_utils.norm_diff
     Calculates the normalised difference of two bands, passed
     as keyword arguments "band1" and "band2".
 
     Also has a "scale_from" argument allowing it to be used in
     component callback function.
 
-datacube_ows.band_utils.single_band
+#. datacube_ows.band_utils.single_band
     Returns the raw value of a band as an index datasets. Takes
     keyword argument "band".
 
-datacube_ows.band_utils.constant
+#. datacube_ows.band_utils.constant
     Returns a constant.  Still needs a band (takes a band, multiplies
     by zero and adds the constant), but it can be any band.  Arguments
     are "band" and "const".
 
-datacube_ows.band_utils.band_quotient
+#. datacube_ows.band_utils.band_quotient
     Divides two bands, passed as keyword arguments "band1" and "band2".
 
     (band1 is divided by from band2)
 
-datacube_ows.band_utils.band_quotient_sum
+#. datacube_ows.band_utils.band_quotient_sum
     Takes 4 bands, divides and adds them as follows:
 
     (band1a / band1b) + (band2a / band2b)
+
+#. datacube_ows.band_utils.single_band_arcsec
+    Takes one band, and returns the arcsec of that band.
+
+#. datacube_ows.band_utils.single_band_offset_log
+    Takes a single band and an optional offset, and an optional scale.
+
+    Returns:
+
+        log( ( band * scale ) + offset )
+
+    The scale and offset both default to 1.0.  If offset is not supplied
+    the more efficient log1p function is used.
 
 E.g. This is an index function that will compute NDVI on any
 layer that has both an "nir" and "red" band name or alias
