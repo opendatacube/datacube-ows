@@ -43,7 +43,7 @@ def uniform_crs(cfg, crs):
         raise WCS2Exception("Not a CRS: %s" % crs,
                             WCS2Exception.NOT_A_CRS,
                             locator=crs,
-                            valid_keys=list(get_config().published_CRSs))
+                            valid_keys=list(cfg.published_CRSs))
     return crs
 
 
