@@ -142,6 +142,19 @@ datacube_ows.band_utils.band_quotient_sum
 
     (band1a / band1b) + (band2a / band2b)
 
+datacube_ows.band_utils.single_band_arcsec
+    Takes one band, and returns the arcsec of that band.
+
+datacube_ows.band_utils.single_band_offset_log
+    Takes a single band and an optional offset, and an optional scale.
+
+    Returns:
+
+        log( ( band * scale ) + offset )
+
+    The scale and offset both default to 1.0.  If offset is not supplied
+    the more efficient log1p function is used.
+
 E.g. This is an index function that will compute NDVI on any
 layer that has both an "nir" and "red" band name or alias
 in the band dictionary:
