@@ -56,7 +56,7 @@ ENV PATH=${py_env_path}/bin:$PATH \
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
 RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
-    pip install pydevd-pycharm~=201.8538.36 \
+    pip install pydevd-pycharm~=203.5981.165 \
 ;fi
 
 RUN chown 1000:100 /dev/shm
