@@ -92,11 +92,7 @@ def get_coverage_data(request):
         scaler = WCSScaler(layer, subsetting_crs)
         times = layer.ranges["times"]
 
-        try:
-            subsets = request.subsets
-        except Exception as exc:
-            raise WCS2Exception("Invalid subsetting: %s" % exc,
-                                WCS2Exception.INVALID_SUBSETTING)
+        subsets = request.subsets
 
         if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
             dimensions = [subset.dimension.lower() for subset in subsets]
@@ -107,7 +103,7 @@ def get_coverage_data(request):
             ]
 
             raise WCS2Exception("Duplicate dimension%s: %s" % (
-                                    's' if len(duplicate_dimensions) > 1 else ''
+                                    's' if len(duplicate_dimensions) > 1 else '',
                                     ', '.join(duplicate_dimensions)
                                 ),
                                 WCS2Exception.INVALID_SUBSETTING,

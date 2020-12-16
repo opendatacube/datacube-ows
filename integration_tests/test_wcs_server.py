@@ -623,3 +623,80 @@ def test_wcs21_getcoverage(ows_server):
         "subset": subsets
     })
     assert r.status_code == 200
+
+
+def test_wcs2_getcov_badcov(ows_server):
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": "not_a_valid_coverage"
+    },
+                    expected_error_message="Invalid coverage: not_a_valid_coverage",
+                    expected_status_code=400)
+
+def test_wcs2_getcov_unpub_subset_crs(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": layer.name,
+        "subsettingcrs": "EPSG:FAKE",
+        "outputcrs": "EPSG:4326"
+    },
+                    expected_error_message="Invalid subsettingCrs: EPSG:FAKE",
+                    expected_status_code=400)
+
+
+def test_wcs2_getcov_unpub_output_crs(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": layer.name,
+        "subsettingcrs": "EPSG:4326",
+        "outputcrs": "EPSG:FAKE"
+    },
+                    expected_error_message="Invalid outputCrs: EPSG:FAKE",
+                    expected_status_code=400)
+
+
+def test_wcs2_getcov_dup_subset_dims(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": layer.name,
+        "subsettingcrs": "EPSG:4326",
+        "outputcrs": "EPSG:4326",
+        "subset": (
+            "x(2345234,-99999.99999)",
+            "x(12315.000,-12312321)",
+            "y(2345234,-99999.99999)",
+            "y(12315.000,-12312321)",
+        )
+    },
+                    expected_error_message="Duplicate dimensions:",
+                    expected_status_code=400)
+
