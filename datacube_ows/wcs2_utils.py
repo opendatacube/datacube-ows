@@ -159,7 +159,7 @@ def get_coverage_data(request):
                 if count > 1
             ]
             raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
-                                    'i' if len(duplicate_axes) == 1 else 'e'
+                                    'i' if len(duplicate_axes) == 1 else 'e',
                                     ', '.join(duplicate_axes)
                                 ),
                                 WCS2Exception.INVALID_SCALE_FACTOR,
