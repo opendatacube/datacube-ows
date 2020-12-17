@@ -938,3 +938,89 @@ def test_wcs2_getcov_bad_band_range(ows_server):
     },
                     expected_error_message="No such field green",
                     expected_status_code=400)
+
+def test_wcs2_getcov_native_format(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST)
+
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    })
+    assert r.status_code == 200
+
+def test_wcs2_getcov_bad_format(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/reality_tv",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    },
+                    expected_error_message="Unsupported format: image/reality_tv",
+                    expected_status_code=400)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "rangesubset": "band_3:green",
+        "subset": subsets
+    },
+                    expected_error_message="No such field green",
+                    expected_status_code=400)
+
+
+def test_wcs2_getcov_bad_multitime_format(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO)
+    subsets = subsets[0:2]
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    },
+                    expected_error_message="Format does not support multi-time datasets",
+                    expected_status_code=400)

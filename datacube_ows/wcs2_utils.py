@@ -221,7 +221,7 @@ def get_coverage_data(request):
         #
 
         if not request.format:
-            fmt = cfg.wcs_formats[layer.native_wcs_format]
+            fmt = cfg.wcs_formats_by_name[layer.native_format]
         else:
             try:
                 fmt = cfg.wcs_formats_by_mime[request.format]
