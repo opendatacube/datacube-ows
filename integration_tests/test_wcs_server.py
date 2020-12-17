@@ -623,3 +623,404 @@ def test_wcs21_getcoverage(ows_server):
         "subset": subsets
     })
     assert r.status_code == 200
+
+
+def test_wcs2_getcov_badcov(ows_server):
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": "not_a_valid_coverage"
+    },
+                    expected_error_message="Invalid coverage: not_a_valid_coverage",
+                    expected_status_code=400)
+
+def test_wcs2_getcov_unpub_subset_crs(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": layer.name,
+        "subsettingcrs": "EPSG:FAKE",
+        "outputcrs": "EPSG:4326"
+    },
+                    expected_error_message="Invalid subsettingCrs: EPSG:FAKE",
+                    expected_status_code=400)
+
+
+def test_wcs2_getcov_unpub_output_crs(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": layer.name,
+        "subsettingcrs": "EPSG:4326",
+        "outputcrs": "EPSG:FAKE"
+    },
+                    expected_error_message="Invalid outputCrs: EPSG:FAKE",
+                    expected_status_code=400)
+
+
+def test_wcs2_getcov_dup_subset_dims(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "2.1.0",
+        "coverageid": layer.name,
+        "subsettingcrs": "EPSG:4326",
+        "outputcrs": "EPSG:4326",
+        "subset": (
+            "x(2345234,-99999.99999)",
+            "x(12315.000,-12312321)",
+            "y(2345234,-99999.99999)",
+            "y(12315.000,-12312321)",
+        )
+    },
+                    expected_error_message="Duplicate dimensions:",
+                    expected_status_code=400)
+
+
+def test_wcs2_getcov_trim_time(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO)
+
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "application/x-netcdf",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    })
+    assert r.status_code == 200
+
+
+def test_wcs2_getcov_slice_space(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = list(extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST))
+    subsets[0] = subsets[0].split(",")[0] + ")"
+
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "y(400)",
+        "subset": subsets
+    })
+    assert r.status_code == 200
+
+
+def test_wcs2_getcov_invalid_space_dim(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = list(extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST))
+    subsets[0] = "upper_fourth" + subsets[0][1:]
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "y(400)",
+        "subset": subsets
+    },
+                    expected_error_message = "Invalid subsetting axis upper_fourth",
+                    expected_status_code = 400)
+
+def test_wcs2_getcov_duplicate_scale_dim(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = list(extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST))
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(240),y(400),y(300)",
+        "subset": subsets
+    },
+                    expected_error_message = "Duplicate scales for axis: y",
+                    expected_status_code = 400)
+
+def test_wcs2_getcov_unscalable_dim(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = list(extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST))
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(240),y(400),time(300)",
+        "subset": subsets
+    },
+                expected_error_message = "Cannot scale axis time",
+                expected_status_code = 400)
+
+
+def test_wcs2_getcov_bands(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND)
+
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "rangesubset": "nir,band_3,band_6",
+        "subset": subsets
+    })
+    assert r.status_code == 200
+
+
+def test_wcs2_getcov_band_range(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST)
+
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "rangesubset": "band_3:band_6",
+        "subset": subsets
+    })
+    assert r.status_code == 200
+
+
+def test_wcs2_getcov_bad_band(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = list(extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST))
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(240),y(400)",
+        "rangesubset": "nir,green,band_6",
+        "subset": subsets
+    },
+                    expected_error_message = "No such field green",
+                    expected_status_code = 400)
+
+
+def test_wcs2_getcov_bad_band_range(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "rangesubset": "green:band_6",
+        "subset": subsets
+    },
+                    expected_error_message="No such field green",
+                    expected_status_code=400)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "rangesubset": "band_3:green",
+        "subset": subsets
+    },
+                    expected_error_message="No such field green",
+                    expected_status_code=400)
+
+def test_wcs2_getcov_native_format(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST)
+
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    })
+    assert r.status_code == 200
+
+def test_wcs2_getcov_bad_format(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/reality_tv",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    },
+                    expected_error_message="Unsupported format: image/reality_tv",
+                    expected_status_code=400)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "rangesubset": "band_3:green",
+        "subset": subsets
+    },
+                    expected_error_message="No such field green",
+                    expected_status_code=400)
+
+
+def test_wcs2_getcov_bad_multitime_format(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO)
+    subsets = subsets[0:2]
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "coverageid": layer.name,
+        "version": "2.1.0",
+        "service": "WCS",
+        "format": "image/geotiff",
+        "subsettingcrs": "EPSG:4326",
+        "scalesize": "x(400),y(400)",
+        "subset": subsets
+    },
+                    expected_error_message="Format does not support multi-time datasets",
+                    expected_status_code=400)

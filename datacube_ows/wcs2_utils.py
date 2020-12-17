@@ -43,7 +43,7 @@ def uniform_crs(cfg, crs):
         raise WCS2Exception("Not a CRS: %s" % crs,
                             WCS2Exception.NOT_A_CRS,
                             locator=crs,
-                            valid_keys=list(get_config().published_CRSs))
+                            valid_keys=list(cfg.published_CRSs))
     return crs
 
 
@@ -92,11 +92,7 @@ def get_coverage_data(request):
         scaler = WCSScaler(layer, subsetting_crs)
         times = layer.ranges["times"]
 
-        try:
-            subsets = request.subsets
-        except Exception as exc:
-            raise WCS2Exception("Invalid subsetting: %s" % exc,
-                                WCS2Exception.INVALID_SUBSETTING)
+        subsets = request.subsets
 
         if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
             dimensions = [subset.dimension.lower() for subset in subsets]
@@ -107,7 +103,7 @@ def get_coverage_data(request):
             ]
 
             raise WCS2Exception("Duplicate dimension%s: %s" % (
-                                    's' if len(duplicate_dimensions) > 1 else ''
+                                    's' if len(duplicate_dimensions) > 1 else '',
                                     ', '.join(duplicate_dimensions)
                                 ),
                                 WCS2Exception.INVALID_SUBSETTING,
@@ -163,7 +159,7 @@ def get_coverage_data(request):
                 if count > 1
             ]
             raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
-                                    'i' if len(duplicate_axes) == 1 else 'e'
+                                    'i' if len(duplicate_axes) == 1 else 'e',
                                     ', '.join(duplicate_axes)
                                 ),
                                 WCS2Exception.INVALID_SCALE_FACTOR,
@@ -225,7 +221,7 @@ def get_coverage_data(request):
         #
 
         if not request.format:
-            fmt = cfg.wcs_formats[layer.native_wcs_format]
+            fmt = cfg.wcs_formats_by_name[layer.native_format]
         else:
             try:
                 fmt = cfg.wcs_formats_by_mime[request.format]
