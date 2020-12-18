@@ -35,10 +35,18 @@ def test_no_request(ows_server):
     # Make empty request to server:
     check_wcs_error(ows_server.url + "/wcs", "No operation specified", 400)
 
+def test_no_request_wcs1(ows_server):
+    # Make empty request to server:
+    check_wcs_error(ows_server.url + "/wcs?version=1.0.0", "No operation specified", 400)
+
 
 def test_invalid_operation(ows_server):
     # Make invalid operation request to server:
     check_wcs_error(ows_server.url + "/wcs?request=NoSuchOperation", "Unrecognised operation: NOSUCHOPERATION", 400)
+
+def test_invalid_operation_wcs1(ows_server):
+    # Make invalid operation request to server:
+    check_wcs_error(ows_server.url + "/wcs?version=1.0.0&request=NoSuchOperation", "Unrecognised operation: NOSUCHOPERATION", 400)
 
 
 def test_getcap_badsvc(ows_server):
@@ -56,6 +64,23 @@ def test_wcs1_getcap(ows_server):
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("1.0.0/wcsCapabilities.xsd")
     assert gc_xds.validate(resp_xml)
+
+def test_wcs1_getcap_sections(ows_server):
+    resp = request.urlopen(ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0&section=/wcs_capabilities/service", timeout=10)
+    assert resp.code == 200
+    resp = request.urlopen(ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0&section=/wcs_capabilities/capability", timeout=10)
+    assert resp.code == 200
+    resp = request.urlopen(ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0&section=/wcs_capabilities/contentmetadata", timeout=10)
+    assert resp.code == 200
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCapabilities",
+        "service": "WCS",
+        "version": "1.0.0",
+        "section": "nose_bleed"
+    },
+                    expected_error_message="Invalid section: nose_bleed",
+                    expected_status_code=400)
+
 
 def test_wcs1_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -439,6 +464,25 @@ def test_wcs1_describecoverage(ows_server):
 
     gc_xds = get_xsd("1.0.0/describeCoverage.xsd")
     assert gc_xds.validate(resp)
+
+
+def test_wcs1_describecov_badcov(ows_server):
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "DescribeCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": "splunge"
+    },
+                    expected_error_message="Invalid coverage: splunge",
+                    expected_status_code=400)
+
+
+def test_wcs1_describecov_all(ows_server):
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "DescribeCoverage",
+        "version": "1.0.0",
+    })
+    assert r.status_code == 200
 
 
 def test_wcs20_server(ows_server):
