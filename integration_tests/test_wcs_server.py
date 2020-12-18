@@ -145,6 +145,78 @@ def test_wcs1_getcov_nobbox(ows_server):
                     expected_error_message="No BBOX parameter supplied",
                     expected_status_code=400)
 
+def test_wcs1_time_exceptions(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": "now",
+    },
+                    expected_error_message="No valid ISO-8601 dates",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": "the day after the first full moon before the Northern Solstice, in the year of our Lord Two Thousand and Twelve",
+        "resx": 0.01,
+        "resy": 0.01,
+    },
+                    expected_error_message="not a valid ISO-8601 date",
+                    expected_status_code=400)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": "1516-04-22",
+        "resx": 0.01,
+        "resy": 0.01,
+    },
+                    expected_error_message="not a valid date for coverage",
+                    expected_status_code=400)
+
+def test_wcs1_multi_time_exceptions(ows_server):
+    wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO)
+    check_wcs_error(ows_server.url + "/wcs", params={
+         "request": "GetCoverage",
+         "service": "WCS",
+         "version": "1.0.0",
+         "coverage": test_layer_name,
+         "crs": 'EPSG:4326',
+         "format": 'GeoTIFF',
+         "bbox": extents["bbox"],
+         "time": ",".join(extents["times"]),
+         "resx": 0.01,
+        "resy": 0.01,
+    },
+                    expected_error_message="Cannot select more than one time slice with the GeoTIFF format",
+                    expected_status_code=400)
+
+
 def test_wcs1_getcov_no_meas(ows_server):
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
@@ -161,7 +233,6 @@ def test_wcs1_getcov_no_meas(ows_server):
                         "format": 'GeoTIFF',
                         "bbox": extents["bbox"],
                         "time": extents["times"],
-                        "exceptions": "spam",
                         "measurements": ""
                     },
                     expected_error_message="No measurements supplied",
@@ -183,7 +254,6 @@ def test_wcs1_getcov_multi_style(ows_server):
                         "format": 'GeoTIFF',
                         "bbox": extents["bbox"],
                         "time": extents["times"],
-                        "exceptions": "spam",
                         "styles": "simple_rgb,ndvi"
                     },
                     expected_error_message="Multiple style parameters not supported",
@@ -205,7 +275,6 @@ def test_wcs1_getcov_bad_meas(ows_server):
                         "format": 'GeoTIFF',
                         "bbox": extents["bbox"],
                         "time": extents["times"],
-                        "exceptions": "spam",
                         "measurements": "red,green,spam"
                     },
                     expected_error_message="Invalid measurement: spam",
@@ -450,6 +519,7 @@ def test_wcs1_getcoverage_exceptions(ows_server):
         )
     except ServiceException as e:
         assert 'Invalid BBOX parameter' in str(e)
+
 
 
 def test_wcs1_describecoverage(ows_server):

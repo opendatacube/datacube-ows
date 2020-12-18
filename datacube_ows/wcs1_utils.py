@@ -106,44 +106,43 @@ class WCS1GetCoverageRequest():
         #    self.times = [parse(self.product.wcs_sole_time).date()]
         if "time" not in args:
             #      CEOS treats no supplied time argument as all time.
-            # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING
+            # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING - treat it as "now"
             self.times = [self.product.ranges["times"][-1]]
         else:
             # TODO: the min/max/res format option?
             # It's a bit underspeced. I'm not sure what the "res" would look like.
             times = args["time"].split(",")
             self.times = []
-            if times == "now":
-                pass
-            else:
-                for t in times:
-                    try:
-                        time = parse(t).date()
-                        if time not in self.product.ranges["time_set"]:
-                            raise WCS1Exception(
-                                "Time value '%s' not a valid date for coverage %s" % (t, self.product_name),
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="TIME parameter",
-                                valid_keys=[d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
-                            )
-                        self.times.append(time)
-                    except ValueError:
+            for t in times:
+                if t == "now":
+                    continue
+                try:
+                    time = parse(t).date()
+                    if time not in self.product.ranges["time_set"]:
                         raise WCS1Exception(
-                            "Time value '%s' not a valid ISO-8601 date" % t,
+                            "Time value '%s' not a valid date for coverage %s" % (t, self.product_name),
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="TIME parameter",
                             valid_keys=[d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
                         )
-                self.times.sort()
+                    self.times.append(time)
+                except ValueError:
+                    raise WCS1Exception(
+                        "Time value '%s' not a valid ISO-8601 date" % t,
+                        WCS1Exception.INVALID_PARAMETER_VALUE,
+                        locator="TIME parameter",
+                        valid_keys=[d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
+                    )
+            self.times.sort()
 
-            if len(times) == 0:
+            if len(self.times) == 0:
                 raise WCS1Exception(
                     "No valid ISO-8601 dates",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
                     locator="TIME parameter",
                     valid_keys = [d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
                 )
-            elif len(times) > 1 and not self.format["multi-time"]:
+            elif len(self.times) > 1 and not self.format["multi-time"]:
                 raise WCS1Exception(
                     "Cannot select more than one time slice with the %s format" % self.format["name"],
                     WCS1Exception.INVALID_PARAMETER_VALUE,
