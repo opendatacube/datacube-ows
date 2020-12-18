@@ -35,10 +35,18 @@ def test_no_request(ows_server):
     # Make empty request to server:
     check_wcs_error(ows_server.url + "/wcs", "No operation specified", 400)
 
+def test_no_request_wcs1(ows_server):
+    # Make empty request to server:
+    check_wcs_error(ows_server.url + "/wcs?version=1.0.0", "No operation specified", 400)
+
 
 def test_invalid_operation(ows_server):
     # Make invalid operation request to server:
     check_wcs_error(ows_server.url + "/wcs?request=NoSuchOperation", "Unrecognised operation: NOSUCHOPERATION", 400)
+
+def test_invalid_operation_wcs1(ows_server):
+    # Make invalid operation request to server:
+    check_wcs_error(ows_server.url + "/wcs?version=1.0.0&request=NoSuchOperation", "Unrecognised operation: NOSUCHOPERATION", 400)
 
 
 def test_getcap_badsvc(ows_server):
@@ -56,6 +64,23 @@ def test_wcs1_getcap(ows_server):
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("1.0.0/wcsCapabilities.xsd")
     assert gc_xds.validate(resp_xml)
+
+def test_wcs1_getcap_sections(ows_server):
+    resp = request.urlopen(ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0&section=/wcs_capabilities/service", timeout=10)
+    assert resp.code == 200
+    resp = request.urlopen(ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0&section=/wcs_capabilities/capability", timeout=10)
+    assert resp.code == 200
+    resp = request.urlopen(ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0&section=/wcs_capabilities/contentmetadata", timeout=10)
+    assert resp.code == 200
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCapabilities",
+        "service": "WCS",
+        "version": "1.0.0",
+        "section": "nose_bleed"
+    },
+                    expected_error_message="Invalid section: nose_bleed",
+                    expected_status_code=400)
+
 
 def test_wcs1_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
@@ -120,6 +145,80 @@ def test_wcs1_getcov_nobbox(ows_server):
                     expected_error_message="No BBOX parameter supplied",
                     expected_status_code=400)
 
+def test_wcs1_time_exceptions(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": "now",
+    },
+                    expected_error_message="No valid ISO-8601 dates",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": "the day after the first full moon before the Northern Solstice, in the year of our Lord Two Thousand and Twelve",
+        "resx": 0.01,
+        "resy": 0.01,
+    },
+                    expected_error_message="not a valid ISO-8601 date",
+                    expected_status_code=400)
+
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": "1516-04-22",
+        "resx": 0.01,
+        "resy": 0.01,
+    },
+                    expected_error_message="not a valid date for coverage",
+                    expected_status_code=400)
+
+# Need a test database with multiple time slices to test successfully.
+@pytest.mark.xfail
+def test_wcs1_multi_time_exceptions(ows_server):
+    wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO)
+    check_wcs_error(ows_server.url + "/wcs", params={
+         "request": "GetCoverage",
+         "service": "WCS",
+         "version": "1.0.0",
+         "coverage": test_layer_name,
+         "crs": 'EPSG:4326',
+         "format": 'GeoTIFF',
+         "bbox": extents["bbox"],
+         "time": ",".join(extents["times"]),
+         "resx": 0.01,
+        "resy": 0.01,
+    },
+                    expected_error_message="Cannot select more than one time slice with the GeoTIFF format",
+                    expected_status_code=400)
+
+
 def test_wcs1_getcov_no_meas(ows_server):
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
@@ -136,7 +235,6 @@ def test_wcs1_getcov_no_meas(ows_server):
                         "format": 'GeoTIFF',
                         "bbox": extents["bbox"],
                         "time": extents["times"],
-                        "exceptions": "spam",
                         "measurements": ""
                     },
                     expected_error_message="No measurements supplied",
@@ -150,6 +248,197 @@ def test_wcs1_getcov_multi_style(ows_server):
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST)
     check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "styles": "simple_rgb,ndvi"
+    },
+                    expected_error_message="Multiple style parameters not supported",
+                    expected_status_code=400)
+
+def test_wcs1_width_height_res_exceptions(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+    },
+                    expected_error_message="You must specify either the WIDTH/HEIGHT parameters or RESX/RESY",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "width": "200",
+    },
+                    expected_error_message="WIDTH parameter supplied without HEIGHT parameter",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "width": "200",
+        "resy": "0.0",
+    },
+                    expected_error_message="Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "width": "200",
+        "height": "-200",
+    },
+                    expected_error_message="HEIGHT parameter must be a positive integer",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "width": "extra thicc",
+        "height": "200",
+    },
+                    expected_error_message="WIDTH parameter must be a positive integer",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "resx": "0.01",
+    },
+                    expected_error_message="RESX parameter supplied without RESY parameter",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "height": "300",
+        "resx": "0.01",
+    },
+                    expected_error_message="Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "resx": "-0.01",
+        "resy": "0.01"
+    },
+                    expected_error_message="RESX parameter must be a positive number",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "resx": "0.01",
+        "resy": "krunk"
+    },
+                    expected_error_message="RESY parameter must be a positive number",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "height": "1200",
+    },
+                    expected_error_message="HEIGHT parameter supplied without WIDTH parameter",
+                    expected_status_code=400)
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "resy": "1.00",
+    },
+                    expected_error_message="RESY parameter supplied without RESX parameter",
+                    expected_status_code=400)
+
+def test_wcs1_style(ows_server):
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST)
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "GetCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": test_layer_name,
+        "crs": 'EPSG:4326',
+        "format": 'GeoTIFF',
+        "bbox": extents["bbox"],
+        "time": extents["times"],
+        "styles": "simple_rgb",
+        "resx": "0.01",
+        "resy": "0.01",
+    })
+    assert r.status_code == 200
+    r = requests.get(ows_server.url + "/wcs", params={
                         "request": "GetCoverage",
                         "service": "WCS",
                         "version": "1.0.0",
@@ -158,11 +447,11 @@ def test_wcs1_getcov_multi_style(ows_server):
                         "format": 'GeoTIFF',
                         "bbox": extents["bbox"],
                         "time": extents["times"],
-                        "exceptions": "spam",
-                        "styles": "simple_rgb,ndvi"
-                    },
-                    expected_error_message="Multiple style parameters not supported",
-                    expected_status_code=400)
+                        "styles": "invalid_style_returns_default_bands",
+                        "resx": "0.01",
+                        "resy": "0.01",
+    })
+    assert r.status_code == 200
 
 def test_wcs1_getcov_bad_meas(ows_server):
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
@@ -180,7 +469,6 @@ def test_wcs1_getcov_bad_meas(ows_server):
                         "format": 'GeoTIFF',
                         "bbox": extents["bbox"],
                         "time": extents["times"],
-                        "exceptions": "spam",
                         "measurements": "red,green,spam"
                     },
                     expected_error_message="Invalid measurement: spam",
@@ -427,6 +715,7 @@ def test_wcs1_getcoverage_exceptions(ows_server):
         assert 'Invalid BBOX parameter' in str(e)
 
 
+
 def test_wcs1_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
@@ -439,6 +728,25 @@ def test_wcs1_describecoverage(ows_server):
 
     gc_xds = get_xsd("1.0.0/describeCoverage.xsd")
     assert gc_xds.validate(resp)
+
+
+def test_wcs1_describecov_badcov(ows_server):
+    check_wcs_error(ows_server.url + "/wcs", params={
+        "request": "DescribeCoverage",
+        "service": "WCS",
+        "version": "1.0.0",
+        "coverage": "splunge"
+    },
+                    expected_error_message="Invalid coverage: splunge",
+                    expected_status_code=400)
+
+
+def test_wcs1_describecov_all(ows_server):
+    r = requests.get(ows_server.url + "/wcs", params={
+        "request": "DescribeCoverage",
+        "version": "1.0.0",
+    })
+    assert r.status_code == 200
 
 
 def test_wcs20_server(ows_server):

@@ -255,7 +255,7 @@ class ODCExtent:
         crs_bbox = crs_extent.boundingbox
         return {
             "bbox": f"{min(crs_bbox.left,crs_bbox.right)},{min(crs_bbox.top,crs_bbox.bottom)},{max(crs_bbox.left,crs_bbox.right)},{max(crs_bbox.top,crs_bbox.bottom)}",
-            "times": time_strs
+            "times": ",".join(time_strs)
         }
 
     def wcs2_subsets(self,

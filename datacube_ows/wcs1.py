@@ -90,7 +90,7 @@ def desc_coverages(args):
                                     locator="Coverage parameter")
     else:
         for p in cfg.product_index.values():
-            if p.wcs:
+            if p.ready and p.wcs:
                 products.append(p)
 
     return (
