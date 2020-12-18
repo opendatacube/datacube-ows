@@ -201,14 +201,14 @@ class WCS1GetCoverageRequest():
                                 locator="INTERPOLATION parameter")
 
         if "width" in args:
-            if "height" not in args:
-                raise WCS1Exception("WIDTH parameter supplied without HEIGHT parameter",
-                                    WCS1Exception.MISSING_PARAMETER_VALUE,
-                                    locator="WIDTH/HEIGHT parameters")
             if "resx" in args or "resy" in args:
                 raise WCS1Exception("Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
                                     WCS1Exception.MISSING_PARAMETER_VALUE,
                                     locator="RESX/RESY/WIDTH/HEIGHT parameters")
+            if "height" not in args:
+                raise WCS1Exception("WIDTH parameter supplied without HEIGHT parameter",
+                                    WCS1Exception.MISSING_PARAMETER_VALUE,
+                                    locator="WIDTH/HEIGHT parameters")
             try:
                 self.height = int(args["height"])
                 if self.height < 1:
@@ -228,14 +228,14 @@ class WCS1GetCoverageRequest():
             self.resx = (self.maxx - self.minx) / self.width
             self.resy = (self.maxy - self.miny) / self.height
         elif "resx" in args:
-            if "resy" not in args:
-                raise WCS1Exception("RESX parameter supplied without RESY parameter",
-                                    WCS1Exception.MISSING_PARAMETER_VALUE,
-                                    locator="RESX/RESY parameters")
             if "height" in args:
                 raise WCS1Exception("Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
                                     WCS1Exception.MISSING_PARAMETER_VALUE,
                                     locator="RESX/RESY/WIDTH/HEIGHT parameters")
+            if "resy" not in args:
+                raise WCS1Exception("RESX parameter supplied without RESY parameter",
+                                    WCS1Exception.MISSING_PARAMETER_VALUE,
+                                    locator="RESX/RESY parameters")
             try:
                 self.resx = float(args["resx"])
                 if self.resx <= 0.0:
