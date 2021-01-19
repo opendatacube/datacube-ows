@@ -800,6 +800,10 @@ class OWSProductLayer(OWSNamedLayer):
             self.low_res_product_names = [self.low_res_product_name]
         else:
             self.low_res_product_names = []
+        if "product_names" in cfg:
+            raise ConfigException(f"'product_names' entry in non-multi-product layer {self.name} - use 'product_name' only")
+        if "low_res_product_names" in cfg:
+            raise ConfigException(f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only")
 
     def parse_pq_names(self, cfg):
         # pylint: disable=attribute-defined-outside-init
@@ -821,6 +825,10 @@ class OWSProductLayer(OWSNamedLayer):
             self.pq_low_res_names = [self.pq_low_res_name]
         else:
             self.pq_low_res_names = self.low_res_product_names
+        if "products" in cfg:
+            raise ConfigException(f"'products' entry in flags section of non-multi-product layer {self.name} - use 'product' only")
+        if "low_res_products" in cfg:
+            raise ConfigException(f"'low_res_products' entry in flags section of non-multi-product layer {self.name}- use 'low_res_product' only")
 
 
 class OWSMultiProductLayer(OWSNamedLayer):
@@ -834,6 +842,10 @@ class OWSMultiProductLayer(OWSNamedLayer):
             self.low_res_product_name = self.low_res_product_names[0]
         else:
             self.low_res_product_name = None
+        if "product_name" in cfg:
+            raise ConfigException(f"'product_name' entry in multi-product layer {self.name} - use 'product_names' only")
+        if "low_res_product_name" in cfg:
+            raise ConfigException(f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only")
 
     def parse_pq_names(self, cfg):
         # pylint: disable=attribute-defined-outside-init
@@ -856,6 +868,10 @@ class OWSMultiProductLayer(OWSNamedLayer):
         else:
             self.pq_low_res_names = list(self.low_res_product_names)
             self.pq_low_res_name = self.low_res_product_name
+        if "product" in cfg:
+            raise ConfigException(f"'product' entry in flags section of multi-product layer {self.name} - use 'products' only")
+        if "low_res_product" in cfg:
+            raise ConfigException(f"'low_res_product' entry in flags section of multi-product layer {self.name} - use 'low_res_products' only")
 
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None):

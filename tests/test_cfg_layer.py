@@ -211,6 +211,82 @@ def test_bad_lowres_product_name(minimal_layer_cfg, minimal_global_cfg, minimal_
     assert "a_layer" in str(excinfo.value)
 
 
+def test_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["low_res_product_names"] = "smolfoolookupfail"
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "a_layer" in str(excinfo.value)
+    assert "'low_res_product_names' entry in non-multi-product layer" in str(excinfo.value)
+    assert "use 'low_res_product_name' only" in str(excinfo.value)
+    del minimal_layer_cfg["low_res_product_names"]
+    minimal_layer_cfg["product_names"] = ["foo", "bar"]
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "a_layer" in str(excinfo.value)
+    assert "'product_names' entry in non-multi-product layer" in str(excinfo.value)
+    assert "use 'product_name' only" in str(excinfo.value)
+
+def test_flag_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["flags"] = {
+        "band": "foo",
+        "products": ["prod1", "prod2"],
+    }
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "a_layer" in str(excinfo.value)
+    assert "'products' entry in flags section of non-multi-product layer" in str(excinfo.value)
+    assert "use 'product' only" in str(excinfo.value)
+    del minimal_layer_cfg["flags"]["products"]
+    minimal_layer_cfg["flags"]["low_res_products"] = ["smolfoo", "smolbar"]
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "'low_res_products' entry in flags section of non-multi-product layer" in str(excinfo.value)
+    assert "use 'low_res_product' only" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
+def test_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg):
+    minimal_multiprod_cfg["low_res_product_name"] = "smolfoolookupfail"
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_multiprod_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "'low_res_product_name' entry in multi-product layer" in str(excinfo.value)
+    assert "use 'low_res_product_names' only" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+    del minimal_multiprod_cfg["low_res_product_name"]
+    minimal_multiprod_cfg["product_name"] = "foo"
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_multiprod_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "'product_name' entry in multi-product layer" in str(excinfo.value)
+    assert "use 'product_names' only" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
+
+def test_flag_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg):
+    minimal_multiprod_cfg["flags"] = {
+        "band": "foo",
+        "product": "goo",
+    }
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_multiprod_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert "'product' entry in flags section of multi-product layer" in str(excinfo.value)
+    assert "use 'products' only" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+    del minimal_multiprod_cfg["flags"]["product"]
+    minimal_multiprod_cfg["flags"]["low_res_product"] = "smolfoo"
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_multiprod_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "'low_res_product' entry in flags section of multi-product layer" in str(excinfo.value)
+    assert "use 'low_res_products' only" in str(excinfo.value)
+    assert "a_layer" in str(excinfo.value)
+
 def test_noprod_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
     minimal_multiprod_cfg["product_names"] = []
     with pytest.raises(ConfigException) as excinfo:
@@ -244,7 +320,7 @@ def test_multi_product_lowres(minimal_multiprod_cfg, minimal_global_cfg, minimal
 
 def test_multi_product_pq(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
     minimal_multiprod_cfg["flags"] = {
-        "product": ["flag_foo", "flag_bar"],
+        "products": ["flag_foo", "flag_bar"],
         "band": "band4",
     }
     lyr = parse_ows_layer(minimal_multiprod_cfg,
