@@ -223,7 +223,7 @@ style_c3_pure_swir2 = {
     "scale_range": [0.0, 3000.0],
 }
 
-style_c3_ls_common = [
+styles_c3_ls_common = [
     style_c3_simple_rgb,
     style_c3_false_colour,
     style_c3_ndvi,
@@ -238,11 +238,11 @@ style_c3_ls_common = [
 ]
 
 
-style_c3_ls_7 = style_c3_ls_common.copy()
-style_c3_ls_7.append(style_c3_pure_panchromatic)
+styles_c3_ls_7 = styles_c3_ls_common.copy()
+styles_c3_ls_7.append(style_c3_pure_panchromatic)
 
-style_c3_ls_8 = style_c3_ls_7.copy()
-style_c3_ls_8.append(style_c3_pure_aerosol)
+styles_c3_ls_8 = styles_c3_ls_7.copy()
+styles_c3_ls_8.append(style_c3_pure_aerosol)
 
 
 reslim_c3_ls = {
@@ -290,7 +290,7 @@ The resolution is a 30 m grid based on the USGS Landsat Collection 1 archive."""
                             },
                             "styling": {
                                 "default_style": "simple_rgb",
-                                "styles": style_c3_ls_8
+                                "styles": styles_c3_ls_8
                             },
                         },
 dea_c3_ls7_ard =        {
@@ -320,7 +320,7 @@ For service status information, see https://status.dea.ga.gov.au""",
                             },
                             "styling": {
                                 "default_style": "simple_rgb",
-                                "styles": style_c3_ls_7
+                                "styles": styles_c3_ls_7
                             },
                         },
 dea_c3_ls5_ard =        {
@@ -352,6 +352,6 @@ For service status information, see https://status.dea.ga.gov.au""",
                             },
                             "styling": {
                                 "default_style": "simple_rgb",
-                                "styles": style_c3_ls_common
+                                "styles": styles_c3_ls_common
                             },
                         },
