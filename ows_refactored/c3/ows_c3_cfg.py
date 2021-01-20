@@ -237,9 +237,12 @@ style_c3_ls_common = [
     style_c3_pure_swir2,
 ]
 
-style_c3_ls_7 = style_c3_ls_common.append(style_c3_pure_panchromatic)
-# style_c3_ls_8 = style_c3_ls_7.append(style_c3_pure_aerosol)
-style_c3_ls_8 = [].append(style_c3_pure_aerosol)
+
+style_c3_ls_7 = style_c3_ls_common.copy()
+style_c3_ls_7.append(style_c3_pure_panchromatic)
+
+style_c3_ls_8 = style_c3_ls_7.copy()
+style_c3_ls_8.append(style_c3_pure_aerosol)
 
 
 reslim_c3_ls = {
