@@ -5,6 +5,7 @@ OWS Configuration
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :glob:
 
    cfg_global
    cfg_wms
@@ -309,5 +310,3 @@ The `layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ se
 contains a list of layer configurations.  The configured layers define the
 layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour. The layers section
 is always required.
-
-
