@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+==============================
+OWS Configuration - Functions
+=============================
 
 .. contents:: Table of Contents
 
@@ -197,4 +197,3 @@ referencing it directly, or with a lambda.  These methods are no
 longer supported to ensure that configuration objects are always
 serialisable and that the json and python configuration formats
 are equivalent.
-

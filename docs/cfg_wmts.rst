@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+================================
+OWS Configuration - WMTS Section
+================================
 
 .. contents:: Table of Contents
 
@@ -184,4 +184,3 @@ E.g.
             },
         }
     }
-

@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+===============================
+OWS Configuration - WMS Section
+===============================
 
 .. contents:: Table of Contents
 
@@ -146,4 +146,3 @@ E.g.
                 "format": "image/png",
             }
         },
-

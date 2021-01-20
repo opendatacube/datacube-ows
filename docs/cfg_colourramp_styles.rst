@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+=======================================
+OWS Configuration - Colour-Ramp Styles
+=======================================
 
 .. contents:: Table of Contents
 

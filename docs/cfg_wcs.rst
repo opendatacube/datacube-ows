@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+===============================
+OWS Configuration - WCS Section
+===============================
 
 .. contents:: Table of Contents
 
@@ -79,5 +79,3 @@ activated (specified in the `global services <https://datacube-ows.readthedocs.i
 section) and must contain the name of one of the formats in
 defined in the
 `formats <#supported-output-formats-formats>`_ section.
-
-

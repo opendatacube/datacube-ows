@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+=================================
+OWS Configuration - Layer Styles
+=================================
 
 .. contents:: Table of Contents
 
@@ -292,5 +292,3 @@ E.g.::
          "show_legend": True,
          "url": "https://somedomain.com/path/to/legend_image.png",
      }
-
-

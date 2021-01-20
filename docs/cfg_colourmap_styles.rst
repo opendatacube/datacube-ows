@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+=====================================
+OWS Configuration - Colourmap Styles
+====================================
 
 .. contents:: Table of Contents
 

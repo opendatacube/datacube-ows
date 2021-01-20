@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+==================================
+OWS Configuration - Global Section
+==================================
 
 .. contents:: Table of Contents
 
@@ -207,4 +207,3 @@ in the comments to this example:
         # If there are constraints on access to the service, they can be described here in free text.
         # If blank or not included, defaults to "none".
         "access_constraints": "",
-

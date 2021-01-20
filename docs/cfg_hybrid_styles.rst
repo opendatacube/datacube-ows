@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+=================================
+OWS Configuration - Hybrid Styles
+=================================
 
 .. contents:: Table of Contents
 
