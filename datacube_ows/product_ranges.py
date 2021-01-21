@@ -336,7 +336,9 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
     else:
         for pname, ows_prods in odc_products.items():
             dc_product = dc.index.products.get_by_name(pname)
-            if datasets_exist(dc, dc_product.name):
+            if dc_product is None:
+                print("Could not find ODC product:", pname)
+            elif datasets_exist(dc, dc_product.name):
                 prod_summary = summary
                 for ows_prod in ows_prods["ows"]:
                     if ows_prod:
