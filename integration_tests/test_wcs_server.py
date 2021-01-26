@@ -84,7 +84,7 @@ def test_wcs1_getcap_sections(ows_server):
 
 def test_wcs1_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -102,7 +102,7 @@ def test_wcs1_getcov_nocov(ows_server):
 
 
 def test_wcs1_getcov_nofmt(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     check_wcs_error(ows_server.url + "/wcs", params={
@@ -115,7 +115,7 @@ def test_wcs1_getcov_nofmt(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_getcov_bad_respcrs(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     check_wcs_error(ows_server.url + "/wcs", params={
@@ -131,7 +131,7 @@ def test_wcs1_getcov_bad_respcrs(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_getcov_nobbox(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     check_wcs_error(ows_server.url + "/wcs", params={
@@ -146,7 +146,7 @@ def test_wcs1_getcov_nobbox(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_time_exceptions(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -197,7 +197,7 @@ def test_wcs1_time_exceptions(ows_server):
 # Need a test database with multiple time slices to test successfully.
 @pytest.mark.xfail
 def test_wcs1_multi_time_exceptions(ows_server):
-    wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -220,7 +220,7 @@ def test_wcs1_multi_time_exceptions(ows_server):
 
 
 def test_wcs1_getcov_no_meas(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -241,7 +241,7 @@ def test_wcs1_getcov_no_meas(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_getcov_multi_style(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -262,7 +262,7 @@ def test_wcs1_getcov_multi_style(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_width_height_res_exceptions(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -418,7 +418,7 @@ def test_wcs1_width_height_res_exceptions(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_style(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -454,7 +454,7 @@ def test_wcs1_style(ows_server):
     assert r.status_code == 200
 
 def test_wcs1_getcov_bad_meas(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -475,7 +475,7 @@ def test_wcs1_getcov_bad_meas(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_getcov_badexception(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -497,7 +497,7 @@ def test_wcs1_getcov_badexception(ows_server):
                     expected_status_code=400)
 
 def test_wcs1_getcov_interp(ows_server):
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
@@ -521,7 +521,7 @@ def test_wcs1_getcov_interp(ows_server):
 
 def test_wcs1_getcoverage_geotiff(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -547,7 +547,7 @@ def test_wcs1_getcoverage_geotiff(ows_server):
 
 def test_wcs1_getcoverage_geotiff_respcrs(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -573,7 +573,7 @@ def test_wcs1_getcoverage_geotiff_respcrs(ows_server):
 
 def test_wcs1_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -642,7 +642,7 @@ def test_extent_utils():
 
 def test_wcs1_getcoverage_exceptions(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     test_layer = wcs.contents[test_layer_name]
@@ -718,7 +718,7 @@ def test_wcs1_getcoverage_exceptions(ows_server):
 
 def test_wcs1_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -751,7 +751,7 @@ def test_wcs1_describecov_all(ows_server):
 
 def test_wcs20_server(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -765,7 +765,7 @@ def test_wcs20_server(ows_server):
 def test_wcs20_getcoverage_geotiff(ows_server):
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -788,7 +788,7 @@ def test_wcs20_getcoverage_geotiff(ows_server):
 def test_wcs20_getcoverage_netcdf(ows_server):
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -810,7 +810,7 @@ def test_wcs20_getcoverage_netcdf(ows_server):
 def test_wcs20_getcoverage_crs_alias(ows_server):
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -832,7 +832,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
 def test_wcs20_getcoverage_multidate_geotiff(ows_server):
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
@@ -854,7 +854,7 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server):
 def test_wcs20_getcoverage_multidate_netcdf(ows_server):
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="2.0.0")
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
