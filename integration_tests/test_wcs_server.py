@@ -91,7 +91,7 @@ def test_wcs1_getcoverage_geotiff(ows_server):
 
 def test_wcs1_getcoverage_netcdf(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
-    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=120)
+    wcs = WebCoverageService(url=ows_server.url+"/wcs", version="1.0.0", timeout=180)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
