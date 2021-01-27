@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+==============================
+OWS Configuration - Components
+==============================
 
 .. contents:: Table of Contents
 
@@ -341,4 +341,3 @@ channels satisfy the exceptions above.
 
 See the `component scale_range <#component-scale-range>`_
 section for examples.
-

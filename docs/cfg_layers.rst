@@ -1,6 +1,6 @@
-=================
-OWS Configuration
-=================
+==========================
+OWS Configuration - Layers
+==========================
 
 .. contents:: Table of Contents
 
