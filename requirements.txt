@@ -29,7 +29,7 @@ bottleneck
 sentry-sdk
 blinker
 pyows
-owslib==0.20.0
+owslib==0.21.0
 pytest-helpers-namespace
 prometheus-flask-exporter
 setuptools_scm
