@@ -1,4 +1,3 @@
-
 from datacube_ows.cfg_parser import main
 
 
@@ -15,4 +14,3 @@ def test_cfg_parser_parse_only(runner):
 def test_cfg_parser_version(runner):
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
-

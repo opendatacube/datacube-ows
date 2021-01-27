@@ -1,5 +1,6 @@
 import os
-pytest_plugins = ['helpers_namespace']
+
+pytest_plugins = ["helpers_namespace"]
 import pytest
 from click.testing import CliRunner
 
@@ -7,6 +8,7 @@ from datacube_ows import ogc
 from pytest_localserver.http import WSGIServer
 
 from datacube_ows.ogc import app
+
 
 @pytest.fixture
 def flask_client():
@@ -28,7 +30,7 @@ def ows_server(request):
         server = generic_obj()
         server.url = external_url
     else:
-        server = WSGIServer(port='5000', application=ogc.app)
+        server = WSGIServer(port="5000", application=ogc.app)
         server.start()
         request.addfinalizer(server.stop)
 
@@ -38,6 +40,7 @@ def ows_server(request):
 @pytest.fixture
 def runner():
     return CliRunner()
+
 
 @pytest.helpers.register
 def enclosed_bbox(bbox):
@@ -49,8 +52,9 @@ def enclosed_bbox(bbox):
         lon_min + 0.45 * lon_range,
         lat_min + 0.45 * lat_range,
         lon_max - 0.45 * lon_range,
-        lat_max - 0.45 * lat_range
+        lat_max - 0.45 * lat_range,
     )
+
 
 @pytest.helpers.register
 def disjoint_bbox(bbox):
@@ -62,7 +66,7 @@ def disjoint_bbox(bbox):
         lon_min - 0.4 * lon_range,
         lat_min - 0.4 * lat_range,
         lon_min - 0.2 * lon_range,
-        lat_min - 0.2 * lat_range
+        lat_min - 0.2 * lat_range,
     )
 
 

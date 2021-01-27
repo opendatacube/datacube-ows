@@ -1,9 +1,5 @@
 from datacube_ows.ows_configuration import get_config
 
-import datacube
-import pytest
-
-
 def test_get_layers():
     layers = get_config()
 
