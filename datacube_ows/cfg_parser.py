@@ -55,19 +55,38 @@ def parse_path(path, parse_only, folders, styles):
         print()
         print("Folder/Layer Hierarchy")
         print("======================")
-        print_layers(cfg.layers, depth=0)
+        print_layers(cfg.layers, styles, depth=0)
+        print()
+    elif styles:
+        print()
+        print("Layers and Styles")
+        print("=================")
+        for lyr in cfg.product_index.values():
+            print(lyr.name, f"[{','.join(lyr.product_names)}]")
+            print_styles(lyr)
         print()
 
-def print_layers(layers, depth):
+def print_layers(layers, styles, depth):
     for lyr in layers:
         if isinstance(lyr, OWSFolder):
             indent(depth)
             print("*", lyr.title)
-            print_layers(lyr.child_layers, depth+1)
+            print_layers(lyr.child_layers, styles, depth+1)
         else:
             indent(depth)
             print(lyr.name, f"[{','.join(lyr.product_names)}]")
+            if styles:
+                print_styles(lyr, depth)
 
-def indent(depth):
+
+def print_styles(lyr, depth=0):
+    for styl in lyr.styles:
+        indent(0, for_styles=True)
+        print(".", styl.name)
+
+
+def indent(depth, for_styles=False):
     for i in range(depth):
         print("  ", end="")
+    if for_styles:
+        print("      ", end="")
