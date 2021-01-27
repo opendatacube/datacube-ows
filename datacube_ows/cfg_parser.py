@@ -26,6 +26,10 @@ def main(version, parse_only, folders, styles, paths):
                )
         return 0
 
+    if parse_only and (folders or styles):
+        print("The --folders (-f) and --styles (-s) flags cannot be used in conjunction with the --parser-only (-p) flag.")
+        return 1
+
     if not paths:
         if parse_path(None, parse_only, folders, styles):
             return 0
