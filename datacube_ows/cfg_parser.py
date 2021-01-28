@@ -47,7 +47,13 @@ from datacube import Datacube
     default=False,
     help="Compare the input json file with config file",
 )
-def main(version, parse_only, folders, styles, input_file, paths):
+@click.option(
+    "-o",
+    "--output-file",
+    default=False,
+    help="Compare the input json file with config file",
+)
+def main(version, parse_only, folders, styles, input_file, output_file, paths):
     """Test configuration files
 
     Valid invocations:
@@ -67,12 +73,12 @@ def main(version, parse_only, folders, styles, input_file, paths):
 
     all_ok = True
     if not paths:
-        if parse_path(None, parse_only, folders, styles, input_file):
+        if parse_path(None, parse_only, folders, styles, input_file, output_file):
             return 0
         else:
             sys.exit(1)
     for path in paths:
-        if not parse_path(path, parse_only, folders, styles, input_file):
+        if not parse_path(path, parse_only, folders, styles, input_file, output_file):
             all_ok = False
 
     if not all_ok:
@@ -80,7 +86,7 @@ def main(version, parse_only, folders, styles, input_file, paths):
     return 0
 
 
-def parse_path(path, parse_only, folders, styles, input_file):
+def parse_path(path, parse_only, folders, styles, input_file, output_file):
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
@@ -105,11 +111,12 @@ def parse_path(path, parse_only, folders, styles, input_file):
             print(lyr.name, f"[{','.join(lyr.product_names)}]")
             print_styles(lyr)
         print()
-    layers_report(input_file, cfg.product_index)
+    if input_file or output_file:
+        layers_report(cfg.product_index, input_file, output_file)
     return True
 
 
-def layers_report(input_file, config_values):
+def layers_report(config_values, input_file, output_file):
     report = {"total_layers_count": len(config_values.values()), "layers": []}
     for lyr in config_values.values():
         layer = {
@@ -118,7 +125,6 @@ def layers_report(input_file, config_values):
             "styles_list": [styl.name for styl in lyr.styles],
         }
         report["layers"].append(layer)
-    json_report = json.dumps(report, sort_keys=True)
     if input_file:
         with open(input_file) as f:
             input_file_data = json.load(f)
@@ -128,8 +134,9 @@ def layers_report(input_file, config_values):
         else:
             print(ddiff)
             return False
-    else:
-        print(json_report)
+    if output_file:
+        with open(output_file, 'w') as reportfile:
+            json.dumps(report, reportfile)
         return True
 
 
