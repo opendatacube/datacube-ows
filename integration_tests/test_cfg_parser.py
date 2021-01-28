@@ -30,6 +30,10 @@ def test_cfg_parser_folders_parse_only(runner):
     result = runner.invoke(main, ["-f", "-p"])
     assert result.exit_code == 1
 
+def test_cfg_parser_input_file_compare(runner):
+    result = runner.invoke(main, ["-i", "ows_cfg_report.json"])
+    assert result.exit_code == 0
+
 
 def test_cfg_parser_version(runner):
     result = runner.invoke(main, ["--version"])
