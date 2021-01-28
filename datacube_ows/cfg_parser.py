@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import click
 
 from datacube_ows import __version__
@@ -28,13 +29,13 @@ def main(version, parse_only, folders, styles, paths):
 
     if parse_only and (folders or styles):
         print("The --folders (-f) and --styles (-s) flags cannot be used in conjunction with the --parser-only (-p) flag.")
-        return 1
+        sys.exit(1)
 
     if not paths:
         if parse_path(None, parse_only, folders, styles):
             return 0
         else:
-            return 1
+            sys.exit(1)
     all_ok = True
     for path in paths:
         if not parse_path(path, parse_only, folders, styles):
@@ -42,7 +43,7 @@ def main(version, parse_only, folders, styles, paths):
 
 
     if all_ok:
-        return 1
+        sys.exit(1)
     return 0
 
 def parse_path(path, parse_only, folders, styles):
