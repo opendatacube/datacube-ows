@@ -33,3 +33,4 @@ owslib==0.21.0
 pytest-helpers-namespace
 prometheus-flask-exporter
 setuptools_scm
+deepdiff

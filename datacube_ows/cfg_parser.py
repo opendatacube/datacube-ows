@@ -3,6 +3,7 @@
 import sys
 import click
 import json
+from deepdiff import DeepDiff
 
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import read_config, OWSConfig, ConfigException, OWSFolder
@@ -92,12 +93,14 @@ def layers_report(input_file, config_values):
     if input_file:
         with open(input_file) as f:
             input_file_data = json.load(f)
-        if json.dumps(input_file_data, sort_keys=True) == json_report:
+        ddiff = DeepDiff(input_file_data, report, ignore_order=True)
+        if len(ddiff) == 0:
             return True
         else:
+            print(ddiff)
             return False
     else:
-        print(json_report, sort_keys=True)
+        print(json_report)
 
 def print_layers(layers, styles, depth):
     for lyr in layers:
