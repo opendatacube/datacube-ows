@@ -31,18 +31,18 @@ def main(version, parse_only, folders, styles, paths):
         print("The --folders (-f) and --styles (-s) flags cannot be used in conjunction with the --parser-only (-p) flag.")
         sys.exit(1)
 
+    all_ok = True
     if not paths:
         if parse_path(None, parse_only, folders, styles):
             return 0
         else:
             sys.exit(1)
-    all_ok = True
     for path in paths:
         if not parse_path(path, parse_only, folders, styles):
             all_ok = False
 
 
-    if all_ok:
+    if not all_ok:
         sys.exit(1)
     return 0
 
@@ -55,6 +55,7 @@ def parse_path(path, parse_only, folders, styles):
                 cfg.make_ready(dc)
     except ConfigException as e:
         print("Config exception for path", str(e))
+        return False
     print("Configuration parsed OK")
     if folders:
         print()
@@ -70,6 +71,7 @@ def parse_path(path, parse_only, folders, styles):
             print(lyr.name, f"[{','.join(lyr.product_names)}]")
             print_styles(lyr)
         print()
+    return True
 
 def print_layers(layers, styles, depth):
     for lyr in layers:
