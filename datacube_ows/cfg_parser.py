@@ -2,6 +2,8 @@
 
 import sys
 import click
+import json
+from deepdiff import DeepDiff
 
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import read_config, OWSConfig, ConfigException, OWSFolder
@@ -13,7 +15,8 @@ from datacube import Datacube
 @click.option("-p", "--parse-only", is_flag=True, default=False, help="Only parse the syntax of the config file - do not validate against database")
 @click.option("-f", "--folders", is_flag=True, default=False, help="Print the folder/layer heirarchy(ies) to stdout.")
 @click.option("-s", "--styles", is_flag=True, default=False, help="Print the styles for each layer to stdout (format depends on --folders flag).")
-def main(version, parse_only, folders, styles, paths):
+@click.option("-i", "--input-file", default=False, help="Compare the input json file with config file")
+def main(version, parse_only, folders, styles, input_file, paths):
     """Test configuration files
 
     Valid invocations:
@@ -33,12 +36,12 @@ def main(version, parse_only, folders, styles, paths):
 
     all_ok = True
     if not paths:
-        if parse_path(None, parse_only, folders, styles):
+        if parse_path(None, parse_only, folders, styles, input_file):
             return 0
         else:
             sys.exit(1)
     for path in paths:
-        if not parse_path(path, parse_only, folders, styles):
+        if not parse_path(path, parse_only, folders, styles, input_file):
             all_ok = False
 
 
@@ -46,7 +49,7 @@ def main(version, parse_only, folders, styles, paths):
         sys.exit(1)
     return 0
 
-def parse_path(path, parse_only, folders, styles):
+def parse_path(path, parse_only, folders, styles, input_file):
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
@@ -71,7 +74,33 @@ def parse_path(path, parse_only, folders, styles):
             print(lyr.name, f"[{','.join(lyr.product_names)}]")
             print_styles(lyr)
         print()
+    layers_report(input_file, cfg.product_index.values())
     return True
+
+def layers_report(input_file, config_values):
+    report = {
+        "total_layers_count": len(config_values),
+        "layers": []
+    }
+    for lyr in config_values:
+        layer = {
+            "product": lyr.product_names,
+            "styles_count": len(lyr.styles),
+            "styles_list": [styl.name for styl in lyr.styles],
+        }
+        report['layers'].append(layer)
+    json_report = json.dumps(report, sort_keys=True)
+    if input_file:
+        with open(input_file) as f:
+            input_file_data = json.load(f)
+        ddiff = DeepDiff(input_file_data, report, ignore_order=True)
+        if len(ddiff) == 0:
+            return True
+        else:
+            print(ddiff)
+            return False
+    else:
+        print(json_report)
 
 def print_layers(layers, styles, depth):
     for lyr in layers:
