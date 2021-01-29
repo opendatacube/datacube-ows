@@ -45,13 +45,13 @@ from datacube import Datacube
     "-i",
     "--input-file",
     default=False,
-    help="Compare the input json file with config file",
+    help="Provide a file path for the input inventory json file to be compared with config file",
 )
 @click.option(
     "-o",
     "--output-file",
     default=False,
-    help="Compare the input json file with config file",
+    help="Provide an output file name with extension .json",
 )
 def main(version, parse_only, folders, styles, input_file, output_file, paths):
     """Test configuration files
@@ -136,7 +136,7 @@ def layers_report(config_values, input_file, output_file):
             return False
     if output_file:
         with open(output_file, 'w') as reportfile:
-            json.dumps(report, reportfile)
+            json.dump(report, reportfile, indent=4)
         return True
 
 
