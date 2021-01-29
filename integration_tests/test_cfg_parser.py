@@ -34,6 +34,9 @@ def test_cfg_parser_input_file_compare(runner):
     result = runner.invoke(main, ["-i", "/code/ows_cfg_report.json"])
     assert result.exit_code == 0
 
+def test_cfg_parser_output_file_compare(runner):
+    result = runner.invoke(main, ["-o", "inventory.json"])
+    assert result.exit_code == 0
 
 def test_cfg_parser_version(runner):
     result = runner.invoke(main, ["--version"])
