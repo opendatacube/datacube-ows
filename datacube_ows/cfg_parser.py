@@ -2,18 +2,58 @@
 
 import sys
 import click
+import json
+from deepdiff import DeepDiff
 
 from datacube_ows import __version__
-from datacube_ows.ows_configuration import read_config, OWSConfig, ConfigException, OWSFolder
+from datacube_ows.ows_configuration import (
+    read_config,
+    OWSConfig,
+    ConfigException,
+    OWSFolder,
+)
 from datacube import Datacube
+
 
 @click.command()
 @click.argument("paths", nargs=-1)
-@click.option("--version", is_flag=True, default=False, help="Show OWS version number and exit")
-@click.option("-p", "--parse-only", is_flag=True, default=False, help="Only parse the syntax of the config file - do not validate against database")
-@click.option("-f", "--folders", is_flag=True, default=False, help="Print the folder/layer heirarchy(ies) to stdout.")
-@click.option("-s", "--styles", is_flag=True, default=False, help="Print the styles for each layer to stdout (format depends on --folders flag).")
-def main(version, parse_only, folders, styles, paths):
+@click.option(
+    "--version", is_flag=True, default=False, help="Show OWS version number and exit"
+)
+@click.option(
+    "-p",
+    "--parse-only",
+    is_flag=True,
+    default=False,
+    help="Only parse the syntax of the config file - do not validate against database",
+)
+@click.option(
+    "-f",
+    "--folders",
+    is_flag=True,
+    default=False,
+    help="Print the folder/layer heirarchy(ies) to stdout.",
+)
+@click.option(
+    "-s",
+    "--styles",
+    is_flag=True,
+    default=False,
+    help="Print the styles for each layer to stdout (format depends on --folders flag).",
+)
+@click.option(
+    "-i",
+    "--input-file",
+    default=False,
+    help="Provide a file path for the input inventory json file to be compared with config file",
+)
+@click.option(
+    "-o",
+    "--output-file",
+    default=False,
+    help="Provide an output file name with extension .json",
+)
+def main(version, parse_only, folders, styles, input_file, output_file, paths):
     """Test configuration files
 
     Valid invocations:
@@ -22,31 +62,31 @@ def main(version, parse_only, folders, styles, paths):
     """
     # --version
     if version:
-        print("Open Data Cube Open Web Services (datacube-ows) version",
-              __version__
-               )
+        print("Open Data Cube Open Web Services (datacube-ows) version", __version__)
         return 0
 
     if parse_only and (folders or styles):
-        print("The --folders (-f) and --styles (-s) flags cannot be used in conjunction with the --parser-only (-p) flag.")
+        print(
+            "The --folders (-f) and --styles (-s) flags cannot be used in conjunction with the --parser-only (-p) flag."
+        )
         sys.exit(1)
 
     all_ok = True
     if not paths:
-        if parse_path(None, parse_only, folders, styles):
+        if parse_path(None, parse_only, folders, styles, input_file, output_file):
             return 0
         else:
             sys.exit(1)
     for path in paths:
-        if not parse_path(path, parse_only, folders, styles):
+        if not parse_path(path, parse_only, folders, styles, input_file, output_file):
             all_ok = False
-
 
     if not all_ok:
         sys.exit(1)
     return 0
 
-def parse_path(path, parse_only, folders, styles):
+
+def parse_path(path, parse_only, folders, styles, input_file, output_file):
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
@@ -71,14 +111,41 @@ def parse_path(path, parse_only, folders, styles):
             print(lyr.name, f"[{','.join(lyr.product_names)}]")
             print_styles(lyr)
         print()
+    if input_file or output_file:
+        layers_report(cfg.product_index, input_file, output_file)
     return True
+
+
+def layers_report(config_values, input_file, output_file):
+    report = {"total_layers_count": len(config_values.values()), "layers": []}
+    for lyr in config_values.values():
+        layer = {
+            "product": lyr.product_names,
+            "styles_count": len(lyr.styles),
+            "styles_list": [styl.name for styl in lyr.styles],
+        }
+        report["layers"].append(layer)
+    if input_file:
+        with open(input_file) as f:
+            input_file_data = json.load(f)
+        ddiff = DeepDiff(input_file_data, report, ignore_order=True)
+        if len(ddiff) == 0:
+            return True
+        else:
+            print(ddiff)
+            return False
+    if output_file:
+        with open(output_file, 'w') as reportfile:
+            json.dump(report, reportfile, indent=4)
+        return True
+
 
 def print_layers(layers, styles, depth):
     for lyr in layers:
         if isinstance(lyr, OWSFolder):
             indent(depth)
             print("*", lyr.title)
-            print_layers(lyr.child_layers, styles, depth+1)
+            print_layers(lyr.child_layers, styles, depth + 1)
         else:
             indent(depth)
             print(lyr.name, f"[{','.join(lyr.product_names)}]")
