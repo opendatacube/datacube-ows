@@ -1,3 +1,5 @@
+import pytest
+
 from datacube_ows.cfg_parser import main
 
 
