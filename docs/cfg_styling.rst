@@ -212,7 +212,9 @@ Bit-flag Masks (pq_masks)
 +++++++++++++++++++++++++
 
 The "pq_masks" section allows a style to mask the output image
-by the bit flags defined in the `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_ for the layer.
+by the bit flags in any of the flag bands defined in the
+`Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
+for the layer.
 
 The pq_masks section is a list of mask sections, which are OR'd together.  i.e. A pixel
 becomes transparent if it would be made transparent by any of the masks in the list
@@ -221,16 +223,23 @@ acting individually.
 Mask Sections
 @@@@@@@@@@@@@
 
-Each mask section contains a "flags" dictionary and an optional "invert" flag, which
-is False by default.
+Each mask section contains a "band" identifier and a "flags" dictionary. A mask section
+may also optionally include an "invert" flag, which is False by default.
+
+The "band" identifier refers to one of the flag-band identifiers defined in the
+`Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
+for the layer.
+
+Backwards compatibility note: The "band" identifier may be omitted if there is only
+one band identifier defined for the layer.  However this usage is deprecated and will
+be removed in a future release.
 
 The flags dictionary is passed directly to ``datacube.utils.masking.make_mask``.
 The entries of the dictionary represent bitflag comparisons that
 are ANDed together.  i.e. A pixel is DISPLAYED if the bitflags
 for the pixel match ALL of the entries specified in the "flags" dictionary.
-
-specified by the index match.
-The keys of the dictionary are the flag names as used in the ODC metadata
+The keys of the dictionary are the flag names, and the values are the flag values -
+refer to the ODC product metadata for possible values.
 
 If the "invert" flag is True, then the output inverted (logically NOTed). I.e.
 A pixel is MADE TRANSPARENT if the bitflags
@@ -243,12 +252,14 @@ E.g.
     # Remove pixels
     "pq_masks": [
         {
+            "band": "ls8_pq"
             "flags": {
                 "cloud": "no_cloud",
                 "cloud_shadow": "no_cloud_shadow"
             }
         },
         {
+            "band": "wofs_flags",
             "invert": True,
             "flags": {
                 "water": "no_water"
@@ -292,3 +303,4 @@ E.g.::
          "show_legend": True,
          "url": "https://somedomain.com/path/to/legend_image.png",
      }
+
