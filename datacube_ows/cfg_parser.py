@@ -133,7 +133,7 @@ def layers_report(config_values, input_file, output_file):
             return True
         else:
             print(ddiff)
-            return False
+            sys.exit(1)
     if output_file:
         with open(output_file, 'w') as reportfile:
             json.dump(report, reportfile, indent=4)
