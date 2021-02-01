@@ -213,6 +213,54 @@ def test_parse_colorramp_legend_ticks():
     assert ramp.tick_labels == ["0.3", "0.9", "1.1", "1.9", "2.0"]
 
 
+def test_parse_colorramp_legend_find_end():
+    ramp = ColorRamp(None, {
+         'color_ramp': [
+            {
+                'value': 999,
+                'color': '#000000',
+                'alpha': 0.0
+            },
+            {
+                'value': 1000,
+                'color': '#000000'
+            },
+            {
+                'value': 2500,
+                'color': '#BA7500'
+            },
+            {
+                'value': 6500,
+                'color': '#BF4000'
+            },
+            {
+                'value': 51500,
+                'color': '#EF1000'
+            }
+        ],
+        'legend': {
+            'show_legend': True,
+            'begin': '1000',
+            'end': '6000',
+            'ticks': ['1000', '2000', '3000', '6000'],
+            'tick_labels': {
+                '1000': {
+                    'label': '-1.0'
+                },
+                '2000': {
+                    'label': '0.0'
+                },
+                '3000': {
+                    'label': '1.0'
+                },
+                '6000': {
+                    'label': '4.0'
+                }
+            }
+        }
+    })
+    assert ramp.values == [999.0, 1000.0, 2500.0, 6000.0, 6500.0, 51500.0]
+
 def test_parse_colorramp_legend_tick_labels():
     ramp = ColorRamp(None, {
         "range": [-1.0, 2.5],
