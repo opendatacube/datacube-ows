@@ -327,7 +327,7 @@ class ColorRamp:
                         begin_in_ramp = True
                     elif col_val > fbegin:
                         begin_before_idx = idx
-                if not end_in_ramp and not end_before_idx is not None:
+                if not end_in_ramp and end_before_idx is None:
                     if isclose(col_val, fend, abs_tol=1e-9):
                         end_in_ramp = True
                     elif col_val > fend:
