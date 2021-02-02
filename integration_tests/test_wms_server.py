@@ -59,7 +59,6 @@ def test_getcap_badsvc(ows_server):
     )
 
 
-@pytest.mark.xfail(reason="OWS Getcaps don't pass XSD")
 def test_getcap(ows_server):
     resp = request.urlopen(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
@@ -73,7 +72,6 @@ def test_getcap(ows_server):
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("capabilities_1_3_0.xsd")
     assert gc_xds.validate(resp_xml)
-
 
 def test_getcap_coord_order(ows_server):
     resp = request.urlopen(
