@@ -87,21 +87,7 @@
             {% for t in lyr_ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
         </Dimension>
         {% endif %}
-        {% for style in lyr.styles %}
-            <Style>
-                <Name>{{ style.name }}</Name>
-                <Title>{{ style.title }}</Title>
-                <Abstract>{{ style.abstract }}</Abstract>
-                {% if style.show_legend %}
-                    <LegendURL>
-                        <Format>image/png</Format>
-                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
-                                        xlink:type="simple"
-                                        xlink:href="{{ base_url }}/legend/{{ lyr.name }}/{{ style.name }}/legend.png"/>
-                    </LegendURL>
-                {% endif %}
-            </Style>
-        {% endfor %}
+
         {% if lyr.attribution %}
             <Attribution>
                 {% if lyr.attribution.title %}
@@ -146,7 +132,21 @@
                 />
             </FeatureListURL>
         {% endfor %}
-        {# TODO: Layers for Subproducts #}
+        {% for style in lyr.styles %}
+            <Style>
+                <Name>{{ style.name }}</Name>
+                <Title>{{ style.title }}</Title>
+                <Abstract>{{ style.abstract }}</Abstract>
+                {% if style.show_legend %}
+                    <LegendURL>
+                        <Format>image/png</Format>
+                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                        xlink:type="simple"
+                                        xlink:href="{{ base_url }}/legend/{{ lyr.name }}/{{ style.name }}/legend.png"/>
+                    </LegendURL>
+                {% endif %}
+            </Style>
+        {% endfor %} {# TODO: Layers for Subproducts #}
     </Layer>
     {% endif %}
 {%- endmacro %}
