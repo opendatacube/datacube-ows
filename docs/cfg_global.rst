@@ -159,6 +159,8 @@ E.g.:
 
    },
 
+If unsure of an `EPSG` code, search in http://epsg.io/
+
 
 Optional Metadata
 =================
