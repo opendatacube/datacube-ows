@@ -46,6 +46,11 @@
             <Keyword>{{ kw }}</Keyword>
             {% endfor %}
         </KeywordList>
+        {% if depth == 0 %}
+            {% for crs in cfg.published_CRSs.keys() %}
+                <CRS>{{ crs }}</CRS>
+            {% endfor %}
+        {% endif %}
         <EX_GeographicBoundingBox>
             <westBoundLongitude>{{ lyr_ranges.lon.min }}</westBoundLongitude>
             <eastBoundLongitude>{{ lyr_ranges.lon.max }}</eastBoundLongitude>
@@ -79,29 +84,12 @@
                 {% endif %}
             />
         {% endfor %}
-        {% for crsid in lyr.bboxes.keys() %}
-            <CRS>{{ crsid }}</CRS>
-        {% endfor %}
         {% if lyr_ranges.times|length > 1 %}
         <Dimension name="time" units="ISO8601">
             {% for t in lyr_ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
         </Dimension>
         {% endif %}
-        {% for style in lyr.styles %}
-            <Style>
-                <Name>{{ style.name }}</Name>
-                <Title>{{ style.title }}</Title>
-                <Abstract>{{ style.abstract }}</Abstract>
-                {% if style.show_legend %}
-                    <LegendURL>
-                        <Format>image/png</Format>
-                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
-                                        xlink:type="simple"
-                                        xlink:href="{{ base_url }}/legend/{{ lyr.name }}/{{ style.name }}/legend.png"/>
-                    </LegendURL>
-                {% endif %}
-            </Style>
-        {% endfor %}
+
         {% if lyr.attribution %}
             <Attribution>
                 {% if lyr.attribution.title %}
@@ -125,6 +113,16 @@
                 {% endif %}
             </Attribution>
         {% endif %}
+        {% if depth == 0 %}
+            {% for name, url in cfg.authorities.items() %}
+                <AuthorityURL name="{{ name }}">
+                    <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                    xlink:type="simple"
+                                    xlink:href="{{ url }}"/>
+                </AuthorityURL>
+            {% endfor %}
+        {% endif %}
+
         {% for auth, id in lyr.identifiers.items() %}
             <Identifier authority="{{ auth }}">{{ id }}</Identifier>
         {% endfor %}
@@ -146,7 +144,21 @@
                 />
             </FeatureListURL>
         {% endfor %}
-        {# TODO: Layers for Subproducts #}
+        {% for style in lyr.styles %}
+            <Style>
+                <Name>{{ style.name }}</Name>
+                <Title>{{ style.title }}</Title>
+                <Abstract>{{ style.abstract }}</Abstract>
+                {% if style.show_legend %}
+                    <LegendURL>
+                        <Format>image/png</Format>
+                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                        xlink:type="simple"
+                                        xlink:href="{{ base_url }}/legend/{{ lyr.name }}/{{ style.name }}/legend.png"/>
+                    </LegendURL>
+                {% endif %}
+            </Style>
+        {% endfor %} {# TODO: Layers for Subproducts #}
     </Layer>
     {% endif %}
 {%- endmacro %}
