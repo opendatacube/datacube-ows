@@ -46,9 +46,11 @@
             <Keyword>{{ kw }}</Keyword>
             {% endfor %}
         </KeywordList>
-        {% for crsid in lyr.bboxes.keys() %}
-            <CRS>{{ crsid }}</CRS>
-        {% endfor %}
+        {% if depth == 0 %}
+            {% for crs in cfg.published_CRSs.keys() %}
+                <CRS>{{ crs }}</CRS>
+            {% endfor %}
+        {% endif %}
         <EX_GeographicBoundingBox>
             <westBoundLongitude>{{ lyr_ranges.lon.min }}</westBoundLongitude>
             <eastBoundLongitude>{{ lyr_ranges.lon.max }}</eastBoundLongitude>
@@ -111,6 +113,16 @@
                 {% endif %}
             </Attribution>
         {% endif %}
+        {% if depth == 0 %}
+            {% for name, url in cfg.authorities.items() %}
+                <AuthorityURL name="{{ name }}">
+                    <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                                    xlink:type="simple"
+                                    xlink:href="{{ url }}"/>
+                </AuthorityURL>
+            {% endfor %}
+        {% endif %}
+
         {% for auth, id in lyr.identifiers.items() %}
             <Identifier authority="{{ auth }}">{{ id }}</Identifier>
         {% endfor %}
