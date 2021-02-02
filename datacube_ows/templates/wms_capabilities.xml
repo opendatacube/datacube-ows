@@ -79,6 +79,9 @@
                 {% endif %}
             />
         {% endfor %}
+        {% for crsid in lyr.bboxes.keys() %}
+            <CRS>{{ crsid }}</CRS>
+        {% endfor %}
         {% if lyr_ranges.times|length > 1 %}
         <Dimension name="time" units="ISO8601">
             {% for t in lyr_ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}
