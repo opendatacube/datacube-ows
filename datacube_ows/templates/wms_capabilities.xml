@@ -46,6 +46,9 @@
             <Keyword>{{ kw }}</Keyword>
             {% endfor %}
         </KeywordList>
+        {% for crsid in lyr.bboxes.keys() %}
+            <CRS>{{ crsid }}</CRS>
+        {% endfor %}
         <EX_GeographicBoundingBox>
             <westBoundLongitude>{{ lyr_ranges.lon.min }}</westBoundLongitude>
             <eastBoundLongitude>{{ lyr_ranges.lon.max }}</eastBoundLongitude>
@@ -78,9 +81,6 @@
                     {% endif %}
                 {% endif %}
             />
-        {% endfor %}
-        {% for crsid in lyr.bboxes.keys() %}
-            <CRS>{{ crsid }}</CRS>
         {% endfor %}
         {% if lyr_ranges.times|length > 1 %}
         <Dimension name="time" units="ISO8601">
