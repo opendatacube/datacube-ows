@@ -52,7 +52,6 @@ def test_getcap_badsvc(ows_server):
     )
 
 
-@pytest.mark.xfail(reason="OWS Getcaps don't pass XSD")
 def test_wmts_getcap(ows_server):
     resp = request.urlopen(
         ows_server.url + "/wmts?request=GetCapabilities&service=WMTS&version=1.0.0",
