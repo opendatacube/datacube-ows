@@ -34,3 +34,4 @@ pytest-helpers-namespace
 prometheus-flask-exporter
 setuptools_scm
 deepdiff
+xmlschema

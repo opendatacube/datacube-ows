@@ -64,8 +64,11 @@ def test_wmts_getcap(ows_server):
     # Validate XML Schema
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("wmtsGetCapabilities_response.xsd")
-    assert gc_xds.validate(resp_xml)
+    # assert gc_xds.validate(resp_xml)
 
+    import xmlschema
+    wmts_schema = xmlschema.XMLSchema("http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd")
+    wmts_schema.validate(resp_xml)
 
 def test_wmts_getcap_section(ows_server):
     section_options = [
