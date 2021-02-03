@@ -3,6 +3,9 @@ from datacube.utils.masking import make_mask
 from datacube_ows.ows_configuration import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
+import logging
+
+_LOG = logging.getLogger(__name__)
 
 class StyleDefBase(OWSExtensibleConfigEntry):
     INDEX_KEYS = ["layer", "style"]
@@ -46,7 +49,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
-        self.masks = [StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", [])]
+        self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
         self.raw_needed_bands = set()
         self.declare_unready("needed_bands")
 
@@ -61,9 +64,10 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             self.needed_bands.add(self.local_band(band))
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
-        if self.masks:
+        for mask in self.mask:
+            fb = mask.band
             for i, product_name in enumerate(self.product.product_names):
-                if not self.product.pq_names or self.product.pq_names[i] == product_name:
+                if fb.pq_names[i] == product_name:
                     self.needed_bands.add(self.product.pq_band)
                     break
         super().make_ready(dc, *args, **kwargs)
@@ -241,7 +245,30 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 style_class_priority_reg = []
 style_class_reg = []
 
-class StyleMask(object):
-    def __init__(self, flags, invert=False):
-        self.flags = flags
-        self.invert = invert
+class StyleMask(OWSConfigEntry):
+    def __init__(self, cfg, style):
+        super().__init__(cfg)
+        self.style = style
+        if not self.style.product.flag_bands:
+            raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
+        if "band" in self.cfg:
+            self.band_name = self.cfg["band"]
+            use_default_band = False
+        else:
+            self.band_name = "default"
+            use_default_band = True
+            _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
+                         self.style.name,
+                         self.styles.product.name)
+        if self.band_name not in self.style.product.flag_bands:
+            raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{band_name} which is not defined for the layer")
+        self.band = self.style.product.flag_bands[self.band_name]
+        if use_default_band:
+            self.flags = self.cfg.copy()
+            if "invert" in self.flags:
+                self.invert = self.flags.pop("invert")
+            else:
+                self.invert = False
+        else:
+            self.invert = self.cfg.get("invert", False)
+            self.flags = self.cfg["flags"]

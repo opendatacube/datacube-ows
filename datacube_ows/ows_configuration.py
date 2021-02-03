@@ -297,17 +297,17 @@ class OWSFlagBand(OWSConfigEntry):
         super().__init__(cfg, **kwargs)
 
         self.product = product_cfg
-        pq_names = self.product.parse_pq_names(cfg)
+        pq_names = self.product.parse_pq_names(self.cfg)
         self.pq_names = pq_names["pq_names"]
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.pq_band = cfg["band"]
-        if "fuse_func" in cfg:
-            self.pq_fuse_func = FunctionWrapper(self, cfg["fuse_func"])
+        if "fuse_func" in self.cfg:
+            self.pq_fuse_func = FunctionWrapper(self, self.cfg["fuse_func"])
         else:
             self.pq_fuse_func = None
-        self.pq_ignore_time = cfg.get("ignore_time", False)
-        self.ignore_info_flags = cfg.get("ignore_info_flags", [])
-        self.pq_manual_merge = cfg.get("manual_merge", False)
+        self.pq_ignore_time = self.cfg.get("ignore_time", False)
+        self.ignore_info_flags = self.cfg.get("ignore_info_flags", [])
+        self.pq_manual_merge = self.cfg.get("manual_merge", False)
         self.declare_unready("pq_products")
         self.declare_unready("pq_low_res_product")
         self.declare_unready("flags_def")
@@ -341,7 +341,7 @@ class OWSFlagBand(OWSConfigEntry):
                 continue
             flag = 1 << bit
             self.info_mask &= ~flag
-
+        super().make_ready(dc)
 
 TIMERES_RAW = "raw"
 TIMERES_MON = "month"
@@ -448,7 +448,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.definition = self.product.definition
         self.force_range_update(dc)
         self.band_idx.make_ready(dc)
-        self.flag_bands.make_ready(dc)
+        for fb in self.flag_bands.values():
+            fb.make_ready(dc)
         self.ready_image_processing(dc)
         if self.global_cfg.wcs:
             self.ready_wcs(dc)
