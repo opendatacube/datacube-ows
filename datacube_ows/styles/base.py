@@ -262,7 +262,7 @@ class StyleMask(OWSConfigEntry):
                          self.style.name,
                          self.styles.product.name)
         if self.band_name not in self.style.product.flag_bands:
-            raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{band_name} which is not defined for the layer")
+            raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{self.band_name} which is not defined for the layer")
         self.band = self.style.product.flag_bands[self.band_name]
         if use_default_band:
             self.flags = cfg.copy()
