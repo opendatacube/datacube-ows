@@ -295,21 +295,22 @@ class CacheControlRules(OWSConfigEntry):
 class OWSFlagBand(OWSConfigEntry):
     def __init__(self, cfg, product_cfg, **kwargs):
         super().__init__(cfg, **kwargs)
-
+        cfg = self._raw_cfg
         self.product = product_cfg
-        pq_names = self.product.parse_pq_names(self.cfg)
+        if not isinstance(cfg, dict):
+            raise ConfigException(f"Invalid flags section in layer {self.product.name}. Probably a missing required 'band' entry")
+        pq_names = self.product.parse_pq_names(cfg)
         self.pq_names = pq_names["pq_names"]
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.pq_band = cfg["band"]
-        if "fuse_func" in self.cfg:
+        if "fuse_func" in cfg:
             self.pq_fuse_func = FunctionWrapper(self, self.cfg["fuse_func"])
         else:
             self.pq_fuse_func = None
-        self.pq_ignore_time = self.cfg.get("ignore_time", False)
-        self.ignore_info_flags = self.cfg.get("ignore_info_flags", [])
-        self.pq_manual_merge = self.cfg.get("manual_merge", False)
+        self.pq_ignore_time = cfg.get("ignore_time", False)
+        self.ignore_info_flags = cfg.get("ignore_info_flags", [])
+        self.pq_manual_merge = cfg.get("manual_merge", False)
         self.declare_unready("pq_products")
-        self.declare_unready("pq_low_res_product")
         self.declare_unready("flags_def")
         self.declare_unready("info_mask")
 
@@ -321,13 +322,13 @@ class OWSFlagBand(OWSConfigEntry):
             if pqn is not None:
                 pq_product = dc.index.products.get_by_name(pqn)
                 if pq_product is None:
-                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
+                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.product.name} in datacube")
                 self.pq_products.append(pq_product)
         for pqn in self.pq_low_res_names:
             if pqn is not None:
                 pq_product = dc.index.products.get_by_name(pqn)
                 if pq_product is None:
-                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.name} in datacube")
+                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
                 self.pq_low_res_products.append(pq_product)
 
         self.info_mask = ~0

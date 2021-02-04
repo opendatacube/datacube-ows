@@ -64,7 +64,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             self.needed_bands.add(self.local_band(band))
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
-        for mask in self.mask:
+        for mask in self.masks:
             fb = mask.band
             for i, product_name in enumerate(self.product.product_names):
                 if fb.pq_names[i] == product_name:
@@ -248,11 +248,12 @@ style_class_reg = []
 class StyleMask(OWSConfigEntry):
     def __init__(self, cfg, style):
         super().__init__(cfg)
+        cfg = self._raw_cfg
         self.style = style
         if not self.style.product.flag_bands:
             raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
-        if "band" in self.cfg:
-            self.band_name = self.cfg["band"]
+        if "band" in cfg:
+            self.band_name = cfg["band"]
             use_default_band = False
         else:
             self.band_name = "default"
@@ -264,11 +265,11 @@ class StyleMask(OWSConfigEntry):
             raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{band_name} which is not defined for the layer")
         self.band = self.style.product.flag_bands[self.band_name]
         if use_default_band:
-            self.flags = self.cfg.copy()
+            self.flags = cfg.copy()
             if "invert" in self.flags:
                 self.invert = self.flags.pop("invert")
             else:
                 self.invert = False
         else:
-            self.invert = self.cfg.get("invert", False)
-            self.flags = self.cfg["flags"]
+            self.invert = cfg.get("invert", False)
+            self.flags = cfg["flags"]
