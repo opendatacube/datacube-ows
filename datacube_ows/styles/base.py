@@ -7,6 +7,32 @@ import logging
 
 _LOG = logging.getLogger(__name__)
 
+
+class FlagProduct(OWSConfigEntry):
+    def __init__(self, flag_band):
+        super().__init__({})
+        self.bands = set()
+        self.bands.add(flag_band.band)
+        self.flag_bands = {flag_band.name: flag_band}
+        self.product_names = tuple(flag_band.pq_names)
+        self.declare_unready("products")
+        self.declare_unready("low_res_products")
+
+    def products_match(self, fb):
+        return tuple(fb.pq_names) == self.product_names
+
+    def add_flag_band(self, fb):
+        self.flag_bands[fb.name] = fb
+        self.bands.add(fb.band)
+
+    def make_ready(self, dc):
+        for fb in self.flag_bands:
+            self.products = fb.pq_products
+            self.low_res_products = fb.pq_low_res_products
+            break
+        super().make_ready(dc)
+
+
 class StyleDefBase(OWSExtensibleConfigEntry):
     INDEX_KEYS = ["layer", "style"]
     auto_legend = False
@@ -50,6 +76,17 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
         self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
+        self.flag_products = []
+        for mask in self.masks:
+            handled = False
+            for fp in self.flag_products:
+                if fp.products_match(mask.band):
+                    fp.add_flag_band(mask.band)
+                    handled = True
+                    break
+            if not handled:
+                self.flag_products.append(FlagProduct(mask.band))
+
         self.raw_needed_bands = set()
         self.declare_unready("needed_bands")
 
@@ -60,16 +97,25 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.needed_bands = set()
+        self.pq_product_bands = []
         for band in self.raw_needed_bands:
             self.needed_bands.add(self.local_band(band))
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
         for mask in self.masks:
             fb = mask.band
-            for i, product_name in enumerate(self.product.product_names):
-                if fb.pq_names[i] == product_name:
-                    self.needed_bands.add(self.product.pq_band)
-                    break
+            if fb.pq_names == self.product.product_names:
+                self.needed_bands.add(fb.band)
+                continue
+            for pqp, pqb in self.pq_product_bands:
+                if fb.pq_names == pqb:
+                    pqb.add(fb.band)
+                    continue
+            self.pq_product_bands.append(
+                (fb.pq_names, set([fb.band]))
+            )
+        for fp in self.flag_products:
+            self.flag_products.make_ready(dc)
         super().make_ready(dc, *args, **kwargs)
 
     def local_band(self, band):

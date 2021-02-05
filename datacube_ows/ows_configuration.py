@@ -293,9 +293,10 @@ class CacheControlRules(OWSConfigEntry):
 
 
 class OWSFlagBand(OWSConfigEntry):
-    def __init__(self, cfg, product_cfg, **kwargs):
+    def __init__(self, cfg, product_cfg, name, **kwargs):
         super().__init__(cfg, **kwargs)
         cfg = self._raw_cfg
+        self.name = name
         self.product = product_cfg
         if not isinstance(cfg, dict):
             raise ConfigException(f"Invalid flags section in layer {self.product.name}. Probably a missing required 'band' entry")
@@ -510,16 +511,23 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if cfg:
             if "band" in cfg:
                 self.flag_bands = {
-                    "default": OWSFlagBand(cfg, self)
+                    "default": OWSFlagBand(cfg, self, "default")
                 }
                 _LOG.warning("Unlabeled flag bands are deprecated. Please refer to the documentation for the new format (layer %s)", self.name)
             else:
                 self.flag_bands = {
-                    key: OWSFlagBand(value, self)
+                    key: OWSFlagBand(value, self, key)
                     for key, value in cfg.items()
                 }
         else:
             self.flag_bands = {}
+        pq_names_to_lowres_names = {}
+        for fb in self.flag_bands.values():
+            pns = tuple(fb.pq_names)
+            lrpns = tuple(fb.pq_low_res_names)
+            if pns in pq_names_to_lowres_names and pq_names_to_lowres_names[pns] != lrpns:
+                raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
+            pq_names_to_lowres_names[pns] = lrpns
 
     # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):
