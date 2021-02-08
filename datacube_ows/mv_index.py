@@ -81,9 +81,9 @@ def mv_search_datasets(index,
     elif resource_limited and layer.low_res_products:
         products = layer.low_res_products
     else:
-        products = layer.layer.products
+        products = layer.products
 
-    return mv_search(sel=sel, times=times, geom=geom, products=products)
+    return mv_search(index, sel=sel, times=times, geom=geom, products=products)
 
 
 def mv_search(index,
