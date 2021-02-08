@@ -8,11 +8,11 @@ import logging
 _LOG = logging.getLogger(__name__)
 
 
-class FlagProduct(OWSConfigEntry):
+class FlagProductBands(OWSConfigEntry):
     def __init__(self, flag_band):
         super().__init__({})
         self.bands = set()
-        self.bands.add(flag_band.band)
+        self.bands.add(flag_band.pq_band)
         self.flag_bands = {flag_band.name: flag_band}
         self.product_names = tuple(flag_band.pq_names)
         self.declare_unready("products")
@@ -23,7 +23,7 @@ class FlagProduct(OWSConfigEntry):
 
     def add_flag_band(self, fb):
         self.flag_bands[fb.name] = fb
-        self.bands.add(fb.band)
+        self.bands.add(fb.pq_band)
 
     def make_ready(self, dc):
         for fb in self.flag_bands:
@@ -85,7 +85,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                     handled = True
                     break
             if not handled:
-                self.flag_products.append(FlagProduct(mask.band))
+                self.flag_products.append(FlagProductBands(mask.band))
 
         self.raw_needed_bands = set()
         self.declare_unready("needed_bands")
@@ -306,7 +306,7 @@ class StyleMask(OWSConfigEntry):
             use_default_band = True
             _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
                          self.style.name,
-                         self.styles.product.name)
+                         self.style.product.name)
         if self.band_name not in self.style.product.flag_bands:
             raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{self.band_name} which is not defined for the layer")
         self.band = self.style.product.flag_bands[self.band_name]

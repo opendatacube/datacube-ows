@@ -65,6 +65,8 @@ class BandIndex(OWSConfigEntry):
             self.band_cfg = {}
         else:
             self.band_cfg = band_cfg
+        if "default" in self.band_cfg:
+            _LOG.warning(f"Layer {self.product_name} contains a band named 'default' which may interfere with styles using the old style mask format.")
         self._idx = {}
         self.add_aliases(self.band_cfg)
         self.declare_unready("native_bands")
@@ -298,6 +300,8 @@ class OWSFlagBand(OWSConfigEntry):
         cfg = self._raw_cfg
         self.name = name
         self.product = product_cfg
+        if name in self.product.band_idx.band_cfg:
+            raise ConfigException(f"Flag band name {name} in layer {self.product_name} is already a native band name for the layer.")
         if not isinstance(cfg, dict):
             raise ConfigException(f"Invalid flags section in layer {self.product.name}. Probably a missing required 'band' entry")
         pq_names = self.product.parse_pq_names(cfg)
@@ -305,7 +309,7 @@ class OWSFlagBand(OWSConfigEntry):
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.pq_band = cfg["band"]
         if "fuse_func" in cfg:
-            self.pq_fuse_func = FunctionWrapper(self, self.cfg["fuse_func"])
+            self.pq_fuse_func = FunctionWrapper(self, cfg["fuse_func"])
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = cfg.get("ignore_time", False)

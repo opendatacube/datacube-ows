@@ -25,15 +25,55 @@ from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
 from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
     solar_date
-from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets
+from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets, mv_search
 from datacube_ows.utils import log_call
 
 import logging
 
 _LOG = logging.getLogger(__name__)
 
+class ProductBandQuery:
+    def __init__(self, products, bands):
+        self.products = products
+        self.bands = bands
+        self.key = (
+            tuple((p.id for p in self.products)),
+            tuple(bands)
+        )
 
-class DataStacker(object):
+    def  __hash__(self):
+       return hash(self.key)
+
+    @classmethod
+    def style_queries(cls, style, resource_limited=False):
+        queries = [
+            cls.simple_layer_query(style.product, style.needed_bands, resource_limited)
+        ]
+        for fp in style.flag_products:
+            if fp.products_match(style.product.product_names):
+                for band in fp.bands:
+                    assert band in style.needed_bands
+            else:
+                if resource_limited:
+                    pq_products = fp.low_res_products
+                else:
+                    pq_products = fp.products
+                queries.append(cls(
+                    pq_products,
+                    tuple(fp.bands)
+                ))
+        return queries
+
+    @classmethod
+    def simple_layer_query(cls, layer, bands, resource_limited=False):
+        if resource_limited:
+            main_products = layer.low_res_products
+        else:
+            main_products = layer.products
+        return cls(main_products, bands)
+
+
+class DataStacker:
     @log_call
     def __init__(self, product, geobox, times, resampling=None, style=None, bands=None, **kwargs):
         super(DataStacker, self).__init__(**kwargs)
@@ -41,6 +81,7 @@ class DataStacker(object):
         self.cfg = product.global_cfg
         self._geobox = geobox
         self._resampling = resampling if resampling is not None else Resampling.nearest
+        self.style = style
         if style:
             self._needed_bands = style.needed_bands
         elif bands:
@@ -65,6 +106,45 @@ class DataStacker(object):
         return self.datasets(index,
                              all_time=all_time, point=point,
                              mode=MVSelectOpts.COUNT)
+
+    def datasets_new(self, index,
+                     main_only=True,
+                     all_time=False, point=None,
+                     mode=MVSelectOpts.DATASETS):
+        if self.style and not main_only:
+            queries = ProductBandQuery.style_queries(
+                self.style,
+                self.resource_limited
+            )
+        else:
+            queries = [
+                ProductBandQuery.simple_layer_query(
+                    self._product,
+                    self.needed_bands(),
+                    self.resource_limited)
+            ]
+        if point:
+            geom = point
+        else:
+            geom = self._geobox.extent
+        if all_time:
+            times = None
+        else:
+            times = self._times
+        results = {}
+        for query in queries:
+            result = mv_search(index,
+                               sel=mode,
+                               times=times,
+                               geom=geom,
+                               products=query.products)
+            if mode == MVSelectOpts.DATASETS:
+                result = datacube.Datacube.group_datasets(result, self.group_by)
+            if main_only:
+                return result
+            results[query] = result
+        return results
+
     @log_call
     def datasets(self, index,
                  mask=False, all_time=False, point=None,
@@ -89,38 +169,39 @@ class DataStacker(object):
                                   geom=geom,
                                   mask=mask,
                                   resource_limited=self.resource_limited
-                                    )
+        )
         if mode == MVSelectOpts.DATASETS:
             return datacube.Datacube.group_datasets(result, self.group_by)
         else:
             return result
 
     @log_call
-    def data(self, datasets, mask=False, manual_merge=False, skip_corrections=False, **kwargs):
+    def data(self, datasets_by_query, manual_merge=False, skip_corrections=False, **kwargs):
         # pylint: disable=too-many-locals, consider-using-enumerate
         # datasets is an XArray DataArray of datasets grouped by time.
-        if mask:
-            prod = self._product.pq_product
-            measurements = prod.lookup_measurements([self._product.pq_band])
-        else:
-            prod = self._product.product
-            measurements = prod.lookup_measurements(self.needed_bands())
+        data = None
+        for pbq, datasets in datasets_by_query.items():
+            if manual_merge:
+                qry_result = self.manual_data_stack(datasets, pbq.bands, skip_corrections, **kwargs)
+            else:
+                qry_result = self.read_data(datasets, pbq.bands, self._geobox, self._resampling, **kwargs)
+            if data is None:
+                data = qry_result
+            else:
+                for band in pbq.bands:
+                    data.assign({
+                        band: qry_result[band]
+                        for band in pbq.bands
+                    })
 
-        if manual_merge:
-            return self.manual_data_stack(datasets, measurements, mask, skip_corrections, **kwargs)
-        else:
-            data = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
-            return data
+        return data
 
     @log_call
-    def manual_data_stack(self, datasets, measurements, mask, skip_corrections, **kwargs):
+    def manual_data_stack(self, datasets, measurements, skip_corrections, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
-        # REFACTOR: TODO
         # manual merge
-        if mask:
-            bands = [self._product.pq_band]
-        else:
-            bands = self.needed_bands()
+        non_flag_bands = set(filter(lambda b: b in self._product.band_idx.band_cfg, measurements))
+        flag_bands = set(filter(lambda b: b not in self._product.band_idx.band_cfg, measurements))
         time_slices = []
         for dt in datasets.time.values:
             tds = datasets.sel(time=dt)
@@ -130,27 +211,24 @@ class DataStacker(object):
                 # Squeeze upconverts uints to int32
                 d = d.squeeze(["time"], drop=True)
                 extent_mask = None
-                for band in bands:
-                    if self._product.pq_band == band:
-                        continue
+                for band in non_flag_bands:
                     for f in self._product.extent_mask_func:
                         if extent_mask is None:
                             extent_mask = f(d, band)
                         else:
                             extent_mask &= f(d, band)
                 dm = d.where(extent_mask)
-                if self._product.solar_correction and not mask and not skip_corrections:
-                    for band in bands:
-                        if band != self._product.pq_band:
-                            dm[band] = solar_correct_data(dm[band], ds)
+                if self._product.solar_correction and not skip_corrections:
+                    for band in non_flag_bands:
+                        dm[band] = solar_correct_data(dm[band], ds)
                 if merged is None:
                     merged = dm
                 else:
                     merged = merged.combine_first(dm)
-            if mask:
-                merged = merged.astype('uint8', copy=True)
-                for band in bands:
-                    merged[band].attrs = d[band].attrs
+            for band in flag_bands:
+                # REVISIT: not sure about type converting one band like this?
+                merged[band] = merged[band].astype('uint16', copy=True)
+                merged[band].attrs = d[band].attrs
             time_slices.append(merged)
 
         result = xarray.concat(time_slices, datasets.time)
@@ -213,14 +291,14 @@ def get_map(args):
         zoomed_out = params.zf < params.product.min_zoom
         qprof["zoom_factor"] = params.zf
         qprof.start_event("count-datasets")
-        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+        n_datasets = stacker.datasets_new(dc.index, mode=MVSelectOpts.COUNT)
         qprof.end_event("count-datasets")
         qprof["n_datasets"] = n_datasets
         too_many_datasets = (params.product.max_datasets_wms > 0
                              and n_datasets > params.product.max_datasets_wms
                              )
         if qprof.active:
-            qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
+            qprof["datasets"] = stacker.datasets_new(dc.index, mode=MVSelectOpts.IDS)
         if too_many_datasets or zoomed_out:
             stacker.resource_limited = True
             qprof["too_many_datasets"] = too_many_datasets
@@ -228,7 +306,7 @@ def get_map(args):
 
         if stacker.resource_limited and not params.product.low_res_product_names:
             qprof.start_event("extent-in-query")
-            extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
+            extent = stacker.datasets_new(dc.index, mode=MVSelectOpts.EXTENT)
             qprof.end_event("extent-in-query")
             if extent is None:
                 qprof["write_action"] = "No extent: Write Empty"
@@ -252,10 +330,10 @@ def get_map(args):
         else:
             if stacker.resource_limited:
                 qprof.start_event("count-summary-datasets")
-                qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+                qprof["n_summary_datasets"] = stacker.datasets_new(dc.index, mode=MVSelectOpts.COUNT)
                 qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
-            datasets = stacker.datasets(dc.index)
+            datasets = stacker.datasets_new(dc.index, main_only=False)
             qprof.end_event("fetch-datasets")
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             qprof.start_event("load-data")
