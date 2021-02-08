@@ -523,8 +523,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.flag_bands = {}
         pq_names_to_lowres_names = {}
         for fb in self.flag_bands.values():
-            pns = tuple(fb.pq_names)
-            lrpns = tuple(fb.pq_low_res_names)
+            pns = fb.pq_names
+            lrpns = fb.pq_low_res_names
             if pns in pq_names_to_lowres_names and pq_names_to_lowres_names[pns] != lrpns:
                 raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
             pq_names_to_lowres_names[pns] = lrpns
@@ -840,8 +840,8 @@ class OWSProductLayer(OWSNamedLayer):
         if "low_res_products" in cfg:
             raise ConfigException(f"'low_res_products' entry in flags section of non-multi-product layer {self.name}- use 'low_res_product' only")
         return {
-            "pq_names": pq_names,
-            "pq_low_res_names": pq_low_res_names,
+            "pq_names": tuple(pq_names),
+            "pq_low_res_names": tuple(pq_low_res_names),
         }
 
 
@@ -878,8 +878,8 @@ class OWSMultiProductLayer(OWSNamedLayer):
         if "low_res_product" in cfg:
             raise ConfigException(f"'low_res_product' entry in flags section of multi-product layer {self.name} - use 'low_res_products' only")
         return {
-            "pq_names": pq_names,
-            "pq_low_res_names": pq_low_res_names,
+            "pq_names": tuple(pq_names),
+            "pq_low_res_names": tuple(pq_low_res_names),
         }
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None):
