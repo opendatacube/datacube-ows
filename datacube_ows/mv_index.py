@@ -75,13 +75,39 @@ def mv_search_datasets(index,
     if layer is None:
         raise Exception("Must filter by product/layer")
     if mask and resource_limited and layer.pq_low_res_products:
-        prod_ids = [p.id for p in layer.pq_low_res_products]
+        products = layer.pq_low_res_products
     elif mask:
-        prod_ids = [p.id for p in layer.pq_products]
+        products = layer.pq_products
     elif resource_limited and layer.low_res_products:
-        prod_ids = [p.id for p in layer.low_res_products]
+        products = layer.low_res_products
     else:
-        prod_ids = [p.id for p in layer.products]
+        products = layer.layer.products
+
+    return mv_search(sel=sel, times=times, geom=geom, products=products)
+
+
+def mv_search(index,
+                       sel=MVSelectOpts.IDS,
+                       times=None,
+                       geom=None,
+                       products=None):
+    """
+    Perform a dataset query via the space_time_view
+
+    :param products: An array of combinable products to search
+    :param index: A datacube index (required)
+
+    :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
+    :param times: A list of pairs of datetimes (with time zone)
+    :param geom: A datacube.utils.geometry.Geometry object
+
+    :return: See MVSelectOpts doc
+    """
+    engine = get_sqlalc_engine(index)
+    stv = st_view
+    if products is None:
+        raise Exception("Must filter by product/layer")
+    prod_ids = [p.id for p in products]
 
     s = select(sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
     if times is not None:
