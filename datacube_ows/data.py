@@ -335,6 +335,9 @@ def get_map(args):
                 qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
             datasets = stacker.datasets_new(dc.index, main_only=False)
+            for flagband, dss in datasets.items():
+                if not dss:
+                    _LOG.warning(f"Flag band {flagband.name} returned no data")
             qprof.end_event("fetch-datasets")
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             qprof.start_event("load-data")
@@ -396,12 +399,12 @@ def get_map(args):
             extent_mask = xarray.concat(td_masks, dim=data.time)
             qprof.end_event("build-masks")
 
-            if not data or (params.style.masks and not pq_data):
+            if not data:
                 qprof["write_action"] = "No Data: Write Empty"
                 body = _write_empty(params.geobox)
             else:
                 qprof["write_action"] = "Write Data"
-                body = _write_png(data, pq_data, params.style, extent_mask, params.geobox, qprof)
+                body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
 
     if params.ows_stats:
         return json_response(qprof.profile())
@@ -421,9 +424,9 @@ def png_response(body, cfg=None, extra_headers=None):
 
 
 @log_call
-def _write_png(data, pq_data, style, extent_mask, geobox, qprof):
+def _write_png(data, style, extent_mask, geobox, qprof):
     qprof.start_event("combine-masks")
-    mask = style.to_mask(data, pq_data, extent_mask)
+    mask = style.to_mask(data, extent_mask)
     qprof.end_event("combine-masks")
     qprof.start_event("apply-style")
     img_data = style.transform_data(data, mask)

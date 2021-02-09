@@ -128,31 +128,33 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         for mb_cfg in cfg.get("multi_date", []):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
-    def to_mask(self, data, pq_data, extra_mask=None):
+    def to_mask(self, data, extra_mask=None):
+        def single_date_make_mask(data, mask):
+            pq_data = getattr(data, mask.band_name)
+            odc_mask = make_mask(pq_data, **mask.flags)
+            return getattr(odc_mask, mask.band_name)
+
         date_count = len(data.coords["time"])
         if date_count > 1:
+            # TODO multidate
             mdh = self.get_multi_date_handler(date_count)
             if extra_mask is not None:
                 extra_mask = mdh.collapse_mask(extra_mask)
-            if pq_data is not None:
-                pq_data = mdh.collapse_mask(pq_data)
+            mask_maker = mdh.make_mask
         else:
             if extra_mask is not None:
                 extra_mask = extra_mask.squeeze(dim="time", drop=True)
-            if pq_data is not None:
-                pq_data = pq_data.squeeze(dim="time", drop=True)
+            mask_maker=single_date_make_mask
 
         result = extra_mask
-        if pq_data is not None:
-            for mask in self.masks:
-                odc_mask = make_mask(pq_data, **mask.flags)
-                mask_data = getattr(odc_mask, self.product.pq_band)
-                if mask.invert:
-                    mask_data = ~mask_data
-                if result is None:
-                    result = mask_data
-                else:
-                    result = result & mask_data
+        for mask in self.masks:
+            mask_data = mask_maker(data, mask)
+            if mask.invert:
+                mask_data = ~mask_data
+            if result is None:
+                result = mask_data
+            else:
+                result = result & mask_data
         return result
 
     def apply_mask(self, data, mask):
