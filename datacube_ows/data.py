@@ -181,10 +181,11 @@ class DataStacker:
         # datasets is an XArray DataArray of datasets grouped by time.
         data = None
         for pbq, datasets in datasets_by_query.items():
+            measurements = pbq.products[0].lookup_measurements(pbq.bands)
             if manual_merge:
-                qry_result = self.manual_data_stack(datasets, pbq.bands, skip_corrections, **kwargs)
+                qry_result = self.manual_data_stack(datasets, measurements, pbq.bands, skip_corrections, **kwargs)
             else:
-                qry_result = self.read_data(datasets, pbq.bands, self._geobox, self._resampling, **kwargs)
+                qry_result = self.read_data(datasets, measurements, self._geobox, self._resampling, **kwargs)
             if data is None:
                 data = qry_result
             else:
@@ -197,11 +198,11 @@ class DataStacker:
         return data
 
     @log_call
-    def manual_data_stack(self, datasets, measurements, skip_corrections, **kwargs):
+    def manual_data_stack(self, datasets, measurements, bands, skip_corrections, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
-        non_flag_bands = set(filter(lambda b: b in self._product.band_idx.band_cfg, measurements))
-        flag_bands = set(filter(lambda b: b not in self._product.band_idx.band_cfg, measurements))
+        non_flag_bands = set(filter(lambda b: b in self._product.band_idx.band_cfg, bands))
+        flag_bands = set(filter(lambda b: b not in self._product.band_idx.band_cfg, bands))
         time_slices = []
         for dt in datasets.time.values:
             tds = datasets.sel(time=dt)
@@ -342,32 +343,34 @@ def get_map(args):
                                 fuse_func=params.product.fuse_func)
             qprof.end_event("load-data")
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
-            if params.style.masks:
-                if params.product.pq_name == params.product.name:
-                    qprof.start_event("build-pq-xarray")
-                    pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
-                    pq_data = xarray.Dataset({params.product.pq_band: pq_band_data},
-                                             coords=data[params.product.pq_band].coords
-                                             )
-                    flag_def = data[params.product.pq_band].flags_definition
-                    pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
-                    qprof.end_event("build-pq-xarray")
-                else:
-                    qprof.start_event("load-pq-xarray")
-                    n_pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time, mode=MVSelectOpts.COUNT)
-                    if n_pq_datasets > 0:
-                        pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time,
-                                                             mode=MVSelectOpts.DATASETS)
-                        pq_data = stacker.data(pq_datasets,
-                                               mask=True,
-                                               manual_merge=params.product.pq_manual_merge,
-                                               fuse_func=params.product.pq_fuse_func)
-                    else:
-                        pq_data = None
-                    qprof.end_event("load-pq-xarray")
-                    qprof["n_pq_datasets"] = n_pq_datasets
-            else:
-                pq_data = None
+            # I think this whole chunk of code is no longer required?
+            # Keeping commented out until I'm sure I won't need to resurrect bits of it.
+            #if params.style.masks:
+            #    if params.product.pq_name == params.product.name:
+            #        qprof.start_event("build-pq-xarray")
+            #        pq_band_data = (data[params.product.pq_band].dims, data[params.product.pq_band].astype("uint16"))
+            #        pq_data = xarray.Dataset({params.product.pq_band: pq_band_data},
+            #                                 coords=data[params.product.pq_band].coords
+            #                                 )
+            #        flag_def = data[params.product.pq_band].flags_definition
+            #        pq_data[params.product.pq_band].attrs["flags_definition"] = flag_def
+            #        qprof.end_event("build-pq-xarray")
+            #    else:
+            #        qprof.start_event("load-pq-xarray")
+            #        n_pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time, mode=MVSelectOpts.COUNT)
+            #        if n_pq_datasets > 0:
+            #            pq_datasets = stacker.datasets(dc.index, mask=True, all_time=params.product.pq_ignore_time,
+            #                                                 mode=MVSelectOpts.DATASETS)
+            #            pq_data = stacker.data(pq_datasets,
+            #                                   mask=True,
+            #                                   manual_merge=params.product.pq_manual_merge,
+            #                                   fuse_func=params.product.pq_fuse_func)
+            #        else:
+            #            pq_data = None
+            #        qprof.end_event("load-pq-xarray")
+            #        qprof["n_pq_datasets"] = n_pq_datasets
+            #else:
+            #    pq_data = None
 
             qprof.start_event("build-masks")
             td_masks = []
