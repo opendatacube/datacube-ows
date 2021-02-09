@@ -201,8 +201,12 @@ class DataStacker:
     def manual_data_stack(self, datasets, measurements, bands, skip_corrections, **kwargs):
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
-        non_flag_bands = set(filter(lambda b: b in self._product.band_idx.band_cfg, bands))
-        flag_bands = set(filter(lambda b: b not in self._product.band_idx.band_cfg, bands))
+        if self.style:
+            flag_bands = set(filter(lambda b: b in self.style.flag_bands, bands))
+            non_flag_bands = set(filter(lambda b: b not in self.style.flag_bands, bands))
+        else:
+            non_flag_bands = bands
+            flag_bands = set()
         time_slices = []
         for dt in datasets.time.values:
             tds = datasets.sel(time=dt)
@@ -381,7 +385,7 @@ def get_map(args):
                 td = data.sel(time=npdt)
                 td_ext_mask = None
                 for band in params.style.needed_bands:
-                    if params.product.pq_band != band:
+                    if band in params.style.flag_bands:
                         if params.product.data_manual_merge:
                             if td_ext_mask is None:
                                 td_ext_mask = ~numpy.isnan(td[band])

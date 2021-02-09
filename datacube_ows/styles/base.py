@@ -89,6 +89,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
         self.raw_needed_bands = set()
         self.declare_unready("needed_bands")
+        self.declare_unready("flag_bands")
 
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         if not defer_multi_date:
@@ -100,8 +101,6 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.pq_product_bands = []
         for band in self.raw_needed_bands:
             self.needed_bands.add(self.local_band(band))
-        for band in self.product.always_fetch_bands:
-            self.needed_bands.add(band)
         for mask in self.masks:
             fb = mask.band
             if fb.pq_names == self.product.product_names:
@@ -114,8 +113,17 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             self.pq_product_bands.append(
                 (fb.pq_names, set([fb.band]))
             )
+        self.flag_bands = set()
+        for pq_names, pq_bands in self.pq_product_bands:
+            for band in pq_bands:
+                if band in self.flag_bands:
+                    raise ConfigException(f"Same flag band name {band} appears in different PQ product (sets)")
+                self.flag_bands.add(band)
         for fp in self.flag_products:
             self.flag_products.make_ready(dc)
+        for band in self.product.always_fetch_bands:
+            self.needed_bands.add(band)
+            self.flag_bands.add(band)
         super().make_ready(dc, *args, **kwargs)
 
     def local_band(self, band):
