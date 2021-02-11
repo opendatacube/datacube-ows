@@ -40,7 +40,16 @@ def s3_url_datasets():
                     return self.datasets
             self.values = InnerMock(datasets)
 
-    return [DataSetMock(datasets)]
+    class PBQMock:
+        def __init__(self, main):
+            self.main=main
+        def __hash__(self):
+            return hash(self.main)
+
+    return {
+        PBQMock(True): [DataSetMock(datasets)],
+        PBQMock(False): [DataSetMock(datasets)],
+    }
 
 def test_s3_browser_uris(s3_url_datasets):
     uris = get_s3_browser_uris(s3_url_datasets)
@@ -152,7 +161,7 @@ def test_make_band_dict_nan(product_layer):
 
     bands = ["fake"]
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset(), bands)
+    band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset(), bands, set())
     assert band_dict["fake"] == "n/a"
 
 def test_make_band_dict_float(product_layer):
@@ -193,11 +202,11 @@ def test_make_band_dict_float(product_layer):
 
     bands = ["fake"]
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, int_dataset(), bands)
+    band_dict = datacube_ows.data._make_band_dict(product_layer, int_dataset(), bands, {"fake"})
     assert isinstance(band_dict["fake"], list) 
     assert band_dict["fake"] == ['Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.']
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, float_dataset(), bands)
+    band_dict = datacube_ows.data._make_band_dict(product_layer, float_dataset(), bands, {"fake"})
     assert isinstance(band_dict["fake"], list) 
     assert band_dict["fake"] == ['Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.']
 

@@ -572,6 +572,7 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list, flag_bands):
         except ConfigException:
             pass
     for band in flag_bands:
+        band_val = pixel_dataset[band].item()
         flag_def = pixel_dataset[band].attrs['flags_definition']
         # HACK: Work around bands with floating point values
         try:
@@ -584,7 +585,7 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list, flag_bands):
         except KeyError:
             # Weirdly formatted flag definition.  Hacky workaround for USGS data in DEAfrica demo.
             ret_val = [val for flag, val in flag_dict.items() if val]
-        band_dict[band_lbl] = ret_val
+        band_dict[band] = ret_val
 
     return band_dict
 
