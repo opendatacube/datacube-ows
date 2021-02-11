@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import patch
 import os
 
+
 def test_fake_creds(monkeypatch):
     from datacube_ows.startup_utils import initialise_aws_credentials
     monkeypatch.setenv("AWS_DEFAULT_REGION", "")
@@ -12,7 +13,7 @@ def test_fake_creds(monkeypatch):
     with patch("datacube_ows.startup_utils.configure_s3_access") as s3a:
         s3a.return_value = None
         initialise_aws_credentials()
-        assert os.getenv("AWS_NO_SIGN_REQUEST") == "NO"
+        assert os.getenv("AWS_NO_SIGN_REQUEST") is None
         monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "indubitably")
         initialise_aws_credentials()
         assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
@@ -60,4 +61,3 @@ def test_supported_version():
     from datacube_ows.protocol_versions import supported_versions
     supported = supported_versions()
     assert supported["wms"].versions[0].service == "wms"
-

@@ -49,14 +49,18 @@ AWS_DEFAULT_REGION:
     S3 access by datacube_ows will be disabled unless this is set.
 
 AWS_NO_SIGN_REQUEST:
-    If this environment variable is set to a non-empty value then
-    S3 access will be unsigned.
+    S3 access will be unsigned if this environment variable is set
+    to a non-empty value other than "n", "f", "no", "false" or "0".
 
     N.B. Unsigned requests is the default behaviour - explicitly
     set ``$AWS_NO_SIGN_REQUEST`` to an empty string to sign requests
     (and set the ``$AWS_ACCESS_KEY_ID`` and
     ``$AWS_SECRET_ACCESS_KEY`` environment variables - refer to
     the boto3 documentation for more information).
+
+AWS_REQUEST_PAYER:
+    Set to "requester" if accessing requester-pays S3 buckets.
+    Default behaviour is to prevent access to requester-pays buckets.
 
 Configuring Flask
 -----------------

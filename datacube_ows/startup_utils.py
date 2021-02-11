@@ -73,18 +73,22 @@ def initialise_aws_credentials(log=None):
         unsigned = bool(env_nosign)
         if not unsigned or env_nosign.lower() in ("n", "f", "no", "false", "0"):
             unsigned = False
-            # set env variable to comply with gdal
-            os.environ["AWS_NO_SIGN_REQUEST"] = "NO"
+            # delete env variable
+            del os.environ["AWS_NO_SIGN_REQUEST"]
         else:
             # Workaround for rasterio bug
             os.environ["AWS_ACCESS_KEY_ID"] = "fake"
             os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
+        env_requester_pays = os.environ.get("AWS_REQUEST_PAYER", "")
+        requester_pays = False
+        if env_requester_pays.lower() == "requester":
+            requester_pays = True
         if log:
             if unsigned:
                 log.info("S3 access configured with unsigned requests")
             else:
                 log.info("S3 access configured with signed requests")
-        credentials = configure_s3_access(aws_unsigned=unsigned)
+        credentials = configure_s3_access(aws_unsigned=unsigned, requester_pays=requester_pays)
     elif log:
         log.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
