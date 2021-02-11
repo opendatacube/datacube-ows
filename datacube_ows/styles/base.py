@@ -123,7 +123,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                     pqb.add(fb.band)
                     continue
             self.pq_product_bands.append(
-                (fb.pq_names, set([fb.band]))
+                (fb.pq_names, set([fb.pq_band]))
             )
         self.flag_bands = set()
         for pq_names, pq_bands in self.pq_product_bands:
