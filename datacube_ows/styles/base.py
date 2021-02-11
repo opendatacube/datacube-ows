@@ -17,6 +17,9 @@ class FlagProductBands(OWSConfigEntry):
         self.product_names = tuple(flag_band.pq_names)
         self.declare_unready("products")
         self.declare_unready("low_res_products")
+        self.manual_merge = flag_band.pq_manual_merge
+        self.fuse_func = flag_band.pq_fuse_func
+
 
     def products_match(self, fb):
         return tuple(fb.pq_names) == self.product_names
@@ -24,6 +27,12 @@ class FlagProductBands(OWSConfigEntry):
     def add_flag_band(self, fb):
         self.flag_bands[fb.name] = fb
         self.bands.add(fb.pq_band)
+        if fb.pq_manual_merge:
+            fb.pq_manual_merge = True
+        if fb.pq_fuse_func and self.fuse_func and fb.pq_fuse_func != self.fuse_func:
+            raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
+        elif fb.pq_fuse_func and not self.fuse_func:
+            self.fuse_func = fb.pq_fuse_func
 
     def make_ready(self, dc):
         for fb in self.flag_bands:

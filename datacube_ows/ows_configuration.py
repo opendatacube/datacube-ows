@@ -397,6 +397,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.parse_resource_limits(cfg.get("resource_limits", {}))
         try:
             self.parse_flags(cfg.get("flags", {}))
+            self.declare_unready("all_flag_band_names")
         except KeyError as e:
             raise ConfigException(f"Missing required config ({str(e)}) in flags section for layer {self.name}")
         try:
@@ -454,8 +455,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.definition = self.product.definition
         self.force_range_update(dc)
         self.band_idx.make_ready(dc)
+        self.all_flag_band_names = set()
         for fb in self.flag_bands.values():
             fb.make_ready(dc)
+            if fb.pq_band in self.all_flag_band_names:
+                raise ConfigException(f"Duplicate flag band name: {fp.pq_band}")
+            self.all_flag_band_names.add(fb.pq_band)
         self.ready_image_processing(dc)
         if self.global_cfg.wcs:
             self.ready_wcs(dc)
