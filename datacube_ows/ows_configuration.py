@@ -66,7 +66,7 @@ class BandIndex(OWSConfigEntry):
         else:
             self.band_cfg = band_cfg
         if "default" in self.band_cfg:
-            _LOG.warning(f"Layer {self.product_name} contains a band named 'default' which may interfere with styles using the old style mask format.")
+            _LOG.warning("Layer %s contains a band named 'default' which may interfere with styles using the old style mask format.", self.product_name)
         self._idx = {}
         self.add_aliases(self.band_cfg)
         self.declare_unready("native_bands")
@@ -459,7 +459,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         for fb in self.flag_bands.values():
             fb.make_ready(dc)
             if fb.pq_band in self.all_flag_band_names:
-                raise ConfigException(f"Duplicate flag band name: {fp.pq_band}")
+                raise ConfigException(f"Duplicate flag band name: {fb.pq_band}")
             self.all_flag_band_names.add(fb.pq_band)
         self.ready_image_processing(dc)
         if self.global_cfg.wcs:

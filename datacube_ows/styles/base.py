@@ -33,13 +33,16 @@ class FlagProductBands(OWSConfigEntry):
             raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
         elif fb.pq_fuse_func and not self.fuse_func:
             self.fuse_func = fb.pq_fuse_func
+        self.declare_unready("products")
+        self.declare_unready("low_res_products")
 
-    def make_ready(self, dc):
+    # pylint: disable=attribute-defined-outside-init
+    def make_ready(self, dc, *args, **kwargs):
         for fb in self.flag_bands:
             self.products = fb.pq_products
             self.low_res_products = fb.pq_low_res_products
             break
-        super().make_ready(dc)
+        super().make_ready(dc, *args, **kwargs)
 
 
 class StyleDefBase(OWSExtensibleConfigEntry):

@@ -45,7 +45,7 @@ class ProductBandQuery:
         )
 
     def  __hash__(self):
-       return hash(self.key)
+        return hash(self.key)
 
     @classmethod
     def style_queries(cls, style, resource_limited=False):
@@ -350,13 +350,11 @@ def get_map(args):
             datasets = stacker.datasets_new(dc.index, main_only=False)
             for flagband, dss in datasets.items():
                 if not dss:
-                    _LOG.warning(f"Flag band {flagband.name} returned no data")
+                    _LOG.warning("Flag band %s returned no data", flagband.name)
             qprof.end_event("fetch-datasets")
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             qprof.start_event("load-data")
-            data = stacker.data(datasets,
-                                manual_merge=params.product.data_manual_merge,
-                                fuse_func=params.product.fuse_func)
+            data = stacker.data(datasets)
             qprof.end_event("load-data")
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             qprof.start_event("build-masks")
