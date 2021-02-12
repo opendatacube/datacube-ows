@@ -12,6 +12,32 @@ def scale_data(imgband_data, scale_from, scale_to):
     scaled = normalised * (tc_max - tc_min)
     return scaled + tc_min
 
+def scalable(undecorated):
+    def decorated(*args, **kwargs):
+        scale_from = kwargs.pop("scale_from", None)
+        scale_to = kwargs.pop("scale_to", None)
+        if scale_from is not None and scale_to is None:
+            scale_to = [0,255]
+        unscaled = undecorated(*args, **kwargs)
+        if scale_from:
+            return scale_data(unscaled, scale_from, scale_to)
+        return unscaled
+
+    return decorated
+
+
+def band_modulator(undecorated):
+    def decorated(data, *args, **kwargs):
+        band_mapper = kwargs.get("band_mapper", None)
+        mult_band = kwargs.pop("mult_band", None)
+        raw_data = undecorated(data, *args, **kwargs)
+        if mult_band and band_mapper:
+            mult_band = band_mapper(mult_band)
+        if mult_band:
+            return data[mult_band] * raw_data
+        return raw_data
+    return decorated
+
 def sum_bands(data, band1, band2, band_mapper=None):
     if band_mapper:
         band1=band_mapper(band1)
@@ -40,16 +66,13 @@ def delta_bands(data, band1, band2, band_mapper=None):
 
 # N.B. Modifying scale_to would be dangerous - don't do it.
 # pylint: disable=dangerous-default-value
-def norm_diff(data, band1, band2, band_mapper=None, scale_from=None, scale_to=[0,255]):
+@scalable
+def norm_diff(data, band1, band2, band_mapper=None):
     # Calculate a normalised difference index.
-    unscaled = delta_bands(data, band1,band2, band_mapper) / sum_bands(data, band1, band2, band_mapper)
-    if scale_from:
-        scaled = scale_data(unscaled, scale_from, scale_to)
-    else:
-        scaled = unscaled
-    return scaled
+    return delta_bands(data, band1,band2, band_mapper) / sum_bands(data, band1, band2, band_mapper)
 
 
+@scalable
 def constant(data, band, const, band_mapper=None):
     # Covert an xarray for a flat constant.
     # Useful for displaying mask extents as a flat colour and debugging.
@@ -60,6 +83,7 @@ def constant(data, band, const, band_mapper=None):
     return data[band] * 0.0 + const
 
 
+@scalable
 def single_band(data, band, band_mapper=None):
     # Use the raw value of a band directly as the index function.
 
@@ -68,22 +92,20 @@ def single_band(data, band, band_mapper=None):
     return data[band]
 
 
-def band_quotient(data, band1, band2, band_mapper=None, scale_from=None, scale_to=[0,255]):
+@scalable
+def band_quotient(data, band1, band2, band_mapper=None):
     if band_mapper:
         band1=band_mapper(band1)
         band2=band_mapper(band2)
-    unscaled = data[band1] / data[band2]
-    if scale_from:
-        scaled = scale_data(unscaled, scale_from, scale_to)
-    else:
-        scaled = unscaled
-    return scaled
+    return data[band1] / data[band2]
 
 
+@scalable
 def band_quotient_sum(data, band1a, band1b, band2a, band2b, band_mapper=None):
     return band_quotient(data, band1a, band1b, band_mapper) + band_quotient(data, band2a, band2b, band_mapper)
 
 
+@scalable
 def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, band_mapper=None):
     red_delta = delta_bands(data, b_red_edge, b_red, band_mapper)
     red_sum = sum_bands(data,b_red_edge, b_red, band_mapper)
@@ -99,6 +121,8 @@ def multi_date_delta(data):
     return data2 - data1
 
 
+@band_modulator
+@scalable
 def single_band_log(data, band, scale_factor, exponent, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
@@ -106,34 +130,34 @@ def single_band_log(data, band, scale_factor, exponent, band_mapper=None):
     return scale_factor * ( (d ** exponent) - 1.0)
 
 
-def single_band_arcsec(data, band, scale_from=None, scale_to=None, band_mapper=None):
-    if scale_from is not None and scale_to is None:
-        scale_to = [0,255]
+@band_modulator
+@scalable
+def single_band_arcsec(data, band, mult_band=None, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
     unscaled = numpy.arccos(1/(d + 1))
-    if scale_from:
-        return scale_data(unscaled, scale_from, scale_to)
+    if mult_band:
+        mult_band = band_mapper(mult_band)
+        return data[mult_band] * unscaled
     return unscaled
 
 
-def single_band_offset_log(data, band, scale=1.0, scale_from=None, scale_to=None, offset=None, band_mapper=None):
-    if scale_from is not None and scale_to is None:
-        scale_to = [0,255]
+@scalable
+@band_modulator
+def single_band_offset_log(data, band, scale=1.0, offset=None, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
     if offset is not None:
         d = data[band] * scale + offset
-        unscaled =  numpy.log(d)
+        unscaled = numpy.log(d)
     else:
-        unscaled =  numpy.log1p(d*scale)
-    if scale_from:
-        return scale_data(unscaled, scale_from, scale_to)
+        unscaled = numpy.log1p(d*scale)
     return unscaled
 
 
+@scalable
 def radar_vegetation_index(data, band_hv, band_hh, band_mapper=None):
     if band_mapper:
         band_hv = band_mapper(band_hv)
