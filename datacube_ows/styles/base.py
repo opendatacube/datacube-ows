@@ -38,7 +38,7 @@ class FlagProductBands(OWSConfigEntry):
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
-        for fb in self.flag_bands:
+        for fb in self.flag_bands.values():
             self.products = fb.pq_products
             self.low_res_products = fb.pq_low_res_products
             break
@@ -118,13 +118,16 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             if fb.pq_names == self.product.product_names:
                 self.needed_bands.add(fb.band)
                 continue
+            handled=False
             for pqp, pqb in self.pq_product_bands:
-                if fb.pq_names == pqb:
-                    pqb.add(fb.band)
+                if fb.pq_names == pqp:
+                    pqb.add(fb.pq_band)
+                    handled=True
                     continue
-            self.pq_product_bands.append(
-                (fb.pq_names, set([fb.pq_band]))
-            )
+            if not handled:
+                self.pq_product_bands.append(
+                    (fb.pq_names, set([fb.pq_band]))
+                )
         self.flag_bands = set()
         for pq_names, pq_bands in self.pq_product_bands:
             for band in pq_bands:
@@ -132,7 +135,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                     raise ConfigException(f"Same flag band name {band} appears in different PQ product (sets)")
                 self.flag_bands.add(band)
         for fp in self.flag_products:
-            self.flag_products.make_ready(dc)
+            fp.make_ready(dc)
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
             self.flag_bands.add(band)
