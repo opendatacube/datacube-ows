@@ -246,7 +246,7 @@ def get_coverage_data(request):
                               geobox,
                               times,
                               bands=bands)
-        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+        n_datasets = stacker.datasets_new(dc.index, mode=MVSelectOpts.COUNT)
 
         if layer.max_datasets_wcs > 0 and n_datasets > layer.max_datasets_wcs:
             raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
@@ -257,7 +257,7 @@ def get_coverage_data(request):
                                 WCS2Exception.INVALID_SUBSETTING,
                                 http_response=404)
 
-        datasets = stacker.datasets(dc.index)
+        datasets = stacker.datasets_new(dc.index, main_only=False)
         if fmt.multi_time and len(times) > 1:
             # Group by solar day
             group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
