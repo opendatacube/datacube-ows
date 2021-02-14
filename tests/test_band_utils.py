@@ -116,6 +116,7 @@ def test_single_band_offset_log(band_mapper):
     assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0]) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]) is None
     assert not single_band_offset_log(TEST_XARR, "b1", band_mapper=band_mapper) is None
+    assert not single_band_offset_log(TEST_XARR, "b1", mult_band="b2") is None
 
 
 def test_single_band_arcsec(band_mapper):
