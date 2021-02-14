@@ -132,19 +132,15 @@ def single_band_log(data, band, scale_factor, exponent, band_mapper=None):
 
 @band_modulator
 @scalable
-def single_band_arcsec(data, band, mult_band=None, band_mapper=None):
+def single_band_arcsec(data, band, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
-    unscaled = numpy.arccos(1/(d + 1))
-    if mult_band:
-        mult_band = band_mapper(mult_band)
-        return data[mult_band] * unscaled
-    return unscaled
+    return numpy.arccos(1/(d + 1))
 
 
-@scalable
 @band_modulator
+@scalable
 def single_band_offset_log(data, band, scale=1.0, offset=None, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
