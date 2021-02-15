@@ -22,7 +22,7 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
-    GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
+    GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
     solar_date
 from datacube_ows.mv_index import MVSelectOpts, mv_search
