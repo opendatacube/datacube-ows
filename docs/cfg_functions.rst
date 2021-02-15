@@ -1,4 +1,4 @@
-==============================
+=============================
 OWS Configuration - Functions
 =============================
 
@@ -120,30 +120,39 @@ True.
     Calculates the normalised difference of two bands, passed
     as keyword arguments "band1" and "band2".
 
-    Also has a "scale_from" argument allowing it to be used in
-    component callback function.
+    Scalable.
 
 #. datacube_ows.band_utils.single_band
     Returns the raw value of a band as an index datasets. Takes
     keyword argument "band".
+
+    Scalable.
 
 #. datacube_ows.band_utils.constant
     Returns a constant.  Still needs a band (takes a band, multiplies
     by zero and adds the constant), but it can be any band.  Arguments
     are "band" and "const".
 
+    Scalable.
+
 #. datacube_ows.band_utils.band_quotient
     Divides two bands, passed as keyword arguments "band1" and "band2".
 
     (band1 is divided by from band2)
+
+    Scalable.
 
 #. datacube_ows.band_utils.band_quotient_sum
     Takes 4 bands, divides and adds them as follows:
 
     (band1a / band1b) + (band2a / band2b)
 
+    Scalable.
+
 #. datacube_ows.band_utils.single_band_arcsec
     Takes one band, and returns the arcsec of that band.
+
+    Scalable. Band Modulator.
 
 #. datacube_ows.band_utils.single_band_offset_log
     Takes a single band and an optional offset, and an optional scale.
@@ -154,6 +163,8 @@ True.
 
     The scale and offset both default to 1.0.  If offset is not supplied
     the more efficient log1p function is used.
+
+    Scalable. Band Modulator.
 
 E.g. This is an index function that will compute NDVI on any
 layer that has both an "nir" and "red" band name or alias
@@ -169,6 +180,28 @@ in the band dictionary:
             "band2": "red"
         }
     }
+
+Scalable band utilities
+@@@@@@@@@@@@@@@@@@@@@@@
+
+Many band utilities are noted in the list above as "scalable".  This means
+that they can take two additional optional parameters: ``scale_from`` and ``scale_to``,
+which may each be set to a tuple of two floating point numbers.
+
+After the underlying utility function is called, the output is linearly scaled with ``scale_from``
+and ``scale_to`` providing the input and output ranges. i.e. given:
+
+::
+
+    "scale_from": [0.0, 1.0],
+    "scale_to": [-2500.0, 2500.0],
+
+A raw result from the utility of 0.0 will be scaled to -2500 and a raw result of 1.0 will be
+scaled to +2500. A raw result of 0.5 (exactly half between 0 and 1) will be scaled to 0 (exactly
+half way between -2500 and +2500), and so on.
+
+No scaling is performed if ``scale_from`` is not set.  ``scale_to`` defaults to [0,255] (i.e.
+suitable for use in per-rgb-component indexes.
 
 And this is a component callback function that uses NDVI
 scaled from -0.1 to 1.0 in the red channel:
@@ -186,6 +219,54 @@ scaled from -0.1 to 1.0 in the red channel:
             }
         },
         ...
+
+Band Modulators
+@@@@@@@@@@@@@@@
+
+Some band utilities are noted in the list above as being "band modulators".  This means
+that they can take an additional optional ``mult_band`` value.
+
+The value passed to  ``mult_band`` must be an available band (or band alias if ``mapped_bands``
+is True.)  If set, the value of the band function (after scaling) is multiplied by the raw value
+of mult_band for the final result.  With appropriate use of scaling, this can be used to allow
+a function to be used as a "dimmer" for a data band.
+
+E.g. Using arcsec of the sdev band as a local brightness control for an rgb image.
+The raw red,green,blue bands go to 3000.
+
+::
+    "components": {
+        "red": {
+            "function": "datacube_ows.band_utils.single_band_arcsec",
+            "mapped_bands": True,
+            "kwargs": {
+                "band": "sdev",
+                "mult_band": "red",
+                "scale_from": [0.02, 0.18],
+                "scale_to": [0.0, 255.0/3000.0],
+            },
+        },
+        "green": {
+            "function": "datacube_ows.band_utils.single_band_arcsec",
+            "mapped_bands": True,
+            "kwargs": {
+                "band": "sdev",
+                "mult_band": "green",
+                "scale_from": [0.02, 0.18],
+                "scale_to": [0.0, 255.0/3000.0],
+            },
+        },
+        "blue": {
+            "function": "datacube_ows.band_utils.single_band_arcsec",
+            "mapped_bands": True,
+            "kwargs": {
+                "band": "sdev",
+                "mult_band": "blue",
+                "scale_from": [0.02, 0.18],
+                "scale_to": [0.0, 255.0/3000.0],
+            },
+        },
+
 
 
 Direct insertion of callables not supported
