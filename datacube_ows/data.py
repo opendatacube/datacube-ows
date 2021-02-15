@@ -25,7 +25,7 @@ from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data, collapse_datasets_to_times
 from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
     solar_date
-from datacube_ows.mv_index import MVSelectOpts, mv_search_datasets, mv_search
+from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import log_call
 
 import logging
@@ -115,10 +115,10 @@ class DataStacker:
                              all_time=all_time, point=point,
                              mode=MVSelectOpts.COUNT)
 
-    def datasets_new(self, index,
-                     main_only=True,
-                     all_time=False, point=None,
-                     mode=MVSelectOpts.DATASETS):
+    def datasets(self, index,
+                 main_only=True,
+                 all_time=False, point=None,
+                 mode=MVSelectOpts.DATASETS):
         if self.style and not main_only:
             queries = ProductBandQuery.style_queries(
                 self.style,
@@ -152,36 +152,6 @@ class DataStacker:
                 return result
             results[query] = result
         return results
-
-    @log_call
-    def datasets(self, index,
-                 mask=False, all_time=False, point=None,
-                 mode=MVSelectOpts.DATASETS):
-        # Return datasets as a time-grouped xarray DataArray. (or None if no datasets)
-        # No PQ product, so no PQ datasets.
-        if not self._product.pq_name and mask:
-            return None
-
-        if point:
-            geom = point
-        else:
-            geom = self._geobox.extent
-
-        if all_time:
-            times = None
-        else:
-            times = self._times
-        result = mv_search_datasets(index, mode,
-                                  layer=self._product,
-                                  times=times,
-                                  geom=geom,
-                                  mask=mask,
-                                  resource_limited=self.resource_limited
-        )
-        if mode == MVSelectOpts.DATASETS:
-            return datacube.Datacube.group_datasets(result, self.group_by)
-        else:
-            return result
 
     @log_call
     def data(self, datasets_by_query, skip_corrections=False):
@@ -305,14 +275,14 @@ def get_map(args):
         zoomed_out = params.zf < params.product.min_zoom
         qprof["zoom_factor"] = params.zf
         qprof.start_event("count-datasets")
-        n_datasets = stacker.datasets_new(dc.index, mode=MVSelectOpts.COUNT)
+        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
         qprof.end_event("count-datasets")
         qprof["n_datasets"] = n_datasets
         too_many_datasets = (params.product.max_datasets_wms > 0
                              and n_datasets > params.product.max_datasets_wms
                              )
         if qprof.active:
-            qprof["datasets"] = stacker.datasets_new(dc.index, mode=MVSelectOpts.IDS)
+            qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
         if too_many_datasets or zoomed_out:
             stacker.resource_limited = True
             qprof["too_many_datasets"] = too_many_datasets
@@ -320,7 +290,7 @@ def get_map(args):
 
         if stacker.resource_limited and not params.product.low_res_product_names:
             qprof.start_event("extent-in-query")
-            extent = stacker.datasets_new(dc.index, mode=MVSelectOpts.EXTENT)
+            extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
             qprof.end_event("extent-in-query")
             if extent is None:
                 qprof["write_action"] = "No extent: Write Empty"
@@ -344,10 +314,10 @@ def get_map(args):
         else:
             if stacker.resource_limited:
                 qprof.start_event("count-summary-datasets")
-                qprof["n_summary_datasets"] = stacker.datasets_new(dc.index, mode=MVSelectOpts.COUNT)
+                qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
                 qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
-            datasets = stacker.datasets_new(dc.index, main_only=False)
+            datasets = stacker.datasets(dc.index, main_only=False)
             for flagband, dss in datasets.items():
                 if not dss:
                     _LOG.warning("Flag band %s returned no data", flagband.name)
@@ -638,7 +608,7 @@ def feature_info(args):
     with cube() as dc:
         if not dc:
             raise WMSException("Database connectivity failure")
-        all_time_datasets = stacker.datasets_new(dc.index, all_time=True, point=geo_point)
+        all_time_datasets = stacker.datasets(dc.index, all_time=True, point=geo_point)
 
         # Taking the data as a single point so our indexes into the data should be 0,0
         h_coord = cfg.published_CRSs[params.crsid]["horizontal_coord"]
@@ -654,7 +624,7 @@ def feature_info(args):
             global_info_written = False
             feature_json["data"] = []
             fi_date_index = {}
-            time_datasets = stacker.datasets_new(dc.index, main_only=False, point=geo_point)
+            time_datasets = stacker.datasets(dc.index, main_only=False, point=geo_point)
             data = stacker.data(time_datasets, skip_corrections=True)
             for dt in data.time.values:
                 td = data.sel(time=dt)

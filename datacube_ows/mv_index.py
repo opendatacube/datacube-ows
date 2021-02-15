@@ -6,7 +6,7 @@ from datacube.utils.geometry import Geometry as ODCGeom
 from sqlalchemy import MetaData, Table, select, or_, Column, SMALLINT, text
 from psycopg2.extras import DateTimeTZRange
 from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
-from sqlalchemy.sql.functions import count, func
+from sqlalchemy.sql.functions import count
 
 def get_sqlalc_engine(index):
     # pylint: disable=protected-access
@@ -49,42 +49,6 @@ class MVSelectOpts(Enum):
             return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
         assert False
 
-def mv_search_datasets(index,
-                       sel=MVSelectOpts.IDS,
-                       times=None,
-                       layer=None,
-                       geom=None,
-                       mask=False,
-                       resource_limited=False):
-    """
-    Perform a dataset query via the space_time_view
-
-    :param layer: A ows_configuration.OWSNamedLayer object (single or multiproduct)
-    :param index: A datacube index (required)
-
-    :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
-    :param times: A list of pairs of datetimes (with time zone)
-    :param geom: A datacube.utils.geometry.Geometry object
-    :param mask: Bool, if true use the flags product of layer
-    :param resource_limited: Bool, if true use low-res summary products
-
-    :return: See MVSelectOpts doc
-    """
-    engine = get_sqlalc_engine(index)
-    stv = st_view
-    if layer is None:
-        raise Exception("Must filter by product/layer")
-    if mask and resource_limited and layer.pq_low_res_products:
-        products = layer.pq_low_res_products
-    elif mask:
-        products = layer.pq_products
-    elif resource_limited and layer.low_res_products:
-        products = layer.low_res_products
-    else:
-        products = layer.products
-
-    return mv_search(index, sel=sel, times=times, geom=geom, products=products)
-
 
 def mv_search(index,
                        sel=MVSelectOpts.IDS,
@@ -94,7 +58,7 @@ def mv_search(index,
     """
     Perform a dataset query via the space_time_view
 
-    :param products: An array of combinable products to search
+    :param products: An iterable of combinable products to search
     :param index: A datacube index (required)
 
     :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.

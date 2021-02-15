@@ -294,7 +294,7 @@ def get_coverage_data(req):
                               req.geobox,
                               req.times,
                               bands=req.bands)
-        n_datasets = stacker.datasets_new(dc.index, mode=MVSelectOpts.COUNT)
+        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
         if n_datasets == 0:
             # Return an empty coverage file with full metadata?
             cfg = get_config()
@@ -343,7 +343,7 @@ def get_coverage_data(req):
             raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
                                 "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
-        datasets = stacker.datasets_new(main_only=False, index=dc.index)
+        datasets = stacker.datasets(main_only=False, index=dc.index)
         output = stacker.data(datasets, skip_corrections=True)
         return n_datasets, output
 
