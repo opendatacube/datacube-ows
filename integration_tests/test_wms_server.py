@@ -179,7 +179,7 @@ def test_wms_multidate_getmap(ows_server):
         size=(150, 150),
         format="image/png",
         transparent=True,
-        time="2019-01-29,2019-03-02",
+        time="2019-01-30,2019-03-03",
     )
     assert img.info()["Content-Type"] == "image/png"
 
