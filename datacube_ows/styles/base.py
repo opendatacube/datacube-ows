@@ -266,6 +266,16 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         def transform_data(self, data):
             raise NotImplementedError()
 
+        def make_mask(self, data, mask):
+            odc_mask = None
+            for dt in data.coords["time"].values:
+                tpqdata = getattr(data.sel(time=dt), mask.band_name)
+                if odc_mask is None:
+                    odc_mask = make_mask(tpqdata, **mask.flags)
+                else:
+                    odc_mask |= make_mask(tpqdata, **mask.flags)
+            return odc_mask
+
         # pylint: disable=attribute-defined-outside-init
         def parse_legend_cfg(self, cfg):
             self.show_legend = cfg.get("show_legend", self.auto_legend)
