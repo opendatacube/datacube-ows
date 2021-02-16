@@ -319,7 +319,7 @@ def get_map(args):
             qprof.start_event("fetch-datasets")
             datasets = stacker.datasets(dc.index, main_only=False)
             for flagband, dss in datasets.items():
-                if not dss:
+                if not dss.any():
                     _LOG.warning("Flag band %s returned no data", flagband.name)
             qprof.end_event("fetch-datasets")
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
