@@ -21,8 +21,8 @@ class FlagProductBands(OWSConfigEntry):
         self.fuse_func = flag_band.pq_fuse_func
 
 
-    def products_match(self, fb):
-        return tuple(fb.pq_names) == self.product_names
+    def products_match(self, product_names):
+        return tuple(product_names) == self.product_names
 
     def add_flag_band(self, fb):
         self.flag_bands[fb.name] = fb
@@ -92,7 +92,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         for mask in self.masks:
             handled = False
             for fp in self.flag_products:
-                if fp.products_match(mask.band):
+                if fp.products_match(mask.band.pq_names):
                     fp.add_flag_band(mask.band)
                     handled = True
                     break
