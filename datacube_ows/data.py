@@ -44,6 +44,9 @@ class ProductBandQuery:
             tuple(bands)
         )
 
+    def __str__(self):
+        return f"Query bands {self.bands} from products {self.products}"
+
     def  __hash__(self):
         return hash(self.key)
 
@@ -320,7 +323,7 @@ def get_map(args):
             datasets = stacker.datasets(dc.index, main_only=False)
             for flagband, dss in datasets.items():
                 if not dss.any():
-                    _LOG.warning("Flag band %s returned no data", flagband.name)
+                    _LOG.warning("Flag band %s returned no data", str(flagband))
             qprof.end_event("fetch-datasets")
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
             qprof.start_event("load-data")
