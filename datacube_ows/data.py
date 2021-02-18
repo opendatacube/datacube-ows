@@ -172,7 +172,7 @@ class DataStacker:
                 data = qry_result
             else:
                 for band in pbq.bands:
-                    data.assign({
+                    data = data.assign({
                         band: qry_result[band]
                         for band in pbq.bands
                     })
@@ -336,7 +336,7 @@ def get_map(args):
                 td = data.sel(time=npdt)
                 td_ext_mask = None
                 for band in params.style.needed_bands:
-                    if band in params.style.flag_bands:
+                    if band not in params.style.flag_bands:
                         if params.product.data_manual_merge:
                             if td_ext_mask is None:
                                 td_ext_mask = ~numpy.isnan(td[band])

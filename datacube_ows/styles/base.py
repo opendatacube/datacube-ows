@@ -153,9 +153,11 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
     def to_mask(self, data, extra_mask=None):
         def single_date_make_mask(data, mask):
-            pq_data = getattr(data, mask.band_name)
+            band_name = self.product.flag_bands[mask.band_name].pq_band
+            pq_data = getattr(data, band_name)
             odc_mask = make_mask(pq_data, **mask.flags)
-            return getattr(odc_mask, mask.band_name)
+            odc_mask = odc_mask.squeeze(dim="time", drop=True)
+            return odc_mask
 
         date_count = len(data.coords["time"])
         if date_count > 1:
@@ -345,12 +347,5 @@ class StyleMask(OWSConfigEntry):
         if self.band_name not in self.style.product.flag_bands:
             raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{self.band_name} which is not defined for the layer")
         self.band = self.style.product.flag_bands[self.band_name]
-        if use_default_band:
-            self.flags = cfg.copy()
-            if "invert" in self.flags:
-                self.invert = self.flags.pop("invert")
-            else:
-                self.invert = False
-        else:
-            self.invert = cfg.get("invert", False)
-            self.flags = cfg["flags"]
+        self.invert = cfg.get("invert", False)
+        self.flags = cfg["flags"]
