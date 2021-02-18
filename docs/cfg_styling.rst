@@ -223,8 +223,8 @@ acting individually.
 Mask Sections
 @@@@@@@@@@@@@
 
-Each mask section contains a "band" identifier and a "flags" dictionary. A mask section
-may also optionally include an "invert" flag, which is False by default.
+Each mask section contains a "band" identifier and either "flags" dictionary, or a
+"enum" value. A mask section may also optionally include an "invert" flag, which is False by default.
 
 The "band" identifier refers to one of the flag-band identifiers defined in the
 `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
@@ -234,16 +234,19 @@ Backwards compatibility note: The "band" identifier may be omitted if there is o
 one band identifier defined for the layer.  However this usage is deprecated and will
 be removed in a future release.
 
-The flags dictionary is passed directly to ``datacube.utils.masking.make_mask``.
-The entries of the dictionary represent bitflag comparisons that
+Each mask must have either a "flags" entry or an "enum" entry (but not both).
+
+If a flags entry is supplied, it should be a dictionary is passed directly to
+``datacube.utils.masking.make_mask``. The entries of the dictionary represent bitflag comparisons that
 are ANDed together.  i.e. A pixel is DISPLAYED if the bitflags
 for the pixel match ALL of the entries specified in the "flags" dictionary.
 The keys of the dictionary are the flag names, and the values are the flag values -
 refer to the ODC product metadata for possible values.
 
-If the "invert" flag is True, then the output inverted (logically NOTed). I.e.
-A pixel is MADE TRANSPARENT if the bitflags
-for the pixel match ALL of the entries specified in the "flags" dictionary.
+If an enum entry is supplied, it should be a single integer value.  A pixel becomes transparent if
+the value of the flag band for that pixel is exactly equal to the supplied integer value.
+
+If the "invert" flag is True, then the output of the masking operation is inverted (logically NOTed).
 
 E.g.
 
@@ -264,6 +267,11 @@ E.g.
             "flags": {
                 "water": "no_water"
             }
+        },
+        {
+            "band": "geodata_coast",
+            "invert": True,
+            "enum": 0,
         }
     ],
 

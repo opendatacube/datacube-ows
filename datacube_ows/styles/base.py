@@ -155,7 +155,10 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         def single_date_make_mask(data, mask):
             band_name = self.product.flag_bands[mask.band_name].pq_band
             pq_data = getattr(data, band_name)
-            odc_mask = make_mask(pq_data, **mask.flags)
+            if mask.flags:
+                odc_mask = make_mask(pq_data, **mask.flags)
+            else:
+                odc_mask = pq_data == mask.enum
             odc_mask = odc_mask.squeeze(dim="time", drop=True)
             return odc_mask
 
@@ -348,4 +351,17 @@ class StyleMask(OWSConfigEntry):
             raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{self.band_name} which is not defined for the layer")
         self.band = self.style.product.flag_bands[self.band_name]
         self.invert = cfg.get("invert", False)
-        self.flags = cfg["flags"]
+        if "flags" in cfg:
+            self.flags = cfg["flags"]
+            self.enum = None
+            if "enum" in cfg:
+                raise ConfigException(
+                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has both an enum section and a flags section - please split into two masks.")
+            if len(self.flags) == 0:
+                raise ConfigException(
+                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has empty enum section.")
+        elif "enum" in cfg:
+            self.enum = cfg["enum"]
+            self.flags = None
+        else:
+            raise ConfigException(f"mask definition in layer {self.style.product.name}, style {self.style.name} has no flags or enum section - nothing to mask on.")

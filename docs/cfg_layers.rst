@@ -704,7 +704,8 @@ Flag Band (band)
 
 The name of the measurement band to be used for style-based masking.
 
-Pixel-quality bitmask bands or flag bands can be used.
+Pixel-quality bitmask bands or enumeration flag bands can be used, although
+bitmask bands are better supported and are recommended where possible.
 
 Required.
 
