@@ -15,6 +15,7 @@ class FlagProductBands(OWSConfigEntry):
         self.bands.add(flag_band.pq_band)
         self.flag_bands = {flag_band.pq_band: flag_band}
         self.product_names = tuple(flag_band.pq_names)
+        self.ignore_time = flag_band.pq_ignore_time
         self.declare_unready("products")
         self.declare_unready("low_res_products")
         self.manual_merge = flag_band.pq_manual_merge
@@ -30,6 +31,8 @@ class FlagProductBands(OWSConfigEntry):
             fb.pq_manual_merge = True
         if fb.pq_fuse_func and self.fuse_func and fb.pq_fuse_func != self.fuse_func:
             raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
+        if fb.pq_ignore_time != self.ignore_time:
+            raise ConfigException(f"ignore_time option for flag bands in product set {self.product_names} do not match")
         elif fb.pq_fuse_func and not self.fuse_func:
             self.fuse_func = fb.pq_fuse_func
         self.declare_unready("products")
@@ -152,8 +155,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
     def to_mask(self, data, extra_mask=None):
         def single_date_make_mask(data, mask):
-            band_name = self.product.flag_bands[mask.band_name].pq_band
-            pq_data = getattr(data, band_name)
+            pq_data = getattr(data, mask.band_name)
             if mask.flags:
                 odc_mask = make_mask(pq_data, **mask.flags)
             else:
@@ -341,14 +343,14 @@ class StyleMask(OWSConfigEntry):
             self.band_name = cfg["band"]
             if self.band_name not in self.style.product.flag_bands:
                 raise ConfigException(
-                    f"Style f{self.style.name} has a mask that references flag band f{self.band_name} which is not defined for the layer")
+                    f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
         else:
-            self.band_name = list(self.style.product.flag_bands.keys)[0]
+            self.band_name = list(self.style.product.flag_bands.keys())[0]
             _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
                          self.style.name,
                          self.style.product.name)
         if self.band_name not in self.style.product.flag_bands:
-            raise ConfigException(f"Style f{self.style.name} has a mask that references flag band f{self.band_name} which is not defined for the layer")
+            raise ConfigException(f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
         self.band = self.style.product.flag_bands[self.band_name]
         self.invert = cfg.get("invert", False)
         if "flags" in cfg:

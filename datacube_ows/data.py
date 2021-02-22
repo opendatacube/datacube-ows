@@ -33,11 +33,12 @@ import logging
 _LOG = logging.getLogger(__name__)
 
 class ProductBandQuery:
-    def __init__(self, products, bands, main=False, manual_merge=False, fuse_func=None):
+    def __init__(self, products, bands, main=False, manual_merge=False, ignore_time=False, fuse_func=None):
         self.products = products
         self.bands = bands
         self.manual_merge = manual_merge
         self.fuse_func = fuse_func
+        self.ignore_time = ignore_time
         self.main = main
         self.key = (
             tuple((p.id for p in self.products)),
@@ -61,7 +62,7 @@ class ProductBandQuery:
         for fp in style.flag_products:
             if fp.products_match(style.product.product_names):
                 for band in fp.bands:
-                    assert band in style.needed_bands
+                    assert band in style.needed_bands, "Style band not in needed bands list"
             else:
                 if resource_limited:
                     pq_products = fp.low_res_products
@@ -71,6 +72,7 @@ class ProductBandQuery:
                     pq_products,
                     tuple(fp.bands),
                     manual_merge=fp.manual_merge,
+                    ignore_time=fp.ignore_time,
                     fuse_func=fp.fuse_func
                 ))
         return queries
@@ -144,9 +146,13 @@ class DataStacker:
             times = self._times
         results = {}
         for query in queries:
+            if query.ignore_time:
+                qry_times = None
+            else:
+                qry_times = times
             result = mv_search(index,
                                sel=mode,
-                               times=times,
+                               times=qry_times,
                                geom=geom,
                                products=query.products)
             if mode == MVSelectOpts.DATASETS:
@@ -170,12 +176,31 @@ class DataStacker:
                 qry_result = self.read_data(datasets, measurements, self._geobox, self._resampling, fuse_func=fuse_func)
             if data is None:
                 data = qry_result
-            else:
-                for band in pbq.bands:
-                    data = data.assign({
-                        band: qry_result[band]
-                        for band in pbq.bands
-                    })
+                continue
+            if pbq.ignore_time:
+                # regularise time dimension:
+                if len(qry_result.time) != 1:
+                    raise WMSException("Cannot ignore time on PQ (flag) bands from a time-aware product")
+                if len(qry_result.time) == len(data.time):
+                    qry_result["time"] = data.time
+                else:
+                    data_new_bands = {}
+                    for band in pbq.bands:
+                        band_data = qry_result[band]
+                        timeless_band_data = band_data.sel(time=qry_result.time.values[0])
+                        band_time_slices = []
+                        for dt in data.time.values:
+                            band_time_slices.append(timeless_band_data)
+                        timed_band_data = xarray.concat(band_time_slices, data.time)
+                        data_new_bands[band] = timed_band_data
+
+                    data = data.assign(data_new_bands)
+                    continue
+            for band in pbq.bands:
+                data = data.assign({
+                    band: qry_result[band]
+                    for band in pbq.bands
+                })
 
         return data
 
