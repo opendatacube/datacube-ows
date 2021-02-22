@@ -65,8 +65,6 @@ class BandIndex(OWSConfigEntry):
             self.band_cfg = {}
         else:
             self.band_cfg = band_cfg
-        if "default" in self.band_cfg:
-            _LOG.warning("Layer %s contains a band named 'default' which may interfere with styles using the old style mask format.", self.product_name)
         self._idx = {}
         self.add_aliases(self.band_cfg)
         self.declare_unready("native_bands")
