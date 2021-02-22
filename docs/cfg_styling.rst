@@ -255,21 +255,21 @@ E.g.
     # Remove pixels
     "pq_masks": [
         {
-            "band": "ls8_pq"
+            "band": "pixelquality"
             "flags": {
                 "cloud": "no_cloud",
                 "cloud_shadow": "no_cloud_shadow"
             }
         },
         {
-            "band": "wofs_flags",
+            "band": "flags",
             "invert": True,
             "flags": {
                 "water": "no_water"
             }
         },
         {
-            "band": "geodata_coast",
+            "band": "land",
             "invert": True,
             "enum": 0,
         }

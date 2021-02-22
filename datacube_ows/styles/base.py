@@ -13,19 +13,18 @@ class FlagProductBands(OWSConfigEntry):
         super().__init__({})
         self.bands = set()
         self.bands.add(flag_band.pq_band)
-        self.flag_bands = {flag_band.name: flag_band}
+        self.flag_bands = {flag_band.pq_band: flag_band}
         self.product_names = tuple(flag_band.pq_names)
         self.declare_unready("products")
         self.declare_unready("low_res_products")
         self.manual_merge = flag_band.pq_manual_merge
         self.fuse_func = flag_band.pq_fuse_func
 
-
     def products_match(self, product_names):
         return tuple(product_names) == self.product_names
 
     def add_flag_band(self, fb):
-        self.flag_bands[fb.name] = fb
+        self.flag_bands[fb.pq_band] = fb
         self.bands.add(fb.pq_band)
         if fb.pq_manual_merge:
             fb.pq_manual_merge = True
@@ -340,10 +339,11 @@ class StyleMask(OWSConfigEntry):
             raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
         if "band" in cfg:
             self.band_name = cfg["band"]
-            use_default_band = False
+            if self.band_name not in self.style.product.flag_bands:
+                raise ConfigException(
+                    f"Style f{self.style.name} has a mask that references flag band f{self.band_name} which is not defined for the layer")
         else:
-            self.band_name = "default"
-            use_default_band = True
+            self.band_name = list(self.style.product.flag_bands.keys)[0]
             _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
                          self.style.name,
                          self.style.product.name)

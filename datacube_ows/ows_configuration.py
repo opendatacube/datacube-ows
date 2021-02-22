@@ -295,15 +295,10 @@ class CacheControlRules(OWSConfigEntry):
 
 
 class OWSFlagBand(OWSConfigEntry):
-    def __init__(self, cfg, product_cfg, name, **kwargs):
+    def __init__(self, cfg, product_cfg, **kwargs):
         super().__init__(cfg, **kwargs)
         cfg = self._raw_cfg
-        self.name = name
         self.product = product_cfg
-        if name in self.product.band_idx.band_cfg:
-            raise ConfigException(f"Flag band name {name} in layer {self.product_name} is already a native band name for the layer.")
-        if not isinstance(cfg, dict):
-            raise ConfigException(f"Invalid flags section in layer {self.product.name}. Probably a missing required 'band' entry")
         pq_names = self.product.parse_pq_names(cfg)
         self.pq_names = pq_names["pq_names"]
         self.pq_low_res_names = pq_names["pq_low_res_names"]
@@ -517,19 +512,16 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg):
+        self.flag_bands = {}
         if cfg:
-            if "band" in cfg:
-                self.flag_bands = {
-                    "default": OWSFlagBand(cfg, self, "default")
-                }
-                _LOG.warning("Unlabeled flag bands are deprecated. Please refer to the documentation for the new format (layer %s)", self.name)
+            if isinstance(cfg, dict):
+                fb = OWSFlagBand(cfg, self)
+                self.flag_bands[fb.pq_band] = fb
+                _LOG.warning("Single flag bands not in a list is deprecated. Please refer to the documentation for the new format (layer %s)", self.name)
             else:
-                self.flag_bands = {
-                    key: OWSFlagBand(value, self, key)
-                    for key, value in cfg.items()
-                }
-        else:
-            self.flag_bands = {}
+                for fb_cfg in cfg:
+                    fb = OWSFlagBand(fb_cfg, self)
+                    self.flag_bands[fb.pq_band] = fb
         pq_names_to_lowres_names = {}
         for fb in self.flag_bands.values():
             pns = fb.pq_names

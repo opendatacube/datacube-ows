@@ -668,20 +668,19 @@ Some entries have corresponding entries in
 the `image processing section <#image-processing-section-image_processing>`_
 described above.  Items in this section only affect WMS/WMTS.
 
-The flags section generally consists of a dictionary mapping flag-band identifiers
-to flag-band definitions.  The identifier can be any value except "band".
+The flags section generally consists of a list of flag-band definitions.
 
-Backwards compatibility note:  If there is only one flag-band definition, the flags section can consist of only that
-definition (i.e. without mapping it to an identifier).  This was the old format from
-when only a single flag-band definition was supported and is deprecated and will be
-removed from a future release.
+Backwards compatibility note:  If there is only one flag-band definition,
+it can be supplied directly (i.e. not as a the sole member of a list).
+This was the old format from when only a single flag-band definition was
+supported and is deprecated and will be removed from a future release.
 
 E.g.
 
 ::
 
-    "flags": {
-        "landsat_pq": {
+    "flags": [
+        {
             "band": "pixelquality",
             "product": "ls8_pq",
             "fuse_func": "datacube.helpers.ga_pq_fuser",
@@ -689,7 +688,7 @@ E.g.
             "ignore_info_flags": ["noisy"],
             "ignore_time": False
         },
-        "ocean": {
+        {
             "band": "oceanmask",
             "product": "ls8_coast_detection",
             "fuse_func": "datacube.helpers.ga_pq_fuser",
@@ -697,7 +696,7 @@ E.g.
             "ignore_info_flags": ["uncertain"],
             "ignore_time": False
         }
-    }
+    ]
 
 Flag Band (band)
 ++++++++++++++++
@@ -706,6 +705,9 @@ The name of the measurement band to be used for style-based masking.
 
 Pixel-quality bitmask bands or enumeration flag bands can be used, although
 bitmask bands are better supported and are recommended where possible.
+
+Note that it is not possible to combine flag bands from separate products
+if they have the same band name.
 
 Required.
 
