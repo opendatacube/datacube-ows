@@ -661,33 +661,55 @@ The entire section may be omitted if no flag masking is to be
 supported by the layer.
 
 Flag data may come from the same product as the image data, a separate but
-related product, or in some cases a completely independent product.
+related product, a completely independent product, or from any combination
+of these.
 
 Some entries have corresponding entries in
 the `image processing section <#image-processing-section-image_processing>`_
 described above.  Items in this section only affect WMS/WMTS.
 
+The flags section generally consists of a list of flag-band definitions.
+
+Backwards compatibility note:  If there is only one flag-band definition,
+it can be supplied directly (i.e. not as a the sole member of a list).
+This was the old format from when only a single flag-band definition was
+supported and is deprecated and will be removed from a future release.
+
 E.g.
 
 ::
 
-    "flags": {
-        "band": "pixelquality",
-        "product": "ls8_pq",
-        "fuse_func": "datacube.helpers.ga_pq_fuser",
-        "manual_merge": False,
-        "ignore_info_flags": ["noisy"],
-        "ignore_time": False
-    }
+    "flags": [
+        {
+            "band": "pixelquality",
+            "product": "ls8_pq",
+            "fuse_func": "datacube.helpers.ga_pq_fuser",
+            "manual_merge": False,
+            "ignore_info_flags": ["noisy"],
+            "ignore_time": False
+        },
+        {
+            "band": "oceanmask",
+            "product": "ls8_coast_detection",
+            "fuse_func": "datacube.helpers.ga_pq_fuser",
+            "manual_merge": False,
+            "ignore_info_flags": ["uncertain"],
+            "ignore_time": False
+        }
+    ]
 
 Flag Band (band)
 ++++++++++++++++
 
 The name of the measurement band to be used for style-based masking.
 
-Pixel-quality bitmask bands or flag bands can be used.
+Pixel-quality bitmask bands or enumeration flag bands can be used, although
+bitmask bands are better supported and are recommended where possible.
 
-Required, unless the whole "flags" section is empty or None.
+Note that it is not possible to combine flag bands from separate products
+if they have the same band name.
+
+Required.
 
 Flag Product(s) (product/products)
 ++++++++++++++++++++++++++++++++++
@@ -706,7 +728,9 @@ E.g. Product Layer, flag band is in the main layer product:
 
     "product_name": "ls8_combined",
     "flags": {
-        "band": "pixelquality"
+        "ls8_internal": {
+            "band": "pixelquality"
+        }
     }
 
 Product Layer, flag band is in a separate product:
@@ -715,8 +739,10 @@ Product Layer, flag band is in a separate product:
 
     "product_name": "ls8_data",
     "flags": {
-        "band": "pixelquality",
-        "product": "ls8_flags"
+        "ls8_external": {
+            "band": "pixelquality",
+            "product": "ls8_flags"
+        }
     }
 
 Multiproduct Layer, flag band is in separate products mapping to main layer products:
@@ -726,8 +752,10 @@ Multiproduct Layer, flag band is in separate products mapping to main layer prod
     "multi_product": True,
     "product_names": ["s2a_data", "s2b_data"],
     "flags": {
-        "band": "pixelquality",
-        "products": ["s2a_flags", "s2b_flags"]
+        "s2_external": {
+            "band": "pixelquality",
+            "products": ["s2a_flags", "s2b_flags"]
+        }
     }
 
 Multiproduct Layer, flag band is in a single separate product:
@@ -737,8 +765,10 @@ Multiproduct Layer, flag band is in a single separate product:
     "multi_product": True,
     "product_names": ["s2a_data", "s2b_data"],
     "flags": {
-        "band": "pixelquality",
-        "products": ["s2_combined_flags", "s2_combined_flags"]
+        "s2_external_combined": {
+            "band": "pixelquality",
+            "products": ["s2_combined_flags", "s2_combined_flags"]
+        }
     }
 
 Flag Fuse Function (fuse_func)

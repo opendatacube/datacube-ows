@@ -166,6 +166,24 @@ def test_wms_multiproduct_getmap(ows_server, multiproduct_name):
     assert img.info()["Content-Type"] == "image/png"
 
 
+def test_wms_multidate_getmap(ows_server):
+    # This one will only work with specially prepared test data, sorry.
+    wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
+
+    img = wms.getmap(
+        layers=["ls8_usgs_level1_scene_layer"],
+        styles=["ndvi_delta"],
+        srs="EPSG:4326",
+        bbox=(145.75, -44.2,
+              148.69, -42.11),
+        size=(150, 150),
+        format="image/png",
+        transparent=True,
+        time="2019-01-30,2019-03-03",
+    )
+    assert img.info()["Content-Type"] == "image/png"
+
+
 def test_wms_style_looping_getmap(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)

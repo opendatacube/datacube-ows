@@ -257,7 +257,7 @@ def get_coverage_data(request):
                                 WCS2Exception.INVALID_SUBSETTING,
                                 http_response=404)
 
-        datasets = stacker.datasets(dc.index)
+        datasets = stacker.datasets(dc.index, main_only=False)
         if fmt.multi_time and len(times) > 1:
             # Group by solar day
             group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')

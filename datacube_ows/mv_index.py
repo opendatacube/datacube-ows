@@ -6,7 +6,7 @@ from datacube.utils.geometry import Geometry as ODCGeom
 from sqlalchemy import MetaData, Table, select, or_, Column, SMALLINT, text
 from psycopg2.extras import DateTimeTZRange
 from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
-from sqlalchemy.sql.functions import count, func
+from sqlalchemy.sql.functions import count
 
 def get_sqlalc_engine(index):
     # pylint: disable=protected-access
@@ -49,39 +49,29 @@ class MVSelectOpts(Enum):
             return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
         assert False
 
-def mv_search_datasets(index,
+
+def mv_search(index,
                        sel=MVSelectOpts.IDS,
                        times=None,
-                       layer=None,
                        geom=None,
-                       mask=False,
-                       resource_limited=False):
+                       products=None):
     """
     Perform a dataset query via the space_time_view
 
-    :param layer: A ows_configuration.OWSNamedLayer object (single or multiproduct)
+    :param products: An iterable of combinable products to search
     :param index: A datacube index (required)
 
     :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
     :param times: A list of pairs of datetimes (with time zone)
     :param geom: A datacube.utils.geometry.Geometry object
-    :param mask: Bool, if true use the flags product of layer
-    :param resource_limited: Bool, if true use low-res summary products
 
     :return: See MVSelectOpts doc
     """
     engine = get_sqlalc_engine(index)
     stv = st_view
-    if layer is None:
+    if products is None:
         raise Exception("Must filter by product/layer")
-    if mask and resource_limited and layer.pq_low_res_products:
-        prod_ids = [p.id for p in layer.pq_low_res_products]
-    elif mask:
-        prod_ids = [p.id for p in layer.pq_products]
-    elif resource_limited and layer.low_res_products:
-        prod_ids = [p.id for p in layer.low_res_products]
-    else:
-        prod_ids = [p.id for p in layer.products]
+    prod_ids = [p.id for p in products]
 
     s = select(sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
     if times is not None:

@@ -319,30 +319,33 @@ def test_multi_product_lowres(minimal_multiprod_cfg, minimal_global_cfg, minimal
 
 
 def test_multi_product_pq(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
-    minimal_multiprod_cfg["flags"] = {
-        "products": ["flag_foo", "flag_bar"],
-        "band": "band4",
-    }
+    minimal_multiprod_cfg["flags"] = [
+        {
+            "products": ["flag_foo", "flag_bar"],
+            "band": "band4",
+        }
+    ]
     lyr = parse_ows_layer(minimal_multiprod_cfg,
                           global_cfg=minimal_global_cfg)
     lyr.make_ready(minimal_dc)
     assert len(lyr.products) == 2
-    assert len(lyr.pq_products) == 2
+    assert len(lyr.flag_bands["band4"].pq_products) == 2
 
 
 def test_multi_product_lrpq(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
-    minimal_multiprod_cfg["flags"] = {
-        "products": ["flag_foo", "flag_bar"],
-        "low_res_products": ["smol_flag_foo", "smol_flag_bar"],
-        "band": "band4",
-    }
+    minimal_multiprod_cfg["flags"] = [
+        {
+            "products": ["flag_foo", "flag_bar"],
+            "low_res_products": ["smol_flag_foo", "smol_flag_bar"],
+            "band": "band4",
+        }
+    ]
     lyr = parse_ows_layer(minimal_multiprod_cfg,
                               global_cfg=minimal_global_cfg)
     lyr.make_ready(minimal_dc)
     assert len(lyr.products) == 2
-    assert len(lyr.pq_products) == 2
-    assert len(lyr.pq_low_res_products) == 2
-
+    assert len(lyr.flag_bands["band4"].pq_products) == 2
+    assert len(lyr.flag_bands["band4"].pq_low_res_products) == 2
 
 def test_multi_product_name_mismatch(minimal_multiprod_cfg, minimal_global_cfg):
     minimal_multiprod_cfg["low_res_product_names"] = ["smol_foo"]
@@ -378,7 +381,9 @@ def test_bad_timeres(minimal_layer_cfg, minimal_global_cfg):
 
 def test_flag_no_band(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["flags"] = {
-        "product": "foo",
+        "external": {
+            "product": "foo",
+        }
     }
 
     with pytest.raises(ConfigException) as excinfo:
@@ -390,10 +395,12 @@ def test_flag_no_band(minimal_layer_cfg, minimal_global_cfg):
 
 
 def test_flag_bad_prod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
-    minimal_layer_cfg["flags"] = {
-        "product": "foolookupfail",
-        "band": "band1"
-    }
+    minimal_layer_cfg["flags"] = [
+        {
+            "product": "foolookupfail",
+            "band": "band1"
+        }
+    ]
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     with pytest.raises(ConfigException) as excinfo:
         lyr.make_ready(dc=minimal_dc)
@@ -402,11 +409,13 @@ def test_flag_bad_prod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
 
 
 def test_flag_bad_lrprod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
-    minimal_layer_cfg["flags"] = {
-        "product": "foo",
-        "low_res_product": "foolookupfail",
-        "band": "band1"
-    }
+    minimal_layer_cfg["flags"] = [
+        {
+            "product": "foo",
+            "low_res_product": "foolookupfail",
+            "band": "band1"
+        }
+    ]
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     with pytest.raises(ConfigException) as excinfo:
         lyr.make_ready(dc=minimal_dc)
@@ -415,19 +424,21 @@ def test_flag_bad_lrprod(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
 
 
 def test_flag_info_mask(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
-    minimal_layer_cfg["flags"] = {
-        "product": "foo",
-        "band": "band4",
-        "ignore_info_flags": ["moo", "blat", "zap"]
-    }
+    minimal_layer_cfg["flags"] = [
+        {
+            "product": "foo",
+            "band": "band4",
+            "ignore_info_flags": ["moo", "blat", "zap"]
+        }
+    ]
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     lyr.make_ready(dc=minimal_dc)
-    assert not 1 & lyr.info_mask
-    assert 2 & lyr.info_mask
-    assert not 4 & lyr.info_mask
-    assert 8 & lyr.info_mask
-    assert not 16 & lyr.info_mask
-    assert 32 & lyr.info_mask
+    assert not 1 & lyr.flag_bands["band4"].info_mask
+    assert 2 & lyr.flag_bands["band4"].info_mask
+    assert not 4 & lyr.flag_bands["band4"].info_mask
+    assert 8 & lyr.flag_bands["band4"].info_mask
+    assert not 16 & lyr.flag_bands["band4"].info_mask
+    assert 32 & lyr.flag_bands["band4"].info_mask
 
 
 def test_img_proc_no_extent_func(minimal_layer_cfg, minimal_global_cfg):

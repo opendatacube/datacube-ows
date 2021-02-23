@@ -127,8 +127,9 @@
 {% if show_contents %}
     <Contents>
         {% for layer in cfg.product_index.values() %}
+            {% if layer.ready and not layer.hide %}
         {% set product_ranges = layer.ranges %}
-        {% if product_ranges and not layer.hide %}
+        {% if product_ranges %}
         <Layer>
             <ows:Title>{{ layer.title }}</ows:Title>
             <ows:Abstract>{{ layer.abstract }}</ows:Abstract>
@@ -161,6 +162,7 @@
             </TileMatrixSetLink>
             {% endfor %}
         </Layer>
+        {% endif %}
         {% endif %}
         {% endfor %}
         {% for tms in cfg.tile_matrix_sets.values() %}

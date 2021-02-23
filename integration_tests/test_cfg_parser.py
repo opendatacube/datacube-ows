@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from datacube_ows.cfg_parser import main
@@ -33,7 +34,8 @@ def test_cfg_parser_folders_parse_only(runner):
     assert result.exit_code == 1
 
 def test_cfg_parser_input_file_compare(runner):
-    result = runner.invoke(main, ["-i", "/code/ows_cfg_report.json"])
+    this_dir = os.path.dirname(os.path.dirname(__file__))
+    result = runner.invoke(main, ["-i", f"{this_dir}/ows_cfg_report.json"])
     assert result.exit_code == 0
 
 @pytest.mark.xfail(reason="Permission denied")

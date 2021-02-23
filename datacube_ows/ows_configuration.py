@@ -18,7 +18,7 @@ from slugify import slugify
 
 from datacube.utils import geometry
 from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
-    OWSIndexedConfigEntry, OWSEntryNotFound, OWSExtensibleConfigEntry
+    OWSEntryNotFound, OWSExtensibleConfigEntry
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
@@ -48,7 +48,7 @@ def read_config(path=None):
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
         cfg = json.loads(cfg_env)
-        abs_path =  os.path.abspath(cfg_env)
+        abs_path = os.path.abspath(cfg_env)
         cwd = os.path.dirname(abs_path)
     else:
         mod = import_module("datacube_ows.ows_cfg")
@@ -292,6 +292,56 @@ class CacheControlRules(OWSConfigEntry):
             return {"cache-control": "no-cache"}
 
 
+class OWSFlagBand(OWSConfigEntry):
+    def __init__(self, cfg, product_cfg, **kwargs):
+        super().__init__(cfg, **kwargs)
+        cfg = self._raw_cfg
+        self.product = product_cfg
+        pq_names = self.product.parse_pq_names(cfg)
+        self.pq_names = pq_names["pq_names"]
+        self.pq_low_res_names = pq_names["pq_low_res_names"]
+        self.pq_band = cfg["band"]
+        if "fuse_func" in cfg:
+            self.pq_fuse_func = FunctionWrapper(self, cfg["fuse_func"])
+        else:
+            self.pq_fuse_func = None
+        self.pq_ignore_time = cfg.get("ignore_time", False)
+        self.ignore_info_flags = cfg.get("ignore_info_flags", [])
+        self.pq_manual_merge = cfg.get("manual_merge", False)
+        self.declare_unready("pq_products")
+        self.declare_unready("flags_def")
+        self.declare_unready("info_mask")
+
+    # pylint: disable=attribute-defined-outside-init
+    def make_ready(self, dc, *args, **kwargs):
+        self.pq_products = []
+        self.pq_low_res_products = []
+        for pqn in self.pq_names:
+            if pqn is not None:
+                pq_product = dc.index.products.get_by_name(pqn)
+                if pq_product is None:
+                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.product.name} in datacube")
+                self.pq_products.append(pq_product)
+        for pqn in self.pq_low_res_names:
+            if pqn is not None:
+                pq_product = dc.index.products.get_by_name(pqn)
+                if pq_product is None:
+                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
+                self.pq_low_res_products.append(pq_product)
+
+        self.info_mask = ~0
+        # A (hopefully) representative product
+        product = self.pq_products[0]
+        meas = product.lookup_measurements([self.pq_band])
+        self.flags_def = meas[self.pq_band]["flags_definition"]
+        for bitname in self.ignore_info_flags:
+            bit = self.flags_def[bitname]["bits"]
+            if not isinstance(bit, int):
+                continue
+            flag = 1 << bit
+            self.info_mask &= ~flag
+        super().make_ready(dc)
+
 TIMERES_RAW = "raw"
 TIMERES_MON = "month"
 TIMERES_YR  = "year"
@@ -340,6 +390,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.parse_resource_limits(cfg.get("resource_limits", {}))
         try:
             self.parse_flags(cfg.get("flags", {}))
+            self.declare_unready("all_flag_band_names")
         except KeyError as e:
             raise ConfigException(f"Missing required config ({str(e)}) in flags section for layer {self.name}")
         try:
@@ -397,7 +448,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.definition = self.product.definition
         self.force_range_update(dc)
         self.band_idx.make_ready(dc)
-        self.ready_flags(dc)
+        self.all_flag_band_names = set()
+        for fb in self.flag_bands.values():
+            fb.make_ready(dc)
+            if fb.pq_band in self.all_flag_band_names:
+                raise ConfigException(f"Duplicate flag band name: {fb.pq_band}")
+            self.all_flag_band_names.add(fb.pq_band)
         self.ready_image_processing(dc)
         if self.global_cfg.wcs:
             self.ready_wcs(dc)
@@ -454,62 +510,23 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg):
+        self.flag_bands = {}
         if cfg:
-            self.parse_pq_names(cfg)
-            self.pq_band = cfg["band"]
-            if "fuse_func" in cfg:
-                self.pq_fuse_func = FunctionWrapper(self, cfg["fuse_func"])
+            if isinstance(cfg, dict):
+                fb = OWSFlagBand(cfg, self)
+                self.flag_bands[fb.pq_band] = fb
+                _LOG.warning("Single flag bands not in a list is deprecated. Please refer to the documentation for the new format (layer %s)", self.name)
             else:
-                self.pq_fuse_func = None
-            self.pq_ignore_time = cfg.get("ignore_time", False)
-            self.ignore_info_flags = cfg.get("ignore_info_flags", [])
-            self.pq_manual_merge = cfg.get("manual_merge", False)
-        else:
-            self.pq_names = []
-            self.pq_low_res_names = []
-            self.pq_name = None
-            self.pq_band = None
-            self.pq_ignore_time = False
-            self.ignore_info_flags = []
-            self.pq_manual_merge = False
-        self.declare_unready("pq_products")
-        self.declare_unready("pq_product")
-        self.declare_unready("flags_def")
-        self.declare_unready("info_mask")
-        self.pq_products = []
-        self.pq_low_res_products = []
-
-    # pylint: disable=attribute-defined-outside-init
-    def ready_flags(self, dc):
-        if self.pq_names:
-            for pqn in self.pq_names:
-                if pqn is not None:
-                    pq_product = dc.index.products.get_by_name(pqn)
-                    if pq_product is None:
-                        raise ConfigException(f"Could not find flags product {pqn} for layer {self.name} in datacube")
-                    self.pq_products.append(pq_product)
-        if self.pq_low_res_names:
-            for pqn in self.pq_low_res_names:
-                if pqn is not None:
-                    pq_product = dc.index.products.get_by_name(pqn)
-                    if pq_product is None:
-                        raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.name} in datacube")
-                    self.pq_low_res_products.append(pq_product)
-
-        self.info_mask = ~0
-        if self.pq_products:
-            self.pq_product = self.pq_products[0]
-            meas = self.pq_product.lookup_measurements([self.pq_band])
-            self.flags_def = meas[self.pq_band]["flags_definition"]
-            for bitname in self.ignore_info_flags:
-                bit = self.flags_def[bitname]["bits"]
-                if not isinstance(bit, int):
-                    continue
-                flag = 1 << bit
-                self.info_mask &= ~flag
-        else:
-            self.flags_def = None
-            self.pq_product = None
+                for fb_cfg in cfg:
+                    fb = OWSFlagBand(fb_cfg, self)
+                    self.flag_bands[fb.pq_band] = fb
+        pq_names_to_lowres_names = {}
+        for fb in self.flag_bands.values():
+            pns = fb.pq_names
+            lrpns = fb.pq_low_res_names
+            if pns in pq_names_to_lowres_names and pq_names_to_lowres_names[pns] != lrpns:
+                raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
+            pq_names_to_lowres_names[pns] = lrpns
 
     # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):
@@ -806,29 +823,25 @@ class OWSProductLayer(OWSNamedLayer):
             raise ConfigException(f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only")
 
     def parse_pq_names(self, cfg):
-        # pylint: disable=attribute-defined-outside-init
         if "dataset" in cfg:
-            self.pq_name = cfg["dataset"]
-            print("CFG WARNING:",
-                  "The preferred name for the 'dataset' entry",
-                  "in the flags section is now 'product'.",
-                  "Please update the configuration for layer",
-                  self.name)
-        elif "product" in cfg:
-            self.pq_name = cfg["product"]
+            raise ConfigException(f"The 'dataset' entry in the flags section is no longer supported.  Please refer to the documentation for the correct format (layer {self.name})")
+        if "product" in cfg:
+            pq_names = [cfg["product"]]
         else:
-            self.pq_name = self.product_name
-        self.pq_names = [ self.pq_name ]
+            pq_names = [self.product_name]
 
         if "low_res_product" in cfg:
-            self.pq_low_res_name = cfg.get("low_res_product")
-            self.pq_low_res_names = [self.pq_low_res_name]
+            pq_low_res_names = [cfg.get("low_res_product")]
         else:
-            self.pq_low_res_names = self.low_res_product_names
+            pq_low_res_names = self.low_res_product_names
         if "products" in cfg:
             raise ConfigException(f"'products' entry in flags section of non-multi-product layer {self.name} - use 'product' only")
         if "low_res_products" in cfg:
             raise ConfigException(f"'low_res_products' entry in flags section of non-multi-product layer {self.name}- use 'low_res_product' only")
+        return {
+            "pq_names": tuple(pq_names),
+            "pq_low_res_names": tuple(pq_low_res_names),
+        }
 
 
 class OWSMultiProductLayer(OWSNamedLayer):
@@ -848,31 +861,25 @@ class OWSMultiProductLayer(OWSNamedLayer):
             raise ConfigException(f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only")
 
     def parse_pq_names(self, cfg):
-        # pylint: disable=attribute-defined-outside-init
         if "datasets" in cfg:
-            self.pq_names = cfg["datasets"]
-            print("CFG WARNING:",
-                  "The preferred name for the 'datasets' entry",
-                  "in the flags section is now 'products'.",
-                  "Please update the configuration for layer",
-                  self.name)
-        elif "products" in cfg:
-            self.pq_names = cfg["products"]
+            raise ConfigException(f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})")
+        if "products" in cfg:
+            pq_names = cfg["products"]
         else:
-            self.pq_names = list(self.product_names)
-        self.pq_name = self.pq_names[0]
+            pq_names = list(self.product_names)
 
         if "low_res_products" in cfg:
-            self.pq_low_res_names = cfg["low_res_products"]
-            self.pq_low_res_name = self.pq_names[0]
+            pq_low_res_names = cfg["low_res_products"]
         else:
-            self.pq_low_res_names = list(self.low_res_product_names)
-            self.pq_low_res_name = self.low_res_product_name
+            pq_low_res_names = list(self.low_res_product_names)
         if "product" in cfg:
             raise ConfigException(f"'product' entry in flags section of multi-product layer {self.name} - use 'products' only")
         if "low_res_product" in cfg:
             raise ConfigException(f"'low_res_product' entry in flags section of multi-product layer {self.name} - use 'low_res_products' only")
-
+        return {
+            "pq_names": tuple(pq_names),
+            "pq_low_res_names": tuple(pq_low_res_names),
+        }
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None):
     if cfg.get("name", None):

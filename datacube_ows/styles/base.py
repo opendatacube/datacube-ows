@@ -3,6 +3,49 @@ from datacube.utils.masking import make_mask
 from datacube_ows.ows_configuration import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
+import logging
+
+_LOG = logging.getLogger(__name__)
+
+
+class FlagProductBands(OWSConfigEntry):
+    def __init__(self, flag_band):
+        super().__init__({})
+        self.bands = set()
+        self.bands.add(flag_band.pq_band)
+        self.flag_bands = {flag_band.pq_band: flag_band}
+        self.product_names = tuple(flag_band.pq_names)
+        self.ignore_time = flag_band.pq_ignore_time
+        self.declare_unready("products")
+        self.declare_unready("low_res_products")
+        self.manual_merge = flag_band.pq_manual_merge
+        self.fuse_func = flag_band.pq_fuse_func
+
+    def products_match(self, product_names):
+        return tuple(product_names) == self.product_names
+
+    def add_flag_band(self, fb):
+        self.flag_bands[fb.pq_band] = fb
+        self.bands.add(fb.pq_band)
+        if fb.pq_manual_merge:
+            fb.pq_manual_merge = True
+        if fb.pq_fuse_func and self.fuse_func and fb.pq_fuse_func != self.fuse_func:
+            raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
+        if fb.pq_ignore_time != self.ignore_time:
+            raise ConfigException(f"ignore_time option for flag bands in product set {self.product_names} do not match")
+        elif fb.pq_fuse_func and not self.fuse_func:
+            self.fuse_func = fb.pq_fuse_func
+        self.declare_unready("products")
+        self.declare_unready("low_res_products")
+
+    # pylint: disable=attribute-defined-outside-init
+    def make_ready(self, dc, *args, **kwargs):
+        for fb in self.flag_bands.values():
+            self.products = fb.pq_products
+            self.low_res_products = fb.pq_low_res_products
+            break
+        super().make_ready(dc, *args, **kwargs)
+
 
 class StyleDefBase(OWSExtensibleConfigEntry):
     INDEX_KEYS = ["layer", "style"]
@@ -46,9 +89,21 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
-        self.masks = [StyleMask(**mask_cfg) for mask_cfg in style_cfg.get("pq_masks", [])]
+        self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
+        self.flag_products = []
+        for mask in self.masks:
+            handled = False
+            for fp in self.flag_products:
+                if fp.products_match(mask.band.pq_names):
+                    fp.add_flag_band(mask.band)
+                    handled = True
+                    break
+            if not handled:
+                self.flag_products.append(FlagProductBands(mask.band))
+
         self.raw_needed_bands = set()
         self.declare_unready("needed_bands")
+        self.declare_unready("flag_bands")
 
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         if not defer_multi_date:
@@ -57,15 +112,35 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.needed_bands = set()
+        self.pq_product_bands = []
         for band in self.raw_needed_bands:
             self.needed_bands.add(self.local_band(band))
+        for mask in self.masks:
+            fb = mask.band
+            if fb.pq_names == self.product.product_names:
+                self.needed_bands.add(fb.band)
+                continue
+            handled=False
+            for pqp, pqb in self.pq_product_bands:
+                if fb.pq_names == pqp:
+                    pqb.add(fb.pq_band)
+                    handled=True
+                    continue
+            if not handled:
+                self.pq_product_bands.append(
+                    (fb.pq_names, set([fb.pq_band]))
+                )
+        self.flag_bands = set()
+        for pq_names, pq_bands in self.pq_product_bands:
+            for band in pq_bands:
+                if band in self.flag_bands:
+                    raise ConfigException(f"Same flag band name {band} appears in different PQ product (sets)")
+                self.flag_bands.add(band)
+        for fp in self.flag_products:
+            fp.make_ready(dc)
         for band in self.product.always_fetch_bands:
             self.needed_bands.add(band)
-        if self.masks:
-            for i, product_name in enumerate(self.product.product_names):
-                if not self.product.pq_names or self.product.pq_names[i] == product_name:
-                    self.needed_bands.add(self.product.pq_band)
-                    break
+            self.flag_bands.add(band)
         super().make_ready(dc, *args, **kwargs)
 
     def local_band(self, band):
@@ -78,31 +153,37 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         for mb_cfg in cfg.get("multi_date", []):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
-    def to_mask(self, data, pq_data, extra_mask=None):
+    def to_mask(self, data, extra_mask=None):
+        def single_date_make_mask(data, mask):
+            pq_data = getattr(data, mask.band_name)
+            if mask.flags:
+                odc_mask = make_mask(pq_data, **mask.flags)
+            else:
+                odc_mask = pq_data == mask.enum
+            odc_mask = odc_mask.squeeze(dim="time", drop=True)
+            return odc_mask
+
         date_count = len(data.coords["time"])
         if date_count > 1:
+            # TODO multidate
             mdh = self.get_multi_date_handler(date_count)
             if extra_mask is not None:
                 extra_mask = mdh.collapse_mask(extra_mask)
-            if pq_data is not None:
-                pq_data = mdh.collapse_mask(pq_data)
+            mask_maker = mdh.make_mask
         else:
             if extra_mask is not None:
                 extra_mask = extra_mask.squeeze(dim="time", drop=True)
-            if pq_data is not None:
-                pq_data = pq_data.squeeze(dim="time", drop=True)
+            mask_maker=single_date_make_mask
 
         result = extra_mask
-        if pq_data is not None:
-            for mask in self.masks:
-                odc_mask = make_mask(pq_data, **mask.flags)
-                mask_data = getattr(odc_mask, self.product.pq_band)
-                if mask.invert:
-                    mask_data = ~mask_data
-                if result is None:
-                    result = mask_data
-                else:
-                    result = result & mask_data
+        for mask in self.masks:
+            mask_data = mask_maker(data, mask)
+            if mask.invert:
+                mask_data = ~mask_data
+            if result is None:
+                result = mask_data
+            else:
+                result = result & mask_data
         return result
 
     def apply_mask(self, data, mask):
@@ -191,6 +272,16 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         def transform_data(self, data):
             raise NotImplementedError()
 
+        def make_mask(self, data, mask):
+            odc_mask = None
+            for dt in data.coords["time"].values:
+                tpqdata = getattr(data.sel(time=dt), mask.band_name)
+                if odc_mask is None:
+                    odc_mask = make_mask(tpqdata, **mask.flags)
+                else:
+                    odc_mask |= make_mask(tpqdata, **mask.flags)
+            return odc_mask
+
         # pylint: disable=attribute-defined-outside-init
         def parse_legend_cfg(self, cfg):
             self.show_legend = cfg.get("show_legend", self.auto_legend)
@@ -241,7 +332,38 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 style_class_priority_reg = []
 style_class_reg = []
 
-class StyleMask(object):
-    def __init__(self, flags, invert=False):
-        self.flags = flags
-        self.invert = invert
+class StyleMask(OWSConfigEntry):
+    def __init__(self, cfg, style):
+        super().__init__(cfg)
+        cfg = self._raw_cfg
+        self.style = style
+        if not self.style.product.flag_bands:
+            raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
+        if "band" in cfg:
+            self.band_name = cfg["band"]
+            if self.band_name not in self.style.product.flag_bands:
+                raise ConfigException(
+                    f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
+        else:
+            self.band_name = list(self.style.product.flag_bands.keys())[0]
+            _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
+                         self.style.name,
+                         self.style.product.name)
+        if self.band_name not in self.style.product.flag_bands:
+            raise ConfigException(f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
+        self.band = self.style.product.flag_bands[self.band_name]
+        self.invert = cfg.get("invert", False)
+        if "flags" in cfg:
+            self.flags = cfg["flags"]
+            self.enum = None
+            if "enum" in cfg:
+                raise ConfigException(
+                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has both an enum section and a flags section - please split into two masks.")
+            if len(self.flags) == 0:
+                raise ConfigException(
+                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has empty enum section.")
+        elif "enum" in cfg:
+            self.enum = cfg["enum"]
+            self.flags = None
+        else:
+            raise ConfigException(f"mask definition in layer {self.style.product.name}, style {self.style.name} has no flags or enum section - nothing to mask on.")

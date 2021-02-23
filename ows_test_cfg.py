@@ -1008,8 +1008,8 @@ ows_cfg = {
                             style_infrared_false_colour,
                             style_pure_ls8_blue,
                             style_ndvi,
-                            style_rgb_ndvi
-
+                            style_ndvi_delta,
+                            style_rgb_ndvi,
                             # faulty layers
                             # style_ndvi_cloudmask, style_ext_rgb,  style_ndwi,
                             # style_mineral_content, style_rgb_cloud_and_shadowmask
