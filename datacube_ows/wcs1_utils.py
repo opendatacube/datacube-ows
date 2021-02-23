@@ -406,6 +406,8 @@ def get_netcdf(req, data):
         v.attrs["crs"] = req.response_crsid
         if "spectral_definition" in v.attrs:
             del v.attrs["spectral_definition"]
+        if "flags_definition" in v.attrs:
+            del v.attrs["flags_definition"]
     if "time" in data and "units" in data["time"].attrs:
         del data["time"].attrs["units"]
 
