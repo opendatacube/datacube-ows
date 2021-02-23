@@ -78,6 +78,31 @@ class ProductBandQuery:
         return queries
 
     @classmethod
+    def full_layer_queries(cls, layer):
+        needed_bands = set(layer.band_idx.band_cfg.keys())
+        queries = [
+            cls.simple_layer_query(layer, needed_bands,
+                                   manual_merge=layer.data_manual_merge,
+                                   fuse_func=layer.fuse_func,
+                                   resource_limited=False)
+
+        ]
+        for fpb in layer.allflag_productbands:
+            if fpb.products_match(layer.product_names):
+                for band in fpb.bands:
+                    assert band in needed_bands, "main product band not in needed bands list"
+            else:
+                pq_products = fpb.products
+                queries.append(cls(
+                    pq_products,
+                    tuple(fpb.bands),
+                    manual_merge=fpb.manual_merge,
+                    ignore_time=fpb.ignore_time,
+                    fuse_func=fpb.fuse_func
+                ))
+        return queries
+
+    @classmethod
     def simple_layer_query(cls, layer, bands, manual_merge=False, fuse_func=None, resource_limited=False):
         if resource_limited:
             main_products = layer.low_res_products
@@ -129,7 +154,11 @@ class DataStacker:
                 self.style,
                 self.resource_limited
             )
+        elif not main_only:
+            # not main_only, but not style either.  Probably a GetFeatureInfo request.
+            queries = ProductBandQuery.full_layer_queries(self._product)
         else:
+            # main_only
             queries = [
                 ProductBandQuery.simple_layer_query(
                     self._product,

@@ -1,50 +1,12 @@
 from datacube.utils.masking import make_mask
 
 from datacube_ows.ows_configuration import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound
+from datacube_ows.config_utils import FlagProductBands
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 import logging
 
 _LOG = logging.getLogger(__name__)
-
-
-class FlagProductBands(OWSConfigEntry):
-    def __init__(self, flag_band):
-        super().__init__({})
-        self.bands = set()
-        self.bands.add(flag_band.pq_band)
-        self.flag_bands = {flag_band.pq_band: flag_band}
-        self.product_names = tuple(flag_band.pq_names)
-        self.ignore_time = flag_band.pq_ignore_time
-        self.declare_unready("products")
-        self.declare_unready("low_res_products")
-        self.manual_merge = flag_band.pq_manual_merge
-        self.fuse_func = flag_band.pq_fuse_func
-
-    def products_match(self, product_names):
-        return tuple(product_names) == self.product_names
-
-    def add_flag_band(self, fb):
-        self.flag_bands[fb.pq_band] = fb
-        self.bands.add(fb.pq_band)
-        if fb.pq_manual_merge:
-            fb.pq_manual_merge = True
-        if fb.pq_fuse_func and self.fuse_func and fb.pq_fuse_func != self.fuse_func:
-            raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
-        if fb.pq_ignore_time != self.ignore_time:
-            raise ConfigException(f"ignore_time option for flag bands in product set {self.product_names} do not match")
-        elif fb.pq_fuse_func and not self.fuse_func:
-            self.fuse_func = fb.pq_fuse_func
-        self.declare_unready("products")
-        self.declare_unready("low_res_products")
-
-    # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc, *args, **kwargs):
-        for fb in self.flag_bands.values():
-            self.products = fb.pq_products
-            self.low_res_products = fb.pq_low_res_products
-            break
-        super().make_ready(dc, *args, **kwargs)
 
 
 class StyleDefBase(OWSExtensibleConfigEntry):
@@ -55,7 +17,6 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     def __new__(cls, product=None, style_cfg=None, defer_multi_date=False):
         if product and style_cfg:
             style_cfg = cls.expand_inherit(style_cfg, global_cfg=product.global_cfg,
-
                                keyval_subs={
                                    "layer": {
                                        product.name: product
@@ -90,16 +51,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
         self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
-        self.flag_products = []
-        for mask in self.masks:
-            handled = False
-            for fp in self.flag_products:
-                if fp.products_match(mask.band.pq_names):
-                    fp.add_flag_band(mask.band)
-                    handled = True
-                    break
-            if not handled:
-                self.flag_products.append(FlagProductBands(mask.band))
+        self.flag_products = FlagProductBands.build_list_from_masks(self.masks)
 
         self.raw_needed_bands = set()
         self.declare_unready("needed_bands")

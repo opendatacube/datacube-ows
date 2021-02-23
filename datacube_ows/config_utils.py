@@ -4,7 +4,7 @@ from importlib import import_module
 from typing import Mapping, Sequence
 
 from datacube_ows.config_toolkit import deepinherit
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 
 # pylint: disable=dangerous-default-value
@@ -171,3 +171,121 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
             cfg = deepinherit(parent_cfg, cfg)
             cfg["inheritance_expanded"] = True
         return cfg
+
+
+class OWSFlagBand(OWSConfigEntry):
+    def __init__(self, cfg, product_cfg, **kwargs):
+        super().__init__(cfg, **kwargs)
+        cfg = self._raw_cfg
+        self.product = product_cfg
+        pq_names = self.product.parse_pq_names(cfg)
+        self.pq_names = pq_names["pq_names"]
+        self.pq_low_res_names = pq_names["pq_low_res_names"]
+        self.pq_band = cfg["band"]
+        if "fuse_func" in cfg:
+            self.pq_fuse_func = FunctionWrapper(self, cfg["fuse_func"])
+        else:
+            self.pq_fuse_func = None
+        self.pq_ignore_time = cfg.get("ignore_time", False)
+        self.ignore_info_flags = cfg.get("ignore_info_flags", [])
+        self.pq_manual_merge = cfg.get("manual_merge", False)
+        self.declare_unready("pq_products")
+        self.declare_unready("flags_def")
+        self.declare_unready("info_mask")
+
+    # pylint: disable=attribute-defined-outside-init
+    def make_ready(self, dc, *args, **kwargs):
+        self.pq_products = []
+        self.pq_low_res_products = []
+        for pqn in self.pq_names:
+            if pqn is not None:
+                pq_product = dc.index.products.get_by_name(pqn)
+                if pq_product is None:
+                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.product.name} in datacube")
+                self.pq_products.append(pq_product)
+        for pqn in self.pq_low_res_names:
+            if pqn is not None:
+                pq_product = dc.index.products.get_by_name(pqn)
+                if pq_product is None:
+                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
+                self.pq_low_res_products.append(pq_product)
+
+        self.info_mask = ~0
+        # A (hopefully) representative product
+        product = self.pq_products[0]
+        meas = product.lookup_measurements([self.pq_band])
+        self.flags_def = meas[self.pq_band]["flags_definition"]
+        for bitname in self.ignore_info_flags:
+            bit = self.flags_def[bitname]["bits"]
+            if not isinstance(bit, int):
+                continue
+            flag = 1 << bit
+            self.info_mask &= ~flag
+        super().make_ready(dc)
+
+
+class FlagProductBands(OWSConfigEntry):
+    def __init__(self, flag_band):
+        super().__init__({})
+        self.bands = set()
+        self.bands.add(flag_band.pq_band)
+        self.flag_bands = {flag_band.pq_band: flag_band}
+        self.product_names = tuple(flag_band.pq_names)
+        self.ignore_time = flag_band.pq_ignore_time
+        self.declare_unready("products")
+        self.declare_unready("low_res_products")
+        self.manual_merge = flag_band.pq_manual_merge
+        self.fuse_func = flag_band.pq_fuse_func
+
+    def products_match(self, product_names):
+        return tuple(product_names) == self.product_names
+
+    def add_flag_band(self, fb):
+        self.flag_bands[fb.pq_band] = fb
+        self.bands.add(fb.pq_band)
+        if fb.pq_manual_merge:
+            fb.pq_manual_merge = True
+        if fb.pq_fuse_func and self.fuse_func and fb.pq_fuse_func != self.fuse_func:
+            raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
+        if fb.pq_ignore_time != self.ignore_time:
+            raise ConfigException(f"ignore_time option for flag bands in product set {self.product_names} do not match")
+        elif fb.pq_fuse_func and not self.fuse_func:
+            self.fuse_func = fb.pq_fuse_func
+        self.declare_unready("products")
+        self.declare_unready("low_res_products")
+
+    # pylint: disable=attribute-defined-outside-init
+    def make_ready(self, dc, *args, **kwargs):
+        for fb in self.flag_bands.values():
+            self.products = fb.pq_products
+            self.low_res_products = fb.pq_low_res_products
+            break
+        super().make_ready(dc, *args, **kwargs)
+
+    @classmethod
+    def build_list_from_masks(cls, masks):
+        flag_products = []
+        for mask in masks:
+            handled = False
+            for fp in flag_products:
+                if fp.products_match(mask.band.pq_names):
+                    fp.add_flag_band(mask.band)
+                    handled = True
+                    break
+            if not handled:
+                flag_products.append(cls(mask.band))
+        return flag_products
+
+    @classmethod
+    def build_list_from_flagbands(cls, flagbands):
+        flag_products = []
+        for fb in flagbands:
+            handled = False
+            for fp in flag_products:
+                if fp.products_match(fb.pq_names):
+                    fp.add_flag_band(fb)
+                handled = True
+                break
+            if not handled:
+                flag_products.append(cls(fb))
+        return flag_products
