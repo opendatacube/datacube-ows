@@ -257,13 +257,18 @@ def get_coverage_data(request):
                                 WCS2Exception.INVALID_SUBSETTING,
                                 http_response=404)
 
-        datasets = stacker.datasets(dc.index, main_only=False)
+        datasets = stacker.datasets(dc.index)
         if fmt.multi_time and len(times) > 1:
             # Group by solar day
             group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
             datasets = dc.group_datasets(datasets, group_by)
 
         output = stacker.data(datasets, skip_corrections=True)
+
+    # Clean extent flag band from output
+        for k,v in output.data_vars.items():
+            if k not in bands:
+                output = output.drop_vars([k])
 
     #
     # TODO: configurable
@@ -355,6 +360,8 @@ def get_netcdf(request, data, crs):
         v.attrs["crs"] = crs
         if "spectral_definition" in v.attrs:
             del v.attrs["spectral_definition"]
+        if "flags_definition" in v.attrs:
+            del v.attrs["flags_definition"]
     if "time" in data and "units" in data["time"].attrs:
         del data["time"].attrs["units"]
 

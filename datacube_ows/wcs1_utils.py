@@ -181,7 +181,10 @@ class WCS1GetCoverageRequest():
                 raise WCS1Exception("Multiple style parameters not supported")
             style = self.product.style_index.get(styles[0])
             if style:
-                self.bands = style.needed_bands
+                self.bands = set()
+                for b in style.needed_bands:
+                    if b not in style.flag_bands:
+                        self.bands.add(b)
             else:
                 self.bands = self.product.wcs_default_bands
         else:
@@ -343,8 +346,13 @@ def get_coverage_data(req):
             raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
                                 "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
-        datasets = stacker.datasets(main_only=False, index=dc.index)
+        datasets = stacker.datasets(index=dc.index)
         output = stacker.data(datasets, skip_corrections=True)
+
+        # Clean extent flag band from output
+        for k,v in output.data_vars.items():
+            if k not in req.bands:
+                output = output.drop_vars([k])
         return n_datasets, output
 
 
@@ -402,10 +410,12 @@ def get_tiff(req, data):
 def get_netcdf(req, data):
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid # geometry.CRS(response_crs)
-    for v in data.data_vars.values():
+    for k, v in data.data_vars.items():
         v.attrs["crs"] = req.response_crsid
         if "spectral_definition" in v.attrs:
             del v.attrs["spectral_definition"]
+        if "flags_definition" in v.attrs:
+            del v.attrs["flags_definition"]
     if "time" in data and "units" in data["time"].attrs:
         del data["time"].attrs["units"]
 

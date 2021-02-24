@@ -18,7 +18,7 @@ from slugify import slugify
 
 from datacube.utils import geometry
 from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
-    OWSEntryNotFound, OWSExtensibleConfigEntry
+    OWSEntryNotFound, OWSExtensibleConfigEntry, OWSFlagBand, FlagProductBands
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.styles import StyleDef
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
@@ -292,56 +292,6 @@ class CacheControlRules(OWSConfigEntry):
             return {"cache-control": "no-cache"}
 
 
-class OWSFlagBand(OWSConfigEntry):
-    def __init__(self, cfg, product_cfg, **kwargs):
-        super().__init__(cfg, **kwargs)
-        cfg = self._raw_cfg
-        self.product = product_cfg
-        pq_names = self.product.parse_pq_names(cfg)
-        self.pq_names = pq_names["pq_names"]
-        self.pq_low_res_names = pq_names["pq_low_res_names"]
-        self.pq_band = cfg["band"]
-        if "fuse_func" in cfg:
-            self.pq_fuse_func = FunctionWrapper(self, cfg["fuse_func"])
-        else:
-            self.pq_fuse_func = None
-        self.pq_ignore_time = cfg.get("ignore_time", False)
-        self.ignore_info_flags = cfg.get("ignore_info_flags", [])
-        self.pq_manual_merge = cfg.get("manual_merge", False)
-        self.declare_unready("pq_products")
-        self.declare_unready("flags_def")
-        self.declare_unready("info_mask")
-
-    # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc, *args, **kwargs):
-        self.pq_products = []
-        self.pq_low_res_products = []
-        for pqn in self.pq_names:
-            if pqn is not None:
-                pq_product = dc.index.products.get_by_name(pqn)
-                if pq_product is None:
-                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.product.name} in datacube")
-                self.pq_products.append(pq_product)
-        for pqn in self.pq_low_res_names:
-            if pqn is not None:
-                pq_product = dc.index.products.get_by_name(pqn)
-                if pq_product is None:
-                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
-                self.pq_low_res_products.append(pq_product)
-
-        self.info_mask = ~0
-        # A (hopefully) representative product
-        product = self.pq_products[0]
-        meas = product.lookup_measurements([self.pq_band])
-        self.flags_def = meas[self.pq_band]["flags_definition"]
-        for bitname in self.ignore_info_flags:
-            bit = self.flags_def[bitname]["bits"]
-            if not isinstance(bit, int):
-                continue
-            flag = 1 << bit
-            self.info_mask &= ~flag
-        super().make_ready(dc)
-
 TIMERES_RAW = "raw"
 TIMERES_MON = "month"
 TIMERES_YR  = "year"
@@ -459,7 +409,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.ready_wcs(dc)
         for style in self.styles:
             style.make_ready(dc, *args, **kwargs)
-
+        for fpb in self.allflag_productbands:
+            fpb.make_ready(dc, *args, **kwargs)
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
@@ -527,6 +478,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if pns in pq_names_to_lowres_names and pq_names_to_lowres_names[pns] != lrpns:
                 raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
             pq_names_to_lowres_names[pns] = lrpns
+        # pylint: disable=dict-values-not-iterating
+        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values())
 
     # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):
@@ -1164,3 +1117,4 @@ def get_config(refresh=False):
         with cube() as dc:
             cfg.make_ready(dc)
     return cfg
+
