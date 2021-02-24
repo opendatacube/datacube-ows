@@ -265,6 +265,11 @@ def get_coverage_data(request):
 
         output = stacker.data(datasets, skip_corrections=True)
 
+    # Clean extent flag band from output
+        for k,v in output.data_vars.items():
+            if k not in bands:
+                output = output.drop_vars([k])
+
     #
     # TODO: configurable
     #
@@ -273,7 +278,7 @@ def get_coverage_data(request):
                               layer, scaler.size.x, scaler.size.y, affine)
 
     else:
-        output = fmt.renderer(request.version)(request, output, output_crs, bands)
+        output = fmt.renderer(request.version)(request, output, output_crs)
 
     headers = {
         "Content-Type": fmt.mime,
@@ -348,12 +353,10 @@ def get_tiff(request, data, crs, product, width, height, affine):
                 dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
         return memfile.read()
 
-def get_netcdf(request, data, crs, bands):
+def get_netcdf(request, data, crs):
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = crs # geometry.CRS(response_crs)
-    for k,v in data.data_vars.items():
-        if k not in bands:
-            data.drop_vars([k])
+    for v in data.data_vars.values():
         v.attrs["crs"] = crs
         if "spectral_definition" in v.attrs:
             del v.attrs["spectral_definition"]

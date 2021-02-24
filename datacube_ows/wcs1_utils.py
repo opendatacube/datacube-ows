@@ -181,7 +181,10 @@ class WCS1GetCoverageRequest():
                 raise WCS1Exception("Multiple style parameters not supported")
             style = self.product.style_index.get(styles[0])
             if style:
-                self.bands = style.needed_bands
+                self.bands = set()
+                for b in style.needed_bands:
+                    if b not in style.flag_bands:
+                        self.bands.add(b)
             else:
                 self.bands = self.product.wcs_default_bands
         else:
@@ -345,6 +348,11 @@ def get_coverage_data(req):
                                 "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
         datasets = stacker.datasets(index=dc.index)
         output = stacker.data(datasets, skip_corrections=True)
+
+        # Clean extent flag band from output
+        for k,v in output.data_vars.items():
+            if k not in req.bands:
+                output = output.drop_vars([k])
         return n_datasets, output
 
 
@@ -403,9 +411,6 @@ def get_netcdf(req, data):
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid # geometry.CRS(response_crs)
     for k, v in data.data_vars.items():
-        if k not in req.bands:
-            data = data.drop_vars([k])
-            continue
         v.attrs["crs"] = req.response_crsid
         if "spectral_definition" in v.attrs:
             del v.attrs["spectral_definition"]
