@@ -343,7 +343,7 @@ def get_coverage_data(req):
             raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
                                 "(max: %d, this request requires: %d)" % (req.product.max_datasets_wcs, n_datasets))
-        datasets = stacker.datasets(main_only=False, index=dc.index)
+        datasets = stacker.datasets(index=dc.index)
         output = stacker.data(datasets, skip_corrections=True)
         return n_datasets, output
 
@@ -402,7 +402,10 @@ def get_tiff(req, data):
 def get_netcdf(req, data):
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid # geometry.CRS(response_crs)
-    for v in data.data_vars.values():
+    for k, v in data.data_vars.items():
+        if k not in req.bands:
+            data = data.drop_vars([k])
+            continue
         v.attrs["crs"] = req.response_crsid
         if "spectral_definition" in v.attrs:
             del v.attrs["spectral_definition"]

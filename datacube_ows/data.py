@@ -78,8 +78,11 @@ class ProductBandQuery:
         return queries
 
     @classmethod
-    def full_layer_queries(cls, layer):
-        needed_bands = set(layer.band_idx.band_cfg.keys())
+    def full_layer_queries(cls, layer, main_bands=None):
+        if main_bands:
+            needed_bands = main_bands
+        else:
+            needed_bands = set(layer.band_idx.band_cfg.values())
         queries = [
             cls.simple_layer_query(layer, needed_bands,
                                    manual_merge=layer.data_manual_merge,
@@ -121,12 +124,15 @@ class DataStacker:
         self._resampling = resampling if resampling is not None else Resampling.nearest
         self.style = style
         if style:
-            self._needed_bands = style.needed_bands
+            self._needed_bands = list(style.needed_bands)
         elif bands:
             self._needed_bands = [ self._product.band_idx.band(b) for b in bands ]
         else:
-            self._needed_bands = self._product.band_idx.native_bands.index
+            self._needed_bands = list(self._product.band_idx.native_bands.index)
 
+        for band in self._product.always_fetch_bands:
+            if band not in self._needed_bands:
+                self._needed_bands.append(band)
         self.raw_times = times
         self._times = [
                 self._product.search_times(
@@ -146,25 +152,30 @@ class DataStacker:
                              mode=MVSelectOpts.COUNT)
 
     def datasets(self, index,
-                 main_only=True,
+                 all_flag_bands=False,
                  all_time=False, point=None,
                  mode=MVSelectOpts.DATASETS):
-        if self.style and not main_only:
-            queries = ProductBandQuery.style_queries(
-                self.style,
-                self.resource_limited
-            )
-        elif not main_only:
-            # not main_only, but not style either.  Probably a GetFeatureInfo request.
-            queries = ProductBandQuery.full_layer_queries(self._product)
-        else:
-            # main_only
+        if mode != MVSelectOpts.DATASETS or all_time:
+            # Not returning datasets - use main product only
             queries = [
                 ProductBandQuery.simple_layer_query(
                     self._product,
                     self.needed_bands(),
                     self.resource_limited)
+
             ]
+        elif self.style:
+            # we have a style - lets go with that.
+            queries = ProductBandQuery.style_queries(
+                self.style,
+                self.resource_limited
+            )
+        elif all_flag_bands:
+            queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
+        else:
+            # Just take needed bands.
+            queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
+
         if point:
             geom = point
         else:
@@ -186,9 +197,11 @@ class DataStacker:
                                products=query.products)
             if mode == MVSelectOpts.DATASETS:
                 result = datacube.Datacube.group_datasets(result, self.group_by)
-            if main_only:
+                if all_time:
+                    return result
+                results[query] = result
+            else:
                 return result
-            results[query] = result
         return results
 
     @log_call
@@ -374,7 +387,7 @@ def get_map(args):
                 qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
                 qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
-            datasets = stacker.datasets(dc.index, main_only=False)
+            datasets = stacker.datasets(dc.index)
             for flagband, dss in datasets.items():
                 if not dss.any():
                     _LOG.warning("Flag band %s returned no data", str(flagband))
@@ -681,7 +694,7 @@ def feature_info(args):
             global_info_written = False
             feature_json["data"] = []
             fi_date_index = {}
-            time_datasets = stacker.datasets(dc.index, main_only=False, point=geo_point)
+            time_datasets = stacker.datasets(dc.index, all_flag_bands=True, point=geo_point)
             data = stacker.data(time_datasets, skip_corrections=True)
             for dt in data.time.values:
                 td = data.sel(time=dt)
