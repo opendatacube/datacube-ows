@@ -614,8 +614,9 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list, flag_bands):
                 # Weirdly formatted flag definition.  Hacky workaround for USGS data in DEAfrica demo.
                 ret_val = [val for flag, val in flag_dict.items() if val]
             band_dict[k] = ret_val
-            pass
         else:
+            if k in prod_cfg.ignore_info_flags:
+                continue
             try:
                 band_lbl = prod_cfg.band_idx.band_label(k)
                 if band_val == pixel_dataset[k].nodata or numpy.isnan(band_val):
@@ -624,36 +625,6 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list, flag_bands):
                     band_dict[band_lbl] = band_val
             except ConfigException:
                 pass
-    return band_dict
-    band_dict = {}
-    for band in band_list:
-        if band in flag_bands:
-            continue
-        try:
-            band_lbl = prod_cfg.band_idx.band_label(band)
-            band_val = pixel_dataset[band].item()
-            if band_val == pixel_dataset[band].nodata or numpy.isnan(band_val):
-                band_dict[band_lbl] = "n/a"
-            else:
-                band_dict[band_lbl] = band_val
-        except ConfigException:
-            pass
-    for band in flag_bands:
-        band_val = pixel_dataset[band].item()
-        flag_def = pixel_dataset[band].attrs['flags_definition']
-        # HACK: Work around bands with floating point values
-        try:
-            flag_dict = mask_to_dict(flag_def, band_val)
-        except TypeError as te:
-            logging.warning('Working around for float bands')
-            flag_dict = mask_to_dict(flag_def, int(band_val))
-        try:
-            ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
-        except KeyError:
-            # Weirdly formatted flag definition.  Hacky workaround for USGS data in DEAfrica demo.
-            ret_val = [val for flag, val in flag_dict.items() if val]
-        band_dict[band] = ret_val
-
     return band_dict
 
 
