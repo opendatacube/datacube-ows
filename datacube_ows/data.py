@@ -599,6 +599,33 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
 @log_call
 def _make_band_dict(prod_cfg, pixel_dataset, band_list, flag_bands):
     band_dict = {}
+    for k,v in pixel_dataset.data_vars.items():
+        band_val = pixel_dataset[k].item()
+        flag_def = pixel_dataset[k].attrs.get("flags_definition")
+        if flag_def:
+            try:
+                flag_dict = mask_to_dict(flag_def, band_val)
+            except TypeError as te:
+                logging.warning('Working around for float bands')
+                flag_dict = mask_to_dict(flag_def, int(band_val))
+            try:
+                ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
+            except KeyError:
+                # Weirdly formatted flag definition.  Hacky workaround for USGS data in DEAfrica demo.
+                ret_val = [val for flag, val in flag_dict.items() if val]
+            band_dict[k] = ret_val
+            pass
+        else:
+            try:
+                band_lbl = prod_cfg.band_idx.band_label(k)
+                if band_val == pixel_dataset[k].nodata or numpy.isnan(band_val):
+                    band_dict[band_lbl] = "n/a"
+                else:
+                    band_dict[band_lbl] = band_val
+            except ConfigException:
+                pass
+    return band_dict
+    band_dict = {}
     for band in band_list:
         if band in flag_bands:
             continue

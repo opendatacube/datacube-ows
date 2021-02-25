@@ -54,6 +54,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.flag_products = FlagProductBands.build_list_from_masks(self.masks)
 
         self.raw_needed_bands = set()
+        self.raw_flag_bands = set()
         self.declare_unready("needed_bands")
         self.declare_unready("flag_bands")
 
