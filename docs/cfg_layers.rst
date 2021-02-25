@@ -685,7 +685,6 @@ E.g.
             "product": "ls8_pq",
             "fuse_func": "datacube.helpers.ga_pq_fuser",
             "manual_merge": False,
-            "ignore_info_flags": ["noisy"],
             "ignore_time": False
         },
         {
@@ -693,7 +692,6 @@ E.g.
             "product": "ls8_coast_detection",
             "fuse_func": "datacube.helpers.ga_pq_fuser",
             "manual_merge": False,
-            "ignore_info_flags": ["uncertain"],
             "ignore_time": False
         }
     ]
@@ -795,14 +793,6 @@ the flag band is read from a separate product.
 
 If true, OWS assumes that flag product has no time dimension
 (i.e. the same flags apply to all times).
-
-Ignore Info Flags (ignore_info_flags)
-+++++++++++++++++++++++++++++++++++++
-
-An optional list of flags which should be excluded from
-GetFeatureInfo responses.  Defaults to an empty list, meaning
-all flags defined in the ODC metadata will be included
-in WMS and WMTS GetFeatureInfo responses.
 
 -----------------------
 Layer WCS Section (wcs)

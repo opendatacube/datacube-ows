@@ -152,16 +152,21 @@ def test_make_band_dict_nan(product_layer):
     class fake_data:
         def __init__(self):
             self.nodata = np.nan
+            self.attrs = {}
         def item(self):
             return np.nan
 
     class fake_dataset:
+        def __init__(self):
+            self.data_vars = {
+                "fake": "fake_band"
+            }
         def __getitem__(self, key):
             return fake_data()
 
     bands = ["fake"]
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset(), bands, set())
+    band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset())
     assert band_dict["fake"] == "n/a"
 
 def test_make_band_dict_float(product_layer):
@@ -186,28 +191,33 @@ def test_make_band_dict_float(product_layer):
             return 100
 
     class int_dataset:
+        def __init__(self):
+            self.data_vars = {
+                "fake": "fake_band"
+            }
         def __getitem__(self, key):
             return int_data()
 
-    class float_data:
-        def __init__(self):
-            self.nodata = np.nan
-            self.attrs = yaml.load(flags_yaml, yaml.Loader)
+    class float_data(int_data):
         def item(self):
             return 100.0
 
-    class float_dataset:
+    class float_dataset(int_dataset):
         def __getitem__(self, key):
             return float_data()
 
     bands = ["fake"]
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, int_dataset(), bands, {"fake"})
-    assert isinstance(band_dict["fake"], list) 
-    assert band_dict["fake"] == ['Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.']
+    band_dict = datacube_ows.data._make_band_dict(product_layer, int_dataset())
+    assert isinstance(band_dict["fake"], dict)
+    assert band_dict["fake"] == {
+        "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": 'lay_over'
+    }
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, float_dataset(), bands, {"fake"})
-    assert isinstance(band_dict["fake"], list) 
-    assert band_dict["fake"] == ['Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.']
+    band_dict = datacube_ows.data._make_band_dict(product_layer, float_dataset())
+    assert isinstance(band_dict["fake"], dict)
+    assert band_dict["fake"] == {
+        "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": 'lay_over'
+    }
 
 

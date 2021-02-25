@@ -597,7 +597,7 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
 
 
 @log_call
-def _make_band_dict(prod_cfg, pixel_dataset, band_list, flag_bands):
+def _make_band_dict(prod_cfg, pixel_dataset):
     band_dict = {}
     for k,v in pixel_dataset.data_vars.items():
         band_val = pixel_dataset[k].item()
@@ -608,15 +608,16 @@ def _make_band_dict(prod_cfg, pixel_dataset, band_list, flag_bands):
             except TypeError as te:
                 logging.warning('Working around for float bands')
                 flag_dict = mask_to_dict(flag_def, int(band_val))
-            try:
-                ret_val = [flag_def[flag]['description'] for flag, val in flag_dict.items() if val]
-            except KeyError:
-                # Weirdly formatted flag definition.  Hacky workaround for USGS data in DEAfrica demo.
-                ret_val = [val for flag, val in flag_dict.items() if val]
+            ret_val = {}
+            for flag, val in flag_dict.items():
+                if not val:
+                    continue
+                if val == True:
+                    ret_val[flag_def[flag]['description']] = True
+                else:
+                    ret_val[flag_def[flag]['description']] = val
             band_dict[k] = ret_val
         else:
-            if k in prod_cfg.ignore_info_flags:
-                continue
             try:
                 band_lbl = prod_cfg.band_idx.band_label(k)
                 if band_val == pixel_dataset[k].nodata or numpy.isnan(band_val):
@@ -735,8 +736,7 @@ def feature_info(args):
                 else:
                     date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
                 # Collect raw band values for pixel and derived bands from styles
-                date_info["bands"] = _make_band_dict(params.product, pixel_ds, stacker.needed_bands(),
-                                                     params.product.all_flag_band_names)
+                date_info["bands"] = _make_band_dict(params.product, pixel_ds)
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
                 if derived_band_dict:
                     date_info["band_derived"] = derived_band_dict
