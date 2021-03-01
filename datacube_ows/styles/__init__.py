@@ -6,3 +6,16 @@ from datacube_ows.styles.ramp import ColorRampDef
 
 
 StyleDef = StyleDefBase
+
+
+class StandaloneGlobalProxy:
+    pass
+
+class StandaloneProductProxy:
+    name = "standalone"
+    global_cfg = None
+
+
+def ows_style_standalone(cfg):
+    return StyleDef(StandaloneProductProxy(), cfg, stand_alone=True)
+

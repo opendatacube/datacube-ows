@@ -16,8 +16,8 @@ _LOG = logging.getLogger(__name__)
 class ColorMapStyleDef(StyleDefBase):
     auto_legend = True
 
-    def __init__(self, product, style_cfg):
-        super(ColorMapStyleDef, self).__init__(product, style_cfg)
+    def __init__(self, product, style_cfg, stand_alone=False):
+        super(ColorMapStyleDef, self).__init__(product, style_cfg, stand_alone=stand_alone)
         style_cfg = self._raw_cfg
         self.value_map = style_cfg["value_map"]
         for band in self.value_map.keys():

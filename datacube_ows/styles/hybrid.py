@@ -7,8 +7,10 @@ from datacube_ows.styles.ramp import ColorRampDef
 
 class HybridStyleDef(ColorRampDef, ComponentStyleDef):
     auto_legend = False
-    def __init__(self, product, style_cfg):
-        super(HybridStyleDef, self).__init__(product, style_cfg)
+    def __init__(self, product, style_cfg, defer_multi_date=False, stand_alone=False):
+        super(HybridStyleDef, self).__init__(product, style_cfg,
+                                             defer_multi_date=defer_multi_date,
+                                             stand_alone=stand_alone)
         style_cfg = self._raw_cfg
         self.component_ratio = style_cfg["component_ratio"]
 

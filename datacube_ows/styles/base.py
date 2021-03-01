@@ -1,7 +1,6 @@
 from datacube.utils.masking import make_mask
 
-from datacube_ows.ows_configuration import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound
-from datacube_ows.config_utils import FlagProductBands
+from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 import logging
@@ -14,7 +13,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     auto_legend = False
     include_in_feature_info = False
 
-    def __new__(cls, product=None, style_cfg=None, defer_multi_date=False):
+    def __new__(cls, product=None, style_cfg=None, stand_alone=False, defer_multi_date=False):
         if product and style_cfg:
             style_cfg = cls.expand_inherit(style_cfg, global_cfg=product.global_cfg,
                                keyval_subs={
@@ -29,7 +28,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             return super().__new__(subclass)
         return super().__new__(cls)
 
-    def __init__(self, product, style_cfg, defer_multi_date=False):
+    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
         super().__init__(style_cfg,
                          global_cfg=product.global_cfg,
                          keyvals={
@@ -45,6 +44,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                              "layer": product.name
                          })
         style_cfg = self._raw_cfg
+        self.stand_alone=stand_alone
         self.local_band_map = style_cfg.get("band_map", {})
         self.product = product
         self.name = style_cfg["name"]
@@ -91,12 +91,15 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                 self.flag_bands.add(band)
         for fp in self.flag_products:
             fp.make_ready(dc)
-        for band in self.product.always_fetch_bands:
-            self.needed_bands.add(band)
-            self.flag_bands.add(band)
+        if not self.stand_alone:
+            for band in self.product.always_fetch_bands:
+                self.needed_bands.add(band)
+                self.flag_bands.add(band)
         super().make_ready(dc, *args, **kwargs)
 
     def local_band(self, band):
+        if self.stand_alone:
+            return band
         if band in self.local_band_map:
             band = self.local_band_map[band]
         return self.product.band_idx.band(band)

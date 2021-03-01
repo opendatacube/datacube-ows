@@ -6,8 +6,9 @@ from datacube_ows.styles.base import StyleDefBase
 
 # pylint: disable=abstract-method
 class ComponentStyleDef(StyleDefBase):
-    def __init__(self, product, style_cfg, local_band_map=None):
-        super().__init__(product, style_cfg, local_band_map)
+    def __init__(self, product, style_cfg, local_band_map=None, stand_alone=False, defer_multi_date=False):
+        super().__init__(product, style_cfg,
+                         stand_alone=stand_alone, defer_multi_date=defer_multi_date)
         style_cfg = self._raw_cfg
         self.raw_rgb_components = {}
         for imgband in ["red", "green", "blue", "alpha"]:
@@ -62,7 +63,9 @@ class ComponentStyleDef(StyleDefBase):
         super().make_ready(dc, *args, **kwargs)
 
     def dealias_components(self, comp_in):
-        if comp_in is None:
+        if self.stand_alone:
+            return comp_in
+        elif comp_in is None:
             return None
         else:
             return { self.product.band_idx.band(self.local_band(band_alias)): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }

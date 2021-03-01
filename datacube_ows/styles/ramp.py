@@ -519,8 +519,9 @@ class ColorRamp:
 
 class ColorRampDef(StyleDefBase):
     auto_legend = True
-    def __init__(self, product, style_cfg, defer_multi_date=False):
-        super(ColorRampDef, self).__init__(product, style_cfg)
+    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
+        super(ColorRampDef, self).__init__(product, style_cfg,
+                           stand_alone=stand_alone, defer_multi_date=defer_multi_date)
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
 
