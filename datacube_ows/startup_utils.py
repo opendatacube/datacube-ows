@@ -54,8 +54,10 @@ def initialise_debugging(log=None):
 
 def initialise_sentry(log=None):
     if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
+        SENTRY_ENV_TAG = os.environ.get("SENTRY_ENV_TAG") if os.environ.get("SENTRY_ENV_TAG") else "dev"
         sentry_sdk.init(
             dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
+            environment=SENTRY_ENV_TAG,
             integrations = [FlaskIntegration()]
         )
         if log:
