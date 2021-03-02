@@ -613,9 +613,9 @@ def _make_band_dict(prod_cfg, pixel_dataset):
                 if not val:
                     continue
                 if val == True:
-                    ret_val[flag_def[flag]['description']] = True
+                    ret_val[flag_def[flag].get('description', flag)] = True
                 else:
-                    ret_val[flag_def[flag]['description']] = val
+                    ret_val[flag_def[flag].get('description', flag)] = val
             band_dict[k] = ret_val
         else:
             try:
