@@ -8,9 +8,73 @@ from datacube.utils.masking import make_mask
 from matplotlib import patches as mpatches, pyplot as plt
 from xarray import Dataset, DataArray, merge
 
+from datacube_ows.config_utils import OWSConfigEntry
 from datacube_ows.styles.base import StyleDefBase
 
 _LOG = logging.getLogger(__name__)
+
+
+class ValueMapRule(OWSConfigEntry):
+    def __init__(self, style_def, band, cfg):
+        super().__init__(self, cfg)
+        self.style = style_def
+        self.band = style_def.local_band(band)
+
+        self.title = cfg["title"]
+        self.abstract = cfg.get("abstract")
+        if self.title and self.abstract:
+            self.label = f"{self.title} - {self.abstract}"
+        elif self.title:
+            self.label = self.title
+        elif self.abstract:
+            self.label = self.abstract
+        else:
+            self.label = None
+
+        flags = cfg["flags"]
+        self.or_flags = False
+        if "or" in flags:
+            self.or_flags = True
+            flags = flags["or"]
+        elif "and" in flags:
+            flags = flags["and"]
+        self.flags = flags
+        self.color_str = cfg["color"]
+        self.rgb = Color(self.color_str)
+
+        if cfg.get("mask", False):
+            self.alpha = 0.0
+        else:
+            self.alpha = cfg.get("alpha", 1.0)
+
+    def label(self):
+        if self.title and self.abstract:
+            return f"{self.title} - {self.abstract}"
+        elif self.title:
+            return self.title
+        elif self.abstract:
+            return self.abstract
+
+    def create_mask(self, data):
+        if self.or_flags:
+            mask = None
+            for f in self.flags.items():
+                f = {f[0]: f[1]}
+                if mask is None:
+                    mask = make_mask(data, **f)
+                else:
+                    mask |= make_mask(data, **f)
+        else:
+            mask = make_mask(data, **self.flags)
+        return mask
+
+    @classmethod
+    def value_map_from_config(cls, style, cfg):
+        vmap = {}
+        for band_name, rules in cfg.items():
+            band_rules = [cls(style, band_name, rule) for rule in rules]
+            vmap[band_name] = band_rules
+        return vmap
 
 
 class ColorMapStyleDef(StyleDefBase):
@@ -19,7 +83,7 @@ class ColorMapStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg):
         super(ColorMapStyleDef, self).__init__(product, style_cfg)
         style_cfg = self._raw_cfg
-        self.value_map = style_cfg["value_map"]
+        self.value_map = ValueMapRule.value_map_from_config(self, style_cfg["value_map"])
         for band in self.value_map.keys():
             self.raw_needed_bands.add(band)
 
@@ -42,23 +106,6 @@ class ColorMapStyleDef(StyleDefBase):
         masked = target.where(mask).where(numpy.isfinite(data))  # remask
         return masked
 
-    @staticmethod
-    def create_mask(data, flags):
-        if "or" in flags:
-            fs = flags["or"]
-            mask = None
-            for f in fs.items():
-                f = {f[0]: f[1]}
-                if mask is None:
-                    mask = make_mask(data, **f)
-                else:
-                    mask |= make_mask(data, **f)
-        else:
-            fs = flags if "and" not in flags else flags["and"]
-            mask = make_mask(data, **fs)
-        return mask
-
-
     def transform_single_date_data(self, data):
         # pylint: disable=too-many-locals, too-many-branches
         # extent mask data per band to preseve nodata
@@ -71,7 +118,7 @@ class ColorMapStyleDef(StyleDefBase):
         #            data[band] = data[band].where(extent_mask)
 
         imgdata = Dataset()
-        for cfg_band, values in self.value_map.items():
+        for cfg_band, rules in self.value_map.items():
             # Run through each item
             band = self.product.band_idx.band(cfg_band)
             band_data = Dataset()
@@ -79,22 +126,11 @@ class ColorMapStyleDef(StyleDefBase):
             if bdata.dtype.kind == 'f':
                 # Convert back to int for bitmasking
                 bdata = ColorMapStyleDef.reint(bdata)
-            for value in values:
-                flags = value["flags"]
-                rgb = Color(value["color"])
-                alpha = value.get("alpha", 1.0)
-                mask_source_band = value.get("mask", False)
+            for rule in rules:
+                mask = rule.create_mask(bdata)
 
-                mask = ColorMapStyleDef.create_mask(bdata, flags)
-
-                if mask_source_band:
-                    # disable checking on the use of ~mask
-                    # pylint: disable=invalid-unary-operand-type
-                    bdata = bdata.where(~mask)
-                    bdata = ColorMapStyleDef.reint(bdata)
-                else:
-                    masked = ColorMapStyleDef.create_colordata(bdata, rgb, alpha, mask)
-                    band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
+                masked = ColorMapStyleDef.create_colordata(bdata, rule.rgb, rule.alpha, mask)
+                band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
 
             imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
 
@@ -104,13 +140,11 @@ class ColorMapStyleDef(StyleDefBase):
     def single_date_legend(self, bytesio):
         patches = []
         for band in self.value_map.keys():
-            for value in self.value_map[band]:
-                # only include values that have a title set
-                if "title" in value and "abstract" in value and "color" in value and value["title"]:
-                    rgb = Color(value["color"])
-                    label = fill(value["title"] + " - " + value["abstract"], 30)
+            for rule in reversed(self.value_map[band]):
+                # only include values that are not transparent (and that have a non-blank title or abstract)
+                if rule.alpha > 0.001 and rule.label:
                     try:
-                        patch = mpatches.Patch(color=rgb.hex_l, label=label)
+                        patch = mpatches.Patch(color=rule.rgb.hex_l, label=rule.label)
                     # pylint: disable=broad-except
                     except Exception as e:
                         print("Error creating patch?", e)

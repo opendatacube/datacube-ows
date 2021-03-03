@@ -466,33 +466,34 @@ def style_cfg_map_mask():
                     "color": "#FFFFFF",
                 },
                 {
-                    "title": "Non-Transparent",
-                    "abstract": "A Non-Transparent Value",
+                    "title": "Impossible",
+                    "abstract": "Will already have matched a previous rule",
                     "flags": {
                         "bar": 1,
                     },
-                    "color": "#111111",
+                    "color": "#54d56f",
                 }
             ]
         }
     }
     return cfg
 
-def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
+def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
     def fake_make_mask(data, **kwargs):
         val = kwargs["bar"]
         return data == val
 
 
+    dim = np.array([0, 1, 2, 3, 4, 5])
     band = np.array([0, 0, 1, 1, 2, 2])
     timarray = [np.datetime64(datetime.date.today())]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name='foo', coords={"dim": dim}, dims=["dim"])
     dst = Dataset(data_vars={'foo': da})
     ds = concat([dst], times)
 
     npmap = np.array([True, True, True, True, True, True])
-    damap = DataArray(npmap)
+    damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
 
     with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask)
@@ -502,14 +503,14 @@ def test_RBGAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
         b = data["blue"]
         a = data["alpha"]
 
-        assert (r[2:3:1] == 0)
-        assert (g[2:3:1] == 0)
-        assert (b[2:3:1] == 0)
-        assert (a[2:3:1] == 0)
-        assert (r[4:5:1] == 255)
-        assert (g[4:5:1] == 255)
-        assert (b[4:5:1] == 255)
-        assert (a[4:5:1] == 255)
+        assert (r.values[2] == 17)
+        assert (g.values[2] == 17)
+        assert (b.values[2] == 17)
+        assert (a.values[2] == 0)
+        assert (r.values[4] == 255)
+        assert (g.values[4] == 255)
+        assert (b.values[4] == 255)
+        assert (a.values[4] == 255)
 
 
 def test_reint():
