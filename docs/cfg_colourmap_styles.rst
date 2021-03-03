@@ -68,8 +68,14 @@ match the rule.  The ``color`` entry is in html RGB hex format.
 The ``alpha`` and ``mask`` entries are optional and allow transparency.  ``alpha`` should
 be a floating point number between 0.0 (fully transparent) and 1.0 (fully opaque)
 and defaults to 1.0 (i.e. fully transparent).  The ``mask`` entry is boolean (default
-False).  Setting ``mask`` to true is functionally equivalent to setting ``alpha`` to
-0.0, but uses a more efficient implementation.
+False).  Setting ``mask`` to true is the same equivalent to setting ``alpha`` to
+0.0.  (A third option would be to use the standard style
+`pq_masks <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#bit-flag-masks-pq-masks>`_.
+Bit-flag Masks (pq_masks)
+
+syntax.)
+
+to achieve the same effect
 
 ``color`` is still required when mask is True, but is not used in this case.
 
