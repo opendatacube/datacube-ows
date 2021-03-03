@@ -47,14 +47,6 @@ class ValueMapRule(OWSConfigEntry):
         else:
             self.alpha = cfg.get("alpha", 1.0)
 
-    def label(self):
-        if self.title and self.abstract:
-            return f"{self.title} - {self.abstract}"
-        elif self.title:
-            return self.title
-        elif self.abstract:
-            return self.abstract
-
     def create_mask(self, data):
         if self.or_flags:
             mask = None
