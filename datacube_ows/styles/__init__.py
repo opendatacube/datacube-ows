@@ -17,5 +17,7 @@ class StandaloneProductProxy:
 
 
 def ows_style_standalone(cfg):
-    return StyleDef(StandaloneProductProxy(), cfg, stand_alone=True)
+    style = StyleDef(StandaloneProductProxy(), cfg, stand_alone=True)
+    style.make_ready(None)
+    return style
 

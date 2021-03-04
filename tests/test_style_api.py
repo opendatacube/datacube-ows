@@ -65,8 +65,10 @@ def simple_rgb_style_cfg():
 
 def test_rgb_style_instantiation(dummy_raw_data, null_mask, simple_rgb_style_cfg):
     style = ows_style_standalone(simple_rgb_style_cfg)
-    style.make_ready(None)
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
     for channel in ("red", "green", "blue"):
         assert channel in result.data_vars.keys()
+        assert result["red"].values[0][0] == 5
+        assert result["green"].values[0][0] == 7
+        assert result["blue"].values[0][0] == 2
