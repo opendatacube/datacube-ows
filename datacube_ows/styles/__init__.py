@@ -11,9 +11,14 @@ StyleDef = StyleDefBase
 class StandaloneGlobalProxy:
     pass
 
+class BandIdxProxy:
+    def band(self, band):
+        return band
+
 class StandaloneProductProxy:
     name = "standalone"
     global_cfg = None
+    band_idx = BandIdxProxy()
 
 
 def ows_style_standalone(cfg):

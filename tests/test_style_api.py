@@ -23,6 +23,31 @@ def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
     )
     return output
 
+def dim1_da(name, vals, coords, with_time=True, attrs=None):
+    if len(vals) != len(coords):
+        raise Exception("vals and coords must match len")
+    if attrs is None:
+        attrs={}
+    dims = ["dim"]
+    shape = [len(coords)]
+    coords = {
+        'dim': coords,
+    }
+    if with_time:
+        dims.append("time")
+        coords["time"] = [np.datetime64(datetime.date.today())]
+        shape.append(1)
+    buff_arr = np.array(vals)
+    data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
+    output = xr.DataArray(
+        data,
+        coords=coords,
+        dims=dims,
+        attrs=attrs,
+        name=name,
+    )
+    return output
+
 coords = [
     ('x', [
         0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
@@ -69,6 +94,98 @@ def test_rgb_style_instantiation(dummy_raw_data, null_mask, simple_rgb_style_cfg
     result = style.transform_data(dummy_raw_data, mask)
     for channel in ("red", "green", "blue"):
         assert channel in result.data_vars.keys()
-        assert result["red"].values[0][0] == 5
-        assert result["green"].values[0][0] == 7
-        assert result["blue"].values[0][0] == 2
+    assert result["red"].values[0][0] == 5
+    assert result["green"].values[0][0] == 7
+    assert result["blue"].values[0][0] == 2
+
+
+@pytest.fixture
+def simple_ramp_style_cfg():
+    return {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "index_function": {
+            "function": "datacube_ows.band_utils.norm_diff",
+            "mapped_bands": True,
+            "kwargs": {
+                "band1": "ir",
+                "band2": "red"
+            }
+        },
+        "needed_bands": ["red", "ir"],
+        "color_ramp": [
+            {
+                "value": -0.00000001,
+                "color": "#000000",
+                "alpha": 0.0
+            },
+            {
+                "value": 0.0,
+                "color": "#000000",
+                "alpha": 1.0
+            },
+            {"value": 0.2, "color": "#FF00FF"},
+            {"value": 0.4, "color": "#00FF00"},
+            {"value": 0.5, "color": "#FFFF00"},
+            {"value": 0.6, "color": "#0000FF"},
+            {"value": 0.8, "color": "#00FFFF"},
+            {"value": 1.0, "color": "#FFFFFF"}
+        ],
+    }
+
+@pytest.fixture
+def dummy_raw_calc_data():
+    dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    output = xr.Dataset({
+        "ir": dim1_da("ir",   [ 800, 100, 1000, 600, 200, 1000 ], dim_coords),
+        "red": dim1_da("red", [ 200, 500, 0,    200, 200, 700 ], dim_coords),
+        "green": dim1_da("green", [ 100, 500, 0, 400, 300, 200 ], dim_coords),
+        "blue": dim1_da("blue", [ 200, 500, 1000, 600, 100, 700 ], dim_coords),
+        "uv": dim1_da("uv", [ 400, 600, 900, 200, 400, 100 ], dim_coords),
+    })
+    return output
+
+def dim1_null_mask(coords):
+    return dim1_da("mask", [True] * len(coords), coords)
+
+@pytest.fixture
+def raw_calc_null_mask():
+    dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    return dim1_da("mask", [True] * len(dim_coords), dim_coords)
+
+def test_ramp_style_instantiation(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
+    style = ows_style_standalone(simple_ramp_style_cfg)
+    mask = style.to_mask(dummy_raw_calc_data, raw_calc_null_mask)
+    result = style.transform_data(dummy_raw_calc_data, mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    # point 0 800, 200 (idx=0.6)maps to blue
+    assert result["alpha"].values[0] == 255
+    assert result["red"].values[0] == 0
+    assert result["green"].values[0] == 0
+    assert result["blue"].values[0] == 255
+    # point 1 100, 500 (idx<0)maps to transparent
+    assert result["alpha"].values[1] == 0
+    # point 2 1000,0 (idx=1.0) maps to white
+    assert result["alpha"].values[2] == 255
+    assert result["red"].values[2] == 255
+    assert result["green"].values[2] == 255
+    assert result["blue"].values[2] == 255
+    # point 3 600,200 (idx=0.5) maps to yellow
+    assert result["alpha"].values[3] == 255
+    assert result["red"].values[3] == 255
+    assert result["green"].values[3] >= 254 # Why isn't it 255?
+    assert result["blue"].values[3] == 0
+    # point 4 200,200 (idx=0.0) maps to black
+    assert result["alpha"].values[4] == 255
+    assert result["red"].values[4] == 0
+    assert result["green"].values[4] == 0
+    assert result["blue"].values[4] == 0
+    # point 5 1000,700 (idx=0.176) maps to between black and magenta
+    assert result["alpha"].values[5] == 255
+    assert result["green"].values[5] == 0
+    assert abs(result["red"].values[5] - result["blue"].values[5]) <=1 # Why not exactly equal?
+    assert result["red"].values[5] > 0
+    assert result["red"].values[5] < 255
+
