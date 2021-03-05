@@ -183,7 +183,7 @@ def raw_calc_null_mask():
     dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     return dim1_da("mask", [True] * len(dim_coords), dim_coords)
 
-def test_ramp_style_instantiation(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
+def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
     style = ows_style_standalone(simple_ramp_style_cfg)
     mask = style.to_mask(dummy_raw_calc_data, raw_calc_null_mask)
     result = style.transform_data(dummy_raw_calc_data, mask)
