@@ -89,7 +89,7 @@ class ColorMapStyleDef(StyleDefBase):
 
     @staticmethod
     def create_colordata(data, rgb, alpha, mask):
-        target = Dataset()
+        target = Dataset(coords=data.coords)
         colors = ["red", "green", "blue", "alpha"]
         for color in colors:
             val = alpha if color == "alpha" else getattr(rgb, color)

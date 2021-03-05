@@ -19,7 +19,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
         if self.index_function is not None:
             data['index_function'] = (data.dims, self.index_function(data))
 
-        imgdata = Dataset()
+        imgdata = Dataset(coords=data)
 
         d = data['index_function']
         for band, intensity in self.rgb_components.items():
