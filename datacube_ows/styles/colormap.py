@@ -109,7 +109,7 @@ class ColorMapStyleDef(StyleDefBase):
         #        except AttributeError:
         #            data[band] = data[band].where(extent_mask)
 
-        imgdata = Dataset()
+        imgdata = Dataset(coords=data.coords)
         for cfg_band, rules in self.value_map.items():
             # Run through each item
             band = self.product.band_idx.band(cfg_band)
