@@ -175,12 +175,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
 
 class OWSFlagBandStandalone:
     def __init__(self, band):
-        self.pq_band = "band"
-
-    def flags_def(self, data):
-        banddata = data.getattr(self.pq_band)
-        self.flags_def = banddata.flags_definition
-
+        self.pq_band = band
 
 class OWSFlagBand(OWSConfigEntry):
     def __init__(self, cfg, product_cfg, **kwargs):
