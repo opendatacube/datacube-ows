@@ -88,7 +88,7 @@ def simple_rgb_style_cfg():
     }
 
 
-def test_rgb_style_instantiation(dummy_raw_data, null_mask, simple_rgb_style_cfg):
+def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg):
     style = ows_style_standalone(simple_rgb_style_cfg)
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
@@ -143,6 +143,35 @@ def dummy_raw_calc_data():
         "green": dim1_da("green", [ 100, 500, 0, 400, 300, 200 ], dim_coords),
         "blue": dim1_da("blue", [ 200, 500, 1000, 600, 100, 700 ], dim_coords),
         "uv": dim1_da("uv", [ 400, 600, 900, 200, 400, 100 ], dim_coords),
+        "pq": dim1_da("pq", [ 0b000, 0b001, 0b010, 0b011, 0b100, 0b111], dim_coords,
+                            attrs={
+                                "flags_definition": {
+                                    "splodgy": {
+                                        "bits": 2,
+                                        "values": {
+                                            '0': "Splodgeless",
+                                            '1': "Splodgy",
+                                        },
+                                        "description": "All splodgy looking"
+                                    },
+                                    "ugly": {
+                                        "bits": 1,
+                                        "values": {
+                                            '0': False,
+                                            '1': True
+                                        },
+                                        "description": "Real, real ugly",
+                                    },
+                                    "impossible": {
+                                        "bits": 0,
+                                        "values": {
+                                            '0': False,
+                                            '1': "Woah!"
+                                        },
+                                        "description": "Won't happen. Can't happen. Might happen.",
+                                    },
+                                }
+                            })
     })
     return output
 
@@ -189,3 +218,49 @@ def test_ramp_style_instantiation(dummy_raw_calc_data, raw_calc_null_mask, simpl
     assert result["red"].values[5] > 0
     assert result["red"].values[5] < 255
 
+
+
+@pytest.fixture
+def rgb_style_with_masking_cfg():
+    return {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["red", "green", "blue"],
+        "scale_range": (0.0, 1000.0),
+        "components": {
+            "red": {"red": 1.0},
+            "green": {"green": 1.0},
+            "blue": {"blue": 1.0}
+        },
+        "pq_masks": [
+            {
+                "band": "pq",
+                "flags": {
+                    'splodgy': "Splodgeless",
+                },
+            },
+            {
+                "band": "pq",
+                "flags": {
+                    "ugly": True,
+                    "impossible": "Woah!"
+                },
+                "invert": True
+            },
+        ]
+    }
+
+def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg):
+    style = ows_style_standalone(rgb_style_with_masking_cfg)
+    mask = style.to_mask(dummy_raw_calc_data, raw_calc_null_mask)
+    result = style.transform_data(dummy_raw_calc_data, mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    alphas = result["alpha"].values
+    assert alphas[0] == 255
+    assert alphas[1] == 255
+    assert alphas[2] == 255
+    assert alphas[3] == 0
+    assert alphas[4] == 0
+    assert alphas[5] == 0

@@ -79,7 +79,7 @@ class ComponentStyleDef(StyleDefBase):
 
 
     def transform_single_date_data(self, data):
-        imgdata = Dataset()
+        imgdata = Dataset(coords=data.coords)
         for imgband, components in self.rgb_components.items():
             if callable(components):
                 imgband_data = components(data)

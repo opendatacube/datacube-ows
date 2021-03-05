@@ -1,6 +1,8 @@
 from datacube.utils.masking import make_mask
 
-from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands
+import numpy as np
+import xarray as xr
+from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands, OWSFlagBandStandalone
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 import logging
@@ -44,14 +46,17 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                              "layer": product.name
                          })
         style_cfg = self._raw_cfg
-        self.stand_alone=stand_alone
+        self.stand_alone = stand_alone
         self.local_band_map = style_cfg.get("band_map", {})
         self.product = product
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
         self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
-        self.flag_products = FlagProductBands.build_list_from_masks(self.masks)
+        if self.stand_alone:
+            self.flag_products = []
+        else:
+            self.flag_products = FlagProductBands.build_list_from_masks(self.masks)
 
         self.raw_needed_bands = set()
         self.raw_flag_bands = set()
@@ -68,21 +73,22 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.pq_product_bands = []
         for band in self.raw_needed_bands:
             self.needed_bands.add(self.local_band(band))
-        for mask in self.masks:
-            fb = mask.band
-            if fb.pq_names == self.product.product_names:
-                self.needed_bands.add(fb.band)
-                continue
-            handled=False
-            for pqp, pqb in self.pq_product_bands:
-                if fb.pq_names == pqp:
-                    pqb.add(fb.pq_band)
-                    handled=True
+        if not self.stand_alone:
+            for mask in self.masks:
+                fb = mask.band
+                if fb.pq_names == self.product.product_names:
+                    self.needed_bands.add(fb.band)
                     continue
-            if not handled:
-                self.pq_product_bands.append(
-                    (fb.pq_names, set([fb.pq_band]))
-                )
+                handled=False
+                for pqp, pqb in self.pq_product_bands:
+                    if fb.pq_names == pqp:
+                        pqb.add(fb.pq_band)
+                        handled=True
+                        continue
+                if not handled:
+                    self.pq_product_bands.append(
+                        (fb.pq_names, set([fb.pq_band]))
+                    )
         self.flag_bands = set()
         for pq_names, pq_bands in self.pq_product_bands:
             for band in pq_bands:
@@ -142,20 +148,32 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                 result = result & mask_data
         return result
 
-    def apply_mask(self, data, mask):
-        if mask is not None:
-            for band in data.data_vars:
-                data[band] = data[band].where(mask)
-        return data
+    def apply_mask_to_image(self, img_data, mask):
+        if mask is None:
+            return img_data
+        if "alpha" not in img_data.data_vars.keys():
+            nda_alpha = np.ndarray(img_data["red"].shape, dtype='uint8')
+            nda_alpha.fill(255)
+            alpha = xr.DataArray(nda_alpha,
+                                coords=img_data.coords,
+                                dims=img_data.dims,
+                                name="alpha"
+            )
+        else:
+            alpha = img_data.alpha
+        alpha = alpha.where(mask, other=0)
+        img_data = img_data.assign({"alpha": alpha})
+        return img_data
 
     def transform_data(self, data, mask):
         date_count = len(data.coords["time"])
-        if mask is not None:
-            data = self.apply_mask(data, mask)
         if date_count == 1:
-            return self.transform_single_date_data(data.squeeze(dim="time", drop=True))
-        mdh = self.get_multi_date_handler(date_count)
-        return mdh.transform_data(data)
+            img_data = self.transform_single_date_data(data.squeeze(dim="time", drop=True))
+        else:
+            mdh = self.get_multi_date_handler(date_count)
+            img_data = mdh.transform_data(data)
+        img_data = self.apply_mask_to_image(img_data, mask)
+        return img_data
 
     def transform_single_date_data(self, data):
         raise NotImplementedError()
@@ -293,21 +311,29 @@ class StyleMask(OWSConfigEntry):
         super().__init__(cfg)
         cfg = self._raw_cfg
         self.style = style
-        if not self.style.product.flag_bands:
+        self.stand_alone = style.stand_alone
+        if not self.stand_alone and not self.style.product.flag_bands:
             raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
         if "band" in cfg:
             self.band_name = cfg["band"]
-            if self.band_name not in self.style.product.flag_bands:
+            if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
                 raise ConfigException(
                     f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
         else:
+            if self.stand_alone:
+                raise ConfigException(
+                    f"Must provide band name for masks in stand-alone styles"
+                )
             self.band_name = list(self.style.product.flag_bands.keys())[0]
             _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
                          self.style.name,
                          self.style.product.name)
-        if self.band_name not in self.style.product.flag_bands:
+        if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
             raise ConfigException(f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
-        self.band = self.style.product.flag_bands[self.band_name]
+        if self.stand_alone:
+            self.band = OWSFlagBandStandalone(self.band_name)
+        else:
+            self.band = self.style.product.flag_bands[self.band_name]
         self.invert = cfg.get("invert", False)
         if "flags" in cfg:
             self.flags = cfg["flags"]
