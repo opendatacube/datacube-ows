@@ -264,3 +264,132 @@ def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, r
     assert alphas[3] == 0
     assert alphas[4] == 0
     assert alphas[5] == 0
+
+
+@pytest.fixture
+def dummy_col_map_data():
+    dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    output = xr.Dataset({
+        "pq": dim1_da("pq", [ 0b01000, 0b11001, 0b01010, 0b10011, 0b00100, 0b10111], dim_coords,
+                      attrs={
+                          "flags_definition": {
+                              "joviality": {
+                                  "bits": 3,
+                                  "values": {
+                                      '0': "Melancholic",
+                                      '1': "Joyous",
+                                  },
+                                  "description": "All splodgy looking"
+                              },
+                              "flavour": {
+                                  "bits": 3,
+                                  "values": {
+                                      '0': "Bland",
+                                      '1': "Tasty",
+                                  },
+                                  "description": "All splodgy looking"
+                              },
+                              "splodgy": {
+                                  "bits": 2,
+                                  "values": {
+                                      '0': "Splodgeless",
+                                      '1': "Splodgy",
+                                  },
+                                  "description": "All splodgy looking"
+                              },
+                              "ugly": {
+                                  "bits": 1,
+                                  "values": {
+                                      '0': False,
+                                      '1': True
+                                  },
+                                  "description": "Real, real ugly",
+                              },
+                              "impossible": {
+                                  "bits": 0,
+                                  "values": {
+                                      '0': False,
+                                      '1': "Woah!"
+                                  },
+                                  "description": "Won't happen. Can't happen. Might happen.",
+                              },
+                          }
+                      })
+    })
+    return output
+
+
+@pytest.fixture
+def simple_colormap_style_cfg():
+    return {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "value_map": {
+            "pq": [
+                {
+                    "title": "Impossibly Tasty",
+                    "abstract": "Tasty AND Impossible",
+                    "flags": {
+                        "flavour": "Tasty",
+                        "impossible": "Woah!"
+                    },
+                    "color": "#FF0000"
+                },
+                {
+                    "title": "Possibly Tasty",
+                    "abstract": "Tasty and Possible",
+                    "flags": {
+                        "impossible": "Woah!"
+                    },
+                    "color": "#00FF00"
+                },
+                {
+                    "title": "Ugly/Splodgy",
+                    "abstract": "Ugly or splodgy",
+                    "flags": {
+                        "or": {
+                            "ugly": True,
+                            "splodgy": "Splodgy"
+                        }
+                    },
+                    "color": "#0000FF"
+                },
+            ]
+        }
+    }
+
+def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
+    style = ows_style_standalone(simple_colormap_style_cfg)
+    mask = style.to_mask(dummy_col_map_data, raw_calc_null_mask)
+    result = style.transform_data(dummy_col_map_data, mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    # point 0 fall through - transparent
+    assert result["alpha"].values[0] == 0
+    # point 1 tasty & impossible: red
+    assert result["alpha"].values[1] == 255
+    assert result["red"].values[1] == 255
+    assert result["green"].values[1] == 0
+    assert result["blue"].values[1] == 0
+    # point 2 splodgy or ugly: blue
+    assert result["alpha"].values[2] == 255
+    assert result["red"].values[2] == 0
+    assert result["green"].values[2] == 0
+    assert result["blue"].values[2] == 255
+    # point 3 bland & impossible: green
+    assert result["alpha"].values[3] == 255
+    assert result["red"].values[3] == 0
+    assert result["green"].values[3] == 255
+    assert result["blue"].values[3] == 0
+    # point 4 splodgy or ugly: blue
+    assert result["alpha"].values[4] == 255
+    assert result["red"].values[4] == 0
+    assert result["green"].values[4] == 0
+    assert result["blue"].values[4] == 255
+    # point 5 bland & impossible: green
+    assert result["alpha"].values[5] == 255
+    assert result["red"].values[5] == 0
+    assert result["green"].values[5] == 255
+    assert result["blue"].values[5] == 0
+
