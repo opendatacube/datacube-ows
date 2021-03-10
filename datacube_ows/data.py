@@ -82,7 +82,7 @@ class ProductBandQuery:
         if main_bands:
             needed_bands = main_bands
         else:
-            needed_bands = set(layer.band_idx.band_cfg.values())
+            needed_bands = set(layer.band_idx.band_cfg.keys())
         queries = [
             cls.simple_layer_query(layer, needed_bands,
                                    manual_merge=layer.data_manual_merge,
