@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 import numpy as np
 
-from datacube_ows.styles import ows_style_standalone
+from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg
 
 
 def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
@@ -89,7 +89,7 @@ def simple_rgb_style_cfg():
 
 
 def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg):
-    style = ows_style_standalone(simple_rgb_style_cfg)
+    style = StandaloneStyle(simple_rgb_style_cfg)
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
     for channel in ("red", "green", "blue"):
@@ -184,9 +184,8 @@ def raw_calc_null_mask():
     return dim1_da("mask", [True] * len(dim_coords), dim_coords)
 
 def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
-    style = ows_style_standalone(simple_ramp_style_cfg)
-    mask = style.to_mask(dummy_raw_calc_data, raw_calc_null_mask)
-    result = style.transform_data(dummy_raw_calc_data, mask)
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    result = apply_ows_style(style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     # point 0 800, 200 (idx=0.6)maps to blue
@@ -252,9 +251,7 @@ def rgb_style_with_masking_cfg():
     }
 
 def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg):
-    style = ows_style_standalone(rgb_style_with_masking_cfg)
-    mask = style.to_mask(dummy_raw_calc_data, raw_calc_null_mask)
-    result = style.transform_data(dummy_raw_calc_data, mask)
+    result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     alphas = result["alpha"].values
@@ -360,9 +357,7 @@ def simple_colormap_style_cfg():
     }
 
 def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
-    style = ows_style_standalone(simple_colormap_style_cfg)
-    mask = style.to_mask(dummy_col_map_data, raw_calc_null_mask)
-    result = style.transform_data(dummy_col_map_data, mask)
+    result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     # point 0 fall through - transparent
@@ -393,3 +388,10 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     assert result["green"].values[5] == 255
     assert result["blue"].values[5] == 0
 
+
+def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
+    null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    none_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data)
+    for i in range(6):
+        for c in ("red", "green", "blue", "alpha"):
+            assert null_mask[c].values[i] == none_mask[c].values[i]

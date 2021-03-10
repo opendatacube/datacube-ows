@@ -349,3 +349,18 @@ class StyleMask(OWSConfigEntry):
             self.flags = None
         else:
             raise ConfigException(f"mask definition in layer {self.style.product.name}, style {self.style.name} has no flags or enum section - nothing to mask on.")
+
+
+# Minimum Viable Proxy Objects, for standalone API
+
+class StandaloneGlobalProxy:
+    pass
+
+class BandIdxProxy:
+    def band(self, band):
+        return band
+
+class StandaloneProductProxy:
+    name = "standalone"
+    global_cfg = None
+    band_idx = BandIdxProxy()
