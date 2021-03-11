@@ -1,6 +1,34 @@
+from unittest.mock import MagicMock
+
 import datacube_ows.ogc_utils
+import datetime
 
 import pytest
+
+class DSCT:
+    def __init__(self, meta):
+        self.center_time = datetime.datetime(1970,1,1,0,0,0)
+        self.metadata_doc = meta
+
+def test_dataset_center_time():
+    dct = datacube_ows.ogc_utils.dataset_center_time
+    ds = DSCT({})
+    assert dct(ds).year == 1970
+    ds = DSCT({
+        "properties": {
+            "dtr:start_datetime": "1980-01-01T00:00:00"
+        },
+    })
+    assert dct(ds).year == 1980
+    ds = DSCT({
+        "extent": {
+            "center_dt": "1990-01-01T00:00:00"
+        },
+        "properties": {
+            "dtr:start_datetime": "1980-01-01T00:00:00"
+        },
+    })
+    assert dct(ds).year == 1990
 
 def test_get_service_base_url():
 
