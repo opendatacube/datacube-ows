@@ -5,7 +5,7 @@ def StandaloneStyle(cfg):
     """
     Construct a OWS style object that stands alone, independent of a complete OWS configuration environment.
 
-    :param cfg: A valid OWS Style configuration dictionary.
+    :param cfg: A valid OWS Style definition configuration dictionary.
 
         Refer to the documentation for the valid syntax:
 
@@ -47,7 +47,7 @@ def apply_ows_style_cfg(cfg, data, valid_data_mask=None):
     """
     Apply an OWS style configuration to an ODC XArray to generate a styled image.
 
-    :param cfg: A valid OWS Style configuration dictionary.
+    :param cfg: A valid OWS Style definition configuration dictionary.
 
         Refer to the documentation for the valid syntax:
 
@@ -69,3 +69,26 @@ def apply_ows_style_cfg(cfg, data, valid_data_mask=None):
         valid_data_mask
     )
 
+
+def generate_ows_legend_style(style, ndates=0):
+    """
+
+    :param style: An OWS Style object, as created by StandaloneStyle()
+    :param ndates: (optional) Number of dates (for styles with multi-date handlers)
+    :return: A PIL Image object.
+    """
+    return style.render_legend(ndates)
+
+
+def generate_ows_legend_cfg(cfg, ndates=0):
+    """
+
+    :param cfg: A valid OWS Style definition configuration dictionary.
+
+        Refer to the documentation for the valid syntax:
+
+        https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html
+    :param ndates: (optional) Number of dates (for styles with multi-date handlers)
+    :return: A PIL Image object.
+    """
+    return generate_ows_legend_style(StandaloneStyle(cfg), ndates)

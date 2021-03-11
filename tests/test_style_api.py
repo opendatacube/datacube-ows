@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 import numpy as np
 
-from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg
+from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_cfg
 
 
 def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
@@ -220,7 +220,7 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
 
 def test_ramp_legend(simple_ramp_style_cfg):
     style = StandaloneStyle(simple_ramp_style_cfg)
-    img = style.render_legend(1)
+    img = generate_ows_legend_style(style, 1)
     assert img.mode == "RGBA"
     assert img.size == (400, 125)
 
@@ -396,8 +396,8 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
 
 
 def test_ramp_legend(simple_colormap_style_cfg):
-    style = StandaloneStyle(simple_colormap_style_cfg)
-    img = style.render_legend(1)
+    img = generate_ows_legend_cfg(simple_colormap_style_cfg, 1)
+
     assert img.mode == "RGBA"
     assert img.size == (300, 125)
 
