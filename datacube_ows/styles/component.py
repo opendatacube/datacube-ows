@@ -19,7 +19,8 @@ class ComponentStyleDef(StyleDefBase):
                 else:
                     raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
             if "function" in components:
-                self.raw_rgb_components[imgband] = FunctionWrapper(self.product, components)
+                self.raw_rgb_components[imgband] = FunctionWrapper(self.product, components,
+                                                                   stand_alone=self.stand_alone)
                 for b in style_cfg["additional_bands"]:
                     self.raw_needed_bands.add(b)
             else:

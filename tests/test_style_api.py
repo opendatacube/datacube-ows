@@ -218,6 +218,12 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     assert result["red"].values[5] < 255
 
 
+def test_ramp_legend(simple_ramp_style_cfg):
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    img = style.render_legend(1)
+    assert img.mode == "RGBA"
+    assert img.size == (400, 125)
+
 
 @pytest.fixture
 def rgb_style_with_masking_cfg():
@@ -389,9 +395,17 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     assert result["blue"].values[5] == 0
 
 
+def test_ramp_legend(simple_colormap_style_cfg):
+    style = StandaloneStyle(simple_colormap_style_cfg)
+    img = style.render_legend(1)
+    assert img.mode == "RGBA"
+    assert img.size == (300, 125)
+
+
 def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
     null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
     none_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data)
     for i in range(6):
         for c in ("red", "green", "blue", "alpha"):
             assert null_mask[c].values[i] == none_mask[c].values[i]
+

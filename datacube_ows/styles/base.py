@@ -1,8 +1,13 @@
+import io
+
+from PIL import Image
 from datacube.utils.masking import make_mask
 
 import numpy as np
 import xarray as xr
 from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands, OWSFlagBandStandalone
+from datacube_ows.legend_utils import get_image_from_url
+from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 import logging
@@ -184,17 +189,40 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.legend_url_override = cfg.get('url', None)
         self.legend_cfg = cfg
 
+    def render_legend(self, dates):
+        try:
+            ndates = int(dates)
+        except TypeError:
+            ndates = len(dates)
+        mdh = self.get_multi_date_handler(ndates)
+        url = self.legend_override_with_url(mdh)
+        if url:
+            return get_image_from_url(url)
+        if not self.auto_legend:
+            return None
+        bytesio = io.BytesIO()
+        if mdh:
+            mdh.legend(bytesio)
+        else:
+            self.single_date_legend(bytesio)
+        bytesio.seek(0)
+        return Image.open(bytesio)
+
     def single_date_legend(self, bytesio):
         raise NotImplementedError()
 
-    def legend_override_with_url(self):
+    def legend_override_with_url(self, mdh=None):
+        if mdh:
+            return mdh.legend_url_override
         return self.legend_url_override
 
     def get_multi_date_handler(self, count):
         for mdh in self.multi_date_handlers:
             if mdh.applies_to(count):
                 return mdh
-        return None
+        if count in [0,1]:
+            return None
+        raise WMSException(f"Style {self.name} does not support requests with {count} dates")
 
     @classmethod
     def register_subclass(cls, subclass, triggers, priority=False):
