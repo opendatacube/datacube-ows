@@ -11,6 +11,7 @@ import numpy as np
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.ogc_exceptions import WMSException
+from datacube_ows.legend_utils import  get_image_from_url
 
 
 @pytest.fixture
@@ -46,6 +47,25 @@ def test_legend_parser_urllegend(prelegend_style):
     )
     assert prelegend_style.show_legend
     assert prelegend_style.legend_url_override == url
+
+@pytest.fixture
+def image_url():
+    return "https://github.com/fluidicon.png"
+
+@pytest.fixture
+def bad_image_url():
+    return "https://github.com/not-a-real-github-image-i-hope-asdfgaskjdfghaskjdh.png"
+
+
+def test_image_from_url(image_url):
+    img = get_image_from_url(image_url)
+    assert img is not None
+    assert img.model == "RGBA"
+
+
+def test_image_from_url(bad_image_url):
+    img = get_image_from_url(bad_image_url)
+    assert img is None
 
 
 def test_parse_colorramp_defaults():
