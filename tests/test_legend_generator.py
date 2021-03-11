@@ -5,6 +5,7 @@ import datetime
 from decimal import Decimal
 
 from unittest.mock import patch, MagicMock
+from tests.test_band_utils import dummy_layer
 
 import numpy as np
 
@@ -47,6 +48,11 @@ def test_legend_parser_urllegend(prelegend_style):
     )
     assert prelegend_style.show_legend
     assert prelegend_style.legend_url_override == url
+
+def test_create_legend_for_style(dummy_layer):
+    from datacube_ows.legend_generator import create_legend_for_style
+    assert create_legend_for_style(dummy_layer, "stylish_steve") is None
+
 
 @pytest.fixture
 def image_url():
