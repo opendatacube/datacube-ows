@@ -25,17 +25,17 @@ styles and default_style
 ========================
 
 The "styles" list must be supplied, and must contain at least
-one style.  There are several different possible style, each
-with a slightly different syntax, these are discussed below.
+one style definition.  There are several different types of style,
+each with a slightly different syntax, these are discussed below.
 
 The "default_style" entry is optional and identifies the style
 that will be used by default if no style is specified in the
-request.  If not supplied, it defaults to the first style in the
+request.  If not supplied, it defaults to the first style definition in the
 "styles" list.
 
 E.g. Here the second style "another_style" is the default. If the
-"default_style" entry is removed from this snippet, then the first
-style "a_style" will be the default.
+"default_style" entry were removed from this snippet, then the first
+style "a_style" would be the default.
 
 ::
 
@@ -47,82 +47,8 @@ style "a_style" will be the default.
         ]
     }
 
-Inheritance
-===========
-
-Styles may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
-from previously defined styles.
-
-To lookup a style by name use the "style" and "layer" element in the inherits section.
-(The layer section is optional and defaults to the layer of the new style:
-
-::
-
-    new_style = {
-        "inherits": {
-            "layer": "layer1",
-            "style": "old_style"
-        },
-        "name": "new_style",
-        "title": "New Style",
-        ... # Other overrides.
-    }
-
-Note that a style can only inherit by name from a parent style that has already been parsed
-by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
-can be avoided using direct inheritance.
-
-multi_date
-==========
-
-The WMS and WMTS specs allow queries over multiple date
-values.  Datacube OWS will generally reject such queries as it
-is generally not clear what such a query means in the
-context of raster satellite data.
-
-Datacube OWS does allow the user to define custom
-extensions for individual styles to define the behaviour
-of multi-date requests.  For example, selecting two
-dates within a particular style might return a representation
-of the difference between the data for those two dates.
-
-Multi-date behaviour is configured using the ``multi_date``
-entry which is a list of multi-date handlers.  `multi_date``
-is optional and defaults to an empty list (no multi-date
-handlers, single date requests supported only).
-
-The format of a multi-date handler varies depending on the
-`style type <#style-types>`__ but a multi-date handler must
-always contain a ``allowed_count_range`` entry which specifies
-the values for which the handler applies. The ``allowed_count_range``
-is a tuple of two integers corresponding the minimum and maximum
-number of dates accepted by that handler.  The allowed count ranges
-of declared multi-date handlers cannot overlap and a multi-date handler
-cannot handle a request with 1 (or 0) dates.
-
-E.g. ::
-
-    "multi_date": [
-        {
-            # This multi-date handler handles requests with 2 dates.
-            "allowed_count_range": [2, 2],
-            ...
-        },
-        {
-            # This multi-date handler handles requests with between 3 and 5 dates.
-            "allowed_count_range": [3, 5],
-            ...
-        },
-        {
-            # ERROR: 1 is not allowed, and 2 is already handled.
-            "allowed_count_range": [1, 2],
-            ...
-        }
-    ],
-
-Currently multi_date is only supported
-for `Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date>`__.
+Style Definitions
+-----------------
 
 Style Types
 ===========
@@ -155,6 +81,33 @@ There are four distinct possible types of style.
 
 Each style type has its own specific config entries as described in the
 pages linked above.
+
+Inheritance
+===========
+
+Styles may be
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
+from previously defined styles.
+
+To lookup a style by name use the "style" and "layer" element in the inherits section.
+(The layer section is optional and defaults to the layer of the new style:
+
+::
+
+    new_style = {
+        "inherits": {
+            "layer": "layer1",
+            "style": "old_style"
+        },
+        "name": "new_style",
+        "title": "New Style",
+        ... # Other overrides.
+    }
+
+Note that a style can only inherit by name from a parent style that has already been parsed
+by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
+can be avoided using direct inheritance.
+
 
 ---------------
 Common Elements
@@ -312,3 +265,54 @@ E.g.::
          "url": "https://somedomain.com/path/to/legend_image.png",
      }
 
+multi_date
+++++++++++
+
+The WMS and WMTS specs allow queries over multiple date
+values.  Datacube OWS will generally reject such queries as it
+is generally not clear what such a query means in the
+context of raster satellite data.
+
+Datacube OWS does allow the user to define custom
+extensions for individual styles to define the behaviour
+of multi-date requests.  For example, selecting two
+dates within a particular style might return a representation
+of the difference between the data for those two dates.
+
+Multi-date behaviour is configured using the ``multi_date``
+entry which is a list of multi-date handlers.  `multi_date``
+is optional and defaults to an empty list (no multi-date
+handlers, single date requests supported only).
+
+The format of a multi-date handler varies depending on the
+`style type <#style-types>`__ but a multi-date handler must
+always contain a ``allowed_count_range`` entry which specifies
+the values for which the handler applies. The ``allowed_count_range``
+is a tuple of two integers corresponding the minimum and maximum
+number of dates accepted by that handler.  The allowed count ranges
+of declared multi-date handlers cannot overlap and a multi-date handler
+cannot handle a request with 1 (or 0) dates.
+
+E.g. ::
+
+    "multi_date": [
+        {
+            # This multi-date handler handles requests with 2 dates.
+            "allowed_count_range": [2, 2],
+            ...
+        },
+        {
+            # This multi-date handler handles requests with between 3 and 5 dates.
+            "allowed_count_range": [3, 5],
+            ...
+        },
+        {
+            # ERROR: 1 is not allowed, and 2 is already handled.
+            "allowed_count_range": [1, 2],
+            ...
+        }
+    ],
+
+Currently multi_date is only supported
+for `Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date>`__,
+but will likely be extended to other style types in future.
