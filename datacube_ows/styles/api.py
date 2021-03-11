@@ -80,7 +80,7 @@ def generate_ows_legend_style(style, ndates=0):
     return style.render_legend(ndates)
 
 
-def generate_ows_legend_cfg(cfg, ndates=0):
+def generate_ows_legend_style_cfg(cfg, ndates=0):
     """
 
     :param cfg: A valid OWS Style definition configuration dictionary.
