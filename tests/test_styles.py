@@ -597,8 +597,29 @@ def test_createcolordata_remask():
     data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, np.array([True, True, True, True, True, True]))
     assert (np.isfinite(data["red"][0:3:1])).all()
     assert (np.isnan(data["red"][4:5:1])).all()
-    
-    
 
+def test_scale_ramp():
+    from datacube_ows.styles.ramp import scale_unscaled_ramp
 
+    input = [
+        {"value": 0.0, "color": "red", "alpha": 0.5},
+        {"value": 0.5, "color": "green"},
+        {"value": 1.0, "color": "blue"},
+    ]
+    output = scale_unscaled_ramp(-100.0, 100.0, input)
+    assert output[0]["color"] == "red"
+    assert output[0]["alpha"] == 0.5
+    assert output[0]["value"] == -100.0
+    assert output[1]["color"] == "green"
+    assert output[1]["alpha"] == 1.0
+    assert output[1]["value"] == 0.0
+    assert output[2]["color"] == "blue"
+    assert output[2]["alpha"] == 1.0
+    assert output[2]["value"] == 100.0
 
+def test_bad_mpl_ramp():
+    from datacube_ows.styles.ramp import read_mpl_ramp
+
+    with pytest.raises(ConfigException) as e:
+        ramp = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
+    assert "Invalid Matplotlib name: " in str(e.value)
