@@ -171,16 +171,28 @@ class ConfigException(Exception):
 # Function wrapper for configurable functional elements
 
 class FunctionWrapper:
-    def __init__(self,  product_or_style_cfg, func_cfg):
+    def __init__(self,  product_or_style_cfg, func_cfg,
+                 stand_alone=False):
         if callable(func_cfg):
-            raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+            if not stand_alone:
+                raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+            self._func = func_cfg
+            self._args = []
+            self._kwargs = {}
+            self.band_mapper = None
         elif isinstance(func_cfg, str):
             self._func = get_function(func_cfg)
             self._args = []
             self._kwargs = {}
             self.band_mapper = None
         else:
-            self._func = get_function(func_cfg["function"])
+            if not stand_alone and callable(func_cfg["function"]):
+                self._func = func_cfg["function"]
+            elif callable(func_cfg["function"]):
+                raise ConfigException(
+                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+            else:
+                self._func = get_function(func_cfg["function"])
             self._args = func_cfg.get("args", [])
             self._kwargs = func_cfg.get("kwargs", {})
             if "pass_product_cfg" in func_cfg:

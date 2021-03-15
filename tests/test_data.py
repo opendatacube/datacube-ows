@@ -1,6 +1,6 @@
 import datacube_ows.data
 
-from datacube_ows.data import get_s3_browser_uris
+from datacube_ows.data import get_s3_browser_uris, ProductBandQuery
 
 import pytest
 
@@ -220,4 +220,31 @@ def test_make_band_dict_float(product_layer):
         "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": 'lay_over'
     }
 
+
+def test_pbq_ctor_simple(product_layer):
+    pbq = ProductBandQuery.simple_layer_query(product_layer, set(["red", "green"]))
+    assert str(pbq) in (
+        "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_product)]",
+        "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_product)]"
+    )
+    pbq = ProductBandQuery.simple_layer_query(product_layer, set(["red", "green"]), resource_limited=True)
+    assert str(pbq) in (
+        "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_summary_product)]",
+        "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_summary_product)]"
+    )
+
+
+def test_pbq_ctor_full(product_layer):
+    pbqs = ProductBandQuery.full_layer_queries(product_layer)
+    assert len(pbqs) == 2
+    assert "red" in str(pbqs[0])
+    assert "green" in str(pbqs[0])
+    assert "blue" in str(pbqs[0])
+    assert "fake" in str(pbqs[0])
+    assert "Query bands {" in str(pbqs[0])
+    assert "} from products [FakeODCProduct(test_odc_product)]"  in str(pbqs[0])
+    assert str(pbqs[1]) in (
+        "Query bands ('wongle', 'pq') from products [FakeODCProduct(test_masking_product)]",
+        "Query bands ('pq', 'wongle') from products [FakeODCProduct(test_masking_product)]",
+    )
 

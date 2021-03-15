@@ -6,3 +6,4 @@ from datacube_ows.styles.ramp import ColorRampDef
 
 
 StyleDef = StyleDefBase
+

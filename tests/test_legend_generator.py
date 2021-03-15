@@ -5,12 +5,14 @@ import datetime
 from decimal import Decimal
 
 from unittest.mock import patch, MagicMock
+from tests.test_band_utils import dummy_layer
 
 import numpy as np
 
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.ogc_exceptions import WMSException
+from datacube_ows.legend_utils import  get_image_from_url
 
 
 @pytest.fixture
@@ -47,100 +49,29 @@ def test_legend_parser_urllegend(prelegend_style):
     assert prelegend_style.show_legend
     assert prelegend_style.legend_url_override == url
 
-
-@patch("datacube_ows.legend_generator.make_response")
-def test_create_legends_from_styles(make_response):
-
-    def fake_img(bytesio):
-        from PIL import Image
-        Image.new('RGB', (256, 256)).save(bytesio, format="PNG")
-
-    class fakestyle:
-        def __init__(self):
-            self.auto_legend = True
-            self.single_date_legend = MagicMock()
-            self.single_date_legend.side_effect = fake_img
-            self.legend_override_with_url = MagicMock()
-            self.legend_override_with_url.return_value = None
-            self.multi_date_handlers = [
-            ]
-
-    datacube_ows.legend_generator.create_legends_from_styles([fakestyle()])
-
-    from io import BytesIO
-    from PIL import Image
-    bs = BytesIO()
-    Image.new('RGB', (256, 256)).save(bs, format="PNG")
-
-    make_response.assert_called_with(bs.getvalue())
-
-@patch("datacube_ows.legend_generator.make_response")
-def test_legend_graphic(make_response):
-
-    def fake_img(bytesio):
-        from PIL import Image
-        Image.new('RGB', (256, 256)).save(bytesio, format="PNG")
-
-    class FakeRequestResult:
-        def __init__(self, status_code=200, mime="image/png"):
-            self.status_code = status_code
-            self.headers = {
-                'content-type': mime
-            }
-            from io import BytesIO
-            from PIL import Image
-            bs = BytesIO()
-            Image.new('RGB', (256, 256)).save(bs, format="PNG")
-            bs.seek(0)
-            self.content = bs.read()
-
-    class fakeproduct:
-        def __init__(self, legend, style_index):
-            self.legend = legend
-            self.style_index = style_index
-
-    class fakeparams:
-        def __init__(self, style_name, product):
-            self.product = product
-            self.times = [datetime.date(2017,1,1)]
-            self.styles = [MagicMock()]
-            self.styles[0].name = style_name
-            self.styles[0].single_date_legend = MagicMock()
-            self.styles[0].single_date_legend.side_effect = fake_img
-            self.styles[0].legend_override_with_url = MagicMock()
-            self.styles[0].legend_override_with_url.return_value = "anurl"
-            self.styles[0].multi_date_handlers = [
-            ]
-
-    with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("requests.get") as rg:
-        lgp.return_value = fakeparams("test_style", None)
-        rg.return_value = FakeRequestResult()
-        lg = datacube_ows.legend_generator.legend_graphic(None)
-
-        assert lg.mimetype == 'image/png'
-    with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("requests.get") as rg:
-        lgp.return_value = fakeparams("test_style", fakeproduct({"url": "test_bad_url"}, dict()))
-        rg.return_value = FakeRequestResult(status_code=404)
-        try:
-            lg = datacube_ows.legend_generator.legend_graphic(None)
-            assert False
-        except WMSException:
-            assert True
-
-    with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("requests.get") as rg:
-        rg.return_value = FakeRequestResult()
-        lgp.return_value = fakeparams("test_style", fakeproduct({"url": "test_good_url"}, dict()))
-
-        lg = datacube_ows.legend_generator.legend_graphic(None)
-
-        make_response.assert_called_with(rg.return_value.content)
+def test_create_legend_for_style(dummy_layer):
+    from datacube_ows.legend_generator import create_legend_for_style
+    assert create_legend_for_style(dummy_layer, "stylish_steve") is None
 
 
-    with patch("datacube_ows.legend_generator.GetLegendGraphicParameters") as lgp, patch("datacube_ows.legend_generator.create_legends_from_styles") as clfs:
-        lgp.return_value = fakeparams("test", fakeproduct({"styles": ["test"]}, {"test": "foobarbaz"}))
-        lg = datacube_ows.legend_generator.legend_graphic(None)
+@pytest.fixture
+def image_url():
+    return "https://github.com/fluidicon.png"
 
-        clfs.assert_called_with(lgp.return_value.styles, ndates=1)
+@pytest.fixture
+def bad_image_url():
+    return "https://github.com/not-a-real-github-image-i-hope-asdfgaskjdfghaskjdh.png"
+
+
+def test_image_from_url(image_url):
+    img = get_image_from_url(image_url)
+    assert img is not None
+    assert img.model == "RGBA"
+
+
+def test_image_from_url(bad_image_url):
+    img = get_image_from_url(bad_image_url)
+    assert img is None
 
 
 def test_parse_colorramp_defaults():

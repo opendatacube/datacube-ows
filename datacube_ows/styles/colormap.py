@@ -72,8 +72,8 @@ class ValueMapRule(OWSConfigEntry):
 class ColorMapStyleDef(StyleDefBase):
     auto_legend = True
 
-    def __init__(self, product, style_cfg):
-        super(ColorMapStyleDef, self).__init__(product, style_cfg)
+    def __init__(self, product, style_cfg, stand_alone=False):
+        super(ColorMapStyleDef, self).__init__(product, style_cfg, stand_alone=stand_alone)
         style_cfg = self._raw_cfg
         self.value_map = ValueMapRule.value_map_from_config(self, style_cfg["value_map"])
         for band in self.value_map.keys():
@@ -89,7 +89,7 @@ class ColorMapStyleDef(StyleDefBase):
 
     @staticmethod
     def create_colordata(data, rgb, alpha, mask):
-        target = Dataset()
+        target = Dataset(coords=data.coords)
         colors = ["red", "green", "blue", "alpha"]
         for color in colors:
             val = alpha if color == "alpha" else getattr(rgb, color)
@@ -109,7 +109,7 @@ class ColorMapStyleDef(StyleDefBase):
         #        except AttributeError:
         #            data[band] = data[band].where(extent_mask)
 
-        imgdata = Dataset()
+        imgdata = Dataset(coords=data.coords)
         for cfg_band, rules in self.value_map.items():
             # Run through each item
             band = self.product.band_idx.band(cfg_band)

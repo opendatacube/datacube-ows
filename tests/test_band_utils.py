@@ -52,6 +52,7 @@ def dummy_layer():
     product_layer.name = "test_product"
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx._idx = {"b1": "b1", "b2": "b2"}
+    product_layer.style_index = {}
     return product_layer
 
 @pytest.fixture

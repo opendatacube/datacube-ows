@@ -501,7 +501,7 @@ class ColorRamp:
         imgdata = {}
         for band in self.components:
             imgdata[band] = (data.dims, self.get_8bit_value(data, band))
-        imgdataset = Dataset(imgdata)
+        imgdataset = Dataset(imgdata, coords=data.coords)
         return imgdataset
 
     def color_alpha_at(self, val):
@@ -519,8 +519,9 @@ class ColorRamp:
 
 class ColorRampDef(StyleDefBase):
     auto_legend = True
-    def __init__(self, product, style_cfg, defer_multi_date=False):
-        super(ColorRampDef, self).__init__(product, style_cfg)
+    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
+        super(ColorRampDef, self).__init__(product, style_cfg,
+                           stand_alone=stand_alone, defer_multi_date=defer_multi_date)
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
 
@@ -530,7 +531,9 @@ class ColorRampDef(StyleDefBase):
         self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
 
         if "index_function" in style_cfg:
-            self.index_function = FunctionWrapper(self, style_cfg["index_function"])
+            self.index_function = FunctionWrapper(self,
+                                                  style_cfg["index_function"],
+                                                  stand_alone=self.stand_alone)
         else:
             raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
                 self.name,

@@ -173,6 +173,10 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
         return cfg
 
 
+class OWSFlagBandStandalone:
+    def __init__(self, band):
+        self.pq_band = band
+
 class OWSFlagBand(OWSConfigEntry):
     def __init__(self, cfg, product_cfg, **kwargs):
         super().__init__(cfg, **kwargs)

@@ -14,12 +14,31 @@ import numpy as np
 
 @pytest.fixture
 def product_layer():
+    class FakeODCProduct:
+        def __init__(self, name):
+            self.name = name
+            self.id = 7
+        def __str__(self):
+            return self.name
+        def __repr__(self):
+            return f"FakeODCProduct({self.name})"
+    class FakeProductBand:
+        bands = set(["pq", "wongle"])
+        products = [FakeODCProduct("test_masking_product")]
+        manual_merge=False
+        ignore_time=False
+        fuse_func=None
+        def products_match(self, name):
+            return False
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer._unready_attributes = []
     product_layer.global_cfg = MagicMock()
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
+    product_layer.products = [FakeODCProduct('test_odc_product')]
+    product_layer.low_res_product_names = ["test_odc_summary_product"]
+    product_layer.low_res_products = [FakeODCProduct('test_odc_summary_product')]
     product_layer.always_fetch_bands = ["red", "green", "blue"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx._unready_attributes = []
@@ -43,6 +62,9 @@ def product_layer():
     product_layer.global_cfg.product_index = {
         "test_product": product_layer
     }
+    product_layer.data_manual_merge = False
+    product_layer.fuse_func = None
+    product_layer.allflag_productbands = [FakeProductBand()]
     product_layer.style_index = {}
     return product_layer
 

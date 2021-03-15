@@ -14,7 +14,11 @@ OWS Configuration
    cfg_functions
    cfg_layers
    cfg_styling
-   cfg_*_styles
+   cfg_component_styles
+   cfg_colourramp_styles
+   cfg_colourmap_styles
+   cfg_hybrid_styles
+   cfg_style_api
 
 .. contents:: Table of Contents
 
