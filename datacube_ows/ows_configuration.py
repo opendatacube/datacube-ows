@@ -763,13 +763,13 @@ class OWSProductLayer(OWSNamedLayer):
 
     def parse_product_names(self, cfg):
         self.product_name = cfg["product_name"]
-        self.product_names = [self.product_name]
+        self.product_names = (self.product_name,)
 
         self.low_res_product_name  = cfg.get("low_res_product_name")
         if self.low_res_product_name:
-            self.low_res_product_names = [self.low_res_product_name]
+            self.low_res_product_names = (self.low_res_product_name,)
         else:
-            self.low_res_product_names = []
+            self.low_res_product_names = tuple()
         if "product_names" in cfg:
             raise ConfigException(f"'product_names' entry in non-multi-product layer {self.name} - use 'product_name' only")
         if "low_res_product_names" in cfg:
@@ -779,12 +779,12 @@ class OWSProductLayer(OWSNamedLayer):
         if "dataset" in cfg:
             raise ConfigException(f"The 'dataset' entry in the flags section is no longer supported.  Please refer to the documentation for the correct format (layer {self.name})")
         if "product" in cfg:
-            pq_names = [cfg["product"]]
+            pq_names = (cfg["product"],)
         else:
-            pq_names = [self.product_name]
+            pq_names = (self.product_name,)
 
         if "low_res_product" in cfg:
-            pq_low_res_names = [cfg.get("low_res_product")]
+            pq_low_res_names = (cfg.get("low_res_product"),)
         else:
             pq_low_res_names = self.low_res_product_names
         if "products" in cfg:
@@ -792,8 +792,8 @@ class OWSProductLayer(OWSNamedLayer):
         if "low_res_products" in cfg:
             raise ConfigException(f"'low_res_products' entry in flags section of non-multi-product layer {self.name}- use 'low_res_product' only")
         return {
-            "pq_names": tuple(pq_names),
-            "pq_low_res_names": tuple(pq_low_res_names),
+            "pq_names": pq_names,
+            "pq_low_res_names": pq_low_res_names,
         }
 
 
@@ -801,9 +801,9 @@ class OWSMultiProductLayer(OWSNamedLayer):
     multi_product = True
 
     def parse_product_names(self, cfg):
-        self.product_names = cfg["product_names"]
+        self.product_names = tuple(cfg["product_names"])
         self.product_name = self.product_names[0]
-        self.low_res_product_names = cfg.get("low_res_product_names", [])
+        self.low_res_product_names = tuple(cfg.get("low_res_product_names", []))
         if self.low_res_product_names:
             self.low_res_product_name = self.low_res_product_names[0]
         else:
@@ -817,21 +817,21 @@ class OWSMultiProductLayer(OWSNamedLayer):
         if "datasets" in cfg:
             raise ConfigException(f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})")
         if "products" in cfg:
-            pq_names = cfg["products"]
+            pq_names = tuple(cfg["products"])
         else:
-            pq_names = list(self.product_names)
+            pq_names = self.product_names
 
         if "low_res_products" in cfg:
-            pq_low_res_names = cfg["low_res_products"]
+            pq_low_res_names = tuple(cfg["low_res_products"])
         else:
-            pq_low_res_names = list(self.low_res_product_names)
+            pq_low_res_names = self.low_res_product_names
         if "product" in cfg:
             raise ConfigException(f"'product' entry in flags section of multi-product layer {self.name} - use 'products' only")
         if "low_res_product" in cfg:
             raise ConfigException(f"'low_res_product' entry in flags section of multi-product layer {self.name} - use 'low_res_products' only")
         return {
-            "pq_names": tuple(pq_names),
-            "pq_low_res_names": tuple(pq_low_res_names),
+            "pq_names": pq_names,
+            "pq_low_res_names": pq_low_res_names,
         }
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None):
