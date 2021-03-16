@@ -82,7 +82,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             for mask in self.masks:
                 fb = mask.band
                 if fb.pq_names == self.product.product_names:
-                    self.needed_bands.add(fb.band)
+                    self.needed_bands.add(fb.pq_band)
                     continue
                 handled=False
                 for pqp, pqb in self.pq_product_bands:
