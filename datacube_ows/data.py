@@ -789,12 +789,12 @@ def feature_info(args):
 #                            except TypeError:
 #                                pass
             feature_json["data_available_for_dates"] = []
+            pt_native = None
             for d in all_time_datasets.coords["time"].values:
                 dt_datasets = all_time_datasets.sel(time=d)
                 dt = datetime.utcfromtimestamp(d.astype(int) * 1e-9)
                 if params.product.is_raw_time_res:
                     dt = solar_date(dt, tz)
-                pt_native = None
                 for ds in dt_datasets.values.item():
                     if pt_native is None:
                         pt_native = geo_point.to_crs(ds.crs)
@@ -804,7 +804,7 @@ def feature_info(args):
                         feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
                         break
             if time_datasets:
-                feature_json["data_links"] = sorted(get_s3_browser_uris(time_datasets, pt, s3_url, s3_bucket))
+                feature_json["data_links"] = sorted(get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket))
             else:
                 feature_json["data_links"] = []
             if params.product.feature_info_include_utc_dates:
