@@ -76,6 +76,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     def make_ready(self, dc, *args, **kwargs):
         self.needed_bands = set()
         self.pq_product_bands = []
+        self.flag_bands = set()
         for band in self.raw_needed_bands:
             self.needed_bands.add(self.local_band(band))
         if not self.stand_alone:
@@ -83,6 +84,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                 fb = mask.band
                 if fb.pq_names == self.product.product_names:
                     self.needed_bands.add(fb.pq_band)
+                    self.flag_bands.add(fb.pq_band)
                     continue
                 handled=False
                 for pqp, pqb in self.pq_product_bands:
@@ -94,7 +96,6 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                     self.pq_product_bands.append(
                         (fb.pq_names, set([fb.pq_band]))
                     )
-        self.flag_bands = set()
         for pq_names, pq_bands in self.pq_product_bands:
             for band in pq_bands:
                 if band in self.flag_bands:
@@ -160,8 +161,8 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             nda_alpha = np.ndarray(img_data["red"].shape, dtype='uint8')
             nda_alpha.fill(255)
             alpha = xr.DataArray(nda_alpha,
-                                coords=img_data.coords,
-                                dims=img_data.dims,
+                                coords=img_data["red"].coords,
+                                dims=img_data["red"].dims,
                                 name="alpha"
             )
         else:

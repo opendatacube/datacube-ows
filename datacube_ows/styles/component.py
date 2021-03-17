@@ -80,13 +80,13 @@ class ComponentStyleDef(StyleDefBase):
 
 
     def transform_single_date_data(self, data):
-        imgdata = Dataset(coords=data.coords)
+        imgdata = {}
         for imgband, components in self.rgb_components.items():
             if callable(components):
                 imgband_data = components(data)
                 dims = imgband_data.dims
                 imgband_data = imgband_data.astype('uint8')
-                imgdata[imgband] = (dims, imgband_data)
+                imgdata[imgband] = imgband_data
             else:
                 imgband_data = None
                 for band, intensity in components.items():
@@ -104,9 +104,10 @@ class ComponentStyleDef(StyleDefBase):
                     imgband_data = DataArray(imgband_data, data.coords, data.dims.keys())
                 if imgband != "alpha":
                     imgband_data = self.compress_band(imgband, imgband_data)
-                imgdata[imgband] = (imgband_data.dims,
-                                    imgband_data.astype("uint8"))
-        return imgdata
+                imgdata[imgband] = imgband_data.astype("uint8")
+
+        image_dataset = Dataset(imgdata)
+        return image_dataset
 
 
 StyleDefBase.register_subclass(ComponentStyleDef, "components")
