@@ -161,8 +161,8 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             nda_alpha = np.ndarray(img_data["red"].shape, dtype='uint8')
             nda_alpha.fill(255)
             alpha = xr.DataArray(nda_alpha,
-                                coords=img_data.coords,
-                                dims=img_data.dims,
+                                coords=img_data["red"].coords,
+                                dims=img_data["red"].dims,
                                 name="alpha"
             )
         else:
