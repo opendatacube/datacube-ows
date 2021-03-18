@@ -1,4 +1,4 @@
-=====================================
+====================================
 OWS Configuration - Colourmap Styles
 ====================================
 
@@ -112,10 +112,19 @@ E.g.::
     }
 
 
-Rule Logic (flags)
-++++++++++++++++++
+Rules
++++++
 
-The actual logic of the Value Rule is contained in the "flags" entry.
+Each Value Rule must also specify the rule to evaluate when it applies.
+
+This can be done either by treating the band as a bit-flag (
+with the `flags<#bitflag-rules-flags>`_ entry) or as an enumeration (
+with the `values<#enumeration-rules-values>`_ entry).
+
+Bitflag Rules (flags)
+&&&&&&&&&&&&&&&&&&&&&
+
+For bitflag bands, the actual logic of the Value Rule is contained in the "flags" entry.
 
 The flags entry is a dictionary with one of three possible formats.  Note
 that formats cannot be combined.  In particular ``and`` and ``or`` logic cannot
@@ -198,6 +207,30 @@ E.g.::
             },
             ...
     ]
+
+Enumeration Rules (values)
+&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+For bitflag bands, the actual logic of the Value Rule is contained in the "values" entry.
+
+The "values" entry is a list of integers.  Pixels whose exact value is in this list satisfy
+the rule.
+
+E.g.
+
+::
+
+    "value_map": {
+        "enum_band": [
+            ...
+            {
+                ...
+                # Matches pixels whose value is exactly either 2, 3, 7 or 15.
+                "values": [2, 3, 7, 15],
+            },
+            ...
+    ]
+
 
 ------
 Legend

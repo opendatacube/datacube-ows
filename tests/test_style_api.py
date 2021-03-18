@@ -334,8 +334,10 @@ def simple_colormap_style_cfg():
                     "title": "Impossibly Tasty",
                     "abstract": "Tasty AND Impossible",
                     "flags": {
-                        "flavour": "Tasty",
-                        "impossible": "Woah!"
+                        "and": {
+                            "flavour": "Tasty",
+                            "impossible": "Woah!"
+                        },
                     },
                     "color": "#FF0000"
                 },
@@ -393,6 +395,67 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     assert result["red"].values[5] == 0
     assert result["green"].values[5] == 255
     assert result["blue"].values[5] == 0
+
+
+@pytest.fixture
+def enum_colormap_style_cfg():
+    return {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "value_map": {
+            "pq": [
+                {
+                    "title": "Blah",
+                    "values": [8, 25],
+                    "color": "#FF0000"
+                },
+                {
+                    "title": "Rock and Roll",
+                    "values": [4, 19, 25],
+                    "color": "#00FF00"
+                },
+                {
+                    "title": "",
+                    "values": [23],
+                    "color": "#0000FF"
+                },
+            ]
+        }
+    }
+
+
+def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg):
+    result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    # point 0 (8) Blah - red
+    assert result["alpha"].values[0] == 255
+    assert result["red"].values[1] == 255
+    assert result["green"].values[1] == 0
+    assert result["blue"].values[1] == 0
+    # point 1 (25) Blah - red
+    assert result["alpha"].values[1] == 255
+    assert result["red"].values[1] == 255
+    assert result["green"].values[1] == 0
+    assert result["blue"].values[1] == 0
+    # point 2 (10) - fall through, transparent
+    assert result["alpha"].values[2] == 0
+    # point 3 (19) - rnr green
+    assert result["alpha"].values[3] == 255
+    assert result["red"].values[3] == 0
+    assert result["green"].values[3] == 255
+    assert result["blue"].values[3] == 0
+    # point 4 (4): rnr green
+    assert result["alpha"].values[4] == 255
+    assert result["red"].values[4] == 0
+    assert result["green"].values[4] == 255
+    assert result["blue"].values[4] == 0
+    # point 5 (23): blue
+    assert result["alpha"].values[5] == 255
+    assert result["red"].values[5] == 0
+    assert result["green"].values[5] == 0
+    assert result["blue"].values[5] == 255
 
 
 def test_ramp_legend(simple_colormap_style_cfg):

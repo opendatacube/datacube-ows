@@ -8,7 +8,7 @@ from datacube.utils.masking import make_mask
 from matplotlib import patches as mpatches, pyplot as plt
 from xarray import Dataset, DataArray, merge
 
-from datacube_ows.config_utils import OWSConfigEntry
+from datacube_ows.config_utils import OWSConfigEntry, ConfigException
 from datacube_ows.styles.base import StyleDefBase
 
 _LOG = logging.getLogger(__name__)
@@ -30,25 +30,44 @@ class ValueMapRule(OWSConfigEntry):
             self.label = self.abstract
         else:
             self.label = None
-
-        flags = cfg["flags"]
-        self.or_flags = False
-        if "or" in flags:
-            self.or_flags = True
-            flags = flags["or"]
-        elif "and" in flags:
-            flags = flags["and"]
-        self.flags = flags
         self.color_str = cfg["color"]
         self.rgb = Color(self.color_str)
-
         if cfg.get("mask", False):
             self.alpha = 0.0
         else:
             self.alpha = cfg.get("alpha", 1.0)
 
+        if "flags" in cfg:
+            flags = cfg["flags"]
+            self.or_flags = False
+            if "or" in flags:
+                self.or_flags = True
+                flags = flags["or"]
+            elif "and" in flags:
+                flags = flags["and"]
+            self.flags = flags
+        else:
+            self.flags = None
+            self.or_flags = False
+        if "values" in cfg:
+            self.values = cfg["values"]
+        else:
+            self.values = None
+        if not self.flags and not self.values:
+            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} must have a non-empty 'flags' or a 'values' section.")
+        if self.flags and self.values:
+            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} has a both a 'flags' and a 'values' section - choose one.")
+
     def create_mask(self, data):
-        if self.or_flags:
+        if self.values:
+            mask = None
+            for v in self.values:
+                vmask = data == v
+                if mask is None:
+                    mask = vmask
+                else:
+                    mask |= vmask
+        elif self.or_flags:
             mask = None
             for f in self.flags.items():
                 f = {f[0]: f[1]}
