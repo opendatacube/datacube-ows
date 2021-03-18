@@ -169,9 +169,8 @@ by the bit flags in any of the flag bands defined in the
 `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
 for the layer.
 
-The pq_masks section is a list of mask sections, which are OR'd together.  i.e. A pixel
-becomes transparent if it would be made transparent by any of the masks in the list
-acting individually.
+The pq_masks section is a list of mask sections, which are AND'd together.
+i.e. A pixel remains visible if it matches all of the rules in the list.
 
 Mask Sections
 @@@@@@@@@@@@@
@@ -189,17 +188,21 @@ be removed in a future release.
 
 Each mask must have either a "flags" entry or an "enum" entry (but not both).
 
+If an enum entry is supplied, it should be a single integer value.  A pixel is displayed
+if the value of the flag band for that pixel is exactly equal to the supplied integer value.
+
 If a flags entry is supplied, it should be a dictionary is passed directly to
-``datacube.utils.masking.make_mask``. The entries of the dictionary represent bitflag comparisons that
-are ANDed together.  i.e. A pixel is DISPLAYED if the bitflags
-for the pixel match ALL of the entries specified in the "flags" dictionary.
+``datacube.utils.masking.make_mask``.
 The keys of the dictionary are the flag names, and the values are the flag values -
 refer to the ODC product metadata for possible values.
-
-If an enum entry is supplied, it should be a single integer value.  A pixel becomes transparent if
-the value of the flag band for that pixel is exactly equal to the supplied integer value.
+The entries of the dictionary represent bitflag comparisons that
+are ORed together.  Pixels that match ALL of the bitflags match the rule, and
+remain visible (unless made invisible by another rule).
+i.e. A pixel is DISPLAYED if the bitflags for the pixel match ALL of the entries
+specified in the "flags" dictionary. (and it matches all the other rules.)
 
 If the "invert" flag is True, then the output of the masking operation is inverted (logically NOTed).
+i.e. only pixels that DO NOT match the uninverted rule match the inverted rule.
 
 E.g.
 
@@ -207,7 +210,17 @@ E.g.
 
     # Remove pixels
     "pq_masks": [
+        # A pixel is displayed if it matches all of the rules below.
+        #
+        # i.e. A pixel is masked out if it is masked out by any of the rules below.
         {
+            # This rule matches pixels that are:
+            #       1. Not Cloud.
+            # AND   2. Not Cloud Shadow
+            #       (According to the "pixelquality" band.)
+            #
+            # i.e. mask out pixels with cloud and/or cloud shadow.
+            #
             "band": "pixelquality"
             "flags": {
                 "cloud": "no_cloud",
@@ -215,17 +228,31 @@ E.g.
             }
         },
         {
-            "band": "flags",
-            "invert": True,
+            # This rule matches pixels that are not water (according to the "pixelquality" band).
+            #
+            # i.e. mask out pixels that are land.
+            #
+            "band": "pixelquality",
+            "invert": True, # Without invert, rule would match pixels ARE water.
             "flags": {
-                "water": "no_water"
+                "water": "water"
             }
         },
         {
-            "band": "land",
-            "invert": True,
+            # This rule matches pixels with a non-zero "valid" band value.
+            #
+            # i.e. mask out pixels with zero validity.
+            #
+            "band": "valid",
+            "invert": True, # Without invert, rule would match pixels with valid band equal to zero.
             "enum": 0,
         }
+
+        # A pixel must match all of the rules above to be displayed.
+        # (i.e. A pixel masked out by ANY of the above rules will be masked out.)
+        #
+        # So in this example, pixels are masked out if the are cloud, or cloud shadow, or water,
+        # or invalid - all other pixels are displayed.
     ],
 
 Legend
