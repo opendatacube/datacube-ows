@@ -279,10 +279,14 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             odc_mask = None
             for dt in data.coords["time"].values:
                 tpqdata = getattr(data.sel(time=dt), mask.band_name)
-                if odc_mask is None:
-                    odc_mask = make_mask(tpqdata, **mask.flags)
+                if mask.flags:
+                    dt_mask = make_mask(tpqdata, **mask.flags)
                 else:
-                    odc_mask |= make_mask(tpqdata, **mask.flags)
+                    dt_mask = tpqdata == mask.enum
+                if odc_mask is None:
+                    odc_mask = dt_mask
+                else:
+                    odc_mask |= dt_mask
             return odc_mask
 
         # pylint: disable=attribute-defined-outside-init
