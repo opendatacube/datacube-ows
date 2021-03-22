@@ -188,7 +188,7 @@ Local Postgres database
 -----------------------
 1. create an empty database and db_user
 2. run `datacube system init` after creating a datacube config file
-3. A product added to your datacube `datacube product add url` some examples are here: https://github.com/GeoscienceAustralia/dea-config/tree/master/dev/products
+3. A product added to your datacube `datacube product add url` some examples are here: https://github.com/GeoscienceAustralia/dea-config/tree/master/products
 4. Index datasets into your product for example refer to https://datacube-ows.readthedocs.io/en/latest/usage.html
 ::
   aws s3 ls s3://deafrica-data/jaxa/alos_palsar_mosaic/2017/ --recursive \
