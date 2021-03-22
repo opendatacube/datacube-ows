@@ -70,78 +70,6 @@ style_rgb_clone = {
     "scale_range": [0.0, 20000.0],
 }
 
-style_rgb_cloud_and_shadowmask = {
-    "name": "cloud_and_shadow_masked_rgb",
-    "title": "Simple RGB with cloud and cloud shadow masking",
-    "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud and cloud shadow masking",
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 1.0
-        }
-    },
-    # PQ masking example
-    "pq_masks": [
-        {
-            "flags": {
-                "cloud_acca": "no_cloud",
-                "cloud_fmask": "no_cloud",
-                "cloud_shadow_acca": "no_cloud_shadow",
-                "cloud_shadow_fmask": "no_cloud_shadow",
-            },
-        },
-    ],
-    "scale_range": [0.0, 65535.0],
-}
-
-style_ext_rgb = {
-    "name": "extended_rgb",
-    "title": "Extended RGB",
-    "abstract": "Extended true-colour image, incorporating the coastal aerosol band",
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 0.6,
-            "coastal_aerosol": 0.4
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
-
-style_ls8_allband_false_colour = {
-    "name": "wideband",
-    "title": "Wideband false-colour",
-    "abstract": "False-colour image, incorporating all available LS8 spectral bands",
-    "components": {
-        "red": {
-            "swir2": 0.255,
-            "swir1": 0.45,
-            "nir": 0.255,
-        },
-        "green": {
-            "nir": 0.255,
-            "red": 0.45,
-            "green": 0.255,
-        },
-        "blue": {
-            "green": 0.255,
-            "blue": 0.45,
-            "coastal_aerosol": 0.255,
-        }
-    },
-    "scale_range": [0.0, 65535.0],
-}
-
 style_infrared_false_colour = {
     "name": "infra_red",
     "title": "False colour multi-band infra-red",
@@ -165,65 +93,6 @@ style_infrared_false_colour = {
         }
     },
     # The style scale_range can be omitted if all components have a component-specific scale_range defined.
-    # "scale_range": [0.0, 3000.0]
-}
-
-style_mineral_content = {
-    "name": "mineral_content",
-    "title": "Multi-band mineral indexes",
-    "abstract": "Red: Ferric Iron. Green: Bare soil. Blue: Clay/mica",
-    "components": {
-        "red": {
-            # If the component dictionary contains the key "function", then the dictionary as treated as
-            # a function callback as follows:
-            #    a) "function" (required): A string containing the fully qualified path to a python function
-            #    b) "args" (optional): An array of additional positional arguments that will always be passed to the function.
-            #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
-            #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, the band mapping function is passed
-            #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
-            #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
-            #       to band names.
-            #
-            # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
-            # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
-            #
-            # An xarray DataArray is returned containing the band data.  Note that it is up to the function
-            # to normalise the output to 0-255.
-            #
-            "function": "datacube_ows.band_utils.norm_diff",
-            "mapped_bands": True,
-            "kwargs": {
-                "band1": "red",
-                "band2": "blue",
-                "scale_from": [-0.1, 1.0],
-            }
-        },
-        "green": {
-            "function": "datacube_ows.band_utils.norm_diff",
-            "mapped_bands": True,
-            "kwargs": {
-                "band1": "nir",
-                "band2": "swir1",
-                "scale_from": [-0.1, 1.0],
-            }
-        },
-        "blue": {
-            "function": "datacube_ows.band_utils.norm_diff",
-            "mapped_bands": True,
-            "kwargs": {
-                "band1": "swir1",
-                "band2": "swir2",
-                "scale_from": [-0.1, 1.0],
-            }
-        }
-    },
-    # If ANY components include a function callback, the bands that need to be passed to the callback
-    # MUST be declared in a "additional_bands" item:
-    "additional_bands": [ "red", "blue", "nir", "swir1", "swir2" ]
-
-    #
-    # The style scale_range can be omitted if all components have a component-specific scale_range defined or
-    # a function callback.
     # "scale_range": [0.0, 3000.0]
 }
 
@@ -430,98 +299,6 @@ style_ndvi_delta = {
     ]
 }
 
-style_ndvi_cloudmask = {
-    "name": "ndvi_cloudmask",
-    "title": "NDVI with cloud masking",
-    "abstract": "Normalised Difference Vegetation Index (with cloud masking) - a derived index that correlates well with the existence of vegetation",
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "mapped_bands": True,
-        "kwargs": {
-            "band1": "nir",
-            "band2": "red"
-        }
-    },
-    "needed_bands": ["red", "nir"],
-    # If a "range" is supplied instead of a "color_ramp", a default color ramp is used.
-    # Areas where the index_function returns less the lower range limit are transparent.
-    # Areas where the index_function returns within the range limits are mapped to a
-    # simple heat map ranging from dark blue, through blue, green, yellow, orange, and red to dark red.
-    # Areas where the index_function returns greater than the upper range limit are displayed as dark red.
-    "range": [0.0, 1.0],
-    # Cloud masks work the same as for linear combination styles.
-    "pq_masks": [
-        {
-            "flags": {
-                "cloud_acca": "no_cloud",
-                "cloud_fmask": "no_cloud",
-            },
-        },
-    ],
-    # Already have NDVI in GetFeatureInfo.
-    "include_in_feature_info": False,
-}
-
-style_ndwi = {
-    "name": "ndwi",
-    "title": "NDWI",
-    "abstract": "Normalised Difference Water Index - a derived index that correlates well with the existence of water",
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "mapped_bands": True,
-        "kwargs": {
-            "band1": "green",
-            "band2": "nir"
-        }
-    },
-    "needed_bands": ["green", "nir"],
-    "range": [0.0, 1.0],
-}
-
-# Mask layers - examples of how to display raw pixel quality data.
-# This works by creatively mis-using the colormap styles.
-# The index function returns a constant, so the output is a flat single colour, masked by the
-# relevant pixel quality flags.
-style_cloud_mask = {
-    "name": "cloud_mask",
-    "title": "Cloud Mask",
-    "abstract": "Highlight pixels with cloud.",
-    "index_function": {
-        "function": "datacube_ows.band_utils.constant",
-        "mapped_bands": True,
-        "kwargs": {
-            "band": "red",
-            "const": "0.1"
-        }
-    },
-    "needed_bands": ["red"],
-    "range": [0.0, 1.0],
-    # Mask flags normally describe which areas SHOULD be shown.
-    # (i.e. show pixels with any of the declared flag values)
-    # pq_mask_invert inverts this logic.
-    # (i.e. show pixels for which none of the declared flags are true)
-    #
-    # i.e. Specifying like this shows pixels which are not clouds under either algorithm.
-    #      Specifying "cloud"for both flags and setting the "pq_mask_invert" to False would
-    #      show pixels which are not clouds in both metrics.
-    "pq_masks": [
-        {
-            "invert": True,
-            "flags": {
-                "cloud_acca": "no_cloud",
-                "cloud_fmask": "no_cloud",
-            },
-        },
-    ],
-    "legend": {
-        # Default legend won't work well with mask layers, so set 'show_legend' to False or provide a url to
-        # legend PNG.
-        "show_legend": False
-    },
-    # The constant function causes errors in GetFeatureInfo.
-    # In any case, pixel flags are already included in GetFeatureInfo, so styles like this are not needed there.
-    "include_in_feature_info": False,
-}
 
 # Hybrid style - blends a linear mapping and an colour-ramped index style
 # There is no scientific justification for these styles, I just think they look cool.  :)
@@ -591,11 +368,13 @@ style_fc_simple = {
     "scale_range": [0.0, 100.0],
     "pq_masks": [
         {
+            "band": "water",
             "flags": {
                 'dry': True
             },
         },
         {
+            "band": "water",
             "flags": {
                 "terrain_or_low_angle": False,
                 "high_slope": False,
@@ -614,51 +393,98 @@ style_wofs_obs = {
     "value_map": {
         "water": [
             {
-                "title": "Invalid",
-                "abstract": "Slope or Cloud",
-                "flags": {
-                    "or": {
-                      "terrain_or_low_angle": True,
-                      "cloud_shadow": True,
-                      "cloud": True,
-                      "high_slope": True,
-                      "noncontiguous": True
-                    }
-                },
-                "color": "#707070"
-            },
-            {
-                # Possible Sea Glint, also mark as invalid
+                # Make noncontiguous data transparent
                 "title": "",
                 "abstract": "",
+                "flags": {"noncontiguous": True},
+                "alpha": 0.0,
+                "color": "#ffffff",
+            },
+            {
+                # Make sea and sea glint transparent
+                "title": "",
+                "abstract": "",
+                "flags": {"sea": True},
+                "alpha": 0.0,
+                "color": "#4f81bd",
+            },
+            {
+                "title": "Cloudy Steep Terrain",
+                "abstract": "",
                 "flags": {
-                    "dry": True,
-                    "sea": True
+                    "and": {
+                        "high_slope": True,
+                        "cloud": True
+                    }
                 },
-                "color": "#707070"
+                "color": "#f2dcb4",
+            },
+            {
+                "title": "Cloudy Water",
+                "abstract": "",
+                "flags": {
+                    "and": {
+                        "wet": True,
+                        "cloud": True
+                    }
+                },
+                "color": "#bad4f2",
+            },
+            {
+                "title": "Shaded Water",
+                "abstract": "",
+                "flags": {
+                    "and": {
+                        "wet": True,
+                        "cloud_shadow": True
+                    }
+                },
+                "color": "#335277",
+            },
+            {
+                "title": "Cloud",
+                "abstract": "",
+                "flags": {"cloud": True},
+                "color": "#c2c1c0",
+            },
+            {
+                "title": "Cloud Shadow",
+                "abstract": "",
+                "flags": {"cloud_shadow": True},
+                "color": "#4b4b37",
+            },
+            {
+                "title": "Terrain Shadow or Low Sun Angle",
+                "abstract": "",
+                "flags": {"terrain_or_low_angle": True},
+                "color": "#2f2922",
+            },
+            {
+                "title": "Steep Terrain",
+                "abstract": "",
+                "flags": {"high_slope": True},
+                "color": "#776857",
+            },
+            {
+                "title": "Water",
+                "abstract": "",
+                "flags": {
+                    "and": {
+                        "wet": True,
+                        "sea": False
+                    }
+                },
+                "color": "#4f81bd",
             },
             {
                 "title": "Dry",
-                "abstract": "Dry",
-                "flags": {
-                    "dry": True,
-                    "sea": False,
-                },
-                "color": "#D99694"
+                "abstract": "",
+                "flags": {"and": {"dry": True, "sea": False}},
+                "color": "#96966e",
             },
-            {
-                "title": "Wet",
-                "abstract": "Wet or Sea",
-                "flags": {
-                  "or": {
-                    "wet": True,
-                    "sea": True
-                  }
-                },
-                "color": "#4F81BD"
-            }
         ]
-    }
+    },
+    "legend": {"width": 3.0, "height": 2.1},
 }
 
 style_wofs_obs_wet_only = {
@@ -672,26 +498,23 @@ style_wofs_obs_wet_only = {
                 "abstract": "Slope or Cloud",
                 "flags": {
                     "or": {
-                      "terrain_or_low_angle": True,
-                      "cloud_shadow": True,
-                      "cloud": True,
-                      "high_slope": True,
-                      "noncontiguous": True
+                        "terrain_or_low_angle": True,
+                        "cloud_shadow": True,
+                        "cloud": True,
+                        "high_slope": True,
+                        "noncontiguous": True,
                     }
                 },
                 "color": "#707070",
-                "mask": True
+                "alpha": 0.0,
             },
             {
                 # Possible Sea Glint, also mark as invalid
                 "title": "",
                 "abstract": "",
-                "flags": {
-                    "dry": True,
-                    "sea": True
-                },
+                "flags": {"dry": True, "sea": True},
                 "color": "#707070",
-                "mask": True
+                "alpha": 0.0,
             },
             {
                 "title": "Dry",
@@ -701,21 +524,16 @@ style_wofs_obs_wet_only = {
                     "sea": False,
                 },
                 "color": "#D99694",
-                "mask": True
+                "alpha": 0.0,
             },
             {
                 "title": "Wet",
                 "abstract": "Wet or Sea",
-                "flags": {
-                  "or": {
-                    "wet": True,
-                    "sea": True
-                  }
-                },
-                "color": "#4F81BD"
-            }
+                "flags": {"or": {"wet": True, "sea": True}},
+                "color": "#4F81BD",
+            },
         ]
-    }
+    },
 }
 
 # Describes a style which uses several bitflags to create a style
@@ -972,12 +790,12 @@ ows_cfg = {
                     "product_name": "ls8_usgs_level1_scene",
                     "bands": ls8_usgs_level1_bands,
                     "resource_limits": standard_resource_limits,
-                    "flags": {
+                    "flags": [{
                         "band": "quality",
                         "ignore_time": False,
                         "ignore_info_flags": [],
                         "manual_merge": True,
-                    },
+                    },]
                     "image_processing": {
                         # Extent mask function
                         #
@@ -1010,10 +828,6 @@ ows_cfg = {
                             style_ndvi,
                             style_ndvi_delta,
                             style_rgb_ndvi,
-                            # faulty layers
-                            # style_ndvi_cloudmask, style_ext_rgb,  style_ndwi,
-                            # style_mineral_content, style_rgb_cloud_and_shadowmask
-                            # style_cloud_mask, style_ls8_allband_false_colour,
                         ]
                     }
                 }, ##### End of ls8_level1_pds product definition.
@@ -1054,13 +868,13 @@ For service status information, see https://status.dea.ga.gov.au
                         "always_fetch_bands": [ ],
                         "manual_merge": False,
                     },
-                    "flags": {
+                    "flags": [{
                         "band": "water",
                         "product": "wofs_albers",
                         "ignore_time": False,
                         "ignore_info_flags": [],
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                    },
+                    },]
                     "wcs": {
                         "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
@@ -1124,13 +938,13 @@ For service status information, see https://status.dea.ga.gov.au
                         "always_fetch_bands": [ ],
                         "manual_merge": False,
                     },
-                    "flags": {
+                    "flags": [{
                         "band": "water",
                         "product": "wofs_albers",
                         "ignore_time": False,
                         "ignore_info_flags": [],
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                    },
+                    },]
                     "wcs": {
                         "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
@@ -1162,13 +976,13 @@ For service status information, see https://status.dea.ga.gov.au
                         "always_fetch_bands": [ ],
                         "manual_merge": False,
                     },
-                    "flags": {
+                    "flags": [{
                         "band": "water",
                         "product": "wofs_albers",
                         "ignore_time": False,
                         "ignore_info_flags": [],
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                    },
+                    },]
                     "wcs": {
                         "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
@@ -1197,13 +1011,13 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                         "always_fetch_bands": [ ],
                         "manual_merge": False,
                     },
-                    "flags": {
+                    "flags": [{
                         "band": "water",
                         "products": ['wofs_albers', 'wofs_albers', 'wofs_albers'],
                         "ignore_time": False,
                         "ignore_info_flags": [],
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                    },
+                    },]
                     "wcs": {
                         "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
