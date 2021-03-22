@@ -31,7 +31,7 @@ Calculating the Index Value
 
 The `index_function <#index-function>`__ entry defines how the
 index is calculated at each pixel.  The bands needed for the calculation
-must be declared in the `needed_bands list <needed-bands-list>`__
+must be declared in the `needed_bands list <#needed-bands-list>`__
 entry.
 
 index_function
@@ -41,7 +41,7 @@ The `index_function` allows the user to declare a callback function
 to calculate the index value using OWS's
 `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 The function is expected to take an xarray Dataset containing all the
-bands in the `needed_bands list <needed-bands-list>`__ (plus any additional
+bands in the `needed_bands list <#needed-bands-list>`__ (plus any additional
 arguments handled by the
 `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_); and returns
 an xarray Dataset containing the index value.
@@ -127,7 +127,7 @@ Manual color_ramp
 =================
 
 A colour ramp can be created manually using the `color_ramp` style configuration
-entry.  `color_ramp` should be a list of `colour point definitions <#colour-point-definitions>`_.
+entry.  `color_ramp` should be a list of `colour point definitions <#colour-point-definition>`_.
 Each colour point definition describes a mapping from a value to a colour.
 
 The list should be sorted in order of ascending value. If the index function value
@@ -142,8 +142,8 @@ be coloured a average of the rgb values of those two colour points, weighted
 by the difference between the pixel index function value and the values of the
 two colour points.
 
-Colour Point Definitions
-++++++++++++++++++++++++
+Colour Point Definition
++++++++++++++++++++++++
 
 Each Colour Point Definition must have a numeric ``value`` and a ``color`` in
 html hex format  (e.g. ``#FFFFFF``, ``#ffffff``, ``#FFF`` and ``#fff`` all refer to pure white).
@@ -222,7 +222,7 @@ The legend range defaults to the
 `range <#ramp-scale-range>`_  for the default colour ramp
 or `MatPlotLib color ramps <#mpl_ramp>`_.
 
-For `manual colour ramps <#manual-colour-ramp>`_, the default
+For `manual colour ramps <#manual-color-ramp>`_, the default
 range is between the values of first and last colour point
 definitions in the ramp, **excluding** any leading or trailing
 colour points that are full transparent (alpha=0.0).
@@ -525,7 +525,7 @@ Multi-Date Colour Ramps
 =======================
 
 Each multi-date handler has it's own colour ramp.  It may be defined by
-any of the `colour ramp defintition methods<#colour-ramps`__ described
+any of the `colour ramp definition methods<#colour-ramps>`__ described
 above.
 
 Multi-Date Legend

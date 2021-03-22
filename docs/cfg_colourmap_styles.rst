@@ -14,7 +14,7 @@ by applying a logical decision tree to the flag data for that pixel.
 Colour-map styles support the
 `elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
 
-Colour-map styles also have `value_map <#value_map>`_ entry that describes
+Colour-map styles also have `value_map <#value-map>`_ entry that describes
 how the colour of individual pixels is determined.
 
 Colour-map styles support `automatic legend generation <#legend>`_.
@@ -23,12 +23,12 @@ Colour-map styles support `automatic legend generation <#legend>`_.
 value_map
 ---------
 
-The ``value_map`` is dictionary mapping bands to a list of `value rules <#value-rules>`_.
+The ``value_map`` is dictionary mapping bands to a list of `value rules <#value-rule-format>`_.
 The key is a name or alias of a bitmap band.  Multiple bands are possible
 but it is strongly recommended to use only a single band, because the order in which
 rules are processed cannot be guaranteed in a multiple band scenario.
 
-A value rule set is a list of `value rules <#value-rules>`_.  The rules are applied in order.  Each pixel
+A value rule set is a list of `value rules <#value-rule-format>`_.  The rules are applied in order.  Each pixel
 will take the the colour specified by the first value rule in the set that the pixel satisifies.  Any pixel
 that does not match any rules will be fully transparent.
 
@@ -56,8 +56,8 @@ E.g.::
         # ],
     },
 
-Value Rules
-===========
+Value Rule Format
+=================
 
 Color, Alpha and Mask
 +++++++++++++++++++++
@@ -118,8 +118,8 @@ Rules
 Each Value Rule must also specify the rule to evaluate when it applies.
 
 This can be done either by treating the band as a bit-flag (
-with the `flags<#bitflag-rules-flags>`_ entry) or as an enumeration (
-with the `values<#enumeration-rules-values>`_ entry).
+with the `flags <#bitflag-rules-flags>`_ entry) or as an enumeration (
+with the `values <#enumeration-rules-values>`_ entry).
 
 Bitflag Rules (flags)
 &&&&&&&&&&&&&&&&&&&&&

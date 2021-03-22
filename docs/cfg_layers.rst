@@ -169,10 +169,10 @@ Product Layers and Multiproduct Layers
 --------------------------------------
 
 Named layers can map to either a single Open Data Cube product
-(a `Product Layer <#product-layer-configuration-product_name>`_), or
+(a `Product Layer <#product-layer-configuration-product-name>`_), or
 to several Open Data Cube products with identical band and
 metadata structure (e.g. matching Sentinel-2A and Sentinel-2B
-products) (a `Multiproduct Layer <#multiproduct-configuration-multiproduct-product_names>`_).
+products) (a `Multiproduct Layer <#multiproduct-configuration-multi-product-product-names>`_).
 
 It also possible to combine bands with differing
 bands, but only bands common to both products can be accessed.
@@ -547,7 +547,7 @@ limit setting, an error is returned to the user.
 The only resource limit available to WCS currently is max_datasets,
 which works the same as in wms, `described above <#max_datasets>`_.
 
-The `dataset_cache_rules <#dataset_cache_rules>`_ element is also
+The `dataset_cache_rules <#dataset-cache-rules>`_ element is also
 supported for WCS.  It behaves for WCS GetCoverage requests as
 documented above for WMS GetMap and WMTS GetTile requests.
 
@@ -665,7 +665,7 @@ related product, a completely independent product, or from any combination
 of these.
 
 Some entries have corresponding entries in
-the `image processing section <#image-processing-section-image_processing>`_
+the `image processing section <#image-processing-section-image-processing>`_
 described above.  Items in this section only affect WMS/WMTS.
 
 The flags section generally consists of a list of flag-band definitions.
@@ -718,7 +718,7 @@ can be over-ridden with the "product" (for Product Layers) or "products"
 
 For Product Layers, specify a single ODC product name, for Multiproduct Layers,
 specify a list of ODC product names, which should map one-to-one to the main
-`product_names <#multiproduct-layer-configuration-multi_product-product_names>`_ list.
+`product_names <#multiproduct-layer-configuration-multi-product-product-names>`_ list.
 
 E.g. Product Layer, flag band is in the main layer product:
 
@@ -774,7 +774,7 @@ Flag Fuse Function (fuse_func)
 
 Only applies if the flag band is read from a separate product
 (or product).  Equivalent to the `fuse function in the
-image_processing section <#fuse-function-fuse_func>`_.
+image_processing section <#fuse-function-fuse-func>`_.
 Always optional - defaults to None.
 
 Manual Flag Merge (manual_merge)
@@ -782,7 +782,7 @@ Manual Flag Merge (manual_merge)
 
 Only applies if the flag band is read from a separate product
 (or product).  Equivalent to the `manual merge in the
-image_processing section <#manual-merge-manual_merge>`_.
+image_processing section <#manual-merge-manual-merge>`_.
 Optional - defaults to False.
 
 Ignore Time (ignore_time)
@@ -828,7 +828,7 @@ Sentinel-2 data is usually packaged like this.)  In this case
 you must manually declare a "native" CRS (if WCS is active).
 This can be any CRS
 declared in the `global published_CRSs section
-<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published_CRSs>`_
+<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_
 and need not be related to the CRSs that the data is actually
 stored in.
 
@@ -989,7 +989,7 @@ Inheritance
 -----------
 
 Named layers may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration-inheritance>`_
 from previously defined layers.
 
 To lookup a layer by name use the "layer" element in the inherits section:

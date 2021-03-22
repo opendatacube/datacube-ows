@@ -16,7 +16,7 @@ Component styles support the
 
 There are three additional settings specific to component styles:
 `scale_range <#style-scale-range>`, `components <#components>`
-and `additional_bands <#additional-bands>`_.
+and `additional_bands <#additional-bands-additional-bands>`_.
 
 Component styles do NOT support automatic legend generation. If you
 want a legend you must provide an external
@@ -276,9 +276,9 @@ E.g.::
         "additional_bands": [ "red", "blue", "nir", "swir1", "swir2" ]
     },
 
-----------------
-additional_bands
-----------------
+-----------------------------------
+Additional Bands (additional_bands)
+-----------------------------------
 
 The bands needed for a linear combination component can be trivially
 determined from the component definition.  This is not the case for callback
@@ -289,7 +289,7 @@ components), then these additional required bands must be declared
 with the `additional_bands` list.
 
 The `additional_bands` should be a list of band names or aliases from
-the `band dictionary <https://datacube-ows.readthedocs.io/en/latest/cfg_layer.html#band-dictionary-bands>`__.  It is
+the `band dictionary <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#bands-dictionary-bands>`__.  It is
 optional (defaults to an empty list).  It is safe (but not
 necessary) to declare bands in `additional_bands` that are used
 directly by a linear combination component in the style.
