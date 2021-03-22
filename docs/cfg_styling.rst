@@ -86,7 +86,7 @@ Inheritance
 ===========
 
 Styles may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration_inheritance>`_
+`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration-inheritance>`_
 from previously defined styles.
 
 To lookup a style by name use the "style" and "layer" element in the inherits section.
@@ -341,5 +341,5 @@ E.g. ::
     ],
 
 Currently multi_date is only supported
-for `Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date>`__,
+for `Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date-requests>`__,
 but will likely be extended to other style types in future.
