@@ -525,7 +525,7 @@ Multi-Date Colour Ramps
 =======================
 
 Each multi-date handler has it's own colour ramp.  It may be defined by
-any of the `colour ramp definition methods<#colour-ramps>`__ described
+any of the `colour ramp definition methods <#colour-ramps>`__ described
 above.
 
 Multi-Date Legend

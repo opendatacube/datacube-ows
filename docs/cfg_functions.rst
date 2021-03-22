@@ -120,39 +120,39 @@ True.
     Calculates the normalised difference of two bands, passed
     as keyword arguments "band1" and "band2".
 
-    `Scalable<#scaleable-band-utilities>`_.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.single_band
     Returns the raw value of a band as an index datasets. Takes
     keyword argument "band".
 
-    `Scalable<#scaleable-band-utilities>`_.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.constant
     Returns a constant.  Still needs a band (takes a band, multiplies
     by zero and adds the constant), but it can be any band.  Arguments
     are "band" and "const".
 
-    `Scalable<#scaleable-band-utilities>`_.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.band_quotient
     Divides two bands, passed as keyword arguments "band1" and "band2".
 
     (band1 is divided by from band2)
 
-    `Scalable<#scaleable-band-utilities>`_.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.band_quotient_sum
     Takes 4 bands, divides and adds them as follows:
 
     (band1a / band1b) + (band2a / band2b)
 
-    `Scalable<#scaleable-band-utilities>`_.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.single_band_arcsec
     Takes one band, and returns the arcsec of that band.
 
-    `Scalable<#scaleable-band-utilities>`_. `Band Modulator<#band-modulators>`_.
+    `Scalable <#scaleable-band-utilities>`_. `Band Modulator <#band-modulators>`_.
 
 #. datacube_ows.band_utils.single_band_offset_log
     Takes a single band and an optional offset, and an optional scale.
@@ -164,7 +164,7 @@ True.
     The scale and offset both default to 1.0.  If offset is not supplied
     the more efficient log1p function is used.
 
-    `Scalable<#scaleable-band-utilities>`_. `Band Modulator<#band-modulators>`_.
+    `Scalable <#scaleable-band-utilities>`_. `Band Modulator <#band-modulators>`_.
 
 E.g. This is an index function that will compute NDVI on any
 layer that has both an "nir" and "red" band name or alias

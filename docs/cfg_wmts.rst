@@ -48,7 +48,7 @@ CRS (crs)
 
 The "crs" element of the tile matrix set definition is required and must
 be the name or alias of a
-`published CRS<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_.
+`published CRS <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_.
 
 Matrix Origin (matrix_origin)
 +++++++++++++++++++++++++++++
