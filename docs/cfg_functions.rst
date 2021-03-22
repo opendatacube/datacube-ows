@@ -11,11 +11,11 @@ Functions in Configuration
 Several entries in the OWS configuration allow to specify
 behaviour in an arbitrary way by specifying a Python function
 that may be written by the user.  All these functions can be
-specified using either the `simple <#simple>`_ or
-`advanced <#advanced>`_ formats described below.
+specified using either the `simple <#simple-function-format>`_ or
+`advanced <#advanced-function-format>`_ function formats described below.
 
-Simple
-======
+Simple Function Format
+======================
 
 Simply provide the fully qualified path to the function as
 a string.  Note that if you use your own custom function it
@@ -31,8 +31,8 @@ E.g.
 
     "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val"
 
-Advanced
-========
+Advanced Function Format
+========================
 
 More detailed control over the calling of the function is possible
 using a function section.  Function sections MUST contain
@@ -84,7 +84,7 @@ functions for
 and
 `style index functions <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#index-function>`__.
 In order for this to work with
-`band aliases <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#band-dictionary-bands>`_,
+`band aliases <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#bands-dictionary-bands>`_,
 it it necessary for the function
 to have access to the band alias dictionary to convert aliases
 to native band names.  This can be accomplished with the
