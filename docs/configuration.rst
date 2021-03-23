@@ -19,6 +19,7 @@ OWS Configuration
    cfg_colourmap_styles
    cfg_hybrid_styles
    cfg_style_api
+   cfg_style_api_examples
 
 .. contents:: Table of Contents
 
