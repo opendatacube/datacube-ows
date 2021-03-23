@@ -72,10 +72,12 @@ target/
 
 wsgi_local.py
 wms_cfg_local.py
-ows_cfg.py
+ows_*_cfg.py
 
 .DS_Store
 docker-compose.yaml
 ows_cfg.py
 
 _version.py
+.env
+ows_refactored/
