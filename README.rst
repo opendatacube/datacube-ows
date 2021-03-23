@@ -10,7 +10,7 @@ datacube-ows
 
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Docker/badge.svg
         :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ADocker
-        
+
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Scan/badge.svg
         :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22Scan%22
 
@@ -52,8 +52,9 @@ containerised solution and we supply scripts for building appropriate Docker con
 Docker-Compose
 --------------
 
+setup env by export
+^^^^^^^^^^^^^^^^^^^
 We use docker-compose to make development and testing of the containerised ows images easier
-
 
 To start OWS with flask connected to a pre-existing database on your local machine: ::
 
@@ -84,6 +85,16 @@ The default environment variables (in .env file) can be overriden by setting loc
   # Change location of default config file (good for testing config changes on a local db)
   OWS_CFG_FILE=/path/to/ows_cfg.py
   docker-compose -f docker-compose.yaml
+
+setup env with .env file
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+    cp .env_simple .env # for a single ows config file setup
+    cp .env_ows_root .env # for multi-file ows config with ows_root_cfg.py
+    docker-compose up
+
 
 Docker
 ------
