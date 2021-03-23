@@ -60,7 +60,10 @@ can apply this style to the data, and write the result to disk as a PNG file:
 The resulting image looks like this:
 
 .. image:: https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png
-    :width: 1128
+    :width: 600
+
+`View full size
+<https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
 
 Other Simple Component Examples
 -------------------------------
@@ -104,7 +107,10 @@ For example, here is a popular false-colour style, using optical green and two i
     }
 
 .. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
-    :width: 1128
+    :width: 600
+
+`View full size
+<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`_
 
 If we wanted a greyscale image of a single band (say red), you could do this:
 
@@ -153,9 +159,11 @@ bands to make the blue channel:
         "scale_range": (50, 3000),
     }
 
-
 .. image:: https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png
-    :width: 1128
+    :width: 600
+
+`View full size
+<https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png`_
 
 
 You can read more about
