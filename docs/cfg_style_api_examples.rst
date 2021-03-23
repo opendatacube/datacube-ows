@@ -88,25 +88,74 @@ For example, here is a popular false-colour style, using optical green and two i
 
 ::
 
-
-ir_green_cfg = {
-	"components": {
-	    "red": {
-		 "swir1": 1.0
-	    },
-	    "green": {
-		 "nir": 1.0
-	    },
-	    "blue": {
-		 "green": 1.0
-	    },
-	},
-	"scale_range": (50, 3000),
-}
+    ir_green_cfg = {
+        "components": {
+            "red": {
+             "swir1": 1.0
+            },
+            "green": {
+             "nir": 1.0
+            },
+            "blue": {
+             "green": 1.0
+            },
+        },
+        "scale_range": (50, 3000),
+    }
 
 .. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
     :width: 1128
 
+If we wanted a greyscale image of a single band (say red), you could do this:
+
+::
+
+    pure_red_cfg = {
+        "components": {
+            "red": {
+             "red": 1.0
+            },
+            "green": {
+             "red": 1.0
+            },
+            "blue": {
+             "red": 1.0
+            },
+        },
+        "scale_range": (50, 3000),
+    }
+
+
+.. image:: https://user-images.githubusercontent.com/4548530/112124234-3ddd1400-8c16-11eb-9d01-37b895010221.png
+    :width: 1128
+
+What if want to mix more than one band to make each channel? Here we average all three visible bands
+into the red channel, put near infra-red in the green channel amd average the two shortwave infrared
+bands to make the blue channel:
+
+::
+
+    all_bands_cfg = {
+        "components": {
+            "red": {
+             "red": 0.333,
+             "green": 0.333,
+             "blue": 0.333,
+            },
+            "green": {
+             "nir": 1.0
+            },
+            "blue": {
+             "swir1": 0.5,
+             "swir2": 0.5,
+            },
+        },
+        "scale_range": (50, 3000),
+    }
+
+
+.. image:: https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png
+    :width: 1128
 
 
 You can read more about
