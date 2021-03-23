@@ -18,7 +18,7 @@ env:
 jobs:
   unit-integration-performance-tests:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -46,6 +46,7 @@ jobs:
       - name: Dockerized Integration Pytest (stage 1 - integration test)
         run: |
           chmod a+rw artifacts
+          export $(grep -v '^#' .env_simple | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
@@ -60,6 +61,7 @@ jobs:
       # Run performance profiling
       - name: setup performance profiling with py-spy (stage 1 - run profiling containers)
         run: |
+          export $(grep -v '^#' .env_simple | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml up -d
 
       - name: Sleep for 10 seconds (stage 1 - wait for services to be ready)
@@ -70,6 +72,7 @@ jobs:
       - name: set output container pid (stage 1 - get ows container pid)
         id: set-output-container-id
         run: |
+          export $(grep -v '^#' .env_simple | xargs)
           echo "::set-output name=PID::$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' \
           $(docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows) \
           | cut -c2-))"
@@ -78,6 +81,7 @@ jobs:
         timeout-minutes: 1
         continue-on-error: true
         run: |
+          export $(grep -v '^#' .env_simple | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
           exec -T ows /bin/sh -c "cd /code;./test_urls.sh &"
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
@@ -87,6 +91,7 @@ jobs:
 
       - name: Stop py-spy profiling after timeout (stage 1 - stop profiling)
         run: |
+          export $(grep -v '^#' .env_simple | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml down
 
 
@@ -95,4 +100,3 @@ jobs:
         with:
           name: profile.json
           path: ./artifacts/profile.json
-    
