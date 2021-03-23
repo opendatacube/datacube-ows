@@ -104,6 +104,7 @@ def test_single_band(band_mapper):
 
 def test_multidate():
     assert not multi_date_delta(TEST_XARR_T) is None
+    assert not multi_date_delta(TEST_XARR_T, time_direction=1) is None
 
 
 def test_ndci():
