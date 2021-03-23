@@ -248,9 +248,9 @@ There are two types of named configuration object that support inheritance:
 named `Layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ and
 `styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_.
 The exact way to inherit by name differs depending on the object type so
-`see <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>#inheritance`_
+`see <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#inheritance>`_
 the
-`relevant <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>#inheritance`_
+`relevant <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#inheritance>`_
 sections for details.
 
 The copying and updating of the parent configuration object is recursive
@@ -304,7 +304,7 @@ section), or if the default values for all entries are acceptable.
 The `wmts <https://datacube-ows.readthedocs.io/en/latest/cfg_wmts.html>`_ section is optional.
 
 The `wcs <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html>`_ section must be supplied if the WCS service is
-activated (specified in the `global services <cfg_global#service-selection-services>`_
+activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section).
 
 WMTS is implemented as a thin wrapper around the WMS implementation. Therefore configuration in the

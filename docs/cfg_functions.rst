@@ -11,11 +11,11 @@ Functions in Configuration
 Several entries in the OWS configuration allow to specify
 behaviour in an arbitrary way by specifying a Python function
 that may be written by the user.  All these functions can be
-specified using either the `simple <#simple>`_ or
-`advanced <#advanced>`_ formats described below.
+specified using either the `simple <#simple-function-format>`_ or
+`advanced <#advanced-function-format>`_ function formats described below.
 
-Simple
-======
+Simple Function Format
+======================
 
 Simply provide the fully qualified path to the function as
 a string.  Note that if you use your own custom function it
@@ -31,8 +31,8 @@ E.g.
 
     "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val"
 
-Advanced
-========
+Advanced Function Format
+========================
 
 More detailed control over the calling of the function is possible
 using a function section.  Function sections MUST contain
@@ -78,13 +78,13 @@ arguments of the function in the standard python manner.
 mapped_bands
 ++++++++++++
 
-A common use case passing band names to generic band-math
+A common use case is passing band names to generic band-math
 functions for
 `component callback functions <https://datacube-ows.readthedocs.io/en/latest/cfg_component_styles.html#callback-function-components>`_
 and
 `style index functions <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#index-function>`__.
 In order for this to work with
-`band aliases <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#band-dictionary-bands>`_,
+`band aliases <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#bands-dictionary-bands>`_,
 it it necessary for the function
 to have access to the band alias dictionary to convert aliases
 to native band names.  This can be accomplished with the
@@ -120,39 +120,39 @@ True.
     Calculates the normalised difference of two bands, passed
     as keyword arguments "band1" and "band2".
 
-    Scalable.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.single_band
     Returns the raw value of a band as an index datasets. Takes
     keyword argument "band".
 
-    Scalable.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.constant
     Returns a constant.  Still needs a band (takes a band, multiplies
     by zero and adds the constant), but it can be any band.  Arguments
     are "band" and "const".
 
-    Scalable.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.band_quotient
     Divides two bands, passed as keyword arguments "band1" and "band2".
 
     (band1 is divided by from band2)
 
-    Scalable.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.band_quotient_sum
     Takes 4 bands, divides and adds them as follows:
 
     (band1a / band1b) + (band2a / band2b)
 
-    Scalable.
+    `Scalable <#scaleable-band-utilities>`_.
 
 #. datacube_ows.band_utils.single_band_arcsec
     Takes one band, and returns the arcsec of that band.
 
-    Scalable. Band Modulator.
+    `Scalable <#scaleable-band-utilities>`_. `Band Modulator <#band-modulators>`_.
 
 #. datacube_ows.band_utils.single_band_offset_log
     Takes a single band and an optional offset, and an optional scale.
@@ -164,7 +164,7 @@ True.
     The scale and offset both default to 1.0.  If offset is not supplied
     the more efficient log1p function is used.
 
-    Scalable. Band Modulator.
+    `Scalable <#scaleable-band-utilities>`_. `Band Modulator <#band-modulators>`_.
 
 E.g. This is an index function that will compute NDVI on any
 layer that has both an "nir" and "red" band name or alias

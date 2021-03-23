@@ -22,7 +22,7 @@ Materialised Views over ODC Indexes
 -----------------------------------
 
 The materialised views provide a dataset level extent index
-using PostGIS <https://postgis.net>`_ datatypes.
+using `PostGIS <https://postgis.net>`_ datatypes.
 
 These views are used only as an intermediate calculation
 step to populate the Layer Extent Cache, as described below,
