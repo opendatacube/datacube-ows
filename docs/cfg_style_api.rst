@@ -7,9 +7,10 @@ OWS Configuration - OWS Styling Python API
 Motivation
 ----------
 
-OWS configuration is complex, and for large deployments there can be friction between the needs and
-interests of the Dev Ops engineers responsible for the configuration as a whole, and the scientific
-staff responsible for individual products/layers within that configuration.
+OWS configuration is complex, and for large deployments refining stylings can quickly
+get bogged down in a constant back and forth between the Dev Ops engineers responsible
+for the configuration as a whole, and the scientific staff responsible for individual
+products/layers within that configuration.
 
 The OWS Styling Python API is intended to allow product owners who intimately familiar with their
 product and experienced with using the Open Datacube in a scientific programming environment to
@@ -33,19 +34,25 @@ The differences between stand-alone styles and true OWS styles are:
 
 2. Style inheritance cannot be used.
 
-   Style inheritance depends on the context of the enclosing complete OWS Configuration and
-   so is not available for stand-alone styles.
+   Style inheritance is an OWS feature that allows styles to be extended from existing styles
+   in the configuration hierarchy.
 
-3. The various band-aliasing techniques are not available.
+   As stand-alone style objects exist outside of the configuration hierarchy, style inheritance
+   is not applicable.
+
+3. The various OWS-specific band-aliasing techniques are not available.
 
     It is up to the the user of the API to ensure the band names in the style definition exactly
     match the data variable names in the XArray Dataset being styled.
+
+    Make sure you reference measurement bands from the source product using the same names
+    that you requested in the `dc.load()` statement.
 
 4. Function objects/callables can be used directly in stand-alone style definitions.
 
     Full OWS Configurations must be serialisable, so fuctions can only be embedded as
     fully qualified python names.  For stand-alone styles, raw callable functions can be
-    used.
+    used.  Some examples are shown below.
 
 Stand-alone style objects are created by passing a valid style configuration to the
 ``StandaloneStyle`` constructor:
@@ -88,7 +95,10 @@ There are two API functions that provide this functionality: ``apply_ows_style``
 
 ::
 
-    from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg
+    from datacube import Datacube
+    from datacube_ows.styles.api import StandaloneStyle
+    from datacube_ows.styles.api import apply_ows_style, apply_ows_style_cfg
+    from datacube_ows.styles.api import xarray_image_as_png
 
     # Given:
 
@@ -98,6 +108,9 @@ There are two API functions that provide this functionality: ``apply_ows_style``
     style = StandaloneStyle(cfg)
 
     # and data (an Xarray Dataset as returned by ODC load_data method);
+    dc = Datacube()
+    data = dc.load( ...query parameters... )
+
     # The following are equivalent:
 
     image = apply_ows_style_cfg(cfg, data)
@@ -109,6 +122,14 @@ There are two API functions that provide this functionality: ``apply_ows_style``
 
     image = apply_ows_style_cfg(cfg, data, valid_data_mask=mask)
     image = apply_ows_style(style, data, valid_data_mask=mask)
+
+A helper method is provided to convert a uint8 RGBA Xarray (such as are returned by
+the ``apply_ows_style`` methods discussed above) into a PNG image:
+
+::
+
+    with open("filename.png", "wb") as fp:
+        fp.write(xarray_image_as_png(image)
 
 Auto-generating a legend image
 ------------------------------
@@ -144,3 +165,7 @@ to the Apply OWS Style methods described above.
     image = generate_ows_legend_style(cfg, 2)
     # or
     image = generate_ows_legend_style_cfg(style, ["yesterday", "today"])
+
+    # Write out as PNG:
+    with open("filename.png", "wb") as fp:
+        image.save(fp)
