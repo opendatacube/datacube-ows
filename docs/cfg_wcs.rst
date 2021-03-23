@@ -60,13 +60,15 @@ NetCDF formats and look something like this:
         },
 
 Renderer is set using OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
-The function is expected to take:
+
+For WCS1, The function is expected to take the following arguments:
   * A WCSRequest object
   * An xarray.DataArray to render
 
-Some special use cases may require tweaking the MIME type or the
-file extension. Either way don't touch this section unless you
-are very sure about what you are doing.
+For WCS2, additional arguments are required and adding an additional output format may
+not be possible from configuration changes alone. Some special use cases may require
+tweaking the MIME type or the file extension. More extensive modifications are not
+guaranteed to be supported. Refer to the source code and be very sure about what you are doing.
 
 Native Format (native_format)
 =============================
