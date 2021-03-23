@@ -24,7 +24,7 @@ from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
     GetFeatureInfoParameters, solar_correct_data
 from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
-    solar_date
+    solar_date, xarray_image_as_png
 from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import log_call
 
@@ -453,42 +453,10 @@ def _write_png(data, style, extent_mask, geobox, qprof):
     qprof.start_event("apply-style")
     img_data = style.transform_data(data, mask)
     qprof.end_event("apply-style")
-    width = geobox.width
-    height = geobox.height
-    band_index = {
-        "red": 1,
-        "green": 2,
-        "blue": 3,
-        "alpha": 4,
-    }
-
-    with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=width,
-                          height=height,
-                          count=4,
-                          transform=None,
-                          dtype='uint8') as thing:
-            masked = False
-            last_band = None
-            qprof.start_event("write")
-            for band in img_data.data_vars:
-                idx = band_index[band]
-                band_data = img_data[band].values
-                if band == "alpha" and mask is not None:
-                    band_data = numpy.where(mask, band_data, 0)
-                    masked = True
-                thing.write_band(idx, band_data)
-                last_band = band_data
-            if not masked:
-                if mask is None:
-                    alpha_mask = numpy.empty(last_band.shape)
-                    alpha_mask.fill(255)
-                else:
-                    alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
-                thing.write_band(4, alpha_mask)
-            qprof.end_event("write")
-        return memfile.read()
+    qprof.start_event("write")
+    image = xarray_image_as_png(img_data, mask)
+    qprof.end_event("write")
+    return image
 
 
 @log_call
