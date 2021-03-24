@@ -5,11 +5,13 @@ import datetime
 from importlib import import_module
 from itertools import chain
 
+import numpy
 from affine import Affine
 from dateutil.parser import parse
 from urllib.parse import urlparse
 
 from flask import request
+from rasterio import MemoryFile
 from timezonefinderL import TimezoneFinder
 from datacube.utils import geometry
 from pytz import timezone, utc
@@ -291,7 +293,67 @@ def create_geobox(
         crs,
         minx, miny,
         maxx, maxy,
-        width, height,
+        width=None, height=None,
 ):
-    affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
+    if width is None and height is None:
+        raise Exception("Must supply at least a width or height")
+    if height is not None:
+        scale_y = (miny - maxy)/height
+    if width is not None:
+        scale_x = (maxx - minx) / width
+    else:
+        scale_x = -scale_y
+        width = round((maxx - minx) / scale_x)
+    if height is None:
+        scale_y = - scale_x
+        height = round((miny-maxy)/scale_y)
+    affine = Affine.translation(minx, maxy) * Affine.scale(scale_x, scale_y)
     return geometry.GeoBox(width, height, affine, crs)
+
+
+def xarray_image_as_png(img_data, mask=None):
+    band_index = {
+        "red": 1,
+        "green": 2,
+        "blue": 3,
+        "alpha": 4,
+    }
+    xcoord = None
+    ycoord = None
+    for cc in ("x", "longitude", "Longitude", "long", "lon"):
+        if cc in img_data.coords:
+            xcoord = cc
+            break
+    for cc in ("y", "latitude", "Latitude", "lat"):
+        if cc in img_data.coords:
+            ycoord = cc
+            break
+    if not xcoord or not ycoord:
+        raise Exception("Could not identify spatial coordinates")
+    width = len(img_data.coords[xcoord])
+    height = len(img_data.coords[ycoord])
+    with MemoryFile() as memfile:
+        with memfile.open(driver='PNG',
+                          width=width,
+                          height=height,
+                          count=4,
+                          transform=None,
+                          dtype='uint8') as thing:
+            masked = False
+            last_band = None
+            for band in img_data.data_vars:
+                idx = band_index[band]
+                band_data = img_data[band].values
+                if band == "alpha" and mask is not None:
+                    band_data = numpy.where(mask, band_data, 0)
+                    masked = True
+                thing.write_band(idx, band_data)
+                last_band = band_data
+            if not masked:
+                if mask is None:
+                    alpha_mask = numpy.empty(last_band.shape).astype('uint8')
+                    alpha_mask.fill(255)
+                else:
+                    alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+                thing.write_band(4, alpha_mask)
+        return memfile.read()

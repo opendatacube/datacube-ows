@@ -40,7 +40,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                          global_cfg=product.global_cfg,
                          keyvals={
                                 "layer": product.name,
-                                "style": style_cfg["name"]
+                                "style": style_cfg.get("name", "stand_alone")
                          },
                          keyval_subs={
                              "layer": {
@@ -54,9 +54,14 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.stand_alone = stand_alone
         self.local_band_map = style_cfg.get("band_map", {})
         self.product = product
-        self.name = style_cfg["name"]
-        self.title = style_cfg["title"]
-        self.abstract = style_cfg["abstract"]
+        if self.stand_alone:
+            self.name = style_cfg.get("name", "stand_alone")
+            self.title = style_cfg.get("title", "Stand Alone Style")
+            self.abstract = style_cfg.get("abstract", "Stand Alone Style")
+        else:
+            self.name = style_cfg["name"]
+            self.title = style_cfg["title"]
+            self.abstract = style_cfg["abstract"]
         self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
         if self.stand_alone:
             self.flag_products = []

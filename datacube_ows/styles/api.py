@@ -1,4 +1,9 @@
+from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StyleDefBase, StandaloneProductProxy
+from datacube_ows.ogc_utils import create_geobox, xarray_image_as_png
+
+
+initialise_ignorable_warnings()
 
 
 def StandaloneStyle(cfg):
