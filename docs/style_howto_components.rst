@@ -303,6 +303,8 @@ The red and green channel have custom scale ranges.
 `View full size
 <https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png>`_
 
+Wow! That looks much better!
+
 But don't get too carried away!  You'll probably find that these particular scale ranges
 look really dark and washed out in south eastern australia and super bright and saturated
 in the central deserts.  The trick is usually to choose a few datasets from different
