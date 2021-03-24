@@ -1,6 +1,8 @@
 import pytest
 from decimal import Decimal
 
+from tests.test_band_utils import dummy_layer # noqa: F401
+
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.legend_utils import  get_image_from_url

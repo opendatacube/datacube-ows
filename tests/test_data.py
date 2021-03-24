@@ -4,6 +4,8 @@ from datacube_ows.data import get_s3_browser_uris, ProductBandQuery
 
 import pytest
 
+from tests.test_styles import product_layer # noqa: F401
+
 import numpy as np
 
 @pytest.fixture
