@@ -14,6 +14,8 @@ from collections.abc import Mapping
 from importlib import import_module
 
 from datacube.utils import geometry
+from ows import Version
+from slugify import slugify
 
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
@@ -27,8 +29,6 @@ from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.utils import group_by_statistical
-from ows import Version
-from slugify import slugify
 
 _LOG = logging.getLogger(__name__)
 

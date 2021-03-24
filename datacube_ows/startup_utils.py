@@ -8,12 +8,12 @@ import sentry_sdk
 from datacube.utils.aws import configure_s3_access
 from flask import Flask, request
 from flask_log_request_id import RequestID, RequestIDLogFilter
+from prometheus_flask_exporter.multiprocess import \
+    GunicornInternalPrometheusMetrics
 from rasterio.errors import NotGeoreferencedWarning
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from datacube_ows.ows_configuration import get_config
-from prometheus_flask_exporter.multiprocess import \
-    GunicornInternalPrometheusMetrics
 
 __all__ = [
     "initialise_logger",
