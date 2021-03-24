@@ -4,7 +4,6 @@ from functools import wraps
 
 import logging
 from time import monotonic
-import os
 
 def log_call(func):
     @wraps(func)

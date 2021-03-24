@@ -3,9 +3,7 @@ import datacube_ows.ogc_utils
 
 
 import datacube_ows.ows_configuration
-from datacube_ows.ows_configuration import BandIndex
-from unittest.mock import patch, MagicMock
-import pytest
+from unittest.mock import MagicMock
 
 
 def test_function_wrapper_lyr():
@@ -31,4 +29,3 @@ def test_function_wrapper_lyr():
     assert result[0] == "apple  beagle  couple"
     assert result[1]["foo"] == "bar"
     assert f.band_mapper is None
-

@@ -1,4 +1,3 @@
-import pytest
 import os
 import sys
 from datacube_ows.ows_configuration import read_config, ConfigException
@@ -218,4 +217,3 @@ def test_cfg_json_mixed(monkeypatch):
     assert cfg["test"] == 9364
     assert cfg["subtest"]["test_py"]["test"] == 123
     assert cfg["subtest"]["test_json"]["test"] == 1234
-

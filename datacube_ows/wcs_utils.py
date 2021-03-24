@@ -1,1 +1,1 @@
-from datacube_ows.wcs1_utils import get_netcdf, get_tiff
+from datacube_ows.wcs1_utils import get_netcdf, get_tiff # noqa: F401

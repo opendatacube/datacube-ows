@@ -5,20 +5,16 @@ from dateutil.parser import parse
 
 import collections
 import datacube
-import numpy
-import xarray
-from affine import Affine
 
 from datacube.utils import geometry
 from rasterio import MemoryFile
-from rasterio.warp import calculate_default_transform
 
 from ows.wcs.v20 import (
     Slice, Trim, ScaleSize, ScaleAxis, ScaleExtent
 )
 
-from datacube_ows.cube_pool import get_cube, release_cube, cube
-from datacube_ows.data import DataStacker, datasets_in_xarray
+from datacube_ows.cube_pool import cube
+from datacube_ows.data import DataStacker
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ows_configuration import get_config
@@ -367,4 +363,3 @@ def get_netcdf(request, data, crs):
 
     # And export to NetCDF
     return data.to_netcdf()
-

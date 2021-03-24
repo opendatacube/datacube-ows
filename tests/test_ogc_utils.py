@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock
-
 import datacube_ows.ogc_utils
 import datetime
 
@@ -92,4 +90,3 @@ def test_create_geobox():
         geobox_no = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
                                                          140.7184, 145.6924, -16.1144, -13.4938)
     assert "Must supply at least a width or height" in str(excinfo.value)
-
