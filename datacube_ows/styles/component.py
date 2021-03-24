@@ -92,6 +92,8 @@ class ComponentStyleDef(StyleDefBase):
                 for band, intensity in components.items():
                     if callable(intensity):
                         imgband_component = intensity(data[band], band, imgband)
+                    elif band == "scale_range":
+                        continue
                     else:
                         imgband_component = data[band] * intensity
 
