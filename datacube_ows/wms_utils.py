@@ -17,6 +17,7 @@ except ImportError:
     from rasterio.warp import RESAMPLING as Resampling
 
 from affine import Affine
+from datacube.utils import geometry
 import math
 
 from datacube_ows.ows_configuration import get_config
