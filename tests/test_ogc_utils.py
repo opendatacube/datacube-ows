@@ -73,3 +73,23 @@ def test_parse_for_base_url():
     url = "https://hello.world.bar:8000/wms/?CheckSomething"
     ret = datacube_ows.ogc_utils.parse_for_base_url(url)
     assert ret == "hello.world.bar:8000/wms"
+
+
+def test_create_geobox():
+    geobox = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
+                                                  140.7184, 145.6924, -16.1144, -13.4938,
+                                                  1182, 668)
+    geobox_ho = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
+                                                  140.7184, 145.6924, -16.1144, -13.4938,
+                                                  1182, 668)
+    geobox_wo = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
+                              140.7184, 145.6924, -16.1144, -13.4938,
+                              1182, 668)
+    for gb in (geobox, geobox_ho, geobox_wo):
+        assert geobox.width == 1182
+        assert geobox.height == 668
+    with pytest.raises(Exception) as excinfo:
+        geobox_no = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
+                                                         140.7184, 145.6924, -16.1144, -13.4938)
+    assert "Must supply at least a width or height" in str(excinfo.value)
+
