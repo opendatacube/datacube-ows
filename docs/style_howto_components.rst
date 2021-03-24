@@ -261,10 +261,54 @@ Example: Per-channel scale_ranges
 
 What if we want to apply a different scale ranges to different channels?
 
-For example, in the `false colour example above
-<#example-infrared-green-false-colour>`_, the image was very...
+For example, the image in the `false colour example above
+<#example-infrared-green-false-colour>`_, looks a bit
+saturated, especially in the red and green bands (red+green make yellow).
 
+.. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
+    :width: 600
 
-But as any scientist will tell you, linear equations can only get you so far, so `next
+`View full size
+<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`_
+
+Let's see what we can do with some judicious tweaking of the scale_ranges
+on a per-band basis:
+
+::
+
+    irg_bandscale_cfg = {
+            "components": {
+                "red": {
+                    "swir1": 1.0,
+                    "scale_range": (1500, 3700),
+                },
+                "green": {
+                    "nir": 1.0,
+                    "scale_range": (1600, 3200),
+                },
+                "blue": {
+                    "green": 1.0
+                },
+            },
+            "scale_range": (200, 1900),
+        }
+
+The "blue" channel takes the default scale_range `(200,1900)`.
+
+The red and green channel have custom scale ranges.
+
+.. image:: https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png
+    :width: 600
+
+`View full size
+<https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png>`_
+
+But don't get too carried away!  You'll probably find that these particular scale ranges
+look really dark and washed out in south eastern australia and super bright and saturated
+in the central deserts.  The trick is usually to choose a few datasets from different
+land cover types and come up with a compromise configuration that looks good everywhere.
+
+But as any scientist will tell you, when it comes to visualisation, linear equations can
+only get you so far, so `next
 <https://datacube-ows.readthedocs.io/en/latest/style_howto_components_nonlinear.html>`_
 we start to look at how to apply more powerful maths to calculate components.
