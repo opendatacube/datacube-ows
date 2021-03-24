@@ -1,19 +1,20 @@
-from collections import defaultdict
-from decimal import Decimal, ROUND_HALF_UP
-from math import isclose
 import logging
+from collections import defaultdict
+from decimal import ROUND_HALF_UP, Decimal
+from math import isclose
 
 import matplotlib
 import numpy
 from colour import Color
 from matplotlib import pyplot as plt
-from matplotlib.colors import to_hex, LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, to_hex
 from xarray import Dataset
-
-matplotlib.use("Agg")
 
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
+
+matplotlib.use("Agg")
+
 
 _LOG = logging.getLogger(__name__)
 

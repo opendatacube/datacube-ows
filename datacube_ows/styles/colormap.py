@@ -1,13 +1,14 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 
 import numpy
 from colour import Color
 from datacube.utils.masking import make_mask
-from matplotlib import patches as mpatches, pyplot as plt
-from xarray import Dataset, DataArray, merge
+from matplotlib import patches as mpatches
+from matplotlib import pyplot as plt
+from xarray import DataArray, Dataset, merge
 
-from datacube_ows.config_utils import OWSConfigEntry, ConfigException
+from datacube_ows.config_utils import ConfigException, OWSConfigEntry
 from datacube_ows.styles.base import StyleDefBase
 
 _LOG = logging.getLogger(__name__)

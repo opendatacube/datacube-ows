@@ -1,4 +1,4 @@
-from datacube_ows.styles.base import StyleDefBase, StandaloneProductProxy
+from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
 
 
 def StandaloneStyle(cfg):
