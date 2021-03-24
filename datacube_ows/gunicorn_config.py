@@ -2,7 +2,8 @@
 """
 import os
 
-from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+from prometheus_flask_exporter.multiprocess import \
+    GunicornInternalPrometheusMetrics
 
 
 def child_exit(server, worker):

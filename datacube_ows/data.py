@@ -19,21 +19,13 @@ from skimage.draw import polygon as skimg_polygon
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import (
-    ConfigException,
-    dataset_center_time,
-    solar_date,
-    tz_for_geometry,
-)
+from datacube_ows.ogc_utils import (ConfigException, dataset_center_time,
+                                    solar_date, tz_for_geometry)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
-from datacube_ows.wms_utils import (
-    GetFeatureInfoParameters,
-    GetMapParameters,
-    img_coords_to_geopoint,
-    solar_correct_data,
-)
+from datacube_ows.wms_utils import (GetFeatureInfoParameters, GetMapParameters,
+                                    img_coords_to_geopoint, solar_correct_data)
 
 _LOG = logging.getLogger(__name__)
 

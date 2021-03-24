@@ -12,7 +12,8 @@ from rasterio.errors import NotGeoreferencedWarning
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from datacube_ows.ows_configuration import get_config
-from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+from prometheus_flask_exporter.multiprocess import \
+    GunicornInternalPrometheusMetrics
 
 __all__ = [
     "initialise_logger",

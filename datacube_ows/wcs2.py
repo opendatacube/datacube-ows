@@ -15,7 +15,8 @@ from ows.gml import Grid, IrregularAxis, RegularAxis, SpatioTemporalType
 from ows.swe import Field
 from ows.wcs import CoverageDescription, CoverageSummary, ServiceCapabilities
 from ows.wcs.v20 import encoders as encoders_v20
-from ows.wcs.v20.decoders import kvp_decode_describe_coverage, kvp_decode_get_coverage
+from ows.wcs.v20.decoders import (kvp_decode_describe_coverage,
+                                  kvp_decode_get_coverage)
 from ows.wcs.v21 import encoders as encoders_v21
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
