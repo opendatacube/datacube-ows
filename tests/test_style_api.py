@@ -4,8 +4,12 @@ import pytest
 import xarray as xr
 import numpy as np
 
-from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_style_cfg
+from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_style_cfg, xarray_image_as_png, create_geobox
 
+
+def test_indirect_imports():
+    assert xarray_image_as_png is not None
+    assert create_geobox is not None
 
 def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
     if attrs is None:
