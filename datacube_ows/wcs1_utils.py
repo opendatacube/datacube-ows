@@ -12,7 +12,7 @@ from rasterio import MemoryFile
 from ows.util import Version
 
 from datacube_ows.cube_pool import cube
-from datacube_ows.data import DataStacker, datasets_in_xarray
+from datacube_ows.data import DataStacker
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
@@ -421,4 +421,3 @@ def get_netcdf(req, data):
 
     # And export to NetCDF
     return data.to_netcdf()
-

@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from flask import render_template, request
+from flask import request
 
 
 from ows.common.v20.decoders import kvp_decode_get_capabilities
@@ -10,9 +10,7 @@ from ows.swe import Field
 from ows.wcs import (
     CoverageSummary, ServiceCapabilities, CoverageDescription
 )
-from ows.wcs.v20 import (
-    GetCapabilitiesRequest, DescribeCoverageRequest, GetCoverageRequest
-)
+
 from ows.wcs.v20.decoders import kvp_decode_describe_coverage, kvp_decode_get_coverage
 from ows.wcs.v20 import encoders as encoders_v20
 from ows.wcs.v21 import encoders as encoders_v21

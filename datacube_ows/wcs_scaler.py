@@ -1,6 +1,4 @@
 from datacube.utils import geometry
-import numpy
-import xarray
 from affine import Affine
 
 class WCSScalerException(Exception):

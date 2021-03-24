@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 from flask import render_template
 
-from datacube.utils import geometry
 from datacube_ows.data import get_map, feature_info
 from datacube_ows.ogc_utils import get_service_base_url
 
@@ -192,5 +191,3 @@ def get_feature_info(args):
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
         raise e
-
-

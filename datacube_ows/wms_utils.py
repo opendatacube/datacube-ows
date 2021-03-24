@@ -6,7 +6,6 @@ except ImportError:
     import re
 
 import numpy
-import xarray
 from datetime import datetime
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
@@ -22,7 +21,7 @@ from datacube.utils import geometry
 import math
 
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.ogc_utils import solar_date, create_geobox
+from datacube_ows.ogc_utils import create_geobox
 from datacube_ows.ogc_exceptions import WMSException
 
 RESAMPLING_METHODS = {
@@ -445,4 +444,3 @@ def item_fuser(dest, src):
     where_combined = numpy.isnan(dest) | (dest == -6666.)
     numpy.copyto(dest, src, where=where_combined)
     return dest
-
