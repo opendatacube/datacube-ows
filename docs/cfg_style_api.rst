@@ -131,6 +131,10 @@ the ``apply_ows_style`` methods discussed above) into a PNG image:
     with open("filename.png", "wb") as fp:
         fp.write(xarray_image_as_png(image)
 
+For more detailed examples,
+refer to the
+`styling how-to guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto.html>`_.
+
 Auto-generating a legend image
 ------------------------------
 

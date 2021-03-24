@@ -10,6 +10,7 @@ Contents:
    installation
    database
    configuration
+   styling_howto
    usage
    environment_variables
    pyspy
