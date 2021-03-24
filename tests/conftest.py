@@ -3,10 +3,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
+
 @pytest.fixture
 def flask_client(monkeypatch):
     monkeypatch.setenv("DEFER_CFG_PARSE", "yes")
     from datacube_ows.ogc import app
+
     with app.test_client() as client:
         yield client
 
@@ -15,7 +17,7 @@ def flask_client(monkeypatch):
 def minimal_dc():
     dc = MagicMock()
     nb = MagicMock()
-    nb.index = ['band1', 'band2', 'band3', 'band4']
+    nb.index = ["band1", "band2", "band3", "band4"]
     nb.__getitem__.return_value = {
         "band1": -999,
         "band2": -999,
@@ -35,34 +37,32 @@ def minimal_dc():
     dc.list_measurements.return_value = lmo
 
     def product_by_name(s):
-        if 'lookupfail' in s:
+        if "lookupfail" in s:
             return None
-        mprod  = MagicMock()
+        mprod = MagicMock()
         flag_def = {
-            "moo":   {"bits": 0},
+            "moo": {"bits": 0},
             "floop": {"bits": 1},
-            "blat":  {"bits": 2},
-            "pow":   {"bits": 3},
-            "zap":   {"bits": 4},
-            "dang":  {"bits": 5},
+            "blat": {"bits": 2},
+            "pow": {"bits": 3},
+            "zap": {"bits": 4},
+            "dang": {"bits": 5},
         }
         mprod.lookup_measurements.return_value = {
-            "band4": {
-                "flags_definition": flag_def
-            }
+            "band4": {"flags_definition": flag_def}
         }
         mprod.definition = {"storage": {}}
-        if 'nonativecrs' in s:
+        if "nonativecrs" in s:
             pass
-        elif 'badnativecrs' in s:
+        elif "badnativecrs" in s:
             mprod.definition["storage"]["crs"] = "EPSG:9999"
-        elif 'nativecrs' in s:
+        elif "nativecrs" in s:
             mprod.definition["storage"]["crs"] = "EPSG:4326"
         else:
             pass
-        if 'nonativeres' in s:
+        if "nonativeres" in s:
             pass
-        elif 'nativeres' in s:
+        elif "nativeres" in s:
             mprod.definition["storage"]["resolution"] = {
                 "latitude": 0.001,
                 "longitude": 0.001,
@@ -70,13 +70,14 @@ def minimal_dc():
         else:
             pass
         return mprod
+
     dc.index.products.get_by_name = product_by_name
     return dc
 
 
 @pytest.fixture
 def minimal_global_cfg():
-    global_cfg=MagicMock()
+    global_cfg = MagicMock()
     global_cfg.keywords = {"global"}
     global_cfg.attribution = "Global Attribution"
     global_cfg.authorities = {
@@ -159,10 +160,10 @@ def minimal_layer_cfg():
                         "green": {"band1": 1.0},
                         "blue": {"band1": 1.0},
                     },
-                    "scale_range": [0, 1024]
+                    "scale_range": [0, 1024],
                 }
-            ]
-        }
+            ],
+        },
     }
 
 
@@ -189,11 +190,12 @@ def minimal_multiprod_cfg():
                         "green": {"band1": 1.0},
                         "blue": {"band1": 1.0},
                     },
-                    "scale_range": [0, 1024]
+                    "scale_range": [0, 1024],
                 }
-            ]
-        }
+            ],
+        },
     }
+
 
 @pytest.fixture
 def mock_range():
@@ -212,10 +214,25 @@ def mock_range():
         "end_time": times[-1],
         "time_set": set(times),
         "bboxes": {
-            "EPSG:4326": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1,},
-            "EPSG:3577": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1,},
-            "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1,},
-        }
+            "EPSG:4326": {
+                "top": 0.1,
+                "bottom": -0.1,
+                "left": -0.1,
+                "right": 0.1,
+            },
+            "EPSG:3577": {
+                "top": 0.1,
+                "bottom": -0.1,
+                "left": -0.1,
+                "right": 0.1,
+            },
+            "EPSG:3857": {
+                "top": 0.1,
+                "bottom": -0.1,
+                "left": -0.1,
+                "right": 0.1,
+            },
+        },
     }
 
 
@@ -232,18 +249,19 @@ def minimal_global_raw_cfg():
             ],
             "published_CRSs": {
                 "EPSG:3857": {  # Web Mercator
-                     "geographic": False,
-                     "horizontal_coord": "x",
-                     "vertical_coord": "y",
+                    "geographic": False,
+                    "horizontal_coord": "x",
+                    "vertical_coord": "y",
                 },
                 "EPSG:4326": {  # WGS-84
                     "geographic": True,
-                    "vertical_coord_first": True
+                    "vertical_coord_first": True,
                 },
             },
         },
-        "layers": []
+        "layers": [],
     }
+
 
 @pytest.fixture
 def wcs_global_cfg():
@@ -257,14 +275,14 @@ def wcs_global_cfg():
                 # The file extension to add to the filename.
                 "extension": "tif",
                 # Whether or not the file format supports multiple time slices.
-                "multi-time": False
+                "multi-time": False,
             },
             "netCDF": {
                 "renderer": "datacube_ows.wcs_utils.get_netcdf",
                 "mime": "application/x-netcdf",
                 "extension": "nc",
                 "multi-time": True,
-            }
+            },
         },
         "native_format": "GeoTIFF",
     }

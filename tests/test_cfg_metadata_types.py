@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import patch, MagicMock
 
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import AttributionCfg, SuppURL
@@ -17,30 +16,27 @@ def test_cfg_attrib_emptyfail():
 
 
 def test_cfg_attrib_title_only():
-    attrib = AttributionCfg.parse({
-        "title": "Sir"
-    })
+    attrib = AttributionCfg.parse({"title": "Sir"})
     assert attrib.title == "Sir"
     assert attrib.logo_width is None
     assert attrib.url is None
 
 
 def test_cfg_attrib_url_only():
-    attrib = AttributionCfg.parse({
-        "url": "http://test.url/path/name",
-    })
+    attrib = AttributionCfg.parse(
+        {
+            "url": "http://test.url/path/name",
+        }
+    )
     assert attrib.title is None
     assert attrib.logo_width is None
     assert attrib.url == "http://test.url/path/name"
 
 
 def test_cfg_attrib_minimal_logo_only():
-    attrib = AttributionCfg.parse({
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png"
-        }
-    })
+    attrib = AttributionCfg.parse(
+        {"logo": {"url": "http://test.url/path/img.png", "format": "image/png"}}
+    )
     assert attrib.title is None
     assert attrib.url is None
     assert attrib.logo_url == "http://test.url/path/img.png"
@@ -50,55 +46,59 @@ def test_cfg_attrib_minimal_logo_only():
 
 def test_cfg_attrib_logo_requirements():
     with pytest.raises(ConfigException) as excinfo:
-        attrib = AttributionCfg.parse({
-            "logo": {
-                "url": "http://test.url/path/img.png",
+        attrib = AttributionCfg.parse(
+            {
+                "logo": {
+                    "url": "http://test.url/path/img.png",
+                }
             }
-        })
+        )
     assert "url and format" in str(excinfo.value)
     with pytest.raises(ConfigException) as excinfo:
-        attrib = AttributionCfg.parse({
-            "logo": {
-                "format": "image/png"
-            }
-        })
+        attrib = AttributionCfg.parse({"logo": {"format": "image/png"}})
     assert "url and format" in str(excinfo.value)
 
 
 def test_cfg_attrib_logo_options():
-    attrib = AttributionCfg.parse({
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png",
-            "width": 200
+    attrib = AttributionCfg.parse(
+        {
+            "logo": {
+                "url": "http://test.url/path/img.png",
+                "format": "image/png",
+                "width": 200,
+            }
         }
-    })
+    )
     assert attrib.logo_url == "http://test.url/path/img.png"
     assert attrib.logo_fmt == "image/png"
     assert attrib.logo_width == 200
     assert attrib.logo_height is None
-    attrib = AttributionCfg.parse({
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png",
-            "width": 200,
-            "height": 300
+    attrib = AttributionCfg.parse(
+        {
+            "logo": {
+                "url": "http://test.url/path/img.png",
+                "format": "image/png",
+                "width": 200,
+                "height": 300,
+            }
         }
-    })
+    )
     assert attrib.logo_height == 300
 
 
 def test_cfg_attrib_all_flds(minimal_dc):
-    attrib = AttributionCfg.parse({
-        "title": "Boogie Woogie",
-        "url": "http://test.url/path",
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png",
-            "width": 200,
-            "height": 150,
+    attrib = AttributionCfg.parse(
+        {
+            "title": "Boogie Woogie",
+            "url": "http://test.url/path",
+            "logo": {
+                "url": "http://test.url/path/img.png",
+                "format": "image/png",
+                "width": 200,
+                "height": 150,
+            },
         }
-    })
+    )
     assert attrib.title == "Boogie Woogie"
     assert attrib.url == "http://test.url/path"
     assert attrib.logo_url == "http://test.url/path/img.png"
@@ -118,33 +118,21 @@ def test_surl_empty():
 
 def test_surl_no_url():
     with pytest.raises(KeyError):
-        supps = SuppURL.parse_list([
-            {
-                "format": "text/html"
-            }
-        ])
+        supps = SuppURL.parse_list([{"format": "text/html"}])
 
 
 def test_surl_no_format():
     with pytest.raises(KeyError):
-        supps = SuppURL.parse_list([
-            {
-                "url": "http://test.url/path"
-            }
-        ])
+        supps = SuppURL.parse_list([{"url": "http://test.url/path"}])
 
 
 def test_surl_full(minimal_dc):
-    supps = SuppURL.parse_list([
-        {
-            "url": "http://test.url/path",
-            "format": "text/html"
-        },
-        {
-            "url": "http://test.url/another_path",
-            "format": "text/plain"
-        },
-    ])
+    supps = SuppURL.parse_list(
+        [
+            {"url": "http://test.url/path", "format": "text/html"},
+            {"url": "http://test.url/another_path", "format": "text/plain"},
+        ]
+    )
     assert len(supps) == 2
     assert supps[0].url == "http://test.url/path"
     assert supps[1].url == "http://test.url/another_path"

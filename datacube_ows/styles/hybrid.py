@@ -7,21 +7,25 @@ from datacube_ows.styles.ramp import ColorRampDef
 
 class HybridStyleDef(ColorRampDef, ComponentStyleDef):
     auto_legend = False
+
     def __init__(self, product, style_cfg, defer_multi_date=False, stand_alone=False):
-        super(HybridStyleDef, self).__init__(product, style_cfg,
-                                             defer_multi_date=defer_multi_date,
-                                             stand_alone=stand_alone)
+        super(HybridStyleDef, self).__init__(
+            product,
+            style_cfg,
+            defer_multi_date=defer_multi_date,
+            stand_alone=stand_alone,
+        )
         style_cfg = self._raw_cfg
         self.component_ratio = style_cfg["component_ratio"]
 
     def transform_single_date_data(self, data):
-        #pylint: disable=too-many-locals
+        # pylint: disable=too-many-locals
         if self.index_function is not None:
-            data['index_function'] = (data.dims, self.index_function(data))
+            data["index_function"] = (data.dims, self.index_function(data))
 
         imgdata = Dataset(coords=data)
 
-        d = data['index_function']
+        d = data["index_function"]
         for band, intensity in self.rgb_components.items():
             rampdata = self.color_ramp.get_value(d, band)
             component_band_data = None
@@ -36,9 +40,13 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                     else:
                         component_band_data = imgband_component_data
                     if band != "alpha":
-                        component_band_data = self.compress_band(band, component_band_data)
-                img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
-                                 + self.component_ratio * component_band_data)
+                        component_band_data = self.compress_band(
+                            band, component_band_data
+                        )
+                img_band_data = (
+                    rampdata * 255.0 * (1.0 - self.component_ratio)
+                    + self.component_ratio * component_band_data
+                )
             else:
                 img_band_data = rampdata * 255.0
             imgdata[band] = (d.dims, img_band_data.astype("uint8"))

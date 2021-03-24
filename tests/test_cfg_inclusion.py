@@ -1,7 +1,7 @@
-import pytest
 import os
 import sys
-from datacube_ows.ows_configuration import read_config, ConfigException
+
+from datacube_ows.ows_configuration import ConfigException, read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
@@ -14,14 +14,14 @@ def test_cfg_inject():
 
 
 def test_cfg_direct(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "{\"test\": 12345}")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", '{"test": 12345}')
     cfg = read_config()
 
     assert cfg["test"] == 12345
 
 
 def test_cfg_py_simple_0(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG",  "tests.cfg.simple.simple")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.simple.simple")
     cfg = read_config()
 
     assert cfg["test"] == 123
@@ -104,7 +104,7 @@ def test_cfg_py_infinite_1(monkeypatch):
 
 
 def test_cfg_py_infinite_2(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG",  "tests.cfg.nested.infinite_2")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_2")
     try:
         cfg = read_config()
         assert False
@@ -218,4 +218,3 @@ def test_cfg_json_mixed(monkeypatch):
     assert cfg["test"] == 9364
     assert cfg["subtest"]["test_py"]["test"] == 123
     assert cfg["subtest"]["test_json"]["test"] == 1234
-

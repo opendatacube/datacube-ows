@@ -1,16 +1,15 @@
 import datetime
-
-from datacube_ows.config_utils import OWSEntryNotFound
-from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
-from datacube_ows.ogc_utils import ConfigException
-import datacube_ows.styles
-
-from xarray import DataArray, Dataset, concat
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
+from xarray import DataArray, Dataset, concat
+
+import datacube_ows.styles
+from datacube_ows.config_utils import OWSEntryNotFound
+from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
+
 
 @pytest.fixture
 def product_layer():
@@ -18,36 +17,44 @@ def product_layer():
         def __init__(self, name):
             self.name = name
             self.id = 7
+
         def __str__(self):
             return self.name
+
         def __repr__(self):
             return f"FakeODCProduct({self.name})"
+
     class FakeProductBand:
         bands = set(["pq", "wongle"])
         products = [FakeODCProduct("test_masking_product")]
-        manual_merge=False
-        ignore_time=False
-        fuse_func=None
+        manual_merge = False
+        ignore_time = False
+        fuse_func = None
+
         def products_match(self, name):
             return False
+
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer._unready_attributes = []
     product_layer.global_cfg = MagicMock()
     product_layer.name = "test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
-    product_layer.products = [FakeODCProduct('test_odc_product')]
+    product_layer.products = [FakeODCProduct("test_odc_product")]
     product_layer.low_res_product_names = ["test_odc_summary_product"]
-    product_layer.low_res_products = [FakeODCProduct('test_odc_summary_product')]
+    product_layer.low_res_products = [FakeODCProduct("test_odc_summary_product")]
     product_layer.always_fetch_bands = ["red", "green", "blue"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx._unready_attributes = []
     product_layer.band_idx.product = product_layer
     product_layer.band_idx.band_cfg = {
-        "red": [ "crimson", "foo", ],
-        "green": [ ],
-        "blue": [ "azure", "bar" ],
-        "fake": []
+        "red": [
+            "crimson",
+            "foo",
+        ],
+        "green": [],
+        "blue": ["azure", "bar"],
+        "fake": [],
     }
     product_layer.band_idx._idx = {
         "red": "red",
@@ -59,9 +66,7 @@ def product_layer():
         "azure": "red",
         "fake": "fake",
     }
-    product_layer.global_cfg.product_index = {
-        "test_product": product_layer
-    }
+    product_layer.global_cfg.product_index = {"test_product": product_layer}
     product_layer.data_manual_merge = False
     product_layer.fuse_func = None
     product_layer.allflag_productbands = [FakeProductBand()]
@@ -80,8 +85,8 @@ def style_cfg_lin():
         "components": {
             "red": {"red": 1.0},
             "green": {"green": 1.0},
-            "blue": {"blue": 1.0}
-        }
+            "blue": {"blue": 1.0},
+        },
     }
     return cfg
 
@@ -99,6 +104,7 @@ def style_cfg_lin_clone():
     }
     return cfg
 
+
 @pytest.fixture
 def style_cfg_map():
     cfg = {
@@ -111,27 +117,20 @@ def style_cfg_map():
                 {
                     "title": "Invalid",
                     "abstract": "An Invalid Value",
-                    "flags": {
-                        "bar": True,
-                        "baz": False
-                    },
-                    "color": "#000000"
+                    "flags": {"bar": True, "baz": False},
+                    "color": "#000000",
                 },
                 {
                     "title": "Valid",
                     "abstract": "A Valid Value",
-                    "flags": {
-                        "or": {
-                            "x": True,
-                            "y": True
-                        }
-                    },
-                    "color": "#FFFFFF"
-                }
+                    "flags": {"or": {"x": True, "y": True}},
+                    "color": "#FFFFFF",
+                },
             ]
-        }
+        },
     }
     return cfg
+
 
 @pytest.fixture
 def product_layer_alpha_map():
@@ -142,13 +141,10 @@ def product_layer_alpha_map():
     product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["foo"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
-    product_layer.band_idx.band_cfg = {
-        "foo": ["foo"]
-    }
-    product_layer.band_idx._idx = {
-        "foo": "foo"
-    }
+    product_layer.band_idx.band_cfg = {"foo": ["foo"]}
+    product_layer.band_idx._idx = {"foo": "foo"}
     return product_layer
+
 
 @pytest.fixture
 def style_cfg_map_alpha_1():
@@ -166,12 +162,13 @@ def style_cfg_map_alpha_1():
                         "bar": True,
                     },
                     "color": "#000000",
-                    "alpha": 0.0
+                    "alpha": 0.0,
                 }
             ]
-        }
+        },
     }
     return cfg
+
 
 @pytest.fixture
 def style_cfg_map_alpha_2():
@@ -189,12 +186,13 @@ def style_cfg_map_alpha_2():
                         "bar": False,
                     },
                     "color": "#000000",
-                    "alpha": 0.5
+                    "alpha": 0.5,
                 }
             ]
-        }
+        },
     }
     return cfg
+
 
 @pytest.fixture
 def style_cfg_map_alpha_3():
@@ -214,9 +212,10 @@ def style_cfg_map_alpha_3():
                     "color": "#000000",
                 }
             ]
-        }
+        },
     }
     return cfg
+
 
 @pytest.fixture
 def style_cfg_ramp():
@@ -228,16 +227,15 @@ def style_cfg_ramp():
         "index_function": {
             "function": "datacube_ows.band_utils.single_band",
             "mapped_bands": False,
-            "kwargs": {
-                "band": "foo"
-            }
+            "kwargs": {"band": "foo"},
         },
         "color_ramp": [
             {"value": 0.0, "color": "#FFFFFF", "alpha": 0.0},
-            {"value": 1.0, "color": "#000000", "alpha": 1.0}
-        ]
+            {"value": 1.0, "color": "#000000", "alpha": 1.0},
+        ],
     }
     return cfg
+
 
 @pytest.fixture
 def style_cfg_ramp_clone(style_cfg_ramp):
@@ -249,6 +247,7 @@ def style_cfg_ramp_clone(style_cfg_ramp):
     }
     return cfg
 
+
 @pytest.fixture
 def style_cfg_ramp_mapped():
     cfg = {
@@ -259,17 +258,16 @@ def style_cfg_ramp_mapped():
         "index_function": {
             "function": "datacube_ows.band_utils.single_band",
             "mapped_bands": True,
-            "kwargs": {
-                "band": "bar"
-            }
+            "kwargs": {"band": "bar"},
         },
-        "band_map": { "bar": "foo"},
+        "band_map": {"bar": "foo"},
         "color_ramp": [
             {"value": 0.0, "color": "#FFFFFF", "alpha": 0.0},
-            {"value": 1.0, "color": "#000000", "alpha": 1.0}
-        ]
+            {"value": 1.0, "color": "#000000", "alpha": 1.0},
+        ],
     }
     return cfg
+
 
 def test_correct_style_hybrid(product_layer, style_cfg_lin):
     style_cfg_lin["component_ratio"] = 1.0
@@ -277,13 +275,12 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
     style_cfg_lin["index_function"] = {
         "function": "datacube_ows.band_utils.constant",
         "mapped_bands": True,
-        "kwargs": {
-            "const": "0.1"
-        }
+        "kwargs": {"const": "0.1"},
     }
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
     assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
+
 
 def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
@@ -303,74 +300,84 @@ def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone):
     product_layer.style_index[style_def.name] = style_def
     style_cfg_lin_clone["inherits"]["layer"] = "fake_layer"
     try:
-        style_def_clone = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
+        style_def_clone = datacube_ows.styles.StyleDef(
+            product_layer, style_cfg_lin_clone
+        )
         assert "Expected exception not thrown" == False
     except OWSEntryNotFound:
         pass
     try:
-        style = datacube_ows.styles.StyleDef.lookup_impl(product_layer.global_cfg,
-                                                         keyvals={
-                                                             "style": "test_style",
-                                                             "layer": "fake-layer"
-                                                         })
+        style = datacube_ows.styles.StyleDef.lookup_impl(
+            product_layer.global_cfg,
+            keyvals={"style": "test_style", "layer": "fake-layer"},
+        )
         assert style == "Expected exception not thrown"
     except OWSEntryNotFound:
         pass
     try:
-        style = datacube_ows.styles.StyleDef.lookup_impl(product_layer.global_cfg,
-                                                 keyvals={
-                                                     "style": "fake_style",
-                                                     "layer": "test_product"
-                                                 },
-                                                subs={"layer": {"test_product": product_layer}})
+        style = datacube_ows.styles.StyleDef.lookup_impl(
+            product_layer.global_cfg,
+            keyvals={"style": "fake_style", "layer": "test_product"},
+            subs={"layer": {"test_product": product_layer}},
+        )
         assert style == "Expected exception not thrown"
     except OWSEntryNotFound:
         pass
 
-def test_style_exceptions(product_layer, style_cfg_map : dict):
+
+def test_style_exceptions(product_layer, style_cfg_map: dict):
     style_no_name = dict(style_cfg_map)
-    style_no_name.pop('name', None)
+    style_no_name.pop("name", None)
     with pytest.raises(KeyError) as excinfo:
         style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
+
 
 def test_correct_style_map(product_layer, style_cfg_map):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_map)
 
     assert isinstance(style_def, datacube_ows.styles.colormap.ColorMapStyleDef)
 
+
 def test_alpha_style_map(
     product_layer_alpha_map,
     style_cfg_map_alpha_1,
     style_cfg_map_alpha_2,
-    style_cfg_map_alpha_3):
-
+    style_cfg_map_alpha_3,
+):
     def fake_make_mask(data, **kwargs):
         return data
-
 
     band = np.array([True, True, True])
     timarray = [np.datetime64(datetime.date.today())]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
-    da = DataArray(band, name='foo')
-    dst = Dataset(data_vars={'foo': da})
+    da = DataArray(band, name="foo")
+    dst = Dataset(data_vars={"foo": da})
     ds = concat([dst], times)
     npmap = np.array([True, True, True])
     damap = DataArray(npmap)
 
-    with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
-        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
-        
+    with patch(
+        "datacube_ows.styles.colormap.make_mask", new_callable=lambda: fake_make_mask
+    ) as fmm:
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_alpha_map, style_cfg_map_alpha_1
+        )
+
         result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
-        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_alpha_map, style_cfg_map_alpha_2
+        )
 
         result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 127).all()
 
-        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_alpha_map, style_cfg_map_alpha_3
+        )
 
         result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
@@ -382,16 +389,19 @@ def test_correct_style_ramp(product_layer, style_cfg_ramp):
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
 
+
 def test_inherited_style_ramp(product_layer, style_cfg_ramp_clone):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_clone)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
+
 
 def test_bandmapped_style_ramp(product_layer, style_cfg_ramp_mapped):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_mapped)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
     assert style_def.local_band("bar") == "red"
+
 
 def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     style_cfg_lin["scale_range"] = [-3000, 3000]
@@ -412,6 +422,7 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     assert compressed[1] == 255 / 2
     assert compressed[2] == 255
 
+
 def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin):
     style_cfg_lin["scale_range"] = [-3000, 3000]
 
@@ -431,6 +442,7 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     assert compressed[1] == 255 / 2
     assert compressed[2] == 255
 
+
 def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
     style_cfg_lin["scale_factor"] = 2.5
 
@@ -444,6 +456,7 @@ def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
     band[1] = 0
     band[2] = 3000
 
+
 @pytest.fixture
 def product_layer_mask_map():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
@@ -453,13 +466,10 @@ def product_layer_mask_map():
     product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["foo"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
-    product_layer.band_idx.band_cfg = {
-        "foo": ["foo"]
-    }
-    product_layer.band_idx._idx = {
-        "foo": "foo"
-    }
+    product_layer.band_idx.band_cfg = {"foo": ["foo"]}
+    product_layer.band_idx._idx = {"foo": "foo"}
     return product_layer
+
 
 @pytest.fixture
 def style_cfg_map_mask():
@@ -477,7 +487,7 @@ def style_cfg_map_mask():
                         "bar": 1,
                     },
                     "color": "#111111",
-                    "mask": True
+                    "mask": True,
                 },
                 {
                     "title": "Non-Transparent",
@@ -494,109 +504,120 @@ def style_cfg_map_mask():
                         "bar": 1,
                     },
                     "color": "#54d56f",
-                }
+                },
             ]
-        }
+        },
     }
     return cfg
+
 
 def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
     def fake_make_mask(data, **kwargs):
         val = kwargs["bar"]
         return data == val
 
-
     dim = np.array([0, 1, 2, 3, 4, 5])
     band = np.array([0, 0, 1, 1, 2, 2])
     timarray = [np.datetime64(datetime.date.today())]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
-    da = DataArray(band, name='foo', coords={"dim": dim}, dims=["dim"])
-    dst = Dataset(data_vars={'foo': da})
+    da = DataArray(band, name="foo", coords={"dim": dim}, dims=["dim"])
+    dst = Dataset(data_vars={"foo": da})
     ds = concat([dst], times)
 
     npmap = np.array([True, True, True, True, True, True])
     damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
 
-    with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
-        style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask)
+    with patch(
+        "datacube_ows.styles.colormap.make_mask", new_callable=lambda: fake_make_mask
+    ) as fmm:
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_mask_map, style_cfg_map_mask
+        )
         data = style_def.transform_data(ds, damap)
         r = data["red"]
         g = data["green"]
         b = data["blue"]
         a = data["alpha"]
 
-        assert (r.values[2] == 17)
-        assert (g.values[2] == 17)
-        assert (b.values[2] == 17)
-        assert (a.values[2] == 0)
-        assert (r.values[4] == 255)
-        assert (g.values[4] == 255)
-        assert (b.values[4] == 255)
-        assert (a.values[4] == 255)
+        assert r.values[2] == 17
+        assert g.values[2] == 17
+        assert b.values[2] == 17
+        assert a.values[2] == 0
+        assert r.values[4] == 255
+        assert g.values[4] == 255
+        assert b.values[4] == 255
+        assert a.values[4] == 255
 
 
 def test_reint():
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
-    band = np.array([0., 0., 1., 1., 2., 2.])
-    da = DataArray(band, name='foo')
+    band = np.array([0.0, 0.0, 1.0, 1.0, 2.0, 2.0])
+    da = DataArray(band, name="foo")
 
-    assert (band.dtype.kind == "f")
+    assert band.dtype.kind == "f"
     data = ColorMapStyleDef.reint(band)
-    assert (data.dtype.kind == "i")
+    assert data.dtype.kind == "i"
 
-    assert (da.dtype.kind == "f")
+    assert da.dtype.kind == "f"
     data = ColorMapStyleDef.reint(da)
-    assert (data.dtype.kind == "i")
+    assert data.dtype.kind == "i"
 
     data = ColorMapStyleDef.reint(data)
-    assert (data.dtype.kind == "i")
+    assert data.dtype.kind == "i"
+
 
 def test_createcolordata():
     from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgb = Color("#FFFFFF")
 
     data = ColorMapStyleDef.create_colordata(da, rgb, 1.0, (band >= 0))
     assert (data == 1.0).all()
+
 
 def test_createcolordata_alpha():
     from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgb = Color("#FFFFFF")
 
     data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, (band >= 0))
     assert (data["alpha"] == 0).all()
+
 
 def test_createcolordata_mask():
     from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgb = Color("#FFFFFF")
 
     data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, (band > 0))
     assert (np.isnan(data["red"][0:1:1])).all()
     assert (np.isfinite(data["red"][2:5:1])).all()
 
+
 def test_createcolordata_remask():
     from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
 
     band = np.array([0, 0, 1, 1, np.nan, np.nan])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgb = Color("#FFFFFF")
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, np.array([True, True, True, True, True, True]))
+    data = ColorMapStyleDef.create_colordata(
+        da, rgb, 0.0, np.array([True, True, True, True, True, True])
+    )
     assert (np.isfinite(data["red"][0:3:1])).all()
     assert (np.isnan(data["red"][4:5:1])).all()
+
 
 def test_scale_ramp():
     from datacube_ows.styles.ramp import scale_unscaled_ramp
@@ -616,6 +637,7 @@ def test_scale_ramp():
     assert output[2]["color"] == "blue"
     assert output[2]["alpha"] == 1.0
     assert output[2]["value"] == 100.0
+
 
 def test_bad_mpl_ramp():
     from datacube_ows.styles.ramp import read_mpl_ramp

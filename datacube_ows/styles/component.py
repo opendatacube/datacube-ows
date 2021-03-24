@@ -6,9 +6,20 @@ from datacube_ows.styles.base import StyleDefBase
 
 # pylint: disable=abstract-method
 class ComponentStyleDef(StyleDefBase):
-    def __init__(self, product, style_cfg, local_band_map=None, stand_alone=False, defer_multi_date=False):
-        super().__init__(product, style_cfg,
-                         stand_alone=stand_alone, defer_multi_date=defer_multi_date)
+    def __init__(
+        self,
+        product,
+        style_cfg,
+        local_band_map=None,
+        stand_alone=False,
+        defer_multi_date=False,
+    ):
+        super().__init__(
+            product,
+            style_cfg,
+            stand_alone=stand_alone,
+            defer_multi_date=defer_multi_date,
+        )
         style_cfg = self._raw_cfg
         self.raw_rgb_components = {}
         for imgband in ["red", "green", "blue", "alpha"]:
@@ -17,10 +28,13 @@ class ComponentStyleDef(StyleDefBase):
                 if imgband == "alpha":
                     continue
                 else:
-                    raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
+                    raise ConfigException(
+                        f"No components defined for {imgband} band in style {self.name}, layer {product.name}"
+                    )
             if "function" in components:
-                self.raw_rgb_components[imgband] = FunctionWrapper(self.product, components,
-                                                                   stand_alone=self.stand_alone)
+                self.raw_rgb_components[imgband] = FunctionWrapper(
+                    self.product, components, stand_alone=self.stand_alone
+                )
                 for b in style_cfg["additional_bands"]:
                     self.raw_needed_bands.add(b)
             else:
@@ -69,7 +83,11 @@ class ComponentStyleDef(StyleDefBase):
         elif comp_in is None:
             return None
         else:
-            return { self.product.band_idx.band(self.local_band(band_alias)): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
+            return {
+                self.product.band_idx.band(self.local_band(band_alias)): value
+                for band_alias, value in comp_in.items()
+                if band_alias not in ["scale_range"]
+            }
 
     def compress_band(self, component_name, imgband_data):
         sc_min = self.component_scale_ranges[component_name]["min"]
@@ -78,14 +96,13 @@ class ComponentStyleDef(StyleDefBase):
         normalized = (clipped - sc_min) / (sc_max - sc_min)
         return normalized * 255
 
-
     def transform_single_date_data(self, data):
         imgdata = {}
         for imgband, components in self.rgb_components.items():
             if callable(components):
                 imgband_data = components(data)
                 dims = imgband_data.dims
-                imgband_data = imgband_data.astype('uint8')
+                imgband_data = imgband_data.astype("uint8")
                 imgdata[imgband] = imgband_data
             else:
                 imgband_data = None
@@ -100,8 +117,10 @@ class ComponentStyleDef(StyleDefBase):
                     else:
                         imgband_data = imgband_component
                 if imgband_data is None:
-                    imgband_data = np.zeros(list(data.dims.values()), 'uint8')
-                    imgband_data = DataArray(imgband_data, data.coords, data.dims.keys())
+                    imgband_data = np.zeros(list(data.dims.values()), "uint8")
+                    imgband_data = DataArray(
+                        imgband_data, data.coords, data.dims.keys()
+                    )
                 if imgband != "alpha":
                     imgband_data = self.compress_band(imgband, imgband_data)
                 imgdata[imgband] = imgband_data.astype("uint8")

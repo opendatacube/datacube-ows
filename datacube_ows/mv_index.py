@@ -1,26 +1,35 @@
-from enum import Enum
 import json
+from enum import Enum
 
-from geoalchemy2 import Geometry
 from datacube.utils.geometry import Geometry as ODCGeom
-from sqlalchemy import MetaData, Table, select, or_, Column, SMALLINT, text
+from geoalchemy2 import Geometry
 from psycopg2.extras import DateTimeTZRange
-from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
+from sqlalchemy import SMALLINT, Column, MetaData, Table, or_, select, text
+from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.sql.functions import count
+
 
 def get_sqlalc_engine(index):
     # pylint: disable=protected-access
     return index._db._engine
 
+
 def get_st_view(meta):
-    return Table('space_time_view', meta,
-             Column('id', UUID()),
-             Column('dataset_type_ref', SMALLINT()),
-             Column('spatial_extent', Geometry(from_text='ST_GeomFromGeoJSON', name='geometry')),
-             Column('temporal_extent', TSTZRANGE())
-                 )
+    return Table(
+        "space_time_view",
+        meta,
+        Column("id", UUID()),
+        Column("dataset_type_ref", SMALLINT()),
+        Column(
+            "spatial_extent", Geometry(from_text="ST_GeomFromGeoJSON", name="geometry")
+        ),
+        Column("temporal_extent", TSTZRANGE()),
+    )
+
+
 _meta = MetaData()
 st_view = get_st_view(_meta)
+
 
 class MVSelectOpts(Enum):
     """
@@ -32,6 +41,7 @@ class MVSelectOpts(Enum):
     COUNT: return a count of matching datasets
     EXTENT: return full extent of query as a Geometry
     """
+
     ALL = 0
     IDS = 1
     COUNT = 2
@@ -50,11 +60,7 @@ class MVSelectOpts(Enum):
         assert False
 
 
-def mv_search(index,
-                       sel=MVSelectOpts.IDS,
-                       times=None,
-                       geom=None,
-                       products=None):
+def mv_search(index, sel=MVSelectOpts.IDS, times=None, geom=None, products=None):
     """
     Perform a dataset query via the space_time_view
 
@@ -76,12 +82,7 @@ def mv_search(index,
     s = select(sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
     if times is not None:
         s = s.where(
-            or_(
-                *[
-                    stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
-                    for t in times
-                ]
-            )
+            or_(*[stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t)) for t in times])
         )
     orig_crs = None
     if geom is not None:

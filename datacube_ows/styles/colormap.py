@@ -1,5 +1,4 @@
 from datetime import datetime
-from textwrap import fill
 import logging
 
 import numpy
@@ -54,9 +53,13 @@ class ValueMapRule(OWSConfigEntry):
         else:
             self.values = None
         if not self.flags and not self.values:
-            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} must have a non-empty 'flags' or a 'values' section.")
+            raise ConfigException(
+                f"Value map rule in style {style_def.name} of layer {style_def.product.name} must have a non-empty 'flags' or a 'values' section."
+            )
         if self.flags and self.values:
-            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} has a both a 'flags' and a 'values' section - choose one.")
+            raise ConfigException(
+                f"Value map rule in style {style_def.name} of layer {style_def.product.name} has a both a 'flags' and a 'values' section - choose one."
+            )
 
     def create_mask(self, data):
         if self.values:
@@ -92,9 +95,13 @@ class ColorMapStyleDef(StyleDefBase):
     auto_legend = True
 
     def __init__(self, product, style_cfg, stand_alone=False):
-        super(ColorMapStyleDef, self).__init__(product, style_cfg, stand_alone=stand_alone)
+        super(ColorMapStyleDef, self).__init__(
+            product, style_cfg, stand_alone=stand_alone
+        )
         style_cfg = self._raw_cfg
-        self.value_map = ValueMapRule.value_map_from_config(self, style_cfg["value_map"])
+        self.value_map = ValueMapRule.value_map_from_config(
+            self, style_cfg["value_map"]
+        )
         for band in self.value_map.keys():
             self.raw_needed_bands.add(band)
 
@@ -121,7 +128,7 @@ class ColorMapStyleDef(StyleDefBase):
         # pylint: disable=too-many-locals, too-many-branches
         # extent mask data per band to preseve nodata
         _LOG.debug("transform begin %s", datetime.now())
-        #if extent_mask is not None:
+        # if extent_mask is not None:
         #    for band in data.data_vars:
         ##        try:
         #            data[band] = data[band].where(extent_mask, other=data[band].attrs['nodata'])
@@ -134,19 +141,29 @@ class ColorMapStyleDef(StyleDefBase):
             band = self.product.band_idx.band(cfg_band)
             band_data = Dataset()
             bdata = data[band]
-            if bdata.dtype.kind == 'f':
+            if bdata.dtype.kind == "f":
                 # Convert back to int for bitmasking
                 bdata = ColorMapStyleDef.reint(bdata)
             for rule in rules:
                 mask = rule.create_mask(bdata)
 
-                masked = ColorMapStyleDef.create_colordata(bdata, rule.rgb, rule.alpha, mask)
-                band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
+                masked = ColorMapStyleDef.create_colordata(
+                    bdata, rule.rgb, rule.alpha, mask
+                )
+                band_data = (
+                    masked
+                    if len(band_data.data_vars) == 0
+                    else band_data.combine_first(masked)
+                )
 
-            imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
+            imgdata = (
+                band_data
+                if len(imgdata.data_vars) == 0
+                else merge([imgdata, band_data])
+            )
 
         imgdata *= 255
-        return imgdata.astype('uint8')
+        return imgdata.astype("uint8")
 
     def single_date_legend(self, bytesio):
         patches = []
@@ -164,11 +181,10 @@ class ColorMapStyleDef(StyleDefBase):
         plt.rcdefaults()
         if cfg.get("rcParams", None) is not None:
             plt.rcParams.update(cfg.get("rcParams"))
-        figure = plt.figure(figsize=(cfg.get("width", 3),
-                                     cfg.get("height", 1.25)))
-        plt.axis('off')
-        legend = plt.legend(handles=patches, loc='center', frameon=False)
-        plt.savefig(bytesio, format='png')
+        figure = plt.figure(figsize=(cfg.get("width", 3), cfg.get("height", 1.25)))
+        plt.axis("off")
+        legend = plt.legend(handles=patches, loc="center", frameon=False)
+        plt.savefig(bytesio, format="png")
 
 
 StyleDefBase.register_subclass(ColorMapStyleDef, "value_map")

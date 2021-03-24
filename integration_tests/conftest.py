@@ -1,13 +1,13 @@
 import os
 
-pytest_plugins = ["helpers_namespace"]
 import pytest
 from click.testing import CliRunner
-
-from datacube_ows import ogc
 from pytest_localserver.http import WSGIServer
 
+from datacube_ows import ogc
 from datacube_ows.ogc import app
+
+pytest_plugins = ["helpers_namespace"]
 
 
 @pytest.fixture

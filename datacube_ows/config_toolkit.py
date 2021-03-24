@@ -36,5 +36,3 @@ def deepupdate(target, src):
             except TypeError:
                 # Non-iterable - Use child's version
                 target[k] = src[k]
-
-

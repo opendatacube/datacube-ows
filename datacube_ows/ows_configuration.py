@@ -6,28 +6,39 @@
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
 
-import os
-import math
-from importlib import import_module
 import json
-
+import logging
+import math
+import os
 from collections.abc import Mapping
-
-from ows import Version
-from slugify import slugify
+from importlib import import_module
 
 from datacube.utils import geometry
-from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
-    OWSEntryNotFound, OWSExtensibleConfigEntry, OWSFlagBand, FlagProductBands
+
+from datacube_ows.config_utils import (
+    FlagProductBands,
+    OWSConfigEntry,
+    OWSEntryNotFound,
+    OWSExtensibleConfigEntry,
+    OWSFlagBand,
+    cfg_expand,
+    import_python_obj,
+    load_json_obj,
+)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
+from datacube_ows.ogc_utils import (
+    ConfigException,
+    FunctionWrapper,
+    create_geobox,
+    local_solar_date_range,
+    month_date_range,
+    year_date_range,
+)
 from datacube_ows.styles import StyleDef
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
-    year_date_range, create_geobox
 from datacube_ows.tile_matrix_sets import TileMatrixSet
-
-import logging
-
 from datacube_ows.utils import group_by_statistical
+from ows import Version
+from slugify import slugify
 
 _LOG = logging.getLogger(__name__)
 
@@ -42,7 +53,7 @@ def read_config(path=None):
         from datacube_ows.ows_cfg import ows_cfg as cfg
     elif "/" in cfg_env or cfg_env.endswith(".json"):
         cfg = load_json_obj(cfg_env)
-        abs_path =  os.path.abspath(cfg_env)
+        abs_path = os.path.abspath(cfg_env)
         cwd = os.path.dirname(abs_path)
     elif "." in cfg_env:
         cfg = import_python_obj(cfg_env)
@@ -73,11 +84,15 @@ class BandIndex(OWSConfigEntry):
     def add_aliases(self, cfg):
         for b, aliases in cfg.items():
             if b in self._idx:
-                raise ConfigException(f"Duplicate band name/alias: {b} in layer {self.product_name}")
+                raise ConfigException(
+                    f"Duplicate band name/alias: {b} in layer {self.product_name}"
+                )
             self._idx[b] = b
             for a in aliases:
                 if a != b and a in self._idx:
-                    raise ConfigException(f"Duplicate band name/alias: {a} in layer {self.product_name}")
+                    raise ConfigException(
+                        f"Duplicate band name/alias: {a} in layer {self.product_name}"
+                    )
                 self._idx[a] = b
 
     def make_ready(self, dc, *args, **kwargs):
@@ -92,14 +107,19 @@ class BandIndex(OWSConfigEntry):
         for b, aliases in self.band_cfg.items():
             if b not in self.native_bands.index:
                 raise ConfigException(f"Unknown band: {b} in layer {self.product.name}")
-            self._nodata_vals[b] = self.native_bands['nodata'][b]
-            if isinstance(self._nodata_vals[b], str) and self._nodata_vals[b].lower() == "nan":
+            self._nodata_vals[b] = self.native_bands["nodata"][b]
+            if (
+                isinstance(self._nodata_vals[b], str)
+                and self._nodata_vals[b].lower() == "nan"
+            ):
                 self._nodata_vals[b] = float("nan")
         super().make_ready(dc, *args, **kwargs)
 
     def band(self, name_alias):
         if name_alias not in self._idx:
-            raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
+            raise ConfigException(
+                f"Unknown band name/alias: {name_alias} in layer {self.product.name}"
+            )
         return self._idx[name_alias]
 
     def band_label(self, name_alias):
@@ -127,7 +147,9 @@ class AttributionCfg(OWSConfigEntry):
         self.url = cfg.get("url")
         logo = cfg.get("logo")
         if not self.title and not self.url and not logo:
-            raise ConfigException("At least one of title, url and logo is required in an attribution definition")
+            raise ConfigException(
+                "At least one of title, url and logo is required in an attribution definition"
+            )
         if not logo:
             self.logo_width = None
             self.logo_height = None
@@ -139,7 +161,9 @@ class AttributionCfg(OWSConfigEntry):
             self.logo_url = logo.get("url")
             self.logo_fmt = logo.get("format")
             if not self.logo_url or not self.logo_fmt:
-                raise ConfigException("url and format must both be specified in an attribution logo.")
+                raise ConfigException(
+                    "url and format must both be specified in an attribution logo."
+                )
 
     @classmethod
     def parse(cls, cfg):
@@ -154,7 +178,7 @@ class SuppURL(OWSConfigEntry):
     def parse_list(cls, cfg):
         if not cfg:
             return []
-        return [ cls(u) for u in cfg ]
+        return [cls(u) for u in cfg]
 
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -162,23 +186,27 @@ class SuppURL(OWSConfigEntry):
         self.format = cfg["format"]
 
 
-
 class OWSLayer(OWSConfigEntry):
     named = False
+
     def __init__(self, cfg, parent_layer=None, **kwargs):
         super().__init__(cfg, **kwargs)
         self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
 
         if "title" not in cfg:
-            raise ConfigException("Layer without title found under parent layer %s" % str(parent_layer))
+            raise ConfigException(
+                "Layer without title found under parent layer %s" % str(parent_layer)
+            )
         self.title = cfg["title"]
         if "abstract" in cfg:
             self.abstract = cfg["abstract"]
         elif parent_layer:
             self.abstract = parent_layer.abstract
         else:
-            raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
+            raise ConfigException(
+                "No abstract supplied for top-level layer %s" % self.title
+            )
         # Accumulate keywords
         self.keywords = set()
         if self.parent_layer:
@@ -223,10 +251,10 @@ class OWSFolder(OWSLayer):
                 _LOG.error("Could not parse layer: %s", str(e))
 
     def unready_layer_count(self):
-        return sum([ l.layer_count() for l in self.unready_layers ])
+        return sum([l.layer_count() for l in self.unready_layers])
 
     def layer_count(self):
-        return sum([ l.layer_count() for l in self.child_layers ])
+        return sum([l.layer_count() for l in self.child_layers])
 
     def make_ready(self, dc, *args, **kwargs):
         still_unready = []
@@ -253,26 +281,44 @@ class CacheControlRules(OWSConfigEntry):
         max_max_age_so_far = 0
         for rule in self.rules:
             if "min_datasets" not in rule:
-                raise ConfigException(f"Dataset cache rule does not contain a 'min_datasets' element in layer {layer_cfg.name}")
+                raise ConfigException(
+                    f"Dataset cache rule does not contain a 'min_datasets' element in layer {layer_cfg.name}"
+                )
             if "max_age" not in rule:
-                raise ConfigException(f"Dataset cache rule does not contain a 'max_age' element in layer {layer_cfg.name}")
+                raise ConfigException(
+                    f"Dataset cache rule does not contain a 'max_age' element in layer {layer_cfg.name}"
+                )
             min_datasets = rule["min_datasets"]
             max_age = rule["max_age"]
             if not isinstance(min_datasets, int):
-                raise ConfigException(f"Dataset cache rule has non-integer 'min_datasets' element in layer {layer_cfg.name}")
+                raise ConfigException(
+                    f"Dataset cache rule has non-integer 'min_datasets' element in layer {layer_cfg.name}"
+                )
             if not isinstance(max_age, int):
-                raise ConfigException(f"Dataset cache rule has non-integer 'max_age' element in layer {layer_cfg.name}")
+                raise ConfigException(
+                    f"Dataset cache rule has non-integer 'max_age' element in layer {layer_cfg.name}"
+                )
             if min_datasets <= 0:
-                raise ConfigException(f"Invalid dataset cache rule in layer {layer_cfg.name}: min_datasets must be greater than zero.")
+                raise ConfigException(
+                    f"Invalid dataset cache rule in layer {layer_cfg.name}: min_datasets must be greater than zero."
+                )
             if min_datasets <= min_so_far:
-                raise ConfigException(f"Dataset cache rules must be sorted by ascending min_datasets values.  In layer {layer_cfg.name}.")
+                raise ConfigException(
+                    f"Dataset cache rules must be sorted by ascending min_datasets values.  In layer {layer_cfg.name}."
+                )
             if max_datasets > 0 and min_datasets > max_datasets:
-                raise ConfigException(f"Dataset cache rule min_datasets value exceeds the max_datasets limit in layer {layer_cfg.name}.")
+                raise ConfigException(
+                    f"Dataset cache rule min_datasets value exceeds the max_datasets limit in layer {layer_cfg.name}."
+                )
             min_so_far = min_datasets
             if max_age <= 0:
-                raise ConfigException(f"Dataset cache rule max_age value must be greater than zero in layer {layer_cfg.name}.")
+                raise ConfigException(
+                    f"Dataset cache rule max_age value must be greater than zero in layer {layer_cfg.name}."
+                )
             if max_age <= max_max_age_so_far:
-                raise ConfigException(f"max_age values in dataset cache rules must increase monotonically in layer {layer_cfg.name}.")
+                raise ConfigException(
+                    f"max_age values in dataset cache rules must increase monotonically in layer {layer_cfg.name}."
+                )
             max_max_age_so_far = max_age
 
     def cache_headers(self, n_datasets):
@@ -294,9 +340,10 @@ class CacheControlRules(OWSConfigEntry):
 
 TIMERES_RAW = "raw"
 TIMERES_MON = "month"
-TIMERES_YR  = "year"
+TIMERES_YR = "year"
 
-TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR]
+TIMERES_VALS = [TIMERES_RAW, TIMERES_MON, TIMERES_YR]
+
 
 class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
@@ -304,24 +351,34 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
         name = cfg["name"]
-        super().__init__(cfg, global_cfg=global_cfg, parent_layer=parent_layer,
-                         keyvals={"layer": name},
-                         **kwargs)
+        super().__init__(
+            cfg,
+            global_cfg=global_cfg,
+            parent_layer=parent_layer,
+            keyvals={"layer": name},
+            **kwargs,
+        )
         self.name = name
         cfg = self._raw_cfg
         self.hide = False
         try:
             self.parse_product_names(cfg)
             if len(self.low_res_product_names) not in (0, len(self.product_names)):
-                raise ConfigException(f"Lengths of product_names and low_res_product_names do not match in layer {self.name}")
+                raise ConfigException(
+                    f"Lengths of product_names and low_res_product_names do not match in layer {self.name}"
+                )
             for prod_name in self.product_names:
                 if "__" in prod_name:
                     # I think this was for subproducts which are currently broken
-                    raise ConfigException("Product names cannot contain a double underscore '__'.")
+                    raise ConfigException(
+                        "Product names cannot contain a double underscore '__'."
+                    )
         except IndexError:
             raise ConfigException(f"No products declared in layer {self.name}")
         except KeyError:
-            raise ConfigException("Required product names entry missing in named layer %s" % self.name)
+            raise ConfigException(
+                "Required product names entry missing in named layer %s" % self.name
+            )
         self.declare_unready("products")
         self.declare_unready("low_res_products")
         self.declare_unready("product")
@@ -330,7 +387,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
         if self.time_resolution not in TIMERES_VALS:
             raise ConfigException(
-                "Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
+                "Invalid time resolution value %s in named layer %s"
+                % (self.time_resolution, self.name)
+            )
         self.dynamic = cfg.get("dynamic", False)
 
         self.declare_unready("_ranges")
@@ -342,39 +401,48 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.parse_flags(cfg.get("flags", {}))
             self.declare_unready("all_flag_band_names")
         except KeyError as e:
-            raise ConfigException(f"Missing required config ({str(e)}) in flags section for layer {self.name}")
+            raise ConfigException(
+                f"Missing required config ({str(e)}) in flags section for layer {self.name}"
+            )
         try:
             self.parse_image_processing(cfg["image_processing"])
         except KeyError as e:
-            raise ConfigException(f"Missing required config ({str(e)}) in image processing section for layer {self.name}")
+            raise ConfigException(
+                f"Missing required config ({str(e)}) in image processing section for layer {self.name}"
+            )
         self.identifiers = cfg.get("identifiers", {})
         for auth in self.identifiers.keys():
             if auth not in self.global_cfg.authorities:
-                raise ConfigException(f"Identifier with non-declared authority: {auth} in layer {self.name}")
+                raise ConfigException(
+                    f"Identifier with non-declared authority: {auth} in layer {self.name}"
+                )
         self.parse_urls(cfg.get("urls", {}))
         self.parse_feature_info(cfg.get("feature_info", {}))
         self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
         try:
             self.parse_styling(cfg["styling"])
         except KeyError as e:
-            raise ConfigException(f"Missing required config item {e} in styling section for layer {self.name}")
+            raise ConfigException(
+                f"Missing required config item {e} in styling section for layer {self.name}"
+            )
 
         if self.global_cfg.wcs:
             try:
                 self.parse_wcs(cfg.get("wcs"))
             except KeyError as e:
-                raise ConfigException(f"Missing required config item {e} in wcs section for layer {self.name}")
+                raise ConfigException(
+                    f"Missing required config item {e} in wcs section for layer {self.name}"
+                )
 
-#       Sub-products have been broken for some time.
-#        sub_prod_cfg = cfg.get("sub_products", {})
-#        self.sub_product_label = sub_prod_cfg.get("label")
-#        if "extractor" in sub_prod_cfg:
-#            self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
-#        else:
-#            self.sub_product_extractor = None
+        #       Sub-products have been broken for some time.
+        #        sub_prod_cfg = cfg.get("sub_products", {})
+        #        self.sub_product_label = sub_prod_cfg.get("label")
+        #        if "extractor" in sub_prod_cfg:
+        #            self.sub_product_extractor = FunctionWrapper(self, sub_prod_cfg["extractor"])
+        #        else:
+        #            self.sub_product_extractor = None
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
-
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
@@ -387,12 +455,16 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 low_res_prod_name = None
             product = dc.index.products.get_by_name(prod_name)
             if not product:
-                raise ConfigException(f"Could not find product {prod_name} in datacube for layer {self.name}")
+                raise ConfigException(
+                    f"Could not find product {prod_name} in datacube for layer {self.name}"
+                )
             self.products.append(product)
             if low_res_prod_name:
                 product = dc.index.products.get_by_name(low_res_prod_name)
                 if not product:
-                    raise ConfigException(f"Could not find product {low_res_prod_name} in datacube for layer {self.name}")
+                    raise ConfigException(
+                        f"Could not find product {low_res_prod_name} in datacube for layer {self.name}"
+                    )
                 self.low_res_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
@@ -425,16 +497,22 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.min_zoom = wms_cfg.get("min_zoom_factor", 300.0)
         self.max_datasets_wms = wms_cfg.get("max_datasets", 0)
         self.max_datasets_wcs = wcs_cfg.get("max_datasets", 0)
-        self.wms_cache_rules = CacheControlRules(wms_cfg.get("dataset_cache_rules"), self, self.max_datasets_wms)
-        self.wcs_cache_rules = CacheControlRules(wcs_cfg.get("dataset_cache_rules"), self, self.max_datasets_wcs)
+        self.wms_cache_rules = CacheControlRules(
+            wms_cfg.get("dataset_cache_rules"), self, self.max_datasets_wms
+        )
+        self.wcs_cache_rules = CacheControlRules(
+            wcs_cfg.get("dataset_cache_rules"), self, self.max_datasets_wcs
+        )
 
     # pylint: disable=attribute-defined-outside-init
     def parse_image_processing(self, cfg):
         emf_cfg = cfg["extent_mask_func"]
         if isinstance(emf_cfg, Mapping) or isinstance(emf_cfg, str):
-            self.extent_mask_func = [ FunctionWrapper(self, emf_cfg) ]
+            self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]
         else:
-            self.extent_mask_func = list([ FunctionWrapper(self, emf) for emf in emf_cfg ])
+            self.extent_mask_func = list(
+                [FunctionWrapper(self, emf) for emf in emf_cfg]
+            )
         self.raw_afb = cfg.get("always_fetch_bands", [])
         self.declare_unready("always_fetch_bands")
         self.solar_correction = cfg.get("apply_solar_corrections", False)
@@ -442,7 +520,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self.solar_correction and not self.data_manual_merge:
             raise ConfigException("Solar correction requires manual_merge.")
         if self.data_manual_merge and not self.solar_correction:
-            _LOG.warning("Manual merge is only recommended where solar correction is required.")
+            _LOG.warning(
+                "Manual merge is only recommended where solar correction is required."
+            )
 
         if cfg.get("fuse_func"):
             self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
@@ -451,13 +531,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_image_processing(self, dc):
-        self.always_fetch_bands = list([ self.band_idx.band(b) for b in self.raw_afb ])
+        self.always_fetch_bands = list([self.band_idx.band(b) for b in self.raw_afb])
 
     # pylint: disable=attribute-defined-outside-init
     def parse_feature_info(self, cfg):
         self.feature_info_include_utc_dates = cfg.get("include_utc_dates", False)
         custom = cfg.get("include_custom", {})
-        self.feature_info_custom_includes = { k: FunctionWrapper(self, v) for k,v in custom.items() }
+        self.feature_info_custom_includes = {
+            k: FunctionWrapper(self, v) for k, v in custom.items()
+        }
 
     # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg):
@@ -466,7 +548,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if isinstance(cfg, dict):
                 fb = OWSFlagBand(cfg, self)
                 self.flag_bands[fb.pq_band] = fb
-                _LOG.warning("Single flag bands not in a list is deprecated. Please refer to the documentation for the new format (layer %s)", self.name)
+                _LOG.warning(
+                    "Single flag bands not in a list is deprecated. Please refer to the documentation for the new format (layer %s)",
+                    self.name,
+                )
             else:
                 for fb_cfg in cfg:
                     fb = OWSFlagBand(fb_cfg, self)
@@ -475,11 +560,18 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         for fb in self.flag_bands.values():
             pns = fb.pq_names
             lrpns = fb.pq_low_res_names
-            if pns in pq_names_to_lowres_names and pq_names_to_lowres_names[pns] != lrpns:
-                raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
+            if (
+                pns in pq_names_to_lowres_names
+                and pq_names_to_lowres_names[pns] != lrpns
+            ):
+                raise ConfigException(
+                    f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names"
+                )
             pq_names_to_lowres_names[pns] = lrpns
         # pylint: disable=dict-values-not-iterating
-        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values())
+        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(
+            self.flag_bands.values()
+        )
 
     # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):
@@ -496,7 +588,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.style_index[style.name] = style
         if "default_style" in cfg:
             if cfg["default_style"] not in self.style_index:
-                raise ConfigException(f"Default style {cfg['default_style']} is not in the 'styles' for layer {self.name}")
+                raise ConfigException(
+                    f"Default style {cfg['default_style']} is not in the 'styles' for layer {self.name}"
+                )
             self.default_style = self.style_index[cfg["default_style"]]
         else:
             self.default_style = self.styles[0]
@@ -530,7 +624,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if "native_format" in cfg:
             self.native_format = cfg["native_format"]
             if self.native_format not in self.global_cfg.wcs_formats_by_name:
-                raise ConfigException(f"WCS native format {self.native_format} for layer {self.name} is not in supported formats list")
+                raise ConfigException(
+                    f"WCS native format {self.native_format} for layer {self.name} is not in supported formats list"
+                )
         else:
             self.native_format = self.global_cfg.native_wcs_format
 
@@ -543,25 +639,36 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 if self.cfg_native_crs == self.native_CRS:
                     _LOG.debug(
                         "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                        self.name)
+                        self.name,
+                    )
                 else:
-                    _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
-                                 self.name, self.cfg_native_crs, self.native_CRS)
+                    _LOG.warning(
+                        "Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                        self.name,
+                        self.cfg_native_crs,
+                        self.native_CRS,
+                    )
             except KeyError:
                 self.native_CRS = self.cfg_native_crs
 
             if not self.native_CRS:
-                raise ConfigException(f"No native CRS could be found for layer {self.name}")
+                raise ConfigException(
+                    f"No native CRS could be found for layer {self.name}"
+                )
             if self.native_CRS not in self.global_cfg.published_CRSs:
-                raise ConfigException(f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs")
+                raise ConfigException(
+                    f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs"
+                )
             self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
             # Prepare Rectified Grids
             try:
                 native_bounding_box = self.bboxes[self.native_CRS]
             except KeyError:
-                _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
-                             self.name,
-                             self.native_CRS)
+                _LOG.warning(
+                    "Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
+                    self.name,
+                    self.native_CRS,
+                )
                 self.hide = True
                 return
             self.origin_x = native_bounding_box["left"]
@@ -569,8 +676,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
             try:
                 self.resolution_x = self.product.definition["storage"]["resolution"][
-                    self.native_CRS_def["horizontal_coord"]]
-                self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
+                    self.native_CRS_def["horizontal_coord"]
+                ]
+                self.resolution_y = self.product.definition["storage"]["resolution"][
+                    self.native_CRS_def["vertical_coord"]
+                ]
             except KeyError:
                 self.resolution_x = None
                 self.resolution_y = None
@@ -581,26 +691,38 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         raise KeyError
                     self.resolution_x, self.resolution_y = self.cfg_native_resolution
                 except KeyError:
-                    raise ConfigException(f"No native resolution supplied for WCS enabled layer {self.name}")
+                    raise ConfigException(
+                        f"No native resolution supplied for WCS enabled layer {self.name}"
+                    )
                 except ValueError:
-                    raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
+                    raise ConfigException(
+                        f"Invalid native resolution supplied for WCS enabled layer {self.name}"
+                    )
                 except TypeError:
-                    raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
+                    raise ConfigException(
+                        f"Invalid native resolution supplied for WCS enabled layer {self.name}"
+                    )
             elif self.cfg_native_resolution:
                 config_x, config_y = (float(r) for r in self.cfg_native_resolution)
-                if (
-                        math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
-                        and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
-                ):
+                if math.isclose(
+                    config_x, float(self.resolution_x), rel_tol=1e-8
+                ) and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8):
                     _LOG.debug(
                         "Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                        self.name)
+                        self.name,
+                    )
                 else:
                     _LOG.warning(
                         "Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
-                        self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
+                        self.name,
+                        repr(self.cfg_native_resolution),
+                        self.resolution_x,
+                        self.resolution_y,
+                    )
 
-            if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
+            if (
+                native_bounding_box["right"] - native_bounding_box["left"]
+            ) < self.resolution_x:
                 ConfigException(
                     "Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
                     % (
@@ -609,9 +731,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         native_bounding_box["left"],
                         native_bounding_box["right"],
                         native_bounding_box["right"] - native_bounding_box["left"],
-                        self.resolution_x
-                    ))
-            if (native_bounding_box["top"] - native_bounding_box["bottom"]) < self.resolution_x:
+                        self.resolution_x,
+                    )
+                )
+            if (
+                native_bounding_box["top"] - native_bounding_box["bottom"]
+            ) < self.resolution_x:
                 ConfigException(
                     "Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
                     % (
@@ -620,12 +745,17 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         native_bounding_box["bottom"],
                         native_bounding_box["top"],
                         native_bounding_box["top"] - native_bounding_box["bottom"],
-                        self.resolution_y
-
-                    ))
-            self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
-            self.grid_high_y = int((
-                                           native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+                        self.resolution_y,
+                    )
+                )
+            self.grid_high_x = int(
+                (native_bounding_box["right"] - native_bounding_box["left"])
+                / self.resolution_x
+            )
+            self.grid_high_y = int(
+                (native_bounding_box["top"] - native_bounding_box["bottom"])
+                / self.resolution_y
+            )
 
             if self.grid_high_x == 0:
                 err_str = f"Grid High x is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
@@ -649,11 +779,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         "origin": (bbox["left"], bbox["bottom"]),
                         "resolution": (
                             (bbox["right"] - bbox["left"]) / self.grid_high_x,
-                            (bbox["top"] - bbox["bottom"]) / self.grid_high_y
-                        )
+                            (bbox["top"] - bbox["bottom"]) / self.grid_high_y,
+                        ),
                     }
             # Band management
-            self.wcs_default_bands = [self.band_idx.band(b) for b in self.wcs_raw_default_bands]
+            self.wcs_default_bands = [
+                self.band_idx.band(b) for b in self.wcs_raw_default_bands
+            ]
 
     def parse_product_names(self, cfg):
         raise NotImplementedError()
@@ -670,6 +802,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self._ranges = None
         try:
             from datacube_ows.product_ranges import get_ranges
+
             self._ranges = get_ranges(dc, self)
             if self._ranges is None:
                 raise Exception("Null product range")
@@ -682,6 +815,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         finally:
             if not ext_dc:
                 release_cube(dc)
+
     @property
     def ranges(self):
         if self.dynamic:
@@ -701,7 +835,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     "left": bbox["left"],
                     "top": bbox["top"],
                     "bottom": bbox["bottom"],
-                    "vertical_coord_first": self.global_cfg.published_CRSs[crs_id]["vertical_coord_first"]
+                    "vertical_coord_first": self.global_cfg.published_CRSs[crs_id][
+                        "vertical_coord_first"
+                    ],
                 }
         return bboxes
 
@@ -728,10 +864,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             if not geobox:
                 bbox = self.ranges["bboxes"][self.native_CRS]
-                geobox=create_geobox(
+                geobox = create_geobox(
                     self.native_CRS,
-                    bbox["left"], bbox["bottom"], bbox["right"],bbox["top"],
-                    1, 1
+                    bbox["left"],
+                    bbox["bottom"],
+                    bbox["right"],
+                    bbox["top"],
+                    1,
+                    1,
                 )
             return local_solar_date_range(geobox, t)
 
@@ -746,10 +886,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     def lookup(self, cfg, keyvals, subs=None):
         if not subs and "layer" not in keyvals:
-            subs = {
-                "layer": self.product
-            }
+            subs = {"layer": self.product}
         return super().lookup(cfg, keyvals, subs)
+
     @classmethod
     def lookup_impl(cls, cfg, keyvals, subs=None):
         try:
@@ -765,19 +904,25 @@ class OWSProductLayer(OWSNamedLayer):
         self.product_name = cfg["product_name"]
         self.product_names = (self.product_name,)
 
-        self.low_res_product_name  = cfg.get("low_res_product_name")
+        self.low_res_product_name = cfg.get("low_res_product_name")
         if self.low_res_product_name:
             self.low_res_product_names = (self.low_res_product_name,)
         else:
             self.low_res_product_names = tuple()
         if "product_names" in cfg:
-            raise ConfigException(f"'product_names' entry in non-multi-product layer {self.name} - use 'product_name' only")
+            raise ConfigException(
+                f"'product_names' entry in non-multi-product layer {self.name} - use 'product_name' only"
+            )
         if "low_res_product_names" in cfg:
-            raise ConfigException(f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only")
+            raise ConfigException(
+                f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only"
+            )
 
     def parse_pq_names(self, cfg):
         if "dataset" in cfg:
-            raise ConfigException(f"The 'dataset' entry in the flags section is no longer supported.  Please refer to the documentation for the correct format (layer {self.name})")
+            raise ConfigException(
+                f"The 'dataset' entry in the flags section is no longer supported.  Please refer to the documentation for the correct format (layer {self.name})"
+            )
         if "product" in cfg:
             pq_names = (cfg["product"],)
         else:
@@ -788,9 +933,13 @@ class OWSProductLayer(OWSNamedLayer):
         else:
             pq_low_res_names = self.low_res_product_names
         if "products" in cfg:
-            raise ConfigException(f"'products' entry in flags section of non-multi-product layer {self.name} - use 'product' only")
+            raise ConfigException(
+                f"'products' entry in flags section of non-multi-product layer {self.name} - use 'product' only"
+            )
         if "low_res_products" in cfg:
-            raise ConfigException(f"'low_res_products' entry in flags section of non-multi-product layer {self.name}- use 'low_res_product' only")
+            raise ConfigException(
+                f"'low_res_products' entry in flags section of non-multi-product layer {self.name}- use 'low_res_product' only"
+            )
         return {
             "pq_names": pq_names,
             "pq_low_res_names": pq_low_res_names,
@@ -809,13 +958,19 @@ class OWSMultiProductLayer(OWSNamedLayer):
         else:
             self.low_res_product_name = None
         if "product_name" in cfg:
-            raise ConfigException(f"'product_name' entry in multi-product layer {self.name} - use 'product_names' only")
+            raise ConfigException(
+                f"'product_name' entry in multi-product layer {self.name} - use 'product_names' only"
+            )
         if "low_res_product_name" in cfg:
-            raise ConfigException(f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only")
+            raise ConfigException(
+                f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only"
+            )
 
     def parse_pq_names(self, cfg):
         if "datasets" in cfg:
-            raise ConfigException(f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})")
+            raise ConfigException(
+                f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})"
+            )
         if "products" in cfg:
             pq_names = tuple(cfg["products"])
         else:
@@ -826,13 +981,18 @@ class OWSMultiProductLayer(OWSNamedLayer):
         else:
             pq_low_res_names = self.low_res_product_names
         if "product" in cfg:
-            raise ConfigException(f"'product' entry in flags section of multi-product layer {self.name} - use 'products' only")
+            raise ConfigException(
+                f"'product' entry in flags section of multi-product layer {self.name} - use 'products' only"
+            )
         if "low_res_product" in cfg:
-            raise ConfigException(f"'low_res_product' entry in flags section of multi-product layer {self.name} - use 'low_res_products' only")
+            raise ConfigException(
+                f"'low_res_product' entry in flags section of multi-product layer {self.name} - use 'low_res_products' only"
+            )
         return {
             "pq_names": pq_names,
             "pq_low_res_names": pq_low_res_names,
         }
+
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None):
     if cfg.get("name", None):
@@ -856,27 +1016,29 @@ class WCSFormat:
                         fmt["mime"],
                         fmt["extension"],
                         fmt["renderers"],
-                        fmt.get("multi-time", False)
+                        fmt.get("multi-time", False),
                     )
                 )
             elif "renderer" in fmt:
-                _LOG.warning("'renderer' in WCS format declarations is "
-                      "deprecated. Please review the latest example config "
-                      "file and update your config file accordingly. Format %s "
-                      "will be WCS 1 only.", name)
+                _LOG.warning(
+                    "'renderer' in WCS format declarations is "
+                    "deprecated. Please review the latest example config "
+                    "file and update your config file accordingly. Format %s "
+                    "will be WCS 1 only.",
+                    name,
+                )
                 renderers.append(
                     WCSFormat(
                         name,
                         fmt["mime"],
                         fmt["extension"],
                         {"1": fmt["renderer"]},
-                        fmt.get("multi-time", False)
+                        fmt.get("multi-time", False),
                     )
                 )
         return renderers
 
-    def __init__(self, name, mime, extension, renderers,
-                 multi_time):
+    def __init__(self, name, mime, extension, renderers, multi_time):
         self.name = name
         self.mime = mime
         self.extension = extension
@@ -888,7 +1050,9 @@ class WCSFormat:
         if 1 not in self.renderers:
             _LOG.warning("No renderer supplied for WCS 1.x for format %s", self.name)
         if 2 not in self.renderers:
-            _LOG.warning("Warning: No renderer supplied for WCS 2.x for format %s", self.name)
+            _LOG.warning(
+                "Warning: No renderer supplied for WCS 2.x for format %s", self.name
+            )
 
     def renderer(self, version):
         if isinstance(version, str):
@@ -930,14 +1094,17 @@ class OWSConfig(OWSConfigEntry):
                     self.parse_wcs(cfg.get("wcs"))
                 except KeyError as e:
                     raise ConfigException(
-                        "Missing required config entry in 'wcs' section (with WCS enabled): %s" % str(e)
+                        "Missing required config entry in 'wcs' section (with WCS enabled): %s"
+                        % str(e)
                     )
             else:
                 self.parse_wcs(None)
             try:
                 self.parse_layers(cfg["layers"])
             except KeyError as e:
-                raise ConfigException("Missing required config entry in 'layers' section")
+                raise ConfigException(
+                    "Missing required config entry in 'layers' section"
+                )
 
             try:
                 if self.wmts:
@@ -946,10 +1113,11 @@ class OWSConfig(OWSConfigEntry):
                     self.parse_wmts({})
             except KeyError as e:
                 raise ConfigException(
-                    "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
+                    "Missing required config entry in 'wmts' section (with WCS enabled): %s"
+                    % str(e)
                 )
 
-    #pylint: disable=attribute-defined-outside-init
+    # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         self.native_product_index = {}
         self.root_layer_folder.make_ready(dc, *args, **kwargs)
@@ -975,6 +1143,7 @@ class OWSConfig(OWSConfigEntry):
             self.fees = "none"
         if not self.access_constraints:
             self.access_constraints = "none"
+
         def make_gml_name(name):
             if name.startswith("EPSG:"):
                 return f"http://www.opengis.net/def/crs/EPSG/0/{name[5:]}"
@@ -994,21 +1163,28 @@ class OWSConfig(OWSConfigEntry):
                 "vertical_coord": crsdef.get("vertical_coord", "latitude"),
                 "vertical_coord_first": crsdef.get("vertical_coord_first", False),
                 "gml_name": make_gml_name(crs_str),
-                "alias_of": None
+                "alias_of": None,
             }
             self.published_CRSs[crs_str] = self.internal_CRSs[crs_str]
             if self.published_CRSs[crs_str]["geographic"]:
                 if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
-                    raise ConfigException(f"Published CRS {crs_str} is geographic"
-                                    "but has a horizontal coordinate that is not 'longitude'")
+                    raise ConfigException(
+                        f"Published CRS {crs_str} is geographic"
+                        "but has a horizontal coordinate that is not 'longitude'"
+                    )
                 if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
-                    raise ConfigException(f"Published CRS {crs_str} is geographic"
-                                    "but has a vertical coordinate that is not 'latitude'")
+                    raise ConfigException(
+                        f"Published CRS {crs_str} is geographic"
+                        "but has a vertical coordinate that is not 'latitude'"
+                    )
         for alias, alias_def in CRS_aliases.items():
             target_crs = alias_def["alias"]
             if target_crs not in self.published_CRSs:
-                _LOG.warning("CRS %s defined as alias for %s, which is not a published CRS - skipping",
-                             alias, target_crs)
+                _LOG.warning(
+                    "CRS %s defined as alias for %s, which is not a published CRS - skipping",
+                    alias,
+                    target_crs,
+                )
                 continue
             target_def = self.published_CRSs[target_crs]
             self.published_CRSs[alias] = target_def.copy()
@@ -1031,20 +1207,18 @@ class OWSConfig(OWSConfigEntry):
             if not isinstance(cfg, Mapping):
                 raise ConfigException("WCS section missing (and WCS is enabled)")
             self.wcs_formats = WCSFormat.from_cfg(cfg["formats"])
-            self.wcs_formats_by_name = {
-                fmt.name: fmt
-                for fmt in self.wcs_formats
-            }
-            self.wcs_formats_by_mime = {
-                fmt.mime: fmt
-                for fmt in self.wcs_formats
-            }
+            self.wcs_formats_by_name = {fmt.name: fmt for fmt in self.wcs_formats}
+            self.wcs_formats_by_mime = {fmt.mime: fmt for fmt in self.wcs_formats}
             if not self.wcs_formats:
-                raise ConfigException("Must configure at least one wcs format to support WCS.")
+                raise ConfigException(
+                    "Must configure at least one wcs format to support WCS."
+                )
 
             self.native_wcs_format = cfg["native_format"]
             if self.native_wcs_format not in self.wcs_formats_by_name:
-                raise ConfigException(f"Configured native WCS format ({self.native_wcs_format}) not a supported format.")
+                raise ConfigException(
+                    f"Configured native WCS format ({self.native_wcs_format}) not a supported format."
+                )
         else:
             self.default_geographic_CRS = None
             self.default_geographic_CRS_def = None
@@ -1066,17 +1240,19 @@ class OWSConfig(OWSConfigEntry):
             if len(identifier.split()) != 1:
                 raise ConfigException(f"Invalid identifier: {identifier}")
             if identifier in self.tile_matrix_sets:
-                raise ConfigException(f"Tile matrix set identifiers must be unique: {identifier}")
+                raise ConfigException(
+                    f"Tile matrix set identifiers must be unique: {identifier}"
+                )
             self.tile_matrix_sets[identifier] = TileMatrixSet(identifier, tms, self)
 
     def parse_layers(self, cfg):
         self.product_index = {}
         self.declare_unready("native_product_index")
-        self.root_layer_folder = OWSFolder({
-            "title": "Root Folder (hidden)",
-            "abstract": ".",
-            "layers": cfg
-        }, self, None)
+        self.root_layer_folder = OWSFolder(
+            {"title": "Root Folder (hidden)", "abstract": ".", "layers": cfg},
+            self,
+            None,
+        )
 
     @property
     def layers(self):
@@ -1117,4 +1293,3 @@ def get_config(refresh=False):
         with cube() as dc:
             cfg.make_ready(dc)
     return cfg
-

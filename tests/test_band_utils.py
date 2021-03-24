@@ -1,23 +1,23 @@
 """Test band math utilities
 """
-import pytest
 import numpy as np
+import pytest
 import xarray as xr
 
 from datacube_ows.band_utils import (
-    scale_data,
-    sum_bands,
-    norm_diff,
-    constant,
-    single_band,
     band_quotient,
     band_quotient_sum,
-    single_band_log,
-    sentinel2_ndci,
+    constant,
     multi_date_delta,
-    single_band_offset_log,
+    norm_diff,
+    radar_vegetation_index,
+    scale_data,
+    sentinel2_ndci,
+    single_band,
     single_band_arcsec,
-    radar_vegetation_index
+    single_band_log,
+    single_band_offset_log,
+    sum_bands,
 )
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
@@ -54,6 +54,7 @@ def dummy_layer():
     product_layer.band_idx._idx = {"b1": "b1", "b2": "b2"}
     product_layer.style_index = {}
     return product_layer
+
 
 @pytest.fixture
 def band_mapper():
@@ -102,6 +103,7 @@ def test_single_band(band_mapper):
     assert not single_band(TEST_XARR, "b1") is None
     assert not single_band(TEST_XARR, "b1", band_mapper) is None
 
+
 def test_multidate():
     assert not multi_date_delta(TEST_XARR_T) is None
     assert not multi_date_delta(TEST_XARR_T, time_direction=1) is None
@@ -116,18 +118,36 @@ def test_single_band_offset_log(band_mapper):
     assert not single_band_offset_log(TEST_XARR, "b1", offset=0.5) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale=100) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0]) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]) is None
+    assert (
+        not single_band_offset_log(
+            TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]
+        )
+        is None
+    )
     assert not single_band_offset_log(TEST_XARR, "b1", band_mapper=band_mapper) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", mult_band="b2", band_mapper=band_mapper) is None
+    assert (
+        not single_band_offset_log(
+            TEST_XARR, "b1", mult_band="b2", band_mapper=band_mapper
+        )
+        is None
+    )
 
 
 def test_single_band_arcsec(band_mapper):
     assert not single_band_arcsec(TEST_XARR, "b1") is None
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is None
-    assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is None
+    assert (
+        not single_band_arcsec(
+            TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]
+        )
+        is None
+    )
     assert not single_band_arcsec(TEST_XARR, "b1", band_mapper=band_mapper) is None
 
 
 def test_rvi(band_mapper):
     assert not radar_vegetation_index(TEST_XARR, "b1", "b2") is None
-    assert not radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper) is None
+    assert (
+        not radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper)
+        is None
+    )

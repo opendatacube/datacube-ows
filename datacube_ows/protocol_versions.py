@@ -1,9 +1,14 @@
-from datacube_ows.wms import handle_wms
+from datacube_ows.ogc_exceptions import (
+    WCS1Exception,
+    WCS2Exception,
+    WMSException,
+    WMTSException,
+)
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.wcs1 import handle_wcs1
 from datacube_ows.wcs2 import handle_wcs2
+from datacube_ows.wms import handle_wms
 from datacube_ows.wmts import handle_wmts
-from datacube_ows.ogc_exceptions import WCS1Exception, WCS2Exception, WMSException, WMTSException
-from datacube_ows.ows_configuration import get_config
 
 
 class SupportedSvcVersion(object):
@@ -41,7 +46,7 @@ class SupportedSvc(object):
             if rv_parts >= v.version_parts:
                 return v
         # The constructor asserted that self.versions is not empty, so this is safe.
-        #pylint: disable=undefined-loop-variable
+        # pylint: disable=undefined-loop-variable
         return v
 
     def activated(self):
@@ -50,18 +55,25 @@ class SupportedSvc(object):
 
 
 OWS_SUPPORTED = {
-    "wms": SupportedSvc([
-        SupportedSvcVersion("wms", "1.3.0", handle_wms, WMSException),
-    ]),
-    "wmts": SupportedSvc([
-        SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException),
-    ]),
-    "wcs": SupportedSvc([
-        SupportedSvcVersion("wcs", "1.0.0", handle_wcs1, WCS1Exception),
-        SupportedSvcVersion("wcs", "2.0.0", handle_wcs2, WCS2Exception),
-        SupportedSvcVersion("wcs", "2.1.0", handle_wcs2, WCS2Exception),
-    ]),
+    "wms": SupportedSvc(
+        [
+            SupportedSvcVersion("wms", "1.3.0", handle_wms, WMSException),
+        ]
+    ),
+    "wmts": SupportedSvc(
+        [
+            SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException),
+        ]
+    ),
+    "wcs": SupportedSvc(
+        [
+            SupportedSvcVersion("wcs", "1.0.0", handle_wcs1, WCS1Exception),
+            SupportedSvcVersion("wcs", "2.0.0", handle_wcs2, WCS2Exception),
+            SupportedSvcVersion("wcs", "2.1.0", handle_wcs2, WCS2Exception),
+        ]
+    ),
 }
+
 
 def supported_versions():
     return OWS_SUPPORTED

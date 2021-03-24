@@ -1,8 +1,9 @@
-import pytest
-from owslib.wms import WebMapService
 from urllib import request
-from lxml import etree
+
+import pytest
 import requests
+from lxml import etree
+from owslib.wms import WebMapService
 
 
 def get_xsd(name):
@@ -72,6 +73,7 @@ def test_getcap(ows_server):
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("capabilities_1_3_0.xsd")
     assert gc_xds.validate(resp_xml)
+
 
 def test_getcap_coord_order(ows_server):
     resp = request.urlopen(
@@ -174,8 +176,7 @@ def test_wms_multidate_getmap(ows_server):
         layers=["ls8_usgs_level1_scene_layer"],
         styles=["ndvi_delta"],
         srs="EPSG:4326",
-        bbox=(145.75, -44.2,
-              148.69, -42.11),
+        bbox=(145.75, -44.2, 148.69, -42.11),
         size=(150, 150),
         format="image/png",
         transparent=True,

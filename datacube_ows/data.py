@@ -1,80 +1,98 @@
 from __future__ import absolute_import
 
 import json
+import logging
+import re
 from datetime import datetime
+from itertools import chain
 
+import datacube
 import numpy
 import numpy.ma
 import xarray
+from datacube.utils import geometry
+from datacube.utils.masking import mask_to_dict
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
-from itertools import chain
-import re
-
-import datacube
-from datacube.utils import geometry
-from datacube.utils.masking import mask_to_dict
 
 from datacube_ows.cube_pool import cube
+from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ogc_exceptions import WMSException
-
+from datacube_ows.ogc_utils import (
+    ConfigException,
+    dataset_center_time,
+    solar_date,
+    tz_for_geometry,
+)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
-from datacube_ows.wms_utils import img_coords_to_geopoint, GetMapParameters, \
-    GetFeatureInfoParameters, solar_correct_data
-from datacube_ows.ogc_utils import dataset_center_time, ConfigException, tz_for_geometry, \
-    solar_date
-from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import log_call
-
-import logging
+from datacube_ows.wms_utils import (
+    GetFeatureInfoParameters,
+    GetMapParameters,
+    img_coords_to_geopoint,
+    solar_correct_data,
+)
 
 _LOG = logging.getLogger(__name__)
 
+
 class ProductBandQuery:
-    def __init__(self, products, bands, main=False, manual_merge=False, ignore_time=False, fuse_func=None):
+    def __init__(
+        self,
+        products,
+        bands,
+        main=False,
+        manual_merge=False,
+        ignore_time=False,
+        fuse_func=None,
+    ):
         self.products = products
         self.bands = bands
         self.manual_merge = manual_merge
         self.fuse_func = fuse_func
         self.ignore_time = ignore_time
         self.main = main
-        self.key = (
-            tuple((p.id for p in self.products)),
-            tuple(bands)
-        )
+        self.key = (tuple((p.id for p in self.products)), tuple(bands))
 
     def __str__(self):
         return f"Query bands {self.bands} from products {self.products}"
 
-    def  __hash__(self):
+    def __hash__(self):
         return hash(self.key)
 
     @classmethod
     def style_queries(cls, style, resource_limited=False):
         queries = [
-            cls.simple_layer_query(style.product, style.needed_bands,
-                                   manual_merge=style.product.data_manual_merge,
-                                   fuse_func=style.product.fuse_func,
-                                   resource_limited=resource_limited)
+            cls.simple_layer_query(
+                style.product,
+                style.needed_bands,
+                manual_merge=style.product.data_manual_merge,
+                fuse_func=style.product.fuse_func,
+                resource_limited=resource_limited,
+            )
         ]
         for fp in style.flag_products:
             if fp.products_match(style.product.product_names):
                 for band in fp.bands:
-                    assert band in style.needed_bands, "Style band not in needed bands list"
+                    assert (
+                        band in style.needed_bands
+                    ), "Style band not in needed bands list"
             else:
                 if resource_limited:
                     pq_products = fp.low_res_products
                 else:
                     pq_products = fp.products
-                queries.append(cls(
-                    pq_products,
-                    tuple(fp.bands),
-                    manual_merge=fp.manual_merge,
-                    ignore_time=fp.ignore_time,
-                    fuse_func=fp.fuse_func
-                ))
+                queries.append(
+                    cls(
+                        pq_products,
+                        tuple(fp.bands),
+                        manual_merge=fp.manual_merge,
+                        ignore_time=fp.ignore_time,
+                        fuse_func=fp.fuse_func,
+                    )
+                )
         return queries
 
     @classmethod
@@ -84,39 +102,55 @@ class ProductBandQuery:
         else:
             needed_bands = set(layer.band_idx.band_cfg.keys())
         queries = [
-            cls.simple_layer_query(layer, needed_bands,
-                                   manual_merge=layer.data_manual_merge,
-                                   fuse_func=layer.fuse_func,
-                                   resource_limited=False)
-
+            cls.simple_layer_query(
+                layer,
+                needed_bands,
+                manual_merge=layer.data_manual_merge,
+                fuse_func=layer.fuse_func,
+                resource_limited=False,
+            )
         ]
         for fpb in layer.allflag_productbands:
             if fpb.products_match(layer.product_names):
                 for band in fpb.bands:
-                    assert band in needed_bands, "main product band not in needed bands list"
+                    assert (
+                        band in needed_bands
+                    ), "main product band not in needed bands list"
             else:
                 pq_products = fpb.products
-                queries.append(cls(
-                    pq_products,
-                    tuple(fpb.bands),
-                    manual_merge=fpb.manual_merge,
-                    ignore_time=fpb.ignore_time,
-                    fuse_func=fpb.fuse_func
-                ))
+                queries.append(
+                    cls(
+                        pq_products,
+                        tuple(fpb.bands),
+                        manual_merge=fpb.manual_merge,
+                        ignore_time=fpb.ignore_time,
+                        fuse_func=fpb.fuse_func,
+                    )
+                )
         return queries
 
     @classmethod
-    def simple_layer_query(cls, layer, bands, manual_merge=False, fuse_func=None, resource_limited=False):
+    def simple_layer_query(
+        cls, layer, bands, manual_merge=False, fuse_func=None, resource_limited=False
+    ):
         if resource_limited:
             main_products = layer.low_res_products
         else:
             main_products = layer.products
-        return cls(main_products, bands, manual_merge=manual_merge, main=True, fuse_func=fuse_func)
+        return cls(
+            main_products,
+            bands,
+            manual_merge=manual_merge,
+            main=True,
+            fuse_func=fuse_func,
+        )
 
 
 class DataStacker:
     @log_call
-    def __init__(self, product, geobox, times, resampling=None, style=None, bands=None, **kwargs):
+    def __init__(
+        self, product, geobox, times, resampling=None, style=None, bands=None, **kwargs
+    ):
         super(DataStacker, self).__init__(**kwargs)
         self._product = product
         self.cfg = product.global_cfg
@@ -126,7 +160,7 @@ class DataStacker:
         if style:
             self._needed_bands = list(style.needed_bands)
         elif bands:
-            self._needed_bands = [ self._product.band_idx.band(b) for b in bands ]
+            self._needed_bands = [self._product.band_idx.band(b) for b in bands]
         else:
             self._needed_bands = list(self._product.band_idx.native_bands.index)
 
@@ -134,11 +168,7 @@ class DataStacker:
             if band not in self._needed_bands:
                 self._needed_bands.append(band)
         self.raw_times = times
-        self._times = [
-                self._product.search_times(
-                        t, self._geobox)
-                for t in times
-        ]
+        self._times = [self._product.search_times(t, self._geobox) for t in times]
         self.group_by = self._product.dataset_groupby()
         self.resource_limited = False
 
@@ -147,34 +177,37 @@ class DataStacker:
 
     @log_call
     def n_datasets(self, index, all_time=False, point=None):
-        return self.datasets(index,
-                             all_time=all_time, point=point,
-                             mode=MVSelectOpts.COUNT)
+        return self.datasets(
+            index, all_time=all_time, point=point, mode=MVSelectOpts.COUNT
+        )
 
-    def datasets(self, index,
-                 all_flag_bands=False,
-                 all_time=False, point=None,
-                 mode=MVSelectOpts.DATASETS):
+    def datasets(
+        self,
+        index,
+        all_flag_bands=False,
+        all_time=False,
+        point=None,
+        mode=MVSelectOpts.DATASETS,
+    ):
         if mode != MVSelectOpts.DATASETS or all_time:
             # Not returning datasets - use main product only
             queries = [
                 ProductBandQuery.simple_layer_query(
-                    self._product,
-                    self.needed_bands(),
-                    self.resource_limited)
-
+                    self._product, self.needed_bands(), self.resource_limited
+                )
             ]
         elif self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(
-                self.style,
-                self.resource_limited
-            )
+            queries = ProductBandQuery.style_queries(self.style, self.resource_limited)
         elif all_flag_bands:
-            queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
+            queries = ProductBandQuery.full_layer_queries(
+                self._product, self.needed_bands()
+            )
         else:
             # Just take needed bands.
-            queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
+            queries = ProductBandQuery.full_layer_queries(
+                self._product, self.needed_bands()
+            )
 
         if point:
             geom = point
@@ -190,11 +223,9 @@ class DataStacker:
                 qry_times = None
             else:
                 qry_times = times
-            result = mv_search(index,
-                               sel=mode,
-                               times=qry_times,
-                               geom=geom,
-                               products=query.products)
+            result = mv_search(
+                index, sel=mode, times=qry_times, geom=geom, products=query.products
+            )
             if mode == MVSelectOpts.DATASETS:
                 result = datacube.Datacube.group_datasets(result, self.group_by)
                 if all_time:
@@ -213,23 +244,39 @@ class DataStacker:
             measurements = pbq.products[0].lookup_measurements(pbq.bands)
             fuse_func = pbq.fuse_func
             if pbq.manual_merge:
-                qry_result = self.manual_data_stack(datasets, measurements, pbq.bands, skip_corrections, fuse_func=fuse_func)
+                qry_result = self.manual_data_stack(
+                    datasets,
+                    measurements,
+                    pbq.bands,
+                    skip_corrections,
+                    fuse_func=fuse_func,
+                )
             else:
-                qry_result = self.read_data(datasets, measurements, self._geobox, self._resampling, fuse_func=fuse_func)
+                qry_result = self.read_data(
+                    datasets,
+                    measurements,
+                    self._geobox,
+                    self._resampling,
+                    fuse_func=fuse_func,
+                )
             if data is None:
                 data = qry_result
                 continue
             if pbq.ignore_time:
                 # regularise time dimension:
                 if len(qry_result.time) != 1:
-                    raise WMSException("Cannot ignore time on PQ (flag) bands from a time-aware product")
+                    raise WMSException(
+                        "Cannot ignore time on PQ (flag) bands from a time-aware product"
+                    )
                 if len(qry_result.time) == len(data.time):
                     qry_result["time"] = data.time
                 else:
                     data_new_bands = {}
                     for band in pbq.bands:
                         band_data = qry_result[band]
-                        timeless_band_data = band_data.sel(time=qry_result.time.values[0])
+                        timeless_band_data = band_data.sel(
+                            time=qry_result.time.values[0]
+                        )
                         band_time_slices = []
                         for dt in data.time.values:
                             band_time_slices.append(timeless_band_data)
@@ -239,20 +286,21 @@ class DataStacker:
                     data = data.assign(data_new_bands)
                     continue
             for band in pbq.bands:
-                data = data.assign({
-                    band: qry_result[band]
-                    for band in pbq.bands
-                })
+                data = data.assign({band: qry_result[band] for band in pbq.bands})
 
         return data
 
     @log_call
-    def manual_data_stack(self, datasets, measurements, bands, skip_corrections, fuse_func):
+    def manual_data_stack(
+        self, datasets, measurements, bands, skip_corrections, fuse_func
+    ):
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         if self.style:
             flag_bands = set(filter(lambda b: b in self.style.flag_bands, bands))
-            non_flag_bands = set(filter(lambda b: b not in self.style.flag_bands, bands))
+            non_flag_bands = set(
+                filter(lambda b: b not in self.style.flag_bands, bands)
+            )
         else:
             non_flag_bands = bands
             flag_bands = set()
@@ -261,7 +309,9 @@ class DataStacker:
             tds = datasets.sel(time=dt)
             merged = None
             for ds in tds.values.item():
-                d = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
+                d = self.read_data_for_single_dataset(
+                    ds, measurements, self._geobox, fuse_func=fuse_func
+                )
                 # Squeeze upconverts uints to int32
                 d = d.squeeze(["time"], drop=True)
                 extent_mask = None
@@ -281,7 +331,7 @@ class DataStacker:
                     merged = merged.combine_first(dm)
             for band in flag_bands:
                 # REVISIT: not sure about type converting one band like this?
-                merged[band] = merged[band].astype('uint16', copy=True)
+                merged[band] = merged[band].astype("uint16", copy=True)
                 merged[band].attrs = d[band].attrs
             time_slices.append(merged)
 
@@ -290,26 +340,36 @@ class DataStacker:
 
     # Read data for given datasets and measurements per the output_geobox
     @log_call
-    def read_data(self, datasets, measurements, geobox, resampling=Resampling.nearest, fuse_func=None):
+    def read_data(
+        self,
+        datasets,
+        measurements,
+        geobox,
+        resampling=Resampling.nearest,
+        fuse_func=None,
+    ):
         return datacube.Datacube.load_data(
-                datasets,
-                geobox,
-                measurements=measurements,
-                fuse_func=fuse_func)
+            datasets, geobox, measurements=measurements, fuse_func=fuse_func
+        )
 
     # Read data for single datasets and measurements per the output_geobox
     @log_call
-    def read_data_for_single_dataset(self, dataset, measurements, geobox, resampling=Resampling.nearest, fuse_func=None):
+    def read_data_for_single_dataset(
+        self,
+        dataset,
+        measurements,
+        geobox,
+        resampling=Resampling.nearest,
+        fuse_func=None,
+    ):
         datasets = [dataset]
         if self._product.is_raw_time_res:
-            dc_datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
+            dc_datasets = datacube.Datacube.group_datasets(datasets, "solar_day")
         else:
-            dc_datasets = datacube.Datacube.group_datasets(datasets, 'time')
+            dc_datasets = datacube.Datacube.group_datasets(datasets, "time")
         return datacube.Datacube.load_data(
-            dc_datasets,
-            geobox,
-            measurements=measurements,
-            fuse_func=fuse_func)
+            dc_datasets, geobox, measurements=measurements, fuse_func=fuse_func
+        )
 
 
 def datasets_in_xarray(xa):
@@ -319,7 +379,9 @@ def datasets_in_xarray(xa):
 
 
 def bbox_to_geom(bbox, crs):
-    return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
+    return datacube.utils.geometry.box(
+        bbox.left, bbox.bottom, bbox.right, bbox.top, crs
+    )
 
 
 @log_call
@@ -334,23 +396,34 @@ def get_map(args):
     else:
         mdh = params.style.get_multi_date_handler(n_dates)
         if mdh is None:
-            raise WMSException("Style %s does not support GetMap requests with %d dates" % (params.style.name, n_dates),
-                               WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
+            raise WMSException(
+                "Style %s does not support GetMap requests with %d dates"
+                % (params.style.name, n_dates),
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter",
+            )
     qprof["n_dates"] = n_dates
     with cube() as dc:
         if not dc:
             raise WMSException("Database connectivity failure")
         # Tiling.
-        stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
+        stacker = DataStacker(
+            params.product,
+            params.geobox,
+            params.times,
+            params.resampling,
+            style=params.style,
+        )
         zoomed_out = params.zf < params.product.min_zoom
         qprof["zoom_factor"] = params.zf
         qprof.start_event("count-datasets")
         n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
         qprof.end_event("count-datasets")
         qprof["n_datasets"] = n_datasets
-        too_many_datasets = (params.product.max_datasets_wms > 0
-                             and n_datasets > params.product.max_datasets_wms
-                             )
+        too_many_datasets = (
+            params.product.max_datasets_wms > 0
+            and n_datasets > params.product.max_datasets_wms
+        )
         if qprof.active:
             qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
         if too_many_datasets or zoomed_out:
@@ -371,10 +444,8 @@ def get_map(args):
                 qprof["write_action"] = "Polygon"
                 qprof.start_event("write")
                 body = _write_polygon(
-                    params.geobox,
-                    extent,
-                    params.product.zoom_fill,
-                    params.product)
+                    params.geobox, extent, params.product.zoom_fill, params.product
+                )
                 qprof.end_event("write")
         elif n_datasets == 0:
             qprof["write_action"] = "No datsets: Write Empty"
@@ -384,7 +455,9 @@ def get_map(args):
         else:
             if stacker.resource_limited:
                 qprof.start_event("count-summary-datasets")
-                qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+                qprof["n_summary_datasets"] = stacker.datasets(
+                    dc.index, mode=MVSelectOpts.COUNT
+                )
                 qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
             datasets = stacker.datasets(dc.index)
@@ -431,7 +504,9 @@ def get_map(args):
     if params.ows_stats:
         return json_response(qprof.profile())
     else:
-        return png_response(body, extra_headers=params.product.wms_cache_rules.cache_headers(n_datasets))
+        return png_response(
+            body, extra_headers=params.product.wms_cache_rules.cache_headers(n_datasets)
+        )
 
 
 def png_response(body, cfg=None, extra_headers=None):
@@ -463,12 +538,14 @@ def _write_png(data, style, extent_mask, geobox, qprof):
     }
 
     with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=width,
-                          height=height,
-                          count=4,
-                          transform=None,
-                          dtype='uint8') as thing:
+        with memfile.open(
+            driver="PNG",
+            width=width,
+            height=height,
+            count=4,
+            transform=None,
+            dtype="uint8",
+        ) as thing:
             masked = False
             last_band = None
             qprof.start_event("write")
@@ -485,7 +562,7 @@ def _write_png(data, style, extent_mask, geobox, qprof):
                     alpha_mask = numpy.empty(last_band.shape)
                     alpha_mask.fill(255)
                 else:
-                    alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+                    alpha_mask = numpy.where(mask, 255, 0).astype("uint8")
                 thing.write_band(4, alpha_mask)
             qprof.end_event("write")
         return memfile.read()
@@ -494,22 +571,25 @@ def _write_png(data, style, extent_mask, geobox, qprof):
 @log_call
 def _write_empty(geobox):
     with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=geobox.width,
-                          height=geobox.height,
-                          count=1,
-                          transform=None,
-                          nodata=0,
-                          dtype='uint8') as thing:
+        with memfile.open(
+            driver="PNG",
+            width=geobox.width,
+            height=geobox.height,
+            count=1,
+            transform=None,
+            nodata=0,
+            dtype="uint8",
+        ) as thing:
             pass
         return memfile.read()
 
+
 def get_coordlist(geo, layer_name):
-    if geo.type == 'Polygon':
+    if geo.type == "Polygon":
         coordinates_list = [geo.json["coordinates"]]
-    elif geo.type == 'MultiPolygon':
+    elif geo.type == "MultiPolygon":
         coordinates_list = geo.json["coordinates"]
-    elif geo.type == 'GeometryCollection':
+    elif geo.type == "GeometryCollection":
         coordinates_list = []
         for geom in geo.json["geometries"]:
             if geom["type"] == "Polygon":
@@ -520,9 +600,13 @@ def get_coordlist(geo, layer_name):
                 _LOG.warning(
                     "Extent contains non-polygon GeometryType (%s in GeometryCollection - ignoring), layer: %s",
                     geom["type"],
-                    layer_name)
+                    layer_name,
+                )
     else:
-        raise Exception("Unexpected extent/geobox polygon geometry type: %s in layer %s" % (geo.type, layer_name))
+        raise Exception(
+            "Unexpected extent/geobox polygon geometry type: %s in layer %s"
+            % (geo.type, layer_name)
+        )
     return coordinates_list
 
 
@@ -536,18 +620,23 @@ def _write_polygon(geobox, polygon, zoom_fill, layer):
         coordinates_list = get_coordlist(polygon, layer.name)
         for polygon_coords in coordinates_list:
             pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
-            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords],
-                                   shape=[geobox.width, geobox.height])
+            rs, cs = skimg_polygon(
+                [c[1] for c in pixel_coords],
+                [c[0] for c in pixel_coords],
+                shape=[geobox.width, geobox.height],
+            )
             data[rs, cs] = 1
 
     with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=geobox.width,
-                          height=geobox.height,
-                          count=len(zoom_fill),
-                          transform=None,
-                          nodata=0,
-                          dtype='uint8') as thing:
+        with memfile.open(
+            driver="PNG",
+            width=geobox.width,
+            height=geobox.height,
+            count=len(zoom_fill),
+            transform=None,
+            nodata=0,
+            dtype="uint8",
+        ) as thing:
             for idx, fill in enumerate(zoom_fill, start=1):
                 thing.write_band(idx, data * fill)
         return memfile.read()
@@ -574,19 +663,24 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
-    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-\.]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-\.]+.yaml")
+    regex = re.compile(
+        r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-\.]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-\.]+.yaml"
+    )
 
     # convert to browsable link
     def convert(uri):
-        uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
+        uri_format = (
+            "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
+        )
         uri_format_prod = str(s3url) + "/?prefix={prefix}"
-        result = regex.match(uri) 
+        result = regex.match(uri)
         if result is not None:
             if result.group("bucket") == str(s3bucket):
                 new_uri = uri_format_prod.format(prefix=result.group("prefix"))
             else:
-                new_uri = uri_format.format(bucket=result.group("bucket"),
-                                            prefix=result.group("prefix"))
+                new_uri = uri_format.format(
+                    bucket=result.group("bucket"), prefix=result.group("prefix")
+                )
         else:
             new_uri = uri
         return new_uri
@@ -599,23 +693,23 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
 @log_call
 def _make_band_dict(prod_cfg, pixel_dataset):
     band_dict = {}
-    for k,v in pixel_dataset.data_vars.items():
+    for k, v in pixel_dataset.data_vars.items():
         band_val = pixel_dataset[k].item()
         flag_def = pixel_dataset[k].attrs.get("flags_definition")
         if flag_def:
             try:
                 flag_dict = mask_to_dict(flag_def, band_val)
             except TypeError as te:
-                logging.warning('Working around for float bands')
+                logging.warning("Working around for float bands")
                 flag_dict = mask_to_dict(flag_def, int(band_val))
             ret_val = {}
             for flag, val in flag_dict.items():
                 if not val:
                     continue
                 if val == True:
-                    ret_val[flag_def[flag].get('description', flag)] = True
+                    ret_val[flag_def[flag].get("description", flag)] = True
                 else:
-                    ret_val[flag_def[flag].get('description', flag)] = val
+                    ret_val[flag_def[flag].get("description", flag)] = val
             band_dict[k] = ret_val
         else:
             try:
@@ -643,7 +737,10 @@ def _make_derived_band_dict(pixel_dataset, style_index):
         if not style.include_in_feature_info:
             continue
 
-        if any(pixel_dataset[band] == pixel_dataset[band].nodata for band in style.needed_bands):
+        if any(
+            pixel_dataset[band] == pixel_dataset[band].nodata
+            for band in style.needed_bands
+        ):
             continue
 
         value = style.index_function(pixel_dataset).item()
@@ -654,6 +751,7 @@ def _make_derived_band_dict(pixel_dataset, style_index):
 def geobox_is_point(geobox):
     # TODO: Not 100% sure why this function is needed.
     return geobox.height == 1 and geobox.width == 1
+
 
 @log_call
 def feature_info(args):
@@ -669,7 +767,8 @@ def feature_info(args):
         geo_point_geobox = params.geobox
     else:
         geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(
-            geo_point, params.geobox.resolution, crs=params.geobox.crs)
+            geo_point, params.geobox.resolution, crs=params.geobox.crs
+        )
     tz = tz_for_geometry(geo_point_geobox.geographic_extent)
     stacker = DataStacker(params.product, geo_point_geobox, params.times)
     # --- Begin code section requiring datacube.
@@ -684,16 +783,15 @@ def feature_info(args):
         v_coord = cfg.published_CRSs[params.crsid]["vertical_coord"]
         s3_bucket = cfg.s3_bucket
         s3_url = cfg.s3_url
-        isel_kwargs = {
-            h_coord: 0,
-            v_coord: 0
-        }
+        isel_kwargs = {h_coord: 0, v_coord: 0}
         if any(all_time_datasets):
             # Group datasets by time, load only datasets that match the idx_date
             global_info_written = False
             feature_json["data"] = []
             fi_date_index = {}
-            time_datasets = stacker.datasets(dc.index, all_flag_bands=True, point=geo_point)
+            time_datasets = stacker.datasets(
+                dc.index, all_flag_bands=True, point=geo_point
+            )
             data = stacker.data(time_datasets, skip_corrections=True)
             for dt in data.time.values:
                 td = data.sel(time=dt)
@@ -725,19 +823,26 @@ def feature_info(args):
                         ds = dss.sel(time=dt).values.tolist()[0]
                         break
                 if params.product.multi_product:
-                    date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
+                    date_info["source_product"] = "%s (%s)" % (
+                        ds.type.name,
+                        ds.metadata_doc["platform"]["code"],
+                    )
 
                 # Extract data pixel
                 pixel_ds = td.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
                 if params.product.is_raw_time_res:
-                    date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    date_info["time"] = dataset_center_time(ds).strftime(
+                        "%Y-%m-%d %H:%M:%S UTC"
+                    )
                 else:
                     date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
                 # Collect raw band values for pixel and derived bands from styles
                 date_info["bands"] = _make_band_dict(params.product, pixel_ds)
-                derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
+                derived_band_dict = _make_derived_band_dict(
+                    pixel_ds, params.product.style_index
+                )
                 if derived_band_dict:
                     date_info["band_derived"] = derived_band_dict
                 # Add any custom-defined fields.
@@ -746,48 +851,48 @@ def feature_info(args):
 
                 feature_json["data"].append(date_info)
                 fi_date_index[dt] = feature_json["data"][-1]
-# REVISIT: There were two very different flag intepreters
+            # REVISIT: There were two very different flag intepreters
             # keeping this commented out for now in case I want to reuse this code in the other interpreter
-#                for dt in pq_data.time.values:
-#                    pqd =pq_data.sel(time=dt)
-#                    date_info = fi_date_index.get(dt)
-#                    if date_info:
-#                        if "flags" not in date_info:
-#                            date_info["flags"] = {}
-#                    else:
-#                        date_info = {"flags": {}}
-#                        feature_json["data"].append(date_info)
-#                    pq_pixel_ds = pqd.isel(**isel_kwargs)
-#                    # PQ flags
-#                    flags = pq_pixel_ds[params.product.pq_band].item()
-#                    if not flags & ~params.product.info_mask:
-#                        my_flags = my_flags | flags
-#                    else:
-#                        continue
-#                    for mk, mv in params.product.flags_def.items():
-#                        if mk in params.product.ignore_info_flags:
-#                            continue
-#                        bits = mv["bits"]
-#                        values = mv["values"]
-#                        if isinstance(bits, int):
-#                            flag = 1 << bits
-#                            if my_flags & flag:
-#                                val = values['1']
-#                            else:
-#                                val = values['0']
-#                            date_info["flags"][mk] = val
-#                        else:
-#                            try:
-#                                for i in bits:
-#                                    if not isinstance(i, int):
-#                                        raise TypeError()
-#                                # bits is a list of ints try to do it alos way
-#                                for key, desc in values.items():
-#                                    if (isinstance(key, str) and key == str(my_flags)) or (isinstance(key, int) and key==my_flags):
-#                                        date_info["flags"][mk] = desc
-#                                        break
-#                            except TypeError:
-#                                pass
+            #                for dt in pq_data.time.values:
+            #                    pqd =pq_data.sel(time=dt)
+            #                    date_info = fi_date_index.get(dt)
+            #                    if date_info:
+            #                        if "flags" not in date_info:
+            #                            date_info["flags"] = {}
+            #                    else:
+            #                        date_info = {"flags": {}}
+            #                        feature_json["data"].append(date_info)
+            #                    pq_pixel_ds = pqd.isel(**isel_kwargs)
+            #                    # PQ flags
+            #                    flags = pq_pixel_ds[params.product.pq_band].item()
+            #                    if not flags & ~params.product.info_mask:
+            #                        my_flags = my_flags | flags
+            #                    else:
+            #                        continue
+            #                    for mk, mv in params.product.flags_def.items():
+            #                        if mk in params.product.ignore_info_flags:
+            #                            continue
+            #                        bits = mv["bits"]
+            #                        values = mv["values"]
+            #                        if isinstance(bits, int):
+            #                            flag = 1 << bits
+            #                            if my_flags & flag:
+            #                                val = values['1']
+            #                            else:
+            #                                val = values['0']
+            #                            date_info["flags"][mk] = val
+            #                        else:
+            #                            try:
+            #                                for i in bits:
+            #                                    if not isinstance(i, int):
+            #                                        raise TypeError()
+            #                                # bits is a list of ints try to do it alos way
+            #                                for key, desc in values.items():
+            #                                    if (isinstance(key, str) and key == str(my_flags)) or (isinstance(key, int) and key==my_flags):
+            #                                        date_info["flags"][mk] = desc
+            #                                        break
+            #                            except TypeError:
+            #                                pass
             feature_json["data_available_for_dates"] = []
             pt_native = None
             for d in all_time_datasets.coords["time"].values:
@@ -801,10 +906,14 @@ def feature_info(args):
                     elif pt_native.crs != ds.crs:
                         pt_native = geo_point.to_crs(ds.crs)
                     if ds.extent and ds.extent.contains(pt_native):
-                        feature_json["data_available_for_dates"].append(dt.strftime("%Y-%m-%d"))
+                        feature_json["data_available_for_dates"].append(
+                            dt.strftime("%Y-%m-%d")
+                        )
                         break
             if time_datasets:
-                feature_json["data_links"] = sorted(get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket))
+                feature_json["data_links"] = sorted(
+                    get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket)
+                )
             else:
                 feature_json["data_links"] = []
             if params.product.feature_info_include_utc_dates:
@@ -816,21 +925,22 @@ def feature_info(args):
                         else:
                             unsorted_dates.append(ds.time.begin.strftime("%Y-%m-%d"))
                 feature_json["data_available_for_utc_dates"] = sorted(
-                    d.center_time.strftime("%Y-%m-%d") for d in all_time_datasets)
+                    d.center_time.strftime("%Y-%m-%d") for d in all_time_datasets
+                )
     # --- End code section requiring datacube.
 
     result = {
         "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "properties": feature_json
-            }
-        ]
+        "features": [{"type": "Feature", "properties": feature_json}],
     }
     return json_response(result, cfg)
+
 
 def json_response(result, cfg=None):
     if not cfg:
         cfg = get_config()
-    return json.dumps(result), 200, cfg.response_headers({"Content-Type": "application/json"})
+    return (
+        json.dumps(result),
+        200,
+        cfg.response_headers({"Content-Type": "application/json"}),
+    )

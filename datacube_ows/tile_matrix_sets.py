@@ -1,5 +1,5 @@
-from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.config_utils import OWSConfigEntry
+from datacube_ows.ogc_utils import ConfigException
 
 # Scale denominators for WebMercator QuadTree Scale Set, starting from zoom level 0.
 # Currently goes to zoom level 14, where the pixel size at the equator is ~10m (i.e. Sentinel2 resolution)
@@ -28,16 +28,22 @@ webmerc_scale_set = [
 def validate_2d_array(array, ident, label, typ):
     try:
         if len(array) != 2:
-            raise ConfigException(f"In tile matrix set {ident}, {label} must have two values: f{array}")
+            raise ConfigException(
+                f"In tile matrix set {ident}, {label} must have two values: f{array}"
+            )
         validate_array_typ(array, ident, label, typ)
     except TypeError:
-        raise ConfigException(f"In tile matrix set {ident}, {label} must be a list of two values: f{array}")
+        raise ConfigException(
+            f"In tile matrix set {ident}, {label} must be a list of two values: f{array}"
+        )
 
 
 def validate_array_typ(array, ident, label, typ):
     for elem in array:
         if not isinstance(elem, typ):
-            raise ConfigException(f"In tile matrix set {ident}, {label} has non-{typ.__name__} value of type {elem.__class__.__name__}: {elem}")
+            raise ConfigException(
+                f"In tile matrix set {ident}, {label} has non-{typ.__name__} value of type {elem.__class__.__name__}: {elem}"
+            )
 
 
 class TileMatrixSet(OWSConfigEntry):
@@ -58,7 +64,9 @@ class TileMatrixSet(OWSConfigEntry):
 
         self.crs_name = cfg["crs"]
         if self.crs_name not in self.global_cfg.published_CRSs:
-            raise ConfigException(f"Tile matrix set {identifier} has unpublished CRS: {self.crs_name}")
+            raise ConfigException(
+                f"Tile matrix set {identifier} has unpublished CRS: {self.crs_name}"
+            )
         self.matrix_origin = cfg["matrix_origin"]
         validate_2d_array(self.matrix_origin, identifier, "Matrix origin", float)
         self.tile_size = cfg["tile_size"]
@@ -67,15 +75,25 @@ class TileMatrixSet(OWSConfigEntry):
         try:
             validate_array_typ(self.scale_set, identifier, "Scale set", float)
         except TypeError:
-            raise ConfigException(f"In tile matrix set {identifier}, scale_set is not a list")
+            raise ConfigException(
+                f"In tile matrix set {identifier}, scale_set is not a list"
+            )
         if len(self.scale_set) < 1:
-            raise ConfigException(f"Tile matrix set {identifier} has no scale denominators in scale_set")
+            raise ConfigException(
+                f"Tile matrix set {identifier} has no scale denominators in scale_set"
+            )
         self.force_raw_crs_name = bool(cfg.get("force_raw_crs_name", False))
         self.wkss = cfg.get("wkss")
-        self.initial_matrix_exponents = cfg.get("matrix_exponent_initial_offsets", (0,0))
-        validate_2d_array(self.initial_matrix_exponents, identifier, "Initial matrix exponents", int)
+        self.initial_matrix_exponents = cfg.get(
+            "matrix_exponent_initial_offsets", (0, 0)
+        )
+        validate_2d_array(
+            self.initial_matrix_exponents, identifier, "Initial matrix exponents", int
+        )
         self.unit_coefficients = cfg.get("unit_coefficients", (1.0, -1.0))
-        validate_2d_array(self.unit_coefficients, identifier, "Unit coefficients", float)
+        validate_2d_array(
+            self.unit_coefficients, identifier, "Unit coefficients", float
+        )
 
     @property
     def crs_cfg(self):
@@ -113,11 +131,6 @@ class TileMatrixSet(OWSConfigEntry):
         maxs = [m + ts for m, ts in zip(mins, tile_span)]
 
         if self.crs_cfg["vertical_coord_first"]:
-            return (
-                maxs[1], mins[0], mins[1], maxs[0]
-            )
+            return (maxs[1], mins[0], mins[1], maxs[0])
         else:
-            return (
-                mins[0], maxs[1], maxs[0], mins[1]
-            )
-
+            return (mins[0], maxs[1], maxs[0], mins[1])

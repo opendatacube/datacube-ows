@@ -5,7 +5,13 @@ from datacube.utils.masking import make_mask
 
 import numpy as np
 import xarray as xr
-from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands, OWSFlagBandStandalone
+from datacube_ows.config_utils import (
+    OWSConfigEntry,
+    OWSExtensibleConfigEntry,
+    OWSEntryNotFound,
+    FlagProductBands,
+    OWSFlagBandStandalone,
+)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -20,36 +26,32 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     auto_legend = False
     include_in_feature_info = False
 
-    def __new__(cls, product=None, style_cfg=None, stand_alone=False, defer_multi_date=False):
+    def __new__(
+        cls, product=None, style_cfg=None, stand_alone=False, defer_multi_date=False
+    ):
         if product and style_cfg:
-            style_cfg = cls.expand_inherit(style_cfg, global_cfg=product.global_cfg,
-                               keyval_subs={
-                                   "layer": {
-                                       product.name: product
-                                   }
-                               },
-                               keyval_defaults={"layer": product.name})
+            style_cfg = cls.expand_inherit(
+                style_cfg,
+                global_cfg=product.global_cfg,
+                keyval_subs={"layer": {product.name: product}},
+                keyval_defaults={"layer": product.name},
+            )
             subclass = cls.determine_subclass(style_cfg)
             if not subclass:
-                raise ConfigException(f"Invalid style in layer {product.name} - could not determine style type")
+                raise ConfigException(
+                    f"Invalid style in layer {product.name} - could not determine style type"
+                )
             return super().__new__(subclass)
         return super().__new__(cls)
 
     def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
-        super().__init__(style_cfg,
-                         global_cfg=product.global_cfg,
-                         keyvals={
-                                "layer": product.name,
-                                "style": style_cfg["name"]
-                         },
-                         keyval_subs={
-                             "layer": {
-                                 product.name: product
-                             }
-                         },
-                         keyval_defaults={
-                             "layer": product.name
-                         })
+        super().__init__(
+            style_cfg,
+            global_cfg=product.global_cfg,
+            keyvals={"layer": product.name, "style": style_cfg["name"]},
+            keyval_subs={"layer": {product.name: product}},
+            keyval_defaults={"layer": product.name},
+        )
         style_cfg = self._raw_cfg
         self.stand_alone = stand_alone
         self.local_band_map = style_cfg.get("band_map", {})
@@ -57,7 +59,9 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.name = style_cfg["name"]
         self.title = style_cfg["title"]
         self.abstract = style_cfg["abstract"]
-        self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
+        self.masks = [
+            StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])
+        ]
         if self.stand_alone:
             self.flag_products = []
         else:
@@ -86,20 +90,20 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                     self.needed_bands.add(fb.pq_band)
                     self.flag_bands.add(fb.pq_band)
                     continue
-                handled=False
+                handled = False
                 for pqp, pqb in self.pq_product_bands:
                     if fb.pq_names == pqp:
                         pqb.add(fb.pq_band)
-                        handled=True
+                        handled = True
                         continue
                 if not handled:
-                    self.pq_product_bands.append(
-                        (fb.pq_names, set([fb.pq_band]))
-                    )
+                    self.pq_product_bands.append((fb.pq_names, set([fb.pq_band])))
         for pq_names, pq_bands in self.pq_product_bands:
             for band in pq_bands:
                 if band in self.flag_bands:
-                    raise ConfigException(f"Same flag band name {band} appears in different PQ product (sets)")
+                    raise ConfigException(
+                        f"Same flag band name {band} appears in different PQ product (sets)"
+                    )
                 self.flag_bands.add(band)
         for fp in self.flag_products:
             fp.make_ready(dc)
@@ -141,7 +145,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         else:
             if extra_mask is not None:
                 extra_mask = extra_mask.squeeze(dim="time", drop=True)
-            mask_maker=single_date_make_mask
+            mask_maker = single_date_make_mask
 
         result = extra_mask
         for mask in self.masks:
@@ -158,12 +162,13 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         if mask is None:
             return img_data
         if "alpha" not in img_data.data_vars.keys():
-            nda_alpha = np.ndarray(img_data["red"].shape, dtype='uint8')
+            nda_alpha = np.ndarray(img_data["red"].shape, dtype="uint8")
             nda_alpha.fill(255)
-            alpha = xr.DataArray(nda_alpha,
-                                coords=img_data["red"].coords,
-                                dims=img_data["red"].dims,
-                                name="alpha"
+            alpha = xr.DataArray(
+                nda_alpha,
+                coords=img_data["red"].coords,
+                dims=img_data["red"].dims,
+                name="alpha",
             )
         else:
             alpha = img_data.alpha
@@ -174,7 +179,9 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     def transform_data(self, data, mask):
         date_count = len(data.coords["time"])
         if date_count == 1:
-            img_data = self.transform_single_date_data(data.squeeze(dim="time", drop=True))
+            img_data = self.transform_single_date_data(
+                data.squeeze(dim="time", drop=True)
+            )
         else:
             mdh = self.get_multi_date_handler(date_count)
             img_data = mdh.transform_data(data)
@@ -187,7 +194,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     # pylint: disable=attribute-defined-outside-init
     def parse_legend_cfg(self, cfg):
         self.show_legend = cfg.get("show_legend", self.auto_legend)
-        self.legend_url_override = cfg.get('url', None)
+        self.legend_url_override = cfg.get("url", None)
         self.legend_cfg = cfg
 
     def render_legend(self, dates):
@@ -221,9 +228,11 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         for mdh in self.multi_date_handlers:
             if mdh.applies_to(count):
                 return mdh
-        if count in [0,1]:
+        if count in [0, 1]:
             return None
-        raise WMSException(f"Style {self.name} does not support requests with {count} dates")
+        raise WMSException(
+            f"Style {self.name} does not support requests with {count} dates"
+        )
 
     @classmethod
     def register_subclass(cls, subclass, triggers, priority=False):
@@ -244,25 +253,36 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
     class MultiDateHandler(OWSConfigEntry):
         auto_legend = False
+
         def __init__(self, style, cfg):
             super().__init__(cfg)
             cfg = self._raw_cfg
             self.style = style
             if "allowed_count_range" not in cfg:
-                raise ConfigException("multi_date handler must have an allowed_count_range")
+                raise ConfigException(
+                    "multi_date handler must have an allowed_count_range"
+                )
             if len(cfg["allowed_count_range"]) > 2:
-                raise ConfigException("multi_date handler allowed_count_range must have 2 and only 2 members")
+                raise ConfigException(
+                    "multi_date handler allowed_count_range must have 2 and only 2 members"
+                )
             self.min_count, self.max_count = cfg["allowed_count_range"]
             if self.max_count < self.min_count:
-                raise ConfigException("multi_date handler allowed_count_range: minimum must be less than equal to maximum")
+                raise ConfigException(
+                    "multi_date handler allowed_count_range: minimum must be less than equal to maximum"
+                )
             if "aggregator_function" in cfg:
-                self.aggregator = FunctionWrapper(style.product, cfg["aggregator_function"])
+                self.aggregator = FunctionWrapper(
+                    style.product, cfg["aggregator_function"]
+                )
             else:
-                raise ConfigException("Aggregator function is required for multi-date handlers.")
+                raise ConfigException(
+                    "Aggregator function is required for multi-date handlers."
+                )
             self.parse_legend_cfg(cfg.get("legend", {}))
 
         def applies_to(self, count):
-            return (self.min_count <= count and self.max_count >= count)
+            return self.min_count <= count and self.max_count >= count
 
         def __repr__(self):
             if self.min_count == self.max_count:
@@ -292,7 +312,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         # pylint: disable=attribute-defined-outside-init
         def parse_legend_cfg(self, cfg):
             self.show_legend = cfg.get("show_legend", self.auto_legend)
-            self.legend_url_override = cfg.get('url', None)
+            self.legend_url_override = cfg.get("url", None)
             self.legend_cfg = cfg
 
         def legend(self, bytesio):
@@ -331,13 +351,16 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                 raise OWSEntryNotFound(f"No layer named {keyvals['layer']}")
 
         try:
-            return prod.style_index[keyvals['style']]
+            return prod.style_index[keyvals["style"]]
         except KeyError:
-            raise OWSEntryNotFound(f"No style named {keyvals['style']} in layer {keyvals['layer']}")
+            raise OWSEntryNotFound(
+                f"No style named {keyvals['style']} in layer {keyvals['layer']}"
+            )
 
 
 style_class_priority_reg = []
 style_class_reg = []
+
 
 class StyleMask(OWSConfigEntry):
     def __init__(self, cfg, style):
@@ -346,23 +369,33 @@ class StyleMask(OWSConfigEntry):
         self.style = style
         self.stand_alone = style.stand_alone
         if not self.stand_alone and not self.style.product.flag_bands:
-            raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
+            raise ConfigException(
+                f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands"
+            )
         if "band" in cfg:
             self.band_name = cfg["band"]
-            if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
+            if (
+                not self.stand_alone
+                and self.band_name not in self.style.product.flag_bands
+            ):
                 raise ConfigException(
-                    f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
+                    f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer"
+                )
         else:
             if self.stand_alone:
                 raise ConfigException(
                     f"Must provide band name for masks in stand-alone styles"
                 )
             self.band_name = list(self.style.product.flag_bands.keys())[0]
-            _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
-                         self.style.name,
-                         self.style.product.name)
+            _LOG.warning(
+                "Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
+                self.style.name,
+                self.style.product.name,
+            )
         if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
-            raise ConfigException(f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
+            raise ConfigException(
+                f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer"
+            )
         if self.stand_alone:
             self.band = OWSFlagBandStandalone(self.band_name)
         else:
@@ -373,25 +406,32 @@ class StyleMask(OWSConfigEntry):
             self.enum = None
             if "enum" in cfg:
                 raise ConfigException(
-                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has both an enum section and a flags section - please split into two masks.")
+                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has both an enum section and a flags section - please split into two masks."
+                )
             if len(self.flags) == 0:
                 raise ConfigException(
-                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has empty enum section.")
+                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has empty enum section."
+                )
         elif "enum" in cfg:
             self.enum = cfg["enum"]
             self.flags = None
         else:
-            raise ConfigException(f"mask definition in layer {self.style.product.name}, style {self.style.name} has no flags or enum section - nothing to mask on.")
+            raise ConfigException(
+                f"mask definition in layer {self.style.product.name}, style {self.style.name} has no flags or enum section - nothing to mask on."
+            )
 
 
 # Minimum Viable Proxy Objects, for standalone API
 
+
 class StandaloneGlobalProxy:
     pass
+
 
 class BandIdxProxy:
     def band(self, band):
         return band
+
 
 class StandaloneProductProxy:
     name = "standalone"

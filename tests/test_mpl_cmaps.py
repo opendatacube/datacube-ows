@@ -6,7 +6,7 @@ from datacube_ows.styles.ramp import read_mpl_ramp
 
 
 def test_get_mpl_cmap():
-    matplotlib_ramp_name = style_deform['mpl_ramp']
+    matplotlib_ramp_name = style_deform["mpl_ramp"]
     assert matplotlib_ramp_name
     ows_ramp_dict = read_mpl_ramp(matplotlib_ramp_name)
     assert len(ows_ramp_dict) == 11

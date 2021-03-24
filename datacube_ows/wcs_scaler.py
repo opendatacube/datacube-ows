@@ -1,18 +1,20 @@
-from datacube.utils import geometry
-import numpy
-import xarray
 from affine import Affine
+from datacube.utils import geometry
+
 
 class WCSScalerException(Exception):
     pass
+
 
 class WCSScalerUnknownDimension(WCSScalerException):
     def __init__(self, dim, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dim = dim
 
+
 class WCSScalerOverspecifiedDimension(WCSScalerException):
     pass
+
 
 class WCSScalarIllegalSize(WCSScalerException):
     pass
@@ -26,13 +28,13 @@ class SpatialParameter:
         self.y = y
 
     def is_x_dim(self, dimension):
-        if dimension == self.crs_def['horizontal_coord'].lower():
+        if dimension == self.crs_def["horizontal_coord"].lower():
             return True
-        elif dimension == self.crs_def['vertical_coord'].lower():
+        elif dimension == self.crs_def["vertical_coord"].lower():
             return False
-        elif dimension == self.layer.native_CRS_def['horizontal_coord'].lower():
+        elif dimension == self.layer.native_CRS_def["horizontal_coord"].lower():
             return True
-        elif dimension == self.layer.native_CRS_def['vertical_coord'].lower():
+        elif dimension == self.layer.native_CRS_def["vertical_coord"].lower():
             return False
         elif dimension in ("x", "i", "lon", "long", "lng", "longitude"):
             return True
@@ -68,6 +70,7 @@ class SpatialParameter:
     def set(self, x, y):
         self.x = x
         self.y = y
+
 
 class WCSScaler:
     def __init__(self, layer, crs=None):
@@ -152,10 +155,8 @@ class WCSScaler:
                 is_point = True
             elif self.is_slice("x") or self.is_slice("y"):
                 geom = geometry.line(
-                    (
-                        (self.min.x, self.min.y),
-                        (self.max.x, self.max.y)
-                    ), old_crs_obj)
+                    ((self.min.x, self.min.y), (self.max.x, self.max.y)), old_crs_obj
+                )
             else:
                 geom = geometry.polygon(
                     (
@@ -165,7 +166,7 @@ class WCSScaler:
                         (self.max.x, self.min.y),
                         (self.min.x, self.min.y),
                     ),
-                    old_crs_obj
+                    old_crs_obj,
                 )
             new_crs_obj = self.cfg.crs(new_crs)
             grid = self.layer.grids[new_crs]
@@ -173,8 +174,7 @@ class WCSScaler:
                 prj_pt = geom.to_crs(new_crs_obj)
                 x, y = prj_pt.coords[0]
                 self.min.set(x, y)
-                self.max.set(x + grid["resolution"][0],
-                             y + grid["resolution"][1])
+                self.max.set(x + grid["resolution"][0], y + grid["resolution"][1])
                 self.size.set(1, 1)
             else:
                 proj_geom = geom.to_crs(new_crs_obj)
@@ -212,9 +212,7 @@ class WCSScaler:
             res = grid["resolution"][0]
         else:
             res = grid["resolution"][1]
-        scaled_size = abs(
-            ((dim_max - dim_min) * factor / res)
-        )
+        scaled_size = abs(((dim_max - dim_min) * factor / res))
         self.set_size(dimension, scaled_size)
 
     def scale_size(self, dimension, size):
@@ -233,12 +231,12 @@ class WCSScaler:
         x_scale = (self.max.x - self.min.x) / self.size.x
         # Y axis is reversed: image coordinate conventions
         y_scale = (self.min.y - self.max.y) / self.size.y
-        #if self.crs_def["vertical_coord_first"]:
-            # This should probably happen, but can't because PostGIS wants
-            # coords to be horizontal first, regardless of what the CRS says.
-            # trans_aff = Affine.translation(self.min.y, self.max.x)
-            # scale_aff = Affine.scale(y_scale, x_scale)
-        #else:
+        # if self.crs_def["vertical_coord_first"]:
+        # This should probably happen, but can't because PostGIS wants
+        # coords to be horizontal first, regardless of what the CRS says.
+        # trans_aff = Affine.translation(self.min.y, self.max.x)
+        # scale_aff = Affine.scale(y_scale, x_scale)
+        # else:
         trans_aff = Affine.translation(self.min.x, self.max.y)
         scale_aff = Affine.scale(x_scale, y_scale)
         return trans_aff * scale_aff

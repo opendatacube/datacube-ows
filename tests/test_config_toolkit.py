@@ -1,19 +1,15 @@
 from datacube_ows.config_toolkit import deepinherit
 
-def test_deepinherit_shallow():
-    parent = {
-        "a": 72,
-        "b": "eagle",
-        "c": False
-    }
 
-    child = {
-        "a": 365
-    }
+def test_deepinherit_shallow():
+    parent = {"a": 72, "b": "eagle", "c": False}
+
+    child = {"a": 365}
     child = deepinherit(parent, child)
-    assert child['a'] == 365
+    assert child["a"] == 365
     assert child["b"] == "eagle"
     assert not child["c"]
+
 
 def test_deepinherit_deep():
     parent = {
@@ -22,23 +18,18 @@ def test_deepinherit_deep():
             "fruit": "grapes",
             "spice": "cummin",
             "cake": "chocolate",
-            "y": [ "some", "body", "once" ],
-            "z": [ 44, 42, 53 ],
-            "c": {
-                "foo": "bar",
-                "wing": "wang"
-            }
-        }
+            "y": ["some", "body", "once"],
+            "z": [44, 42, 53],
+            "c": {"foo": "bar", "wing": "wang"},
+        },
     }
 
     child = {
         "b": {
             "spice": "nutmeg",
-            "c": {
-                "wing": "chicken"
-            },
-            "y": [ "told", "me" ],
-            "z": [ 11 ]
+            "c": {"wing": "chicken"},
+            "y": ["told", "me"],
+            "z": [11],
         }
     }
     child = deepinherit(parent, child)

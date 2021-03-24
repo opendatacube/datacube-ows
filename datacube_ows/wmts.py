@@ -1,24 +1,21 @@
 from __future__ import absolute_import, division, print_function
 
+import logging
+
 from flask import render_template
 
-from datacube.utils import geometry
-from datacube_ows.data import get_map, feature_info
-from datacube_ows.ogc_utils import get_service_base_url
-
+from datacube_ows.data import feature_info, get_map
 from datacube_ows.ogc_exceptions import WMSException, WMTSException
-
+from datacube_ows.ogc_utils import get_service_base_url
 from datacube_ows.ows_configuration import get_config
-
 from datacube_ows.utils import log_call
-import logging
+
 _LOG = logging.getLogger(__name__)
-
-
 
 
 # NB. No need to disambiguate method names shared with WMS because WMTS requires
 # a "SERVICE" parameter with every request.
+
 
 @log_call
 def handle_wmts(nocase_args):
@@ -33,8 +30,11 @@ def handle_wmts(nocase_args):
     elif operation == "GETFEATUREINFO":
         return get_feature_info(nocase_args)
     else:
-        raise WMTSException("Unrecognised operation: %s" % operation, WMTSException.OPERATION_NOT_SUPPORTED,
-                           "Request parameter")
+        raise WMTSException(
+            "Unrecognised operation: %s" % operation,
+            WMTSException.OPERATION_NOT_SUPPORTED,
+            "Request parameter",
+        )
 
 
 @log_call
@@ -43,7 +43,7 @@ def get_capabilities(args):
     # Note: Only WMS v1.0.0 exists at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     cfg = get_config()
-    url = args.get('Host', args['url_root'])
+    url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
     section = args.get("section")
     if section:
@@ -79,24 +79,28 @@ def get_capabilities(args):
             elif s == "themes":
                 show_themes = True
             else:
-                raise WMTSException("Invalid section: %s" % section,
-                                WMTSException.INVALID_PARAMETER_VALUE,
-                                locator="Section parameter")
+                raise WMTSException(
+                    "Invalid section: %s" % section,
+                    WMTSException.INVALID_PARAMETER_VALUE,
+                    locator="Section parameter",
+                )
     return (
         render_template(
             "wmts_capabilities.xml",
             cfg=cfg,
             base_url=base_url,
-            show_service_id = show_service_id,
-            show_service_provider = show_service_provider,
-            show_ops_metadata = show_ops_metadata,
-            show_contents = show_contents,
-            show_themes = show_themes),
+            show_service_id=show_service_id,
+            show_service_provider=show_service_provider,
+            show_ops_metadata=show_ops_metadata,
+            show_contents=show_contents,
+            show_themes=show_themes,
+        ),
         200,
         cfg.response_headers(
             {"Content-Type": "application/xml", "Cache-Control": "max-age=10"}
-        )
+        ),
     )
+
 
 @log_call
 def wmts_args_to_wms(args, cfg):
@@ -120,7 +124,7 @@ def wmts_args_to_wms(args, cfg):
         "height": 256,
         "format": format_,
         "exceptions": "application/vnd.ogc.se_xml",
-        "requestid": args["requestid"]
+        "requestid": args["requestid"],
     }
 
     tms = cfg.tile_matrix_sets.get(tileMatrixSet)
@@ -159,6 +163,7 @@ def wmts_args_to_wms(args, cfg):
 
     return wms_args
 
+
 @log_call
 def get_tile(args):
     cfg = get_config()
@@ -168,13 +173,16 @@ def get_tile(args):
         return get_map(wms_args)
     except WMSException as wmse:
         first_error = wmse.errors[0]
-        e = WMTSException(first_error["msg"],
-                            code=first_error["code"],
-                            locator=first_error["locator"],
-                            http_response=wmse.http_response)
+        e = WMTSException(
+            first_error["msg"],
+            code=first_error["code"],
+            locator=first_error["locator"],
+            http_response=wmse.http_response,
+        )
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
         raise e
+
 
 @log_call
 def get_feature_info(args):
@@ -185,12 +193,12 @@ def get_feature_info(args):
         return feature_info(wms_args)
     except WMSException as wmse:
         first_error = wmse.errors[0]
-        e = WMTSException(first_error["msg"],
-                          code=first_error["code"],
-                          locator=first_error["locator"],
-                          http_response=wmse.http_response)
+        e = WMTSException(
+            first_error["msg"],
+            code=first_error["code"],
+            locator=first_error["locator"],
+            http_response=wmse.http_response,
+        )
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
         raise e
-
-

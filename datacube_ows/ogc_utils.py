@@ -1,20 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
-import re
 import datetime
+import logging
+import re
 from importlib import import_module
 from itertools import chain
-
-from affine import Affine
-from dateutil.parser import parse
 from urllib.parse import urlparse
 
-from flask import request
-from timezonefinderL import TimezoneFinder
+from affine import Affine
 from datacube.utils import geometry
+from dateutil.parser import parse
+from flask import request
 from pytz import timezone, utc
-
-import logging
+from timezonefinderL import TimezoneFinder
 
 _LOG = logging.getLogger(__name__)
 
@@ -27,11 +25,11 @@ tf = TimezoneFinder(in_memory=True)
 def dataset_center_time(dataset):
     center_time = dataset.center_time
     try:
-        metadata_time = dataset.metadata_doc['extent']['center_dt']
+        metadata_time = dataset.metadata_doc["extent"]["center_dt"]
         center_time = parse(metadata_time)
     except KeyError:
         try:
-            metadata_time = dataset.metadata_doc['properties']['dtr:start_datetime']
+            metadata_time = dataset.metadata_doc["properties"]["dtr:start_datetime"]
             center_time = parse(metadata_time)
         except KeyError:
             pass
@@ -86,6 +84,7 @@ def month_date_range(date):
     end = datetime.datetime(y, m, 1, 0, 0, 0) - datetime.timedelta(days=1)
     return start, end
 
+
 def year_date_range(date):
     start = datetime.datetime(date.year, 1, 1, 0, 0, 0)
     end = datetime.datetime(date.year, 12, 31, 23, 59, 59)
@@ -111,6 +110,7 @@ def tz_for_geometry(geom):
 
 def resp_headers(d):
     from datacube_ows.ows_configuration import get_config
+
     return get_config().response_headers(d)
 
 
@@ -121,11 +121,12 @@ def get_function(func):
     :return: a Callable object, or None
     """
     if func is not None and not callable(func):
-        mod_name, func_name = func.rsplit('.', 1)
+        mod_name, func_name = func.rsplit(".", 1)
         mod = import_module(mod_name)
         func = getattr(mod, func_name)
         assert callable(func)
     return func
+
 
 def parse_for_base_url(url):
     parsed = urlparse(url)
@@ -150,13 +151,14 @@ def get_service_base_url(allowed_urls, request_url):
 
 # Collects additional headers from flask request objects
 def capture_headers(req, args_dict):
-    args_dict['referer'] = req.headers.get('Referer', None)
-    args_dict['origin'] = req.headers.get('Origin', None)
-    args_dict['requestid'] = req.environ.get("FLASK_REQUEST_ID")
-    args_dict['host'] = req.headers.get('Host', None)
-    args_dict['url_root'] = req.url_root
+    args_dict["referer"] = req.headers.get("Referer", None)
+    args_dict["origin"] = req.headers.get("Origin", None)
+    args_dict["requestid"] = req.environ.get("FLASK_REQUEST_ID")
+    args_dict["host"] = req.headers.get("Host", None)
+    args_dict["url_root"] = req.url_root
 
     return args_dict
+
 
 # Exceptions raised when attempting to create a
 # product layer from a bad config or without correct
@@ -168,14 +170,17 @@ class ProductLayerException(Exception):
 class ConfigException(Exception):
     pass
 
+
 # Function wrapper for configurable functional elements
 
+
 class FunctionWrapper:
-    def __init__(self,  product_or_style_cfg, func_cfg,
-                 stand_alone=False):
+    def __init__(self, product_or_style_cfg, func_cfg, stand_alone=False):
         if callable(func_cfg):
             if not stand_alone:
-                raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+                raise ConfigException(
+                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name."
+                )
             self._func = func_cfg
             self._args = []
             self._kwargs = {}
@@ -190,14 +195,17 @@ class FunctionWrapper:
                 self._func = func_cfg["function"]
             elif callable(func_cfg["function"]):
                 raise ConfigException(
-                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name."
+                )
             else:
                 self._func = get_function(func_cfg["function"])
             self._args = func_cfg.get("args", [])
             self._kwargs = func_cfg.get("kwargs", {})
             if "pass_product_cfg" in func_cfg:
-                print("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
-                      "'mapped_bands'.  Please update your config accordingly")
+                print(
+                    "WARNING: pass_product_cfg in function wrapper definitions has been renamed "
+                    "'mapped_bands'.  Please update your config accordingly"
+                )
             if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
                 if hasattr(product_or_style_cfg, "band_idx"):
                     # NamedLayer
@@ -229,17 +237,18 @@ class FunctionWrapper:
         if self.band_mapper:
             calling_kwargs["band_mapper"] = self.band_mapper
 
-
         return self._func(*calling_args, **calling_kwargs)
 
 
 # Extent Mask Functions
 
+
 def mask_by_val(data, band, val=None):
     if val is None:
-        return data[band] != data[band].attrs['nodata']
+        return data[band] != data[band].attrs["nodata"]
     else:
         return data[band] != val
+
 
 def mask_by_val2(data, band):
     # REVISIT: Is this the same as mask_by_val or subtlely different?
@@ -247,7 +256,7 @@ def mask_by_val2(data, band):
 
 
 def mask_by_bitflag(data, band):
-    return ~data[band] & data[band].attrs['nodata']
+    return ~data[band] & data[band].attrs["nodata"]
 
 
 def mask_by_quality(data, band):
@@ -259,17 +268,20 @@ def mask_by_extent_flag(data, band):
 
 
 def mask_by_extent_val(data, band):
-    return data["extent"] != data["extent"].attrs['nodata']
+    return data["extent"] != data["extent"].attrs["nodata"]
+
 
 # Sub-product extractors
 
-ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
+ls8_s3_path_pattern = re.compile("L8/(?P<path>[0-9]*)")
 
 
 def ls8_subproduct(ds):
     return int(ls8_s3_path_pattern.search(ds.uris[0]).group("path"))
 
+
 # Method for formatting urls, e.g. for use in feature_info custom inclusions.
+
 
 def feature_info_url_template(data, template):
     return template.format(data=data)
@@ -288,10 +300,15 @@ def lower_get_args():
 
 
 def create_geobox(
-        crs,
-        minx, miny,
-        maxx, maxy,
-        width, height,
+    crs,
+    minx,
+    miny,
+    maxx,
+    maxy,
+    width,
+    height,
 ):
-    affine = Affine.translation(minx, maxy) * Affine.scale((maxx - minx) / width, (miny - maxy) / height)
+    affine = Affine.translation(minx, maxy) * Affine.scale(
+        (maxx - minx) / width, (miny - maxy) / height
+    )
     return geometry.GeoBox(width, height, affine, crs)

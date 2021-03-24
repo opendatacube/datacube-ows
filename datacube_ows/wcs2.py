@@ -1,31 +1,22 @@
 from __future__ import absolute_import, division, print_function
 
-from flask import render_template, request
+import logging
 
-
-from ows.common.v20.decoders import kvp_decode_get_capabilities
-from ows.common import WGS84BoundingBox
-from ows.gml import Grid, RegularAxis, IrregularAxis, SpatioTemporalType
-from ows.swe import Field
-from ows.wcs import (
-    CoverageSummary, ServiceCapabilities, CoverageDescription
-)
-from ows.wcs.v20 import (
-    GetCapabilitiesRequest, DescribeCoverageRequest, GetCoverageRequest
-)
-from ows.wcs.v20.decoders import kvp_decode_describe_coverage, kvp_decode_get_coverage
-from ows.wcs.v20 import encoders as encoders_v20
-from ows.wcs.v21 import encoders as encoders_v21
-
-from datacube_ows.ogc_utils import resp_headers, get_service_base_url
+from flask import request
 
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.wcs2_utils import get_coverage_data
-
+from datacube_ows.ogc_utils import get_service_base_url, resp_headers
 from datacube_ows.ows_configuration import get_config
-
 from datacube_ows.utils import log_call
-
+from datacube_ows.wcs2_utils import get_coverage_data
+from ows.common import WGS84BoundingBox
+from ows.common.v20.decoders import kvp_decode_get_capabilities
+from ows.gml import Grid, IrregularAxis, RegularAxis, SpatioTemporalType
+from ows.swe import Field
+from ows.wcs import CoverageDescription, CoverageSummary, ServiceCapabilities
+from ows.wcs.v20 import encoders as encoders_v20
+from ows.wcs.v20.decoders import kvp_decode_describe_coverage, kvp_decode_get_coverage
+from ows.wcs.v21 import encoders as encoders_v21
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
@@ -42,18 +33,20 @@ def handle_wcs2(nocase_args):
     elif operation == "GETCOVERAGE":
         return get_coverage(request.args.lists())
     else:
-        raise WCS2Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
+        raise WCS2Exception(
+            "Unrecognised operation: %s" % operation, locator="Request parameter"
+        )
 
 
 @log_call
 def get_capabilities(args):
     # Extract layer metadata from Datacube.
     cfg = get_config()
-    url = args.get('Host', args['url_root'])
+    url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
 
     request_obj = kvp_decode_get_capabilities(args)
-    sections = request_obj.sections or ['all']
+    sections = request_obj.sections or ["all"]
 
     # TODO: check for invalid sections
     include_service_identification = False
@@ -62,47 +55,45 @@ def get_capabilities(args):
     include_service_metadata = False
     include_coverage_summary = False
 
-    if 'all' in sections:
+    if "all" in sections:
         include_service_identification = True
         include_service_provider = True
         include_operations_metadata = True
         include_service_metadata = True
         include_coverage_summary = True
-    if 'serviceidentification' in sections:
+    if "serviceidentification" in sections:
         include_service_identification = True
-    if 'serviceprovider' in sections:
+    if "serviceprovider" in sections:
         include_service_provider = True
-    if 'operationsmetadata' in sections:
+    if "operationsmetadata" in sections:
         include_operations_metadata = True
-    if 'servicemetadata' in sections:
+    if "servicemetadata" in sections:
         include_service_metadata = True
-    if 'coveragesummary' in sections:
+    if "coveragesummary" in sections:
         include_coverage_summary = True
 
     capabilities = ServiceCapabilities.with_defaults_v20(
-        service_url=base_url+'/wcs',
-        allowed_operations=[
-            'GetCapabilities', 'DescribeCoverage', 'GetCoverage'
-        ],
+        service_url=base_url + "/wcs",
+        allowed_operations=["GetCapabilities", "DescribeCoverage", "GetCoverage"],
         allow_post=False,
         title=cfg.title,
         abstract=cfg.abstract,
         keywords=cfg.keywords,
         fees=cfg.fees,
         access_constraints=[cfg.access_constraints],
-        provider_name='',
-        provider_site='',
-        individual_name=cfg.contact_info['person'],
-        organisation_name=cfg.contact_info['organisation'],
-        position_name=cfg.contact_info['position'],
-        phone_voice=cfg.contact_info['telephone'],
-        phone_facsimile=cfg.contact_info['fax'],
-        delivery_point=cfg.contact_info['address']['address'],
-        city=cfg.contact_info['address']['city'],
-        administrative_area=cfg.contact_info['address']['state'],
-        postal_code=cfg.contact_info['address']['postcode'],
-        country=cfg.contact_info['address']['country'],
-        electronic_mail_address=cfg.contact_info['email'],
+        provider_name="",
+        provider_site="",
+        individual_name=cfg.contact_info["person"],
+        organisation_name=cfg.contact_info["organisation"],
+        position_name=cfg.contact_info["position"],
+        phone_voice=cfg.contact_info["telephone"],
+        phone_facsimile=cfg.contact_info["fax"],
+        delivery_point=cfg.contact_info["address"]["address"],
+        city=cfg.contact_info["address"]["city"],
+        administrative_area=cfg.contact_info["address"]["state"],
+        postal_code=cfg.contact_info["address"]["postcode"],
+        country=cfg.contact_info["address"]["country"],
+        electronic_mail_address=cfg.contact_info["email"],
         online_resource=base_url,
         # hours_of_service=,
         # contact_instructions=,
@@ -110,24 +101,23 @@ def get_capabilities(args):
         coverage_summaries=[
             CoverageSummary(
                 identifier=product.name,
-                coverage_subtype='RectifiedGridCoverage',
+                coverage_subtype="RectifiedGridCoverage",
                 title=product.title,
-                wgs84_bbox=WGS84BoundingBox([
-                    product.ranges['lon']['min'], product.ranges['lat']['min'],
-                    product.ranges['lon']['max'], product.ranges['lat']['max'],
-                ])
+                wgs84_bbox=WGS84BoundingBox(
+                    [
+                        product.ranges["lon"]["min"],
+                        product.ranges["lat"]["min"],
+                        product.ranges["lon"]["max"],
+                        product.ranges["lat"]["max"],
+                    ]
+                ),
             )
             for product in cfg.product_index.values()
             if product.ready and not product.hide and product.wcs
         ],
-        formats_supported=[
-            fmt.mime
-            for fmt in cfg.wcs_formats
-            if 2 in fmt.renderers
-        ],
+        formats_supported=[fmt.mime for fmt in cfg.wcs_formats if 2 in fmt.renderers],
         crss_supported=[
-            crs  # TODO: conversion to URL format
-            for crs in cfg.published_CRSs
+            crs for crs in cfg.published_CRSs  # TODO: conversion to URL format
         ],
         interpolations_supported=None,  # TODO: find out interpolations
     )
@@ -137,16 +127,18 @@ def get_capabilities(args):
         include_service_provider=include_service_provider,
         include_operations_metadata=include_operations_metadata,
         include_service_metadata=include_service_metadata,
-        include_coverage_summary=include_coverage_summary
+        include_coverage_summary=include_coverage_summary,
     )
 
     return (
         result.value,
         200,
-        resp_headers({
-            "Content-Type": result.content_type,
-            "Cache-Control": "no-cache, max-age=0"
-        })
+        resp_headers(
+            {
+                "Content-Type": result.content_type,
+                "Cache-Control": "no-cache, max-age=0",
+            }
+        ),
     )
 
 
@@ -154,7 +146,7 @@ def create_coverage_description(cfg, product):
     axes = [
         RegularAxis(
             label=product.native_CRS_def["horizontal_coord"],
-            index_label='i',
+            index_label="i",
             lower_bound=min(
                 product.ranges["bboxes"][product.native_CRS]["left"],
                 product.ranges["bboxes"][product.native_CRS]["right"],
@@ -164,12 +156,12 @@ def create_coverage_description(cfg, product):
                 product.ranges["bboxes"][product.native_CRS]["right"],
             ),
             resolution=product.resolution_x,
-            uom='deg',
+            uom="deg",
             size=product.grid_high_x,
         ),
         RegularAxis(
             label=product.native_CRS_def["vertical_coord"],
-            index_label='j',
+            index_label="j",
             lower_bound=min(
                 product.ranges["bboxes"][product.native_CRS]["top"],
                 product.ranges["bboxes"][product.native_CRS]["bottom"],
@@ -179,7 +171,7 @@ def create_coverage_description(cfg, product):
                 product.ranges["bboxes"][product.native_CRS]["bottom"],
             ),
             resolution=product.resolution_y,
-            uom='deg',
+            uom="deg",
             size=product.grid_high_y,
         ),
     ]
@@ -192,13 +184,12 @@ def create_coverage_description(cfg, product):
     # if not product.wcs_sole_time:
     axes.append(
         IrregularAxis(
-            label='time',
-            index_label='k',
+            label="time",
+            index_label="k",
             positions=[
-                f'{t.isoformat()}T00:00:00.000Z'
-                for t in product.ranges['times']
+                f"{t.isoformat()}T00:00:00.000Z" for t in product.ranges["times"]
             ],
-            uom='ISO-8601',
+            uom="ISO-8601",
             type=SpatioTemporalType.TEMPORAL,
         )
     )
@@ -206,16 +197,15 @@ def create_coverage_description(cfg, product):
     return CoverageDescription(
         identifier=product.name,
         title=product.title,
-        abstract=product.definition.get('description'),
+        abstract=product.definition.get("description"),
         range_type=[
             Field(
                 name=band_label,
                 description=band_label,
                 uom=band_label,
                 nil_values={
-                    nv: 'invalid'
-                    for nv in product.band_idx.band_nodata_vals()
-                }
+                    nv: "invalid" for nv in product.band_idx.band_nodata_vals()
+                },
             )
             for band_label in product.band_idx.band_labels()
         ],
@@ -224,8 +214,9 @@ def create_coverage_description(cfg, product):
             srs=product.native_CRS,
         ),
         native_format=cfg.wcs_formats_by_name[product.native_format].mime,
-        coverage_subtype='RectifiedGridCoverage',
+        coverage_subtype="RectifiedGridCoverage",
     )
+
 
 @log_call
 def desc_coverages(args):
@@ -240,13 +231,14 @@ def desc_coverages(args):
         if product and product.wcs:
             products.append(product)
         else:
-            raise WCS2Exception("Invalid coverage: %s" % coverage_id,
-                                WCS2Exception.NO_SUCH_COVERAGE,
-                                locator=coverage_id)
+            raise WCS2Exception(
+                "Invalid coverage: %s" % coverage_id,
+                WCS2Exception.NO_SUCH_COVERAGE,
+                locator=coverage_id,
+            )
 
     coverage_descriptions = [
-        create_coverage_description(cfg, product)
-        for product in products
+        create_coverage_description(cfg, product) for product in products
     ]
 
     version = request_obj.version
@@ -256,30 +248,30 @@ def desc_coverages(args):
     elif version == (2, 1):
         result = encoders_v21.xml_encode_coverage_descriptions(coverage_descriptions)
     else:
-        raise WCS2Exception("Unsupported version: %s" % version,
-                            WCS2Exception.INVALID_PARAMETER_VALUE,
-                            locator="version")
+        raise WCS2Exception(
+            "Unsupported version: %s" % version,
+            WCS2Exception.INVALID_PARAMETER_VALUE,
+            locator="version",
+        )
 
     return (
         result.value,
         200,
-        resp_headers({
-            "Content-Type": result.content_type,
-            "Cache-Control": "no-cache, max-age=0"
-        })
+        resp_headers(
+            {
+                "Content-Type": result.content_type,
+                "Cache-Control": "no-cache, max-age=0",
+            }
+        ),
     )
 
 
-import logging
 _LOG = logging.getLogger(__name__)
+
 
 @log_call
 def get_coverage(args):
     request_obj = kvp_decode_get_coverage(args)
 
     output, headers = get_coverage_data(request_obj)
-    return (
-        output,
-        200,
-        headers
-    )
+    return (output, 200, headers)

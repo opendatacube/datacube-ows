@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
-import sys
-import click
 import json
+import sys
+
+import click
+from datacube import Datacube
 from deepdiff import DeepDiff
 
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import (
-    read_config,
-    OWSConfig,
     ConfigException,
+    OWSConfig,
     OWSFolder,
+    read_config,
 )
-from datacube import Datacube
 
 
 @click.command()
@@ -135,7 +136,7 @@ def layers_report(config_values, input_file, output_file):
             print(ddiff)
             sys.exit(1)
     if output_file:
-        with open(output_file, 'w') as reportfile:
+        with open(output_file, "w") as reportfile:
             json.dump(report, reportfile, indent=4)
         return True
 

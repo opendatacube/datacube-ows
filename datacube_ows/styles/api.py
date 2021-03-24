@@ -34,13 +34,7 @@ def apply_ows_style(style, data, valid_data_mask=None):
     :return: An xarray Dataset, with the same dimensions and coordinates as data, and four data_vars of
             8 bit signed integer data named red, green, blue and alpha, representing an 24bit RGBA image.
     """
-    return style.transform_data(
-            data,
-            style.to_mask(
-                    data,
-                    valid_data_mask
-            )
-    )
+    return style.transform_data(data, style.to_mask(data, valid_data_mask))
 
 
 def apply_ows_style_cfg(cfg, data, valid_data_mask=None):
@@ -63,11 +57,7 @@ def apply_ows_style_cfg(cfg, data, valid_data_mask=None):
     :return: An xarray Dataset, with the same dimensions and coordinates as data, and four data_vars of
             8 bit signed integer data named red, green, blue and alpha, representing an 24bit RGBA image.
     """
-    return apply_ows_style(
-        StandaloneStyle(cfg),
-        data,
-        valid_data_mask
-    )
+    return apply_ows_style(StandaloneStyle(cfg), data, valid_data_mask)
 
 
 def generate_ows_legend_style(style, ndates=0):

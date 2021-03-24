@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-import xarray as xr
 import pytest
+import xarray as xr
 
-from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.styles.base import StyleDefBase
 
 
 def test_multidate_handler():
@@ -61,21 +61,30 @@ def test_multidate_handler():
 
     with pytest.raises(ConfigException) as excinfo:
         bad_mdh = StyleDefBase.MultiDateHandler(
-            FakeMdhStyle(), {"allowed_count_range": [0, 5, 10],}
+            FakeMdhStyle(),
+            {
+                "allowed_count_range": [0, 5, 10],
+            },
         )
 
     assert "allowed_count_range must have 2" in str(excinfo.value)
 
     with pytest.raises(ConfigException) as excinfo:
         bad_mdh = StyleDefBase.MultiDateHandler(
-            FakeMdhStyle(), {"allowed_count_range": [10, 5],}
+            FakeMdhStyle(),
+            {
+                "allowed_count_range": [10, 5],
+            },
         )
 
     assert "minimum must be less than equal to maximum" in str(excinfo.value)
 
     with pytest.raises(ConfigException) as excinfo:
         bad_mdh = StyleDefBase.MultiDateHandler(
-            FakeMdhStyle(), {"allowed_count_range": [0, 10],}
+            FakeMdhStyle(),
+            {
+                "allowed_count_range": [0, 10],
+            },
         )
 
     assert "Aggregator function is required" in str(excinfo.value)

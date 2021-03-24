@@ -1,24 +1,25 @@
 import sys
 import traceback
-
 from time import monotonic
 
 from flask import g, render_template, request
 from flask_log_request_id import current_request_id
 
 from datacube_ows import __version__
-from datacube_ows.legend_generator import create_legend_for_style
-from datacube_ows.ogc_utils import capture_headers, resp_headers, get_service_base_url, lower_get_args
-from datacube_ows.wms import WMS_REQUESTS
-from datacube_ows.wcs1 import WCS_REQUESTS
-from datacube_ows.ogc_exceptions import OGCException, WMSException
 from datacube_ows.cube_pool import cube
-from datacube_ows.protocol_versions import supported_versions
+from datacube_ows.legend_generator import create_legend_for_style
+from datacube_ows.ogc_exceptions import OGCException, WMSException
+from datacube_ows.ogc_utils import (
+    capture_headers,
+    get_service_base_url,
+    lower_get_args,
+    resp_headers,
+)
 from datacube_ows.ows_configuration import get_config
-
-# See startup_utils.py for initialisation methods called at startup.
-#pylint: disable=wildcard-import,unused-wildcard-import
+from datacube_ows.protocol_versions import supported_versions
 from datacube_ows.startup_utils import *
+from datacube_ows.wcs1 import WCS_REQUESTS
+from datacube_ows.wms import WMS_REQUESTS
 
 # Logging intialisation
 _LOG = initialise_logger()
@@ -44,9 +45,10 @@ OWS_SUPPORTED = supported_versions()
 
 # Flask Routes
 
-@app.route('/')
+
+@app.route("/")
 def ogc_impl():
-    #pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
@@ -69,24 +71,29 @@ def ogc_impl():
         elif op:
             # Should we return a WMS or WCS exception if there is no service specified?
             # Defaulting to WMS because that's what we already have.
-            raise WMSException("Invalid service and/or request", locator="Service and request parameters")
+            raise WMSException(
+                "Invalid service and/or request",
+                locator="Service and request parameters",
+            )
         else:
             cfg = get_config()
-            url = nocase_args.get('Host', nocase_args['url_root'])
+            url = nocase_args.get("Host", nocase_args["url_root"])
             base_url = get_service_base_url(cfg.allowed_urls, url)
-            return (render_template(
-                            "index.html",
-                            cfg=cfg,
-                            supported=OWS_SUPPORTED,
-                            base_url=base_url,
-                            version=__version__,
-                    ),
-                    200,
-                    resp_headers({"Content-Type": "text/html"}))
+            return (
+                render_template(
+                    "index.html",
+                    cfg=cfg,
+                    supported=OWS_SUPPORTED,
+                    base_url=base_url,
+                    version=__version__,
+                ),
+                200,
+                resp_headers({"Content-Type": "text/html"}),
+            )
     except OGCException as e:
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         tb = sys.exc_info()[2]
         ogc_e = WMSException("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
@@ -101,20 +108,27 @@ def ogc_svc_impl(svc):
     # Is service activated in config?
     try:
         if not svc_support:
-            raise WMSException(f"Invalid service: {svc}",
-                               valid_keys=[
-                                       service.service
-                                       for service in OWS_SUPPORTED.values()
-                                       if service.activated()
-                               ],
-                               code=WMSException.OPERATION_NOT_SUPPORTED,
-                               locator="service parameter")
+            raise WMSException(
+                f"Invalid service: {svc}",
+                valid_keys=[
+                    service.service
+                    for service in OWS_SUPPORTED.values()
+                    if service.activated()
+                ],
+                code=WMSException.OPERATION_NOT_SUPPORTED,
+                locator="service parameter",
+            )
         if not svc_support.activated():
-            raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
+            raise svc_support.default_exception_class(
+                "Invalid service and/or request",
+                locator="Service and request parameters",
+            )
 
         # Does service match path (if supplied)
         if service != svc_support.service_upper:
-            raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
+            raise svc_support.default_exception_class(
+                "Invalid service", locator="Service parameter"
+            )
 
         version = nocase_args.get("version")
         version_support = svc_support.negotiated_version(version)
@@ -125,33 +139,38 @@ def ogc_svc_impl(svc):
         return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
-    except Exception as e: #pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         tb = sys.exc_info()[2]
-        ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
+        ogc_e = version_support.exception_class(
+            "Unexpected server error: %s" % str(e), http_response=500
+        )
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
-@app.route('/wms')
+@app.route("/wms")
 def ogc_wms_impl():
     return ogc_svc_impl("wms")
 
-@app.route('/wmts')
+
+@app.route("/wmts")
 def ogc_wmts_impl():
     return ogc_svc_impl("wmts")
 
-@app.route('/wcs')
+
+@app.route("/wcs")
 def ogc_wcs_impl():
     return ogc_svc_impl("wcs")
 
 
-@app.route('/ping')
+@app.route("/ping")
 def ping():
     db_ok = False
     with cube() as dc:
         if dc:
             # pylint: disable=protected-access
             with dc.index._db.give_me_a_connection() as conn:
-                results = conn.execute("""
+                results = conn.execute(
+                    """
                         SELECT *
                         FROM wms.product_ranges
                         LIMIT 1"""
@@ -159,9 +178,17 @@ def ping():
                 for r in results:
                     db_ok = True
     if db_ok:
-        return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
+        return (
+            render_template("ping.html", status="Up"),
+            200,
+            resp_headers({"Content-Type": "text/html"}),
+        )
     else:
-        return (render_template("ping.html", status="Down"), 500, resp_headers({"Content-Type": "text/html"}))
+        return (
+            render_template("ping.html", status="Down"),
+            500,
+            resp_headers({"Content-Type": "text/html"}),
+        )
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
@@ -184,7 +211,9 @@ def legend(layer, style, dates=None):
         return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
     return img
 
+
 # Flask middleware
+
 
 @app.after_request
 def append_request_id(response):
@@ -200,7 +229,12 @@ def start_timer():
 @app.after_request
 def log_time_and_request_response(response):
     time_taken = int((monotonic() - g.ogc_start_time) * 1000)
-    _LOG.info("request: %s returned status: %d and took: %d ms", request.url, response.status_code, time_taken)
+    _LOG.info(
+        "request: %s returned status: %d and took: %d ms",
+        request.url,
+        response.status_code,
+        time_taken,
+    )
     return response
 
 

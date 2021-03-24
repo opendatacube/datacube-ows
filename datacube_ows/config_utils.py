@@ -16,7 +16,9 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
     if isinstance(cfg_unexpanded, Mapping):
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
-                raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
+                raise ConfigException(
+                    "Cyclic inclusion: %s" % cfg_unexpanded["include"]
+                )
             ninclusions = inclusions.copy()
             ninclusions.append(cfg_unexpanded["include"])
             # Perform expansion
@@ -43,16 +45,32 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
                         json_obj = None
                 if json_obj is None:
                     raise ConfigException("Could not find json file %s" % raw_path)
-                return cfg_expand(load_json_obj(abs_path), cwd=cwd, inclusions=ninclusions)
+                return cfg_expand(
+                    load_json_obj(abs_path), cwd=cwd, inclusions=ninclusions
+                )
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
-                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
+                return cfg_expand(
+                    import_python_obj(cfg_unexpanded["include"]),
+                    cwd=cwd,
+                    inclusions=ninclusions,
+                )
             else:
-                raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
+                raise ConfigException(
+                    "Unsupported inclusion type: %s" % str(cfg_unexpanded["type"])
+                )
         else:
-            return { k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k,v in cfg_unexpanded.items()  }
+            return {
+                k: cfg_expand(v, cwd=cwd, inclusions=inclusions)
+                for k, v in cfg_unexpanded.items()
+            }
     elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
-        return list([cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded ])
+        return list(
+            [
+                cfg_expand(elem, cwd=cwd, inclusions=inclusions)
+                for elem in cfg_unexpanded
+            ]
+        )
     else:
         return cfg_unexpanded
 
@@ -67,7 +85,7 @@ def import_python_obj(path):
 
     :return: a Callable object, or None
     """
-    mod_name, obj_name = path.rsplit('.', 1)
+    mod_name, obj_name = path.rsplit(".", 1)
     mod = import_module(mod_name)
     obj = getattr(mod, obj_name)
     return obj
@@ -94,7 +112,9 @@ class OWSConfigEntry:
         if name == "_unready_attributes":
             pass
         elif hasattr(self, "_unready_attributes") and name in self._unready_attributes:
-            raise OWSConfigNotReady(f"The following parameters have not been initialised: {self._unready_attributes}")
+            raise OWSConfigNotReady(
+                f"The following parameters have not been initialised: {self._unready_attributes}"
+            )
         return object.__getattribute__(self, name)
 
     def __setattr__(self, name, val):
@@ -107,12 +127,15 @@ class OWSConfigEntry:
     # Validate against database and prepare for use.
     def make_ready(self, dc, *args, **kwargs):
         if self._unready_attributes:
-            raise OWSConfigNotReady(f"The following parameters have not been initialised: {self._unready_attributes}")
+            raise OWSConfigNotReady(
+                f"The following parameters have not been initialised: {self._unready_attributes}"
+            )
         self.ready = True
 
 
 class OWSEntryNotFound(ConfigException):
     pass
+
 
 class OWSIndexedConfigEntry(OWSConfigEntry):
     INDEX_KEYS = []
@@ -122,7 +145,9 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
 
         for k in self.INDEX_KEYS:
             if k not in keyvals:
-                raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
+                raise ConfigException(
+                    f"Key value {k} missing from keyvals: {keyvals!r}"
+                )
         self.keyvals = keyvals
 
     def lookup(self, cfg, keyvals, subs=None):
@@ -130,7 +155,9 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
             subs = {}
         for k in self.INDEX_KEYS:
             if k not in keyvals:
-                raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
+                raise ConfigException(
+                    f"Key value {k} missing from keyvals: {keyvals!r}"
+                )
         return self.lookup_impl(cfg, keyvals, subs)
 
     @classmethod
@@ -140,11 +167,24 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
 
 # pylint: disable=abstract-method
 class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
-    def __init__(self, cfg, keyvals, global_cfg, *args,
-                 keyval_subs=None, keyval_defaults=None, expanded=False, **kwargs):
+    def __init__(
+        self,
+        cfg,
+        keyvals,
+        global_cfg,
+        *args,
+        keyval_subs=None,
+        keyval_defaults=None,
+        expanded=False,
+        **kwargs,
+    ):
         if not expanded:
-            cfg = self.expand_inherit(cfg, global_cfg,
-                                      keyval_subs=keyval_subs, keyval_defaults=keyval_defaults)
+            cfg = self.expand_inherit(
+                cfg,
+                global_cfg,
+                keyval_subs=keyval_subs,
+                keyval_defaults=keyval_defaults,
+            )
 
         super().__init__(cfg, keyvals, global_cfg=global_cfg, *args, **kwargs)
 
@@ -163,7 +203,9 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                 else:
                     lookup_keys[k] = keyval_defaults[k]
             if lookup:
-                parent = cls.lookup_impl(global_cfg, keyvals=lookup_keys, subs=keyval_subs)
+                parent = cls.lookup_impl(
+                    global_cfg, keyvals=lookup_keys, subs=keyval_subs
+                )
                 # pylint: disable=protected-access
                 parent_cfg = parent._raw_cfg
             else:
@@ -176,6 +218,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
 class OWSFlagBandStandalone:
     def __init__(self, band):
         self.pq_band = band
+
 
 class OWSFlagBand(OWSConfigEntry):
     def __init__(self, cfg, product_cfg, **kwargs):
@@ -205,13 +248,17 @@ class OWSFlagBand(OWSConfigEntry):
             if pqn is not None:
                 pq_product = dc.index.products.get_by_name(pqn)
                 if pq_product is None:
-                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.product.name} in datacube")
+                    raise ConfigException(
+                        f"Could not find flags product {pqn} for layer {self.product.name} in datacube"
+                    )
                 self.pq_products.append(pq_product)
         for pqn in self.pq_low_res_names:
             if pqn is not None:
                 pq_product = dc.index.products.get_by_name(pqn)
                 if pq_product is None:
-                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
+                    raise ConfigException(
+                        f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube"
+                    )
                 self.pq_low_res_products.append(pq_product)
 
         self.info_mask = ~0
@@ -250,9 +297,13 @@ class FlagProductBands(OWSConfigEntry):
         if fb.pq_manual_merge:
             fb.pq_manual_merge = True
         if fb.pq_fuse_func and self.fuse_func and fb.pq_fuse_func != self.fuse_func:
-            raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
+            raise ConfigException(
+                f"Fuse functions for flag bands in product set {self.product_names} do not match"
+            )
         if fb.pq_ignore_time != self.ignore_time:
-            raise ConfigException(f"ignore_time option for flag bands in product set {self.product_names} do not match")
+            raise ConfigException(
+                f"ignore_time option for flag bands in product set {self.product_names} do not match"
+            )
         elif fb.pq_fuse_func and not self.fuse_func:
             self.fuse_func = fb.pq_fuse_func
         self.declare_unready("products")
