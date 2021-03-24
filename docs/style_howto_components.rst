@@ -132,7 +132,7 @@ bands to make the blue channel:
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png`_
+<https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png>`_
 
 Example: Unused channels
 ++++++++++++++++++++++++
@@ -168,6 +168,7 @@ What about the other part of that config - the ``scale_ranges`` part? Let's try 
 Firstly, let's remind ourselves of our original RGB configuration and image:
 
 ::
+
     rgb_cfg = {
         "components": {
             "red": {"red": 1.0},
@@ -216,13 +217,13 @@ Example: High Scale Range
 ::
 
     rgb_high_scale_rng_cfg = {
-            "components": {
-                "red": {"red": 1.0},
-                "green": {"green": 1.0},
-                "blue": {"blue": 1.0},
-            },
-            "scale_range": (1000, 8000),
-        }
+        "components": {
+            "red": {"red": 1.0},
+            "green": {"green": 1.0},
+            "blue": {"blue": 1.0},
+        },
+        "scale_range": (1000, 8000),
+    }
 
 .. image:: https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png
     :width: 600
@@ -233,12 +234,12 @@ Example: High Scale Range
 Whoops too far!  Now it's almost pure black!  If your image looks like this, you
 need to pull your scale_range down a bit:
 
-Example: High Scale Range
-+++++++++++++++++++++++++
+Example: Narrow Scale Range
++++++++++++++++++++++++++++
 
 ::
 
-rgb_narrow_scale_rng_cfg = {
+    rgb_narrow_scale_rng_cfg = {
         "components": {
             "red": {"red": 1.0},
             "green": {"green": 1.0},
@@ -277,23 +278,23 @@ on a per-band basis:
 ::
 
     irg_bandscale_cfg = {
-            "components": {
-                "red": {
-                    "swir1": 1.0,
-                    "scale_range": (1500, 3700),
-                },
-                "green": {
-                    "nir": 1.0,
-                    "scale_range": (1600, 3200),
-                },
-                "blue": {
-                    "green": 1.0
-                },
+        "components": {
+            "red": {
+                "swir1": 1.0,
+                "scale_range": (1500, 3700),
             },
-            "scale_range": (200, 1900),
-        }
+            "green": {
+                "nir": 1.0,
+                "scale_range": (1600, 3200),
+            },
+            "blue": {
+                "green": 1.0
+            },
+        },
+        "scale_range": (200, 1900),
+    }
 
-The "blue" channel takes the default scale_range `(200,1900)`.
+The "blue" channel takes the default scale_range ``(200,1900)``.
 
 The red and green channel have custom scale ranges.
 
