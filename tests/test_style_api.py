@@ -4,8 +4,12 @@ import pytest
 import xarray as xr
 import numpy as np
 
-from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_style_cfg
+from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_style_cfg, xarray_image_as_png, create_geobox
 
+
+def test_indirect_imports():
+    assert xarray_image_as_png is not None
+    assert create_geobox is not None
 
 def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
     if attrs is None:
@@ -87,6 +91,21 @@ def simple_rgb_style_cfg():
         }
     }
 
+@pytest.fixture
+def simple_rgb_perband_scaling_style_cfg():
+    return {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["red", "green", "blue"],
+        "components": {
+            "red": {"red": 1.0, "scale_range": [0,200]},
+            "green": {"green": 1.0, "scale_range": [0,500]},
+            "blue": {"blue": 1.0}
+        },
+        "scale_range": [0,350]
+    }
+
 
 def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg):
     style = StandaloneStyle(simple_rgb_style_cfg)
@@ -97,6 +116,14 @@ def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg):
     assert result["red"].values[0][0] == 5
     assert result["green"].values[0][0] == 7
     assert result["blue"].values[0][0] == 2
+
+
+def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_scaling_style_cfg):
+    style = StandaloneStyle(simple_rgb_perband_scaling_style_cfg)
+    mask = style.to_mask(dummy_raw_data, null_mask)
+    result = style.transform_data(dummy_raw_data, mask)
+    for channel in ("red", "green", "blue"):
+        assert channel in result.data_vars.keys()
 
 
 @pytest.fixture
