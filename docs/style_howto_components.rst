@@ -45,6 +45,9 @@ can re-use the same data for all the examples in this section.
         resolution=(-300,300)
     )
 
+Example: Infrared/Green False Colour
+++++++++++++++++++++++++++++++++++++
+
 Lets start with a popular false-colour style, using optical green and two infrared bands.
 Note that the "green" band of the data is not assigned to the "green" channel of the
 output image.
@@ -72,6 +75,9 @@ output image.
 `View full size
 <https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`_
 
+Example: Greyscale single band
+++++++++++++++++++++++++++++++
+
 If we wanted a greyscale image of a single band (say red), you could do this:
 
 ::
@@ -94,6 +100,9 @@ If we wanted a greyscale image of a single band (say red), you could do this:
 
 .. image:: https://user-images.githubusercontent.com/4548530/112124234-3ddd1400-8c16-11eb-9d01-37b895010221.png
     :width: 1128
+
+Example: Mixing bands
++++++++++++++++++++++
 
 What if we want to mix more than one band to make each channel? Here we average all three visible bands
 into the red channel, put near infra-red in the green channel amd average the two shortwave infrared
@@ -124,6 +133,9 @@ bands to make the blue channel:
 
 `View full size
 <https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png`_
+
+Example: Unused channels
+++++++++++++++++++++++++
 
 If you don't want to write any data to one or more of the image channels (red, green or blue)
 just leave it empty:
@@ -171,6 +183,9 @@ Firstly, let's remind ourselves of our original RGB configuration and image:
 `View full size
 <https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
 
+Example: Low Scale Range
+++++++++++++++++++++++++
+
 Let's start by pulling the scale_range down a bit:
 
 ::
@@ -195,6 +210,9 @@ As you can see, the resulting image looks saturated, washed out and overly brigh
 guess at scale_range values produced an image like this, you probably want to increase your
 scale_range a bit.
 
+Example: High Scale Range
++++++++++++++++++++++++++
+
 ::
 
     rgb_high_scale_rng_cfg = {
@@ -215,6 +233,9 @@ scale_range a bit.
 Whoops too far!  Now it's almost pure black!  If your image looks like this, you
 need to pull your scale_range down a bit:
 
+Example: High Scale Range
++++++++++++++++++++++++++
+
 ::
 
 rgb_narrow_scale_rng_cfg = {
@@ -233,7 +254,16 @@ rgb_narrow_scale_rng_cfg = {
 <https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png>`_
 
 This is better, but the lower end of the scale range is too high. If you keep adjusting back and forth,
-you'll eventually end up about where we started:
+you'll eventually end up more or less where we started.
+
+Example: Per-channel scale_ranges
++++++++++++++++++++++++++++++++++
+
+What if we want to apply a different scale ranges to different channels?
+
+For example, in the `false colour example above
+<#example-infrared-green-false-colour>`_, the image was very...
+
 
 But as any scientist will tell you, linear equations can only get you so far, so `next
 <https://datacube-ows.readthedocs.io/en/latest/style_howto_components_nonlinear.html>`_
