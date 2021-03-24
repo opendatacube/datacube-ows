@@ -1,11 +1,13 @@
 import os
 from unittest.mock import patch
 
+import pytest
+
 
 def test_fake_creds(monkeypatch):
     from datacube_ows.startup_utils import initialise_aws_credentials
 
-    monkeypatch.setenv(pytest"AWS_DEFAULT_REGION", "")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "")
     initialise_aws_credentials()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
     monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "false")

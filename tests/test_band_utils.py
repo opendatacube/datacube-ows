@@ -4,21 +4,12 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from datacube_ows.band_utils import (
-    band_quotient,
-    band_quotient_sum,
-    constant,
-    multi_date_delta,
-    norm_diff,
-    radar_vegetation_index,
-    scale_data,
-    sentinel2_ndci,
-    single_band,
-    single_band_arcsec,
-    single_band_log,
-    single_band_offset_log,
-    sum_bands,
-)
+from datacube_ows.band_utils import (band_quotient, band_quotient_sum,
+                                     constant, multi_date_delta, norm_diff,
+                                     radar_vegetation_index, scale_data,
+                                     sentinel2_ndci, single_band,
+                                     single_band_arcsec, single_band_log,
+                                     single_band_offset_log, sum_bands)
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 

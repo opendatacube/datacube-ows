@@ -4,13 +4,10 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from datacube_ows.styles.api import (
-    StandaloneStyle,
-    apply_ows_style,
-    apply_ows_style_cfg,
-    generate_ows_legend_style,
-    generate_ows_legend_style_cfg,
-)
+from datacube_ows.styles.api import (StandaloneStyle, apply_ows_style,
+                                     apply_ows_style_cfg,
+                                     generate_ows_legend_style,
+                                     generate_ows_legend_style_cfg)
 
 
 def dummy_da(val, name, coords, attrs=None, dtype=np.float64):

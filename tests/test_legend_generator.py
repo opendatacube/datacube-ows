@@ -1,16 +1,10 @@
-import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
 
-import datacube_ows.legend_generator
 from datacube_ows.legend_utils import get_image_from_url
-from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
-from tests.test_band_utils import dummy_layer
 
 
 @pytest.fixture

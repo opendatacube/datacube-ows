@@ -4,11 +4,8 @@ import pytest
 from affine import Affine
 
 from datacube_ows.ows_configuration import OWSConfig, OWSProductLayer
-from datacube_ows.wcs_scaler import (
-    SpatialParameter,
-    WCSScaler,
-    WCSScalerUnknownDimension,
-)
+from datacube_ows.wcs_scaler import (SpatialParameter, WCSScaler,
+                                     WCSScalerUnknownDimension)
 
 
 @pytest.fixture

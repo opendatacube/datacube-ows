@@ -1,11 +1,8 @@
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 import datacube_ows.config_utils
 import datacube_ows.ogc_utils
 import datacube_ows.ows_configuration
-from datacube_ows.ows_configuration import BandIndex
 
 
 def test_function_wrapper_lyr():
