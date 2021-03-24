@@ -181,13 +181,60 @@ Let's start by pulling the scale_range down a bit:
             "green": {"green": 1.0},
             "blue": {"blue": 1.0},
         },
-        "scale_range": (5, 1800),
+        "scale_range": (10, 800),
     }
 
-As you can see, the resulting image looks saturated, washed out and overly bright:
 
-.. image:: https://user-images.githubusercontent.com/4548530/112240166-f0a38580-8c9b-11eb-8712-2640549b664e.png
+.. image:: https://user-images.githubusercontent.com/4548530/112252356-15562800-8cb1-11eb-961a-8c10c38167d7.png
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112240166-f0a38580-8c9b-11eb-8712-2640549b664e.png>`_
+<https://user-images.githubusercontent.com/4548530/112252356-15562800-8cb1-11eb-961a-8c10c38167d7.png>`_
+
+As you can see, the resulting image looks saturated, washed out and overly bright.  So if your first
+guess at scale_range values produced an image like this, you probably want to increase your
+scale_range a bit.
+
+::
+
+    rgb_high_scale_rng_cfg = {
+            "components": {
+                "red": {"red": 1.0},
+                "green": {"green": 1.0},
+                "blue": {"blue": 1.0},
+            },
+            "scale_range": (1000, 8000),
+        }
+
+.. image:: https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png
+    :width: 600
+
+`View full size
+<https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png>`_
+
+Whoops too far!  Now it's almost pure black!  If your image looks like this, you
+need to pull your scale_range down a bit:
+
+::
+
+rgb_narrow_scale_rng_cfg = {
+        "components": {
+            "red": {"red": 1.0},
+            "green": {"green": 1.0},
+            "blue": {"blue": 1.0},
+        },
+        "scale_range": (1000, 3000),
+    }
+
+.. image:: https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png
+    :width: 600
+
+`View full size
+<https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png>`_
+
+This is better, but the lower end of the scale range is too high. If you keep adjusting back and forth,
+you'll eventually end up about where we started:
+
+But as any scientist will tell you, linear equations can only get you so far, so `next
+<https://datacube-ows.readthedocs.io/en/latest/style_howto_components_nonlinear.html>`_
+we start to look at how to apply more powerful maths to calculate components.

@@ -7,6 +7,7 @@ OWS Stying HOW-TO Guide
    :hidden:
 
    style_howto_components
+   style_howto_components_nonlinear
 
 .. contents:: Table of Contents
 
