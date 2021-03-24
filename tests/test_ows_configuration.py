@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import datacube_ows.config_utils
 import datacube_ows.ogc_utils
