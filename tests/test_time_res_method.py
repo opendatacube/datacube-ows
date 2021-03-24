@@ -29,7 +29,6 @@ def dummy_yearly_layer():
 
 @pytest.fixture
 def simple_geobox():
-    from datacube_ows.wms_utils import _get_geobox
     from affine import Affine
     from datacube.utils import geometry
 

@@ -5,11 +5,9 @@ from __future__ import absolute_import, division, print_function
 from datetime import datetime, timedelta, timezone
 import datacube
 
-from datacube_ows.ows_configuration import get_config, OWSNamedLayer  # , get_layers, ProductLayerDef
-from datacube_ows.ogc_utils import local_date, tz_for_coord, NoTimezoneException
+from datacube_ows.ows_configuration import get_config  # , get_layers, ProductLayerDef
+from datacube_ows.ogc_utils import tz_for_coord, NoTimezoneException
 from psycopg2.extras import Json
-from itertools import zip_longest
-import json
 
 from datacube_ows.utils import get_sqlconn
 

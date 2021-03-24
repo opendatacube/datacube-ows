@@ -4,10 +4,6 @@ from datacube_ows.data import get_s3_browser_uris, ProductBandQuery
 
 import pytest
 
-from unittest.mock import patch, MagicMock
-from tests.test_styles import product_layer
-from datetime import datetime
-
 import numpy as np
 
 @pytest.fixture
@@ -247,4 +243,3 @@ def test_pbq_ctor_full(product_layer):
         "Query bands ('wongle', 'pq') from products [FakeODCProduct(test_masking_product)]",
         "Query bands ('pq', 'wongle') from products [FakeODCProduct(test_masking_product)]",
     )
-

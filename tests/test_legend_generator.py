@@ -1,17 +1,8 @@
-import datacube_ows.legend_generator
-
 import pytest
-import datetime
 from decimal import Decimal
-
-from unittest.mock import patch, MagicMock
-from tests.test_band_utils import dummy_layer
-
-import numpy as np
 
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
 from datacube_ows.styles.base import StyleDefBase
-from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.legend_utils import  get_image_from_url
 
 
@@ -236,5 +227,3 @@ def test_parse_colorramp_legend_tick_labels():
               Decimal("1.1"), Decimal("1.7"), Decimal("1.9"), Decimal("2.0")]
     assert ramp.tick_labels == ["p0.3s", "p0.5s", "0.8Zz", "p0.9Zz", "p1.0s",
                                 "#1.1s", "prefixes", "pos", ":-)"]
-
-

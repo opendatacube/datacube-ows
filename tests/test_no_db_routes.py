@@ -1,6 +1,5 @@
 """Run with no DB to simulate connection failure
 """
-import pytest
 import os
 import sys
 
