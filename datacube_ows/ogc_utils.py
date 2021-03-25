@@ -188,7 +188,7 @@ class FunctionWrapper:
             self._kwargs = {}
             self.band_mapper = None
         else:
-            if not stand_alone and callable(func_cfg["function"]):
+            if stand_alone and callable(func_cfg["function"]):
                 self._func = func_cfg["function"]
             elif callable(func_cfg["function"]):
                 raise ConfigException(

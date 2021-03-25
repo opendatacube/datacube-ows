@@ -18,11 +18,14 @@ class ComponentStyleDef(StyleDefBase):
                     continue
                 else:
                     raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
-            if "function" in components:
+            if callable(components) or "function" in components:
                 self.raw_rgb_components[imgband] = FunctionWrapper(self.product, components,
                                                                    stand_alone=self.stand_alone)
-                for b in style_cfg["additional_bands"]:
-                    self.raw_needed_bands.add(b)
+                if not self.stand_alone:
+                    if "additional_bands" not in style_cfg:
+                        raise ConfigException(f"Style with a function component must declare additional_bands.")
+                    for b in style_cfg.get("additional_bands", set()):
+                        self.raw_needed_bands.add(b)
             else:
                 self.raw_rgb_components[imgband] = components
                 for k in components.keys():
@@ -42,7 +45,7 @@ class ComponentStyleDef(StyleDefBase):
 
         self.component_scale_ranges = {}
         for cn, cd in style_cfg["components"].items():
-            if "scale_range" in cd:
+            if not callable(cd) and "scale_range" in cd:
                 self.component_scale_ranges[cn] = {
                     "min": cd["scale_range"][0],
                     "max": cd["scale_range"][1],
