@@ -201,10 +201,13 @@ Local Postgres database
 2. run `datacube system init` after creating a datacube config file
 3. A product added to your datacube `datacube product add url` some examples are here: https://github.com/GeoscienceAustralia/dea-config/tree/master/products
 4. Index datasets into your product for example refer to https://datacube-ows.readthedocs.io/en/latest/usage.html
-::
-  aws s3 ls s3://deafrica-data/jaxa/alos_palsar_mosaic/2017/ --recursive \
-  | grep yaml | awk '{print $4}' \
-  | xargs -n1 -I {} datacube dataset add s3://deafrica-data/{}
+
+    ::
+
+      aws s3 ls s3://deafrica-data/jaxa/alos_palsar_mosaic/2017/ --recursive \
+      | grep yaml | awk '{print $4}' \
+      | xargs -n1 -I {} datacube dataset add s3://deafrica-data/{}
+
 5. Write an ows config file to identify the products you want available in ows, see example here: https://github.com/opendatacube/datacube-ows/blob/master/datacube_ows/ows_cfg_example.py
 6. Run `python3 https://github.com/opendatacube/datacube-ows/blob/master/update_ranges.py --schema` to create ows specific tables
 7. Run update_ranges.py to generate ows extents `python3 update_ranges.py PRODUCT`
@@ -218,14 +221,18 @@ approach in most circumstances, but it may make sense for you.
 If you use the ``pip install --pre`` approach described above, your OS's
 pre-packaged python3 apache2-mod-wsgi package should suffice.
 
-* Activate the wsgi module::
+* Activate the wsgi module:
+
+::
 
   cd /etc/apache2/mods-enabled
   ln -s ../mods-available/wsgi.load .
   ln -s ../mods-available/wsgi.conf .
 
 * Add the following to your Apache config (inside the
-  appropriate `VirtualHost` section)::
+  appropriate `VirtualHost` section):
+
+  ::
 
         WSGIDaemonProcess datacube_ows processes=20 threads=1 user=uuu group=ggg maximum-requests=10000
         WSGIScriptAlias /datacube_ows /path/to/source_code/datacube-ows/datacube_ows/wsgi.py
