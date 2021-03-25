@@ -1,0 +1,26 @@
+===========================================
+OWS Stying HOW-TO Guide: Colour Ramp Styles
+===========================================
+
+.. contents:: Table of Contents
+
+Colour Ramps
+------------
+
+A single continuous index is usually best visualised with a Colour Ramp.  We looked at
+some unusual visualisations of NDVI (normalised
+difference vegetation index) in the last chapter, but a more traditional approach
+might look something like this:
+
+::
+
+    ndvi_bidirection_cfg = {
+        "index_function": {
+            "function": "datacube_ows.band_utils.norm_diff",
+            "mapped_bands": True,
+            "kwargs": {"band1": "nir", "band2": "red"},
+        },
+        "mpl_range": "RdYlGn",
+        "range": [-1.0, 1.0]
+    }
+

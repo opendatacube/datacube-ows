@@ -8,6 +8,7 @@ OWS Stying HOW-TO Guide
 
    style_howto_components
    style_howto_components_nonlinear
+   style_howto_color_ramp
 
 .. contents:: Table of Contents
 
