@@ -44,7 +44,7 @@ History
 *    Cleaner internal APIs, improved test coverage, and bug fixes.
 
 
-1.8.3 (2020-03-12)
+1.8.3 (2021-03-12)
 ------------------
 
 *    Generalised handling of WMTS tile matrix sets (#452)
@@ -54,7 +54,7 @@ History
 *    Many bug-fixes, documentation updates and minor enhancements (various)
 
 
-1.8.4 (2020-03-19)
+1.8.4 (2021-03-19)
 ------------------
 
 *    Standalone API for OWS styling. (#523)
@@ -62,3 +62,12 @@ History
 *    Numerous bugfixes.
 *    Updated documentation.
 
+1.8.5 (2021-03-25)
+------------------
+
+* Date delta can now control subtraction direction from config (#535)
+* New helper functions in standalone API (#538)
+* Bug fixes in standalone API. (#542, #543)
+* First draft of new "HOWTO" Styling guide. (#540, #543)
+* Miscellaneous cleanup. (#533, #534, #537, #541)
+* Prep for PyPI (#544)
