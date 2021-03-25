@@ -1,6 +1,6 @@
-===============================
+============
 datacube-ows
-===============================
+============
 
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Linting/badge.svg
         :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ALinting
@@ -17,7 +17,7 @@ datacube-ows
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/opendatacube/datacube-ows
 
-Datacube Web Map Service
+Datacube Open Web Services
 
 
 * Free software: Apache Software License 2.0
