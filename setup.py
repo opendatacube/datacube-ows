@@ -3,12 +3,6 @@
 
 from setuptools import setup, find_packages
 
-with open('README.rst') as readme_file:
-    readme = readme_file.read()
-
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
 requirements = [
     'datacube',
     'Flask',
@@ -46,7 +40,24 @@ test_requirements = [
 setup(
     name='datacube_ows',
     description="Open Data Cube Open Web Services",
-    long_description=readme + '\n\n' + history,
+    long_description="""
+============
+datacube-ows
+============
+
+Open Web Services for the Open Datacube.
+
+* Free software: Apache Software License 2.0
+* Documentation: https://datacube-ows.readthedocs.io.
+
+Features
+--------
+
+* Leverages the power of the Open Data Cube, including support for COGs on S3.
+* Supports WMS and WMTS.
+* Experimental support for WCS (1.0, 2.0, 2.1).
+    
+    """,
     author="Open Data Cube",
     author_email='earth.observation@ga.gov.au',
     url='https://github.com/opendatacube/datacube-ows',
