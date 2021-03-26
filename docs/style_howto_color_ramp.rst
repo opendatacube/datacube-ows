@@ -166,7 +166,8 @@ Example - Custom Colour Ramp with Alpha
 +++++++++++++++++++++++++++++++++++++++
 
 You can add "alpha" to any step in your custom colour ramp.  It takes a value between 0.0 and 1.0
-where 0.0 is totally transparent and 1.0 (the default) is opaque.
+where 0.0 is totally transparent and 1.0 (the default) is opaque.  Note that you need to supply a
+``color`` even when ``alpha`` is 0.0.
 
 ::
 
@@ -227,3 +228,6 @@ where 0.0 is totally transparent and 1.0 (the default) is opaque.
 `View full size
 <https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png>`_
 
+`Next up
+<https://datacube-ows.readthedocs.io/en/latest/style_howto_colour_map.html>`_
+we will look at colour-map styles, which are useful for visualising discrete measurement bands.
