@@ -263,6 +263,11 @@ def mask_by_extent_flag(data, band):
 def mask_by_extent_val(data, band):
     return data["extent"] != data["extent"].attrs['nodata']
 
+
+def mask_by_nan(data, band):
+    return ~data[band].isnan()
+
+
 # Sub-product extractors
 
 ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
