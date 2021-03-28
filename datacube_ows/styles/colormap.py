@@ -7,6 +7,7 @@ from datacube.utils.masking import make_mask
 from matplotlib import patches as mpatches, pyplot as plt
 from xarray import Dataset, DataArray, merge
 
+import tests.utils
 from datacube_ows.config_utils import OWSConfigEntry, ConfigException
 from datacube_ows.styles.base import StyleDefBase
 
@@ -107,12 +108,12 @@ class ColorMapStyleDef(StyleDefBase):
 
     @staticmethod
     def create_colordata(data, rgb, alpha, mask):
-        target = Dataset(coords=data.coords)
+        target = Dataset(coords=tests.utils.coords)
         colors = ["red", "green", "blue", "alpha"]
         for color in colors:
             val = alpha if color == "alpha" else getattr(rgb, color)
             c = numpy.full(data.shape, val)
-            target[color] = DataArray(c, dims=data.dims, coords=data.coords)
+            target[color] = DataArray(c, dims=data.dims, coords=tests.utils.coords)
         masked = target.where(mask).where(numpy.isfinite(data))  # remask
         return masked
 
@@ -127,7 +128,7 @@ class ColorMapStyleDef(StyleDefBase):
         #        except AttributeError:
         #            data[band] = data[band].where(extent_mask)
 
-        imgdata = Dataset(coords=data.coords)
+        imgdata = Dataset(coords=tests.utils.coords)
         for cfg_band, rules in self.value_map.items():
             # Run through each item
             band = self.product.band_idx.band(cfg_band)

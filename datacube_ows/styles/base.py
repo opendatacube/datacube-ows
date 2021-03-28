@@ -5,6 +5,8 @@ from datacube.utils.masking import make_mask
 
 import numpy as np
 import xarray as xr
+
+import tests.utils
 from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands, OWSFlagBandStandalone
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
@@ -136,7 +138,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             odc_mask = odc_mask.squeeze(dim="time", drop=True)
             return odc_mask
 
-        date_count = len(data.coords["time"])
+        date_count = len(tests.utils.coords["time"])
         if date_count > 1:
             # TODO multidate
             mdh = self.get_multi_date_handler(date_count)
@@ -166,10 +168,10 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             nda_alpha = np.ndarray(img_data["red"].shape, dtype='uint8')
             nda_alpha.fill(255)
             alpha = xr.DataArray(nda_alpha,
-                                coords=img_data["red"].coords,
-                                dims=img_data["red"].dims,
-                                name="alpha"
-            )
+                                 coords=tests.utils.coords,
+                                 dims=img_data["red"].dims,
+                                 name="alpha"
+                                 )
         else:
             alpha = img_data.alpha
         alpha = alpha.where(mask, other=0)
@@ -177,7 +179,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         return img_data
 
     def transform_data(self, data, mask):
-        date_count = len(data.coords["time"])
+        date_count = len(tests.utils.coords["time"])
         if date_count == 1:
             img_data = self.transform_single_date_data(data.squeeze(dim="time", drop=True))
         else:
@@ -282,7 +284,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 
         def make_mask(self, data, mask):
             odc_mask = None
-            for dt in data.coords["time"].values:
+            for dt in tests.utils.coords["time"].values:
                 tpqdata = getattr(data.sel(time=dt), mask.band_name)
                 if mask.flags:
                     dt_mask = make_mask(tpqdata, **mask.flags)
@@ -307,7 +309,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         # Override for "OR" functionality.
         def collapse_mask(self, mask):
             collapsed = None
-            for dt in mask.coords["time"].values:
+            for dt in tests.utils.coords["time"].values:
                 m = mask.sel(time=dt)
                 if collapsed is None:
                     collapsed = m

@@ -10,6 +10,8 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import to_hex, LinearSegmentedColormap
 from xarray import Dataset
 
+import tests.utils
+
 matplotlib.use('Agg')
 
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -501,7 +503,7 @@ class ColorRamp:
         imgdata = {}
         for band in self.components:
             imgdata[band] = (data.dims, self.get_8bit_value(data, band))
-        imgdataset = Dataset(imgdata, coords=data.coords)
+        imgdataset = Dataset(imgdata, coords=tests.utils.coords)
         return imgdataset
 
     def color_alpha_at(self, val):

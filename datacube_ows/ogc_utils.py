@@ -18,6 +18,8 @@ from pytz import timezone, utc
 
 import logging
 
+import tests.utils
+
 _LOG = logging.getLogger(__name__)
 
 
@@ -99,15 +101,15 @@ def tz_for_geometry(geom):
     geo_geom = geom.to_crs(crs_geo)
     centroid = geo_geom.centroid
     try:
-        return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
+        return tz_for_coord(tests.utils.coords[0][0], tests.utils.coords[0][1])
     except NoTimezoneException:
         pass
-    for pt in geo_geom.boundary.coords:
+    for pt in tests.utils.coords:
         try:
             return tz_for_coord(pt[0], pt[1])
         except NoTimezoneException:
             pass
-    offset = round(centroid.coords[0][0] / 15.0)
+    offset = round(tests.utils.coords[0][0] / 15.0)
     return datetime.timezone(datetime.timedelta(hours=offset))
 
 
@@ -252,8 +254,12 @@ def mask_by_bitflag(data, band):
     return ~data[band] & data[band].attrs['nodata']
 
 
+def mask_by_val_in_band(data, band, mask_band, val=None):
+    return mask_by_val(data, mask_band, val)
+
+
 def mask_by_quality(data, band):
-    return data["quality"] != 1
+    return mask_by_val(data, "quality")
 
 
 def mask_by_extent_flag(data, band):
@@ -261,11 +267,11 @@ def mask_by_extent_flag(data, band):
 
 
 def mask_by_extent_val(data, band):
-    return data["extent"] != data["extent"].attrs['nodata']
+    return mask_by_val(data, "extent")
 
 
 def mask_by_nan(data, band):
-    return ~data[band].isnan()
+    return ~numpy.isnan(data[band])
 
 
 # Sub-product extractors
@@ -326,17 +332,17 @@ def xarray_image_as_png(img_data, mask=None):
     xcoord = None
     ycoord = None
     for cc in ("x", "longitude", "Longitude", "long", "lon"):
-        if cc in img_data.coords:
+        if cc in tests.utils.coords:
             xcoord = cc
             break
     for cc in ("y", "latitude", "Latitude", "lat"):
-        if cc in img_data.coords:
+        if cc in tests.utils.coords:
             ycoord = cc
             break
     if not xcoord or not ycoord:
         raise Exception("Could not identify spatial coordinates")
-    width = len(img_data.coords[xcoord])
-    height = len(img_data.coords[ycoord])
+    width = len(tests.utils.coords[xcoord])
+    height = len(tests.utils.coords[ycoord])
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,

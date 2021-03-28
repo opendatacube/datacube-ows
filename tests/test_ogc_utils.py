@@ -90,3 +90,102 @@ def test_create_geobox():
         geobox_no = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
                                                          140.7184, 145.6924, -16.1144, -13.4938)
     assert "Must supply at least a width or height" in str(excinfo.value)
+
+
+from tests.utils import dummy_da
+
+
+coords = [
+    ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
+]
+
+
+def test_mask_by_val():
+    data = {
+        "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_val(data, "match")
+    assert not mask.values[0]
+    mask = datacube_ows.ogc_utils.mask_by_val(data, "dont_match")
+    assert mask.values[0]
+    mask = datacube_ows.ogc_utils.mask_by_val(data, "match", val=679)
+    assert mask.values[0]
+    mask = datacube_ows.ogc_utils.mask_by_val(data, "dont_match", val=679)
+    assert not mask.values[0]
+
+
+def test_mask_by_val2():
+    data = {
+        "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_val(data, "match")
+    assert not mask.values[0]
+    mask = datacube_ows.ogc_utils.mask_by_val(data, "dont_match")
+    assert mask.values[0]
+
+
+def test_mask_by_bitflag():
+    data = {
+        "match": dummy_da(128, "match", coords, attrs={"nodata": 128}, dtype="uint8"),
+        "dont_match": dummy_da(63, "dont_match", coords, attrs={"nodata": 128}, dtype="uint8"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_bitflag(data, "match")
+    assert not mask.values[0]
+    mask = datacube_ows.ogc_utils.mask_by_bitflag(data, "dont_match")
+    assert mask.values[0]
+
+def test_mask_by_val_in_band():
+    data = {
+        "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_val_in_band(data, "dband", mask_band="match")
+    assert not mask.values[0]
+    mask = datacube_ows.ogc_utils.mask_by_val_in_band(data, "dband", mask_band="dont_match", val=679)
+    assert not mask.values[0]
+
+
+def test_mask_by_quality():
+    data = {
+        "quality": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_quality(data, "dband")
+    assert not mask.values[0]
+
+
+def mask_by_extent_flag(data, band):
+    data = {
+        "extent": dummy_da(1, "match", coords, dtype="uint8"),
+        "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_extent_flag(data, "dband")
+    assert mask.values[0]
+    data["extent"] = dummy_da(0, "match", coords, dtype="uint8"),
+    mask = datacube_ows.ogc_utils.mask_by_extent_flag(data, "dband")
+    assert not mask.values[0]
+
+
+def test_mask_by_extent_val():
+    data = {
+        "extent": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_extent_val(data, "dband")
+    assert not mask.values[0]
+
+def test_mask_by_nan():
+    data = {
+        "match": dummy_da(float("nan"), "match", coords, dtype="float128"),
+        "dont_match": dummy_da(67.9, "dont_match", coords, dtype="float128"),
+    }
+    mask = datacube_ows.ogc_utils.mask_by_nan(data, "match")
+    assert not mask.values[0]
+    mask = datacube_ows.ogc_utils.mask_by_nan(data, "dont_match")
+    assert mask.values[0]
+
+
+
