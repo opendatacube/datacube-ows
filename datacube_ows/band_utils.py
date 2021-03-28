@@ -3,8 +3,6 @@ from __future__ import division
 import numpy
 
 # Style index functions
-import tests.utils
-
 
 def scale_data(imgband_data, scale_from, scale_to):
     sc_min, sc_max = scale_from
@@ -117,7 +115,7 @@ def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, band_mapper=None):
 
 
 def multi_date_delta(data, time_direction=-1):
-    data1, data2 = (data.sel(time=dt) for dt in tests.utils.coords["time"].values)
+    data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)
 
 #    data1, data2 = data.values.item(0), data.values.item(1)
     if time_direction >= 0:
