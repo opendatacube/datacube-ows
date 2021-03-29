@@ -356,6 +356,8 @@ def xarray_image_as_png(img_data, mask=None):
                 if band == "alpha" and mask is not None:
                     band_data = numpy.where(mask, band_data, 0)
                     masked = True
+                elif band == "alpha":
+                    masked = True
                 thing.write_band(idx, band_data)
                 last_band = band_data
             if not masked:

@@ -184,5 +184,5 @@ Note that utility functions are referenced by name, rather than importing the na
 <https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png>`_
 
 `Next up
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_transparency.html>`_
-we will look at how to include transparency in your visualisations.
+<https://datacube-ows.readthedocs.io/en/latest/style_howto_colour_ramp.html>`_
+we will look at colour ramp styles.

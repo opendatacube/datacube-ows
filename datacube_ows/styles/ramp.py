@@ -525,8 +525,9 @@ class ColorRampDef(StyleDefBase):
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
 
-        for band in style_cfg["needed_bands"]:
-            self.raw_needed_bands.add(band)
+        if not self.stand_alone:
+            for band in style_cfg["needed_bands"]:
+                self.raw_needed_bands.add(band)
 
         self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
 
