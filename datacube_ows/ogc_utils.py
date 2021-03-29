@@ -18,8 +18,6 @@ from pytz import timezone, utc
 
 import logging
 
-import tests.utils
-
 _LOG = logging.getLogger(__name__)
 
 
@@ -101,15 +99,15 @@ def tz_for_geometry(geom):
     geo_geom = geom.to_crs(crs_geo)
     centroid = geo_geom.centroid
     try:
-        return tz_for_coord(tests.utils.coords[0][0], tests.utils.coords[0][1])
+        return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
     except NoTimezoneException:
         pass
-    for pt in tests.utils.coords:
+    for pt in geo_geom.coundary.coords:
         try:
             return tz_for_coord(pt[0], pt[1])
         except NoTimezoneException:
             pass
-    offset = round(tests.utils.coords[0][0] / 15.0)
+    offset = round(centroid.coords[0][0] / 15.0)
     return datetime.timezone(datetime.timedelta(hours=offset))
 
 
@@ -332,17 +330,17 @@ def xarray_image_as_png(img_data, mask=None):
     xcoord = None
     ycoord = None
     for cc in ("x", "longitude", "Longitude", "long", "lon"):
-        if cc in tests.utils.coords:
+        if cc in img_data.coords:
             xcoord = cc
             break
     for cc in ("y", "latitude", "Latitude", "lat"):
-        if cc in tests.utils.coords:
+        if cc in img_data.coords:
             ycoord = cc
             break
     if not xcoord or not ycoord:
         raise Exception("Could not identify spatial coordinates")
-    width = len(tests.utils.coords[xcoord])
-    height = len(tests.utils.coords[ycoord])
+    width = len(img_data.coords[xcoord])
+    height = len(img_data.coords[ycoord])
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,
