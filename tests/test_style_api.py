@@ -1,65 +1,11 @@
-import datetime
 import pytest
 
 import xarray as xr
 import numpy as np
 
 from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_style_cfg, xarray_image_as_png, create_geobox
+from tests.utils import dim1_da, dummy_da, coords
 
-
-def test_indirect_imports():
-    assert xarray_image_as_png is not None
-    assert create_geobox is not None
-
-def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
-    if attrs is None:
-        attrs={}
-    dims = [n for n, a in coords]
-    data = np.ndarray([len(a) for n, a in coords], dtype=dtype)
-    coords = dict(coords)
-    data.fill(val)
-    output = xr.DataArray(
-        data,
-        coords=coords,
-        dims=dims,
-        attrs=attrs,
-        name=name,
-    )
-    return output
-
-def dim1_da(name, vals, coords, with_time=True, attrs=None):
-    if len(vals) != len(coords):
-        raise Exception("vals and coords must match len")
-    if attrs is None:
-        attrs={}
-    dims = ["dim"]
-    shape = [len(coords)]
-    coords = {
-        'dim': coords,
-    }
-    if with_time:
-        dims.append("time")
-        coords["time"] = [np.datetime64(datetime.date.today())]
-        shape.append(1)
-    buff_arr = np.array(vals)
-    data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
-    output = xr.DataArray(
-        data,
-        coords=coords,
-        dims=dims,
-        attrs=attrs,
-        name=name,
-    )
-    return output
-
-coords = [
-    ('x', [
-        0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
-        10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0,
-    ]),
-    ('y', [-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]),
-    ('time', [np.datetime64(datetime.date.today())])
-]
 
 @pytest.fixture
 def dummy_raw_data():
@@ -72,9 +18,16 @@ def dummy_raw_data():
     })
     return output
 
+
 @pytest.fixture
 def null_mask():
     return dummy_da(True, "mask", coords, dtype=np.bool)
+
+
+def test_indirect_imports():
+    assert xarray_image_as_png is not None
+    assert create_geobox is not None
+
 
 @pytest.fixture
 def simple_rgb_style_cfg():
@@ -165,13 +118,13 @@ def simple_ramp_style_cfg():
 def dummy_raw_calc_data():
     dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     output = xr.Dataset({
-        "ir": dim1_da("ir",   [ 800, 100, 1000, 600, 200, 1000 ], dim_coords),
-        "red": dim1_da("red", [ 200, 500, 0,    200, 200, 700 ], dim_coords),
-        "green": dim1_da("green", [ 100, 500, 0, 400, 300, 200 ], dim_coords),
-        "blue": dim1_da("blue", [ 200, 500, 1000, 600, 100, 700 ], dim_coords),
-        "uv": dim1_da("uv", [ 400, 600, 900, 200, 400, 100 ], dim_coords),
-        "pq": dim1_da("pq", [ 0b000, 0b001, 0b010, 0b011, 0b100, 0b111], dim_coords,
-                            attrs={
+        "ir": dim1_da("ir", [800, 100, 1000, 600, 200, 1000], dim_coords),
+        "red": dim1_da("red", [200, 500, 0, 200, 200, 700], dim_coords),
+        "green": dim1_da("green", [100, 500, 0, 400, 300, 200], dim_coords),
+        "blue": dim1_da("blue", [200, 500, 1000, 600, 100, 700], dim_coords),
+        "uv": dim1_da("uv", [400, 600, 900, 200, 400, 100], dim_coords),
+        "pq": dim1_da("pq", [0b000, 0b001, 0b010, 0b011, 0b100, 0b111], dim_coords,
+                      attrs={
                                 "flags_definition": {
                                     "splodgy": {
                                         "bits": 2,
@@ -300,7 +253,7 @@ def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, r
 def dummy_col_map_data():
     dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     output = xr.Dataset({
-        "pq": dim1_da("pq", [ 0b01000, 0b11001, 0b01010, 0b10011, 0b00100, 0b10111], dim_coords,
+        "pq": dim1_da("pq", [0b01000, 0b11001, 0b01010, 0b10011, 0b00100, 0b10111], dim_coords,
                       attrs={
                           "flags_definition": {
                               "joviality": {
