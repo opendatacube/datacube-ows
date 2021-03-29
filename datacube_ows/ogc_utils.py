@@ -252,8 +252,12 @@ def mask_by_bitflag(data, band):
     return ~data[band] & data[band].attrs['nodata']
 
 
+def mask_by_val_in_band(data, band, mask_band, val=None):
+    return mask_by_val(data, mask_band, val)
+
+
 def mask_by_quality(data, band):
-    return data["quality"] != 1
+    return mask_by_val(data, "quality")
 
 
 def mask_by_extent_flag(data, band):
@@ -261,7 +265,12 @@ def mask_by_extent_flag(data, band):
 
 
 def mask_by_extent_val(data, band):
-    return data["extent"] != data["extent"].attrs['nodata']
+    return mask_by_val(data, "extent")
+
+
+def mask_by_nan(data, band):
+    return ~numpy.isnan(data[band])
+
 
 # Sub-product extractors
 
