@@ -5,7 +5,6 @@ from datacube.utils.masking import make_mask
 
 import numpy as np
 import xarray as xr
-
 from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands, OWSFlagBandStandalone
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
@@ -167,10 +166,10 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             nda_alpha = np.ndarray(img_data["red"].shape, dtype='uint8')
             nda_alpha.fill(255)
             alpha = xr.DataArray(nda_alpha,
-                                 coords=img_data["red"].coords,
-                                 dims=img_data["red"].dims,
-                                 name="alpha"
-                                 )
+                                coords=img_data["red"].coords,
+                                dims=img_data["red"].dims,
+                                name="alpha"
+            )
         else:
             alpha = img_data.alpha
         alpha = alpha.where(mask, other=0)

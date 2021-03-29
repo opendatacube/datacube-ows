@@ -102,7 +102,7 @@ def tz_for_geometry(geom):
         return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
     except NoTimezoneException:
         pass
-    for pt in geo_geom.coundary.coords:
+    for pt in geo_geom.boundary.coords:
         try:
             return tz_for_coord(pt[0], pt[1])
         except NoTimezoneException:
