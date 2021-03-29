@@ -60,20 +60,3 @@ def dim1_da(name, vals, coords, with_time=True, attrs=None):
     )
     return output
 
-
-@pytest.fixture
-def dummy_raw_data():
-    output = xr.Dataset({
-        "ir": dummy_da(3, "ir", coords),
-        "red": dummy_da(5, "red", coords),
-        "green": dummy_da(7, "green", coords),
-        "blue": dummy_da(2, "blue", coords),
-        "uv": dummy_da(-1, "uv", coords),
-    })
-    return output
-
-
-@pytest.fixture
-def null_mask():
-    return dummy_da(True, "mask", coords, dtype=np.bool)
-

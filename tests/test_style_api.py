@@ -1,9 +1,27 @@
 import pytest
 
 import xarray as xr
+import numpy as np
 
 from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_style_cfg, xarray_image_as_png, create_geobox
-from tests.utils import dim1_da
+from tests.utils import dim1_da, dummy_da, coords
+
+
+@pytest.fixture
+def dummy_raw_data():
+    output = xr.Dataset({
+        "ir": dummy_da(3, "ir", coords),
+        "red": dummy_da(5, "red", coords),
+        "green": dummy_da(7, "green", coords),
+        "blue": dummy_da(2, "blue", coords),
+        "uv": dummy_da(-1, "uv", coords),
+    })
+    return output
+
+
+@pytest.fixture
+def null_mask():
+    return dummy_da(True, "mask", coords, dtype=np.bool)
 
 
 def test_indirect_imports():
