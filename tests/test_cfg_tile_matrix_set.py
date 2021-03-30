@@ -60,7 +60,7 @@ def test_matrix_origin_float_array(wwwm_tms_cfg, tmsmin_global_cfg):
     assert "Matrix origin" in str(excinfo.value)
     assert "must be a list" in str(excinfo.value)
 
-    wwwm_tms_cfg["matrix_origin"] = [3.3,6.3, 7.8]
+    wwwm_tms_cfg["matrix_origin"] = [3.3, 6.3, 7.8]
     with pytest.raises(ConfigException) as excinfo:
         tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
     assert "test" in str(excinfo.value)
@@ -128,10 +128,12 @@ def test_scale_set_array(wwwm_tms_cfg, tmsmin_global_cfg):
     assert "scale_set" in str(excinfo.value)
     assert "no scale denominators" in str(excinfo.value)
 
+
 def test_tms_crs_cfg(wwwm_tms_cfg, tmsmin_global_cfg):
     global_cfg = tmsmin_global_cfg
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
     assert not tms.crs_cfg["vertical_coord_first"]
+
 
 def test_tms_crs_display(wwwm_tms_cfg, tmsmin_global_cfg):
     global_cfg = tmsmin_global_cfg
@@ -166,17 +168,18 @@ def test_tms_exponent(wwwm_tms_cfg, tmsmin_global_cfg):
     assert tms.height_exponent(1) == 3
     assert tms.height_exponent(12) == 14
 
+
 def test_tms_wms_bbox(wwwm_tms_cfg, tmsmin_global_cfg):
     global_cfg = tmsmin_global_cfg
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
-    a,b,c,d = tms.wms_bbox_coords(7, 32, 24)
+    a, b, c, d = tms.wms_bbox_coords(7, 32, 24)
     assert a == pytest.approx(-12523442.7142, 0.001)
     assert b == pytest.approx(9705668.103538, 0.001)
     assert c == pytest.approx(-12210356.64638, 0.001)
     assert d == pytest.approx(10018754.17139, 0.001)
     wwwm_tms_cfg["crs"] = "I:CANT:BELIEVE:ITS:NOT:EPSG:3857"
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
-    a,b,c,d = tms.wms_bbox_coords(7, 32, 24)
+    a, b, c, d = tms.wms_bbox_coords(7, 32, 24)
     assert b == pytest.approx(-12523442.7142, 0.001)
     assert a == pytest.approx(9705668.103538, 0.001)
     assert d == pytest.approx(-12210356.64638, 0.001)

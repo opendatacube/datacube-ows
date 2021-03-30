@@ -4,8 +4,9 @@ from xarray import DataArray, Dataset
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 
-
 # pylint: disable=abstract-method
+
+
 class ComponentStyleDef(StyleDefBase):
     def __init__(self, product, style_cfg, local_band_map=None, stand_alone=False, defer_multi_date=False):
         super().__init__(product, style_cfg,
@@ -73,7 +74,7 @@ class ComponentStyleDef(StyleDefBase):
         elif comp_in is None:
             return None
         else:
-            return { self.product.band_idx.band(self.local_band(band_alias)): value for band_alias, value in comp_in.items() if band_alias not in [ 'scale_range'] }
+            return {self.product.band_idx.band(self.local_band(band_alias)): value for band_alias, value in comp_in.items() if band_alias not in ['scale_range']}
 
     def compress_band(self, component_name, imgband_data):
         sc_min = self.component_scale_ranges[component_name]["min"]

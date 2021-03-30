@@ -7,8 +7,9 @@ import datacube_ows.ogc_utils
 
 class DSCT:
     def __init__(self, meta):
-        self.center_time = datetime.datetime(1970,1,1,0,0,0)
+        self.center_time = datetime.datetime(1970, 1, 1, 0, 0, 0)
         self.metadata_doc = meta
+
 
 def test_dataset_center_time():
     dct = datacube_ows.ogc_utils.dataset_center_time
@@ -30,6 +31,7 @@ def test_dataset_center_time():
     })
     assert dct(ds).year == 1990
 
+
 def test_get_service_base_url():
 
     # not a list
@@ -45,7 +47,7 @@ def test_get_service_base_url():
     assert ret == "https://foo.hello.world"
 
     # Value in list
-    allowed_urls = ["https://foo.hello.world","https://foo.bar.baz", "https://alice.bob.eve"]
+    allowed_urls = ["https://foo.hello.world", "https://foo.bar.baz", "https://alice.bob.eve"]
     request_url = "https://foo.bar.baz"
     ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"
@@ -56,7 +58,7 @@ def test_get_service_base_url():
     ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"
 
-    #include path
+    # include path
     allowed_urls = ["https://foo.bar.baz", "https://foo.bar.baz/wms/"]
     request_url = "https://foo.bar.baz/wms/"
     ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
@@ -137,6 +139,7 @@ def test_mask_by_bitflag():
     mask = datacube_ows.ogc_utils.mask_by_bitflag(data, "dont_match")
     assert mask.values[0]
 
+
 def test_mask_by_val_in_band():
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
@@ -178,6 +181,7 @@ def test_mask_by_extent_val():
     mask = datacube_ows.ogc_utils.mask_by_extent_val(data, "dband")
     assert not mask.values[0]
 
+
 def test_mask_by_nan():
     data = {
         "match": dummy_da(float("nan"), "match", coords, dtype="float128"),
@@ -187,6 +191,3 @@ def test_mask_by_nan():
     assert not mask.values[0]
     mask = datacube_ows.ogc_utils.mask_by_nan(data, "dont_match")
     assert mask.values[0]
-
-
-

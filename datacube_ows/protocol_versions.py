@@ -64,5 +64,6 @@ OWS_SUPPORTED = {
     ]),
 }
 
+
 def supported_versions():
     return OWS_SUPPORTED

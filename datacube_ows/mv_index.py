@@ -13,6 +13,7 @@ def get_sqlalc_engine(index):
     # pylint: disable=protected-access
     return index._db._engine
 
+
 def get_st_view(meta):
     return Table('space_time_view', meta,
              Column('id', UUID()),
@@ -22,6 +23,7 @@ def get_st_view(meta):
                  )
 _meta = MetaData()
 st_view = get_st_view(_meta)
+
 
 class MVSelectOpts(Enum):
     """

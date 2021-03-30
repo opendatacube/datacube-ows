@@ -10,6 +10,7 @@ from datacube_ows.wcs1_utils import WCS1GetCoverageRequest, get_coverage_data
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
+
 @log_call
 def handle_wcs1(nocase_args):
     operation = nocase_args.get("request", "").upper()
