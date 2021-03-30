@@ -6,7 +6,6 @@ from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
 
 
-
 def test_minimal_layer_create(minimal_global_cfg):
     lyr = OWSLayer({
             "title": "The Title",

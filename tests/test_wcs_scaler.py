@@ -8,7 +8,6 @@ from datacube_ows.wcs_scaler import (SpatialParameter, WCSScaler,
                                      WCSScalerUnknownDimension)
 
 
-
 @pytest.fixture
 def layer_crs_nongeom():
     product_layer = OWSProductLayer.__new__(OWSProductLayer)

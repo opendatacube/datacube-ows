@@ -16,7 +16,6 @@ from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 
 
-
 class WCS1GetCoverageRequest():
     version = Version(1, 0, 0)
     # pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals

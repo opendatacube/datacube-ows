@@ -2,7 +2,6 @@ from affine import Affine
 from datacube.utils import geometry
 
 
-
 class WCSScalerException(Exception):
     pass
 

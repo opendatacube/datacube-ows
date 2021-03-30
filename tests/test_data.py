@@ -6,7 +6,6 @@ from datacube_ows.data import ProductBandQuery, get_s3_browser_uris
 from tests.test_styles import product_layer  # noqa: F401
 
 
-
 @pytest.fixture
 def s3_url_datasets():
     class TestDataset:

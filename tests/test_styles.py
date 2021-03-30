@@ -11,7 +11,6 @@ from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 
-
 @pytest.fixture
 def product_layer():
     class FakeODCProduct:
