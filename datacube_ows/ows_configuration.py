@@ -155,7 +155,7 @@ class SuppURL(OWSConfigEntry):
     def parse_list(cls, cfg):
         if not cfg:
             return []
-        return [ cls(u) for u in cfg ]
+        return [cls(u) for u in cfg]
 
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -224,10 +224,10 @@ class OWSFolder(OWSLayer):
                 _LOG.error("Could not parse layer: %s", str(e))
 
     def unready_layer_count(self):
-        return sum([ l.layer_count() for l in self.unready_layers ])
+        return sum([l.layer_count() for l in self.unready_layers])
 
     def layer_count(self):
-        return sum([ l.layer_count() for l in self.child_layers ])
+        return sum([l.layer_count() for l in self.child_layers])
 
     def make_ready(self, dc, *args, **kwargs):
         still_unready = []
@@ -297,7 +297,8 @@ TIMERES_RAW = "raw"
 TIMERES_MON = "month"
 TIMERES_YR  = "year"
 
-TIMERES_VALS = [ TIMERES_RAW, TIMERES_MON, TIMERES_YR]
+TIMERES_VALS = [TIMERES_RAW, TIMERES_MON, TIMERES_YR]
+
 
 class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
@@ -433,9 +434,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def parse_image_processing(self, cfg):
         emf_cfg = cfg["extent_mask_func"]
         if isinstance(emf_cfg, Mapping) or isinstance(emf_cfg, str):
-            self.extent_mask_func = [ FunctionWrapper(self, emf_cfg) ]
+            self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]
         else:
-            self.extent_mask_func = list([ FunctionWrapper(self, emf) for emf in emf_cfg ])
+            self.extent_mask_func = list([FunctionWrapper(self, emf) for emf in emf_cfg])
         self.raw_afb = cfg.get("always_fetch_bands", [])
         self.declare_unready("always_fetch_bands")
         self.solar_correction = cfg.get("apply_solar_corrections", False)
@@ -452,13 +453,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_image_processing(self, dc):
-        self.always_fetch_bands = list([ self.band_idx.band(b) for b in self.raw_afb ])
+        self.always_fetch_bands = list([self.band_idx.band(b) for b in self.raw_afb])
 
     # pylint: disable=attribute-defined-outside-init
     def parse_feature_info(self, cfg):
         self.feature_info_include_utc_dates = cfg.get("include_utc_dates", False)
         custom = cfg.get("include_custom", {})
-        self.feature_info_custom_includes = { k: FunctionWrapper(self, v) for k,v in custom.items() }
+        self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
 
     # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg):
@@ -729,9 +730,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             if not geobox:
                 bbox = self.ranges["bboxes"][self.native_CRS]
-                geobox=create_geobox(
+                geobox = create_geobox(
                     self.native_CRS,
-                    bbox["left"], bbox["bottom"], bbox["right"],bbox["top"],
+                    bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],
                     1, 1
                 )
             return local_solar_date_range(geobox, t)
@@ -834,6 +835,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
             "pq_names": pq_names,
             "pq_low_res_names": pq_low_res_names,
         }
+
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None):
     if cfg.get("name", None):
@@ -976,6 +978,7 @@ class OWSConfig(OWSConfigEntry):
             self.fees = "none"
         if not self.access_constraints:
             self.access_constraints = "none"
+
         def make_gml_name(name):
             if name.startswith("EPSG:"):
                 return f"http://www.opengis.net/def/crs/EPSG/0/{name[5:]}"

@@ -47,6 +47,7 @@ def simple_rgb_style_cfg():
         }
     }
 
+
 @pytest.fixture
 def simple_rgb_perband_scaling_style_cfg():
     return {
@@ -55,11 +56,11 @@ def simple_rgb_perband_scaling_style_cfg():
         "abstract": "This is a Test Style for Datacube WMS",
         "needed_bands": ["red", "green", "blue"],
         "components": {
-            "red": {"red": 1.0, "scale_range": [0,200]},
-            "green": {"green": 1.0, "scale_range": [0,500]},
+            "red": {"red": 1.0, "scale_range": [0, 200]},
+            "green": {"green": 1.0, "scale_range": [0, 500]},
             "blue": {"blue": 1.0}
         },
-        "scale_range": [0,350]
+        "scale_range": [0, 350]
     }
 
 
@@ -117,9 +118,10 @@ def simple_ramp_style_cfg():
         ],
     }
 
+
 @pytest.fixture
 def dummy_raw_calc_data():
-    dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     output = xr.Dataset({
         "ir": dim1_da("ir", [800, 100, 1000, 600, 200, 1000], dim_coords),
         "red": dim1_da("red", [200, 500, 0, 200, 200, 700], dim_coords),
@@ -158,13 +160,16 @@ def dummy_raw_calc_data():
     })
     return output
 
+
 def dim1_null_mask(coords):
     return dim1_da("mask", [True] * len(coords), coords)
 
+
 @pytest.fixture
 def raw_calc_null_mask():
-    dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     return dim1_da("mask", [True] * len(dim_coords), dim_coords)
+
 
 def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
     style = StandaloneStyle(simple_ramp_style_cfg)
@@ -196,7 +201,7 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     # point 5 1000,700 (idx=0.176) maps to between black and magenta
     assert result["alpha"].values[5] == 255
     assert result["green"].values[5] == 0
-    assert abs(result["red"].values[5] - result["blue"].values[5]) <=1 # Why not exactly equal?
+    assert abs(result["red"].values[5] - result["blue"].values[5]) <= 1 # Why not exactly equal?
     assert result["red"].values[5] > 0
     assert result["red"].values[5] < 255
 
@@ -239,6 +244,7 @@ def rgb_style_with_masking_cfg():
         ]
     }
 
+
 def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg):
     result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
@@ -254,7 +260,7 @@ def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, r
 
 @pytest.fixture
 def dummy_col_map_data():
-    dim_coords = [ -2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     output = xr.Dataset({
         "pq": dim1_da("pq", [0b01000, 0b11001, 0b01010, 0b10011, 0b00100, 0b10111], dim_coords,
                       attrs={
@@ -346,6 +352,7 @@ def simple_colormap_style_cfg():
             ]
         }
     }
+
 
 def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
     result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)

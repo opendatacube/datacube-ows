@@ -34,6 +34,7 @@ def test_bidx_p_unready(minimal_prod):
         x = bidx.nodata_val("foo")
     assert "_nodata_vals" in str(excinfo.value)
 
+
 def test_bidx_p_duplicates(minimal_prod):
     with pytest.raises(ConfigException) as excinfo:
         bidx = BandIndex(minimal_prod, {
@@ -50,6 +51,7 @@ def test_bidx_p_duplicates(minimal_prod):
     assert "Duplicate band name/alias" in str(excinfo.value)
     assert "bar" in str(excinfo.value)
 
+
 def test_bidx_p_band(minimal_prod):
     bidx = BandIndex(minimal_prod, {
         "foo": ["bar", "baz"],
@@ -62,6 +64,7 @@ def test_bidx_p_band(minimal_prod):
     assert "Unknown band name/alias" in str(excinfo.value)
     assert "splat" in str(excinfo.value)
 
+
 def test_bidx_p_band_labels(minimal_prod):
     bidx = BandIndex(minimal_prod, {
         "foo": ["bar", "foo", "baz"],
@@ -73,6 +76,7 @@ def test_bidx_p_band_labels(minimal_prod):
     assert "pow" in bls
     assert "oof" in bls
     assert len(bls) == 3
+
 
 def test_bidx_p_label(minimal_prod):
     bidx = BandIndex(minimal_prod, {
@@ -101,6 +105,7 @@ def test_bidx_makeready(minimal_prod, minimal_dc):
     assert bidx.band("band3") == "band3"
     assert bidx.band("alias4") == "band4"
 
+
 def test_bidx_makeready_default(minimal_prod, minimal_dc):
     bidx = BandIndex(minimal_prod, {})
     bidx.make_ready(minimal_dc)
@@ -111,6 +116,7 @@ def test_bidx_makeready_default(minimal_prod, minimal_dc):
     assert bidx.band("band4") == "band4"
     assert bidx.nodata_val("band1") == -999
     assert isinstance(bidx.nodata_val("band4"), float)
+
 
 def test_bidx_makeready_invalid_band(minimal_prod, minimal_dc):
     bidx = BandIndex(minimal_prod, {

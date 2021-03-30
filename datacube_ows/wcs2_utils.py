@@ -40,7 +40,7 @@ def uniform_crs(cfg, crs):
 
 
 def get_coverage_data(request):
-    #pylint: disable=too-many-locals, protected-access
+    # pylint: disable=too-many-locals, protected-access
 
     cfg = get_config()
 
@@ -258,7 +258,7 @@ def get_coverage_data(request):
         output = stacker.data(datasets, skip_corrections=True)
 
     # Clean extent flag band from output
-        for k,v in output.data_vars.items():
+        for k, v in output.data_vars.items():
             if k not in bands:
                 output = output.drop_vars([k])
 
@@ -308,7 +308,7 @@ def get_tiff(request, data, crs, product, width, height, affine):
     for band in data.data_vars:
         nodata = product.band_idx.nodata_val(band)
     with MemoryFile() as memfile:
-        #pylint: disable=protected-access, bad-continuation
+        # pylint: disable=protected-access, bad-continuation
 
         kwargs = {}
         if gtiff.tile_width is not None:
@@ -344,6 +344,7 @@ def get_tiff(request, data, crs, product, width, height, affine):
                 dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
                 dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
         return memfile.read()
+
 
 def get_netcdf(request, data, crs):
     # Cleanup dataset attributes for NetCDF export

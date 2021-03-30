@@ -12,22 +12,27 @@ def dummy_timeres_layer(time_res):
     prod.time_resolution = time_res
     return prod
 
+
 class Thing:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+
 @pytest.fixture
 def dummy_raw_layer():
     return dummy_timeres_layer(TIMERES_RAW)
+
 
 @pytest.fixture
 def dummy_monthly_layer():
     return dummy_timeres_layer(TIMERES_MON)
 
+
 @pytest.fixture
 def dummy_yearly_layer():
     return dummy_timeres_layer(TIMERES_YR)
+
 
 @pytest.fixture
 def simple_geobox():
@@ -35,9 +40,10 @@ def simple_geobox():
     from datacube.utils import geometry
 
     aff = Affine.translation(145.0, -35.0) * Affine.scale(
-        1.0/256, 2.0/256
+        1.0 / 256, 2.0 / 256
     )
     return geometry.GeoBox(256, 256, aff, 'EPSG:4326')
+
 
 def test_raw_timeres(dummy_raw_layer, simple_geobox):
     assert dummy_raw_layer.is_raw_time_res
@@ -52,6 +58,7 @@ def test_raw_timeres(dummy_raw_layer, simple_geobox):
         datetime(2020, 6, 6, 13, 55, tzinfo=pytz.utc),
         datetime(2020, 6, 7, 13, 54, 59, tzinfo=pytz.utc),
     )
+
 
 def test_mon_timeres(dummy_monthly_layer, simple_geobox):
     assert not dummy_monthly_layer.is_raw_time_res
@@ -73,6 +80,7 @@ def test_mon_timeres(dummy_monthly_layer, simple_geobox):
                datetime(2020, 6, 1),
                datetime(2020, 6, 30),
            )
+
 
 def test_year_timeres(dummy_yearly_layer):
     assert not dummy_yearly_layer.is_raw_time_res

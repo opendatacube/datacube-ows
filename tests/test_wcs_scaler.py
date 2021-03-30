@@ -181,6 +181,7 @@ def test_spatial_parameter_setters(layer_crs_nongeom):
     assert param.x == 7
     assert param.y == -13
 
+
 def test_spatial_parameter_isdim_1(layer_crs_nongeom):
     param = SpatialParameter(layer_crs_nongeom, "TEST:CRS", 7, -13)
     assert param.x == 7
@@ -199,6 +200,7 @@ def test_spatial_parameter_isdim_1(layer_crs_nongeom):
     except WCSScalerUnknownDimension as e:
        assert e.dim == "horivertal_calzones"
 
+
 def test_spatial_parameter_isdim_1(layer_crs_nongeom):
     param = SpatialParameter(layer_crs_nongeom, "EPSG:3577", 2, 7)
 
@@ -213,12 +215,14 @@ def test_spatial_parameter_isdim_1(layer_crs_nongeom):
     except WCSScalerUnknownDimension as e:
         assert e.dim == "horrible_zonts"
 
+
 def test_scaler_constructor(layer_crs_nongeom):
     scaler = WCSScaler(layer_crs_nongeom)
     assert scaler.crs == "TEST:NATIVE_CRS"
     assert scaler.crs_def["gml_name"] == "TEST/NATIVE_CRS"
     scaler = WCSScaler(layer_crs_nongeom, "EPSG:3577")
     assert scaler.crs == "EPSG:3577"
+
 
 def test_scalar_trim(layer_crs_nongeom):
     scaler = WCSScaler(layer_crs_nongeom)
@@ -230,6 +234,7 @@ def test_scalar_trim(layer_crs_nongeom):
     assert not scaler.subsetted.y
     assert not scaler.is_slice("y")
 
+
 def test_scalar_slice(layer_crs_nongeom):
     scaler = WCSScaler(layer_crs_nongeom)
     scaler.slice("y", 5)
@@ -239,6 +244,7 @@ def test_scalar_slice(layer_crs_nongeom):
     assert scaler.dim("x") == (None, None, None)
     assert not scaler.subsetted.x
     assert not scaler.is_slice("x")
+
 
 def test_transform_unsubsetted(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
@@ -256,12 +262,14 @@ def test_transform_one_slice(layer_crs_geom):
     assert scaler.dim("y") == (None, -5195512.771063174, -936185.3115191332)
     assert scaler.dim("x") == (None, -1361473.6681777071, -980861.0939271128)
 
+
 def test_transform_one_trim(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.trim("x", 120.0, 130.0)
     scaler.to_crs("EPSG:3577")
     assert scaler.dim("x") == (None, -1361473.6681777071, -163710.79405154017)
     assert scaler.dim("y") == (None, -5195512.771063174, -936185.3115191332)
+
 
 def test_transform_two_trims(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
@@ -271,6 +279,7 @@ def test_transform_two_trims(layer_crs_geom):
     assert scaler.dim("x") == (None, -1248178.532656371, -190806.89815343948)
     assert scaler.dim("y") == (None, -3317050.4161210703, -2145729.370620175)
 
+
 def test_transform_slice_trim(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.trim("x", 120.0, 130.0)
@@ -278,6 +287,7 @@ def test_transform_slice_trim(layer_crs_geom):
     scaler.to_crs("EPSG:3577")
     assert scaler.dim("x") == (None, -1248178.532656371, -208327.4583571618)
     assert scaler.dim("y") == (None, -2202762.0236987285, -2145729.370620175)
+
 
 def test_transform_two_slices(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
@@ -287,6 +297,7 @@ def test_transform_two_slices(layer_crs_geom):
     assert scaler.dim("x") == (1, -1248178.532656371, -1248153.532656371)
     assert scaler.dim("y") == (1, -2202762.0236987285, -2202787.0236987285)
 
+
 def test_scale_axis(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
@@ -294,6 +305,7 @@ def test_scale_axis(layer_crs_geom):
     scaler.scale_axis("y", 0.5)
     assert scaler.dim("x") == (419380, -2407984.8524648934, 2834259.110253384)
     assert scaler.dim("y") == (85187, -5195512.771063174, -936185.3115191332)
+
 
 def test_scale_size(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
@@ -303,6 +315,7 @@ def test_scale_size(layer_crs_geom):
     assert scaler.dim("x") == (512, -2407984.8524648934, 2834259.110253384)
     assert scaler.dim("y") == (512, -5195512.771063174, -936185.3115191332)
 
+
 def test_scale_extent(layer_crs_geom):
     # N.B. We don't really understand what scale_extent is supposed to do.
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
@@ -311,6 +324,7 @@ def test_scale_extent(layer_crs_geom):
     scaler.scale_extent("y", 0, 300)
     assert scaler.dim("x") == (300, -2407984.8524648934, 2834259.110253384)
     assert scaler.dim("y") == (300, -5195512.771063174, -936185.3115191332)
+
 
 def test_scaler_default(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")

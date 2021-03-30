@@ -14,7 +14,7 @@ from datacube_ows.ogc_utils import (capture_headers, get_service_base_url,
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.protocol_versions import supported_versions
 # See startup_utils.py for initialisation methods called at startup.
-#pylint: disable=wildcard-import,unused-wildcard-import
+# pylint: disable=wildcard-import,unused-wildcard-import
 from datacube_ows.startup_utils import *
 from datacube_ows.wcs1 import WCS_REQUESTS
 from datacube_ows.wms import WMS_REQUESTS
@@ -42,6 +42,7 @@ metrics = initialise_prometheus(app, _LOG)
 OWS_SUPPORTED = supported_versions()
 
 # Flask Routes
+
 
 @app.route('/')
 def ogc_impl():
@@ -134,9 +135,11 @@ def ogc_svc_impl(svc):
 def ogc_wms_impl():
     return ogc_svc_impl("wms")
 
+
 @app.route('/wmts')
 def ogc_wmts_impl():
     return ogc_svc_impl("wmts")
+
 
 @app.route('/wcs')
 def ogc_wcs_impl():
@@ -184,6 +187,7 @@ def legend(layer, style, dates=None):
     return img
 
 # Flask middleware
+
 
 @app.after_request
 def append_request_id(response):

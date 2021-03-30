@@ -14,6 +14,7 @@ def prelegend_style():
     style._unready_attributes = []
     return style
 
+
 @pytest.fixture
 def prelegend_colorramp_style():
     style = ColorRampDef.__new__(ColorRampDef)
@@ -42,6 +43,7 @@ def test_legend_parser_urllegend(prelegend_style):
     assert prelegend_style.show_legend
     assert prelegend_style.legend_url_override == url
 
+
 def test_create_legend_for_style(dummy_layer):
     from datacube_ows.legend_generator import create_legend_for_style
     assert create_legend_for_style(dummy_layer, "stylish_steve") is None
@@ -50,6 +52,7 @@ def test_create_legend_for_style(dummy_layer):
 @pytest.fixture
 def image_url():
     return "https://github.com/fluidicon.png"
+
 
 @pytest.fixture
 def bad_image_url():
@@ -184,6 +187,7 @@ def test_parse_colorramp_legend_find_end():
         }
     })
     assert ramp.values == [999.0, 1000.0, 2500.0, 6000.0, 6500.0, 51500.0]
+
 
 def test_parse_colorramp_legend_tick_labels():
     ramp = ColorRamp(None, {

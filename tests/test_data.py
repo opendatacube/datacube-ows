@@ -16,11 +16,11 @@ def s3_url_datasets():
     d1 = TestDataset([
             "s3://test-bucket/hello_world/data.yaml",
             "s3://test-bucket/hello_world/data.yaml"
-        ])
+    ])
     d2 = TestDataset([
             "s3://test-bucket/hello.word/foo.bar/hello.test.yaml",
             "s3://test-bucket/hello.word/foo.bar/hello-test.yaml"
-        ])
+    ])
 
     datasets.append(d1)
     datasets.append(d2)
@@ -32,13 +32,15 @@ def s3_url_datasets():
             class InnerMock:
                 def __init__(self, datasets):
                     self.datasets = datasets
+
                 def item(self):
                     return self.datasets
             self.values = InnerMock(datasets)
 
     class PBQMock:
         def __init__(self, main):
-            self.main=main
+            self.main = main
+
         def __hash__(self):
             return hash(self.main)
 
@@ -46,6 +48,7 @@ def s3_url_datasets():
         PBQMock(True): [DataSetMock(datasets)],
         PBQMock(False): [DataSetMock(datasets)],
     }
+
 
 def test_s3_browser_uris(s3_url_datasets):
     uris = get_s3_browser_uris(s3_url_datasets)
@@ -96,10 +99,12 @@ def test_s3_browser_uris(s3_url_datasets):
 #         assert load_data.called
 #         assert solar_day.called
 
+
 def test_make_derived_band_dict_nan():
     class fake_data:
         def __init__(self):
             self.nodata = np.nan
+
         def item(self):
             return np.nan
 
@@ -109,6 +114,7 @@ def test_make_derived_band_dict_nan():
 
     class fake_style:
         include_in_feature_info = True
+
         def __init__(self):
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
@@ -120,10 +126,12 @@ def test_make_derived_band_dict_nan():
     band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == "n/a"
 
+
 def test_make_derived_band_dict_not_nan():
     class fake_data:
         def __init__(self):
             self.nodata = -6666
+
         def item(self):
             return 10.10
 
@@ -133,6 +141,7 @@ def test_make_derived_band_dict_not_nan():
 
     class fake_style:
         include_in_feature_info = True
+
         def __init__(self):
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
@@ -144,11 +153,13 @@ def test_make_derived_band_dict_not_nan():
     band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == 10.10
 
+
 def test_make_band_dict_nan(product_layer):
     class fake_data:
         def __init__(self):
             self.nodata = np.nan
             self.attrs = {}
+
         def item(self):
             return np.nan
 
@@ -157,6 +168,7 @@ def test_make_band_dict_nan(product_layer):
             self.data_vars = {
                 "fake": "fake_band"
             }
+
         def __getitem__(self, key):
             return fake_data()
 
@@ -164,6 +176,7 @@ def test_make_band_dict_nan(product_layer):
 
     band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset())
     assert band_dict["fake"] == "n/a"
+
 
 def test_make_band_dict_float(product_layer):
     import yaml
@@ -179,10 +192,12 @@ def test_make_band_dict_float(product_layer):
             150: shadowing
             255: land
     """
+
     class int_data:
         def __init__(self):
             self.nodata = np.nan
             self.attrs = yaml.load(flags_yaml, yaml.Loader)
+
         def item(self):
             return 100
 
@@ -191,6 +206,7 @@ def test_make_band_dict_float(product_layer):
             self.data_vars = {
                 "fake": "fake_band"
             }
+
         def __getitem__(self, key):
             return int_data()
 

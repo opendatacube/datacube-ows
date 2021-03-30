@@ -70,7 +70,7 @@ def get_capabilities(args):
         include_coverage_summary = True
 
     capabilities = ServiceCapabilities.with_defaults_v20(
-        service_url=base_url+'/wcs',
+        service_url =base_url + '/wcs',
         allowed_operations=[
             'GetCapabilities', 'DescribeCoverage', 'GetCoverage'
         ],
@@ -217,6 +217,7 @@ def create_coverage_description(cfg, product):
         coverage_subtype='RectifiedGridCoverage',
     )
 
+
 @log_call
 def desc_coverages(args):
     cfg = get_config()
@@ -263,6 +264,7 @@ def desc_coverages(args):
 import logging
 
 _LOG = logging.getLogger(__name__)
+
 
 @log_call
 def get_coverage(args):

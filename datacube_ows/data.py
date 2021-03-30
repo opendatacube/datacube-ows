@@ -30,6 +30,7 @@ from datacube_ows.wms_utils import (GetFeatureInfoParameters, GetMapParameters,
 
 _LOG = logging.getLogger(__name__)
 
+
 class ProductBandQuery:
     def __init__(self, products, bands, main=False, manual_merge=False, ignore_time=False, fuse_func=None):
         self.products = products
@@ -124,7 +125,7 @@ class DataStacker:
         if style:
             self._needed_bands = list(style.needed_bands)
         elif bands:
-            self._needed_bands = [ self._product.band_idx.band(b) for b in bands ]
+            self._needed_bands = [self._product.band_idx.band(b) for b in bands]
         else:
             self._needed_bands = list(self._product.band_idx.native_bands.index)
 
@@ -470,6 +471,7 @@ def _write_empty(geobox):
             pass
         return memfile.read()
 
+
 def get_coordlist(geo, layer_name):
     if geo.type == 'Polygon':
         coordinates_list = [geo.json["coordinates"]]
@@ -565,7 +567,7 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
 @log_call
 def _make_band_dict(prod_cfg, pixel_dataset):
     band_dict = {}
-    for k,v in pixel_dataset.data_vars.items():
+    for k, v in pixel_dataset.data_vars.items():
         band_val = pixel_dataset[k].item()
         flag_def = pixel_dataset[k].attrs.get("flags_definition")
         if flag_def:
@@ -620,6 +622,7 @@ def _make_derived_band_dict(pixel_dataset, style_index):
 def geobox_is_point(geobox):
     # TODO: Not 100% sure why this function is needed.
     return geobox.height == 1 and geobox.width == 1
+
 
 @log_call
 def feature_info(args):
@@ -795,6 +798,7 @@ def feature_info(args):
         ]
     }
     return json_response(result, cfg)
+
 
 def json_response(result, cfg=None):
     if not cfg:

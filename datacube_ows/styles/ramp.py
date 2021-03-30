@@ -61,7 +61,7 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
         rmax = float(rmax)
     return [
         {
-            "value": (rmax - rmin)*u["value"] + rmin,
+            "value": (rmax - rmin) * u["value"] + rmin,
             "color": u["color"],
             "alpha": u.get("alpha", 1.0)
         } for u in unscaled
@@ -85,7 +85,7 @@ def crack_ramp(ramp):
     return (values, red, green, blue, alpha)
 
 
-def read_mpl_ramp(mpl_ramp : str):
+def read_mpl_ramp(mpl_ramp: str):
     unscaled_cmap = []
     try:
         cmap = plt.get_cmap(mpl_ramp)
@@ -95,17 +95,17 @@ def read_mpl_ramp(mpl_ramp : str):
     rgba_hex = to_hex(cmap(0.0))
     unscaled_cmap.append(
         {
-            "value" : 0.0,
-            "color" : rgba_hex,
-            "alpha" : 1.0
+            "value": 0.0,
+            "color": rgba_hex,
+            "alpha": 1.0
         }
     )
     for val in val_range:
         rgba_hex = to_hex(cmap(val))
         unscaled_cmap.append(
             {
-                "value" : float(val),
-                "color" : rgba_hex
+                "value": float(val),
+                "color": rgba_hex
             }
         )
     return unscaled_cmap
@@ -199,8 +199,8 @@ def legacy_colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
     # ticks are also normalized between 0 - 1.0
     # so they are position correctly on the colorbar
     def create_cdict_ticks(cfg, ramp):
-        generate = (cfg.get("major_ticks", None) is not None or \
-                    cfg.get("scale_by", None) is not None or \
+        generate = (cfg.get("major_ticks", None) is not None or
+                    cfg.get("scale_by", None) is not None or
                     cfg.get("radix_point", None) is not None)
 
         return from_definition(cfg, ramp, generate)
@@ -383,7 +383,7 @@ class ColorRamp:
 
         self.auto_legend = True
         self.legend_title = cfg.get("title")
-        self.legend_units = cfg.get("units","")
+        self.legend_units = cfg.get("units", "")
         self.legend_decimal_places = cfg.get("decimal_places", 1)
         if self.legend_decimal_places < 0:
             raise ConfigException("decimal_places cannot be negative")
@@ -489,7 +489,7 @@ class ColorRamp:
         self.legend_width = cfg.get("width", 4)
         self.legend_height = cfg.get("height", 1.25)
         self.legend_strip_location = cfg.get("strip_location",
-                                      [ 0.05, 0.5, 0.9, 0.15])
+                                      [0.05, 0.5, 0.9, 0.15])
 
     def get_value(self, data, band):
         return numpy.interp(data, self.values, self.components[band])
@@ -540,7 +540,7 @@ class ColorRampDef(StyleDefBase):
             raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
                 self.name,
                 self.product.name
-            ) )
+            ))
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 

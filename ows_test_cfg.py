@@ -424,7 +424,7 @@ ows_cfg = {
         "response_headers": {
             "Access-Control-Allow-Origin": "*",  # CORS header (strongly recommended)
         },
-        ## Which web service(s) should be implemented by this instance
+        # Which web service(s) should be implemented by this instance
         # Optional, defaults: wms,wmts: True, wcs: False
         "services": {"wms": True, "wmts": True, "wcs": True},
         # Service title - appears e.g. in Terria catalog (required)

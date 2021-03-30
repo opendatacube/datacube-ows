@@ -16,6 +16,7 @@ def test_deepinherit_shallow():
     assert child["b"] == "eagle"
     assert not child["c"]
 
+
 def test_deepinherit_deep():
     parent = {
         "a": 72,
@@ -23,8 +24,8 @@ def test_deepinherit_deep():
             "fruit": "grapes",
             "spice": "cummin",
             "cake": "chocolate",
-            "y": [ "some", "body", "once" ],
-            "z": [ 44, 42, 53 ],
+            "y": ["some", "body", "once"],
+            "z": [44, 42, 53],
             "c": {
                 "foo": "bar",
                 "wing": "wang"
@@ -38,8 +39,8 @@ def test_deepinherit_deep():
             "c": {
                 "wing": "chicken"
             },
-            "y": [ "told", "me" ],
-            "z": [ 11 ]
+            "y": ["told", "me"],
+            "z": [11]
         }
     }
     child = deepinherit(parent, child)
