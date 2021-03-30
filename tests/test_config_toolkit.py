@@ -1,5 +1,6 @@
 from datacube_ows.config_toolkit import deepinherit
 
+
 def test_deepinherit_shallow():
     parent = {
         "a": 72,

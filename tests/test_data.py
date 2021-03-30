@@ -1,12 +1,10 @@
-import datacube_ows.data
-
-from datacube_ows.data import get_s3_browser_uris, ProductBandQuery
-
+import numpy as np
 import pytest
 
-from tests.test_styles import product_layer # noqa: F401
+import datacube_ows.data
+from datacube_ows.data import ProductBandQuery, get_s3_browser_uris
+from tests.test_styles import product_layer  # noqa: F401
 
-import numpy as np
 
 @pytest.fixture
 def s3_url_datasets():

@@ -1,22 +1,20 @@
 from __future__ import absolute_import, division, print_function
 
-from dateutil.parser import parse
-
 import numpy
 import xarray
 from affine import Affine
-
 from datacube.utils import geometry
-from rasterio import MemoryFile
-
+from dateutil.parser import parse
 from ows.util import Version
+from rasterio import MemoryFile
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.data import DataStacker
+from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.mv_index import MVSelectOpts
+
 
 class WCS1GetCoverageRequest():
     version = Version(1,0,0)

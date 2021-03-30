@@ -1,9 +1,10 @@
 import math
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.ows_configuration import parse_ows_layer, WCSFormat
+from datacube_ows.ows_configuration import WCSFormat, parse_ows_layer
 
 
 def test_native_crs_mismatch(minimal_global_cfg, minimal_layer_cfg, minimal_dc):

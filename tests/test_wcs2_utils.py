@@ -1,9 +1,10 @@
-import pytest
-
 from unittest.mock import MagicMock
+
+import pytest
 
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.wcs2_utils import uniform_crs
+
 
 @pytest.fixture
 def minimal_cfg():

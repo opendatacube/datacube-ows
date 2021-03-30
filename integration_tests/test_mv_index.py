@@ -1,11 +1,10 @@
 import pytest
-
 from datacube.utils.geometry import box
 
 from datacube_ows.cube_pool import cube
+from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ogc_utils import local_solar_date_range
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.mv_index import MVSelectOpts, mv_search
 
 
 def test_full_layer():
