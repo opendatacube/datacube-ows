@@ -1,24 +1,23 @@
 import sys
 import traceback
-
 from time import monotonic
 
 from flask import g, render_template, request
 from flask_log_request_id import current_request_id
 
 from datacube_ows import __version__
-from datacube_ows.legend_generator import create_legend_for_style
-from datacube_ows.ogc_utils import capture_headers, resp_headers, get_service_base_url, lower_get_args
-from datacube_ows.wms import WMS_REQUESTS
-from datacube_ows.wcs1 import WCS_REQUESTS
-from datacube_ows.ogc_exceptions import OGCException, WMSException
 from datacube_ows.cube_pool import cube
-from datacube_ows.protocol_versions import supported_versions
+from datacube_ows.legend_generator import create_legend_for_style
+from datacube_ows.ogc_exceptions import OGCException, WMSException
+from datacube_ows.ogc_utils import (capture_headers, get_service_base_url,
+                                    lower_get_args, resp_headers)
 from datacube_ows.ows_configuration import get_config
-
+from datacube_ows.protocol_versions import supported_versions
 # See startup_utils.py for initialisation methods called at startup.
 # pylint: disable=wildcard-import,unused-wildcard-import
 from datacube_ows.startup_utils import *
+from datacube_ows.wcs1 import WCS_REQUESTS
+from datacube_ows.wms import WMS_REQUESTS
 
 # Logging intialisation
 _LOG = initialise_logger()

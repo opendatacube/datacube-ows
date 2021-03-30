@@ -1,8 +1,10 @@
-import pytest
 from datetime import datetime
+
+import pytest
 import pytz
 
-from datacube_ows.ows_configuration import OWSProductLayer, TIMERES_RAW, TIMERES_MON, TIMERES_YR
+from datacube_ows.ows_configuration import (TIMERES_MON, TIMERES_RAW,
+                                            TIMERES_YR, OWSProductLayer)
 
 
 def dummy_timeres_layer(time_res):

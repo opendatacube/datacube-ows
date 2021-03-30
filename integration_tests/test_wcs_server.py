@@ -1,12 +1,12 @@
-import pytest
-
-from owslib.wcs import WebCoverageService
-from owslib.util import ServiceException
-import requests
 from urllib import request
-from lxml import etree
 
-from datacube_ows.ows_configuration import get_config, OWSConfig
+import pytest
+import requests
+from lxml import etree
+from owslib.util import ServiceException
+from owslib.wcs import WebCoverageService
+
+from datacube_ows.ows_configuration import OWSConfig, get_config
 from integration_tests.utils import ODCExtent
 
 

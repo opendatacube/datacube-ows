@@ -1,8 +1,9 @@
-from xarray import Dataset, DataArray
 import numpy as np
+from xarray import DataArray, Dataset
 
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
+
 
 # pylint: disable=abstract-method
 

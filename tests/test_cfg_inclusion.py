@@ -1,6 +1,7 @@
 import os
 import sys
-from datacube_ows.ows_configuration import read_config, ConfigException
+
+from datacube_ows.ows_configuration import ConfigException, read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:

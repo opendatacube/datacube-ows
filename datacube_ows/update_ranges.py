@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
-import re
 import os
-import pkg_resources
-from datacube_ows import __version__
-from datacube_ows.product_ranges import get_sqlconn, add_ranges
-from datacube import Datacube
-import psycopg2
-from psycopg2.sql import SQL
-import sqlalchemy
-from datacube_ows.ows_configuration import get_config
+import re
+
 import click
+import pkg_resources
+import psycopg2
+import sqlalchemy
+from datacube import Datacube
+from psycopg2.sql import SQL
+
+from datacube_ows import __version__
+from datacube_ows.ows_configuration import get_config
+from datacube_ows.product_ranges import add_ranges, get_sqlconn
+
 
 
 @click.command()

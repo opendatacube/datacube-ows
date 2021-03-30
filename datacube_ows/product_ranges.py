@@ -3,12 +3,13 @@
 from __future__ import absolute_import, division, print_function
 
 from datetime import datetime, timedelta, timezone
-import datacube
 
-from datacube_ows.ows_configuration import get_config  # , get_layers, ProductLayerDef
-from datacube_ows.ogc_utils import tz_for_coord, NoTimezoneException
+import datacube
 from psycopg2.extras import Json
 
+from datacube_ows.ogc_utils import NoTimezoneException, tz_for_coord
+from datacube_ows.ows_configuration import \
+    get_config  # , get_layers, ProductLayerDef
 from datacube_ows.utils import get_sqlconn
 
 

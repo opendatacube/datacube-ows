@@ -1,8 +1,9 @@
-import pytest
-from owslib.wms import WebMapService
 from urllib import request
-from lxml import etree
+
+import pytest
 import requests
+from lxml import etree
+from owslib.wms import WebMapService
 
 
 def get_xsd(name):

@@ -1,9 +1,8 @@
+from unittest.mock import MagicMock
+
 import datacube_ows.config_utils
 import datacube_ows.ogc_utils
-
-
 import datacube_ows.ows_configuration
-from unittest.mock import MagicMock
 
 
 def test_function_wrapper_lyr():

@@ -1,10 +1,12 @@
 from __future__ import absolute_import, division, print_function
-from flask import render_template
+
 import traceback as tb
 
-from datacube_ows.ogc_utils import resp_headers
-from ows.common.v20.encoders import xml_encode_exception_report
+from flask import render_template
 from ows.common.types import OWSException, Version
+from ows.common.v20.encoders import xml_encode_exception_report
+
+from datacube_ows.ogc_utils import resp_headers
 
 
 class OGCException(Exception):

@@ -1,22 +1,20 @@
 from __future__ import absolute_import, division, print_function
 
-import re
 import datetime
+import logging
+import re
 from importlib import import_module
 from itertools import chain
+from urllib.parse import urlparse
 
 import numpy
 from affine import Affine
+from datacube.utils import geometry
 from dateutil.parser import parse
-from urllib.parse import urlparse
-
 from flask import request
+from pytz import timezone, utc
 from rasterio import MemoryFile
 from timezonefinderL import TimezoneFinder
-from datacube.utils import geometry
-from pytz import timezone, utc
-
-import logging
 
 _LOG = logging.getLogger(__name__)
 

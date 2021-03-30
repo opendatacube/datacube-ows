@@ -1,24 +1,15 @@
 """Test band math utilities
 """
-import pytest
 import numpy as np
+import pytest
 import xarray as xr
 
-from datacube_ows.band_utils import (
-    scale_data,
-    sum_bands,
-    norm_diff,
-    constant,
-    single_band,
-    band_quotient,
-    band_quotient_sum,
-    single_band_log,
-    sentinel2_ndci,
-    multi_date_delta,
-    single_band_offset_log,
-    single_band_arcsec,
-    radar_vegetation_index
-)
+from datacube_ows.band_utils import (band_quotient, band_quotient_sum,
+                                     constant, multi_date_delta, norm_diff,
+                                     radar_vegetation_index, scale_data,
+                                     sentinel2_ndci, single_band,
+                                     single_band_arcsec, single_band_log,
+                                     single_band_offset_log, sum_bands)
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 

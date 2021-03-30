@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
-import click
 import json
+import sys
+
+import click
+from datacube import Datacube
 from deepdiff import DeepDiff
 
 from datacube_ows import __version__
-from datacube_ows.ows_configuration import (
-    read_config,
-    OWSConfig,
-    ConfigException,
-    OWSFolder,
-)
-from datacube import Datacube
+from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
+                                            OWSFolder, read_config)
 
 
 @click.command()

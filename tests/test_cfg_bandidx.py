@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from datacube_ows.config_utils import OWSConfigNotReady
 from datacube_ows.ogc_utils import ConfigException

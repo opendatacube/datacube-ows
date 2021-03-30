@@ -1,7 +1,8 @@
-import datacube_ows.ogc_utils
 import datetime
 
 import pytest
+
+import datacube_ows.ogc_utils
 
 
 class DSCT:
@@ -97,7 +98,6 @@ def test_create_geobox():
 
 from tests.utils import dummy_da
 
-
 coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
 ]
@@ -191,6 +191,3 @@ def test_mask_by_nan():
     assert not mask.values[0]
     mask = datacube_ows.ogc_utils.mask_by_nan(data, "dont_match")
     assert mask.values[0]
-
-
-

@@ -6,27 +6,28 @@
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
 
-import os
-import math
-from importlib import import_module
 import json
-
+import logging
+import math
+import os
 from collections.abc import Mapping
+from importlib import import_module
 
+from datacube.utils import geometry
 from ows import Version
 from slugify import slugify
 
-from datacube.utils import geometry
-from datacube_ows.config_utils import cfg_expand, load_json_obj, import_python_obj, OWSConfigEntry, \
-    OWSEntryNotFound, OWSExtensibleConfigEntry, OWSFlagBand, FlagProductBands
+from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
+                                       OWSEntryNotFound,
+                                       OWSExtensibleConfigEntry, OWSFlagBand,
+                                       cfg_expand, import_python_obj,
+                                       load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
+from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
+                                    create_geobox, local_solar_date_range,
+                                    month_date_range, year_date_range)
 from datacube_ows.styles import StyleDef
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, month_date_range, local_solar_date_range, \
-    year_date_range, create_geobox
 from datacube_ows.tile_matrix_sets import TileMatrixSet
-
-import logging
-
 from datacube_ows.utils import group_by_statistical
 
 _LOG = logging.getLogger(__name__)

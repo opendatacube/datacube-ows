@@ -1,10 +1,13 @@
-import pytest
-
-import xarray as xr
 import numpy as np
+import pytest
+import xarray as xr
 
-from datacube_ows.styles.api import StandaloneStyle, apply_ows_style, apply_ows_style_cfg, generate_ows_legend_style, generate_ows_legend_style_cfg, xarray_image_as_png, create_geobox
-from tests.utils import dim1_da, dummy_da, coords
+from datacube_ows.styles.api import (StandaloneStyle, apply_ows_style,
+                                     apply_ows_style_cfg, create_geobox,
+                                     generate_ows_legend_style,
+                                     generate_ows_legend_style_cfg,
+                                     xarray_image_as_png)
+from tests.utils import coords, dim1_da, dummy_da
 
 
 @pytest.fixture

@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-from functools import wraps
-
 import logging
+from functools import wraps
 from time import monotonic
 
 

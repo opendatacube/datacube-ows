@@ -1,22 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
-import logging
-from dateutil.parser import parse
-
 import collections
+import logging
+
 import datacube
-
 from datacube.utils import geometry
+from dateutil.parser import parse
+from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
 from rasterio import MemoryFile
-
-from ows.wcs.v20 import (
-    Slice, Trim, ScaleSize, ScaleAxis, ScaleExtent
-)
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.data import DataStacker
-from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.mv_index import MVSelectOpts
+from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
