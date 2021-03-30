@@ -1,16 +1,15 @@
 import datetime
-
-from datacube_ows.config_utils import OWSEntryNotFound
-from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
-from datacube_ows.ogc_utils import ConfigException
-import datacube_ows.styles
-
-from xarray import DataArray, Dataset, concat
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
+from xarray import DataArray, Dataset, concat
+
+import datacube_ows.styles
+from datacube_ows.config_utils import OWSEntryNotFound
+from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
+
 
 @pytest.fixture
 def product_layer():
@@ -553,8 +552,9 @@ def test_reint():
     assert (data.dtype.kind == "i")
 
 def test_createcolordata():
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
@@ -564,8 +564,9 @@ def test_createcolordata():
     assert (data == 1.0).all()
 
 def test_createcolordata_alpha():
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
@@ -575,8 +576,9 @@ def test_createcolordata_alpha():
     assert (data["alpha"] == 0).all()
 
 def test_createcolordata_mask():
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
@@ -587,8 +589,9 @@ def test_createcolordata_mask():
     assert (np.isfinite(data["red"][2:5:1])).all()
 
 def test_createcolordata_remask():
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from colour import Color
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, np.nan, np.nan])
     da = DataArray(band, name='foo')

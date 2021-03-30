@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-import xarray as xr
 import pytest
+import xarray as xr
 
-from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.styles.base import StyleDefBase
 
 
 def test_multidate_handler():

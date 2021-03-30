@@ -1,5 +1,6 @@
 from datacube_ows.query_profiler import QueryProfiler
 
+
 def test_qpf_inactive():
     qp = QueryProfiler(False)
     qp.start_event("foo")

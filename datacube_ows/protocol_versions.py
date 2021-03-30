@@ -1,9 +1,10 @@
-from datacube_ows.wms import handle_wms
+from datacube_ows.ogc_exceptions import (WCS1Exception, WCS2Exception,
+                                         WMSException, WMTSException)
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.wcs1 import handle_wcs1
 from datacube_ows.wcs2 import handle_wcs2
+from datacube_ows.wms import handle_wms
 from datacube_ows.wmts import handle_wmts
-from datacube_ows.ogc_exceptions import WCS1Exception, WCS2Exception, WMSException, WMTSException
-from datacube_ows.ows_configuration import get_config
 
 
 class SupportedSvcVersion(object):

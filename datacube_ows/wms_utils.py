@@ -5,8 +5,9 @@ try:
 except ImportError:
     import re
 
-import numpy
 from datetime import datetime
+
+import numpy
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from pytz import utc
@@ -16,13 +17,14 @@ try:
 except ImportError:
     from rasterio.warp import RESAMPLING as Resampling
 
-from affine import Affine
-from datacube.utils import geometry
 import math
 
-from datacube_ows.ows_configuration import get_config
-from datacube_ows.ogc_utils import create_geobox
+from affine import Affine
+from datacube.utils import geometry
+
 from datacube_ows.ogc_exceptions import WMSException
+from datacube_ows.ogc_utils import create_geobox
+from datacube_ows.ows_configuration import get_config
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,

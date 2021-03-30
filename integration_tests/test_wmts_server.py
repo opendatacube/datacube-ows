@@ -1,8 +1,9 @@
-import pytest
-from owslib.wmts import WebMapTileService
-from owslib.util import ServiceException
 from urllib import request
+
+import pytest
 from lxml import etree
+from owslib.util import ServiceException
+from owslib.wmts import WebMapTileService
 
 
 def get_xsd(name):

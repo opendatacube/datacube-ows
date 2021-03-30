@@ -1,12 +1,12 @@
 import datetime
 
+import pytest
 from affine import Affine
 
-import pytest
+from datacube_ows.ows_configuration import OWSConfig, OWSProductLayer
+from datacube_ows.wcs_scaler import (SpatialParameter, WCSScaler,
+                                     WCSScalerUnknownDimension)
 
-from datacube_ows.ows_configuration import OWSProductLayer, OWSConfig
-from datacube_ows.wcs_scaler import WCSScaler, SpatialParameter
-from datacube_ows.wcs_scaler import WCSScalerUnknownDimension
 
 @pytest.fixture
 def layer_crs_nongeom():

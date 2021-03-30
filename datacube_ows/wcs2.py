@@ -1,29 +1,21 @@
 from __future__ import absolute_import, division, print_function
 
 from flask import request
-
-
-from ows.common.v20.decoders import kvp_decode_get_capabilities
 from ows.common import WGS84BoundingBox
-from ows.gml import Grid, RegularAxis, IrregularAxis, SpatioTemporalType
+from ows.common.v20.decoders import kvp_decode_get_capabilities
+from ows.gml import Grid, IrregularAxis, RegularAxis, SpatioTemporalType
 from ows.swe import Field
-from ows.wcs import (
-    CoverageSummary, ServiceCapabilities, CoverageDescription
-)
-
-from ows.wcs.v20.decoders import kvp_decode_describe_coverage, kvp_decode_get_coverage
+from ows.wcs import CoverageDescription, CoverageSummary, ServiceCapabilities
 from ows.wcs.v20 import encoders as encoders_v20
+from ows.wcs.v20.decoders import (kvp_decode_describe_coverage,
+                                  kvp_decode_get_coverage)
 from ows.wcs.v21 import encoders as encoders_v21
 
-from datacube_ows.ogc_utils import resp_headers, get_service_base_url
-
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.wcs2_utils import get_coverage_data
-
+from datacube_ows.ogc_utils import get_service_base_url, resp_headers
 from datacube_ows.ows_configuration import get_config
-
 from datacube_ows.utils import log_call
-
+from datacube_ows.wcs2_utils import get_coverage_data
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
@@ -269,6 +261,7 @@ def desc_coverages(args):
 
 
 import logging
+
 _LOG = logging.getLogger(__name__)
 
 @log_call

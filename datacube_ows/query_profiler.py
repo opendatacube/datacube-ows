@@ -1,5 +1,6 @@
 from time import time
 
+
 class QueryProfiler:
     def __init__(self, active):
         self.active = active
