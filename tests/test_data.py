@@ -19,11 +19,11 @@ def s3_url_datasets():
     d1 = TestDataset([
             "s3://test-bucket/hello_world/data.yaml",
             "s3://test-bucket/hello_world/data.yaml"
-        ])
+    ])
     d2 = TestDataset([
             "s3://test-bucket/hello.word/foo.bar/hello.test.yaml",
             "s3://test-bucket/hello.word/foo.bar/hello-test.yaml"
-        ])
+    ])
 
     datasets.append(d1)
     datasets.append(d2)

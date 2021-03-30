@@ -316,7 +316,7 @@ def create_geobox(
     if width is None and height is None:
         raise Exception("Must supply at least a width or height")
     if height is not None:
-        scale_y = (miny - maxy)/height
+        scale_y = (miny - maxy) / height
     if width is not None:
         scale_x = (maxx - minx) / width
     else:
@@ -324,7 +324,7 @@ def create_geobox(
         width = round((maxx - minx) / scale_x)
     if height is None:
         scale_y = - scale_x
-        height = round((miny-maxy)/scale_y)
+        height = round((miny - maxy) / scale_y)
     affine = Affine.translation(minx, maxy) * Affine.scale(scale_x, scale_y)
     return geometry.GeoBox(width, height, affine, crs)
 

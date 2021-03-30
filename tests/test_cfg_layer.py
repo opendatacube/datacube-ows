@@ -9,7 +9,7 @@ def test_minimal_layer_create(minimal_global_cfg):
     lyr = OWSLayer({
             "title": "The Title",
             "abstract": "The Abstract"
-        },
+    },
         global_cfg=minimal_global_cfg)
     assert lyr.title == "The Title"
     assert len(lyr.keywords) == 1
@@ -26,7 +26,7 @@ def test_missing_title(minimal_global_cfg):
     with pytest.raises(ConfigException) as excinfo:
         lyr = OWSLayer({
             "abstract": "The Abstract"
-            },
+        },
             global_cfg=minimal_global_cfg)
     assert "Layer without title" in str(excinfo.value)
     assert "None" in str(excinfo.value)
@@ -46,7 +46,7 @@ def test_inherit_no_abstract(minimal_global_cfg):
 def test_inherit_parent(minimal_global_cfg, minimal_parent):
     lyr = OWSLayer({
             "title": "The Title",
-        },
+    },
         parent_layer=minimal_parent,
         global_cfg=minimal_global_cfg)
     assert lyr.abstract == "Parent Abstract"

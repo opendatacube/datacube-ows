@@ -78,7 +78,7 @@ def get_capabilities(args):
         include_coverage_summary = True
 
     capabilities = ServiceCapabilities.with_defaults_v20(
-        service_url=base_url+'/wcs',
+        service_url =base_url + '/wcs',
         allowed_operations=[
             'GetCapabilities', 'DescribeCoverage', 'GetCoverage'
         ],

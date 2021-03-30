@@ -38,7 +38,7 @@ def simple_geobox():
     from datacube.utils import geometry
 
     aff = Affine.translation(145.0, -35.0) * Affine.scale(
-        1.0/256, 2.0/256
+        1.0 / 256, 2.0 / 256
     )
     return geometry.GeoBox(256, 256, aff, 'EPSG:4326')
 

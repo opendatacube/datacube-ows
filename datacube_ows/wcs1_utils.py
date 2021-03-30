@@ -282,8 +282,8 @@ class WCS1GetCoverageRequest():
                                        self.request_crs
                                       )
 
-        xscale = (self.maxx - self.minx)/self.width
-        yscale = (self.miny - self.maxy)/self.height
+        xscale = (self.maxx - self.minx) / self.width
+        yscale = (self.miny - self.maxy) / self.height
         trans_aff = Affine.translation(self.minx, self.maxy)
         scale_aff = Affine.scale(xscale, yscale)
         self.affine = trans_aff * scale_aff

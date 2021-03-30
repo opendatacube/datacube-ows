@@ -60,7 +60,7 @@ def scale_unscaled_ramp(rmin, rmax, unscaled):
         rmax = float(rmax)
     return [
         {
-            "value": (rmax - rmin)*u["value"] + rmin,
+            "value": (rmax - rmin) * u["value"] + rmin,
             "color": u["color"],
             "alpha": u.get("alpha", 1.0)
         } for u in unscaled

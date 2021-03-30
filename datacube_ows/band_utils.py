@@ -142,7 +142,7 @@ def single_band_arcsec(data, band, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
-    return numpy.arccos(1/(d + 1))
+    return numpy.arccos(1 / (d + 1))
 
 
 @band_modulator
@@ -155,7 +155,7 @@ def single_band_offset_log(data, band, scale=1.0, offset=None, band_mapper=None)
         d = data[band] * scale + offset
         unscaled = numpy.log(d)
     else:
-        unscaled = numpy.log1p(d*scale)
+        unscaled = numpy.log1p(d * scale)
     return unscaled
 
 
@@ -164,7 +164,7 @@ def radar_vegetation_index(data, band_hv, band_hh, band_mapper=None):
     if band_mapper:
         band_hv = band_mapper(band_hv)
         band_hh = band_mapper(band_hh)
-    hv_sq = data[band_hv]*data[band_hv]
-    hh_sq = data[band_hh]*data[band_hh]
+    hv_sq = data[band_hv] * data[band_hv]
+    hh_sq = data[band_hh] * data[band_hh]
     return (hv_sq * 4.0) / (hh_sq + hv_sq)
 
