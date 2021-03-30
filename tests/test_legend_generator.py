@@ -62,7 +62,7 @@ def bad_image_url():
 def test_image_from_url(image_url):
     img = get_image_from_url(image_url)
     assert img is not None
-    assert img.model == "RGBA"
+    assert img.mode == "RGBA"
 
 
 def test_image_from_bad_image_url(bad_image_url):
