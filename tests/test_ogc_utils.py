@@ -6,7 +6,7 @@ import pytest
 
 class DSCT:
     def __init__(self, meta):
-        self.center_time = datetime.datetime(1970,1,1,0,0,0)
+        self.center_time = datetime.datetime(1970, 1, 1, 0, 0, 0)
         self.metadata_doc = meta
 
 
@@ -46,7 +46,7 @@ def test_get_service_base_url():
     assert ret == "https://foo.hello.world"
 
     # Value in list
-    allowed_urls = ["https://foo.hello.world","https://foo.bar.baz", "https://alice.bob.eve"]
+    allowed_urls = ["https://foo.hello.world", "https://foo.bar.baz", "https://alice.bob.eve"]
     request_url = "https://foo.bar.baz"
     ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"

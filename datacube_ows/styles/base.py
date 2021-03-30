@@ -226,7 +226,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         for mdh in self.multi_date_handlers:
             if mdh.applies_to(count):
                 return mdh
-        if count in [0,1]:
+        if count in [0, 1]:
             return None
         raise WMSException(f"Style {self.name} does not support requests with {count} dates")
 

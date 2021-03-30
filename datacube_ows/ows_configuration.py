@@ -458,7 +458,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def parse_feature_info(self, cfg):
         self.feature_info_include_utc_dates = cfg.get("include_utc_dates", False)
         custom = cfg.get("include_custom", {})
-        self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k,v in custom.items()}
+        self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
 
     # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg):
@@ -731,7 +731,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 bbox = self.ranges["bboxes"][self.native_CRS]
                 geobox = create_geobox(
                     self.native_CRS,
-                    bbox["left"], bbox["bottom"], bbox["right"],bbox["top"],
+                    bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],
                     1, 1
                 )
             return local_solar_date_range(geobox, t)
@@ -977,6 +977,7 @@ class OWSConfig(OWSConfigEntry):
             self.fees = "none"
         if not self.access_constraints:
             self.access_constraints = "none"
+
         def make_gml_name(name):
             if name.startswith("EPSG:"):
                 return f"http://www.opengis.net/def/crs/EPSG/0/{name[5:]}"

@@ -53,11 +53,11 @@ def simple_rgb_perband_scaling_style_cfg():
         "abstract": "This is a Test Style for Datacube WMS",
         "needed_bands": ["red", "green", "blue"],
         "components": {
-            "red": {"red": 1.0, "scale_range": [0,200]},
-            "green": {"green": 1.0, "scale_range": [0,500]},
+            "red": {"red": 1.0, "scale_range": [0, 200]},
+            "green": {"green": 1.0, "scale_range": [0, 500]},
             "blue": {"blue": 1.0}
         },
-        "scale_range": [0,350]
+        "scale_range": [0, 350]
     }
 
 

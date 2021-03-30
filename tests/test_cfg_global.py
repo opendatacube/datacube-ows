@@ -129,7 +129,7 @@ def test_bad_wcs_format(minimal_global_raw_cfg, wcs_global_cfg):
     assert "not a supported format" in str(excinfo.value)
 
 
-def test_crs_lookup_fail(minimal_global_raw_cfg,minimal_dc):
+def test_crs_lookup_fail(minimal_global_raw_cfg, minimal_dc):
     OWSConfig._instance = None
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     with pytest.raises(ConfigException) as excinfo:

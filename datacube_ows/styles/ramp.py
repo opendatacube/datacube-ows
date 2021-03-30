@@ -382,7 +382,7 @@ class ColorRamp:
 
         self.auto_legend = True
         self.legend_title = cfg.get("title")
-        self.legend_units = cfg.get("units","")
+        self.legend_units = cfg.get("units", "")
         self.legend_decimal_places = cfg.get("decimal_places", 1)
         if self.legend_decimal_places < 0:
             raise ConfigException("decimal_places cannot be negative")

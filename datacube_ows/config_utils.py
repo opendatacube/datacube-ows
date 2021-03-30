@@ -50,7 +50,7 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
             else:
                 raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
         else:
-            return {k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k,v in cfg_unexpanded.items()}
+            return {k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k, v in cfg_unexpanded.items()}
     elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
         return list([cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded])
     else:

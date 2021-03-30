@@ -569,7 +569,7 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
 @log_call
 def _make_band_dict(prod_cfg, pixel_dataset):
     band_dict = {}
-    for k,v in pixel_dataset.data_vars.items():
+    for k, v in pixel_dataset.data_vars.items():
         band_val = pixel_dataset[k].item()
         flag_def = pixel_dataset[k].attrs.get("flags_definition")
         if flag_def:

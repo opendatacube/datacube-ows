@@ -72,7 +72,7 @@ class TileMatrixSet(OWSConfigEntry):
             raise ConfigException(f"Tile matrix set {identifier} has no scale denominators in scale_set")
         self.force_raw_crs_name = bool(cfg.get("force_raw_crs_name", False))
         self.wkss = cfg.get("wkss")
-        self.initial_matrix_exponents = cfg.get("matrix_exponent_initial_offsets", (0,0))
+        self.initial_matrix_exponents = cfg.get("matrix_exponent_initial_offsets", (0, 0))
         validate_2d_array(self.initial_matrix_exponents, identifier, "Initial matrix exponents", int)
         self.unit_coefficients = cfg.get("unit_coefficients", (1.0, -1.0))
         validate_2d_array(self.unit_coefficients, identifier, "Unit coefficients", float)

@@ -20,7 +20,7 @@ from datacube_ows.mv_index import MVSelectOpts
 
 
 class WCS1GetCoverageRequest():
-    version = Version(1,0,0)
+    version = Version(1, 0, 0)
     # pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
     def __init__(self, args):
         self.args = args
@@ -352,7 +352,7 @@ def get_coverage_data(req):
         output = stacker.data(datasets, skip_corrections=True)
 
         # Clean extent flag band from output
-        for k,v in output.data_vars.items():
+        for k, v in output.data_vars.items():
             if k not in req.bands:
                 output = output.drop_vars([k])
         return n_datasets, output

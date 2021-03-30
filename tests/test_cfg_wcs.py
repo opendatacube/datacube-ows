@@ -108,7 +108,7 @@ def test_no_native_resolution_badlen(minimal_global_cfg, minimal_layer_cfg, mini
     minimal_layer_cfg["wcs"] = {
         "native_crs": "EPSG:4326",
         "default_bands": ["band1", "band2", "band3"],
-        "native_resolution": [33,45,2234],
+        "native_resolution": [33, 45, 2234],
     }
     minimal_layer_cfg["product_name"] = "foo_nonativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,

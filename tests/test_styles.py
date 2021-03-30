@@ -19,16 +19,20 @@ def product_layer():
         def __init__(self, name):
             self.name = name
             self.id = 7
+
         def __str__(self):
             return self.name
+
         def __repr__(self):
             return f"FakeODCProduct({self.name})"
+
     class FakeProductBand:
         bands = set(["pq", "wongle"])
         products = [FakeODCProduct("test_masking_product")]
         manual_merge = False
         ignore_time = False
         fuse_func = None
+
         def products_match(self, name):
             return False
     product_layer = OWSProductLayer.__new__(OWSProductLayer)

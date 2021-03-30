@@ -19,7 +19,7 @@ def scalable(undecorated):
         scale_from = kwargs.pop("scale_from", None)
         scale_to = kwargs.pop("scale_to", None)
         if scale_from is not None and scale_to is None:
-            scale_to = [0,255]
+            scale_to = [0, 255]
         unscaled = undecorated(*args, **kwargs)
         if scale_from:
             return scale_data(unscaled, scale_from, scale_to)
@@ -72,7 +72,7 @@ def delta_bands(data, band1, band2, band_mapper=None):
 @scalable
 def norm_diff(data, band1, band2, band_mapper=None):
     # Calculate a normalised difference index.
-    return delta_bands(data, band1,band2, band_mapper) / sum_bands(data, band1, band2, band_mapper)
+    return delta_bands(data, band1, band2, band_mapper) / sum_bands(data, band1, band2, band_mapper)
 
 
 @scalable
@@ -111,7 +111,7 @@ def band_quotient_sum(data, band1a, band1b, band2a, band2b, band_mapper=None):
 @scalable
 def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, band_mapper=None):
     red_delta = delta_bands(data, b_red_edge, b_red, band_mapper)
-    red_sum = sum_bands(data,b_red_edge, b_red, band_mapper)
+    red_sum = sum_bands(data, b_red_edge, b_red, band_mapper)
     mndwi = norm_diff(data, b_green, b_swir, band_mapper)
 
     return red_delta / red_sum.where(mndwi > 0.1)
