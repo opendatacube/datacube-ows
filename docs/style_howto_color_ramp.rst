@@ -26,22 +26,24 @@ Example: Bidirectional NDVI
             "mapped_bands": True,
             "kwargs": {"band1": "nir", "band2": "red"},
         },
-        "mpl_range": "RdYlGn",
+        "mpl_ramp": "RdYlGn",
         "range": [-1.0, 1.0]
     }
 
-Here we applied a MatPlotLib named colour ramp "RdYlGn".  This is a diverging colour ramp
+Here we apply a MatPlotLib named colour ramp "RdYlGn".  This is a diverging colour ramp
 stretching from red through yellow to green, with the central yellow region being the brightest.
 The ramp is applied linearly over the ``range`` -1 to 1.
-For us this means that areas with negative NDVI will be red, positive areas green and areas close
+For this example, this means that areas with negative NDVI will be red, positive areas green and areas close
 to zero will be yellow.
+We reference the supplied ``band_utils.norm_diff`` function, as discussed in the last chapter.
 
 The full list of matplotlib named colour ramps can be found in the
 `Matplotlib documentation <https://matplotlib.org/2.0.2/examples/color/colormaps_reference.html>`_.
 (Note that you can reverse the order of any ramp by adding the suffix ``_r``. E.g. "RdYlGn_r" is the
 same as "RdYlGn" except green is the low end of the scale and red the high end.)
 
-.. image https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png
+
+..image https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png
     :width: 600
 
 `View full size
@@ -53,11 +55,11 @@ Example: Unidirectional NDVI
 Let's make a few changes based on what we know so far. We shall:
 
 1. Choose a new Matplotlib colour ramp.
-1. Reverse the order of the Matplotlib ramp with the ``_r`` suffix.
-2. Change the range to [0, 1.0]
+2. Reverse the order of the Matplotlib ramp with the ``_r`` suffix.
+3. Change the range to ``[0, 1.0]``
 
 The Matplotlib ``ocean`` ramp runs from dark green to dark blue, then fading to white.
-so ``ocean_r`` is the reverse - from bright yellow to dark green.
+so ``ocean_r`` is the reverse - from white through darker blues to dark green.
 So now we get white in the negative and zero areas, with positive areas
 getting darkening blues with close to 1.0 being dark green.
 
@@ -69,11 +71,11 @@ getting darkening blues with close to 1.0 being dark green.
             "mapped_bands": True,
             "kwargs": {"band1": "nir", "band2": "red"},
         },
-        "mpl_range": "ocean_r",
+        "mpl_ramp": "ocean_r",
         "range": [0.0, 1.0]
     }
 
-.. image https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png
+..image https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png
     :width: 600
 
 `View full size
@@ -85,7 +87,7 @@ Custom Colour Ramps
 Example - Custom Color Ramp
 +++++++++++++++++++++++++++
 
-If nothing in matplotlib quite achieves what you are after, or if you want to exaggerate certain portions of
+If nothing in matplotlib achieves exactly what you are after, or if you want to exaggerate certain portions of
 the scale, you can define a custom colour map:
 
 ::
@@ -107,10 +109,10 @@ the scale, you can define a custom colour map:
         ]
     }
 
-Note that we use ``color_ramp`` instead of ``mpl_ramp``, and we do not need a ``range``
-because that is spelled out in manual colour ramp definition.
+For custom ramps, we use ``color_ramp`` instead of ``mpl_ramp``, and we do not need a ``range``
+because that information is spelled out in manual colour ramp definition.
 
-Notice that each step in the colour ramp consists of a ``value`` and a ``color``, with
+Each step in the colour ramp consists of a ``value`` and a ``color``, with
 the ramp ordered from lowest value to highest.  The color can be
 `any valid HTML color string <https://htmlcolorcodes.com/>`_.
 
@@ -121,7 +123,7 @@ Let's take a walk up the colour ramp, and see the results:
         "color_ramp": [
             # The ramp starts at -1.0 with bright blue.
             # Any values less than -1.0 would also be pegged at bright blue
-            # (But -1.0 is  hard minimum for NDVI, so that is not relevant here.)
+            # (But -1.0 is the hard minimum for NDVI, so that is not relevant here.)
 
             {"value": -1.0, "color": "#0000FF"},
 
@@ -152,7 +154,7 @@ Let's take a walk up the colour ramp, and see the results:
         ]
 
 
-.. image https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png
+..image https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png
     :width: 600
 
 `View full size
@@ -222,12 +224,12 @@ where 0.0 is totally transparent and 1.0 (the default) is opaque.  Note that you
         ]
     }
 
-.. image https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png
+..image https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png
     :width: 600
 
 `View full size
 <https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png>`_
 
 `Next up
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_colour_map.html>`_
+<https://datacube-ows.readthedocs.io/en/latest/style_howto_color_map.html>`_
 we will look at colour-map styles, which are useful for visualising discrete measurement bands.
