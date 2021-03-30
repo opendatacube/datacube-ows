@@ -1,12 +1,13 @@
-from enum import Enum
 import json
+from enum import Enum
 
-from geoalchemy2 import Geometry
 from datacube.utils.geometry import Geometry as ODCGeom
-from sqlalchemy import MetaData, Table, select, or_, Column, SMALLINT, text
+from geoalchemy2 import Geometry
 from psycopg2.extras import DateTimeTZRange
-from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
+from sqlalchemy import SMALLINT, Column, MetaData, Table, or_, select, text
+from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.sql.functions import count
+
 
 def get_sqlalc_engine(index):
     # pylint: disable=protected-access

@@ -1,8 +1,10 @@
 from __future__ import absolute_import, division, print_function
-from contextlib import contextmanager
-from datacube import Datacube
-from threading import Lock
+
 import logging
+from contextlib import contextmanager
+from threading import Lock
+
+from datacube import Datacube
 
 _LOG = logging.getLogger(__name__)
 

@@ -1,16 +1,18 @@
 import io
-
-from PIL import Image
-from datacube.utils.masking import make_mask
+import logging
 
 import numpy as np
 import xarray as xr
-from datacube_ows.config_utils import OWSConfigEntry, OWSExtensibleConfigEntry, OWSEntryNotFound, FlagProductBands, OWSFlagBandStandalone
+from datacube.utils.masking import make_mask
+from PIL import Image
+
+from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
+                                       OWSEntryNotFound,
+                                       OWSExtensibleConfigEntry,
+                                       OWSFlagBandStandalone)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
-
-import logging
 
 _LOG = logging.getLogger(__name__)
 

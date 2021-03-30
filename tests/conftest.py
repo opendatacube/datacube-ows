@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+
 @pytest.fixture
 def flask_client(monkeypatch):
     monkeypatch.setenv("DEFER_CFG_PARSE", "yes")

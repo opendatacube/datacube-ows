@@ -1,7 +1,9 @@
-import datacube_ows.ogc_utils
 import datetime
 
 import pytest
+
+import datacube_ows.ogc_utils
+
 
 class DSCT:
     def __init__(self, meta):
@@ -93,7 +95,6 @@ def test_create_geobox():
 
 
 from tests.utils import dummy_da
-
 
 coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),

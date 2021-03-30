@@ -1,15 +1,16 @@
 from __future__ import absolute_import
 
+import io
 import logging
+
+import matplotlib
+import numpy as np
+from flask import make_response
+from PIL import Image
 
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.wms_utils import GetLegendGraphicParameters
-import io
-from PIL import Image
-import numpy as np
-from flask import make_response
 
-import matplotlib
 # Do not use X Server backend
 
 matplotlib.use('Agg')

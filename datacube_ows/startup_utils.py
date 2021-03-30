@@ -1,18 +1,19 @@
 from __future__ import absolute_import, division, print_function
-import warnings
-import sentry_sdk
-from rasterio.errors import NotGeoreferencedWarning
-from sentry_sdk.integrations.flask import FlaskIntegration
-from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
-
-from flask import Flask, request
-from flask_log_request_id import RequestID, RequestIDLogFilter
-import os
-
-from datacube.utils.aws import configure_s3_access
-from datacube_ows.ows_configuration import get_config
 
 import logging
+import os
+import warnings
+
+import sentry_sdk
+from datacube.utils.aws import configure_s3_access
+from flask import Flask, request
+from flask_log_request_id import RequestID, RequestIDLogFilter
+from prometheus_flask_exporter.multiprocess import \
+    GunicornInternalPrometheusMetrics
+from rasterio.errors import NotGeoreferencedWarning
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+from datacube_ows.ows_configuration import get_config
 
 __all__ = [
     'initialise_logger',
