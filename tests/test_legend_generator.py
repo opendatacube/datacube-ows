@@ -5,7 +5,7 @@ import pytest
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
-from tests.test_band_utils import dummy_layer  # noqa: F401
+from tests.test_band_utils import dummy_layer  # noqa: F401,F811
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def test_legend_parser_urllegend(prelegend_style):
     assert prelegend_style.legend_url_override == url
 
 
-def test_create_legend_for_style(dummy_layer):
+def test_create_legend_for_style(dummy_layer): # noqa: F811
     from datacube_ows.legend_generator import create_legend_for_style
     assert create_legend_for_style(dummy_layer, "stylish_steve") is None
 
@@ -65,7 +65,7 @@ def test_image_from_url(image_url):
     assert img.model == "RGBA"
 
 
-def test_image_from_url(bad_image_url):
+def test_image_from_bad_image_url(bad_image_url):
     img = get_image_from_url(bad_image_url)
     assert img is None
 

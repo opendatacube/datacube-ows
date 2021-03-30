@@ -111,16 +111,6 @@ def test_scale_set_array(wwwm_tms_cfg, tmsmin_global_cfg):
     assert "test" in str(excinfo.value)
     assert "scale_set" in str(excinfo.value)
     assert "is not a list" in str(excinfo.value)
-
-
-def test_scale_set_array(wwwm_tms_cfg, tmsmin_global_cfg):
-    global_cfg = tmsmin_global_cfg
-    wwwm_tms_cfg["scale_set"] = None
-    with pytest.raises(ConfigException) as excinfo:
-        tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
-    assert "test" in str(excinfo.value)
-    assert "scale_set" in str(excinfo.value)
-    assert "is not a list" in str(excinfo.value)
     wwwm_tms_cfg["scale_set"] = []
     with pytest.raises(ConfigException) as excinfo:
         tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
