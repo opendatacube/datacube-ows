@@ -12,15 +12,16 @@ import sqlalchemy
 from datacube_ows.ows_configuration import get_config
 import click
 
+
 @click.command()
 @click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
 @click.option("--blocking/--no-blocking", is_flag=True, default=False, help="Obsolete")
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
-@click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products" )
+@click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products")
 @click.option("--merge-only/--no-merge-only", default=False, help="When used with a multiproduct layer, the ranges for underlying datacube products are not updated.")
 @click.option("--product", default=None, help="Deprecated option provided for backwards compatibility")
-@click.option("--multiproduct", default=None, help="Deprecated option provided for backwards compatibility." )
+@click.option("--multiproduct", default=None, help="Deprecated option provided for backwards compatibility.")
 @click.option("--calculate-extent/--no-calculate-extent", default=None, help="Has no effect any more.  Provided for backwards compatibility only")
 @click.option("--version", is_flag=True, default=False, help="Print version string and exit")
 @click.argument("layers", nargs=-1)

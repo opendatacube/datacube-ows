@@ -8,9 +8,11 @@ from psycopg2.extras import DateTimeTZRange
 from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
 from sqlalchemy.sql.functions import count
 
+
 def get_sqlalc_engine(index):
     # pylint: disable=protected-access
     return index._db._engine
+
 
 def get_st_view(meta):
     return Table('space_time_view', meta,
@@ -21,6 +23,7 @@ def get_st_view(meta):
                  )
 _meta = MetaData()
 st_view = get_st_view(_meta)
+
 
 class MVSelectOpts(Enum):
     """

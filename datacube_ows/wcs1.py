@@ -14,6 +14,7 @@ from datacube_ows.utils import log_call
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
+
 @log_call
 def handle_wcs1(nocase_args):
     operation = nocase_args.get("request", "").upper()

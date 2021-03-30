@@ -4,6 +4,7 @@ import numpy
 
 # Style index functions
 
+
 def scale_data(imgband_data, scale_from, scale_to):
     sc_min, sc_max = scale_from
     tc_min, tc_max = scale_to
@@ -11,6 +12,7 @@ def scale_data(imgband_data, scale_from, scale_to):
     normalised = (clipped - sc_min) / (sc_max - sc_min)
     scaled = normalised * (tc_max - tc_min)
     return scaled + tc_min
+
 
 def scalable(undecorated):
     def decorated(*args, **kwargs):
@@ -38,17 +40,18 @@ def band_modulator(undecorated):
         return raw_data
     return decorated
 
+
 def sum_bands(data, band1, band2, band_mapper=None):
     if band_mapper:
-        band1=band_mapper(band1)
-        band2=band_mapper(band2)
+        band1 = band_mapper(band1)
+        band2 = band_mapper(band2)
     return data[band1] + data[band2]
 
 
 def delta_bands(data, band1, band2, band_mapper=None):
     if band_mapper:
-        band1=band_mapper(band1)
-        band2=band_mapper(band2)
+        band1 = band_mapper(band1)
+        band2 = band_mapper(band2)
     typ1 = data[band1].dtype
     typ2 = data[band2].dtype
     if typ1.name.startswith('uint'):
@@ -95,8 +98,8 @@ def single_band(data, band, band_mapper=None):
 @scalable
 def band_quotient(data, band1, band2, band_mapper=None):
     if band_mapper:
-        band1=band_mapper(band1)
-        band2=band_mapper(band2)
+        band1 = band_mapper(band1)
+        band2 = band_mapper(band2)
     return data[band1] / data[band2]
 
 
@@ -130,7 +133,7 @@ def single_band_log(data, band, scale_factor, exponent, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
-    return scale_factor * ( (d ** exponent) - 1.0)
+    return scale_factor * ((d ** exponent) - 1.0)
 
 
 @band_modulator

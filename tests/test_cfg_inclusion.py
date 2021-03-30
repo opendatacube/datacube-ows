@@ -20,7 +20,7 @@ def test_cfg_direct(monkeypatch):
 
 
 def test_cfg_py_simple_0(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG",  "tests.cfg.simple.simple")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.simple.simple")
     cfg = read_config()
 
     assert cfg["test"] == 123
@@ -103,7 +103,7 @@ def test_cfg_py_infinite_1(monkeypatch):
 
 
 def test_cfg_py_infinite_2(monkeypatch):
-    monkeypatch.setenv("DATACUBE_OWS_CFG",  "tests.cfg.nested.infinite_2")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_2")
     try:
         cfg = read_config()
         assert False

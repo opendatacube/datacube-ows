@@ -11,6 +11,7 @@ SUPPORTED_CRS = [
    'EPSG:6933', # Africa
 ]
 
+
 def test_pyproj_crs():
    for crs_string in SUPPORTED_CRS:
       try:

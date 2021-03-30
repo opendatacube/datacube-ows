@@ -120,9 +120,9 @@ class ColorMapStyleDef(StyleDefBase):
         # pylint: disable=too-many-locals, too-many-branches
         # extent mask data per band to preseve nodata
         _LOG.debug("transform begin %s", datetime.now())
-        #if extent_mask is not None:
+        # if extent_mask is not None:
         #    for band in data.data_vars:
-        ##        try:
+        # try:
         #            data[band] = data[band].where(extent_mask, other=data[band].attrs['nodata'])
         #        except AttributeError:
         #            data[band] = data[band].where(extent_mask)

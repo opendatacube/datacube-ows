@@ -17,20 +17,24 @@ def test_fake_creds(monkeypatch):
         initialise_aws_credentials()
         assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
 
+
 def test_initialise_logger():
     from datacube_ows.startup_utils import initialise_logger
     log = initialise_logger("tim.the.testlogger")
     assert log is not None
     log.info("Test")
 
+
 def test_initialise_ign_warn():
     from datacube_ows.startup_utils import initialise_ignorable_warnings
     initialise_ignorable_warnings()
+
 
 def test_initialise_debugging(monkeypatch):
     monkeypatch.setenv("PYDEV_DEBUG", "")
     from datacube_ows.startup_utils import initialise_debugging
     initialise_debugging()
+
 
 def test_initialise_sentry(monkeypatch):
     monkeypatch.setenv("SENTRY_KEY", "")
@@ -44,9 +48,11 @@ def test_initialise_sentry(monkeypatch):
     except Exception:
         pass
 
+
 def test_prometheus_inactive(monkeypatch):
     monkeypatch.setenv("prometheus_multiproc_dir", "")
     from datacube_ows.startup_utils import initialise_prometheus_register, initialise_prometheus # noqa: F401
+
 
 def test_supported_version():
     from datacube_ows.protocol_versions import SupportedSvcVersion

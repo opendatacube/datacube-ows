@@ -127,10 +127,12 @@ def test_scale_set_array(wwwm_tms_cfg, tmsmin_global_cfg):
     assert "scale_set" in str(excinfo.value)
     assert "no scale denominators" in str(excinfo.value)
 
+
 def test_tms_crs_cfg(wwwm_tms_cfg, tmsmin_global_cfg):
     global_cfg = tmsmin_global_cfg
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
     assert not tms.crs_cfg["vertical_coord_first"]
+
 
 def test_tms_crs_display(wwwm_tms_cfg, tmsmin_global_cfg):
     global_cfg = tmsmin_global_cfg
@@ -164,6 +166,7 @@ def test_tms_exponent(wwwm_tms_cfg, tmsmin_global_cfg):
     assert tms.height_exponent(0) == 2
     assert tms.height_exponent(1) == 3
     assert tms.height_exponent(12) == 14
+
 
 def test_tms_wms_bbox(wwwm_tms_cfg, tmsmin_global_cfg):
     global_cfg = tmsmin_global_cfg

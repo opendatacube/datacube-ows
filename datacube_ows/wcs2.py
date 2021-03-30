@@ -225,6 +225,7 @@ def create_coverage_description(cfg, product):
         coverage_subtype='RectifiedGridCoverage',
     )
 
+
 @log_call
 def desc_coverages(args):
     cfg = get_config()
@@ -270,6 +271,7 @@ def desc_coverages(args):
 
 import logging
 _LOG = logging.getLogger(__name__)
+
 
 @log_call
 def get_coverage(args):

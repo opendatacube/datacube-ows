@@ -97,6 +97,7 @@ def get_capabilities(args):
         )
     )
 
+
 @log_call
 def wmts_args_to_wms(args, cfg):
     layer = args.get("layer")
@@ -158,6 +159,7 @@ def wmts_args_to_wms(args, cfg):
 
     return wms_args
 
+
 @log_call
 def get_tile(args):
     cfg = get_config()
@@ -174,6 +176,7 @@ def get_tile(args):
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
         raise e
+
 
 @log_call
 def get_feature_info(args):

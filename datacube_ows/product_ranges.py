@@ -40,7 +40,7 @@ def create_multiprod_range_entry(dc, product, crses):
         repr(product.product_names)
     ))
     conn = get_sqlconn(dc)
-    prodids = [ p.id for p in product.products ]
+    prodids = [p.id for p in product.products]
     wms_name = product.name
 
     if all(
@@ -112,7 +112,7 @@ def create_multiprod_range_entry(dc, product, crses):
         FROM wms.multiproduct_ranges
         WHERE wms_product_name=%(p_id)s
         """,
-        {"p_id": wms_name} ))
+        {"p_id": wms_name}))
 
     r = results[0]
 
@@ -130,7 +130,7 @@ def create_multiprod_range_entry(dc, product, crses):
         SET bboxes = %s::jsonb
         WHERE wms_product_name=%s
         """,
-                 Json({ crsid: jsonise_bbox(box.to_crs(crs).boundingbox) for crsid, crs in get_crses(cfg).items() }),
+                 Json({crsid: jsonise_bbox(box.to_crs(crs).boundingbox) for crsid, crs in get_crses(cfg).items()}),
                  wms_name
     )
 
@@ -140,7 +140,7 @@ def create_multiprod_range_entry(dc, product, crses):
 
 
 def create_range_entry(dc, product, crses, summary_product=False):
-  print("Updating range for ODC product %s..."% product.name)
+  print("Updating range for ODC product %s..." % product.name)
   # NB. product is an ODC product
   conn = get_sqlconn(dc)
   txn = conn.begin()
@@ -297,6 +297,7 @@ def datasets_exist(dc, product_name):
 
   return list(results)[0][0] > 0
 
+
 def add_ranges(dc, product_names, summary=False, merge_only=False):
     odc_products = {}
     ows_multiproducts = []
@@ -310,7 +311,7 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                 if dc_pname in odc_products:
                     odc_products[dc_pname]["ows"].append(ows_product)
                 else:
-                    odc_products[dc_pname] = { "ows": [ows_product]}
+                    odc_products[dc_pname] = {"ows": [ows_product]}
             print("OWS Layer %s maps to ODC Product(s): %s" % (
                 ows_product.name,
                 repr(ows_product.product_names)
@@ -324,7 +325,7 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                 if pname in odc_products:
                     odc_products[pname]["ows"].append(None)
                 else:
-                    odc_products[pname] = { "ows": [None]}
+                    odc_products[pname] = {"ows": [None]}
             else:
                 print("Unrecognised product name:", pname)
                 continue

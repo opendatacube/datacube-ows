@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSLayer, OWSFolder, parse_ows_layer
 
+
 def test_minimal_layer_create(minimal_global_cfg):
     lyr = OWSLayer({
             "title": "The Title",
@@ -19,6 +20,7 @@ def test_minimal_layer_create(minimal_global_cfg):
     assert lyr.layer_count() == 0
     assert lyr.unready_layer_count() == 0
     assert "The Title" in str(lyr)
+
 
 def test_missing_title(minimal_global_cfg):
     with pytest.raises(ConfigException) as excinfo:
@@ -228,6 +230,7 @@ def test_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg):
     assert "'product_names' entry in non-multi-product layer" in str(excinfo.value)
     assert "use 'product_name' only" in str(excinfo.value)
 
+
 def test_flag_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["flags"] = {
         "band": "foo",
@@ -287,6 +290,7 @@ def test_flag_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg
     assert "use 'low_res_products' only" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
 
+
 def test_noprod_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc):
     minimal_multiprod_cfg["product_names"] = []
     with pytest.raises(ConfigException) as excinfo:
@@ -295,6 +299,7 @@ def test_noprod_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_
 
     assert "a_layer" in str(excinfo.value)
     assert "No products declared" in str(excinfo.value)
+
 
 def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc, mock_range):
     lyr = parse_ows_layer(minimal_multiprod_cfg,
@@ -346,6 +351,7 @@ def test_multi_product_lrpq(minimal_multiprod_cfg, minimal_global_cfg, minimal_d
     assert len(lyr.products) == 2
     assert len(lyr.flag_bands["band4"].pq_products) == 2
     assert len(lyr.flag_bands["band4"].pq_low_res_products) == 2
+
 
 def test_multi_product_name_mismatch(minimal_multiprod_cfg, minimal_global_cfg):
     minimal_multiprod_cfg["low_res_product_names"] = ["smol_foo"]
@@ -489,6 +495,7 @@ def test_no_default_style(minimal_layer_cfg, minimal_global_cfg):
     lyr = parse_ows_layer(minimal_layer_cfg,
                       global_cfg=minimal_global_cfg)
     assert lyr.default_style.name == 'band1'
+
 
 def test_no_wcs_default_bands(minimal_layer_cfg, minimal_global_cfg):
     minimal_global_cfg.wcs = True

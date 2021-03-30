@@ -18,9 +18,10 @@ from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.mv_index import MVSelectOpts
 
+
 class WCS1GetCoverageRequest():
     version = Version(1,0,0)
-    #pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
+    # pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
     def __init__(self, args):
         self.args = args
         cfg = get_config()
@@ -81,7 +82,7 @@ class WCS1GetCoverageRequest():
             self.response_crs = self.request_crs
 
         # Arguments: One of BBOX or TIME is required
-        #if "bbox" not in args and "time" not in args:
+        # if "bbox" not in args and "time" not in args:
         #    raise WCS1Exception("At least one of BBOX or TIME parameters must be supplied",
         #                        WCS1Exception.MISSING_PARAMETER_VALUE,
         #                        locator="BBOX or TIME parameter"
@@ -288,8 +289,9 @@ class WCS1GetCoverageRequest():
         self.affine = trans_aff * scale_aff
         self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.request_crs)
 
+
 def get_coverage_data(req):
-    #pylint: disable=too-many-locals, protected-access
+    # pylint: disable=too-many-locals, protected-access
     with cube() as dc:
         if not dc:
             raise WCS1Exception("Database connectivity failure")
@@ -384,7 +386,7 @@ def get_tiff(req, data):
     for band in data.data_vars:
         nodata = req.product.band_idx.nodata_val(band)
     with MemoryFile() as memfile:
-        #pylint: disable=protected-access, bad-continuation
+        # pylint: disable=protected-access, bad-continuation
         with memfile.open(
             driver="GTiff",
             width=data.dims[xname],

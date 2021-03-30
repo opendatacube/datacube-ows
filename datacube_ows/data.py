@@ -32,6 +32,7 @@ import logging
 
 _LOG = logging.getLogger(__name__)
 
+
 class ProductBandQuery:
     def __init__(self, products, bands, main=False, manual_merge=False, ignore_time=False, fuse_func=None):
         self.products = products
@@ -126,7 +127,7 @@ class DataStacker:
         if style:
             self._needed_bands = list(style.needed_bands)
         elif bands:
-            self._needed_bands = [ self._product.band_idx.band(b) for b in bands ]
+            self._needed_bands = [self._product.band_idx.band(b) for b in bands]
         else:
             self._needed_bands = list(self._product.band_idx.native_bands.index)
 
@@ -472,6 +473,7 @@ def _write_empty(geobox):
             pass
         return memfile.read()
 
+
 def get_coordlist(geo, layer_name):
     if geo.type == 'Polygon':
         coordinates_list = [geo.json["coordinates"]]
@@ -622,6 +624,7 @@ def _make_derived_band_dict(pixel_dataset, style_index):
 def geobox_is_point(geobox):
     # TODO: Not 100% sure why this function is needed.
     return geobox.height == 1 and geobox.width == 1
+
 
 @log_call
 def feature_info(args):
@@ -797,6 +800,7 @@ def feature_info(args):
         ]
     }
     return json_response(result, cfg)
+
 
 def json_response(result, cfg=None):
     if not cfg:

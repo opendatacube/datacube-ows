@@ -248,10 +248,10 @@ def parse_wms_time_strings(parts):
     if isinstance(start, relativedelta):
         if isinstance(end, relativedelta):
             raise WMSException(
-                "Could not understand time value '%s'" %parts,
+                "Could not understand time value '%s'" % parts,
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-        fuzzy_end=parse_wms_time_string(parts[-1], start=True)
+        fuzzy_end = parse_wms_time_string(parts[-1], start=True)
         return fuzzy_end - start + a_tiny_bit, end
     if isinstance(end, relativedelta):
         return start, start + end - a_tiny_bit

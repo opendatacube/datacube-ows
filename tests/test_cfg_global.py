@@ -19,6 +19,7 @@ def test_global_no_title(minimal_global_raw_cfg):
     assert "Missing required config entry" in str(excinfo.value)
     assert "global" in str(excinfo.value)
 
+
 def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {
@@ -34,6 +35,7 @@ def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     assert not cfg.wms
     assert not cfg.wmts
 
+
 def test_wcs_no_native_format(minimal_global_raw_cfg, wcs_global_cfg):
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {
@@ -48,6 +50,7 @@ def test_wcs_no_native_format(minimal_global_raw_cfg, wcs_global_cfg):
     assert "native_format" in str(excinfo.value)
     assert "Missing required config entry" in str(excinfo.value)
     assert "wcs" in str(excinfo.value)
+
 
 def test_no_services(minimal_global_raw_cfg):
     OWSConfig._instance = None
@@ -93,6 +96,7 @@ def test_bad_crs_alias(minimal_global_raw_cfg):
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "EPSG:7777" not in cfg.published_CRSs
 
+
 def test_no_wcs(minimal_global_raw_cfg):
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {"wcs": True}
@@ -100,6 +104,7 @@ def test_no_wcs(minimal_global_raw_cfg):
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "WCS section missing" in str(excinfo.value)
     assert "WCS is enabled" in str(excinfo.value)
+
 
 def test_no_wcs_formats(minimal_global_raw_cfg):
     OWSConfig._instance = None
@@ -111,6 +116,7 @@ def test_no_wcs_formats(minimal_global_raw_cfg):
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "Must configure at least one wcs format" in str(excinfo.value)
 
+
 def test_bad_wcs_format(minimal_global_raw_cfg, wcs_global_cfg):
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {"wcs": True}
@@ -121,6 +127,7 @@ def test_bad_wcs_format(minimal_global_raw_cfg, wcs_global_cfg):
     assert "Configured native WCS format" in str(excinfo.value)
     assert "jpeg2000" in str(excinfo.value)
     assert "not a supported format" in str(excinfo.value)
+
 
 def test_crs_lookup_fail(minimal_global_raw_cfg,minimal_dc):
     OWSConfig._instance = None

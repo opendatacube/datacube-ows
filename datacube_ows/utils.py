@@ -5,6 +5,7 @@ from functools import wraps
 import logging
 from time import monotonic
 
+
 def log_call(func):
     @wraps(func)
     def log_wrapper(*args, **kwargs):
@@ -12,6 +13,7 @@ def log_call(func):
         _LOG.debug("%s args: %s kwargs: %s", func.__name__, args, kwargs)
         return func(*args, **kwargs)
     return log_wrapper
+
 
 def time_call(func):
     @wraps(func)

@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+
 @pytest.fixture
 def flask_client(monkeypatch):
     monkeypatch.setenv("DEFER_CFG_PARSE", "yes")
@@ -39,12 +40,12 @@ def minimal_dc():
             return None
         mprod  = MagicMock()
         flag_def = {
-            "moo":   {"bits": 0},
+            "moo": {"bits": 0},
             "floop": {"bits": 1},
-            "blat":  {"bits": 2},
-            "pow":   {"bits": 3},
-            "zap":   {"bits": 4},
-            "dang":  {"bits": 5},
+            "blat": {"bits": 2},
+            "pow": {"bits": 3},
+            "zap": {"bits": 4},
+            "dang": {"bits": 5},
         }
         mprod.lookup_measurements.return_value = {
             "band4": {
@@ -76,7 +77,7 @@ def minimal_dc():
 
 @pytest.fixture
 def minimal_global_cfg():
-    global_cfg=MagicMock()
+    global_cfg = MagicMock()
     global_cfg.keywords = {"global"}
     global_cfg.attribution = "Global Attribution"
     global_cfg.authorities = {
@@ -195,6 +196,7 @@ def minimal_multiprod_cfg():
         }
     }
 
+
 @pytest.fixture
 def mock_range():
     times = [datetime.datetime(2010, 1, 1), datetime.datetime(2010, 1, 2)]
@@ -244,6 +246,7 @@ def minimal_global_raw_cfg():
         },
         "layers": []
     }
+
 
 @pytest.fixture
 def wcs_global_cfg():

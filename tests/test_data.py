@@ -8,6 +8,7 @@ from tests.test_styles import product_layer # noqa: F401
 
 import numpy as np
 
+
 @pytest.fixture
 def s3_url_datasets():
     class TestDataset:
@@ -40,7 +41,7 @@ def s3_url_datasets():
 
     class PBQMock:
         def __init__(self, main):
-            self.main=main
+            self.main = main
         def __hash__(self):
             return hash(self.main)
 
@@ -48,6 +49,7 @@ def s3_url_datasets():
         PBQMock(True): [DataSetMock(datasets)],
         PBQMock(False): [DataSetMock(datasets)],
     }
+
 
 def test_s3_browser_uris(s3_url_datasets):
     uris = get_s3_browser_uris(s3_url_datasets)
@@ -98,6 +100,7 @@ def test_s3_browser_uris(s3_url_datasets):
 #         assert load_data.called
 #         assert solar_day.called
 
+
 def test_make_derived_band_dict_nan():
     class fake_data:
         def __init__(self):
@@ -121,6 +124,7 @@ def test_make_derived_band_dict_nan():
 
     band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == "n/a"
+
 
 def test_make_derived_band_dict_not_nan():
     class fake_data:
@@ -146,6 +150,7 @@ def test_make_derived_band_dict_not_nan():
     band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == 10.10
 
+
 def test_make_band_dict_nan(product_layer):
     class fake_data:
         def __init__(self):
@@ -166,6 +171,7 @@ def test_make_band_dict_nan(product_layer):
 
     band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset())
     assert band_dict["fake"] == "n/a"
+
 
 def test_make_band_dict_float(product_layer):
     import yaml

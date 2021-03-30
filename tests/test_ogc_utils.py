@@ -3,10 +3,12 @@ import datetime
 
 import pytest
 
+
 class DSCT:
     def __init__(self, meta):
         self.center_time = datetime.datetime(1970,1,1,0,0,0)
         self.metadata_doc = meta
+
 
 def test_dataset_center_time():
     dct = datacube_ows.ogc_utils.dataset_center_time
@@ -27,6 +29,7 @@ def test_dataset_center_time():
         },
     })
     assert dct(ds).year == 1990
+
 
 def test_get_service_base_url():
 
@@ -54,7 +57,7 @@ def test_get_service_base_url():
     ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"
 
-    #include path
+    # include path
     allowed_urls = ["https://foo.bar.baz", "https://foo.bar.baz/wms/"]
     request_url = "https://foo.bar.baz/wms/"
     ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
@@ -136,6 +139,7 @@ def test_mask_by_bitflag():
     mask = datacube_ows.ogc_utils.mask_by_bitflag(data, "dont_match")
     assert mask.values[0]
 
+
 def test_mask_by_val_in_band():
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
@@ -176,6 +180,7 @@ def test_mask_by_extent_val():
     }
     mask = datacube_ows.ogc_utils.mask_by_extent_val(data, "dband")
     assert not mask.values[0]
+
 
 def test_mask_by_nan():
     data = {

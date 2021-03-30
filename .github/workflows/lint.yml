@@ -51,4 +51,4 @@ jobs:
         with:
           linters: flake8
           run: |
-            flake8 . --ignore=E501 --select=F401
+            flake8 . --ignore=E501 --select=F401,E201,E202,E203,E502,E302,E241,E265,E225

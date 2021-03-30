@@ -24,10 +24,10 @@ create table if not exists wms.product_ranges (
 	--                  "right": 2.000,
 	--                  "bottom": 1.000,
 	--                  "top": 2.000
-	--             },
-	--             "CRS2": { ... },
+	--},
+	--             "CRS2": {...},
 	--             ...
-	--          }
+	--}
         bboxes jsonb not null
 );
 
@@ -52,13 +52,13 @@ create table if not exists wms.sub_product_ranges (
 	--                  "right": 2.000, 
 	--                  "bottom": 1.000, 
 	--                  "top": 2.000 
-	--             }, 
-	--             "CRS2": { ... },
+	--}, 
+	--             "CRS2": {...},
 	--             ... 
-	--          }
+	--}
   bboxes jsonb not null,
 
-  constraint pk_sub_product_ranges primary key ( product_id, sub_product_id)
+  constraint pk_sub_product_ranges primary key (product_id, sub_product_id)
 );
 
 create table if not exists wms.multiproduct_ranges (
@@ -81,10 +81,10 @@ create table if not exists wms.multiproduct_ranges (
 	--                  "right": 2.000,
 	--                  "bottom": 1.000,
 	--                  "top": 2.000
-	--             },
-	--             "CRS2": { ... },
+	--},
+	--             "CRS2": {...},
 	--             ...
-	--          }
+	--}
   bboxes jsonb not null,
 );
 
@@ -99,7 +99,7 @@ DECLARE
     ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
     lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
 BEGIN
-    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref in $1 AND archived IS NULL )
+    WITH m AS (SELECT metadata FROM agdc.dataset WHERE dataset_type_ref in $1 AND archived IS NULL)
     SELECT MIN(LEAST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
            (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
     INTO ret
@@ -116,7 +116,7 @@ DECLARE
     ll text[] DEFAULT array_append('{extent, coord, ll}', $2);
     lr text[] DEFAULT array_append('{extent, coord, lr}', $2);
 BEGIN
-    WITH m AS ( SELECT metadata FROM agdc.dataset WHERE dataset_type_ref in $1 AND archived IS NULL )
+    WITH m AS (SELECT metadata FROM agdc.dataset WHERE dataset_type_ref in $1 AND archived IS NULL)
     SELECT MAX(GREATEST((m.metadata#>>ul)::numeric, (m.metadata#>>ur)::numeric,
            (m.metadata#>>ll)::numeric, (m.metadata#>>lr)::numeric))
     INTO ret
