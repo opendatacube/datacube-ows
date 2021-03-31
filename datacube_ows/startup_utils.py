@@ -27,6 +27,7 @@ __all__ = [
     'initialise_prometheus_register',
 ]
 
+
 def initialise_logger(name=None):
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("[%(asctime)s] %(name)s [%(request_id)s] [%(levelname)s] %(message)s"))
@@ -39,6 +40,7 @@ def initialise_logger(name=None):
     # produced by this application
     _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
     return _LOG
+
 
 def initialise_ignorable_warnings():
     # Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
@@ -53,6 +55,7 @@ def initialise_debugging(log=None):
         if log:
             log.info("PyCharm Debugging enabled")
 
+
 def initialise_sentry(log=None):
     if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
         SENTRY_ENV_TAG = os.environ.get("SENTRY_ENV_TAG") if os.environ.get("SENTRY_ENV_TAG") else "dev"
@@ -63,6 +66,7 @@ def initialise_sentry(log=None):
         )
         if log:
             log.info("Sentry initialised")
+
 
 def initialise_aws_credentials(log=None):
     # Startup initialisation of libraries controlled by environment variables
@@ -95,16 +99,19 @@ def initialise_aws_credentials(log=None):
     elif log:
         log.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
+
 def parse_config_file(log=None):
     # Cache a parsed config file object
     # (unless deferring to first request)
     if not os.environ.get("DEFER_CFG_PARSE"):
         get_config()
 
+
 def initialise_flask(name):
     app = Flask(name.split('.')[0])
     RequestID(app)
     return app
+
 
 def initialise_prometheus(app, log=None):
     # Prometheus
@@ -114,6 +121,7 @@ def initialise_prometheus(app, log=None):
             log.info("Prometheus metrics enabled")
         return metrics
     return None
+
 
 def initialise_prometheus_register(metrics):
     # Register routes with Prometheus - call after all routes set up.

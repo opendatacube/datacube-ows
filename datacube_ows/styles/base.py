@@ -93,11 +93,11 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                     self.needed_bands.add(fb.pq_band)
                     self.flag_bands.add(fb.pq_band)
                     continue
-                handled=False
+                handled = False
                 for pqp, pqb in self.pq_product_bands:
                     if fb.pq_names == pqp:
                         pqb.add(fb.pq_band)
-                        handled=True
+                        handled = True
                         continue
                 if not handled:
                     self.pq_product_bands.append(
@@ -148,7 +148,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         else:
             if extra_mask is not None:
                 extra_mask = extra_mask.squeeze(dim="time", drop=True)
-            mask_maker=single_date_make_mask
+            mask_maker = single_date_make_mask
 
         result = extra_mask
         for mask in self.masks:
@@ -228,7 +228,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         for mdh in self.multi_date_handlers:
             if mdh.applies_to(count):
                 return mdh
-        if count in [0,1]:
+        if count in [0, 1]:
             return None
         raise WMSException(f"Style {self.name} does not support requests with {count} dates")
 
@@ -346,6 +346,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
 style_class_priority_reg = []
 style_class_reg = []
 
+
 class StyleMask(OWSConfigEntry):
     def __init__(self, cfg, style):
         super().__init__(cfg)
@@ -396,9 +397,11 @@ class StyleMask(OWSConfigEntry):
 class StandaloneGlobalProxy:
     pass
 
+
 class BandIdxProxy:
     def band(self, band):
         return band
+
 
 class StandaloneProductProxy:
     name = "standalone"

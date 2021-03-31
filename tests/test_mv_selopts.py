@@ -22,7 +22,7 @@ def test_ids_datasets():
 
 
 def test_extent():
-    sel= MVSelectOpts.EXTENT.sel(None)
+    sel = MVSelectOpts.EXTENT.sel(None)
     assert len(sel) == 1
     assert str(sel[0]) == "ST_AsGeoJSON(ST_Union(spatial_extent))"
 

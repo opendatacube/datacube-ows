@@ -112,38 +112,38 @@ landsat8_bands = {
     #
     "red": [],
     "green": [],
-    "blue": [ "near_blue" ],
-    "nir": [ "near_infrared" ],
-    "swir1": [ "shortwave_infrared_1", "near_shortwave_infrared" ],
-    "swir2": [ "shortwave_infrared_2", "far_shortwave_infrared" ],
-    "coastal_aerosol": [ "far_blue" ],
+    "blue": ["near_blue"],
+    "nir": ["near_infrared"],
+    "swir1": ["shortwave_infrared_1", "near_shortwave_infrared"],
+    "swir2": ["shortwave_infrared_2", "far_shortwave_infrared"],
+    "coastal_aerosol": ["far_blue"],
 
     # N.B. Include pixel quality bands if they are in the main data product.
 }
 
-sentinel2_bands= {
-    "nbar_coastal_aerosol": [ 'nbar_far_blue' ],
+sentinel2_bands = {
+    "nbar_coastal_aerosol": ['nbar_far_blue'],
     "nbar_blue": [],
     "nbar_green": [],
     "nbar_red": [],
     "nbar_red_edge_1": [],
     "nbar_red_edge_2": [],
     "nbar_red_edge_3": [],
-    "nbar_nir_1":  [ "nbar_near_infrared_1" ],
-    "nbar_nir_2":  [ "nbar_near_infrared_2" ],
-    "nbar_swir_2": [ "nbar_shortwave_infrared_2" ],
-    "nbar_swir_3": [ "nbar_shortwave_infrared_3" ],
-    "nbart_coastal_aerosol": [ 'coastal_aerosol', 'nbart_far_blue', 'far_blue'],
-    "nbart_blue": [ 'blue' ],
-    "nbart_green": [ 'green' ],
-    "nbart_red": [ 'red' ],
-    "nbart_red_edge_1": [ 'red_edge_1' ],
-    "nbart_red_edge_2": [ 'red_edge_2' ],
-    "nbart_red_edge_3": [ 'red_edge_3' ],
-    "nbart_nir_1":  [ "nir_1", "nbart_near_infrared_1" ],
-    "nbart_nir_2":  [ "nir_2", "nbart_near_infrared_2" ],
-    "nbart_swir_2": [ "swir_2", "nbart_shortwave_infrared_2" ],
-    "nbart_swir_3": [ "swir_3", "nbart_shortwave_infrared_3" ],
+    "nbar_nir_1": ["nbar_near_infrared_1"],
+    "nbar_nir_2": ["nbar_near_infrared_2"],
+    "nbar_swir_2": ["nbar_shortwave_infrared_2"],
+    "nbar_swir_3": ["nbar_shortwave_infrared_3"],
+    "nbart_coastal_aerosol": ['coastal_aerosol', 'nbart_far_blue', 'far_blue'],
+    "nbart_blue": ['blue'],
+    "nbart_green": ['green'],
+    "nbart_red": ['red'],
+    "nbart_red_edge_1": ['red_edge_1'],
+    "nbart_red_edge_2": ['red_edge_2'],
+    "nbart_red_edge_3": ['red_edge_3'],
+    "nbart_nir_1": ["nir_1", "nbart_near_infrared_1"],
+    "nbart_nir_2": ["nir_2", "nbart_near_infrared_2"],
+    "nbart_swir_2": ["swir_2", "nbart_shortwave_infrared_2"],
+    "nbart_swir_3": ["swir_3", "nbart_shortwave_infrared_3"],
 
     # N.B. Include pixel quality bands if they are in the main data product.
     "quality": [],
@@ -368,7 +368,7 @@ style_mineral_content = {
     },
     # If ANY components include a function callback, the bands that need to be passed to the callback
     # MUST be declared in a "additional_bands" item:
-    "additional_bands": [ "red", "blue", "nir", "swir1", "swir2" ]
+    "additional_bands": ["red", "blue", "nir", "swir1", "swir2"]
 
     #
     # The style scale_range can be omitted if all components have a component-specific scale_range defined or
@@ -768,8 +768,8 @@ style_ndvi_delta = {
         #  [ left, bottom, width, height ], as passed to Matplotlib Figure.add_axes function.
         # All values as fractions of the width and height.  (i.e. between 0.0 and 1.0)
         # The default is:
-        "strip_location": [ 0.05, 0.5, 0.9, 0.15 ]
-    } ,
+        "strip_location": [0.05, 0.5, 0.9, 0.15]
+    },
     # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
     "multi_date": [
         # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
@@ -825,7 +825,7 @@ style_deform = {
     # Legend section is optional for non-linear colour-ramped styles.
     # If not supplied, a legend for the style will be automatically generated from the colour ramp.
     "legend": {
-        ## Only use positive part of range.
+        # Only use positive part of range.
         # tick labels will be created for values that
         # are modulo 0 by this value
         "ticks_every": "10",
@@ -1241,7 +1241,7 @@ ows_cfg = {
         "response_headers": {
             "Access-Control-Allow-Origin": "*",  # CORS header (strongly recommended)
         },
-        ## Which web service(s) should be implemented by this instance
+        # Which web service(s) should be implemented by this instance
         # Optional, defaults: wms,wmts: True, wcs: False
         "services": {
             "wms": True,
@@ -1253,7 +1253,7 @@ ows_cfg = {
         # Service URL.
         # A list of fully qualified URLs that the service can return
         # in the GetCapabilities documents based on the requesting url
-        "allowed_urls": [ "http://localhost/odc_ows",
+        "allowed_urls": ["http://localhost/odc_ows",
                           "https://localhost/odc_ows",
                           "https://alternateurl.domain.org/odc_ows",
                           "http://127.0.0.1:5000/"],
@@ -1620,13 +1620,13 @@ ows_cfg = {
                         # This is the number of CRS units (e.g. degrees, metres) per pixel in the horizontal
                         # and vertical # directions for the native resolution.
                         # E.g. for EPSG:3577; (25.0,25.0) for Landsat-8 and (10.0,10.0 for Sentinel-2)
-                        "native_resolution": [ 25.0, 25.0 ],
+                        "native_resolution": [25.0, 25.0],
                         # The default bands for a WCS request.
                         # 1. Must be provided if WCS is activated.
                         # 2. Must contain at least one band.
                         # 3. All bands must exist in the band index.
                         # 4. Bands may be referred to by either native name or alias
-                        "default_bands": [ "red", "green", "blue" ],
+                        "default_bands": ["red", "green", "blue"],
                         # The native format advertised for the coverage.
                         # Must be one of the formats defined
                         # in the global wcs formats section.
@@ -1752,7 +1752,7 @@ ows_cfg = {
                         # Bands to always fetch from the Datacube, even if it is not used by the active style.
                         # Useful for when a particular band is always needed for the extent_mask_func, as
                         # is the case here.
-                        "always_fetch_bands": [ "quality" ],
+                        "always_fetch_bands": ["quality"],
                         "fuse_func": None,
                         "manual_merge": True,
                         # Apply corrections for solar angle, for "Level 1" products.
@@ -1761,8 +1761,8 @@ ows_cfg = {
                     },
                     "wcs": {
                         "native_crs": "EPSG:3857",
-                        "native_resolution": [ 25.0, 25.0 ],
-                        "default_bands": [ "red", "green", "blue" ],
+                        "native_resolution": [25.0, 25.0],
+                        "default_bands": ["red", "green", "blue"],
                     },
                     "styling": {
                         "default_style": "simple_rgb",
@@ -1785,7 +1785,7 @@ ows_cfg = {
                     "abstract": "Water Observations from Space - Summary",
                     "name": "wofs_summary",
                     "product_name": "wofs_summary",
-                    "bands": { "frequency": [] },
+                    "bands": {"frequency": []},
                     "resource_limits": standard_resource_limits,
                     "flags": None,
                     "image_processing": {
@@ -1794,8 +1794,8 @@ ows_cfg = {
                     },
                     "wcs": {
                         "native_crs": "EPSG:3857",
-                        "native_resolution": [ 25.0, 25.0 ],
-                        "default_bands": [ "frequency" ],
+                        "native_resolution": [25.0, 25.0],
+                        "default_bands": ["frequency"],
                     },
                     "styling": {
                         "styles": [
@@ -1836,15 +1836,15 @@ ows_cfg = {
                     },
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [ ],
+                        "always_fetch_bands": [],
                         "fuse_func": None,
                         "manual_merge": False,
                         "apply_solar_corrections": False,
                     },
                     "wcs": {
                         "native_crs": "EPSG:3577",
-                        "native_resolution": [ 10.0, 10.0 ],
-                        "default_bands": [ "red", "green", "blue" ],
+                        "native_resolution": [10.0, 10.0],
+                        "default_bands": ["red", "green", "blue"],
                     },
                     "identifiers": {
                         "auth": "s2_nrt_multi",
@@ -1865,7 +1865,7 @@ ows_cfg = {
                     },
                     "styling": {
                         "default_style": "simple_rgb",
-                        "styles": [ style_rgb ],
+                        "styles": [style_rgb],
                     }
                 } ##### End of sentinel2_nrt multi-product definition
             ],
@@ -1877,20 +1877,20 @@ ows_cfg = {
             "title": "Mangrove Canopy Cover",
             "abstract": "Mangrove Canopy Cover - example of bitflag value-mapped style.",
             "product_names": "mangrove_cover",
-            "bands": { "canopy_cover_class": [], "extent": [] },
+            "bands": {"canopy_cover_class": [], "extent": []},
             "resource_limits": standard_resource_limits,
             "flags": None,
             "image_processing": {
                 "extent_mask_func": "datacube_ows.ogc_utils.mask_by_extent_flag",
-                "always_fetch_bands": [ "extent" ],
+                "always_fetch_bands": ["extent"],
                 "fuse_func": None,
                 "manual_merge": False,
                 "apply_solar_corrections": False,
             },
             "wcs": {
                 "native_crs": "EPSG:3577",
-                "native_resolution": [ 25.0, 25.0 ],
-                "default_bands": [ "canopy_cover_class" ],
+                "native_resolution": [25.0, 25.0],
+                "default_bands": ["canopy_cover_class"],
             },
             "identifiers": {
                 "auth": "mangrove_canopy_cover",
@@ -1911,7 +1911,7 @@ ows_cfg = {
             },
             "styling": {
                 "default_style": "mangrove",
-                "styles": [ style_mangrove ],
+                "styles": [style_mangrove],
             }
         } ##### End of mangrove_cover definition
     ]  ##### End of "layers" list.

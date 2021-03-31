@@ -12,13 +12,14 @@ coords = [
     ('time', [np.datetime64(datetime.date.today())])
 ]
 
+
 def test_function(a, b=2, c=3, **kwargs):
     return [f"a{a}  b{b}  c{c}", kwargs]
 
 
 def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
     if attrs is None:
-        attrs={}
+        attrs = {}
     dims = [n for n, a in coords]
     data = np.ndarray([len(a) for n, a in coords], dtype=dtype)
     coords = dict(coords)
@@ -37,7 +38,7 @@ def dim1_da(name, vals, coords, with_time=True, attrs=None):
     if len(vals) != len(coords):
         raise Exception("vals and coords must match len")
     if attrs is None:
-        attrs={}
+        attrs = {}
     dims = ["dim"]
     shape = [len(coords)]
     coords = {

@@ -5,7 +5,7 @@ import pytest
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
-from tests.test_band_utils import dummy_layer  # noqa: F401
+from tests.test_band_utils import dummy_layer  # noqa: F401,F811
 
 
 @pytest.fixture
@@ -13,6 +13,7 @@ def prelegend_style():
     style = StyleDefBase.__new__(StyleDefBase)
     style._unready_attributes = []
     return style
+
 
 @pytest.fixture
 def prelegend_colorramp_style():
@@ -42,7 +43,8 @@ def test_legend_parser_urllegend(prelegend_style):
     assert prelegend_style.show_legend
     assert prelegend_style.legend_url_override == url
 
-def test_create_legend_for_style(dummy_layer):
+
+def test_create_legend_for_style(dummy_layer): # noqa: F811
     from datacube_ows.legend_generator import create_legend_for_style
     assert create_legend_for_style(dummy_layer, "stylish_steve") is None
 
@@ -50,6 +52,7 @@ def test_create_legend_for_style(dummy_layer):
 @pytest.fixture
 def image_url():
     return "https://github.com/fluidicon.png"
+
 
 @pytest.fixture
 def bad_image_url():
@@ -59,10 +62,10 @@ def bad_image_url():
 def test_image_from_url(image_url):
     img = get_image_from_url(image_url)
     assert img is not None
-    assert img.model == "RGBA"
+    assert img.mode == "RGBA"
 
 
-def test_image_from_url(bad_image_url):
+def test_image_from_bad_image_url(bad_image_url):
     img = get_image_from_url(bad_image_url)
     assert img is None
 
@@ -184,6 +187,7 @@ def test_parse_colorramp_legend_find_end():
         }
     })
     assert ramp.values == [999.0, 1000.0, 2500.0, 6000.0, 6500.0, 51500.0]
+
 
 def test_parse_colorramp_legend_tick_labels():
     ramp = ColorRamp(None, {

@@ -24,6 +24,8 @@ tf = TimezoneFinder(in_memory=True)
 # Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
 # datacube-core center time accessed through the dataset API is calculated and may
 # not agree with the metadata document
+
+
 def dataset_center_time(dataset):
     center_time = dataset.center_time
     try:
@@ -86,6 +88,7 @@ def month_date_range(date):
     end = datetime.datetime(y, m, 1, 0, 0, 0) - datetime.timedelta(days=1)
     return start, end
 
+
 def year_date_range(date):
     start = datetime.datetime(date.year, 1, 1, 0, 0, 0)
     end = datetime.datetime(date.year, 12, 31, 23, 59, 59)
@@ -127,6 +130,7 @@ def get_function(func):
         assert callable(func)
     return func
 
+
 def parse_for_base_url(url):
     parsed = urlparse(url)
     parsed = (parsed.netloc + parsed.path).rstrip("/")
@@ -161,6 +165,8 @@ def capture_headers(req, args_dict):
 # Exceptions raised when attempting to create a
 # product layer from a bad config or without correct
 # product range
+
+
 class ProductLayerException(Exception):
     pass
 
@@ -170,8 +176,9 @@ class ConfigException(Exception):
 
 # Function wrapper for configurable functional elements
 
+
 class FunctionWrapper:
-    def __init__(self,  product_or_style_cfg, func_cfg,
+    def __init__(self, product_or_style_cfg, func_cfg,
                  stand_alone=False):
         if callable(func_cfg):
             if not stand_alone:
@@ -241,6 +248,7 @@ def mask_by_val(data, band, val=None):
     else:
         return data[band] != val
 
+
 def mask_by_val2(data, band):
     # REVISIT: Is this the same as mask_by_val or subtlely different?
     return data[band] != data[band].nodata
@@ -280,6 +288,7 @@ def ls8_subproduct(ds):
 
 # Method for formatting urls, e.g. for use in feature_info custom inclusions.
 
+
 def feature_info_url_template(data, template):
     return template.format(data=data)
 
@@ -305,7 +314,7 @@ def create_geobox(
     if width is None and height is None:
         raise Exception("Must supply at least a width or height")
     if height is not None:
-        scale_y = (miny - maxy)/height
+        scale_y = (miny - maxy) / height
     if width is not None:
         scale_x = (maxx - minx) / width
     else:
@@ -313,7 +322,7 @@ def create_geobox(
         width = round((maxx - minx) / scale_x)
     if height is None:
         scale_y = - scale_x
-        height = round((miny-maxy)/scale_y)
+        height = round((miny - maxy) / scale_y)
     affine = Affine.translation(minx, maxy) * Affine.scale(scale_x, scale_y)
     return geometry.GeoBox(width, height, affine, crs)
 

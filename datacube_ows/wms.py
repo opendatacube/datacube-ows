@@ -11,6 +11,7 @@ from datacube_ows.utils import log_call
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
+
 @log_call
 def handle_wms(nocase_args):
     operation = nocase_args.get("request", "").upper()

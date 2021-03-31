@@ -46,6 +46,7 @@ def dummy_layer():
     product_layer.style_index = {}
     return product_layer
 
+
 @pytest.fixture
 def band_mapper():
     idx = {
@@ -92,6 +93,7 @@ def test_single_band_log(band_mapper):
 def test_single_band(band_mapper):
     assert not single_band(TEST_XARR, "b1") is None
     assert not single_band(TEST_XARR, "b1", band_mapper) is None
+
 
 def test_multidate():
     assert not multi_date_delta(TEST_XARR_T) is None

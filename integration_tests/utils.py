@@ -135,7 +135,7 @@ class ODCExtent:
             try:
                 if self == self.MIDDLE:
                     i = len(ls) // 2
-                    return ls[i : i + 1]
+                    return ls[i: i + 1]
                 elif self == self.FIRST_TWO:
                     return ls[0:1]
                 elif self == self.LAST_TWO:
@@ -143,7 +143,7 @@ class ODCExtent:
                 elif self == self.LAST:
                     return ls[-1:]
                 else:
-                    return ls[self.value : self.value + 1]
+                    return ls[self.value: self.value + 1]
             except IndexError:
                 return []
 

@@ -13,6 +13,7 @@ def log_call(func):
         return func(*args, **kwargs)
     return log_wrapper
 
+
 def time_call(func):
     @wraps(func)
     def timing_wrapper(*args, **kwargs):
