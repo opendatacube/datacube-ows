@@ -182,7 +182,7 @@ def test_spatial_parameter_setters(layer_crs_nongeom):
     assert param.y == -13
 
 
-def test_spatial_parameter_isdim_1(layer_crs_nongeom):
+def test_spatial_parameter_isdim_test_crs(layer_crs_nongeom):
     param = SpatialParameter(layer_crs_nongeom, "TEST:CRS", 7, -13)
     assert param.x == 7
     assert param.y == -13
@@ -201,7 +201,7 @@ def test_spatial_parameter_isdim_1(layer_crs_nongeom):
        assert e.dim == "horivertal_calzones"
 
 
-def test_spatial_parameter_isdim_1(layer_crs_nongeom):
+def test_spatial_parameter_isdim_epsg(layer_crs_nongeom):
     param = SpatialParameter(layer_crs_nongeom, "EPSG:3577", 2, 7)
 
     assert param.lat == 7

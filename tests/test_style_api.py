@@ -206,7 +206,7 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     assert result["red"].values[5] < 255
 
 
-def test_ramp_legend(simple_ramp_style_cfg):
+def test_ramp_legend_standalone(simple_ramp_style_cfg):
     style = StandaloneStyle(simple_ramp_style_cfg)
     img = generate_ows_legend_style(style, 1)
     assert img.mode == "RGBA"
@@ -461,4 +461,3 @@ def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_s
     for i in range(6):
         for c in ("red", "green", "blue", "alpha"):
             assert null_mask[c].values[i] == none_mask[c].values[i]
-

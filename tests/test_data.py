@@ -154,7 +154,7 @@ def test_make_derived_band_dict_not_nan():
     assert band_dict["fake"] == 10.10
 
 
-def test_make_band_dict_nan(product_layer):
+def test_make_band_dict_nan(product_layer): # noqa: F811
     class fake_data:
         def __init__(self):
             self.nodata = np.nan
@@ -178,7 +178,7 @@ def test_make_band_dict_nan(product_layer):
     assert band_dict["fake"] == "n/a"
 
 
-def test_make_band_dict_float(product_layer):
+def test_make_band_dict_float(product_layer): # noqa: F811
     import yaml
     flags_yaml = """
     flags_definition:
@@ -233,7 +233,7 @@ def test_make_band_dict_float(product_layer):
     }
 
 
-def test_pbq_ctor_simple(product_layer):
+def test_pbq_ctor_simple(product_layer): # noqa: F811
     pbq = ProductBandQuery.simple_layer_query(product_layer, set(["red", "green"]))
     assert str(pbq) in (
         "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_product)]",
@@ -246,7 +246,7 @@ def test_pbq_ctor_simple(product_layer):
     )
 
 
-def test_pbq_ctor_full(product_layer):
+def test_pbq_ctor_full(product_layer): # noqa: F811
     pbqs = ProductBandQuery.full_layer_queries(product_layer)
     assert len(pbqs) == 2
     assert "red" in str(pbqs[0])
