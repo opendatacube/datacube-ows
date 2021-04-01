@@ -112,8 +112,9 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             fp.make_ready(dc)
         if not self.stand_alone:
             for band in self.product.always_fetch_bands:
-                self.needed_bands.add(band)
-                self.flag_bands.add(band)
+                if band not in self.needed_bands:
+                    self.needed_bands.add(band)
+                    self.flag_bands.add(band)
         super().make_ready(dc, *args, **kwargs)
 
     def local_band(self, band):
