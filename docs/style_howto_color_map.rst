@@ -238,10 +238,14 @@ Secondly, all pixels that do not match any rules default to being transparent.
         "value_map": {
             "water": [
                 {
-                    # Make noncontiguous data transparent
+                    # Make noncontiguous and invalid data transparent
                     "title": "",
                     "abstract": "",
-                    "flags": {"noncontiguous": True},
+                    "flags": {
+                        "or": {
+                            "noncontiguous": True,
+                            "nodata": True,
+                    },
                     "alpha": 0.0,
                     "color": "#ffffff",
                 },
@@ -293,7 +297,12 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 {
                     "title": "Terrain Shadow or Low Sun Angle",
                     "abstract": "",
-                    "flags": {"terrain_or_low_angle": True},
+                    flags": {
+                        "or": {
+                            "terrain_shadow": True,
+                            "low_solar_angle": True
+                        },
+                    },
                     "color": "#2f2922",
                 },
                 {
@@ -324,4 +333,12 @@ As with the Colour Ramp examples already seen, transparency is declared with and
 0.0 (fully transparent) to 1.0 (fully opaque).  You must define a colour, even if alpha is zero.  Alpha is
 optional and defaults to 1.0 (fully opaque).
 
+..image https://user-images.githubusercontent.com/4548530/113661392-560a6400-96e9-11eb-920d-26e7e8d84d7f.png
+    :width: 600
+
+`View full size:
+<https://user-images.githubusercontent.com/4548530/113661392-560a6400-96e9-11eb-920d-26e7e8d84d7f.png>`_
+
+The clouds are clearly visible, with only the separately derived terrain data and the noisy water-detection
+bits visible through the cloud, with clearly defined cloud shadows and clear water detection.
 
