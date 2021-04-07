@@ -1,6 +1,6 @@
-===========================================
-OWS Stying HOW-TO Guide: Colour Ramp Styles
-===========================================
+============================================
+OWS Styling HOW-TO Guide: Colour Ramp Styles
+============================================
 
 .. contents:: Table of Contents
 

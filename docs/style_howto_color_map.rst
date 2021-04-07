@@ -1,6 +1,6 @@
-==========================================
-OWS Stying HOW-TO Guide: Colour Map Styles
-==========================================
+===========================================
+OWS Styling HOW-TO Guide: Colour Map Styles
+===========================================
 
 .. contents:: Table of Contents
 

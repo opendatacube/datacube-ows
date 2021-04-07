@@ -1,6 +1,6 @@
-================================================
-OWS Stying HOW-TO Guide: Components (non-linear)
-================================================
+=================================================
+OWS Styling HOW-TO Guide: Components (non-linear)
+=================================================
 
 .. contents:: Table of Contents
 

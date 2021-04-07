@@ -1,6 +1,6 @@
-=====================================
-OWS Stying HOW-TO Guide: Transparency
-=====================================
+======================================
+OWS Styling HOW-TO Guide: Transparency
+======================================
 
 .. contents:: Table of Contents
 

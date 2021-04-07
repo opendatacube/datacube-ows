@@ -1,6 +1,6 @@
-===================================
-OWS Stying HOW-TO Guide: Components
-===================================
+====================================
+OWS Styling HOW-TO Guide: Components
+====================================
 
 .. contents:: Table of Contents
 
