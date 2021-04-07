@@ -141,7 +141,6 @@ The results look like this:
     :width: 600
 
 `View full size:
-
 <https://user-images.githubusercontent.com/4548530/113242261-44494b00-92fc-11eb-8f67-ff83a412746d.png>`_
 
 This all looks a bit of a mess. The problem is that rules are evaluated in order, which can result in
