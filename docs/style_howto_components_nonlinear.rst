@@ -1,6 +1,6 @@
-================================================
-OWS Stying HOW-TO Guide: Components (non-linear)
-================================================
+=================================================
+OWS Styling HOW-TO Guide: Components (non-linear)
+=================================================
 
 .. contents:: Table of Contents
 
@@ -33,13 +33,14 @@ Example: red-ndvi-blue (full scale)
 Let's say we want the green channel of the output image to encode NDVI instead
 of the Landsat green band.
 
-First why we define our function.   The Styling API will call this function with
+First we need to define our function.   The Styling API will call this function with
 the same `xarray.Dataset` that you pass to `apply_ows_style_cfg`.  It should
 return an `xarray.DataArray` with the same spatial dimensions and coordinates,
 as the input argument.
 
 The returned array is converted to `uint8` in the xarray image returned by
 the API.  This means it is up to your function to handle scaling to the (0,255) range.
+For example, given this function:
 
 ::
 
@@ -48,7 +49,7 @@ the API.  This means it is up to your function to handle scaling to the (0,255) 
         return (data["nir"] - data["red"]) / (data["nir"] + data["red")
 
 
-Using ``"green": ndvi,`` in the components dictionary will work, but will
+Using ``"green": ndvi,`` in the components dictionary would sort of work, but will
 return 0 for every pixel after conversion from floating point. We need to do something
 like this:
 
@@ -60,6 +61,7 @@ like this:
 
         # Scale to [-1.0 - 1.0] to [0 - 255]
         scaled = ((unscaled + 1.0) * 255/2).clip(0, 255)
+
         returned scaled
 
     r_ndvi_b_fullrange_cfg = {
@@ -71,8 +73,8 @@ like this:
         "scale_range": (50, 3000),
     }
 
-The scale_range only applies to the linearly defined channels, red and blue.  The function
-takes responsiblity for the scaling of the green channel.
+The ``scale_range`` only applies to the linearly defined channels, red and blue.  The ``ndvi`` function
+is responsible for scaling of the green channel.
 
 .. image:: https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png
     :width: 600
@@ -80,12 +82,13 @@ takes responsiblity for the scaling of the green channel.
 `View full size
 <https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png>`_
 
-Meh, it's *very* green, and kind of saturated.  And it turns out negative values of NDVI
-aren't very interesting, so let's all negative values to zero, and scale 0 to 1 over the
-0-255 range.
+Meh, it's *very* green, and kind of saturated.  This is because we are
+scaling (-1, +1) to (0, 255) and negative values of NDVI
+aren't very interesting.  What we really want is clip (-1,0) to 0 and scale
+(0, +1) to (0,255).
 
-But scaling is handled by the function now.  Do we really have to modify a function every
-time we tweak the scaling?
+But scaling is handled by the function now.  We don't want to have to redefine a function every
+time we tweak the scaling.  The API has a solution to this common problem.
 
 Non-Linear Components: OWS Function Syntax and Scalable
 -------------------------------------------------------
@@ -112,6 +115,9 @@ Example: red-ndvi-blue (half scale)
             "red": {"red": 1.0},
             "green": {
                 "function": scaled_ndvi,
+                # In addition to the standard API calling argument (the input data),
+                # additional positional or keyword arguments can
+                # be passed to the function using an args array and/or a kwargs dictionary.
                 "kwargs": {
                     "scale_from": (0.0, 1.0),
                     "scale_to": (0, 255)
@@ -122,9 +128,9 @@ Example: red-ndvi-blue (half scale)
         "scale_range": (50, 3000),
     }
 
-The ``@scalable`` decorator adds ``scale_from`` and ``scale_to`` arguments that can be
-passed in through config using the extended function syntax, making it easy to adjust
-scaling from configuration.
+The ``@scalable`` decorator adds ``scale_from`` and ``scale_to`` arguments to the function,
+and applies the relevant scaling to the output. Values outside the "scale_from" range are
+clipped to the minimum or maximum "scale_to" value.
 
 .. image:: https://user-images.githubusercontent.com/4548530/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.png
     :width: 600

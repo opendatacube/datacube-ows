@@ -1,6 +1,6 @@
-===========================================
-OWS Stying HOW-TO Guide: Colour Ramp Styles
-===========================================
+============================================
+OWS Styling HOW-TO Guide: Colour Ramp Styles
+============================================
 
 .. contents:: Table of Contents
 
@@ -42,8 +42,7 @@ The full list of matplotlib named colour ramps can be found in the
 (Note that you can reverse the order of any ramp by adding the suffix ``_r``. E.g. "RdYlGn_r" is the
 same as "RdYlGn" except green is the low end of the scale and red the high end.)
 
-
-..image https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png
+..image:: https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png
     :width: 600
 
 `View full size
@@ -75,7 +74,7 @@ getting darkening blues with close to 1.0 being dark green.
         "range": [0.0, 1.0]
     }
 
-..image https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png
+..image:: https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png
     :width: 600
 
 `View full size
@@ -154,7 +153,7 @@ Let's take a walk up the colour ramp, and see the results:
         ]
 
 
-..image https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png
+..image:: https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png
     :width: 600
 
 `View full size
@@ -224,7 +223,7 @@ where 0.0 is totally transparent and 1.0 (the default) is opaque.  Note that you
         ]
     }
 
-..image https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png
+..image:: https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png
     :width: 600
 
 `View full size

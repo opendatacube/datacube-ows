@@ -1,6 +1,6 @@
-===================================
-OWS Stying HOW-TO Guide: Components
-===================================
+====================================
+OWS Styling HOW-TO Guide: Components
+====================================
 
 .. contents:: Table of Contents
 
@@ -8,7 +8,8 @@ OWS Stying HOW-TO Guide: Components
 Simple Linear Components
 ------------------------
 
-Now lets look at that configuration in a bit more details:
+Now lets return to the configuration from the worked example in the introduction and look
+at it in a bit more detail:
 
 ::
 
@@ -105,7 +106,7 @@ Example: Mixing bands
 +++++++++++++++++++++
 
 What if we want to mix more than one band to make each channel? Here we average all three visible bands
-into the red channel, put near infra-red in the green channel amd average the two shortwave infrared
+into the red channel, put near infra-red in the green channel and average the two shortwave infrared
 bands to make the blue channel:
 
 ::
@@ -254,7 +255,8 @@ Example: Narrow Scale Range
 `View full size
 <https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png>`_
 
-This is better, but the lower end of the scale range is too high. If you keep adjusting back and forth,
+This is getting better, the brightest parts are nice and bright, but the lower end of the scale range is too high,
+leaving too much image clipped to black. If you keep adjusting back and forth,
 you'll eventually end up more or less where we started.
 
 Example: Per-channel scale_ranges
@@ -264,7 +266,7 @@ What if we want to apply a different scale ranges to different channels?
 
 For example, the image in the `false colour example above
 <#example-infrared-green-false-colour>`_, looks a bit
-saturated, especially in the red and green bands (red+green make yellow).
+saturated, especially in the red and green channels (red+green make yellow).
 
 .. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
     :width: 600
@@ -294,9 +296,10 @@ on a per-band basis:
         "scale_range": (200, 1900),
     }
 
-The "blue" channel takes the default scale_range ``(200,1900)``.
-
 The red and green channel have custom scale ranges.
+
+The "blue" channel does not have a custom scale_range, so it takes the default scale_range ``(200,1900)``.
+(The default scale_range may be omitted where it is not needed.)
 
 .. image:: https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png
     :width: 600
@@ -307,9 +310,10 @@ The red and green channel have custom scale ranges.
 Wow! That looks much better!
 
 But don't get too carried away!  You'll probably find that these particular scale ranges
-look really dark and washed out in south eastern australia and super bright and saturated
+look really dark and washed out in south eastern australia, or super bright and saturated
 in the central deserts.  The trick is usually to choose a few datasets from different
-land cover types and come up with a compromise configuration that looks good everywhere.
+land cover types across the whole area covered by the data, and come up with a compromise
+configuration that looks reasonably good everywhere.
 
 But as any scientist will tell you, when it comes to visualisation, linear equations can
 only get you so far, so `next
