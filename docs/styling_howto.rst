@@ -42,7 +42,6 @@ from the Open Data Cube.
 
 Note that it is *essential* that you select all the bands used by your style
 definition.
-lable bands so we can use this data for all the examples on this page.)
 
 ::
 
