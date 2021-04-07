@@ -342,3 +342,42 @@ optional and defaults to 1.0 (fully opaque).
 The clouds are clearly visible, with only the separately derived terrain data and the noisy water-detection
 bits visible through the cloud, with clearly defined cloud shadows and clear water detection.
 
+Enumeration Bands
++++++++++++++++++
+
+Sometimes you may have a band that contains an enumeration code value rather than a bitflag.  In this
+case we can use a "values" rule instead of a "flags" rule, where we explicitly specify all the matching
+values.
+
+E.g. because for wofs if the "nodata" is set then other bit can be set, the following are
+equivalent:
+
+::
+                # Using a "flags" rule.
+                {
+                    # Make noncontiguous and invalid data transparent
+                    "title": "",
+                    "abstract": "",
+                    "flags": {
+                        "nodata": True,
+                    },
+                    "alpha": 0.0,
+                    "color": "#ffffff",
+                },
+
+                # Using a "values" rule.
+                {
+                    # Make noncontiguous and invalid data transparent
+                    "title": "",
+                    "abstract": "",
+                    "values": [
+                        1,    # nodata
+                    ],
+                    "alpha": 0.0,
+                    "color": "#ffffff",
+                },
+
+We've seen how to use transparency in colour-ramp styles in the last chapter, and in colour-map styles in this
+one.   `In the next chapter
+<https://datacube-ows.readthedocs.io/en/latest/style_howto_transparency.html>`_ we explore other ways
+of achieving transparency in datacube-ows.
