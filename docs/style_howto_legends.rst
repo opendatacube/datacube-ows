@@ -6,3 +6,5 @@ OWS Styling HOW-TO Guide: Legends
 
 Legends
 -------
+
+Coming soon.

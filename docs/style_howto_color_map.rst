@@ -137,7 +137,7 @@ matches determining the colour of the pixel.  Let's start with a simple example:
 
 The results look like this:
 
-..image https://user-images.githubusercontent.com/4548530/113242261-44494b00-92fc-11eb-8f67-ff83a412746d.png
+..image:: https://user-images.githubusercontent.com/4548530/113242261-44494b00-92fc-11eb-8f67-ff83a412746d.png
     :width: 600
 
 `View full size:
@@ -212,7 +212,7 @@ Let's construct a better ordering:
         }
     }
 
-..image  https://user-images.githubusercontent.com/4548530/113243120-2250c800-92fe-11eb-8554-360f0bb089d5.png
+..image::  https://user-images.githubusercontent.com/4548530/113243120-2250c800-92fe-11eb-8554-360f0bb089d5.png
     :width: 600
 
 `View full size:
@@ -333,7 +333,7 @@ As with the Colour Ramp examples already seen, transparency is declared with and
 0.0 (fully transparent) to 1.0 (fully opaque).  You must define a colour, even if alpha is zero.  Alpha is
 optional and defaults to 1.0 (fully opaque).
 
-..image https://user-images.githubusercontent.com/4548530/113661392-560a6400-96e9-11eb-920d-26e7e8d84d7f.png
+..image:: https://user-images.githubusercontent.com/4548530/113661392-560a6400-96e9-11eb-920d-26e7e8d84d7f.png
     :width: 600
 
 `View full size:

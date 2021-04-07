@@ -74,7 +74,7 @@ RGB "true colour" visualisation.
         "scale_range": (50, 3000),
     }
 
-Don't worry about understanding what everything in that, we'll cover that later. For now, we
+Don't worry yet about understanding what that all means, we'll cover that later. For now, we
 can apply this style to the data, and write the result to disk as a PNG file:
 
 ::
