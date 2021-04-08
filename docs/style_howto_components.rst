@@ -164,7 +164,9 @@ just leave it empty:
 Scale Ranges: Controlling dynamic range
 ---------------------------------------
 
-What about the other part of that config - the ``scale_ranges`` part? Let's try some other values and see what happens.
+What about the other part of that config - the ``scale_range`` part?  The scale range specifices the value
+range of the input data that will be mapped to the output channel range (0-255).
+Let's try some other values and see what happens.
 
 Firstly, let's remind ourselves of our original RGB configuration and image:
 
@@ -184,6 +186,9 @@ Firstly, let's remind ourselves of our original RGB configuration and image:
 
 `View full size
 <https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
+
+In this image, band values between 50 and 3000 get scaled to the image values 0 to 255.  (Values less than zero
+are clipped to 0 and values greater than 3000 are clipped to 255.)
 
 Example: Low Scale Range
 ++++++++++++++++++++++++
@@ -233,7 +238,7 @@ Example: High Scale Range
 <https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png>`_
 
 Whoops too far!  Now it's almost pure black!  If your image looks like this, you
-need to pull your scale_range down a bit:
+need to pull your scale_range down:
 
 Example: Narrow Scale Range
 +++++++++++++++++++++++++++
@@ -257,16 +262,16 @@ Example: Narrow Scale Range
 
 This is getting better, the brightest parts are nice and bright, but the lower end of the scale range is too high,
 leaving too much image clipped to black. If you keep adjusting back and forth,
-you'll eventually end up more or less where we started.
+you'll eventually end up more or less where we started, with a ``scale_range`` around (50,3000).
 
 Example: Per-channel scale_ranges
 +++++++++++++++++++++++++++++++++
 
-What if we want to apply a different scale ranges to different channels?
+What if we want to apply different scale ranges to different channels?
 
 For example, the image in the `false colour example above
 <#example-infrared-green-false-colour>`_, looks a bit
-saturated, especially in the red and green channels (red+green make yellow).
+saturated, especially in the red and green channels (red+green makes yellow).
 
 .. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
     :width: 600
@@ -309,7 +314,7 @@ The "blue" channel does not have a custom scale_range, so it takes the default s
 
 Wow! That looks much better!
 
-But don't get too carried away!  You'll probably find that these particular scale ranges
+But don't get too carried away!  You'll probably find that these particular scale range values
 look really dark and washed out in south eastern australia, or super bright and saturated
 in the central deserts.  The trick is usually to choose a few datasets from different
 land cover types across the whole area covered by the data, and come up with a compromise
