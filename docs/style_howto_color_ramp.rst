@@ -102,9 +102,9 @@ the scale, you can define a custom colour map:
             {"value": -0.1, "color": "#505050",},
             {"value": -0.01, "color": "#303030",},
             {"value": 0.0, "color": "black",},
-            {"value": 0.000000001, "color": "#303000",},
+            {"value": 0.01, "color": "#303000",},
             {"value": 0.5, "color": "#707030",},
-            {"value": 1.0, "color": "#FFFF90",},
+            {"value": 1.0, "color": "#FF9090",},
         ]
     }
 
@@ -146,23 +146,23 @@ at the results.
             {"value": 0.0, "color": "black",},
             {"value": 0.01, "color": "#003000",},
 
-            # Finally the positive value morphs from: dark green (0.1), to dark yellow (0.5) to
-            # a bright yellow by 1.0.
+            # Finally the positive value morphs from: dark green (0.01), to dark yellow (0.5) to
+            # a bright red by 1.0.
 
             {"value": 0.5, "color": "#707030",},
-            {"value": 1.0, "color": "#FFFF90",},
+            {"value": 1.0, "color": "#FF9090",},
 
             # Values above 1.0 would be pegged at bright yellow, but again, this does not apply
             # here because 1.0 is the absolute maximum value of NDVI (that's what the N means!)
         ]
 
 
-.. image:: https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png
+.. image:: https://user-images.githubusercontent.com/4548530/113971225-b6c9a600-987b-11eb-9ba8-c046728aedee.png
     :width: 600
 
 Example: Unidirectional NDVI
 `View full size
-<https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png>`_
+<https://user-images.githubusercontent.com/4548530/113971225-b6c9a600-987b-11eb-9ba8-c046728aedee.png>`_
 
 Oh well, looks like there's nothing much interesting in that close-to-zero region.  In fact, it would be
 nice if we could get rid of those bits all together, just leave those bits transparent, to show the next
