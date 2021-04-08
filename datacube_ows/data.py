@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import json
 import logging
 import re
+from collections import OrderedDict
 from datetime import datetime
 from itertools import chain
 
@@ -183,7 +184,7 @@ class DataStacker:
             times = None
         else:
             times = self._times
-        results = {}
+        results = []
         for query in queries:
             if query.ignore_time:
                 qry_times = None
@@ -198,10 +199,10 @@ class DataStacker:
                 result = datacube.Datacube.group_datasets(result, self.group_by)
                 if all_time:
                     return result
-                results[query] = result
+                results.append((query, result))
             else:
                 return result
-        return results
+        return OrderedDict(results)
 
     @log_call
     def data(self, datasets_by_query, skip_corrections=False):
@@ -222,7 +223,10 @@ class DataStacker:
                 # regularise time dimension:
                 if len(qry_result.time) != 1:
                     raise WMSException("Cannot ignore time on PQ (flag) bands from a time-aware product")
-                if len(qry_result.time) == len(data.time):
+                if len(data.time) == 0:
+                    # No data, so no need for masking data.
+                    continue
+                elif len(qry_result.time) == len(data.time):
                     qry_result["time"] = data.time
                 else:
                     data_new_bands = {}
