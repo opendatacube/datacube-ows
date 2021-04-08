@@ -1,6 +1,6 @@
-=======================
-OWS Stying HOW-TO Guide
-=======================
+========================
+OWS Styling HOW-TO Guide
+========================
 
 .. toctree::
    :maxdepth: 2
@@ -9,7 +9,8 @@ OWS Stying HOW-TO Guide
    style_howto_components
    style_howto_components_nonlinear
    style_howto_color_ramp
-   style_howto_color_map
+   style_howto_transparency
+   style_howto_legends
 
 .. contents:: Table of Contents
 

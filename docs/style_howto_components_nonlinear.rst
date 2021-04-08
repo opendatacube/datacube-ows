@@ -10,11 +10,11 @@ Non-Linear Components: Functions
 
 All the examples in the
 `previous section <https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html>`_
-involved calculating components linearly scaled, linear combinations of bands.
+involved using linearly scaled, linear combinations of bands to calculate channel values.
 If we want to evaluate components using more sophisticated calculations, we need to use
 python functions.
 
-Starting again with our simple rgb image:
+Again we will start from the base of a simple rgb image:
 
 ::
 
@@ -40,7 +40,7 @@ as the input argument.
 
 The returned array is converted to `uint8` in the xarray image returned by
 the API.  This means it is up to your function to handle scaling to the (0,255) range.
-For example, given this function:
+For example, given this function, containing a simple unscaled implementation of NDVI:
 
 ::
 
@@ -49,9 +49,9 @@ For example, given this function:
         return (data["nir"] - data["red"]) / (data["nir"] + data["red")
 
 
-Using ``"green": ndvi,`` in the components dictionary would sort of work, but will
-return 0 for every pixel after conversion from floating point. We need to do something
-like this:
+Using ``"green": ndvi,`` in the components dictionary would sort of work, but would
+return 0 for every pixel after conversion from floating point - which is probably
+not what we want. We can add scaling like this:
 
 ::
 
@@ -75,6 +75,9 @@ like this:
 
 The ``scale_range`` only applies to the linearly defined channels, red and blue.  The ``ndvi`` function
 is responsible for scaling of the green channel.
+
+Note that this example is for illustrative purposes only - there is a much easier way to implement
+scaling, discussed later in this chapter.
 
 .. image:: https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png
     :width: 600
