@@ -103,7 +103,7 @@ the scale, you can define a custom colour map:
             {"value": -0.01, "color": "#303030",},
             {"value": 0.0, "color": "black",},
             {"value": 0.000000001, "color": "#303000",},
-            {"value": 0.5, "color": "#70D030",},
+            {"value": 0.5, "color": "#707030",},
             {"value": 1.0, "color": "#FFFF90",},
         ]
     }
@@ -115,7 +115,8 @@ Each step in the colour ramp consists of a ``value`` and a ``color``, with
 the ramp ordered from lowest value to highest.  The color can be
 `any valid HTML color string <https://htmlcolorcodes.com/>`_.
 
-Let's take a walk up the colour ramp, and see the results:
+Let's take a walk up the colour ramp, examining each step. Then we can look
+at the results.
 
 ::
 
@@ -132,30 +133,34 @@ Let's take a walk up the colour ramp, and see the results:
 
             {"value": -0.2, "color": "#005050",},
 
-            # From -0.2 to -0.1, morph to a grey which morphs to a darker grey at -0.01
+            # From -0.2 to -0.1, morph from the dark greenish blue to a dark grey at -0.01
 
             {"value": -0.1, "color": "#505050",},
 
             # I've deliberately spread out -0.01 to 0.01, so we can see if there is any
-            # interesting detail in areas close to zero.
-            # It morphs from dark grey to pure black at zero, then brightens to a
+            # interesting fine detail in areas close to zero.
+            # It morphs from dark grey (-0.1) to pure black (0.0), then brightens to a
             # a dark green.
 
             {"value": -0.01, "color": "#303030",},
             {"value": 0.0, "color": "black",},
             {"value": 0.01, "color": "#003000",},
 
-            # Finally the positive value morph from a dark green, through brighter yellow greens to
+            # Finally the positive value morphs from: dark green (0.1), to dark yellow (0.5) to
             # a bright yellow by 1.0.
 
-            {"value": 0.5, "color": "#70D030",},
+            {"value": 0.5, "color": "#707030",},
             {"value": 1.0, "color": "#FFFF90",},
+
+            # Values above 1.0 would be pegged at bright yellow, but again, this does not apply
+            # here because 1.0 is the absolute maximum value of NDVI (that's what the N means!)
         ]
 
 
 .. image:: https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png
     :width: 600
 
+Example: Unidirectional NDVI
 `View full size
 <https://user-images.githubusercontent.com/4548530/112597065-bf27e700-8e60-11eb-9f61-2e7a16e75e48.png>`_
 
