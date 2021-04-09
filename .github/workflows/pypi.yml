@@ -1,11 +1,11 @@
-name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+name: Publish datacube-ows distributions 📦 to PyPI and TestPyPI
 
 on: push
 
 jobs:
   build-n-publish:
-    name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
-    runs-on: ubuntu-18.04
+    name: Build and publish datacube-ows distributions 📦 to PyPI and TestPyPI
+    runs-on: ubuntu-20.04
 
   steps:
     - uses: actions/checkout@master
@@ -20,14 +20,14 @@ jobs:
         build
         --user
     - name: Build a binary wheel and a source tarball
-      run: >-
+      run: |
         python -m
         build
         --sdist
         --wheel
         --outdir dist/
         .
-
+        twine check dist/*
     - name: Publish distribution 📦 to Test PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
