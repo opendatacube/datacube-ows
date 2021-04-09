@@ -9,7 +9,7 @@ Colour Maps
 
 Discrete measurement bands (i.e. bit-flag or enumeration bands) demand very different visualisation
 approaches than continuous measurement bands, and they are not well served by the sorts of
-component and ramp based styles we have discussed so far[1]_.
+component and ramp based styles we have discussed so far [1]_.
 
 .. [1] You could force the use case onto colour-ramp styles pretty easily.  But a colour map gives a few advantages -
    in particular the embedded metadata which can be used to autogenerate a legend.
@@ -352,29 +352,30 @@ E.g. because for wofs if the "nodata" is set then other bit can be set, the foll
 equivalent:
 
 ::
-                # Using a "flags" rule.
-                {
-                    # Make noncontiguous and invalid data transparent
-                    "title": "",
-                    "abstract": "",
-                    "flags": {
-                        "nodata": True,
-                    },
-                    "alpha": 0.0,
-                    "color": "#ffffff",
-                },
 
-                # Using a "values" rule.
-                {
-                    # Make noncontiguous and invalid data transparent
-                    "title": "",
-                    "abstract": "",
-                    "values": [
-                        1,    # nodata
-                    ],
-                    "alpha": 0.0,
-                    "color": "#ffffff",
-                },
+    # Using a "flags" rule.
+    {
+        # Make noncontiguous and invalid data transparent
+        "title": "",
+        "abstract": "",
+        "flags": {
+            "nodata": True,
+        },
+        "alpha": 0.0,
+        "color": "#ffffff",
+    },
+
+    # Using a "values" rule.
+    {
+        # Make noncontiguous and invalid data transparent
+        "title": "",
+        "abstract": "",
+        "values": [
+            1,    # nodata
+        ],
+        "alpha": 0.0,
+        "color": "#ffffff",
+    },
 
 We've seen how to use transparency in colour-ramp styles in the last chapter, and in colour-map styles in this
 one.   `In the next chapter
