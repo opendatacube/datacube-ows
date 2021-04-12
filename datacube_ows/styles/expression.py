@@ -19,10 +19,10 @@ def not_supported(op_name):
 
 @lark.v_args(inline=True)
 class ExpressionEvaluator(lark.Transformer):
+    from operator import add, sub, mul, truediv, floordiv, neg, pos, mod, pow
     not_ = inv = or_ = and_ = xor = not_supported("Bitwise logical operators")
     eq = ne = le = ge = lt = gt = not_supported("Comparison operators")
     lshift = rshift = not_supported("Left and right-shift operators")
-    from operator import add, sub, mul, truediv, floordiv, neg, pos, mod, pow
 
     float_literal = float
     int_literal = int
