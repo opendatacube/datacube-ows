@@ -1,5 +1,6 @@
 import lark
 
+
 def formula_parser():
     return lark.Lark("""
                 ?expr: num_expr | bool_expr
