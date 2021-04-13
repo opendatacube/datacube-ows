@@ -1,6 +1,5 @@
 import lark
 import numpy
-
 from datacube.utils.masking import valid_data_mask
 
 
@@ -29,7 +28,7 @@ def formula_parser():
                 ge: num_expr ">=" num_expr
                 lt: num_expr "<" num_expr
                 gt: num_expr ">" num_expr
-
+`
 
                 ?num_expr: shift
 
@@ -56,7 +55,7 @@ def formula_parser():
                 ?subatom: NAME -> var_name
                         | FLOAT -> float_literal
                         | INT -> int_literal
-                        | "(" num_expr ")"
+`                        | "(" num_expr ")"
 
 
                 %import common.FLOAT
@@ -70,9 +69,9 @@ def formula_parser():
 
 @lark.v_args(inline=True)
 class FormulaEvaluator(lark.Transformer):
-    from operator import not_, or_, and_, xor
-    from operator import eq, ne, le, ge, lt, gt
-    from operator import add, sub, mul, truediv, floordiv, neg, pos, inv, mod, pow, lshift, rshift
+    from operator import (add, and_, eq, floordiv, ge, gt, inv, le, lshift, lt,
+        mod, mul, ne, neg, not_, or_, pos, pow, rshift, sub,
+        truediv, xor)
 
     float_literal = float
     int_literal = int

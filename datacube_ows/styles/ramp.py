@@ -16,7 +16,6 @@ from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 
-
 _LOG = logging.getLogger(__name__)
 
 UNSCALED_DEFAULT_RAMP = [
