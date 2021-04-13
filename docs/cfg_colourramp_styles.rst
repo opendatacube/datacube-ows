@@ -29,13 +29,41 @@ of this documentation, I use the UK/Australian spelling.
 Calculating the Index Value
 ---------------------------
 
-The `index_function <#index-function>`__ entry defines how the
-index is calculated at each pixel.  The bands needed for the calculation
-must be declared in the `needed_bands list <#needed-bands-list>`__
+There are two methods to specify the calculation of the index value:
+
+Expressions (simple calculations)
+=================================
+
+index_expression
+++++++++++++++++
+
+The ``index_expression`` entry takes a string written in a simple
+expression language.  Lexical units are floating point or integer
+constants, or band names (alias-aware).  Simple operators (+, -, /, *, **)
+and parentheses work in the usual manner. Note that you
+do NOT need to explicitly specify ``needed_bands`` when using
+an ``index_expression``.
+
+E.g.
+
+::
+
+   # Simple nir/red NDVI
+   "index_expression": "(nir-red)/(nir+red)",
+
+
+Functions (complex calculations)
+=================================
+
+For more complex calculations than are supported by the expression
+syntax, The `index_function <#index-function>`__ entry can define how the
+index is calculated at each pixel using an arbitrary Python function.
+The bands needed for the calculation must be declared in
+the `needed_bands list <#needed-bands-list>`__
 entry.
 
 index_function
-==============
+++++++++++++++
 
 The `index_function` allows the user to declare a callback function
 to calculate the index value using OWS's
@@ -51,7 +79,7 @@ of general purpose band math functions
 are provided in `datacube_ows.band_utils`.
 
 needed_bands list
-=================
++++++++++++++++++
 
 The `needed_bands` entry must list the names (or aliases) of
 all the bands required by the

@@ -25,6 +25,7 @@ requirements = [
     'timezonefinderL',
     'python-slugify',
     'geoalchemy',
+    'lark-parser',
     'xarray',
     'pyows',
     'prometheus-flask-exporter',

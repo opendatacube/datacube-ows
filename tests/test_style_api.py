@@ -205,6 +205,43 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     assert result["red"].values[5] > 0
     assert result["red"].values[5] < 255
 
+def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
+    del simple_ramp_style_cfg["index_function"]
+    del simple_ramp_style_cfg["needed_bands"]
+    simple_ramp_style_cfg["index_expression"] = "(ir-red)/(ir+red)"
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    result = apply_ows_style(style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    # point 0 800, 200 (idx=0.6)maps to blue
+    assert result["alpha"].values[0] == 255
+    assert result["red"].values[0] == 0
+    assert result["green"].values[0] == 0
+    assert result["blue"].values[0] == 255
+    # point 1 100, 500 (idx<0)maps to transparent
+    assert result["alpha"].values[1] == 0
+    # point 2 1000,0 (idx=1.0) maps to white
+    assert result["alpha"].values[2] == 255
+    assert result["red"].values[2] == 255
+    assert result["green"].values[2] == 255
+    assert result["blue"].values[2] == 255
+    # point 3 600,200 (idx=0.5) maps to yellow
+    assert result["alpha"].values[3] == 255
+    assert result["red"].values[3] == 255
+    assert result["green"].values[3] >= 254 # Why isn't it 255?
+    assert result["blue"].values[3] == 0
+    # point 4 200,200 (idx=0.0) maps to black
+    assert result["alpha"].values[4] == 255
+    assert result["red"].values[4] == 0
+    assert result["green"].values[4] == 0
+    assert result["blue"].values[4] == 0
+    # point 5 1000,700 (idx=0.176) maps to between black and magenta
+    assert result["alpha"].values[5] == 255
+    assert result["green"].values[5] == 0
+    assert abs(result["red"].values[5] - result["blue"].values[5]) <= 1 # Why not exactly equal?
+    assert result["red"].values[5] > 0
+    assert result["red"].values[5] < 255
+
 
 def test_ramp_legend_standalone(simple_ramp_style_cfg):
     style = StandaloneStyle(simple_ramp_style_cfg)

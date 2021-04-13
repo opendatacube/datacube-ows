@@ -14,6 +14,7 @@ matplotlib.use('Agg')
 
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
+from datacube_ows.styles.expression import Expression
 
 _LOG = logging.getLogger(__name__)
 
@@ -525,17 +526,20 @@ class ColorRampDef(StyleDefBase):
                            stand_alone=stand_alone, defer_multi_date=defer_multi_date)
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
-
-        if not self.stand_alone:
-            for band in style_cfg["needed_bands"]:
-                self.raw_needed_bands.add(band)
-
         self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
 
         if "index_function" in style_cfg:
             self.index_function = FunctionWrapper(self,
                                                   style_cfg["index_function"],
                                                   stand_alone=self.stand_alone)
+            if not self.stand_alone:
+                for band in style_cfg["needed_bands"]:
+                    self.raw_needed_bands.add(band)
+        elif "index_expression" in style_cfg:
+            self.index_function = Expression(self, style_cfg["index_expression"])
+            if not self.stand_alone:
+                for band in self.index_function.needed_bands:
+                    self.raw_needed_bands.add(band)
         else:
             raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
                 self.name,
