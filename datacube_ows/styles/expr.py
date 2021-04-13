@@ -28,7 +28,6 @@ def formula_parser():
                 ge: num_expr ">=" num_expr
                 lt: num_expr "<" num_expr
                 gt: num_expr ">" num_expr
-`
 
                 ?num_expr: shift
 
@@ -55,7 +54,7 @@ def formula_parser():
                 ?subatom: NAME -> var_name
                         | FLOAT -> float_literal
                         | INT -> int_literal
-`                        | "(" num_expr ")"
+                        | "(" num_expr ")"
 
 
                 %import common.FLOAT
