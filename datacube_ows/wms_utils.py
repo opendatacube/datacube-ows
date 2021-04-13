@@ -336,6 +336,12 @@ def single_style_from_args(product, args, required=True):
                 "index_expression": code,
                 "mpl_ramp": mpl_ramp,
                 "range": colorscalerange,
+                "legend": {
+                    "title": "User-Custom Index",
+                    "show_legend": True,
+                    "begin": str(colorscalerange[0]),
+                    "end": str(colorscalerange[1]),
+                }
             }, stand_alone=True)
         except ExpressionException as e:
             raise WMSException(f"Code expression invalid: {e}",
