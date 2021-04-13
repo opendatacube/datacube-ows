@@ -537,9 +537,11 @@ class ColorRampDef(StyleDefBase):
                     self.raw_needed_bands.add(band)
         elif "index_expression" in style_cfg:
             self.index_function = Expression(self, style_cfg["index_expression"])
-            if not self.stand_alone:
-                for band in self.index_function.needed_bands:
-                    self.raw_needed_bands.add(band)
+            for band in self.index_function.needed_bands:
+                self.raw_needed_bands.add(band)
+            if self.stand_alone:
+                self.needed_bands = [self.local_band(b) for b in self.raw_needed_bands]
+                self.flag_bands = []
         else:
             raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
                 self.name,

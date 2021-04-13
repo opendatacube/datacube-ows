@@ -1,5 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+from datacube_ows.styles import StyleDef
+from datacube_ows.styles.expression import ExpressionException
+
 try:
     import regex as re
 except ImportError:
@@ -11,6 +14,7 @@ import numpy
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from pytz import utc
+from matplotlib import pyplot as plt
 
 try:
     from rasterio.warp import Resampling
@@ -23,7 +27,7 @@ from affine import Affine
 from datacube.utils import geometry
 
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import create_geobox
+from datacube_ows.ogc_utils import create_geobox, ConfigException
 from datacube_ows.ows_configuration import get_config
 
 RESAMPLING_METHODS = {
@@ -340,20 +344,57 @@ class GetMapParameters(GetParameters):
                               errcode=WMSException.INVALID_FORMAT,
                               lower=True,
                               permitted_values=["image/png"])
-        # Styles
-        self.styles = args.get("styles", "").split(",")
-        if len(self.styles) != 1:
-            raise WMSException("Multi-layer GetMap requests not supported")
-        style_r = self.styles[0]
-        if not style_r:
-            style_r = self.product.default_style.name
-        self.style = self.product.style_index.get(style_r)
-        if not self.style:
-            raise WMSException("Style %s is not defined" % style_r,
+
+        cfg = get_config()
+        # User Band Math (overrides style if present).
+        if self.product.user_band_math and "code" in args and "colorscheme" in args:
+            code = args["code"]
+            mpl_ramp = args["colorscheme"]
+            try:
+                plt.get_cmap(mpl_ramp)
+            except:
+                raise WMSException(f"Invalid Matplotlib ramp name: {mpl_ramp}",
+                                   locator="Colorscalerange parameter")
+            colorscalerange = args.get("colorscalerange", "0,1").split(",")
+            if len(colorscalerange) != 2:
+                raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+                                   locator="Colorscalerange parameter")
+            try:
+                colorscalerange = [float(r) for r in colorscalerange]
+            except ValueError:
+                raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+                                   locator="Colorscalerange parameter")
+            if colorscalerange[0] >= colorscalerange[1]:
+                raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+                                   locator="Colorscalerange parameter")
+            try:
+                self.style = StyleDef(self.product, {
+                    "name": "custom_user_style",
+                    "index_expression": code,
+                    "mpl_ramp": mpl_ramp,
+                    "range": colorscalerange,
+                }, stand_alone=True)
+            except ExpressionException as e:
+                raise WMSException(f"Code expression invalid: {e}",
+                                   locator="Code parameter")
+            except ConfigException as e:
+                raise WMSException(f"Code invalid: {e}",
+                                   locator="Code parameter")
+        else:
+            # Regular WMS Styles
+            self.styles = args.get("styles", "").split(",")
+            if len(self.styles) != 1:
+                raise WMSException("Multi-layer GetMap requests not supported")
+            style_r = self.styles[0]
+            if not style_r:
+                style_r = self.product.default_style.name
+            self.style = self.product.style_index.get(style_r)
+            if not self.style:
+                raise WMSException("Style %s is not defined" % style_r,
                                WMSException.STYLE_NOT_DEFINED,
                                locator="Style parameter",
                                valid_keys=list(self.product.style_index))
-        cfg = get_config()
+
         if self.geobox.width > cfg.wms_max_width:
             raise WMSException(f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",
                                locator="Width parameter")
