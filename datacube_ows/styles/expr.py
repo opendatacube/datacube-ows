@@ -2,7 +2,6 @@ import lark
 import numpy
 from datacube.utils.masking import valid_data_mask
 
-
 # N.B. Copied from datacube.virtual.expr
 # Remove this file and reference core directly after next ODC release.
 
@@ -69,8 +68,8 @@ def formula_parser():
 @lark.v_args(inline=True)
 class FormulaEvaluator(lark.Transformer):
     from operator import (add, and_, eq, floordiv, ge, gt, inv, le, lshift, lt,
-        mod, mul, ne, neg, not_, or_, pos, pow, rshift, sub,
-        truediv, xor)
+                          mod, mul, ne, neg, not_, or_, pos, pow, rshift, sub,
+                          truediv, xor)
 
     float_literal = float
     int_literal = int
