@@ -308,6 +308,59 @@ class GetParameters():
         return get_product_from_arg(args)
 
 
+def single_style_from_args(product, args, required=True):
+    # User Band Math (overrides style if present).
+    if product.user_band_math and "code" in args and "colorscheme" in args:
+        code = args["code"]
+        mpl_ramp = args["colorscheme"]
+        try:
+            plt.get_cmap(mpl_ramp)
+        except:
+            raise WMSException(f"Invalid Matplotlib ramp name: {mpl_ramp}",
+                               locator="Colorscalerange parameter")
+        colorscalerange = args.get("colorscalerange", "0,1").split(",")
+        if len(colorscalerange) != 2:
+            raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+                               locator="Colorscalerange parameter")
+        try:
+            colorscalerange = [float(r) for r in colorscalerange]
+        except ValueError:
+            raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+                               locator="Colorscalerange parameter")
+        if colorscalerange[0] >= colorscalerange[1]:
+            raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+                               locator="Colorscalerange parameter")
+        try:
+            style = StyleDef(product, {
+                "name": "custom_user_style",
+                "index_expression": code,
+                "mpl_ramp": mpl_ramp,
+                "range": colorscalerange,
+            }, stand_alone=True)
+        except ExpressionException as e:
+            raise WMSException(f"Code expression invalid: {e}",
+                               locator="Code parameter")
+        except ConfigException as e:
+            raise WMSException(f"Code invalid: {e}",
+                               locator="Code parameter")
+    else:
+        # Regular WMS Styles
+        styles = args.get("styles", "").split(",")
+        if len(styles) != 1:
+            raise WMSException("Multi-layer GetMap requests not supported")
+        style_r = styles[0]
+        if not style_r and not required:
+            return None
+        if not style_r:
+            style_r = product.default_style.name
+        style = product.style_index.get(style_r)
+        if not style:
+            raise WMSException("Style %s is not defined" % style_r,
+                               WMSException.STYLE_NOT_DEFINED,
+                               locator="Style parameter",
+                               valid_keys=list(product.style_index))
+    return style
+
 class GetLegendGraphicParameters():
     def __init__(self, args):
         self.product = get_product_from_arg(args, 'layer')
@@ -317,22 +370,8 @@ class GetLegendGraphicParameters():
                               errcode=WMSException.INVALID_FORMAT,
                               lower=True,
                               permitted_values=["image/png"])
-        arg_styles = args.get("styles", None)
-        if arg_styles:
-            # Styles
-            try:
-                self.styles = [
-                    self.product.style_index[style_name]
-                    for style_name in arg_styles.split(",")
-                ]
-            except KeyError as e:
-                raise WMSException(
-                    f"Style {e} not valid for layer.",
-                    WMSException.STYLE_NOT_DEFINED,
-                    locator="STYLES parameter"
-                )
-        else:
-            self.styles = [self.product.default_style]
+        self.style = single_style_from_args(self.product, args)
+        self.styles = [self.style]
         # Time parameter
         self.times = get_times(args, self.product)
 
@@ -345,56 +384,8 @@ class GetMapParameters(GetParameters):
                               lower=True,
                               permitted_values=["image/png"])
 
+        self.style = single_style_from_args(self.product, args)
         cfg = get_config()
-        # User Band Math (overrides style if present).
-        if self.product.user_band_math and "code" in args and "colorscheme" in args:
-            code = args["code"]
-            mpl_ramp = args["colorscheme"]
-            try:
-                plt.get_cmap(mpl_ramp)
-            except:
-                raise WMSException(f"Invalid Matplotlib ramp name: {mpl_ramp}",
-                                   locator="Colorscalerange parameter")
-            colorscalerange = args.get("colorscalerange", "0,1").split(",")
-            if len(colorscalerange) != 2:
-                raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
-                                   locator="Colorscalerange parameter")
-            try:
-                colorscalerange = [float(r) for r in colorscalerange]
-            except ValueError:
-                raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
-                                   locator="Colorscalerange parameter")
-            if colorscalerange[0] >= colorscalerange[1]:
-                raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
-                                   locator="Colorscalerange parameter")
-            try:
-                self.style = StyleDef(self.product, {
-                    "name": "custom_user_style",
-                    "index_expression": code,
-                    "mpl_ramp": mpl_ramp,
-                    "range": colorscalerange,
-                }, stand_alone=True)
-            except ExpressionException as e:
-                raise WMSException(f"Code expression invalid: {e}",
-                                   locator="Code parameter")
-            except ConfigException as e:
-                raise WMSException(f"Code invalid: {e}",
-                                   locator="Code parameter")
-        else:
-            # Regular WMS Styles
-            self.styles = args.get("styles", "").split(",")
-            if len(self.styles) != 1:
-                raise WMSException("Multi-layer GetMap requests not supported")
-            style_r = self.styles[0]
-            if not style_r:
-                style_r = self.product.default_style.name
-            self.style = self.product.style_index.get(style_r)
-            if not self.style:
-                raise WMSException("Style %s is not defined" % style_r,
-                               WMSException.STYLE_NOT_DEFINED,
-                               locator="Style parameter",
-                               valid_keys=list(self.product.style_index))
-
         if self.geobox.width > cfg.wms_max_width:
             raise WMSException(f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",
                                locator="Width parameter")
