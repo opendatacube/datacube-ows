@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 import datacube_ows.wms_utils
 from datacube_ows.ogc_exceptions import WMSException
 
