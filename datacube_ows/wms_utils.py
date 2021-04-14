@@ -13,8 +13,8 @@ from datetime import datetime
 import numpy
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
-from pytz import utc
 from matplotlib import pyplot as plt
+from pytz import utc
 
 try:
     from rasterio.warp import Resampling
@@ -27,7 +27,7 @@ from affine import Affine
 from datacube.utils import geometry
 
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import create_geobox, ConfigException
+from datacube_ows.ogc_utils import ConfigException, create_geobox
 from datacube_ows.ows_configuration import get_config
 
 RESAMPLING_METHODS = {
