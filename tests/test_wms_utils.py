@@ -52,7 +52,7 @@ def test_parse_userbandmath(dummy_product):
                                                               "colorscalerange": "0,2"
                                                           })
 
-def test_parse_userbandmath(dummy_product):
+def test_parse_userbandmath_bad_code(dummy_product):
     with pytest.raises(WMSException) as e:
         style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                             {
