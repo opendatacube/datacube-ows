@@ -521,9 +521,9 @@ class ColorRamp:
 
 class ColorRampDef(StyleDefBase):
     auto_legend = True
-    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
+    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
         super(ColorRampDef, self).__init__(product, style_cfg,
-                           stand_alone=stand_alone, defer_multi_date=defer_multi_date)
+                           stand_alone=stand_alone, defer_multi_date=defer_multi_date, user_defined=user_defined)
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
         self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)

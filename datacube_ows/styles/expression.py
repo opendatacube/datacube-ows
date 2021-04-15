@@ -33,6 +33,11 @@ class ExpressionEvaluator(lark.Transformer):
 
 
 @lark.v_args(inline=True)
+class UserDefinedExpressionEvaluator(ExpressionEvaluator):
+    pow = not_supported("Exponent operator")
+
+
+@lark.v_args(inline=True)
 class BandListEvaluator(ExpressionEvaluator):
     neg = pos = identity
     add = sub = mul = truediv = floordiv = mod = pow = union
@@ -64,8 +69,13 @@ class Expression:
 
 
     def __call__(self, data):
+        if self.style.user_defined:
+            evaluator = UserDefinedExpressionEvaluator
+        else:
+            evaluator = ExpressionEvaluator
+
         @lark.v_args(inline=True)
-        class ExpressionDataEvaluator(ExpressionEvaluator):
+        class ExpressionDataEvaluator(evaluator):
             def var_name(self, key):
                 return data[self.ows_style.local_band(key.value)]
 

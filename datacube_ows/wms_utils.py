@@ -342,7 +342,7 @@ def single_style_from_args(product, args, required=True):
                     "begin": str(colorscalerange[0]),
                     "end": str(colorscalerange[1]),
                 }
-            }, stand_alone=True)
+            }, stand_alone=True, user_defined=True)
         except ExpressionException as e:
             raise WMSException(f"Code expression invalid: {e}",
                                locator="Code parameter")

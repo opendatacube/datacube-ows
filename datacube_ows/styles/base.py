@@ -22,7 +22,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
     auto_legend = False
     include_in_feature_info = False
 
-    def __new__(cls, product=None, style_cfg=None, stand_alone=False, defer_multi_date=False):
+    def __new__(cls, product=None, style_cfg=None, stand_alone=False, defer_multi_date=False, user_defined=False):
         if product and style_cfg:
             style_cfg = cls.expand_inherit(style_cfg, global_cfg=product.global_cfg,
                                keyval_subs={
@@ -37,7 +37,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             return super().__new__(subclass)
         return super().__new__(cls)
 
-    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
+    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
         super().__init__(style_cfg,
                          global_cfg=product.global_cfg,
                          keyvals={
@@ -54,6 +54,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                          })
         style_cfg = self._raw_cfg
         self.stand_alone = stand_alone
+        self.user_defined = user_defined
         self.local_band_map = style_cfg.get("band_map", {})
         self.product = product
         if self.stand_alone:
