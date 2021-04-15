@@ -70,8 +70,9 @@ def test_getcap_xsd(ows_server):
 
     # Validate XML Schema
     resp_xml = etree.parse(resp.fp)
-    gc_xds = get_xsd("capabilities_consolidated.xsd")
-    assert gc_xds.validate(resp_xml)
+    gc_xds = get_xsd("capabilities_extensions.xsd")
+    result = gc_xds.validate(resp_xml)
+    assert result
 
 
 def test_getcap_coord_order(ows_server):

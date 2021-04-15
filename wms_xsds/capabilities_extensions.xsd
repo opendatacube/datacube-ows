@@ -4,6 +4,9 @@
         xmlns:wms="http://www.opengis.net/wms"
         xmlns="http://www.w3.org/2001/XMLSchema"
         elementFormDefault="qualified" version="1.3.0.0">
+    <import namespace="http://www.w3.org/1999/xlink" schemaLocation="http://www.w3.org/1999/xlink.xsd"/>
+    <import namespace="http://www.opengis.net/wms" schemaLocation="http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd"/>
+
 
     <element name="SupportedExtension" substitutionGroup="wms:_ExtendedCapabilities">
         <annotation>
