@@ -72,7 +72,7 @@ def test_getcap_xsd(ows_server):
 
     # Validate XML Schema
     resp_xml = etree.fromstring(resp.content)
-    gc_xds = get_xsd("capabilities_extensions.xsd")
+    gc_xds = get_xsd("capabilities_extensions_local.xsd")
     result = gc_xds.validate(resp_xml)
     if not result:
         assert gc_xds.error_log.last_error == caps_document

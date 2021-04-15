@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://dea.ga.gov.au/namespaces/wms_extensions"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:wms="http://www.opengis.net/wms"
+        xmlns="http://www.w3.org/2001/XMLSchema"
+        elementFormDefault="qualified" version="1.3.0.0">
+    <import namespace="http://www.w3.org/1999/xlink" schemaLocation="http://www.w3.org/1999/xlink.xsd"/>
+    <import namespace="http://www.opengis.net/wms" schemaLocation="capabilities_1_3_0.xsd"/>
+
+
+    <element name="SupportedExtension" substitutionGroup="wms:_ExtendedCapabilities">
+        <annotation>
+            <documentation>
+                Declare a supported non-standard extension.
+            </documentation>
+        </annotation>
+        <complexType>
+            <sequence>
+                <element name="Extension">
+                    <annotation>
+                        <documentation>
+                            Identify the supported extension
+                        </documentation>
+                    </annotation>
+                    <complexType>
+                        <simpleContent>
+                            <extension base="string">
+                                <attribute name="version" type="string"/>
+                            </extension>
+                        </simpleContent>
+                    </complexType>
+                </element>
+                <element ref="wms:OnlineResource">
+                    <annotation>
+                        <documentation>
+                            URL to documentation of the extension. Preferably readable to
+                            both developers writing client software to consume the extension
+                            AND end users making use of the extension through a supporting client.
+
+                            E.g. For the user_band_math extension, this documentation should provide:
+
+                            1) A high-level end-user-readable description of why user_band_math is cool and useful.
+                            2) The syntax for user_band_math equations - targetted at both client implementers AND end-users.)
+                            2) How to embed user_band_math equations in GetMap requests - mostly for client implementors, but
+                            also readable to advanced end-users ("power users").
+                            3) The need for an "available_bands" ExtensionProperty (see below).
+                        </documentation>
+                    </annotation>
+                </element>
+                <element name="Layer" type="string" minOccurs="1" maxOccurs="unbounded">
+                    <annotation>
+                        <documentation>
+                            Layers supporting this extension.
+
+                            Note that one Extension will require separate SupportedExtension elements for
+                            different layers where: The layers have different ExtensionProperties (see below).
+                        </documentation>
+                    </annotation>
+                </element>
+                <element name="ExtensionProperty" minOccurs="0" maxOccurs="unbounded">
+                    <annotation>
+                        <documentation>
+                            Extension-specific properties.
+
+                            E.g. for the user_band_math, the available_bands
+                        </documentation>
+                    </annotation>
+                    <complexType>
+                        <simpleContent>
+                            <extension base="string">
+                                <attribute name="name" type="string"/>
+                            </extension>
+                        </simpleContent>
+                    </complexType>
+                </element>
+            </sequence>
+        </complexType>
+    </element>
+
+</schema>
