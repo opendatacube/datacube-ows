@@ -521,9 +521,9 @@ class ColorRamp:
 
 class ColorRampDef(StyleDefBase):
     auto_legend = True
-    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
+    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
         super(ColorRampDef, self).__init__(product, style_cfg,
-                           stand_alone=stand_alone, defer_multi_date=defer_multi_date)
+                           stand_alone=stand_alone, defer_multi_date=defer_multi_date, user_defined=user_defined)
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
         self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
@@ -537,9 +537,11 @@ class ColorRampDef(StyleDefBase):
                     self.raw_needed_bands.add(band)
         elif "index_expression" in style_cfg:
             self.index_function = Expression(self, style_cfg["index_expression"])
-            if not self.stand_alone:
-                for band in self.index_function.needed_bands:
-                    self.raw_needed_bands.add(band)
+            for band in self.index_function.needed_bands:
+                self.raw_needed_bands.add(band)
+            if self.stand_alone:
+                self.needed_bands = [self.local_band(b) for b in self.raw_needed_bands]
+                self.flag_bands = []
         else:
             raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
                 self.name,

@@ -329,6 +329,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("product")
         self.declare_unready("definition")
 
+        if global_cfg.user_band_math_extension:
+            self.user_band_math = cfg.get("user_band_math", False)
+        else:
+            self.user_band_math = False
+
         self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
         if self.time_resolution not in TIMERES_VALS:
             raise ConfigException(
@@ -1029,6 +1034,7 @@ class OWSConfig(OWSConfigEntry):
         self.wms_max_height = cfg.get("max_height", 256)
         self.attribution = AttributionCfg.parse(cfg.get("attribution"))
         self.authorities = cfg.get("authorities", {})
+        self.user_band_math_extension = cfg.get("user_band_math_extension", False)
 
     def parse_wcs(self, cfg):
         if self.wcs:

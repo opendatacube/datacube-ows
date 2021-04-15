@@ -91,8 +91,8 @@ class ValueMapRule(OWSConfigEntry):
 class ColorMapStyleDef(StyleDefBase):
     auto_legend = True
 
-    def __init__(self, product, style_cfg, stand_alone=False):
-        super(ColorMapStyleDef, self).__init__(product, style_cfg, stand_alone=stand_alone)
+    def __init__(self, product, style_cfg, stand_alone=False, user_defined=False):
+        super().__init__(product, style_cfg, stand_alone=stand_alone, user_defined=user_defined)
         style_cfg = self._raw_cfg
         self.value_map = ValueMapRule.value_map_from_config(self, style_cfg["value_map"])
         for band in self.value_map.keys():

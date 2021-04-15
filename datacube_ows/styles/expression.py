@@ -33,6 +33,11 @@ class ExpressionEvaluator(lark.Transformer):
 
 
 @lark.v_args(inline=True)
+class UserDefinedExpressionEvaluator(ExpressionEvaluator):
+    pow = not_supported("Exponent operator")
+
+
+@lark.v_args(inline=True)
 class BandListEvaluator(ExpressionEvaluator):
     neg = pos = identity
     add = sub = mul = truediv = floordiv = mod = pow = union
@@ -44,6 +49,9 @@ class BandListEvaluator(ExpressionEvaluator):
         return set([self.ows_style.local_band(key.value)])
 
 
+class ExpressionException(ConfigException):
+    pass
+
 class Expression:
     def __init__(self, style, expr_str):
         self.style = style
@@ -53,16 +61,21 @@ class Expression:
             self.tree = parser.parse(self.expr_str)
             self.needed_bands = BandListEvaluator(self.style).transform(self.tree)
         except lark.LarkError as e:
-            raise ConfigException(f"Invalid expression: {e} {self.expr_str}")
+            raise ExpressionException(f"Invalid expression: {e} {self.expr_str}")
         except KeyError as e:
-            raise ConfigException(f"Unrecognised band '{e}' in {expr_str}")
+            raise ExpressionException(f"Unrecognised band '{e}' in {expr_str}")
         if len(self.needed_bands) == 0:
-            raise ConfigException(f"Expression references no bands: {self.expr_str}")
+            raise ExpressionException(f"Expression references no bands: {self.expr_str}")
 
 
     def __call__(self, data):
+        if self.style.user_defined:
+            evaluator = UserDefinedExpressionEvaluator
+        else:
+            evaluator = ExpressionEvaluator
+
         @lark.v_args(inline=True)
-        class ExpressionDataEvaluator(ExpressionEvaluator):
+        class ExpressionDataEvaluator(evaluator):
             def var_name(self, key):
                 return data[self.ows_style.local_band(key.value)]
 

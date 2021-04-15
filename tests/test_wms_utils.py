@@ -1,4 +1,9 @@
+from unittest.mock import MagicMock
+
+import pytest
+
 import datacube_ows.wms_utils
+from datacube_ows.ogc_exceptions import WMSException
 
 
 def test_parse_time_delta():
@@ -32,3 +37,120 @@ def test_parse_wms_time_strings_with_present():
     start, end = datacube_ows.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
     assert start == dt.datetime(2018, 1, 10, 0, 0)
     assert (dt.datetime.utcnow() - end).total_seconds() < 60
+
+
+@pytest.fixture
+def dummy_product():
+    dummy = MagicMock()
+    return dummy
+
+
+def test_parse_userbandmath(dummy_product):
+    style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                                                          {
+                                                              "code": "2*(red-nir)/(red+nir)",
+                                                              "colorscheme": "viridis",
+                                                              "colorscalerange": "0,2"
+                                                          })
+
+
+def test_parse_userbandmath_nobands(dummy_product):
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                              {
+                                  "code": "2+(4.0*72)",
+                                  "colorscheme": "viridis",
+                                  "colorscalerange": "0,2"
+                              })
+    assert "Code expression invalid" in str(e.value)
+    assert "Expression references no bands" in str(e.value)
+
+
+def test_parse_userbandmath_banned_op(dummy_product):
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                                  {
+                                      "code": "red<green",
+                                      "colorscheme": "viridis",
+                                      "colorscalerange": "0,2"
+                                  })
+    assert "not supported" in str(e.value)
+    assert "Code expression invalid" in str(e.value)
+
+def test_parse_userbandmath_bad_code(dummy_product):
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                          {
+                              "code": "2*(red@nir)/(red#nir)",
+                              "colorscheme": "viridis",
+                              "colorscalerange": "0,2"
+                          })
+    assert "Code expression invalid" in str(e.value)
+
+
+def test_parse_userbandmath_bad_scheme(dummy_product):
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                                                              {
+                                                                  "code": "2*(red-nir)/(red+nir)",
+                                                                  "colorscheme": "i_am_not_a_matplotlib_scheme",
+                                                                  "colorscalerange": "0,2"
+                                                              })
+    assert "Invalid Matplotlib ramp name:" in str(e.value)
+
+
+def test_parse_no2_colorscalerange(dummy_product):
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                                                              {
+                                                                  "code": "2*(red-nir)/(red+nir)",
+                                                                  "colorscheme": "viridis",
+                                                                  "colorscalerange": "0,2,4,6,8,9,15,52"
+                                                              })
+    assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                                                              {
+                                                                  "code": "2*(red-nir)/(red+nir)",
+                                                                  "colorscheme": "viridis",
+                                                                  "colorscalerange": "2"
+                                                              })
+    assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
+
+
+def test_parse_nonnumeric_colorscalerange(dummy_product):
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                                                              {
+                                                                  "code": "2*(red-nir)/(red+nir)",
+                                                                  "colorscheme": "viridis",
+                                                                  "colorscalerange": "0,spam",
+                                                              })
+    assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                                                              {
+                                                                  "code": "2*(red-nir)/(red+nir)",
+                                                                  "colorscheme": "viridis",
+                                                                  "colorscalerange": "spam,2"
+                                                              })
+    assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
+
+
+def test_parse_unsorted_colorscalerange(dummy_product):
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                          {
+                              "code": "2*(red-nir)/(red+nir)",
+                              "colorscheme": "viridis",
+                              "colorscalerange": "0,spam",
+                          })
+    assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
+    with pytest.raises(WMSException) as e:
+        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+                            {
+                                "code": "2*(red-nir)/(red+nir)",
+                                "colorscheme": "viridis",
+                                "colorscalerange": "2,0"
+                            })
+    assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
