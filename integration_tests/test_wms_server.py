@@ -60,18 +60,18 @@ def test_getcap_badsvc(ows_server):
 
 
 def test_getcap_xsd(ows_server):
-    resp = request.urlopen(
+    resp = requests.get(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
         timeout=10,
     )
 
     # Confirm success
-    assert resp.code == 200
+    assert resp.status_code == 200
 
-    caps_document = resp.fp.read()
+    caps_document = resp.text
 
     # Validate XML Schema
-    resp_xml = etree.fromstring(caps_document)
+    resp_xml = etree.fromstring(resp.content)
     gc_xds = get_xsd("capabilities_extensions.xsd")
     result = gc_xds.validate(resp_xml)
     if not result:
