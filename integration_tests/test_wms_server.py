@@ -68,10 +68,10 @@ def test_getcap_xsd(ows_server):
     # Confirm success
     assert resp.code == 200
 
-    caps_document = resp.text
+    caps_document = resp.fp.read()
 
     # Validate XML Schema
-    resp_xml = etree.parse(caps_document)
+    resp_xml = etree.fromstring(caps_document)
     gc_xds = get_xsd("capabilities_extensions.xsd")
     result = gc_xds.validate(resp_xml)
     if not result:
