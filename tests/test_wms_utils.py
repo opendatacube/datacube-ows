@@ -62,8 +62,8 @@ def test_parse_userbandmath_nobands(dummy_product):
                                   "colorscheme": "viridis",
                                   "colorscalerange": "0,2"
                               })
-    assert "not supported" in str(e.value)
     assert "Code expression invalid" in str(e.value)
+    assert "Expression references no bands" in str(e.value)
 
 
 def test_parse_userbandmath_banned_op(dummy_product):
