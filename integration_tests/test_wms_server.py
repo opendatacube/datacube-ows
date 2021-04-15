@@ -72,6 +72,7 @@ def test_getcap_xsd(ows_server):
     resp_xml = etree.parse(resp.fp)
     gc_xds = get_xsd("capabilities_extensions.xsd")
     result = gc_xds.validate(resp_xml)
+    assert gc_xds.error_log.last_error is None
     assert result
 
 
