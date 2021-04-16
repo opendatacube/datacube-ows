@@ -21,7 +21,7 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
                                        cfg_expand, import_python_obj,
-                                       load_json_obj)
+                                       load_json_obj, fetch_from_s3)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, local_solar_date_range,
@@ -41,6 +41,8 @@ def read_config(path=None):
         cfg_env = os.environ.get("DATACUBE_OWS_CFG")
     if not cfg_env:
         from datacube_ows.ows_cfg import ows_cfg as cfg
+    elif cfg_env.startswith("s3://") and cfg_env.endswith(".py"):
+        cfg = fetch_from_s3(cfg_env)
     elif "/" in cfg_env or cfg_env.endswith(".json"):
         cfg = load_json_obj(cfg_env)
         abs_path =  os.path.abspath(cfg_env)
