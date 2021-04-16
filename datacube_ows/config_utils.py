@@ -64,7 +64,6 @@ def load_json_obj(path):
     with open(path) as json_file:
         return json.load(json_file)
 
-# pylint: disable=raise-missing-from
 def fetch_from_s3(uri):
     """Fetches ows_cfg from S3"""
     dst = os.path.dirname(__file__) + "/ows_cfg.py"
