@@ -3,6 +3,9 @@ import os
 from importlib import import_module
 from typing import Mapping, Sequence
 
+from botocore.exceptions import NoCredentialsError, ClientError
+from datacube.utils.aws import s3_fetch
+
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
@@ -61,6 +64,22 @@ def load_json_obj(path):
     with open(path) as json_file:
         return json.load(json_file)
 
+# pylint: disable=raise-missing-from
+def fetch_from_s3(uri):
+    """Fetches ows_cfg from S3"""
+    dst = os.path.dirname(__file__) + "/ows_cfg.py"
+    try:
+        _cfg = s3_fetch(uri)
+    except (NoCredentialsError, ClientError):
+        raise ValueError("Could not fetch OWS config from S3!")
+
+    with open(dst, "wb") as the_file:
+        the_file.write(_cfg)
+
+    mod = import_module("datacube_ows.ows_cfg")
+    obj = getattr(mod, "ows_cfg")
+
+    return obj
 
 def import_python_obj(path):
     """Imports a python dictionary by fully-qualified path
