@@ -1,11 +1,21 @@
-name: Publish datacube-ows distributions 📦 to PyPI and TestPyPI
+---------
+name: PyPI
 
-on: push
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**"
+
+  release:
+    types: [created, edited, published]
 
 jobs:
   build-n-publish:
     name: Build and publish datacube-ows distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-20.04
+    if: github.ref == 'refs/heads/master' || github.event_name == 'release'
 
   steps:
     - uses: actions/checkout@master
