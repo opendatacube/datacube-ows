@@ -37,6 +37,8 @@ jobs:
           --wheel
           --outdir dist/
           .
+      - name: Twine check
+        run: |
           twine check dist/*
       - name: Publish distribution 📦 to Test PyPI
         uses: pypa/gh-action-pypi-publish@master
