@@ -238,14 +238,10 @@ class DataStacker:
                             band_time_slices.append(timeless_band_data)
                         timed_band_data = xarray.concat(band_time_slices, data.time)
                         data_new_bands[band] = timed_band_data
-
                     data = data.assign(data_new_bands)
                     continue
-            for band in pbq.bands:
-                data = data.assign({
-                    band: qry_result[band]
-                    for band in pbq.bands
-                })
+            qry_result.coords["time"] = data.coords["time"]
+            data = xarray.combine_by_coords([data, qry_result], join="exact")
 
         return data
 

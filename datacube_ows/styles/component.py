@@ -8,9 +8,10 @@ from datacube_ows.styles.base import StyleDefBase
 
 
 class ComponentStyleDef(StyleDefBase):
-    def __init__(self, product, style_cfg, local_band_map=None, stand_alone=False, defer_multi_date=False):
+    def __init__(self, product, style_cfg,
+                 stand_alone=False, defer_multi_date=False, user_defined=False):
         super().__init__(product, style_cfg,
-                         stand_alone=stand_alone, defer_multi_date=defer_multi_date)
+                         stand_alone=stand_alone, defer_multi_date=defer_multi_date, user_defined=user_defined)
         style_cfg = self._raw_cfg
         self.raw_rgb_components = {}
         for imgband in ["red", "green", "blue", "alpha"]:

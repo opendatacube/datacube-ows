@@ -48,6 +48,14 @@ geospatial libraries.  Dependency conflicts are almost unavoidable in environmen
 other large complex geospatial software packages.  We therefore strongly recommend some kind of
 containerised solution and we supply scripts for building appropriate Docker containers.
 
+Linting
+-------
+
+..::
+    flake8 . --exclude Dockerfile --ignore=E501 --select=F401,E201,E202,E203,E502,E241,E225,E306,E231,E226,E123,F811
+    isort --check --diff **/*.py
+    autopep8  -r  --diff . --select F401,E201,E202,E203,E502,E241,E225,E306,E231,E226,E123,F811
+
 
 Docker-Compose
 --------------
@@ -259,4 +267,3 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
