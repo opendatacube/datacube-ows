@@ -18,7 +18,7 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.event_name == 'release'
 
   steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v2
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
