@@ -11,7 +11,7 @@ Transparency is a powerful tool for web maps. As well as basic recurring use cas
 or invalid data, partial transparency can also be used to crafting novel ways of delivering additional
 information.
 
-Datacube OWS has four[1]_ different ways of achieving transparency.
+Datacube OWS has four [1]_ different ways of achieving transparency.
 
 We've already seen how to use transparency in colour-ramp styles in the last chapter, and in
 colour-map styles in this one.  Both used an entry called "alpha". The context differed, but
@@ -39,7 +39,7 @@ discrete and continuous measurement bands, or if the masking bands are drawn fro
 Example Data for Masking
 &&&&&&&&&&&&&&&&&&&&&&&&
 
-For the examples here I am using the Collection 3 WOFS example from the previous chapter, with continuous
+For the examples here I am masking with the Collection 3 WOFS example from the previous chapter, with continuous
 data from the Collection 3 Fractional Cover product:
 
 ::
@@ -70,8 +70,8 @@ data from the Collection 3 Fractional Cover product:
         group_by="solar_day"
     )
 
-    # Time coordinates come back slightly differently from the two products, so we need to align them
-    # before we combine.
+    # Time coordinates come back slightly differently from the two products, so we need
+    # to align them before we combine.
 
     discrete_data.coords["time"] = parallel_data.coords["time"]
     combined_data = xr.combine_by_coords(
@@ -156,9 +156,9 @@ can be done using ``enum`` masking rules:
         "components": {
             "red": {"bs": 1.0},
             "green": {"pv": 1.0},
-            "blue": {"npv": 1.0}},
-        "scale_range": [0.0, 100.0],
+            "blue": {"npv": 1.0}
         },
+        "scale_range": [0.0, 100.0],
         "pq_masks": [
             {
                 "band": "water",
@@ -173,8 +173,8 @@ can be done using ``enum`` masking rules:
 `View full size
 <https://user-images.githubusercontent.com/4548530/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.png>`_
 
-What happened here?  Remember pq_masking rules specify the values to keep, so setting enum 1 means that we
-only want to keep pixels which are marked nodata in WOFS!
+What happened here?  Remember pq_masking rules specify the values to keep, so setting enum to 1 means that we
+only keep pixels which are marked nodata in WOFS - everything else becomes transparent.
 
 Example: Inverted enum mask
 &&&&&&&&&&&&&&&&&&&&&&&&&&&

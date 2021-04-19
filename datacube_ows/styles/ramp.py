@@ -14,6 +14,7 @@ matplotlib.use('Agg')
 
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
+from datacube_ows.styles.expression import Expression
 
 _LOG = logging.getLogger(__name__)
 
@@ -520,22 +521,27 @@ class ColorRamp:
 
 class ColorRampDef(StyleDefBase):
     auto_legend = True
-    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False):
+    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
         super(ColorRampDef, self).__init__(product, style_cfg,
-                           stand_alone=stand_alone, defer_multi_date=defer_multi_date)
+                           stand_alone=stand_alone, defer_multi_date=defer_multi_date, user_defined=user_defined)
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
-
-        if not self.stand_alone:
-            for band in style_cfg["needed_bands"]:
-                self.raw_needed_bands.add(band)
-
         self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
 
         if "index_function" in style_cfg:
             self.index_function = FunctionWrapper(self,
                                                   style_cfg["index_function"],
                                                   stand_alone=self.stand_alone)
+            if not self.stand_alone:
+                for band in style_cfg["needed_bands"]:
+                    self.raw_needed_bands.add(band)
+        elif "index_expression" in style_cfg:
+            self.index_function = Expression(self, style_cfg["index_expression"])
+            for band in self.index_function.needed_bands:
+                self.raw_needed_bands.add(band)
+            if self.stand_alone:
+                self.needed_bands = [self.local_band(b) for b in self.raw_needed_bands]
+                self.flag_bands = []
         else:
             raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
                 self.name,

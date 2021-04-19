@@ -509,6 +509,7 @@ ows_cfg = {
         "s3_url": "http://data.au",
         "s3_bucket": "s3_bucket_name",
         "s3_aws_zone": "ap-southeast-2",
+        "user_band_math_extension": True,
         # Max tile height/width for wms.  (N.B. Does not apply to WMTS)
         # Optional, defaults to 256x256
         "max_width": 512,
@@ -620,6 +621,7 @@ ows_cfg = {
                     "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set",
                     "name": "ls8_usgs_level1_scene_layer",
                     "product_name": "ls8_usgs_level1_scene",
+                    "user_band_math": True,
                     "bands": ls8_usgs_level1_bands,
                     "resource_limits": standard_resource_limits,
                     "flags": [

@@ -9,7 +9,6 @@ from owslib.wms import WebMapService
 def get_xsd(name):
     xsd_f = open("wms_xsds/" + name)
     schema_doc = etree.parse(xsd_f)
-
     return etree.XMLSchema(schema_doc)
 
 
@@ -60,19 +59,25 @@ def test_getcap_badsvc(ows_server):
     )
 
 
-def test_getcap(ows_server):
-    resp = request.urlopen(
+def test_getcap_xsd(ows_server):
+    resp = requests.get(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
         timeout=10,
     )
 
     # Confirm success
-    assert resp.code == 200
+    assert resp.status_code == 200
+
+    caps_document = resp.text
 
     # Validate XML Schema
-    resp_xml = etree.parse(resp.fp)
-    gc_xds = get_xsd("capabilities_1_3_0.xsd")
-    assert gc_xds.validate(resp_xml)
+    resp_xml = etree.fromstring(resp.content)
+    gc_xds = get_xsd("capabilities_extensions_local.xsd")
+    result = gc_xds.validate(resp_xml)
+    if not result:
+        assert gc_xds.error_log.last_error == caps_document
+    assert gc_xds.error_log.last_error is None
+    assert result
 
 
 def test_getcap_coord_order(ows_server):
