@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+import xarray
 import xarray as xr
 
 from tests.utils import dummy_da, coords, dim1_da
@@ -397,3 +398,42 @@ def dummy_col_map_data():
                       })
     })
     return output
+
+
+@pytest.fixture
+def dummy_raw_ls_data():
+    output = xr.Dataset({
+        "red": dummy_da(5, "red", coords, dtype=np.int16),
+        "green": dummy_da(7, "green", coords, dtype=np.int16),
+        "blue": dummy_da(2, "blue", coords, dtype=np.int16),
+        "nir": dummy_da(101, "nir", coords, dtype=np.int16),
+        "swir1": dummy_da(1051, "swir1", coords, dtype=np.int16),
+        "swir2": dummy_da(1051, "swir2", coords, dtype=np.int16),
+    })
+    return output
+
+
+@pytest.fixture
+def dummy_raw_wo_data():
+    output = xr.Dataset({
+        "water": dummy_da(0b101, "red", coords, dtype=np.uint8),
+    })
+    return output
+
+
+@pytest.fixture
+def dummy_raw_fc_data():
+    output = xr.Dataset({
+        "bs": dummy_da(546, "bs", coords, dtype=np.int16),
+        "pv": dummy_da(723, "pv", coords, dtype=np.int16),
+        "npv": dummy_da(209, "npv", coords, dtype=np.int16),
+    })
+    return output
+
+
+@pytest.fixture
+def dummy_raw_fc_plus_wo(dummy_raw_fc_data, dummy_raw_wo_data):
+    return xarray.combine_by_coords(
+            [dummy_raw_fc_data, dummy_raw_wo_data],
+            join="exact")
+
