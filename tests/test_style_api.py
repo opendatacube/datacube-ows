@@ -1,30 +1,10 @@
-import numpy as np
 import pytest
-import xarray as xr
 
 from datacube_ows.styles.api import (StandaloneStyle, apply_ows_style,
                                      apply_ows_style_cfg, create_geobox,
                                      generate_ows_legend_style,
                                      generate_ows_legend_style_cfg,
                                      xarray_image_as_png)
-from tests.utils import coords, dim1_da, dummy_da
-
-
-@pytest.fixture
-def dummy_raw_data():
-    output = xr.Dataset({
-        "ir": dummy_da(3, "ir", coords),
-        "red": dummy_da(5, "red", coords),
-        "green": dummy_da(7, "green", coords),
-        "blue": dummy_da(2, "blue", coords),
-        "uv": dummy_da(-1, "uv", coords),
-    })
-    return output
-
-
-@pytest.fixture
-def null_mask():
-    return dummy_da(True, "mask", coords, dtype=np.bool)
 
 
 def test_indirect_imports():
@@ -117,58 +97,6 @@ def simple_ramp_style_cfg():
             {"value": 1.0, "color": "#FFFFFF"}
         ],
     }
-
-
-@pytest.fixture
-def dummy_raw_calc_data():
-    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
-    output = xr.Dataset({
-        "ir": dim1_da("ir", [800, 100, 1000, 600, 200, 1000], dim_coords),
-        "red": dim1_da("red", [200, 500, 0, 200, 200, 700], dim_coords),
-        "green": dim1_da("green", [100, 500, 0, 400, 300, 200], dim_coords),
-        "blue": dim1_da("blue", [200, 500, 1000, 600, 100, 700], dim_coords),
-        "uv": dim1_da("uv", [400, 600, 900, 200, 400, 100], dim_coords),
-        "pq": dim1_da("pq", [0b000, 0b001, 0b010, 0b011, 0b100, 0b111], dim_coords,
-                      attrs={
-                                "flags_definition": {
-                                    "splodgy": {
-                                        "bits": 2,
-                                        "values": {
-                                            '0': "Splodgeless",
-                                            '1': "Splodgy",
-                                        },
-                                        "description": "All splodgy looking"
-                                    },
-                                    "ugly": {
-                                        "bits": 1,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                        "description": "Real, real ugly",
-                                    },
-                                    "impossible": {
-                                        "bits": 0,
-                                        "values": {
-                                            '0': False,
-                                            '1': "Woah!"
-                                        },
-                                        "description": "Won't happen. Can't happen. Might happen.",
-                                    },
-                                }
-                            })
-    })
-    return output
-
-
-def dim1_null_mask(coords):
-    return dim1_da("mask", [True] * len(coords), coords)
-
-
-@pytest.fixture
-def raw_calc_null_mask():
-    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
-    return dim1_da("mask", [True] * len(dim_coords), dim_coords)
 
 
 def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
@@ -293,59 +221,6 @@ def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, r
     assert alphas[3] == 0
     assert alphas[4] == 0
     assert alphas[5] == 0
-
-
-@pytest.fixture
-def dummy_col_map_data():
-    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
-    output = xr.Dataset({
-        "pq": dim1_da("pq", [0b01000, 0b11001, 0b01010, 0b10011, 0b00100, 0b10111], dim_coords,
-                      attrs={
-                          "flags_definition": {
-                              "joviality": {
-                                  "bits": 3,
-                                  "values": {
-                                      '0': "Melancholic",
-                                      '1': "Joyous",
-                                  },
-                                  "description": "All splodgy looking"
-                              },
-                              "flavour": {
-                                  "bits": 3,
-                                  "values": {
-                                      '0': "Bland",
-                                      '1': "Tasty",
-                                  },
-                                  "description": "All splodgy looking"
-                              },
-                              "splodgy": {
-                                  "bits": 2,
-                                  "values": {
-                                      '0': "Splodgeless",
-                                      '1': "Splodgy",
-                                  },
-                                  "description": "All splodgy looking"
-                              },
-                              "ugly": {
-                                  "bits": 1,
-                                  "values": {
-                                      '0': False,
-                                      '1': True
-                                  },
-                                  "description": "Real, real ugly",
-                              },
-                              "impossible": {
-                                  "bits": 0,
-                                  "values": {
-                                      '0': False,
-                                      '1': "Woah!"
-                                  },
-                                  "description": "Won't happen. Can't happen. Might happen.",
-                              },
-                          }
-                      })
-    })
-    return output
 
 
 @pytest.fixture
