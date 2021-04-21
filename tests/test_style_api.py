@@ -373,3 +373,28 @@ def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_s
     for i in range(6):
         for c in ("red", "green", "blue", "alpha"):
             assert null_mask[c].values[i] == none_mask[c].values[i]
+
+
+def test_landsat_like_configs(dummy_raw_ls_data, configs_for_landsat, null_mask):
+    for cfg in configs_for_landsat:
+        style = StandaloneStyle(cfg)
+        mask = style.to_mask(dummy_raw_ls_data, null_mask)
+        result = style.transform_data(dummy_raw_ls_data, mask)
+        assert result
+
+
+def test_wofs_like_configs(dummy_raw_wo_data, configs_for_wofs, null_mask):
+    for cfg in configs_for_wofs:
+        style = StandaloneStyle(cfg)
+        mask = style.to_mask(dummy_raw_wo_data, null_mask)
+        result = style.transform_data(dummy_raw_wo_data, mask)
+        assert result
+
+
+def test_fc_wofs_like_configs(dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs, null_mask):
+    for cfg in configs_for_combined_fc_wofs:
+        style = StandaloneStyle(cfg)
+        mask = style.to_mask(dummy_raw_fc_plus_wo, null_mask)
+        result = style.transform_data(dummy_raw_fc_plus_wo, mask)
+        assert result
+
