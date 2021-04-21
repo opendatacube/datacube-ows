@@ -6,7 +6,7 @@ import pytest
 import xarray
 import xarray as xr
 
-from tests.utils import dummy_da, coords, dim1_da
+from tests.utils import coords, dim1_da, dummy_da
 
 
 @pytest.fixture
