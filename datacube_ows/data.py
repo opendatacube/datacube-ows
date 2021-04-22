@@ -694,7 +694,10 @@ def feature_info(args):
                         ds = dss.sel(time=dt).values.tolist()[0]
                         break
                 if params.product.multi_product:
-                    date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
+                    if "platform" in ds.metadata_doc:
+                        date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
+                    else:
+                        date_info["source_product"] = ds.type.name
 
                 # Extract data pixel
                 pixel_ds = td.isel(**isel_kwargs)
