@@ -320,17 +320,28 @@ number of dates accepted by that handler.  The allowed count ranges
 of declared multi-date handlers cannot overlap and a multi-date handler
 cannot handle a request with 1 (or 0) dates.
 
+There is also an optional boolean entry ``preserve_user_date_order``.
+The default value is False, which means the date dimension coordinates
+of the Xarray dataset passed to the multidate handler at render time
+will be as returned by ``dc.load`` - i.e. sorted in chronological order.
+If ``preserve_user_date_order`` is set to True, then the date coordinates
+of the dataset are resorted to match the date order passed in by the user
+in the WMS request.
+
 E.g. ::
 
     "multi_date": [
         {
             # This multi-date handler handles requests with 2 dates.
             "allowed_count_range": [2, 2],
+            # No "preserve_user_date_order" specified - defaults to False.
             ...
         },
         {
             # This multi-date handler handles requests with between 3 and 5 dates.
             "allowed_count_range": [3, 5],
+            # Preserve user-supplied date order.
+            "preserve_user_date_order": True,
             ...
         },
         {
