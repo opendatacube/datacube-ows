@@ -16,6 +16,7 @@ from datacube.utils.masking import mask_to_dict
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
+from pandas import Timestamp
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
@@ -141,6 +142,10 @@ class DataStacker:
         ]
         self.group_by = self._product.dataset_groupby()
         self.resource_limited = False
+
+    @property
+    def geobox(self):
+        return self._geobox
 
     def needed_bands(self):
         return self._needed_bands
@@ -336,6 +341,12 @@ def get_map(args):
             raise WMSException("Style %s does not support GetMap requests with %d dates" % (params.style.name, n_dates),
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
     qprof["n_dates"] = n_dates
+    user_order = None
+    if mdh is not None and mdh.preserve_user_date_order:
+        user_order = [
+            (date, idx)
+            for idx, date in enumerate(params.times)
+        ]
     with cube() as dc:
         if not dc:
             raise WMSException("Database connectivity failure")
@@ -398,6 +409,7 @@ def get_map(args):
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             qprof.start_event("build-masks")
             td_masks = []
+            np_user_order = []
             for npdt in data.time.values:
                 td = data.sel(time=npdt)
                 td_ext_mask = None
@@ -417,6 +429,13 @@ def get_map(args):
                 if params.product.data_manual_merge:
                     td_ext_mask = xarray.DataArray(td_ext_mask)
                 td_masks.append(td_ext_mask)
+                if user_order:
+                    ts = Timestamp(npdt).tz_localize("UTC")
+                    solar_day = solar_date(ts, tz_for_geometry(params.geobox.geographic_extent))
+                    for udate, usort in user_order:
+                        if udate == solar_day:
+                            np_user_order.append(usort)
+                            break
             extent_mask = xarray.concat(td_masks, dim=data.time)
             qprof.end_event("build-masks")
 
@@ -425,6 +444,19 @@ def get_map(args):
                 body = _write_empty(params.geobox)
             else:
                 qprof["write_action"] = "Write Data"
+                if np_user_order:
+                    npsort = numpy.array(np_user_order, dtype="uint8")
+                    xr_user_order = xarray.DataArray(
+                        npsort,
+                        coords={
+                            "time": data.coords["time"],
+                        },
+                        dims=["time"],
+                        name="user_date_sort_order"
+                    )
+                    data = data.sortby(xr_user_order)
+                    extent_mask = extent_mask.sortby(xr_user_order)
+
                 body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
 
     if params.ows_stats:

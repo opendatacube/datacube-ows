@@ -269,6 +269,7 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             else:
                 raise ConfigException("Aggregator function is required for multi-date handlers.")
             self.parse_legend_cfg(cfg.get("legend", {}))
+            self.preserve_user_date_order = cfg.get("preserve_user_date_order", False)
 
         def applies_to(self, count):
             return (self.min_count <= count and self.max_count >= count)
