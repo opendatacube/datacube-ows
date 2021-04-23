@@ -13,10 +13,10 @@ import numpy.ma
 import xarray
 from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
+from pandas import Timestamp
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
-from pandas import Timestamp
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
