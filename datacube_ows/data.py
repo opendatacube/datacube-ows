@@ -326,6 +326,19 @@ def bbox_to_geom(bbox, crs):
     return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
 
 
+def user_date_sorter(odc_dates, geom, user_dates):
+    tz = tz_for_geometry(geom)
+    result = []
+    for npdt in odc_dates.values:
+        ts = Timestamp(npdt).tz_localize("UTC")
+        solar_day = solar_date(ts, tz)
+        for idx, date in enumerate(user_dates):
+            if date == solar_day:
+                result.append(idx)
+                break
+    return result
+
+
 @log_call
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
@@ -341,12 +354,6 @@ def get_map(args):
             raise WMSException("Style %s does not support GetMap requests with %d dates" % (params.style.name, n_dates),
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
     qprof["n_dates"] = n_dates
-    user_order = None
-    if mdh is not None and mdh.preserve_user_date_order:
-        user_order = [
-            (date, idx)
-            for idx, date in enumerate(params.times)
-        ]
     with cube() as dc:
         if not dc:
             raise WMSException("Database connectivity failure")
@@ -409,7 +416,6 @@ def get_map(args):
             _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
             qprof.start_event("build-masks")
             td_masks = []
-            np_user_order = []
             for npdt in data.time.values:
                 td = data.sel(time=npdt)
                 td_ext_mask = None
@@ -429,13 +435,6 @@ def get_map(args):
                 if params.product.data_manual_merge:
                     td_ext_mask = xarray.DataArray(td_ext_mask)
                 td_masks.append(td_ext_mask)
-                if user_order:
-                    ts = Timestamp(npdt).tz_localize("UTC")
-                    solar_day = solar_date(ts, tz_for_geometry(params.geobox.geographic_extent))
-                    for udate, usort in user_order:
-                        if udate == solar_day:
-                            np_user_order.append(usort)
-                            break
             extent_mask = xarray.concat(td_masks, dim=data.time)
             qprof.end_event("build-masks")
 
