@@ -336,7 +336,14 @@ def user_date_sorter(odc_dates, geom, user_dates):
             if date == solar_day:
                 result.append(idx)
                 break
-    return result
+    npresult = numpy.array(result, dtype="uint8")
+    xrresult = xarray.DataArray(
+        npresult,
+        coords={"time": odc_dates},
+        dims=["time"],
+        name="user_date_sorter"
+    )
+    return xrresult
 
 
 @log_call
@@ -443,18 +450,12 @@ def get_map(args):
                 body = _write_empty(params.geobox)
             else:
                 qprof["write_action"] = "Write Data"
-                if np_user_order:
-                    npsort = numpy.array(np_user_order, dtype="uint8")
-                    xr_user_order = xarray.DataArray(
-                        npsort,
-                        coords={
-                            "time": data.coords["time"],
-                        },
-                        dims=["time"],
-                        name="user_date_sort_order"
-                    )
-                    data = data.sortby(xr_user_order)
-                    extent_mask = extent_mask.sortby(xr_user_order)
+                if mdh and  mdh.preserve_user_date_order:
+                    sorter = user_date_sorter(data.time,
+                                          params.geobox.geographic_extent,
+                                          params.times)
+                    data = data.sortby(sorter)
+                    extent_mask = extent_mask.sortby(sorter)
 
                 body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
 
