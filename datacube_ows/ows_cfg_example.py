@@ -777,6 +777,10 @@ style_ndvi_delta = {
             # The count range for which this handler is to be used - a tuple of two ints, the smallest and
             # largest date counts for which this handler will be used.  Required.
             "allowed_count_range": [2, 2],
+            # Re-sort data returned from the ODC so the order of date coordinates in the "time" dimension
+            # matches the date order supplied by the user in the WMS request.
+            # Optional. Defaults to False (date coordinates in the "time" dimension are always sorted chronologically)
+            "preserve_user_date_order": True,
             # A function, expressed in the standard format as described elsewhere in this example file.
             # The function is assumed to take one arguments, an xarray Dataset.
             # The function returns an xarray Dataset with a single band, which is the input to the

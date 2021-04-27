@@ -13,6 +13,7 @@ import numpy.ma
 import xarray
 from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
+from pandas import Timestamp
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
@@ -321,6 +322,26 @@ def bbox_to_geom(bbox, crs):
     return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
 
 
+def user_date_sorter(odc_dates, geom, user_dates):
+    tz = tz_for_geometry(geom)
+    result = []
+    for npdt in odc_dates:
+        ts = Timestamp(npdt).tz_localize("UTC")
+        solar_day = solar_date(ts, tz)
+        for idx, date in enumerate(user_dates):
+            if date == solar_day:
+                result.append(idx)
+                break
+    npresult = numpy.array(result, dtype="uint8")
+    xrresult = xarray.DataArray(
+        npresult,
+        coords={"time": odc_dates},
+        dims=["time"],
+        name="user_date_sorter"
+    )
+    return xrresult
+
+
 @log_call
 def get_map(args):
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
@@ -425,6 +446,13 @@ def get_map(args):
                 body = _write_empty(params.geobox)
             else:
                 qprof["write_action"] = "Write Data"
+                if mdh and  mdh.preserve_user_date_order:
+                    sorter = user_date_sorter(data.time.values,
+                                          params.geobox.geographic_extent,
+                                          params.times)
+                    data = data.sortby(sorter)
+                    extent_mask = extent_mask.sortby(sorter)
+
                 body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
 
     if params.ows_stats:
