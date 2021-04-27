@@ -3,9 +3,9 @@ import datetime
 import numpy as np
 import pytest
 import pytz
+from datacube.utils import geometry
 
 import datacube_ows.data
-from datacube.utils import geometry
 from datacube_ows.data import ProductBandQuery, get_s3_browser_uris
 from tests.test_styles import product_layer  # noqa: F401
 
