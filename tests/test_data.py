@@ -1,5 +1,8 @@
 import numpy as np
+import xarray as xr
 import pytest
+import datetime
+import pytz
 
 import datacube_ows.data
 from datacube_ows.data import ProductBandQuery, get_s3_browser_uris
@@ -259,3 +262,28 @@ def test_pbq_ctor_full(product_layer): # noqa: F811
         "Query bands ('wongle', 'pq') from products [FakeODCProduct(test_masking_product)]",
         "Query bands ('pq', 'wongle') from products [FakeODCProduct(test_masking_product)]",
     )
+
+
+def test_user_date_sorter():
+    from datacube.utils import geometry
+    minx, maxx = 140,141
+    miny, maxy = -35,-34
+    crs = "EPSG:4326"
+    geom = geometry.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
+
+    odc_dates =  [
+        np.datetime64(datetime.datetime(2018,12,31,20,0,0,tzinfo=pytz.UTC)),
+        np.datetime64(datetime.datetime(2019,12,31,20,0,0,tzinfo=pytz.UTC)),
+        np.datetime64(datetime.datetime(2020,12,31,20,0,0,tzinfo=pytz.UTC)),
+    ]
+
+    user_dates = [
+        datetime.date(2021,1,1),
+        datetime.date(2019,1,1),
+        datetime.date(2020,1,1),
+    ]
+
+    sorter = datacube_ows.data.user_date_sorter(odc_dates, geom, user_dates)
+    assert sorter.values[0] == 1
+    assert sorter.values[1] == 2
+    assert sorter.values[2] == 0

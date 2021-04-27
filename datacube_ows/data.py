@@ -143,10 +143,6 @@ class DataStacker:
         self.group_by = self._product.dataset_groupby()
         self.resource_limited = False
 
-    @property
-    def geobox(self):
-        return self._geobox
-
     def needed_bands(self):
         return self._needed_bands
 
@@ -329,7 +325,7 @@ def bbox_to_geom(bbox, crs):
 def user_date_sorter(odc_dates, geom, user_dates):
     tz = tz_for_geometry(geom)
     result = []
-    for npdt in odc_dates.values:
+    for npdt in odc_dates:
         ts = Timestamp(npdt).tz_localize("UTC")
         solar_day = solar_date(ts, tz)
         for idx, date in enumerate(user_dates):
@@ -451,7 +447,7 @@ def get_map(args):
             else:
                 qprof["write_action"] = "Write Data"
                 if mdh and  mdh.preserve_user_date_order:
-                    sorter = user_date_sorter(data.time,
+                    sorter = user_date_sorter(data.time.values,
                                           params.geobox.geographic_extent,
                                           params.times)
                     data = data.sortby(sorter)
