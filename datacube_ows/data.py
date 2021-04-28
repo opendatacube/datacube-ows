@@ -220,25 +220,36 @@ class DataStacker:
             if data is None:
                 data = qry_result
                 continue
+            if len(data.time) == 0:
+                # No data, so no need for masking data.
+                continue
             if pbq.ignore_time:
                 # regularise time dimension:
-                if len(qry_result.time) != 1:
+                if len(qry_result.time) > 1:
                     raise WMSException("Cannot ignore time on PQ (flag) bands from a time-aware product")
-                if len(data.time) == 0:
-                    # No data, so no need for masking data.
-                    continue
                 elif len(qry_result.time) == len(data.time):
                     qry_result["time"] = data.time
                 else:
-                    data_new_bands = {}
-                    for band in pbq.bands:
-                        band_data = qry_result[band]
-                        timeless_band_data = band_data.sel(time=qry_result.time.values[0])
-                        band_time_slices = []
-                        for dt in data.time.values:
-                            band_time_slices.append(timeless_band_data)
-                        timed_band_data = xarray.concat(band_time_slices, data.time)
-                        data_new_bands[band] = timed_band_data
+                    if len(qry_result.time) == 0:
+                        for var in data.data_vars.variables.keys():
+                            break
+                        template = getattr(data, var)
+                        new_data = numpy.ndarray(template.shape)
+                        new_data.fill(0)
+                        qry_result = template.copy(data=new_data)
+                        data_new_bands = {}
+                        for band in pbq.bands:
+                            data_new_bands[band] = qry_result
+                    else:
+                        data_new_bands = {}
+                        for band in pbq.bands:
+                            band_data = qry_result[band]
+                            timeless_band_data = band_data.sel(time=qry_result.time.values[0])
+                            band_time_slices = []
+                            for dt in data.time.values:
+                                band_time_slices.append(timeless_band_data)
+                            timed_band_data = xarray.concat(band_time_slices, data.time)
+                            data_new_bands[band] = timed_band_data
                     data = data.assign(data_new_bands)
                     continue
             qry_result.coords["time"] = data.coords["time"]
