@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 import pytz
 
-from datacube_ows.ows_configuration import (TIMERES_DAY_SUMMARY, TIMERES_MON,
+from datacube_ows.ows_configuration import (TIMERES_DAY, TIMERES_MON,
                                             TIMERES_RAW, TIMERES_YR,
                                             OWSProductLayer)
 
@@ -27,7 +27,7 @@ def dummy_raw_layer():
 
 @pytest.fixture
 def dummy_sumday_layer():
-    return dummy_timeres_layer(TIMERES_DAY_SUMMARY)
+    return dummy_timeres_layer(TIMERES_DAY)
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def test_raw_timeres(dummy_raw_layer, simple_geobox):
 
 def test_sumday_timeres(dummy_sumday_layer):
     assert not dummy_sumday_layer.is_raw_time_res
-    assert dummy_sumday_layer.is_day_summary_time_res
+    assert dummy_sumday_layer.is_day_time_res
     assert not dummy_sumday_layer.is_month_time_res
     assert not dummy_sumday_layer.is_year_time_res
     gby = dummy_sumday_layer.dataset_groupby()

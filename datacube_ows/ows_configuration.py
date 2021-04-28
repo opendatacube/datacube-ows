@@ -295,11 +295,11 @@ class CacheControlRules(OWSConfigEntry):
 
 
 TIMERES_RAW = "raw"
-TIMERES_DAY_SUMMARY = "day_summary"
+TIMERES_DAY = "day"
 TIMERES_MON = "month"
 TIMERES_YR  = "year"
 
-TIMERES_VALS = [TIMERES_RAW, TIMERES_DAY_SUMMARY, TIMERES_MON, TIMERES_YR]
+TIMERES_VALS = [TIMERES_RAW, TIMERES_DAY, TIMERES_MON, TIMERES_YR]
 
 
 class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
@@ -722,8 +722,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return self.time_resolution == TIMERES_RAW
 
     @property
-    def is_day_summary_time_res(self):
-        return self.time_resolution == TIMERES_DAY_SUMMARY
+    def is_day_time_res(self):
+        return self.time_resolution == TIMERES_DAY
 
     @property
     def is_month_time_res(self):
@@ -738,7 +738,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             return month_date_range(t)
         elif self.is_year_time_res:
             return year_date_range(t)
-        elif self.is_day_summary_time_res:
+        elif self.is_day_time_res:
             return day_summary_date_range(t)
         else:
             if not geobox:
