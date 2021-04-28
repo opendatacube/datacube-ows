@@ -268,6 +268,9 @@ are mapped to user-accessible dates. The acceptable values are:
   (i.e. the date below the satellite at the time, not relative
   to a single fixed timezone.)
 
+* "day"
+  Data has time dimension with absolute (non-local) day resolution.
+
 * "month"
   Data is expected to be monthly summary data, with a begin-time
   corresponding to the start of the month (UTC).
