@@ -94,6 +94,10 @@ def year_date_range(date):
     end = datetime.datetime(date.year, 12, 31, 23, 59, 59)
     return start, end
 
+def day_summary_date_range(date):
+    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0)
+    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59)
+    return start, end
 
 def tz_for_geometry(geom):
     crs_geo = geometry.CRS("EPSG:4326")

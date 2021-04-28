@@ -25,7 +25,7 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, local_solar_date_range,
-                                    month_date_range, year_date_range)
+                                    month_date_range, year_date_range, day_summary_date_range)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.utils import group_by_statistical
@@ -294,10 +294,11 @@ class CacheControlRules(OWSConfigEntry):
 
 
 TIMERES_RAW = "raw"
+TIMERES_DAY_SUMMARY = "day_summary"
 TIMERES_MON = "month"
 TIMERES_YR  = "year"
 
-TIMERES_VALS = [TIMERES_RAW, TIMERES_MON, TIMERES_YR]
+TIMERES_VALS = [TIMERES_RAW, TIMERES_DAY_SUMMARY, TIMERES_MON, TIMERES_YR]
 
 
 class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
@@ -720,6 +721,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return self.time_resolution == TIMERES_RAW
 
     @property
+    def is_day_summary_res(self):
+        return self.time_resolution == TIMERES_DAY_SUMMARY
+
+    @property
     def is_month_time_res(self):
         return self.time_resolution == TIMERES_MON
 
@@ -732,6 +737,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             return month_date_range(t)
         elif self.is_year_time_res:
             return year_date_range(t)
+        elif self.is_day_summary_res:
+            return day_summary_date_range(t)
         else:
             if not geobox:
                 bbox = self.ranges["bboxes"][self.native_CRS]
