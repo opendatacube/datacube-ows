@@ -13,6 +13,7 @@ import numpy.ma
 import xarray
 from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
+from pandas import Timestamp
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 from skimage.draw import polygon as skimg_polygon
@@ -219,25 +220,37 @@ class DataStacker:
             if data is None:
                 data = qry_result
                 continue
+            if len(data.time) == 0:
+                # No data, so no need for masking data.
+                continue
             if pbq.ignore_time:
                 # regularise time dimension:
-                if len(qry_result.time) != 1:
+                if len(qry_result.time) > 1:
                     raise WMSException("Cannot ignore time on PQ (flag) bands from a time-aware product")
-                if len(data.time) == 0:
-                    # No data, so no need for masking data.
-                    continue
                 elif len(qry_result.time) == len(data.time):
                     qry_result["time"] = data.time
                 else:
-                    data_new_bands = {}
-                    for band in pbq.bands:
-                        band_data = qry_result[band]
-                        timeless_band_data = band_data.sel(time=qry_result.time.values[0])
-                        band_time_slices = []
-                        for dt in data.time.values:
-                            band_time_slices.append(timeless_band_data)
-                        timed_band_data = xarray.concat(band_time_slices, data.time)
-                        data_new_bands[band] = timed_band_data
+                    if len(qry_result.time) == 0:
+                        var = "No data vars in result"
+                        for var in data.data_vars.variables.keys():
+                            break
+                        template = getattr(data, var)
+                        new_data = numpy.ndarray(template.shape)
+                        new_data.fill(0)
+                        qry_result = template.copy(data=new_data)
+                        data_new_bands = {}
+                        for band in pbq.bands:
+                            data_new_bands[band] = qry_result
+                    else:
+                        data_new_bands = {}
+                        for band in pbq.bands:
+                            band_data = qry_result[band]
+                            timeless_band_data = band_data.sel(time=qry_result.time.values[0])
+                            band_time_slices = []
+                            for dt in data.time.values:
+                                band_time_slices.append(timeless_band_data)
+                            timed_band_data = xarray.concat(band_time_slices, data.time)
+                            data_new_bands[band] = timed_band_data
                     data = data.assign(data_new_bands)
                     continue
             qry_result.coords["time"] = data.coords["time"]
@@ -319,6 +332,26 @@ def datasets_in_xarray(xa):
 
 def bbox_to_geom(bbox, crs):
     return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
+
+
+def user_date_sorter(odc_dates, geom, user_dates):
+    tz = tz_for_geometry(geom)
+    result = []
+    for npdt in odc_dates:
+        ts = Timestamp(npdt).tz_localize("UTC")
+        solar_day = solar_date(ts, tz)
+        for idx, date in enumerate(user_dates):
+            if date == solar_day:
+                result.append(idx)
+                break
+    npresult = numpy.array(result, dtype="uint8")
+    xrresult = xarray.DataArray(
+        npresult,
+        coords={"time": odc_dates},
+        dims=["time"],
+        name="user_date_sorter"
+    )
+    return xrresult
 
 
 @log_call
@@ -425,6 +458,13 @@ def get_map(args):
                 body = _write_empty(params.geobox)
             else:
                 qprof["write_action"] = "Write Data"
+                if mdh and  mdh.preserve_user_date_order:
+                    sorter = user_date_sorter(data.time.values,
+                                          params.geobox.geographic_extent,
+                                          params.times)
+                    data = data.sortby(sorter)
+                    extent_mask = extent_mask.sortby(sorter)
+
                 body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
 
     if params.ows_stats:
