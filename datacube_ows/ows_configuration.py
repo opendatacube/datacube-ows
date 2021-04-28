@@ -722,7 +722,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return self.time_resolution == TIMERES_RAW
 
     @property
-    def is_day_summary_res(self):
+    def is_day_summary_time_res(self):
         return self.time_resolution == TIMERES_DAY_SUMMARY
 
     @property
@@ -738,7 +738,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             return month_date_range(t)
         elif self.is_year_time_res:
             return year_date_range(t)
-        elif self.is_day_summary_res:
+        elif self.is_day_summary_time_res:
             return day_summary_date_range(t)
         else:
             if not geobox:

@@ -3,8 +3,9 @@ from datetime import datetime
 import pytest
 import pytz
 
-from datacube_ows.ows_configuration import (TIMERES_MON, TIMERES_RAW,
-                                            TIMERES_YR, OWSProductLayer)
+from datacube_ows.ows_configuration import (TIMERES_DAY_SUMMARY, TIMERES_MON,
+                                            TIMERES_RAW, TIMERES_YR,
+                                            OWSProductLayer)
 
 
 def dummy_timeres_layer(time_res):
@@ -22,6 +23,11 @@ class Thing:
 @pytest.fixture
 def dummy_raw_layer():
     return dummy_timeres_layer(TIMERES_RAW)
+
+
+@pytest.fixture
+def dummy_sumday_layer():
+    return dummy_timeres_layer(TIMERES_DAY_SUMMARY)
 
 
 @pytest.fixture
@@ -55,8 +61,23 @@ def test_raw_timeres(dummy_raw_layer, simple_geobox):
         datetime(2020, 6, 7, 20, 20, 0, tzinfo=pytz.utc),
         simple_geobox,
     ) == (
-        datetime(2020, 6, 6, 13, 55, tzinfo=pytz.utc),
-        datetime(2020, 6, 7, 13, 54, 59, tzinfo=pytz.utc),
+               datetime(2020, 6, 6, 13, 55, tzinfo=pytz.utc),
+               datetime(2020, 6, 7, 13, 54, 59, tzinfo=pytz.utc),
+           )
+
+
+def test_sumday_timeres(dummy_sumday_layer):
+    assert not dummy_sumday_layer.is_raw_time_res
+    assert dummy_sumday_layer.is_day_summary_time_res
+    assert not dummy_sumday_layer.is_month_time_res
+    assert not dummy_sumday_layer.is_year_time_res
+    gby = dummy_sumday_layer.dataset_groupby()
+    assert gby.dimension == 'time'
+
+    assert dummy_sumday_layer.search_times(datetime(2020, 6, 7, 0, 0, 0, tzinfo=pytz.utc)
+    ) == (
+        datetime(2020, 6, 7, 0, 0, 0),
+        datetime(2020, 6, 7, 23, 59, 59)
     )
 
 
