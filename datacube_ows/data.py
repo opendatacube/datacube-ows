@@ -231,6 +231,7 @@ class DataStacker:
                     qry_result["time"] = data.time
                 else:
                     if len(qry_result.time) == 0:
+                        var = "No data vars in result"
                         for var in data.data_vars.variables.keys():
                             break
                         template = getattr(data, var)
