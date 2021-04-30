@@ -16,9 +16,7 @@ def test_global_no_title(minimal_global_raw_cfg):
     del minimal_global_raw_cfg["global"]["title"]
     with pytest.raises(ConfigException) as excinfo:
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
-    assert "title" in str(excinfo.value)
-    assert "Missing required config entry" in str(excinfo.value)
-    assert "global" in str(excinfo.value)
+    assert "Entity global has no title" in str(excinfo.value)
 
 
 def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):

@@ -21,7 +21,7 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
                                        cfg_expand, import_python_obj,
-                                       load_json_obj)
+                                       load_json_obj, OWSMetadataConfig)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
@@ -165,16 +165,16 @@ class SuppURL(OWSConfigEntry):
 
 
 
-class OWSLayer(OWSConfigEntry):
+class OWSLayer(OWSMetadataConfig):
+
     named = False
-    def __init__(self, cfg, parent_layer=None, **kwargs):
+    def __init__(self, cfg, object_label, parent_layer=None, **kwargs):
         super().__init__(cfg, **kwargs)
+        self.object_label = object_label
         self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
 
-        if "title" not in cfg:
-            raise ConfigException("Layer without title found under parent layer %s" % str(parent_layer))
-        self.title = cfg["title"]
+        self.parse_metadata(cfg)
         if "abstract" in cfg:
             self.abstract = cfg["abstract"]
         elif parent_layer:
@@ -199,6 +199,9 @@ class OWSLayer(OWSConfigEntry):
         else:
             self.attribution = self.global_cfg.attribution
 
+    def get_obj_label(self):
+        return self.object_label
+
     def layer_count(self):
         return 0
 
@@ -210,19 +213,25 @@ class OWSLayer(OWSConfigEntry):
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
-        super().__init__(cfg, parent_layer, global_cfg=global_cfg, **kwargs)
+    def __init__(self, cfg, global_cfg, parent_layer=None, sibling=0, **kwargs):
+        if parent_layer:
+            obj_lbl = f"{parent_layer.object_label}.{sibling}"
+        else:
+            obj_lbl = f"folder.0.{sibling}"
+        super().__init__(cfg, parent_layer=parent_layer, object_label=obj_lbl, global_cfg=global_cfg, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.unready_layers = []
         self.child_layers = []
         if "layers" not in cfg:
             raise ConfigException("No layers section in folder layer %s" % self.title)
+        child = 0
         for lyr_cfg in cfg["layers"]:
             try:
-                lyr = parse_ows_layer(lyr_cfg, global_cfg, parent_layer=self)
+                lyr = parse_ows_layer(lyr_cfg, global_cfg=global_cfg, parent_layer=self, sibling=child)
                 self.unready_layers.append(lyr)
             except ConfigException as e:
                 _LOG.error("Could not parse layer: %s", str(e))
+            child += 1
 
     def unready_layer_count(self):
         return sum([l.layer_count() for l in self.unready_layers])
@@ -308,7 +317,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
         name = cfg["name"]
-        super().__init__(cfg, global_cfg=global_cfg, parent_layer=parent_layer,
+        super().__init__(cfg, object_label=f"layer.{name}", global_cfg=global_cfg, parent_layer=parent_layer,
                          keyvals={"layer": name},
                          **kwargs)
         self.name = name
@@ -383,7 +392,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 #            self.sub_product_extractor = None
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
-
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
@@ -850,14 +858,14 @@ class OWSMultiProductLayer(OWSNamedLayer):
         }
 
 
-def parse_ows_layer(cfg, global_cfg, parent_layer=None):
+def parse_ows_layer(cfg, global_cfg, parent_layer=None, sibling=0):
     if cfg.get("name", None):
         if cfg.get("multi_product", False):
             return OWSMultiProductLayer(cfg, global_cfg, parent_layer)
         else:
             return OWSProductLayer(cfg, global_cfg, parent_layer)
     else:
-        return OWSFolder(cfg, global_cfg, parent_layer)
+        return OWSFolder(cfg, global_cfg, parent_layer=parent_layer, sibling=sibling)
 
 
 class WCSFormat:
@@ -914,7 +922,7 @@ class WCSFormat:
         return self.renderers[version]
 
 
-class OWSConfig(OWSConfigEntry):
+class OWSConfig(OWSMetadataConfig):
     _instance = None
     initialised = False
 
@@ -978,7 +986,7 @@ class OWSConfig(OWSConfigEntry):
         self.wcs = cfg.get("services", {}).get("wcs", False)
         if not self.wms and not self.wmts and not self.wcs:
             raise ConfigException("At least one service must be active.")
-        self.title = cfg["title"]
+        self.parse_metadata(cfg)
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]
         self.abstract = cfg.get("abstract")
@@ -1094,7 +1102,7 @@ class OWSConfig(OWSConfigEntry):
             "title": "Root Folder (hidden)",
             "abstract": ".",
             "layers": cfg
-        }, self, None)
+        }, global_cfg=self, parent_layer=None)
 
     @property
     def layers(self):

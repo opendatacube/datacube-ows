@@ -111,6 +111,53 @@ class OWSConfigEntry:
         self.ready = True
 
 
+class OWSMetadataConfig(OWSConfigEntry):
+    METADATA_TITLE = True
+    METADATA_ABSTRACT = True
+    METADATA_CONTACT_INFO = False
+    METADATA_KEYWORDS = False
+    METADATA_FEES = False
+    METADATA_ACCESS_CONSTRAINTS = False
+    METADATA_ATTRIBUTIONS = False
+
+    _metadata_registry = {}
+
+    def __init__(self, cfg, *args, **kwargs):
+        super().__init__(cfg, *args, **kwargs)
+
+    def get_obj_label(self):
+        return "global"
+
+    default_title = None
+    def parse_metadata(self, cfg):
+        if self.METADATA_TITLE:
+            if self.default_title:
+                self.register_metadata(self.get_obj_label(), "title", cfg.get("title", self.default_title))
+            else:
+                try:
+                    self.register_metadata(self.get_obj_label(), "title", cfg["title"])
+                except KeyError:
+                    raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
+    def read_metadata(self, lbl, fld):
+        lookup = ".".join([lbl, fld])
+        return self._metadata_registry.get(lookup)
+
+    def register_metadata(self, lbl, fld, val):
+        lookup = ".".join([lbl, fld])
+        self._metadata_registry[lookup] = val
+
+    def read_local_metadata(self, fld):
+        return self.read_metadata(self.get_obj_label(), fld)
+
+    def __getattribute__(self, name):
+        if name == "title":
+            return self.read_local_metadata("title")
+        return super().__getattribute__(name)
+
+    def make_ready(self, dc, *args, **kwargs):
+        super().make_ready(dc, *args, **kwargs)
+
+
 class OWSEntryNotFound(ConfigException):
     pass
 
