@@ -214,10 +214,14 @@ class OWSLayer(OWSMetadataConfig):
 
 class OWSFolder(OWSLayer):
     def __init__(self, cfg, global_cfg, parent_layer=None, sibling=0, **kwargs):
+        if "label" in cfg:
+            obj_lbl = f"folder.{cfg['label']}"
         if parent_layer:
             obj_lbl = f"{parent_layer.object_label}.{sibling}"
         else:
             obj_lbl = f"folder.0.{sibling}"
+        if obj_lbl in global_cfg.folder_index:
+            raise ConfigException(f"Duplicate folder label: {obj_lbl}")
         super().__init__(cfg, parent_layer=parent_layer, object_label=obj_lbl, global_cfg=global_cfg, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.unready_layers = []
@@ -232,6 +236,7 @@ class OWSFolder(OWSLayer):
             except ConfigException as e:
                 _LOG.error("Could not parse layer: %s", str(e))
             child += 1
+        global_cfg.folder_index[obj_lbl] = self
 
     def unready_layer_count(self):
         return sum([l.layer_count() for l in self.unready_layers])
@@ -1096,10 +1101,12 @@ class OWSConfig(OWSMetadataConfig):
             self.tile_matrix_sets[identifier] = TileMatrixSet(identifier, tms, self)
 
     def parse_layers(self, cfg):
+        self.folder_index = {}
         self.product_index = {}
         self.declare_unready("native_product_index")
         self.root_layer_folder = OWSFolder({
             "title": "Root Folder (hidden)",
+            "label": "ows_root_hidden",
             "abstract": ".",
             "layers": cfg
         }, global_cfg=self, parent_layer=None)
