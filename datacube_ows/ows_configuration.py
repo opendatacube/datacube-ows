@@ -175,12 +175,6 @@ class OWSLayer(OWSMetadataConfig):
         self.parent_layer = parent_layer
 
         self.parse_metadata(cfg)
-        if "abstract" in cfg:
-            self.abstract = cfg["abstract"]
-        elif parent_layer:
-            self.abstract = parent_layer.abstract
-        else:
-            raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
         # Accumulate keywords
         self.keywords = set()
         if self.parent_layer:
@@ -198,6 +192,12 @@ class OWSLayer(OWSMetadataConfig):
             self.attribution = self.parent_layer.attribution
         else:
             self.attribution = self.global_cfg.attribution
+
+    def can_inherit_from(self):
+        if self.parent_layer:
+            return self.parent_layer
+        else:
+            return self.global_cfg
 
     def get_obj_label(self):
         return self.object_label
@@ -931,6 +931,8 @@ class OWSConfig(OWSMetadataConfig):
     _instance = None
     initialised = False
 
+    default_abstract = ""
+
     def __new__(cls, *args, **kwargs):
         if not cls._instance or kwargs.get("refresh"):
             cls._instance = super().__new__(cls)
@@ -994,7 +996,6 @@ class OWSConfig(OWSMetadataConfig):
         self.parse_metadata(cfg)
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]
-        self.abstract = cfg.get("abstract")
         self.contact_info = cfg.get("contact_info", {})
         self.keywords = cfg.get("keywords", [])
         self.fees = cfg.get("fees")

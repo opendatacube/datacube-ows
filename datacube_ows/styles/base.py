@@ -38,6 +38,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         return super().__new__(cls)
 
     default_title = "Stand-Alone Style"
+    default_abstract = "Stand-Alone Style"
 
     def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
         super().__init__(style_cfg,
@@ -66,10 +67,6 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         else:
             self.name = style_cfg["name"]
         self.parse_metadata(style_cfg)
-        if self.stand_alone:
-            self.abstract = style_cfg.get("abstract", "Stand Alone Style")
-        else:
-            self.abstract = style_cfg["abstract"]
         self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
         if self.stand_alone:
             self.flag_products = []

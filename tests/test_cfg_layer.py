@@ -16,15 +16,12 @@ def test_missing_title(minimal_global_cfg):
 
 
 def test_inherit_no_abstract(minimal_global_cfg):
-    with pytest.raises(ConfigException) as excinfo:
-        lyr = OWSFolder({
+    lyr = OWSFolder({
             "title": "The Title",
+            "layers": [],
         },
         global_cfg=minimal_global_cfg)
-    assert "No abstract" in str(excinfo.value)
-    assert "top-level layer" in str(excinfo.value)
-    assert "The Title" in str(excinfo.value)
-
+    assert lyr.abstract == "Global Abstract"
 
 def test_inherit_parent(minimal_global_cfg, minimal_parent):
     lyr = OWSLayer({

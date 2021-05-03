@@ -112,6 +112,14 @@ class OWSConfigEntry:
 
 
 class OWSMetadataConfig(OWSConfigEntry):
+    FLD_TITLE = "title"
+    FLD_ABSTRACT = "abstract"
+    FLD_CONTACT_INFO = "contact_info"
+    FLD_KEYWORDS = "keywords"
+    FLD_FEES = "fees"
+    FLD_ACCESS_CONSTRAINTS = "access_contraints"
+    FLD_ATTRIBUTIONS = "attributions"
+
     METADATA_TITLE = True
     METADATA_ABSTRACT = True
     METADATA_CONTACT_INFO = False
@@ -121,6 +129,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     METADATA_ATTRIBUTIONS = False
 
     _metadata_registry = {}
+    _inheritance_registry = {}
 
     def __init__(self, cfg, *args, **kwargs):
         super().__init__(cfg, *args, **kwargs)
@@ -128,7 +137,12 @@ class OWSMetadataConfig(OWSConfigEntry):
     def get_obj_label(self):
         return "global"
 
+    def can_inherit_from(self):
+        return None
+
     default_title = None
+    default_abstract = None
+
     def parse_metadata(self, cfg):
         if self.METADATA_TITLE:
             if self.default_title:
@@ -138,20 +152,42 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.register_metadata(self.get_obj_label(), "title", cfg["title"])
                 except KeyError:
                     raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
+        if self.METADATA_ABSTRACT:
+            inherit_from = self.can_inherit_from()
+            local_abstract = cfg.get("abstract", None)
+            if local_abstract is None and inherit_from is not None:
+                self.register_metadata(self.get_obj_label(), "abstract", inherit_from.abstract, inherited=True)
+            elif local_abstract is None and self.default_abstract is not None:
+                self.register_metadata(self.get_obj_label(), "abstract", self.default_abstract)
+            elif local_abstract is None:
+                raise ConfigException(f"Entity {self.get_obj_label()} has no abstract")
+            else:
+                self.register_metadata(self.get_obj_label(), "abstract", local_abstract)
+
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
         return self._metadata_registry.get(lookup)
 
-    def register_metadata(self, lbl, fld, val):
+    def read_inheritance(self, lbl, fld):
+        lookup = ".".join([lbl, fld])
+        return self._inheritance_registry.get(lookup, False)
+
+    def register_metadata(self, lbl, fld, val, inherited=False):
         lookup = ".".join([lbl, fld])
         self._metadata_registry[lookup] = val
+        self._inheritance_registry[lookup] = inherited
 
     def read_local_metadata(self, fld):
         return self.read_metadata(self.get_obj_label(), fld)
 
+    def is_inherited(self, fld):
+        return self.read_inheritance(self.get_obj_label(), fld)
+
     def __getattribute__(self, name):
         if name == "title":
             return self.read_local_metadata("title")
+        if name == "abstract":
+            return self.read_local_metadata("abstract")
         return super().__getattribute__(name)
 
     def make_ready(self, dc, *args, **kwargs):
