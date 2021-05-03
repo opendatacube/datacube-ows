@@ -930,6 +930,9 @@ class OWSConfig(OWSMetadataConfig):
 
     METADATA_KEYWORDS = True
     METADATA_ATTRIBUTIONS = True
+    METADATA_FEES = True
+    METADATA_ACCESS_CONSTRAINTS = True
+
     default_abstract = ""
 
     def __init__(self, refresh=False, cfg=None):
@@ -991,14 +994,8 @@ class OWSConfig(OWSMetadataConfig):
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]
         self.contact_info = cfg.get("contact_info", {})
-        self.fees = cfg.get("fees")
-        self.access_constraints = cfg.get("access_constraints")
         self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
         # self.use_extent_views = cfg.get("use_extent_views", False)
-        if not self.fees:
-            self.fees = "none"
-        if not self.access_constraints:
-            self.access_constraints = "none"
 
         def make_gml_name(name):
             if name.startswith("EPSG:"):

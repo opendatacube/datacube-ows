@@ -184,6 +184,16 @@ class OWSMetadataConfig(OWSConfigEntry):
                 attrib_title = None
             if attrib_title:
                 self.register_metadata(self.get_obj_label(), FLD_ATTRIBUTION, attrib_title, inheriting)
+        if self.METADATA_FEES:
+            fees = cfg.get("fees")
+            if not fees:
+                fees = "none"
+            self.register_metadata(self.get_obj_label(), FLD_FEES, fees)
+        if self.METADATA_ACCESS_CONSTRAINTS:
+            acc = cfg.get("access_contraints")
+            if not acc:
+                acc = "none"
+            self.register_metadata(self.get_obj_label(), FLD_ACCESS_CONSTRAINTS, acc)
 
     @property
     def keywords(self):
@@ -209,7 +219,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         return self.read_inheritance(self.get_obj_label(), fld)
 
     def __getattribute__(self, name):
-        if name in (FLD_TITLE, FLD_ABSTRACT):
+        if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS):
             return self.read_local_metadata(name)
         elif name == FLD_KEYWORDS:
             return set(self.read_local_metadata(FLD_KEYWORDS).split(","))
