@@ -114,16 +114,16 @@ class OWSConfigEntry:
 class OWSMetadataConfig(OWSConfigEntry):
     FLD_TITLE = "title"
     FLD_ABSTRACT = "abstract"
+    FLD_KEYWORDS = "local_keywords"
     FLD_CONTACT_INFO = "contact_info"
-    FLD_KEYWORDS = "keywords"
     FLD_FEES = "fees"
     FLD_ACCESS_CONSTRAINTS = "access_contraints"
     FLD_ATTRIBUTIONS = "attributions"
 
     METADATA_TITLE = True
     METADATA_ABSTRACT = True
-    METADATA_CONTACT_INFO = False
     METADATA_KEYWORDS = False
+    METADATA_CONTACT_INFO = False
     METADATA_FEES = False
     METADATA_ACCESS_CONSTRAINTS = False
     METADATA_ATTRIBUTIONS = False
@@ -143,6 +143,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     default_title = None
     default_abstract = None
 
+    _keywords = None
     def parse_metadata(self, cfg):
         if self.METADATA_TITLE:
             if self.default_title:
@@ -152,8 +153,8 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.register_metadata(self.get_obj_label(), "title", cfg["title"])
                 except KeyError:
                     raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
+        inherit_from = self.can_inherit_from()
         if self.METADATA_ABSTRACT:
-            inherit_from = self.can_inherit_from()
             local_abstract = cfg.get("abstract", None)
             if local_abstract is None and inherit_from is not None:
                 self.register_metadata(self.get_obj_label(), "abstract", inherit_from.abstract, inherited=True)
@@ -163,6 +164,18 @@ class OWSMetadataConfig(OWSConfigEntry):
                 raise ConfigException(f"Entity {self.get_obj_label()} has no abstract")
             else:
                 self.register_metadata(self.get_obj_label(), "abstract", local_abstract)
+        if self.METADATA_KEYWORDS:
+            local_keyword_set = set(cfg.get("keywords", []))
+            self.register_metadata(self.get_obj_label(), "local_keywords", ",".join(local_keyword_set))
+            if inherit_from:
+                keyword_set = inherit_from.keywords
+            else:
+                keyword_set = set()
+            self._keywords = keyword_set.union(local_keyword_set)
+
+    @property
+    def keywords(self):
+        return self._keywords
 
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
@@ -186,9 +199,12 @@ class OWSMetadataConfig(OWSConfigEntry):
     def __getattribute__(self, name):
         if name == "title":
             return self.read_local_metadata("title")
-        if name == "abstract":
+        elif name == "abstract":
             return self.read_local_metadata("abstract")
-        return super().__getattribute__(name)
+        elif name == "local_keywords":
+            return set(self.read_local_metadata("local_keywords").split(","))
+        else:
+            return super().__getattribute__(name)
 
     def make_ready(self, dc, *args, **kwargs):
         super().make_ready(dc, *args, **kwargs)

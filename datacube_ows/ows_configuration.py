@@ -166,6 +166,7 @@ class SuppURL(OWSConfigEntry):
 
 
 class OWSLayer(OWSMetadataConfig):
+    METADATA_KEYWORDS = True
 
     named = False
     def __init__(self, cfg, object_label, parent_layer=None, **kwargs):
@@ -175,16 +176,6 @@ class OWSLayer(OWSMetadataConfig):
         self.parent_layer = parent_layer
 
         self.parse_metadata(cfg)
-        # Accumulate keywords
-        self.keywords = set()
-        if self.parent_layer:
-            for word in self.parent_layer.keywords:
-                self.keywords.add(word)
-        else:
-            for word in self.global_cfg.keywords:
-                self.keywords.add(word)
-        for word in cfg.get("keywords", []):
-            self.keywords.add(word)
         # Inherit or override attribution
         if "attribution" in cfg:
             self.attribution = AttributionCfg.parse(cfg.get("attribution"))
@@ -931,12 +922,13 @@ class OWSConfig(OWSMetadataConfig):
     _instance = None
     initialised = False
 
-    default_abstract = ""
-
     def __new__(cls, *args, **kwargs):
         if not cls._instance or kwargs.get("refresh"):
             cls._instance = super().__new__(cls)
         return cls._instance
+
+    METADATA_KEYWORDS = True
+    default_abstract = ""
 
     def __init__(self, refresh=False, cfg=None):
         if not self.initialised or refresh:
@@ -997,7 +989,6 @@ class OWSConfig(OWSMetadataConfig):
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]
         self.contact_info = cfg.get("contact_info", {})
-        self.keywords = cfg.get("keywords", [])
         self.fees = cfg.get("fees")
         self.access_constraints = cfg.get("access_constraints")
         # self.use_extent_views = cfg.get("use_extent_views", False)
