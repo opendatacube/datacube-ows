@@ -919,6 +919,34 @@ class WCSFormat:
         return self.renderers[version]
 
 
+class ContactInfo(OWSConfigEntry):
+    def __init__(self, cfg, global_cfg):
+        super().__init__(cfg)
+        self.global_cfg = global_cfg
+        self.person = cfg.get("person")
+        self.organisation = cfg.get("organisation")
+        self.position = cfg.get("position")
+        self.address = {}
+        address = cfg.get("address")
+        if address:
+            self.address["type"] = address.get("type")
+            self.address["address"] = address.get("address")
+            self.address["city"] = address.get("city")
+            self.address["state"] = address.get("state")
+            self.address["postcode"] = address.get("postcode")
+            self.address["country"] = address.get("country")
+        self.telephone = cfg.get("telephone")
+        self.fax = cfg.get("fax")
+        self.email = cfg.get("email")
+
+    @classmethod
+    def parse(cls, cfg, global_cfg):
+        if cfg:
+            return cls(cfg, global_cfg)
+        else:
+            return None
+
+
 class OWSConfig(OWSMetadataConfig):
     _instance = None
     initialised = False
@@ -993,9 +1021,8 @@ class OWSConfig(OWSMetadataConfig):
         self.parse_metadata(cfg)
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]
-        self.contact_info = cfg.get("contact_info", {})
+        self.contact_info = ContactInfo.parse(cfg.get("contact_info"), self)
         self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
-        # self.use_extent_views = cfg.get("use_extent_views", False)
 
         def make_gml_name(name):
             if name.startswith("EPSG:"):
