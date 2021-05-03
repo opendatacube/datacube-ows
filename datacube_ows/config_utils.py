@@ -110,15 +110,15 @@ class OWSConfigEntry:
             raise OWSConfigNotReady(f"The following parameters have not been initialised: {self._unready_attributes}")
         self.ready = True
 
+FLD_TITLE = "title"
+FLD_ABSTRACT = "abstract"
+FLD_KEYWORDS = "local_keywords"
+FLD_CONTACT_INFO = "contact_info"
+FLD_FEES = "fees"
+FLD_ACCESS_CONSTRAINTS = "access_contraints"
+FLD_ATTRIBUTION = "attribution_title"
 
 class OWSMetadataConfig(OWSConfigEntry):
-    FLD_TITLE = "title"
-    FLD_ABSTRACT = "abstract"
-    FLD_KEYWORDS = "local_keywords"
-    FLD_CONTACT_INFO = "contact_info"
-    FLD_FEES = "fees"
-    FLD_ACCESS_CONSTRAINTS = "access_contraints"
-    FLD_ATTRIBUTIONS = "attributions"
 
     METADATA_TITLE = True
     METADATA_ABSTRACT = True
@@ -126,7 +126,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     METADATA_CONTACT_INFO = False
     METADATA_FEES = False
     METADATA_ACCESS_CONSTRAINTS = False
-    METADATA_ATTRIBUTIONS = False
+    METADATA_ATTRIBUTION = False
 
     _metadata_registry = {}
     _inheritance_registry = {}
@@ -147,31 +147,43 @@ class OWSMetadataConfig(OWSConfigEntry):
     def parse_metadata(self, cfg):
         if self.METADATA_TITLE:
             if self.default_title:
-                self.register_metadata(self.get_obj_label(), "title", cfg.get("title", self.default_title))
+                self.register_metadata(self.get_obj_label(), FLD_TITLE, cfg.get("title", self.default_title))
             else:
                 try:
-                    self.register_metadata(self.get_obj_label(), "title", cfg["title"])
+                    self.register_metadata(self.get_obj_label(), FLD_TITLE, cfg["title"])
                 except KeyError:
                     raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
         inherit_from = self.can_inherit_from()
         if self.METADATA_ABSTRACT:
             local_abstract = cfg.get("abstract", None)
             if local_abstract is None and inherit_from is not None:
-                self.register_metadata(self.get_obj_label(), "abstract", inherit_from.abstract, inherited=True)
+                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, inherit_from.abstract, inherited=True)
             elif local_abstract is None and self.default_abstract is not None:
-                self.register_metadata(self.get_obj_label(), "abstract", self.default_abstract)
+                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, self.default_abstract)
             elif local_abstract is None:
                 raise ConfigException(f"Entity {self.get_obj_label()} has no abstract")
             else:
                 self.register_metadata(self.get_obj_label(), "abstract", local_abstract)
         if self.METADATA_KEYWORDS:
             local_keyword_set = set(cfg.get("keywords", []))
-            self.register_metadata(self.get_obj_label(), "local_keywords", ",".join(local_keyword_set))
+            self.register_metadata(self.get_obj_label(), FLD_KEYWORDS, ",".join(local_keyword_set))
             if inherit_from:
                 keyword_set = inherit_from.keywords
             else:
                 keyword_set = set()
             self._keywords = keyword_set.union(local_keyword_set)
+        if self.METADATA_ATTRIBUTION:
+            inheriting = False
+            attrib = cfg.get("attribution")
+            if attrib is None and inherit_from is not None:
+                attrib = inherit_from.attribution
+                inheriting = True
+            if attrib:
+                attrib_title = attrib.get("title")
+            else:
+                attrib_title = None
+            if attrib_title:
+                self.register_metadata(self.get_obj_label(), FLD_ATTRIBUTION, attrib_title, inheriting)
 
     @property
     def keywords(self):
@@ -197,12 +209,12 @@ class OWSMetadataConfig(OWSConfigEntry):
         return self.read_inheritance(self.get_obj_label(), fld)
 
     def __getattribute__(self, name):
-        if name == "title":
-            return self.read_local_metadata("title")
-        elif name == "abstract":
-            return self.read_local_metadata("abstract")
-        elif name == "local_keywords":
-            return set(self.read_local_metadata("local_keywords").split(","))
+        if name in (FLD_TITLE, FLD_ABSTRACT):
+            return self.read_local_metadata(name)
+        elif name == FLD_KEYWORDS:
+            return set(self.read_local_metadata(FLD_KEYWORDS).split(","))
+        elif name == FLD_ATTRIBUTION:
+            return set(self.read_local_metadata(FLD_ATTRIBUTION))
         else:
             return super().__getattribute__(name)
 

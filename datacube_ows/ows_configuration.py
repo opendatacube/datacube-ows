@@ -123,9 +123,10 @@ class BandIndex(OWSConfigEntry):
 
 
 class AttributionCfg(OWSConfigEntry):
-    def __init__(self, cfg):
+    def __init__(self, cfg, owner):
         super().__init__(cfg)
-        self.title = cfg.get("title")
+        self.owner = owner
+        self.title = owner.attrib_title
         self.url = cfg.get("url")
         logo = cfg.get("logo")
         if not self.title and not self.url and not logo:
@@ -144,11 +145,11 @@ class AttributionCfg(OWSConfigEntry):
                 raise ConfigException("url and format must both be specified in an attribution logo.")
 
     @classmethod
-    def parse(cls, cfg):
+    def parse(cls, cfg, owner):
         if not cfg:
             return None
         else:
-            return cls(cfg)
+            return cls(cfg, owner)
 
 
 class SuppURL(OWSConfigEntry):
@@ -178,7 +179,7 @@ class OWSLayer(OWSMetadataConfig):
         self.parse_metadata(cfg)
         # Inherit or override attribution
         if "attribution" in cfg:
-            self.attribution = AttributionCfg.parse(cfg.get("attribution"))
+            self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
         elif parent_layer:
             self.attribution = self.parent_layer.attribution
         else:
@@ -928,6 +929,7 @@ class OWSConfig(OWSMetadataConfig):
         return cls._instance
 
     METADATA_KEYWORDS = True
+    METADATA_ATTRIBUTIONS = True
     default_abstract = ""
 
     def __init__(self, refresh=False, cfg=None):
@@ -991,6 +993,7 @@ class OWSConfig(OWSMetadataConfig):
         self.contact_info = cfg.get("contact_info", {})
         self.fees = cfg.get("fees")
         self.access_constraints = cfg.get("access_constraints")
+        self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
         # self.use_extent_views = cfg.get("use_extent_views", False)
         if not self.fees:
             self.fees = "none"
@@ -1045,9 +1048,10 @@ class OWSConfig(OWSMetadataConfig):
         self.s3_aws_zone = cfg.get("s3_aws_zone", "")
         self.wms_max_width = cfg.get("max_width", 256)
         self.wms_max_height = cfg.get("max_height", 256)
-        self.attribution = AttributionCfg.parse(cfg.get("attribution"))
         self.authorities = cfg.get("authorities", {})
         self.user_band_math_extension = cfg.get("user_band_math_extension", False)
+        if "attribution" in cfg:
+            _LOG.warning("Attribution entry in top level 'wms' section will be ignored. Attribution should be moved to the 'global' section")
 
     def parse_wcs(self, cfg):
         if self.wcs:
