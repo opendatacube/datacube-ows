@@ -132,9 +132,6 @@ class OWSMetadataConfig(OWSConfigEntry):
     _metadata_registry = {}
     _inheritance_registry = {}
 
-    def __init__(self, cfg, *args, **kwargs):
-        super().__init__(cfg, *args, **kwargs)
-
     def get_obj_label(self):
         return "global"
 
@@ -156,7 +153,7 @@ class OWSMetadataConfig(OWSConfigEntry):
                     raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
         inherit_from = self.can_inherit_from()
         if self.METADATA_ABSTRACT:
-            local_abstract = cfg.get("abstract", None)
+            local_abstract = cfg.get("abstract")
             if local_abstract is None and inherit_from is not None:
                 self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, inherit_from.abstract, inherited=True)
             elif local_abstract is None and self.default_abstract is not None:
@@ -234,9 +231,6 @@ class OWSMetadataConfig(OWSConfigEntry):
             return set(self.read_local_metadata(FLD_ATTRIBUTION))
         else:
             return super().__getattribute__(name)
-
-    def make_ready(self, dc, *args, **kwargs):
-        super().make_ready(dc, *args, **kwargs)
 
 
 class OWSEntryNotFound(ConfigException):
