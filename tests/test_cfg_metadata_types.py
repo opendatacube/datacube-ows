@@ -13,13 +13,13 @@ def test_cfg_attrib_empty(minimal_owner):
 @pytest.fixture
 def minimal_owner():
     owner = MagicMock()
-    owner.attrib_title=None
+    owner.attrib_title = None
     return owner
 
 @pytest.fixture
 def owner_w_attrib_title():
     owner = MagicMock()
-    owner.attrib_title="Sir"
+    owner.attrib_title = "Sir"
     return owner
 
 def test_cfg_attrib_emptyfail(minimal_owner):
@@ -110,7 +110,7 @@ def test_cfg_attrib_all_flds(minimal_dc, owner_w_attrib_title):
             "width": 200,
             "height": 150,
         }
-    } ,owner_w_attrib_title)
+    }, owner_w_attrib_title)
     assert attrib.title == "Sir"
     assert attrib.url == "http://test.url/path"
     assert attrib.logo_url == "http://test.url/path/img.png"
