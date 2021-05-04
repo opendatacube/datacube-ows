@@ -113,10 +113,11 @@ class OWSConfigEntry:
 FLD_TITLE = "title"
 FLD_ABSTRACT = "abstract"
 FLD_KEYWORDS = "local_keywords"
-FLD_CONTACT_INFO = "contact_info"
 FLD_FEES = "fees"
 FLD_ACCESS_CONSTRAINTS = "access_contraints"
 FLD_ATTRIBUTION = "attribution_title"
+FLD_CONTACT_ORGANISATION = "contact_org"
+FLD_CONTACT_POSITION = "contact_position"
 
 class OWSMetadataConfig(OWSConfigEntry):
 
@@ -194,7 +195,13 @@ class OWSMetadataConfig(OWSConfigEntry):
             if not acc:
                 acc = "none"
             self.register_metadata(self.get_obj_label(), FLD_ACCESS_CONSTRAINTS, acc)
-
+        if self.METADATA_CONTACT_INFO:
+            org = cfg.get("contact_info", {}).get("organisation")
+            position = cfg.get("contact_info", {}).get("position")
+            if org:
+                self.register_metadata(self.get_obj_label(), FLD_CONTACT_ORGANISATION, org)
+            if position:
+                self.register_metadata(self.get_obj_label(), FLD_CONTACT_POSITION, position)
     @property
     def keywords(self):
         return self._keywords
@@ -219,7 +226,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         return self.read_inheritance(self.get_obj_label(), fld)
 
     def __getattribute__(self, name):
-        if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS):
+        if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION):
             return self.read_local_metadata(name)
         elif name == FLD_KEYWORDS:
             return set(self.read_local_metadata(FLD_KEYWORDS).split(","))

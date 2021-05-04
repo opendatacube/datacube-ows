@@ -924,8 +924,8 @@ class ContactInfo(OWSConfigEntry):
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.person = cfg.get("person")
-        self.organisation = cfg.get("organisation")
-        self.position = cfg.get("position")
+        self.organisation = self.global_cfg.contact_org
+        self.position = self.global_cfg.contact_position
         self.address = {}
         address = cfg.get("address")
         if address:
@@ -960,6 +960,7 @@ class OWSConfig(OWSMetadataConfig):
     METADATA_ATTRIBUTIONS = True
     METADATA_FEES = True
     METADATA_ACCESS_CONSTRAINTS = True
+    METADATA_CONTACT_INFO = True
 
     default_abstract = ""
 
