@@ -126,7 +126,7 @@ class AttributionCfg(OWSConfigEntry):
     def __init__(self, cfg, owner):
         super().__init__(cfg)
         self.owner = owner
-        self.title = owner.attrib_title
+        self.title = owner.attribution_title
         self.url = cfg.get("url")
         logo = cfg.get("logo")
         if not self.title and not self.url and not logo:
