@@ -135,6 +135,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     def get_obj_label(self):
         return "global"
 
+
     def can_inherit_from(self):
         return None
 
@@ -143,6 +144,9 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     _keywords = None
     def parse_metadata(self, cfg):
+        # can_inherit_from() can be over-ridden by subclasses
+        # pylint: disable=assignment-from-none
+        inherit_from = self.can_inherit_from()
         if self.METADATA_TITLE:
             if self.default_title:
                 self.register_metadata(self.get_obj_label(), FLD_TITLE, cfg.get("title", self.default_title))
@@ -151,7 +155,6 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.register_metadata(self.get_obj_label(), FLD_TITLE, cfg["title"])
                 except KeyError:
                     raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
-        inherit_from = self.can_inherit_from()
         if self.METADATA_ABSTRACT:
             local_abstract = cfg.get("abstract")
             if local_abstract is None and inherit_from is not None:
