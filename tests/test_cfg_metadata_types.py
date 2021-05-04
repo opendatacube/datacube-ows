@@ -13,13 +13,13 @@ def test_cfg_attrib_empty(minimal_owner):
 @pytest.fixture
 def minimal_owner():
     owner = MagicMock()
-    owner.attrib_title = None
+    owner.attribution_title = None
     return owner
 
 @pytest.fixture
 def owner_w_attrib_title():
     owner = MagicMock()
-    owner.attrib_title = "Sir"
+    owner.attribution_title = "Sir"
     return owner
 
 def test_cfg_attrib_emptyfail(minimal_owner):
