@@ -927,6 +927,7 @@ class ContactInfo(OWSConfigEntry):
         self.organisation = self.global_cfg.contact_org
         self.position = self.global_cfg.contact_position
         self.address = {}
+
         class Address(OWSConfigEntry):
             def __init__(self, cfg):
                 super().__init__(cfg)
