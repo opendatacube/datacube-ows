@@ -1,7 +1,7 @@
 import pytest
 
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.ows_configuration import OWSConfig, ContactInfo
+from datacube_ows.ows_configuration import ContactInfo, OWSConfig
 
 
 def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
