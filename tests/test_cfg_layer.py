@@ -12,7 +12,7 @@ def test_missing_title(minimal_global_cfg):
             "abstract": "The Abstract"
         },
             global_cfg=minimal_global_cfg)
-    assert "Entity folder.0.0 has no title" in str(excinfo.value)
+    assert "Entity folder.0 has no title" in str(excinfo.value)
 
 
 def test_inherit_no_abstract(minimal_global_cfg):
