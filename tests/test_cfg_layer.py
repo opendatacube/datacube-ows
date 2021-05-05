@@ -32,7 +32,7 @@ def test_inherit_parent(minimal_global_cfg, minimal_parent):
         parent_layer=minimal_parent,
         global_cfg=minimal_global_cfg)
     assert lyr.abstract == "Parent Abstract"
-    assert lyr.attribution == "Parent Attribution"
+    assert lyr.attribution.title == "Parent Attribution"
     assert "global" in lyr.keywords
     assert "parent" in lyr.keywords
 
