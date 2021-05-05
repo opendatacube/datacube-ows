@@ -33,6 +33,7 @@ def test_cfg_attrib_title_only(owner_w_attrib_title):
         "title": "Sir"
     }, owner_w_attrib_title)
     assert attrib.title == "Sir"
+    assert attrib.get("title") == "Sir"
     assert attrib.logo_width is None
     assert attrib.url is None
 
