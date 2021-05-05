@@ -927,14 +927,24 @@ class ContactInfo(OWSConfigEntry):
         self.organisation = self.global_cfg.contact_org
         self.position = self.global_cfg.contact_position
         self.address = {}
-        address = cfg.get("address")
-        if address:
-            self.address["type"] = address.get("type")
-            self.address["address"] = address.get("address")
-            self.address["city"] = address.get("city")
-            self.address["state"] = address.get("state")
-            self.address["postcode"] = address.get("postcode")
-            self.address["country"] = address.get("country")
+        class Address(OWSConfigEntry):
+            def __init__(self, cfg):
+                super().__init__(cfg)
+                self.type = cfg.get("type")
+                self.address = cfg.get("address")
+                self.city = cfg.get("city")
+                self.state = cfg.get("state")
+                self.postcode = cfg.get("postcode")
+                self.country = cfg.get("country")
+
+            @classmethod
+            def parse(cls, cfg):
+                if not cfg:
+                    return None
+                else:
+                    return cls(cfg)
+
+        self.address = Address(cfg.get("address"))
         self.telephone = cfg.get("telephone")
         self.fax = cfg.get("fax")
         self.email = cfg.get("email")
