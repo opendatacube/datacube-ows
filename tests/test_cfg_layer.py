@@ -22,6 +22,7 @@ def test_inherit_no_abstract(minimal_global_cfg):
         },
         global_cfg=minimal_global_cfg)
     assert lyr.abstract == "Global Abstract"
+    assert lyr.is_inherited("abstract")
 
 def test_inherit_parent(minimal_global_cfg, minimal_parent):
     lyr = OWSLayer({
@@ -51,6 +52,7 @@ def test_override_parent(minimal_global_cfg, minimal_parent):
     assert "global" in lyr.keywords
     assert "parent" in lyr.keywords
     assert "merged" in lyr.keywords
+    assert lyr.local_keywords == set(["merged"])
 
 
 def test_minimal_folder(minimal_global_cfg):

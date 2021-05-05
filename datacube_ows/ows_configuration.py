@@ -168,6 +168,7 @@ class SuppURL(OWSConfigEntry):
 
 class OWSLayer(OWSMetadataConfig):
     METADATA_KEYWORDS = True
+    METADATA_ATTRIBUTION = True
 
     named = False
     def __init__(self, cfg, object_label, parent_layer=None, **kwargs):
