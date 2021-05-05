@@ -229,9 +229,13 @@ class OWSMetadataConfig(OWSConfigEntry):
         if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION):
             return self.read_local_metadata(name)
         elif name == FLD_KEYWORDS:
-            return set(self.read_local_metadata(FLD_KEYWORDS).split(","))
+            kw = self.read_local_metadata(FLD_KEYWORDS)
+            if kw:
+                return set(kw.split(","))
+            else:
+                return set()
         elif name == FLD_ATTRIBUTION:
-            return set(self.read_local_metadata(FLD_ATTRIBUTION))
+            return self.read_local_metadata(FLD_ATTRIBUTION)
         else:
             return super().__getattribute__(name)
 
