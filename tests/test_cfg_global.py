@@ -1,7 +1,7 @@
 import pytest
 
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.ows_configuration import OWSConfig
+from datacube_ows.ows_configuration import OWSConfig, ContactInfo
 
 
 def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
@@ -33,6 +33,15 @@ def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     assert cfg.wcs
     assert not cfg.wms
     assert not cfg.wmts
+
+
+def test_contact_details_parse(minimal_global_cfg):
+    addr1 = ContactInfo.parse({}, minimal_global_cfg)
+    assert addr1 is None
+    addr2 = ContactInfo.parse({"address": {}}, minimal_global_cfg)
+    assert addr2.address is None
+    addr3 = ContactInfo.parse({"address": {"address": "foo"}}, minimal_global_cfg)
+    assert addr3.address.address == "foo"
 
 
 def test_wcs_no_native_format(minimal_global_raw_cfg, wcs_global_cfg):

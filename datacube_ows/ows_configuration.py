@@ -927,7 +927,6 @@ class ContactInfo(OWSConfigEntry):
         self.person = cfg.get("person")
         self.organisation = self.global_cfg.contact_org
         self.position = self.global_cfg.contact_position
-        self.address = {}
 
         class Address(OWSConfigEntry):
             def __init__(self, cfg):
@@ -946,7 +945,7 @@ class ContactInfo(OWSConfigEntry):
                 else:
                     return cls(cfg)
 
-        self.address = Address(cfg.get("address"))
+        self.address = Address.parse(cfg.get("address"))
         self.telephone = cfg.get("telephone")
         self.fax = cfg.get("fax")
         self.email = cfg.get("email")

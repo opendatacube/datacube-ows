@@ -85,6 +85,8 @@ def minimal_global_cfg():
     global_cfg = MagicMock()
     global_cfg.keywords = {"global"}
     global_cfg.attribution.title = "Global Attribution"
+    global_cfg.contact_org = None
+    global_cfg.contact_position = None
     global_cfg.abstract = "Global Abstract"
     global_cfg.authorities = {
         "auth0": "http://test.url/auth0",
