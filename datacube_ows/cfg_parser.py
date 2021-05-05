@@ -24,6 +24,7 @@ from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
     default=False,
     help="Only parse the syntax of the config file - do not validate against database",
 )
+
 @click.option(
     "-f",
     "--folders",
@@ -48,9 +49,16 @@ from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
     "-o",
     "--output-file",
     default=False,
-    help="Provide an output file name with extension .json",
+    help="Provide an output inventory file name with extension .json",
 )
-def main(version, parse_only, folders, styles, input_file, output_file, paths):
+@click.option(
+    "-m",
+    "--msg-file",
+    default=False,
+    help="Write a message file containing the translatable metadata from the configuration.",
+)
+
+def main(version, parse_only, folders, styles, msg_file, input_file, output_file, paths):
     """Test configuration files
 
     Valid invocations:
@@ -70,12 +78,12 @@ def main(version, parse_only, folders, styles, input_file, output_file, paths):
 
     all_ok = True
     if not paths:
-        if parse_path(None, parse_only, folders, styles, input_file, output_file):
+        if parse_path(None, parse_only, folders, styles, input_file, output_file, msg_file):
             return 0
         else:
             sys.exit(1)
     for path in paths:
-        if not parse_path(path, parse_only, folders, styles, input_file, output_file):
+        if not parse_path(path, parse_only, folders, styles, input_file, output_file, msg_file):
             all_ok = False
 
     if not all_ok:
@@ -83,7 +91,7 @@ def main(version, parse_only, folders, styles, input_file, output_file, paths):
     return 0
 
 
-def parse_path(path, parse_only, folders, styles, input_file, output_file):
+def parse_path(path, parse_only, folders, styles, input_file, output_file, msg_file):
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
@@ -110,7 +118,26 @@ def parse_path(path, parse_only, folders, styles, input_file, output_file):
         print()
     if input_file or output_file:
         layers_report(cfg.product_index, input_file, output_file)
+    if msg_file:
+        write_msg_file(msg_file, cfg)
     return True
+
+
+def write_msg_file(msg_file, cfg):
+    with open(msg_file, "w") as fp:
+        for key, value in cfg.export_metadata():
+            if value:
+                print("", file=fp)
+                lines = list(value.split("\n"))
+                for line in lines:
+                    print(f"#. {line}", file=fp)
+                print(f'msgid "{key}"', file=fp)
+                if len(lines) == 1:
+                    print(f'msgstr "{value}"', file=fp)
+                else:
+                    print('msgstr ""', file=fp)
+                    for line in lines:
+                        print(f'msgstr "{line}\\n"', file=fp)
 
 
 def layers_report(config_values, input_file, output_file):

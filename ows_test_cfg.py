@@ -615,6 +615,7 @@ ows_cfg = {
                     "format": "image/png",
                 },
             },
+            "label": "landsat",
             "layers": [
                 {
                     # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
@@ -687,6 +688,7 @@ Fractional cover provides information about the the proportions of green vegetat
 Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena. To be considered in the FCP product a pixel must have had at least 10 clear observations over the year.
 For service status information, see https://status.dea.ga.gov.au
 """,
+            "label": "fc",
             "layers": [
                 {
                     "title": "Fractional Cover 25m 100km tile (Fractional Cover Landsat 5)",

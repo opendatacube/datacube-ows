@@ -42,6 +42,11 @@ def test_cfg_parser_input_file_compare(runner):
 
 
 @pytest.mark.xfail(reason="Permission denied")
+def test_cfg_parser_msg_file(runner):
+    result = runner.invoke(main, ["-m", "messages.po"])
+    assert result.exit_code == 0
+
+@pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_output_file_compare(runner):
     result = runner.invoke(main, ["-o", "inventory.json"])
     assert result.exit_code == 0

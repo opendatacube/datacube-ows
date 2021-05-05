@@ -209,10 +209,10 @@ class OWSFolder(OWSLayer):
     def __init__(self, cfg, global_cfg, parent_layer=None, sibling=0, **kwargs):
         if "label" in cfg:
             obj_lbl = f"folder.{cfg['label']}"
-        if parent_layer:
+        elif parent_layer:
             obj_lbl = f"{parent_layer.object_label}.{sibling}"
         else:
-            obj_lbl = f"folder.0.{sibling}"
+            obj_lbl = f"folder.{sibling}"
         if obj_lbl in global_cfg.folder_index:
             raise ConfigException(f"Duplicate folder label: {obj_lbl}")
         super().__init__(cfg, parent_layer=parent_layer, object_label=obj_lbl, global_cfg=global_cfg, **kwargs)
@@ -1023,6 +1023,14 @@ class OWSConfig(OWSMetadataConfig):
         self.root_layer_folder.make_ready(dc, *args, **kwargs)
         super().make_ready(dc, *args, **kwargs)
 
+    def export_metadata(self):
+        for k, v in self._metadata_registry.items():
+            if self._inheritance_registry[k]:
+                continue
+            if k == "folder.0.title":
+                continue
+            yield k, v
+
     def parse_global(self, cfg):
         self._response_headers = cfg.get("response_headers", {})
         self.wms = cfg.get("services", {}).get("wms", True)
@@ -1139,7 +1147,6 @@ class OWSConfig(OWSMetadataConfig):
         self.root_layer_folder = OWSFolder({
             "title": "Root Folder (hidden)",
             "label": "ows_root_hidden",
-            "abstract": ".",
             "layers": cfg
         }, global_cfg=self, parent_layer=None)
 
