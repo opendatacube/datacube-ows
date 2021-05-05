@@ -140,7 +140,7 @@ def minimal_parent():
     parent = MagicMock()
     parent.abstract = "Parent Abstract"
     parent.keywords = {"global", "parent"}
-    parent.attribution = "Parent Attribution"
+    parent.attribution.title = "Parent Attribution"
     return parent
 
 
