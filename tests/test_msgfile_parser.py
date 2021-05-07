@@ -1,9 +1,9 @@
 import os
-import sys
+
 import pytest
 
-from datacube_ows.ows_configuration import ConfigException
 from datacube_ows.config_utils import OWSMessageFile
+from datacube_ows.ows_configuration import ConfigException
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
