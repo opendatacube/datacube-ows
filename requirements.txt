@@ -35,3 +35,5 @@ pytest-helpers-namespace
 prometheus-flask-exporter
 setuptools_scm
 deepdiff
+s3fs
+fsspec
