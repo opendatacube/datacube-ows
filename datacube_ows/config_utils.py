@@ -3,6 +3,8 @@ import os
 from importlib import import_module
 from typing import Mapping, Sequence
 
+import fsspec
+
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
@@ -58,7 +60,7 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
 
 
 def load_json_obj(path):
-    with open(path) as json_file:
+    with fsspec.open(path) as json_file:
         return json.load(json_file)
 
 
