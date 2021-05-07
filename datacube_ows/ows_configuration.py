@@ -20,8 +20,9 @@ from slugify import slugify
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
-                                       OWSMetadataConfig, cfg_expand,
-                                       import_python_obj, load_json_obj, OWSMessageFile)
+                                       OWSMessageFile, OWSMetadataConfig,
+                                       cfg_expand, import_python_obj,
+                                       load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
