@@ -40,6 +40,13 @@ from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
     help="Print the styles for each layer to stdout (format depends on --folders flag).",
 )
 @click.option(
+    "-c",
+    "--cfg-only",
+    is_flag=True,
+    default=False,
+    help="Read metadata from config only - ignore configured metadata message file).",
+)
+@click.option(
     "-i",
     "--input-file",
     default=False,
@@ -58,7 +65,7 @@ from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
     help="Write a message file containing the translatable metadata from the configuration.",
 )
 
-def main(version, parse_only, folders, styles, msg_file, input_file, output_file, paths):
+def main(version, cfg_only, parse_only, folders, styles, msg_file, input_file, output_file, paths):
     """Test configuration files
 
     Valid invocations:
@@ -78,12 +85,12 @@ def main(version, parse_only, folders, styles, msg_file, input_file, output_file
 
     all_ok = True
     if not paths:
-        if parse_path(None, parse_only, folders, styles, input_file, output_file, msg_file):
+        if parse_path(None, cfg_only, parse_only, folders, styles, input_file, output_file, msg_file):
             return 0
         else:
             sys.exit(1)
     for path in paths:
-        if not parse_path(path, parse_only, folders, styles, input_file, output_file, msg_file):
+        if not parse_path(path, cfg_only, parse_only, folders, styles, input_file, output_file, msg_file):
             all_ok = False
 
     if not all_ok:
@@ -91,10 +98,10 @@ def main(version, parse_only, folders, styles, msg_file, input_file, output_file
     return 0
 
 
-def parse_path(path, parse_only, folders, styles, input_file, output_file, msg_file):
+def parse_path(path, cfg_only, parse_only, folders, styles, input_file, output_file, msg_file):
     try:
         raw_cfg = read_config(path)
-        cfg = OWSConfig(refresh=True, cfg=raw_cfg)
+        cfg = OWSConfig(refresh=True, cfg=raw_cfg, ignore_msgfile=cfg_only)
         if not parse_only:
             with Datacube() as dc:
                 cfg.make_ready(dc)

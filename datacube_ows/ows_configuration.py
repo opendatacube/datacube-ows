@@ -21,7 +21,7 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
                                        OWSMetadataConfig, cfg_expand,
-                                       import_python_obj, load_json_obj)
+                                       import_python_obj, load_json_obj, OWSMessageFile)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
@@ -126,7 +126,6 @@ class AttributionCfg(OWSConfigEntry):
     def __init__(self, cfg, owner):
         super().__init__(cfg)
         self.owner = owner
-        self.title = owner.attribution_title
         self.url = cfg.get("url")
         logo = cfg.get("logo")
         if not self.title and not self.url and not logo:
@@ -143,6 +142,10 @@ class AttributionCfg(OWSConfigEntry):
             self.logo_fmt = logo.get("format")
             if not self.logo_url or not self.logo_fmt:
                 raise ConfigException("url and format must both be specified in an attribution logo.")
+
+    @property
+    def title(self):
+        return self.owner.attribution_title
 
     @classmethod
     def parse(cls, cfg, owner):
@@ -925,8 +928,6 @@ class ContactInfo(OWSConfigEntry):
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.person = cfg.get("person")
-        self.organisation = self.global_cfg.contact_org
-        self.position = self.global_cfg.contact_position
 
         class Address(OWSConfigEntry):
             def __init__(self, cfg):
@@ -949,6 +950,14 @@ class ContactInfo(OWSConfigEntry):
         self.telephone = cfg.get("telephone")
         self.fax = cfg.get("fax")
         self.email = cfg.get("email")
+
+    @property
+    def organisation(self):
+        return self.global_cfg.contact_org
+
+    @property
+    def position(self):
+        return self.global_cfg.contact_position
 
     @classmethod
     def parse(cls, cfg, global_cfg):
@@ -975,14 +984,14 @@ class OWSConfig(OWSMetadataConfig):
 
     default_abstract = ""
 
-    def __init__(self, refresh=False, cfg=None):
+    def __init__(self, refresh=False, cfg=None, ignore_msgfile=False):
         if not self.initialised or refresh:
+            self.msgfile = None
             if not cfg:
                 cfg = read_config()
             super().__init__(cfg)
-            self.initialised = True
             try:
-                self.parse_global(cfg["global"])
+                self.parse_global(cfg["global"], ignore_msgfile)
             except KeyError as e:
                 raise ConfigException(
                     "Missing required config entry in 'global' section: %s" % str(e)
@@ -1019,6 +1028,14 @@ class OWSConfig(OWSMetadataConfig):
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
+        if self.msg_file_name:
+            try:
+                with open(self.msg_file_name, "r") as fp:
+                    self.set_msg_src(OWSMessageFile(fp))
+            except FileNotFoundError:
+                _LOG.warning("Message file %s does not exist - using metadata from config file", self.msg_file_name)
+        else:
+            self.set_msg_src(None)
         self.native_product_index = {}
         self.root_layer_folder.make_ready(dc, *args, **kwargs)
         super().make_ready(dc, *args, **kwargs)
@@ -1031,13 +1048,17 @@ class OWSConfig(OWSMetadataConfig):
                 continue
             yield k, v
 
-    def parse_global(self, cfg):
+    def parse_global(self, cfg, ignore_msgfile):
         self._response_headers = cfg.get("response_headers", {})
         self.wms = cfg.get("services", {}).get("wms", True)
         self.wmts = cfg.get("services", {}).get("wmts", True)
         self.wcs = cfg.get("services", {}).get("wcs", False)
         if not self.wms and not self.wmts and not self.wcs:
             raise ConfigException("At least one service must be active.")
+        if ignore_msgfile:
+            self.msg_file_name = None
+        else:
+            self.msg_file_name = cfg.get("message_file")
         self.parse_metadata(cfg)
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]

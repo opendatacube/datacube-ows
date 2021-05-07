@@ -138,6 +138,8 @@ class OWSMetadataConfig(OWSConfigEntry):
     _metadata_registry = {}
     _inheritance_registry = {}
 
+    _msg_src = None
+
     def get_obj_label(self):
         return "global"
 
@@ -212,8 +214,14 @@ class OWSMetadataConfig(OWSConfigEntry):
     def keywords(self):
         return self._keywords
 
+    @classmethod
+    def set_msg_src(cls, src):
+        cls._msg_src = src
+
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
+        if self._msg_src is not None:
+            return self._msg_src.get(lookup, self._metadata_registry.get(lookup))
         return self._metadata_registry.get(lookup)
 
     def read_inheritance(self, lbl, fld):
