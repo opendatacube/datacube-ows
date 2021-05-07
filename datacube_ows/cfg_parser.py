@@ -137,7 +137,7 @@ def write_msg_file(msg_file, cfg):
                 else:
                     print('msgstr ""', file=fp)
                     for line in lines:
-                        print(f'msgstr "{line}\\n"', file=fp)
+                        print(f'"{line}\\n"', file=fp)
 
 
 def layers_report(config_values, input_file, output_file):
