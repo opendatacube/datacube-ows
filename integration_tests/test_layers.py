@@ -1,8 +1,8 @@
 from datacube_ows.ows_configuration import get_config
 
 
-def test_get_layers():
-    cfg = get_config()
+def test_metadata_export():
+    cfg = get_config(refresh=True)
 
     export = dict(cfg.export_metadata())
     assert "folder.0.title" not in export

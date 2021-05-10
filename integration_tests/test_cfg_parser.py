@@ -69,11 +69,11 @@ def test_cfg_parser_version(runner):
 
 
 def test_cfg_parser_bad_cfgenv(runner):
-    result = runner.invoke(main, [], env={"DATACUBE_OWS_CFG": "ows_test_cfg_bad.ows_cfg"})
+    result = runner.invoke(main, [], env={"DATACUBE_OWS_CFG": "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"})
     assert result.exit_code == 1
 
 
 def test_cfg_parser_bad_cfgarg(runner):
-    result = runner.invoke(main, ["ows_test_cfg.ows,cfg", "ows_test_cfg_bad.ows_cfg"])
+    result = runner.invoke(main, ["integration_tests.cfg.ows_test_cfg.ows,cfg", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
     assert result.exit_code == 1
 
