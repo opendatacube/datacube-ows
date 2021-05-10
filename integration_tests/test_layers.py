@@ -1,5 +1,6 @@
 import os
 
+from datacube_ows.cube_pool import cube
 from datacube_ows.ows_configuration import OWSConfig, get_config, read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,15 +29,18 @@ def test_metadata_read(monkeypatch):
         raw_cfg = read_config()
         raw_cfg["global"]["message_file"] = "integration_tests/cfg/message.po"
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
+        with cube() as dc:
+            cfg.make_ready(dc)
 
         assert "Over-ridden" in cfg.title
         assert "aardvark" in cfg.title
 
-        folder = cfg.folder_index["landsat"]
-        assert "Over-ridden" in folder.title
-        assert "bunny-rabbit" in folder.title
+        folder = cfg.folder_index["folder.landsat"]
+        assert "Over-ridden" not in folder.title
+        assert "Over-ridden" in folder.abstract
+        assert "bunny-rabbit" in folder.abstract
 
-        lyr = cfg.product_index["ls8_usgs-level1_scene_layer"]
+        lyr = cfg.product_index["ls8_usgs_level1_scene_layer"]
         assert "Over-ridden" in lyr.title
         assert "chook" in lyr.title
 

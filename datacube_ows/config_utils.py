@@ -216,7 +216,7 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     @classmethod
     def set_msg_src(cls, src):
-        cls._msg_src = src
+        OWSMetadataConfig._msg_src = src
 
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
@@ -321,6 +321,7 @@ class OWSMessageFile:
                     self._new_element()
             else:
                 raise ConfigException(f"Invalid message file: error at line {self.line_no}")
+        self._new_element()
 
 
 class OWSEntryNotFound(ConfigException):
