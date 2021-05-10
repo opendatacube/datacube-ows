@@ -134,6 +134,9 @@ def minimal_global_cfg():
             "alias_of": None,
         },
     }
+    global_cfg.folder_index = {
+        "existing_folder": MagicMock(),
+    }
     return global_cfg
 
 
