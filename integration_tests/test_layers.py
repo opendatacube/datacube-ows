@@ -21,6 +21,40 @@ def test_metadata_export():
     #        assert prd.title
 
 
+def test_missing_metadata_file(monkeypatch):
+    cached_cfg = OWSConfig._instance
+    monkeypatch.chdir(src_dir)
+    try:
+        OWSConfig._instance = None
+        raw_cfg = read_config()
+        raw_cfg["global"]["message_file"] = "integration_tests/cfg/non-existent.po"
+        cfg = OWSConfig(refresh=True, cfg=raw_cfg)
+        with cube() as dc:
+            cfg.make_ready(dc)
+
+        assert "Over-ridden" not in cfg.title
+        assert "aardvark" not in cfg.title
+    finally:
+        OWSConfig._instance = cached_cfg
+
+
+def test_metadata_file_ignore(monkeypatch):
+    cached_cfg = OWSConfig._instance
+    monkeypatch.chdir(src_dir)
+    try:
+        OWSConfig._instance = None
+        raw_cfg = read_config()
+        raw_cfg["global"]["message_file"] = "integration_tests/cfg/message.po"
+        cfg = OWSConfig(refresh=True, cfg=raw_cfg, ignore_msgfile=True)
+        with cube() as dc:
+            cfg.make_ready(dc)
+
+        assert "Over-ridden" not in cfg.title
+        assert "aardvark" not in cfg.title
+    finally:
+        OWSConfig._instance = cached_cfg
+
+
 def test_metadata_read(monkeypatch):
     cached_cfg = OWSConfig._instance
     monkeypatch.chdir(src_dir)

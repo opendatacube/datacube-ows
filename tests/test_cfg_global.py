@@ -71,6 +71,14 @@ def test_no_services(minimal_global_raw_cfg):
     assert "At least one service must be active" in str(excinfo.value)
 
 
+def test_no_published_crss(minimal_global_raw_cfg):
+    del minimal_global_raw_cfg["global"]["published_CRSs"]
+    with pytest.raises(ConfigException) as e:
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "Missing required config entry in 'global' section:" in str(e.value)
+    assert "published_CRSs" in str(e.value)
+
+
 def test_bad_geographic_crs(minimal_global_raw_cfg):
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["published_CRSs"]["EPSG:7777"] = {

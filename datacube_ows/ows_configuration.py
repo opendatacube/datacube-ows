@@ -1045,7 +1045,11 @@ class OWSConfig(OWSMetadataConfig):
         for k, v in self._metadata_registry.items():
             if self._inheritance_registry[k]:
                 continue
-            if k == "folder.0.title":
+            if k in [
+                    "folder.ows_root_hidden.title",
+                    "folder.ows_root_hidden.abstract",
+                    "folder.ows_root_hidden.local_keywords",
+             ]:
                 continue
             yield k, v
 

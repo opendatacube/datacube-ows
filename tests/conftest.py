@@ -135,7 +135,7 @@ def minimal_global_cfg():
         },
     }
     global_cfg.folder_index = {
-        "existing_folder": MagicMock(),
+        "folder.existing_folder": MagicMock(),
     }
     return global_cfg
 
