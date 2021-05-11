@@ -14,6 +14,16 @@ to all services and all layers/coverages.
 
 The Global section is always required and contains the following entries:
 
+Message File (message_file)
+===========================
+
+The "message_file" entry gives the path to the message file used for
+`metadata separation and internationalisation
+<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
+
+Any metadata fields supplied in the metadata file will over-ride the values
+supplied in the configuration.
+
 Service Title (title)
 =====================
 

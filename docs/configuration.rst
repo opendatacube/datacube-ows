@@ -263,7 +263,56 @@ This restriction can be avoided using direct inheritance.
 Care should be taken of the special handling of lists in configuration:
 
 1. If the child entry is an empty list, this will replace the parent entry, resulting in an empty list.
-2. If the c
+2. If the child entry is a non-empty list, the values in the child list are appended to the parent entry, resulting
+   in a merged list.
+
+Metadata Separation and Internationalisation
+--------------------------------------------
+
+Human-readable metadata can simply be embedded directly in the configuration.  However in order to support
+use-cases like multi-language internationalisation and integrating metadata with external
+content management systems, all human-readable metadata in the OWS configuration can be extracted
+into a separate file and managed independently.
+
+Metadata Separation
++++++++++++++++++++
+
+To separate your metadata from config (either as an end in itself, or as preparation for internationalisation/translation):
+
+1. Add a unique ``label`` to each of your folder layers.
+
+   This step is strongly recommended optional. OWS will autogenerate
+   a unique but non-obvious label for each folder if you do not supply one.
+
+2. Run ``python cfg_parser.py -c -m messages.po``
+
+   This extracts all the translatable/human-readable text from your config file, and writes it to the named file in gettext "po" file
+   format.
+
+   Add ``"message_file": "/path/to/messages.po"`` to the global section of your OWS config file.
+
+   Subsequently, text in messages.po will over-ride text in the config file. Update as needed, restart wsgi process to take effect.
+   Any field not included in the message file will be loaded directly from the config, as previously.
+
+The msgid's in the messages file are symbolic. E.g.
+
+* ``global.title``: The title for the whole service.
+* ``folder.<label>.title``: The title for a folder, identified by label.
+* ``layer.<name>.title``: The title for a named layer, identified by name.
+* ``style.<layer_name>.<style_name>.title``: The title for a style, identified by layer name and style name.
+
+Fields that can be included in the message file are:
+
+*    Titles (global, folder, layer, style)
+*    Abstracts (global, folder, layer, style)
+*    Keywords (global, folder, layer)
+*    Attribution titles (global, folder, layer)
+*    Fees (global only)
+*    Access Constraints (global only)
+*    Contact Info Organisation (global only)
+*    Contact Info Position (global only)
+
+N.B. Internationalisation/language translation, built on this foundation, is planned for a future release.
 
 General Config Structure
 ------------------------
