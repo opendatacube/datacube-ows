@@ -2,6 +2,9 @@ import os
 import sys
 
 from datacube_ows.ows_configuration import ConfigException, read_config
+from fsspec.config import conf as fsspec_conf
+
+from tests.utils import MOTO_S3_ENDPOINT_URI
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
@@ -119,6 +122,15 @@ def test_cfg_json_simple(monkeypatch):
 
     assert cfg["test"] == 1234
 
+def test_cfg_json_simple_s3(monkeypatch, s3, s3_config_simple):
+    monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/simple.json")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
+    fsspec_conf.update({"s3": {"client_kwargs": {"endpoint_url": MOTO_S3_ENDPOINT_URI}}})
+    cfg = read_config()
+
+    assert cfg["test"] == 1234
 
 def test_cfg_json_nested_2(monkeypatch):
     monkeypatch.chdir(src_dir)

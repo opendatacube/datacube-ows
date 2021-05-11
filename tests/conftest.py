@@ -1,13 +1,61 @@
 import datetime
 from unittest.mock import MagicMock
+import time
 
 import numpy as np
 import pytest
+import requests
+from s3fs.core import S3FileSystem
 import xarray
 import xarray as xr
 
-from tests.utils import coords, dim1_da, dummy_da
+from tests.utils import coords, dim1_da, dummy_da, MOTO_S3_ENDPOINT_URI
 
+def get_boto3_client():
+    from botocore.session import Session
+    session = Session()
+    return session.create_client("s3", endpoint_url=MOTO_S3_ENDPOINT_URI)
+
+@pytest.fixture
+def s3_base():
+    # writable local S3 system
+    # adapted from https://github.com/dask/s3fs/blob/main/s3fs/tests/test_s3fs.py
+    import subprocess
+
+    proc = subprocess.Popen(["moto_server", "s3", "-p", "5555"])
+
+    timeout = 5
+    while timeout > 0:
+        try:
+            r = requests.get(MOTO_S3_ENDPOINT_URI)
+            if r.ok:
+                break
+        except:
+            pass
+        timeout -= 0.1
+        time.sleep(0.1)
+    yield
+    proc.terminate()
+    proc.wait()
+
+@pytest.fixture()
+def s3(s3_base, monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
+
+    client = get_boto3_client()
+    client.create_bucket(Bucket="testbucket")
+
+    S3FileSystem.clear_instance_cache()
+    s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": MOTO_S3_ENDPOINT_URI})
+    s3.invalidate_cache()
+    yield s3
+
+@pytest.fixture
+def s3_config_simple(s3):
+    config_uri = "s3://testbucket/simple.json"
+    with s3.open(config_uri, "wb") as f_open:
+        f_open.write(b'{"test": 1234}')
 
 @pytest.fixture
 def flask_client(monkeypatch):
