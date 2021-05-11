@@ -172,7 +172,7 @@ Here's an extended example that replaces Green with NDVI and Blue with NDWI:
                 }
             },
             "blue": {
-                "function": "datacube_ows.band_utils._diff",
+                "function": "datacube_ows.band_utils.norm_diff",
                 "kwargs": {
                     "band1": "green",
                     "band2": "nir",

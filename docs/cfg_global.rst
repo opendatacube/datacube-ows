@@ -14,6 +14,16 @@ to all services and all layers/coverages.
 
 The Global section is always required and contains the following entries:
 
+Message File (message_file)
+===========================
+
+The "message_file" entry gives the path to the message file used for
+`metadata separation and internationalisation
+<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
+
+Any metadata fields supplied in the metadata file will over-ride the values
+supplied in the configuration.
+
 Service Title (title)
 =====================
 
@@ -162,8 +172,70 @@ E.g.:
 If unsure of an `EPSG` code, search in http://epsg.io/
 
 
-Optional Metadata
-=================
+Default Attribution (attribution)
+=================================
+
+Attributions can be declared at any level of the layer hierarchy, and are
+inherited by child layers from the parent layer unless over-ridden.  An
+over-all default attribution may also be declared in the ``wms`` section,
+which will serve as the attribution for top-level layers that do not declare
+their own attribution section.
+
+All attribution sections are optional.
+
+If provided, the attribution section should be a dictionary containing
+the following members:
+
+title
+   A user-readable title for the attribution (e.g. the name of the attributed
+   organisation.)
+
+url
+   A url for the attribution (e.g. the website address of the attributed organisation)
+
+logo
+   A dictionary (structure described below) describing a logo for the attribution
+   (e.g. the logo of the attributed organisation.)
+
+All of the above elements are optional, but at least one must be
+provided if the attribution section exists.
+
+----------------
+Attribution Logo
+----------------
+
+The structure of the logo section is as follows:
+
+url
+   URL of the logo image.  (Required if a logo is specified)
+
+format
+   The MIME type of the logo image.  Should match the file type of
+   the image pointed to by the url.  (Required if a logo is specified)
+
+width
+   The width (in pixels) of the logo image (optional)
+
+height
+   The height (in pixels) of the logo image (optional)
+
+E.g.
+
+::
+
+       "attribution": {
+            "title": "Acme Satellites",
+            "url": "http://www.acme.com/satellites",
+            "logo": {
+                "width": 370,
+                "height": 73,
+                "url": "https://www.acme.com/satellites/images/acme-370x73.png",
+                "format": "image/png",
+            }
+        },
+
+Other Optional Metadata
+=======================
 
 The remainder of the "global" section contains various metadata entries that are written
 directly to the various Capabilities documents.  All metadata in the "global" section

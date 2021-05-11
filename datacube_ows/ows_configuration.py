@@ -20,6 +20,7 @@ from slugify import slugify
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
+                                       OWSMessageFile, OWSMetadataConfig,
                                        cfg_expand, import_python_obj,
                                        load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
@@ -123,9 +124,9 @@ class BandIndex(OWSConfigEntry):
 
 
 class AttributionCfg(OWSConfigEntry):
-    def __init__(self, cfg):
+    def __init__(self, cfg, owner):
         super().__init__(cfg)
-        self.title = cfg.get("title")
+        self.owner = owner
         self.url = cfg.get("url")
         logo = cfg.get("logo")
         if not self.title and not self.url and not logo:
@@ -143,12 +144,16 @@ class AttributionCfg(OWSConfigEntry):
             if not self.logo_url or not self.logo_fmt:
                 raise ConfigException("url and format must both be specified in an attribution logo.")
 
+    @property
+    def title(self):
+        return self.owner.attribution_title
+
     @classmethod
-    def parse(cls, cfg):
+    def parse(cls, cfg, owner):
         if not cfg:
             return None
         else:
-            return cls(cfg)
+            return cls(cfg, owner)
 
 
 class SuppURL(OWSConfigEntry):
@@ -165,39 +170,34 @@ class SuppURL(OWSConfigEntry):
 
 
 
-class OWSLayer(OWSConfigEntry):
+class OWSLayer(OWSMetadataConfig):
+    METADATA_KEYWORDS = True
+    METADATA_ATTRIBUTION = True
+
     named = False
-    def __init__(self, cfg, parent_layer=None, **kwargs):
+    def __init__(self, cfg, object_label, parent_layer=None, **kwargs):
         super().__init__(cfg, **kwargs)
+        self.object_label = object_label
         self.global_cfg = kwargs["global_cfg"]
         self.parent_layer = parent_layer
 
-        if "title" not in cfg:
-            raise ConfigException("Layer without title found under parent layer %s" % str(parent_layer))
-        self.title = cfg["title"]
-        if "abstract" in cfg:
-            self.abstract = cfg["abstract"]
-        elif parent_layer:
-            self.abstract = parent_layer.abstract
-        else:
-            raise ConfigException("No abstract supplied for top-level layer %s" % self.title)
-        # Accumulate keywords
-        self.keywords = set()
-        if self.parent_layer:
-            for word in self.parent_layer.keywords:
-                self.keywords.add(word)
-        else:
-            for word in self.global_cfg.keywords:
-                self.keywords.add(word)
-        for word in cfg.get("keywords", []):
-            self.keywords.add(word)
+        self.parse_metadata(cfg)
         # Inherit or override attribution
         if "attribution" in cfg:
-            self.attribution = AttributionCfg.parse(cfg.get("attribution"))
+            self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
         elif parent_layer:
             self.attribution = self.parent_layer.attribution
         else:
             self.attribution = self.global_cfg.attribution
+
+    def can_inherit_from(self):
+        if self.parent_layer:
+            return self.parent_layer
+        else:
+            return self.global_cfg
+
+    def get_obj_label(self):
+        return self.object_label
 
     def layer_count(self):
         return 0
@@ -210,19 +210,30 @@ class OWSLayer(OWSConfigEntry):
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
-        super().__init__(cfg, parent_layer, global_cfg=global_cfg, **kwargs)
+    def __init__(self, cfg, global_cfg, parent_layer=None, sibling=0, **kwargs):
+        if "label" in cfg:
+            obj_lbl = f"folder.{cfg['label']}"
+        elif parent_layer:
+            obj_lbl = f"{parent_layer.object_label}.{sibling}"
+        else:
+            obj_lbl = f"folder.{sibling}"
+        if obj_lbl in global_cfg.folder_index:
+            raise ConfigException(f"Duplicate folder label: {obj_lbl}")
+        super().__init__(cfg, parent_layer=parent_layer, object_label=obj_lbl, global_cfg=global_cfg, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
         self.unready_layers = []
         self.child_layers = []
         if "layers" not in cfg:
             raise ConfigException("No layers section in folder layer %s" % self.title)
+        child = 0
         for lyr_cfg in cfg["layers"]:
             try:
-                lyr = parse_ows_layer(lyr_cfg, global_cfg, parent_layer=self)
+                lyr = parse_ows_layer(lyr_cfg, global_cfg=global_cfg, parent_layer=self, sibling=child)
                 self.unready_layers.append(lyr)
             except ConfigException as e:
                 _LOG.error("Could not parse layer: %s", str(e))
+            child += 1
+        global_cfg.folder_index[obj_lbl] = self
 
     def unready_layer_count(self):
         return sum([l.layer_count() for l in self.unready_layers])
@@ -308,7 +319,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
         name = cfg["name"]
-        super().__init__(cfg, global_cfg=global_cfg, parent_layer=parent_layer,
+        super().__init__(cfg, object_label=f"layer.{name}", global_cfg=global_cfg, parent_layer=parent_layer,
                          keyvals={"layer": name},
                          **kwargs)
         self.name = name
@@ -383,7 +394,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 #            self.sub_product_extractor = None
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
-
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
@@ -850,14 +860,14 @@ class OWSMultiProductLayer(OWSNamedLayer):
         }
 
 
-def parse_ows_layer(cfg, global_cfg, parent_layer=None):
+def parse_ows_layer(cfg, global_cfg, parent_layer=None, sibling=0):
     if cfg.get("name", None):
         if cfg.get("multi_product", False):
             return OWSMultiProductLayer(cfg, global_cfg, parent_layer)
         else:
             return OWSProductLayer(cfg, global_cfg, parent_layer)
     else:
-        return OWSFolder(cfg, global_cfg, parent_layer)
+        return OWSFolder(cfg, global_cfg, parent_layer=parent_layer, sibling=sibling)
 
 
 class WCSFormat:
@@ -914,7 +924,51 @@ class WCSFormat:
         return self.renderers[version]
 
 
-class OWSConfig(OWSConfigEntry):
+class ContactInfo(OWSConfigEntry):
+    def __init__(self, cfg, global_cfg):
+        super().__init__(cfg)
+        self.global_cfg = global_cfg
+        self.person = cfg.get("person")
+
+        class Address(OWSConfigEntry):
+            def __init__(self, cfg):
+                super().__init__(cfg)
+                self.type = cfg.get("type")
+                self.address = cfg.get("address")
+                self.city = cfg.get("city")
+                self.state = cfg.get("state")
+                self.postcode = cfg.get("postcode")
+                self.country = cfg.get("country")
+
+            @classmethod
+            def parse(cls, cfg):
+                if not cfg:
+                    return None
+                else:
+                    return cls(cfg)
+
+        self.address = Address.parse(cfg.get("address"))
+        self.telephone = cfg.get("telephone")
+        self.fax = cfg.get("fax")
+        self.email = cfg.get("email")
+
+    @property
+    def organisation(self):
+        return self.global_cfg.contact_org
+
+    @property
+    def position(self):
+        return self.global_cfg.contact_position
+
+    @classmethod
+    def parse(cls, cfg, global_cfg):
+        if cfg:
+            return cls(cfg, global_cfg)
+        else:
+            return None
+
+
+class OWSConfig(OWSMetadataConfig):
     _instance = None
     initialised = False
 
@@ -923,14 +977,22 @@ class OWSConfig(OWSConfigEntry):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, refresh=False, cfg=None):
+    METADATA_KEYWORDS = True
+    METADATA_ATTRIBUTIONS = True
+    METADATA_FEES = True
+    METADATA_ACCESS_CONSTRAINTS = True
+    METADATA_CONTACT_INFO = True
+
+    default_abstract = ""
+
+    def __init__(self, refresh=False, cfg=None, ignore_msgfile=False):
         if not self.initialised or refresh:
+            self.msgfile = None
             if not cfg:
                 cfg = read_config()
             super().__init__(cfg)
-            self.initialised = True
             try:
-                self.parse_global(cfg["global"])
+                self.parse_global(cfg["global"], ignore_msgfile)
             except KeyError as e:
                 raise ConfigException(
                     "Missing required config entry in 'global' section: %s" % str(e)
@@ -967,30 +1029,46 @@ class OWSConfig(OWSConfigEntry):
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
+        if self.msg_file_name:
+            try:
+                with open(self.msg_file_name, "r") as fp:
+                    self.set_msg_src(OWSMessageFile(fp))
+            except FileNotFoundError:
+                _LOG.warning("Message file %s does not exist - using metadata from config file", self.msg_file_name)
+        else:
+            self.set_msg_src(None)
         self.native_product_index = {}
         self.root_layer_folder.make_ready(dc, *args, **kwargs)
         super().make_ready(dc, *args, **kwargs)
 
-    def parse_global(self, cfg):
+    def export_metadata(self):
+        for k, v in self._metadata_registry.items():
+            if self._inheritance_registry[k]:
+                continue
+            if k in [
+                    "folder.ows_root_hidden.title",
+                    "folder.ows_root_hidden.abstract",
+                    "folder.ows_root_hidden.local_keywords",
+             ]:
+                continue
+            yield k, v
+
+    def parse_global(self, cfg, ignore_msgfile):
         self._response_headers = cfg.get("response_headers", {})
         self.wms = cfg.get("services", {}).get("wms", True)
         self.wmts = cfg.get("services", {}).get("wmts", True)
         self.wcs = cfg.get("services", {}).get("wcs", False)
         if not self.wms and not self.wmts and not self.wcs:
             raise ConfigException("At least one service must be active.")
-        self.title = cfg["title"]
+        if ignore_msgfile:
+            self.msg_file_name = None
+        else:
+            self.msg_file_name = cfg.get("message_file")
+        self.parse_metadata(cfg)
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]
-        self.abstract = cfg.get("abstract")
-        self.contact_info = cfg.get("contact_info", {})
-        self.keywords = cfg.get("keywords", [])
-        self.fees = cfg.get("fees")
-        self.access_constraints = cfg.get("access_constraints")
-        # self.use_extent_views = cfg.get("use_extent_views", False)
-        if not self.fees:
-            self.fees = "none"
-        if not self.access_constraints:
-            self.access_constraints = "none"
+        self.contact_info = ContactInfo.parse(cfg.get("contact_info"), self)
+        self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
 
         def make_gml_name(name):
             if name.startswith("EPSG:"):
@@ -1040,9 +1118,10 @@ class OWSConfig(OWSConfigEntry):
         self.s3_aws_zone = cfg.get("s3_aws_zone", "")
         self.wms_max_width = cfg.get("max_width", 256)
         self.wms_max_height = cfg.get("max_height", 256)
-        self.attribution = AttributionCfg.parse(cfg.get("attribution"))
         self.authorities = cfg.get("authorities", {})
         self.user_band_math_extension = cfg.get("user_band_math_extension", False)
+        if "attribution" in cfg:
+            _LOG.warning("Attribution entry in top level 'wms' section will be ignored. Attribution should be moved to the 'global' section")
 
     def parse_wcs(self, cfg):
         if self.wcs:
@@ -1088,13 +1167,14 @@ class OWSConfig(OWSConfigEntry):
             self.tile_matrix_sets[identifier] = TileMatrixSet(identifier, tms, self)
 
     def parse_layers(self, cfg):
+        self.folder_index = {}
         self.product_index = {}
         self.declare_unready("native_product_index")
         self.root_layer_folder = OWSFolder({
             "title": "Root Folder (hidden)",
-            "abstract": ".",
+            "label": "ows_root_hidden",
             "layers": cfg
-        }, self, None)
+        }, global_cfg=self, parent_layer=None)
 
     @property
     def layers(self):

@@ -6,52 +6,33 @@ from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
 
 
-def test_minimal_layer_create(minimal_global_cfg):
-    lyr = OWSLayer({
-            "title": "The Title",
-            "abstract": "The Abstract"
-    },
-        global_cfg=minimal_global_cfg)
-    assert lyr.title == "The Title"
-    assert len(lyr.keywords) == 1
-    assert "global" in lyr.keywords
-    assert lyr.abstract == "The Abstract"
-    assert lyr.global_cfg == minimal_global_cfg
-    assert lyr.attribution == "Global Attribution"
-    assert lyr.layer_count() == 0
-    assert lyr.unready_layer_count() == 0
-    assert "The Title" in str(lyr)
-
-
 def test_missing_title(minimal_global_cfg):
     with pytest.raises(ConfigException) as excinfo:
-        lyr = OWSLayer({
+        lyr = OWSFolder({
             "abstract": "The Abstract"
         },
             global_cfg=minimal_global_cfg)
-    assert "Layer without title" in str(excinfo.value)
-    assert "None" in str(excinfo.value)
+    assert "Entity folder.0 has no title" in str(excinfo.value)
 
 
 def test_inherit_no_abstract(minimal_global_cfg):
-    with pytest.raises(ConfigException) as excinfo:
-        lyr = OWSLayer({
+    lyr = OWSFolder({
             "title": "The Title",
+            "layers": [],
         },
         global_cfg=minimal_global_cfg)
-    assert "No abstract" in str(excinfo.value)
-    assert "top-level layer" in str(excinfo.value)
-    assert "The Title" in str(excinfo.value)
-
+    assert lyr.abstract == "Global Abstract"
+    assert lyr.is_inherited("abstract")
 
 def test_inherit_parent(minimal_global_cfg, minimal_parent):
     lyr = OWSLayer({
             "title": "The Title",
     },
+        object_label="foo",
         parent_layer=minimal_parent,
         global_cfg=minimal_global_cfg)
     assert lyr.abstract == "Parent Abstract"
-    assert lyr.attribution == "Parent Attribution"
+    assert lyr.attribution.title == "Parent Attribution"
     assert "global" in lyr.keywords
     assert "parent" in lyr.keywords
 
@@ -63,6 +44,7 @@ def test_override_parent(minimal_global_cfg, minimal_parent):
         "abstract": "The Abstract",
         "keywords": ["merged"]
     },
+        object_label="foo",
         parent_layer=minimal_parent,
         global_cfg=minimal_global_cfg)
     assert lyr.abstract == "The Abstract"
@@ -70,6 +52,7 @@ def test_override_parent(minimal_global_cfg, minimal_parent):
     assert "global" in lyr.keywords
     assert "parent" in lyr.keywords
     assert "merged" in lyr.keywords
+    assert lyr.local_keywords == set(["merged"])
 
 
 def test_minimal_folder(minimal_global_cfg):
@@ -122,6 +105,20 @@ def test_catch_invalid_folder_layers(minimal_global_cfg):
         ]
     }, global_cfg=minimal_global_cfg)
     assert len(lyr.unready_layers) == 0
+
+
+def test_duplicate_folder_label(minimal_global_cfg):
+    with pytest.raises(ConfigException) as e:
+        lyr = OWSFolder({
+            "title": "The Title",
+            "abstract": "The Abstract",
+            "label": "existing_folder",
+            "layers": [
+                {"invalid": "config"}
+            ]
+        }, global_cfg=minimal_global_cfg)
+    assert "Duplicate folder label" in str(e.value)
+    assert "existing_folder" in str(e.value)
 
 
 def test_make_ready_empty(minimal_global_cfg, minimal_dc):

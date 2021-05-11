@@ -1,7 +1,7 @@
 import pytest
 
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.ows_configuration import OWSConfig
+from datacube_ows.ows_configuration import ContactInfo, OWSConfig
 
 
 def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
@@ -16,9 +16,7 @@ def test_global_no_title(minimal_global_raw_cfg):
     del minimal_global_raw_cfg["global"]["title"]
     with pytest.raises(ConfigException) as excinfo:
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
-    assert "title" in str(excinfo.value)
-    assert "Missing required config entry" in str(excinfo.value)
-    assert "global" in str(excinfo.value)
+    assert "Entity global has no title" in str(excinfo.value)
 
 
 def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
@@ -35,6 +33,15 @@ def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     assert cfg.wcs
     assert not cfg.wms
     assert not cfg.wmts
+
+
+def test_contact_details_parse(minimal_global_cfg):
+    addr1 = ContactInfo.parse({}, minimal_global_cfg)
+    assert addr1 is None
+    addr2 = ContactInfo.parse({"address": {}}, minimal_global_cfg)
+    assert addr2.address is None
+    addr3 = ContactInfo.parse({"address": {"address": "foo"}}, minimal_global_cfg)
+    assert addr3.address.address == "foo"
 
 
 def test_wcs_no_native_format(minimal_global_raw_cfg, wcs_global_cfg):
@@ -62,6 +69,14 @@ def test_no_services(minimal_global_raw_cfg):
     with pytest.raises(ConfigException) as excinfo:
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "At least one service must be active" in str(excinfo.value)
+
+
+def test_no_published_crss(minimal_global_raw_cfg):
+    del minimal_global_raw_cfg["global"]["published_CRSs"]
+    with pytest.raises(ConfigException) as e:
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "Missing required config entry in 'global' section:" in str(e.value)
+    assert "published_CRSs" in str(e.value)
 
 
 def test_bad_geographic_crs(minimal_global_raw_cfg):

@@ -84,7 +84,10 @@ def minimal_dc():
 def minimal_global_cfg():
     global_cfg = MagicMock()
     global_cfg.keywords = {"global"}
-    global_cfg.attribution = "Global Attribution"
+    global_cfg.attribution.title = "Global Attribution"
+    global_cfg.contact_org = None
+    global_cfg.contact_position = None
+    global_cfg.abstract = "Global Abstract"
     global_cfg.authorities = {
         "auth0": "http://test.url/auth0",
         "auth1": "http://test.url/auth1",
@@ -131,6 +134,9 @@ def minimal_global_cfg():
             "alias_of": None,
         },
     }
+    global_cfg.folder_index = {
+        "folder.existing_folder": MagicMock(),
+    }
     return global_cfg
 
 
@@ -139,7 +145,7 @@ def minimal_parent():
     parent = MagicMock()
     parent.abstract = "Parent Abstract"
     parent.keywords = {"global", "parent"}
-    parent.attribution = "Parent Attribution"
+    parent.attribution.title = "Parent Attribution"
     return parent
 
 

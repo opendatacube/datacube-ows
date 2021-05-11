@@ -9,7 +9,8 @@ from PIL import Image
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
-                                       OWSFlagBandStandalone)
+                                       OWSFlagBandStandalone,
+                                       OWSMetadataConfig)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -17,7 +18,7 @@ from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 _LOG = logging.getLogger(__name__)
 
 
-class StyleDefBase(OWSExtensibleConfigEntry):
+class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     INDEX_KEYS = ["layer", "style"]
     auto_legend = False
     include_in_feature_info = False
@@ -37,6 +38,9 @@ class StyleDefBase(OWSExtensibleConfigEntry):
             return super().__new__(subclass)
         return super().__new__(cls)
 
+    default_title = "Stand-Alone Style"
+    default_abstract = "Stand-Alone Style"
+
     def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
         super().__init__(style_cfg,
                          global_cfg=product.global_cfg,
@@ -54,17 +58,16 @@ class StyleDefBase(OWSExtensibleConfigEntry):
                          })
         style_cfg = self._raw_cfg
         self.stand_alone = stand_alone
+        if self.stand_alone:
+            self._metadata_registry = {}
         self.user_defined = user_defined
         self.local_band_map = style_cfg.get("band_map", {})
         self.product = product
         if self.stand_alone:
             self.name = style_cfg.get("name", "stand_alone")
-            self.title = style_cfg.get("title", "Stand Alone Style")
-            self.abstract = style_cfg.get("abstract", "Stand Alone Style")
         else:
             self.name = style_cfg["name"]
-            self.title = style_cfg["title"]
-            self.abstract = style_cfg["abstract"]
+        self.parse_metadata(style_cfg)
         self.masks = [StyleMask(mask_cfg, self) for mask_cfg in style_cfg.get("pq_masks", [])]
         if self.stand_alone:
             self.flag_products = []
@@ -79,6 +82,9 @@ class StyleDefBase(OWSExtensibleConfigEntry):
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
+
+    def get_obj_label(self):
+        return f"style.{self.product.name}.{self.name}"
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
