@@ -109,6 +109,14 @@ above, folder layers have a "layers" element which is a list of child
 layers (which may be named layers, folder layers with their own
 child layers).
 
+A folder layer may also have a `label` element which is used only
+for
+`metadata separation and internationalisation
+<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
+Each folder's layer
+must be globally unique.  A unique label based on the folder's position
+in the folder hierarchy is generated if one is not supplied.
+
 E.g.
 
 ::

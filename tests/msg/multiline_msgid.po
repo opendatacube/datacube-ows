@@ -1,0 +1,18 @@
+
+#. Valid test file
+#. Single line msgstr
+msgid "foo.bar.baz"
+msgstr "Single line msgstr"
+
+#.  Multi line msgstr
+msgid "tic.tac.toe"
+msgstr ""
+"\n"
+"A multi-line string that continues\n"
+"Across line-breaks.\n"
+
+#.  Error: msgid with continuation
+msgid ""
+"To tic-tac-toe, or not to tic-tac-toe,\n"
+msgstr "That is the question."
+

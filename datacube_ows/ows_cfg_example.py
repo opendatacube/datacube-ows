@@ -1292,6 +1292,29 @@ ows_cfg = {
             "fax": "+61 2 1234 6789",
             "email": "test@example.com",
         },
+        # Attribution.
+        #
+        # This provides a way to identify the source of the data used in a WMS layer or layers.
+        # This entire section is optional.  If provided, it is taken as the
+        # default attribution for any layer that does not override it.
+        "attribution": {
+            # Attribution must contain at least one of ("title", "url" and "logo")
+            # A human readable title for the attribution - e.g. the name of the attributed organisation
+            "title": "Acme Satellites",
+            # The associated - e.g. URL for the attributed organisation
+            "url": "http://www.acme.com/satellites",
+            # Logo image - e.g. for the attributed organisation
+            "logo": {
+                # Image width in pixels (optional)
+                "width": 370,
+                # Image height in pixels (optional)
+                "height": 73,
+                # URL for the logo image. (required if logo specified)
+                "url": "https://www.acme.com/satellites/images/acme-370x73.png",
+                # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+                "format": "image/png",
+            }
+        },
         # If fees are charged for the use of the service, these can be described here in free text.
         # If blank or not included, defaults to "none".
         "fees": "",
@@ -1334,27 +1357,7 @@ ows_cfg = {
         # Optional, defaults to 256x256
         "max_width": 512,
         "max_height": 512,
-        # Attribution. This provides a way to identify the source of the data used in a layer or layers.
-        # This entire section is optional.  If provided, it is taken as the
-        # default attribution for any layer that does not override it.
-        "attribution": {
-            # Attribution must contain at least one of ("title", "url" and "logo")
-            # A human readable title for the attribution - e.g. the name of the attributed organisation
-            "title": "Acme Satellites",
-            # The associated - e.g. URL for the attributed organisation
-            "url": "http://www.acme.com/satellites",
-            # Logo image - e.g. for the attributed organisation
-            "logo": {
-                # Image width in pixels (optional)
-                "width": 370,
-                # Image height in pixels (optional)
-                "height": 73,
-                # URL for the logo image. (required if logo specified)
-                "url": "https://www.acme.com/satellites/images/acme-370x73.png",
-                # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
-                "format": "image/png",
-            }
-        },
+
         # These define the AuthorityURLs.
         # They represent the authorities that define the "Identifiers" defined layer by layer below.
         # The spec allows AuthorityURLs to be defined anywhere on the Layer heirarchy, but datacube_ows treats them

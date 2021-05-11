@@ -42,11 +42,38 @@ def test_cfg_parser_input_file_compare(runner):
 
 
 @pytest.mark.xfail(reason="Permission denied")
+def test_cfg_parser_msg_file(runner):
+    result = runner.invoke(main, ["-m", "messages.po"])
+    assert result.exit_code == 0
+
+
+def test_cfg_parser_msg_file_null(runner):
+    result = runner.invoke(main, ["-m", "/dev/null"])
+    assert result.exit_code == 0
+
+
+@pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_output_file_compare(runner):
     result = runner.invoke(main, ["-o", "inventory.json"])
+    assert result.exit_code == 0
+
+
+def test_cfg_parser_output_file_compare_null(runner):
+    result = runner.invoke(main, ["-o", "/dev/null"])
     assert result.exit_code == 0
 
 
 def test_cfg_parser_version(runner):
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
+
+
+def test_cfg_parser_bad_cfgenv(runner):
+    result = runner.invoke(main, [], env={"DATACUBE_OWS_CFG": "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"})
+    assert result.exit_code == 1
+
+
+def test_cfg_parser_bad_cfgarg(runner):
+    result = runner.invoke(main, ["integration_tests.cfg.ows_test_cfg.ows,cfg", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
+    assert result.exit_code == 1
+

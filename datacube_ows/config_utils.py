@@ -92,6 +92,12 @@ class OWSConfigEntry:
             raise ConfigException(f"Cannot declare {name} as unready on a ready object")
         self._unready_attributes.add(name)
 
+    def get(self, key, default=None):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            return default
+
     def __getattribute__(self, name):
         if name == "_unready_attributes":
             pass
@@ -111,6 +117,213 @@ class OWSConfigEntry:
         if self._unready_attributes:
             raise OWSConfigNotReady(f"The following parameters have not been initialised: {self._unready_attributes}")
         self.ready = True
+
+FLD_TITLE = "title"
+FLD_ABSTRACT = "abstract"
+FLD_KEYWORDS = "local_keywords"
+FLD_FEES = "fees"
+FLD_ACCESS_CONSTRAINTS = "access_constraints"
+FLD_ATTRIBUTION = "attribution_title"
+FLD_CONTACT_ORGANISATION = "contact_org"
+FLD_CONTACT_POSITION = "contact_position"
+
+class OWSMetadataConfig(OWSConfigEntry):
+
+    METADATA_TITLE = True
+    METADATA_ABSTRACT = True
+    METADATA_KEYWORDS = False
+    METADATA_CONTACT_INFO = False
+    METADATA_FEES = False
+    METADATA_ACCESS_CONSTRAINTS = False
+    METADATA_ATTRIBUTION = False
+
+    _metadata_registry = {}
+    _inheritance_registry = {}
+
+    _msg_src = None
+
+    def get_obj_label(self):
+        return "global"
+
+
+    def can_inherit_from(self):
+        return None
+
+    default_title = None
+    default_abstract = None
+
+    _keywords = None
+    def parse_metadata(self, cfg):
+        # can_inherit_from() can be over-ridden by subclasses
+        # pylint: disable=assignment-from-none
+        inherit_from = self.can_inherit_from()
+        if self.METADATA_TITLE:
+            if self.default_title:
+                self.register_metadata(self.get_obj_label(), FLD_TITLE, cfg.get("title", self.default_title))
+            else:
+                try:
+                    self.register_metadata(self.get_obj_label(), FLD_TITLE, cfg["title"])
+                except KeyError:
+                    raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
+        if self.METADATA_ABSTRACT:
+            local_abstract = cfg.get("abstract")
+            if local_abstract is None and inherit_from is not None:
+                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, inherit_from.abstract, inherited=True)
+            elif local_abstract is None and self.default_abstract is not None:
+                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, self.default_abstract)
+            elif local_abstract is None:
+                raise ConfigException(f"Entity {self.get_obj_label()} has no abstract")
+            else:
+                self.register_metadata(self.get_obj_label(), "abstract", local_abstract)
+        if self.METADATA_KEYWORDS:
+            local_keyword_set = set(cfg.get("keywords", []))
+            self.register_metadata(self.get_obj_label(), FLD_KEYWORDS, ",".join(local_keyword_set))
+            if inherit_from:
+                keyword_set = inherit_from.keywords
+            else:
+                keyword_set = set()
+            self._keywords = keyword_set.union(local_keyword_set)
+        if self.METADATA_ATTRIBUTION:
+            inheriting = False
+            attrib = cfg.get("attribution")
+            if attrib is None and inherit_from is not None:
+                attrib = inherit_from.attribution
+                inheriting = True
+            if attrib:
+                attrib_title = attrib.get("title")
+            else:
+                attrib_title = None
+            if attrib_title:
+                self.register_metadata(self.get_obj_label(), FLD_ATTRIBUTION, attrib_title, inheriting)
+        if self.METADATA_FEES:
+            fees = cfg.get("fees")
+            if not fees:
+                fees = "none"
+            self.register_metadata(self.get_obj_label(), FLD_FEES, fees)
+        if self.METADATA_ACCESS_CONSTRAINTS:
+            acc = cfg.get("access_contraints")
+            if not acc:
+                acc = "none"
+            self.register_metadata(self.get_obj_label(), FLD_ACCESS_CONSTRAINTS, acc)
+        if self.METADATA_CONTACT_INFO:
+            org = cfg.get("contact_info", {}).get("organisation")
+            position = cfg.get("contact_info", {}).get("position")
+            if org:
+                self.register_metadata(self.get_obj_label(), FLD_CONTACT_ORGANISATION, org)
+            if position:
+                self.register_metadata(self.get_obj_label(), FLD_CONTACT_POSITION, position)
+    @property
+    def keywords(self):
+        return self._keywords
+
+    @classmethod
+    def set_msg_src(cls, src):
+        OWSMetadataConfig._msg_src = src
+
+    def read_metadata(self, lbl, fld):
+        lookup = ".".join([lbl, fld])
+        if self._msg_src is not None:
+            return self._msg_src.get(lookup, self._metadata_registry.get(lookup))
+        return self._metadata_registry.get(lookup)
+
+    def read_inheritance(self, lbl, fld):
+        lookup = ".".join([lbl, fld])
+        return self._inheritance_registry.get(lookup, False)
+
+    def register_metadata(self, lbl, fld, val, inherited=False):
+        lookup = ".".join([lbl, fld])
+        self._metadata_registry[lookup] = val
+        self._inheritance_registry[lookup] = inherited
+
+    def read_local_metadata(self, fld):
+        return self.read_metadata(self.get_obj_label(), fld)
+
+    def is_inherited(self, fld):
+        return self.read_inheritance(self.get_obj_label(), fld)
+
+    def __getattribute__(self, name):
+        if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION):
+            return self.read_local_metadata(name)
+        elif name == FLD_KEYWORDS:
+            kw = self.read_local_metadata(FLD_KEYWORDS)
+            if kw:
+                return set(kw.split(","))
+            else:
+                return set()
+        elif name == FLD_ATTRIBUTION:
+            return self.read_local_metadata(FLD_ATTRIBUTION)
+        else:
+            return super().__getattribute__(name)
+
+
+class OWSMessageFile:
+    # Parser states
+    START = 0
+    GOT_ID = 1
+    IN_STR = 2
+
+    def __init__(self, fp):
+        self._index = {}
+        self.state = self.START
+        self.msgstr = ""
+        self.msgid  = ""
+        self.line_no = 0
+        self.read_file(fp)
+
+    def _new_element(self):
+        if self.msgid:
+            self._index[self.msgid] = self.msgstr
+        self.state = self.START
+        self.msgstr = ""
+        self.msgid  = ""
+
+    def __getitem__(self, item):
+        return self._index[item]
+
+    def __contains__(self, item):
+        return item in self._index
+
+    def get(self, item, default=None):
+        return self._index.get(item, default)
+
+    def unescape(self, esc_str):
+        return esc_str.encode("utf-8").decode("unicode-escape")
+
+    def read_file(self, fp):
+        for line in fp.readlines():
+            self.line_no += 1
+            if line.startswith("msgid "):
+                if self.state == self.GOT_ID:
+                    raise ConfigException(f"Unexpected msgid line in message file: at line {self.line_no}")
+                self._new_element()
+                self.msgid = line[7:-2]
+                if self.msgid in self:
+                    raise ConfigException(f"Duplicate msgid: at line {self.line_no}")
+                self.state = self.GOT_ID
+            elif line.strip() == "":
+                if self.state == self.IN_STR:
+                    self._new_element()
+            elif line.startswith("msgstr "):
+                if self.state == self.START:
+                    raise ConfigException(f"msgstr without msgid: at line {self.line_no}")
+                elif self.state == self.IN_STR:
+                    raise ConfigException(f"Badly formatted multi-line msgstr: at line {self.line_no}")
+                # GOT_ID:
+                self.msgstr = self.unescape(line[8:-2])
+                self.state = self.IN_STR
+            elif line.startswith('"'):
+                if self.state == self.START:
+                    raise ConfigException(f"untagged string: at line {self.line_no}")
+                elif self.state == self.GOT_ID:
+                    raise ConfigException(f"Multiline msgids not supported by OWS: at line {self.line_no}")
+                # IN_STR
+                self.msgstr += self.unescape(line[1:-2])
+            elif line.startswith("#"):
+                if self.state == self.IN_STR:
+                    self._new_element()
+            else:
+                raise ConfigException(f"Invalid message file: error at line {self.line_no}")
+        self._new_element()
 
 
 class OWSEntryNotFound(ConfigException):
