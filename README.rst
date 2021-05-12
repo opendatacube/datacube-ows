@@ -23,7 +23,6 @@ Datacube Open Web Services
 * Free software: Apache Software License 2.0
 * Documentation: https://datacube-ows.readthedocs.io.
 
-
 Features
 --------
 
@@ -31,14 +30,18 @@ Features
 * Supports WMS and WMTS.
 * Experimental support for WCS (1.0, 2.0, 2.1).
 
-Note on Naming
---------------
+Community
+---------
 
-This project originally supported WMS only and was known as "datacube_wms".
+This project welcomes community participation.
 
-There are still a handful of file and object names in the codebase that
-include the substring "wms" although they are actually more general.
-These names will be updated to "ows" as time permits.
+`Join the ODC Slack <http://slack.opendatacube.org>`__ if you need help
+setting up or using this project, or the Open Data Cube more generally.
+Conversation about datacube-ows is mostly concentrated in the Slack
+channel ``#wms``.
+
+Please help us to keep the Open Data Cube community open and inclusive by
+reading and following our `Code of Conduct <code-of-conduct.md>`__.
 
 Setup
 -----
