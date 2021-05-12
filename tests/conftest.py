@@ -9,7 +9,7 @@ from s3fs.core import S3FileSystem
 import xarray
 import xarray as xr
 
-from tests.utils import coords, dim1_da, dummy_da, MOTO_S3_ENDPOINT_URI
+from tests.utils import coords, dim1_da, dummy_da, MOTO_PORT, MOTO_S3_ENDPOINT_URI
 
 def get_boto3_client():
     from botocore.session import Session
@@ -22,7 +22,7 @@ def s3_base():
     # adapted from https://github.com/dask/s3fs/blob/main/s3fs/tests/test_s3fs.py
     import subprocess
 
-    proc = subprocess.Popen(["moto_server", "s3", "-p", "5555"])
+    proc = subprocess.Popen(["moto_server", "s3", "-p", MOTO_PORT])
 
     timeout = 5
     while timeout > 0:
