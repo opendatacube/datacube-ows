@@ -7,6 +7,8 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every
 little bit helps, and credit will always be given.
 
+We have a `code of conduct<code-of-conduct.md>`_, so please follow it in all your interactions with the project.
+
 You can contribute in many ways:
 
 Types of Contributions
@@ -16,7 +18,6 @@ Report Bugs
 ~~~~~~~~~~~
 
 Report bugs at https://github.com/opendatacube/datacube-ows/issues.
-
 
 If you are reporting a bug, please include:
 
@@ -58,18 +59,12 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `datacube-ows` for local development.
-
 1. Fork the `datacube-ows` repo on GitHub.
 2. Clone your fork locally::
 
     $ git clone git@github.com:your_name_here/datacube-ows.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
-
-    $ mkvirtualenv datacube-ows
-    $ cd datacube-ows/
-    $ python setup.py develop
+3. Follow the instructions in `README.rst`__  to build a working python environment.
 
 4. Create a branch for local development::
 
@@ -98,16 +93,16 @@ Pull Request Guidelines
 
 Before you submit a pull request, check that it meets these guidelines:
 
-1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated.
+1. The pull request should include tests (and should pass them - and all pre-existing tests!)
+2. If the pull request adds or modifies functionality, the docs should be updated.
 3. The pull request should work for Python 3.7+. Check the results of
    the github actions and make sure that your PR passes all checks and
    does not decrease test coverage.
 
-Tips
-----
+Links
+-----
 
-To run a subset of tests::
+In case you haven't found them yet, please checkout the following resources:
 
-$ pytest tests.test_band_utils
-
+* `Documentation <https://datacube-ows.readthedocs.io/en/latest>`_
+* `Slack <http://slack.opendatacube.org>`_
