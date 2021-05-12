@@ -37,7 +37,7 @@ requirements = [
 
 test_requirements = [
     # TODO: put package test requirements here
-    'pytest', 'pytest-cov', 'pytest_localserver', 'owslib', 'mock', 'pep8', 'pylint==1.6.4', 'pytest-helpers-namespace'
+    'pytest', 'pytest-cov', 'pytest_localserver', 'owslib', 'mock', 'pep8', 'pylint==1.6.4', 'pytest-helpers-namespace', 'moto'
 ]
 
 setup(
@@ -59,7 +59,7 @@ Features
 * Leverages the power of the Open Data Cube, including support for COGs on S3.
 * Supports WMS and WMTS.
 * Experimental support for WCS (1.0, 2.0, 2.1).
-    
+
     """,
     author="Open Data Cube",
     author_email='earth.observation@ga.gov.au',
