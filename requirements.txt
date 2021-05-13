@@ -15,6 +15,7 @@ gunicorn
 gunicorn[gevent]
 gunicorn[eventlet]
 boto3
+moto
 rasterio>=1.0.9
 ruamel.yaml
 prometheus-client
