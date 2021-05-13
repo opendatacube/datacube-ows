@@ -1,12 +1,15 @@
-ARG V_BASE=-3.0.4
+ARG V_BASE=3.3.0
 ARG py_env_path=/env
 
 # Build python libs in env_builder
-FROM opendatacube/geobase:wheels${V_BASE} as env_builder
+FROM opendatacube/geobase-builder:${V_BASE} as env_builder
+
+# REVISIT: Does this do anything, given we've already declared it above?
 ARG py_env_path
 
 COPY requirements.txt /
-RUN /usr/local/bin/env-build-tool new /requirements.txt ${py_env_path}
+COPY constraints.txt /
+RUN /usr/local/bin/env-build-tool new /requirements.txt /constraints.txt ${py_env_path}
 
 ENV PATH=${py_env_path}/bin:$PATH \
     PYTHONPATH=${py_env_path}
@@ -21,11 +24,15 @@ RUN pip install .
 
 
 # Runner image starts here
-FROM opendatacube/geobase:runner${V_BASE}
+FROM opendatacube/geobase-runner:${V_BASE}
 
 ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     SHELL=bash
+
+COPY --from=env_builder ${py_env_path} ${py_env_path}
+
+ENV PATH="/env/bin:${PATH}"
 
 RUN apt-get update && apt install -y \
     curl \
@@ -40,7 +47,7 @@ RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure user
-RUN useradd -m -s /bin/bash -N -g 100 -u 1000 ows
+RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
 WORKDIR "/home/ows"
 
 # Copy python libs, add them to the path, configure GDAL

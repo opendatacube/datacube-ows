@@ -197,6 +197,7 @@ def append_request_id(response):
 
 @app.before_request
 def start_timer():
+    # pylint: disable=assigning-non-slot
     g.ogc_start_time = monotonic()
 
 
