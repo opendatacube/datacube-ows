@@ -1,3 +1,5 @@
+import xarray
+
 from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
 
@@ -21,7 +23,7 @@ def StandaloneStyle(cfg):
     return style
 
 
-def apply_ows_style(style, data, valid_data_mask=None):
+def apply_ows_style(style, data, loop_over=None, valid_data_mask=None):
     """
     Apply an OWS style to an ODC XArray to generate a styled image.
 
@@ -33,20 +35,38 @@ def apply_ows_style(style, data, valid_data_mask=None):
             supported by OWS can work in standalone mode.)
             For bands that are used as bitmaps (i.e. either for masking with pq_mask or colour coding
             in value_map), the data_variable must have a valid flag_definition attribute.
+    :param loop_over: (optional) A string which is the name of a dimension in the data to loop over,
+            for bulk processing.  E.g. if set to "time", the output will have the same time dimension
+            coordinates as the input, with the single-date style being applied to each time slice
+            in the input data independently.
     :param valid_data_mask: (optional) An xarray DataArray mask, with dimensions and coordinates matching data.
     :return: An xarray Dataset, with the same dimensions and coordinates as data, and four data_vars of
             8 bit signed integer data named red, green, blue and alpha, representing an 24bit RGBA image.
     """
-    return style.transform_data(
-            data,
-            style.to_mask(
-                    data,
+    if loop_over is None:
+        return style.transform_data(
+                data,
+                style.to_mask(
+                        data,
+                        valid_data_mask
+                )
+        )
+    image_slices = []
+    for coord in data[loop_over].values:
+        slice = data.sel(**{loop_over: coord})
+        image_slices.append(
+            style.transform_data(
+                slice,
+                style.to_mask(
+                    slice,
                     valid_data_mask
+                )
             )
-    )
+        )
+    return xarray.concat(image_slices, data[loop_over])
 
 
-def apply_ows_style_cfg(cfg, data, valid_data_mask=None):
+def apply_ows_style_cfg(cfg, data, loop_over=None, valid_data_mask=None):
     """
     Apply an OWS style configuration to an ODC XArray to generate a styled image.
 
@@ -62,6 +82,10 @@ def apply_ows_style_cfg(cfg, data, valid_data_mask=None):
             supported by OWS can work in standalone mode.)
             For bands that are used as bitmaps (i.e. either for masking with pq_mask or colour coding
             in value_map), the data_variable must have a valid flag_definition attribute.
+    :param loop_over: (optional) A string which is the name of a dimension in the data to loop over,
+            for bulk processing.  E.g. if set to "time", the output will have the same time dimension
+            coordinates as the input, with the single-date style being applied to each time slice
+            in the input data independently.
     :param valid_data_mask: (optional) An xarray DataArray mask, with dimensions and coordinates matching data.
     :return: An xarray Dataset, with the same dimensions and coordinates as data, and four data_vars of
             8 bit signed integer data named red, green, blue and alpha, representing an 24bit RGBA image.
@@ -69,7 +93,8 @@ def apply_ows_style_cfg(cfg, data, valid_data_mask=None):
     return apply_ows_style(
         StandaloneStyle(cfg),
         data,
-        valid_data_mask
+        loop_over=loop_over,
+        valid_data_mask=valid_data_mask
     )
 
 
