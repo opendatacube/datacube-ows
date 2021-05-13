@@ -5,12 +5,20 @@ on:
   pull_request:
     paths:
       - '**'
+      - '!docs/**'
+      - '!*.rst'
+      - '!*.md'
+      - '!datacube_ows/__init__.py'
 
   push:
     branches:
       - 'master'
     paths:
       - '**'
+      - '!docs/**'
+      - '!*.rst'
+      - '!*.md'
+      - '!datacube_ows/__init__.py'
 
 env:
   ORG: opendatacube
