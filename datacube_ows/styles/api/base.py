@@ -53,12 +53,12 @@ def apply_ows_style(style, data, loop_over=None, valid_data_mask=None):
         )
     image_slices = []
     for coord in data[loop_over].values:
-        slice = data.sel(**{loop_over: coord})
+        d_slice = data.sel(**{loop_over: coord})
         image_slices.append(
             style.transform_data(
-                slice,
+                d_slice,
                 style.to_mask(
-                    slice,
+                    d_slice,
                     valid_data_mask
                 )
             )
