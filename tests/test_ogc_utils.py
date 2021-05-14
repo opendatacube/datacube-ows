@@ -1,6 +1,7 @@
 import datetime
 
 import pytest
+import xarray
 
 import datacube_ows.ogc_utils
 
@@ -196,3 +197,22 @@ def test_day_summary_date_range():
     start, end = datacube_ows.ogc_utils.day_summary_date_range(datetime.date(2015, 5, 12))
     assert start == datetime.datetime(2015, 5, 12, 0, 0, 0)
     assert end == datetime.datetime(2015, 5, 12, 23, 59, 59)
+
+xyt_coords = [
+    ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
+    ("y", [-1.0, -0.5, 0.0, 0.5, 1.0]),
+    ("time", [
+                datetime.datetime(2021, 1, 1, 22, 44, 5),
+                datetime.datetime.now()
+              ])
+]
+
+def test_png_loop_over():
+    data = xarray.Dataset({
+            "red": dummy_da(100, "red", xyt_coords, dtype="uint8"),
+            "green": dummy_da(70, "green", xyt_coords, dtype="uint8"),
+            "blue": dummy_da(150, "blue", xyt_coords, dtype="uint8"),
+            "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
+        })
+    imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time")
+    assert len(imgs) == 2
