@@ -2,6 +2,7 @@ import os
 import sys
 
 from datacube_ows.ows_configuration import ConfigException, read_config
+from datacube_ows.config_utils import get_file_loc
 from fsspec.config import conf as fsspec_conf
 
 from tests.utils import MOTO_S3_ENDPOINT_URI
@@ -10,6 +11,14 @@ src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
+def test_get_file_loc():
+    cwd = os.getcwd()
+
+    assert get_file_loc("foo.bar") == cwd
+    assert get_file_loc("./foo.bar") == cwd
+    assert get_file_loc("baz/foo.bar") == os.path.join(cwd, "baz")
+    assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
+    assert get_file_loc("s3://testbucket/frobnicate/biz/baz.bar") == "s3://testbucket/frobnicate/biz"
 
 def test_cfg_inject():
     cfg = read_config('{"test": 12345}')
@@ -132,6 +141,16 @@ def test_cfg_json_simple_s3(monkeypatch, s3, s3_config_simple):
 
     assert cfg["test"] == 1234
 
+def test_cfg_json_nested_1_s3(monkeypatch, s3, s3_config_nested_1):
+    monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_1.json")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
+    fsspec_conf.update({"s3": {"client_kwargs": {"endpoint_url": MOTO_S3_ENDPOINT_URI}}})
+    cfg = read_config()
+
+    assert cfg["test"] == 1234
+
 def test_cfg_json_nested_2(monkeypatch):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_2.json")
@@ -141,6 +160,17 @@ def test_cfg_json_nested_2(monkeypatch):
     assert cfg[0]["test"] == 88888
     assert cfg[1]["test"] == 1234
 
+def test_cfg_json_nested_2_s3(monkeypatch, s3_config_nested_2):
+    monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_2.json")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
+
+    cfg = read_config()
+
+    assert len(cfg) == 2
+    assert cfg[0]["test"] == 88888
+    assert cfg[1]["test"] == 1234
 
 def validated_nested_3(cfg):
     assert cfg["test"] == 2222
@@ -159,6 +189,13 @@ def test_cfg_json_nested_3(monkeypatch):
     cfg = read_config()
     validated_nested_3(cfg)
 
+def test_cfg_json_nested_3_s3(monkeypatch, s3_config_nested_3):
+    monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_3.json")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
+    cfg = read_config()
+    validated_nested_3(cfg)
 
 def test_cfg_json_nested_4(monkeypatch):
     monkeypatch.chdir(src_dir)
@@ -174,6 +211,21 @@ def test_cfg_json_nested_4(monkeypatch):
     assert cfg["things"][2]["test"] == 2574
     validated_nested_3(cfg["things"][2]["thing"])
 
+def test_cfg_json_nested_4_s3(monkeypatch, s3_config_nested_4):
+    monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_4.json")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
+    cfg = read_config()
+
+    assert cfg["test"] == 3222
+    assert len(cfg["things"]) == 3
+    assert cfg["things"][0]["test"] == 2572
+    assert cfg["things"][0]["thing"] is None
+    assert cfg["things"][1]["test"] == 2573
+    assert cfg["things"][1]["thing"]["test"] == 1234
+    assert cfg["things"][2]["test"] == 2574
+    validated_nested_3(cfg["things"][2]["thing"])
 
 def test_cfg_json_infinite_1(monkeypatch):
     monkeypatch.chdir(src_dir)
@@ -225,6 +277,17 @@ def test_cfg_py_mixed_3(monkeypatch):
 def test_cfg_json_mixed(monkeypatch):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/mixed_nested.json")
+    cfg = read_config()
+
+    assert cfg["test"] == 9364
+    assert cfg["subtest"]["test_py"]["test"] == 123
+    assert cfg["subtest"]["test_json"]["test"] == 1234
+
+def test_cfg_json_mixed_s3(monkeypatch, s3_config_mixed_nested):
+    monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/mixed_nested.json")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
     cfg = read_config()
 
     assert cfg["test"] == 9364

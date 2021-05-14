@@ -58,6 +58,45 @@ def s3_config_simple(s3):
         f_open.write(b'{"test": 1234}')
 
 @pytest.fixture
+def s3_config_nested_1(s3, s3_config_simple):
+    config_uri = "s3://testbucket/nested_1.json"
+    with s3.open(config_uri, "wb") as f_open:
+        f_open.write(b'{"include": "simple.json", "type": "json"}')
+
+@pytest.fixture
+def s3_config_nested_2(s3, s3_config_simple):
+    config_uri = "s3://testbucket/nested_2.json"
+    with s3.open(config_uri, "wb") as f_open:
+        f_open.write(b'[{"test": 88888}, {"include": "simple.json", "type": "json"}]')
+
+@pytest.fixture
+def s3_config_nested_3(s3, s3_config_simple):
+    config_uri = "s3://testbucket/nested_3.json"
+    with s3.open(config_uri, "wb") as f_open:
+        f_open.write(b'{"test": 2222, "things": [{"test": 22562, "thing": null}, \
+            {"test": 22563, "thing": {"include": "simple.json", "type": "json"}}, \
+            {"test": 22564, "thing": {"include": "simple.json", "type": "json"}}]}'
+        )
+
+@pytest.fixture
+def s3_config_nested_4(s3, s3_config_simple,s3_config_nested_3):
+    config_uri = "s3://testbucket/nested_4.json"
+    with s3.open(config_uri, "wb") as f_open:
+        f_open.write(b'{"test": 3222, "things": [{"test": 2572, "thing": null}, \
+            {"test": 2573, "thing": {"include": "simple.json", "type": "json"}}, \
+            {"test": 2574, "thing": {"include": "nested_3.json", "type": "json"}}]}'
+        )
+
+@pytest.fixture
+def s3_config_mixed_nested(s3, s3_config_simple):
+    config_uri = "s3://testbucket/mixed_nested.json"
+    with s3.open(config_uri, "wb") as f_open:
+        f_open.write(b'{"test": 9364, \
+            "subtest": {"test_py": {"include": "tests.cfg.simple.simple", "type": "python"}, \
+            "test_json": {"include": "tests/cfg/simple.json", "type": "json"}}}'
+        )
+
+@pytest.fixture
 def flask_client(monkeypatch):
     monkeypatch.setenv("DEFER_CFG_PARSE", "yes")
     from datacube_ows.ogc import app
