@@ -17,6 +17,7 @@ def test_get_file_loc():
     assert get_file_loc("foo.bar") == cwd
     assert get_file_loc("./foo.bar") == cwd
     assert get_file_loc("baz/foo.bar") == os.path.join(cwd, "baz")
+    assert get_file_loc("/etc/conf/foo.bar") == "/etc/conf"
     assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
     assert get_file_loc("s3://testbucket/frobnicate/biz/baz.bar") == "s3://testbucket/frobnicate/biz"
 
