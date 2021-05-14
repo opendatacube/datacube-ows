@@ -211,7 +211,7 @@ def rgb_style_with_masking_cfg():
 
 
 def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg):
-    result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, raw_calc_null_mask)
+    result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     alphas = result["alpha"].values
@@ -267,7 +267,7 @@ def simple_colormap_style_cfg():
 
 
 def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
-    result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     # point 0 fall through - transparent
@@ -328,7 +328,7 @@ def enum_colormap_style_cfg():
 
 
 def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg):
-    result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     # point 0 (8) Blah - red
@@ -368,7 +368,7 @@ def test_ramp_legend(simple_colormap_style_cfg):
 
 
 def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
-    null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     none_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data)
     for i in range(6):
         for c in ("red", "green", "blue", "alpha"):
