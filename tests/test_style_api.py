@@ -398,3 +398,17 @@ def test_fc_wofs_like_configs(dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs
         result = style.transform_data(dummy_raw_fc_plus_wo, mask)
         assert result
 
+
+def test_multidate(xyt_dummydata, multi_date_cfg):
+    image = apply_ows_style_cfg(multi_date_cfg, xyt_dummydata)
+    assert len(image.x) == len(xyt_dummydata.x)
+    assert len(image.y) == len(xyt_dummydata.y)
+    assert "time" not in image
+
+
+def test_loopover(xyt_dummydata, multi_date_cfg):
+    image = apply_ows_style_cfg(multi_date_cfg, xyt_dummydata, loop_over="time")
+    assert len(image.x) == len(xyt_dummydata.x)
+    assert len(image.y) == len(xyt_dummydata.y)
+    assert len(image.time) == len(xyt_dummydata.time)
+

@@ -1040,3 +1040,50 @@ def configs_for_combined_fc_wofs():
         }
     ]
 
+@pytest.fixture
+def multi_date_cfg():
+   return  {
+       "index_function": {
+           "function": "datacube_ows.band_utils.norm_diff",
+           "kwargs": {"band1": "nir", "band2": "red"},
+       },
+       "color_ramp": [
+           {"value": -1.0, "color": "#0000FF"},
+           {"value": -0.2, "color": "#005050", },
+           {"value": -0.1, "color": "#505050", },
+           {"value": -0.01, "color": "#303030", },
+           {"value": 0.0, "color": "black", },
+           {"value": 0.01, "color": "#303000", },
+           {"value": 0.5, "color": "#707030", },
+           {"value": 1.0, "color": "#FF9090", },
+       ],
+       "multi_date": [
+           {
+               "allowed_count_range": [2, 2],
+               "preserve_user_date_order": True,
+               "aggregator_function": {
+                   "function": "datacube_ows.band_utils.multi_date_delta"
+               },
+               "mpl_ramp": "RdYlBu",
+               "range": [-1.0, 1.0],
+           }
+       ]
+   }
+
+xyt_coords = [
+    ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
+    ("y", [-1.0, -0.5, 0.0, 0.5, 1.0]),
+    ("time", [
+                datetime.datetime(2021, 1, 1, 22, 44, 5),
+                datetime.datetime.now()
+              ])
+]
+
+@pytest.fixture
+def xyt_dummydata():
+    return xarray.Dataset({
+            "red": dummy_da(1400, "red", xyt_coords, dtype="int16"),
+            "green": dummy_da(700, "green", xyt_coords, dtype="int16"),
+            "blue": dummy_da(1500, "blue", xyt_coords, dtype="int16"),
+            "nir": dummy_da(2000, "nir", xyt_coords, dtype="int16"),
+        })
