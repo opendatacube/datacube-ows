@@ -21,7 +21,7 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
                                        OWSMessageFile, OWSMetadataConfig,
-                                       cfg_expand, import_python_obj,
+                                       cfg_expand, get_file_loc, import_python_obj,
                                        load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
@@ -45,8 +45,7 @@ def read_config(path=None):
         from datacube_ows.ows_cfg import ows_cfg as cfg
     elif "/" in cfg_env or cfg_env.endswith(".json"):
         cfg = load_json_obj(cfg_env)
-        abs_path =  os.path.abspath(cfg_env)
-        cwd = os.path.dirname(abs_path)
+        cwd = get_file_loc(cfg_env)
     elif "." in cfg_env:
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
