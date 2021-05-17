@@ -69,7 +69,7 @@ def get_file_loc(x: str):
     and the URL location of a remote file.
     """
     xp = urlparse(x)
-    if xp.scheme in ["s3"]: # NOTE: could add http/s, ...
+    if xp.scheme in ("s3",): # NOTE: could add http/s, ...
         cwd = xp.scheme + "://" + xp.netloc +  xp.path.rsplit("/", 1)[0]
     else:
         abs_path = os.path.abspath(x)
