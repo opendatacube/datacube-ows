@@ -135,6 +135,41 @@ For more detailed examples,
 refer to the
 `styling how-to guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto.html>`_.
 
+Bulk Processing
+---------------
+
+Bulk processing over a non-spatial dimension of the input data (usually time) is supported via the
+optional ``loop_over`` parameter to ``apply_ows_style``, ``apply_ows_style_cfg``, and
+``xarray_image_as_png``:
+
+::
+
+    from datacube import Datacube
+    from datacube_ows.styles.api import StandaloneStyle
+    from datacube_ows.styles.api import apply_ows_style, apply_ows_style_cfg
+    from datacube_ows.styles.api import xarray_image_as_png
+
+    cfg = {
+        # Some style config ...
+    }
+    style = StandaloneStyle(cfg)
+
+    # This ODC query returns data for multiple dates.
+    dc = Datacube()
+    data = dc.load( ...query parameters... )
+
+    # images is an xarray.Dataset with same time dimension coordinates as the input data.
+    # Each time slice is styled independently.
+    images = apply_ows_style(style, data, loop_over="time")
+
+    # This code will write out the images to the local filesystem as `filename00.png`, `filename01.png`, etc.
+
+    pngs = xarray_image_as_png(images, loop_over="time")
+    for i, png in enumerate(pngs):
+        with open(f"filename{i:02}.png", "wb") as fp:
+            fp.write(xarray_image_as_png(image)
+
+
 Auto-generating a legend image
 ------------------------------
 
@@ -173,3 +208,4 @@ to the Apply OWS Style methods described above.
     # Write out as PNG:
     with open("filename.png", "wb") as fp:
         image.save(fp)
+

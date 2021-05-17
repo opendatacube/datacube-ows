@@ -1,3 +1,8 @@
+# This file is part of datacube-ows, part of the Open Data Cube project.
+# See https://opendatacube.org for more information.
+#
+# Copyright (c) 2017-2021 OWS Contributors
+# SPDX-License-Identifier: Apache-2.0
 import io
 import logging
 
@@ -146,7 +151,10 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             odc_mask = odc_mask.squeeze(dim="time", drop=True)
             return odc_mask
 
-        date_count = len(data.coords["time"])
+        if not data.coords["time"].shape:
+            date_count = 1
+        else:
+            date_count = len(data.coords["time"])
         if date_count > 1:
             # TODO multidate
             mdh = self.get_multi_date_handler(date_count)
@@ -187,9 +195,14 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         return img_data
 
     def transform_data(self, data, mask):
-        date_count = len(data.coords["time"])
+        if not data.time.shape:
+            date_count = 1
+        else:
+            date_count = len(data.coords["time"])
+            if date_count == 1:
+                data = data.squeeze(dim="time", drop=True)
         if date_count == 1:
-            img_data = self.transform_single_date_data(data.squeeze(dim="time", drop=True))
+            img_data = self.transform_single_date_data(data)
         else:
             mdh = self.get_multi_date_handler(date_count)
             img_data = mdh.transform_data(data)

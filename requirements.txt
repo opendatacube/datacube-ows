@@ -38,3 +38,4 @@ setuptools_scm
 deepdiff
 s3fs
 fsspec
+regex

@@ -1,3 +1,8 @@
+# This file is part of datacube-ows, part of the Open Data Cube project.
+# See https://opendatacube.org for more information.
+#
+# Copyright (c) 2017-2021 OWS Contributors
+# SPDX-License-Identifier: Apache-2.0
 import pytest
 
 from datacube_ows.styles.api import (StandaloneStyle, apply_ows_style,
@@ -211,7 +216,7 @@ def rgb_style_with_masking_cfg():
 
 
 def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg):
-    result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, raw_calc_null_mask)
+    result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     alphas = result["alpha"].values
@@ -267,7 +272,7 @@ def simple_colormap_style_cfg():
 
 
 def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
-    result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     # point 0 fall through - transparent
@@ -328,7 +333,7 @@ def enum_colormap_style_cfg():
 
 
 def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg):
-    result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     # point 0 (8) Blah - red
@@ -368,7 +373,7 @@ def test_ramp_legend(simple_colormap_style_cfg):
 
 
 def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
-    null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, raw_calc_null_mask)
+    null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     none_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data)
     for i in range(6):
         for c in ("red", "green", "blue", "alpha"):
@@ -397,4 +402,18 @@ def test_fc_wofs_like_configs(dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs
         mask = style.to_mask(dummy_raw_fc_plus_wo, null_mask)
         result = style.transform_data(dummy_raw_fc_plus_wo, mask)
         assert result
+
+
+def test_multidate(xyt_dummydata, multi_date_cfg):
+    image = apply_ows_style_cfg(multi_date_cfg, xyt_dummydata)
+    assert len(image.x) == len(xyt_dummydata.x)
+    assert len(image.y) == len(xyt_dummydata.y)
+    assert "time" not in image
+
+
+def test_loopover(xyt_dummydata, multi_date_cfg):
+    image = apply_ows_style_cfg(multi_date_cfg, xyt_dummydata, loop_over="time")
+    assert len(image.x) == len(xyt_dummydata.x)
+    assert len(image.y) == len(xyt_dummydata.y)
+    assert len(image.time) == len(xyt_dummydata.time)
 
