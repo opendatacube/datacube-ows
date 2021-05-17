@@ -84,7 +84,7 @@ def s3_config_nested_3(s3, s3_config_simple):
         )
 
 @pytest.fixture
-def s3_config_nested_4(s3, s3_config_simple,s3_config_nested_3):
+def s3_config_nested_4(s3, s3_config_simple, s3_config_nested_3):
     config_uri = "s3://testbucket/nested_4.json"
     with s3.open(config_uri, "wb") as f_open:
         f_open.write(b'{"test": 3222, "things": [{"test": 2572, "thing": null}, \
