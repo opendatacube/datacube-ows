@@ -4,6 +4,7 @@ pytest
 pytest-cov
 pylint==2.4.4
 flask
+flask-cors
 colour
 pandas==1.0.5
 scikit-image
