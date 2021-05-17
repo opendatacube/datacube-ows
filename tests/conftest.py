@@ -4,17 +4,17 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-from unittest.mock import MagicMock
 import time
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 import requests
-from s3fs.core import S3FileSystem
 import xarray
 import xarray as xr
-
-from tests.utils import coords, dim1_da, dummy_da, MOTO_PORT, MOTO_S3_ENDPOINT_URI
+from s3fs.core import S3FileSystem
+from tests.utils import (MOTO_PORT, MOTO_S3_ENDPOINT_URI, coords, dim1_da,
+                         dummy_da)
 
 def get_boto3_client():
     from botocore.session import Session
