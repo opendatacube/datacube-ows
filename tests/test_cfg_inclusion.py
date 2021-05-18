@@ -7,6 +7,7 @@ import os
 import sys
 
 from fsspec.config import conf as fsspec_conf
+import pytest
 
 from datacube_ows.config_utils import get_file_loc
 from datacube_ows.ows_configuration import ConfigException, read_config
@@ -16,7 +17,8 @@ src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-def test_get_file_loc():
+def test_get_file_loc(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     cwd = os.getcwd()
 
     assert get_file_loc("foo.bar") == cwd
@@ -25,6 +27,42 @@ def test_get_file_loc():
     assert get_file_loc("/etc/conf/foo.bar") == "/etc/conf"
     assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
     assert get_file_loc("s3://testbucket/frobnicate/biz/baz.bar") == "s3://testbucket/frobnicate/biz"
+
+
+def test_get_file_loc_s3_disable(monkeypatch):
+    with pytest.raises(ValueError) as excinfo:
+        _ = get_file_loc("s3://testbucket/foo.bar")
+
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "NO")
+    with pytest.raises(ValueError) as excinfo:
+        _ = get_file_loc("s3://testbucket/foo.bar")
+
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "FALSE")
+    with pytest.raises(ValueError) as excinfo:
+        _ = get_file_loc("s3://testbucket/foo.bar")
+
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "0")
+    with pytest.raises(ValueError) as excinfo:
+        _ = get_file_loc("s3://testbucket/foo.bar")
+
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "N")
+    with pytest.raises(ValueError) as excinfo:
+        _ = get_file_loc("s3://testbucket/foo.bar")
+
+
+def test_get_file_loc_s3_enable(monkeypatch):
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
+    assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
+
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "TRUE")
+    assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
+
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "1")
+    assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
+
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "Y")
+    assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
+
 
 def test_cfg_inject():
     cfg = read_config('{"test": 12345}')
@@ -139,6 +177,7 @@ def test_cfg_json_simple(monkeypatch):
 
 def test_cfg_json_simple_s3(monkeypatch, s3, s3_config_simple):
     monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/simple.json")
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
@@ -149,6 +188,7 @@ def test_cfg_json_simple_s3(monkeypatch, s3, s3_config_simple):
 
 def test_cfg_json_nested_1_s3(monkeypatch, s3, s3_config_nested_1):
     monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_1.json")
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
@@ -168,6 +208,7 @@ def test_cfg_json_nested_2(monkeypatch):
 
 def test_cfg_json_nested_2_s3(monkeypatch, s3_config_nested_2):
     monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_2.json")
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
@@ -197,6 +238,7 @@ def test_cfg_json_nested_3(monkeypatch):
 
 def test_cfg_json_nested_3_s3(monkeypatch, s3_config_nested_3):
     monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_3.json")
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
@@ -219,6 +261,7 @@ def test_cfg_json_nested_4(monkeypatch):
 
 def test_cfg_json_nested_4_s3(monkeypatch, s3_config_nested_4):
     monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/nested_4.json")
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
@@ -291,6 +334,7 @@ def test_cfg_json_mixed(monkeypatch):
 
 def test_cfg_json_mixed_s3(monkeypatch, s3_config_mixed_nested):
     monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     monkeypatch.setenv("DATACUBE_OWS_CFG", "s3://testbucket/mixed_nested.json")
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
