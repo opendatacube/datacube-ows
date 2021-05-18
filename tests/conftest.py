@@ -13,8 +13,10 @@ import requests
 import xarray
 import xarray as xr
 from s3fs.core import S3FileSystem
+
 from tests.utils import (MOTO_PORT, MOTO_S3_ENDPOINT_URI, coords, dim1_da,
                          dummy_da)
+
 
 def get_boto3_client():
     from botocore.session import Session

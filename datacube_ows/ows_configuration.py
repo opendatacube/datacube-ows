@@ -27,8 +27,8 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
                                        OWSMessageFile, OWSMetadataConfig,
-                                       cfg_expand, get_file_loc, import_python_obj,
-                                       load_json_obj)
+                                       cfg_expand, get_file_loc,
+                                       import_python_obj, load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
