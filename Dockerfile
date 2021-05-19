@@ -52,13 +52,12 @@ WORKDIR "/home/ows"
 
 # Copy python libs, add them to the path, configure GDAL
 ARG py_env_path
-COPY --chown=1000:100 --from=env_builder $py_env_path $py_env_path
 ENV PATH=${py_env_path}/bin:$PATH \
     PYTHONPATH=${py_env_path} \
     GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
     GDAL_HTTP_MAX_RETRY="10" \
-    GDAL_HTTP_RETRY_DELAY="1" 
+    GDAL_HTTP_RETRY_DELAY="1"
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
