@@ -25,7 +25,8 @@ services:
       # Where the config file is (must match the volume mount)
       WMS_CONFIG_PATH: /env/config/ows_cfg.py
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
-      DATACUBE_OWS_CFG: config.ows_cfg.ows_cfg
+      PYTHONPATH: ${PYTHONPATH}
+      DATACUBE_OWS_CFG: ${DATACUBE_OWS_CFG}
       AWS_DEFAULT_REGION: ${AWS_REGION}
       # Talk to AWS without using credentials
       AWS_NO_SIGN_REQUEST: "${AWS_NO_SIGN_REQUEST}"
