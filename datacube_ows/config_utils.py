@@ -72,7 +72,7 @@ def get_file_loc(x: str):
     if xp.scheme in ("s3",): # NOTE: could add http/s, ...
         enable_s3 = os.environ.get("DATACUBE_OWS_CFG_ALLOW_S3", "no")
         if not enable_s3.lower() in ("yes", "true", "1", "y"):
-            raise ConfigException("Please set environment variable 'DATACUBE_OWS_CFG_ALLOW_S3=YES' " \
+            raise ConfigException("Please set environment variable 'DATACUBE_OWS_CFG_ALLOW_S3=YES' "
                               + "to enable OWS config from AWS S3")
         cwd = xp.scheme + "://" + xp.netloc +  xp.path.rsplit("/", 1)[0]
     else:
