@@ -11,7 +11,8 @@ Datacube_ows configuration
 
 The location of the `datacube configuration object <configuration.rst>`_
 is set via the ``$DATACUBE_OWS_CFG`` environment variable as described
-`here <configuration.rst>`_.
+`here <configuration.rst>`_. To enable the retrieval of a json configuration file from AWS S3,
+the ``$DATACUBE_OWS_CFG_ALLOW_S3`` environment variable needs to be set to ``YES``.
 
 Open DataCube Database Connection
 ---------------------------------
