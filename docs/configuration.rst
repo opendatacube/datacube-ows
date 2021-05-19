@@ -91,9 +91,10 @@ alternative applies):
 
 6. Has a valid ``s3://`` URL and a ``.json`` extension
 
-   If the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3`` is set correctly,
-   the configuration is fetched from AWS S3, otherwise a ``ConfigurationExecption``
-   is raised.
+   The configuration is fetched from AWS S3 in json format.
+
+   N.B. Configuration can only be loaded from S3 if the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3``
+   is set to ``yes``, otherwise a ``ConfigurationException`` will be raised.
 
 7. Valid python object name, e.g. ``cfg_prod``
 
