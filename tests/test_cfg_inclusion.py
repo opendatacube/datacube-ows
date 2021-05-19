@@ -6,8 +6,8 @@
 import os
 import sys
 
-from fsspec.config import conf as fsspec_conf
 import pytest
+from fsspec.config import conf as fsspec_conf
 
 from datacube_ows.config_utils import get_file_loc
 from datacube_ows.ows_configuration import ConfigException, read_config
