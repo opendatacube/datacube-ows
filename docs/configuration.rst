@@ -54,6 +54,10 @@ but this can be overridden by setting the ``$DATACUBE_OWS_CFG`` environment vari
 Configuration can be read from a python file, a json file, or a collection of python
 and/or json files.
 
+A json file can optionally also be fetched from AWS S3 if access to S3 is configured correctly for datacube_ows
+ and the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3`` is set to ``YES``. Please note that this is not
+ possible for configurations as python file.
+
 .. _DATACUBE_OWS_CFG:
 
 The DATACUBE_OWS_CFG Environment Variable
@@ -85,11 +89,17 @@ alternative applies):
    N.B. It is up to you to ensure that the Python file in question is in your Python path and
    that all package directories have a ``__init__.py`` file, etc.
 
-6. Valid python object name, e.g. ``cfg_prod``
+6. Has a valid ``s3://`` URL and a ``.json`` extension
+
+   If the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3`` is set correctly,
+   the configuration is fetched from AWS S3, otherwise a ``ConfigurationExecption``
+   is raised.
+
+7. Valid python object name, e.g. ``cfg_prod``
 
    Imported as **python** from named object in ``datacube_ows/ows_cfg.py``
 
-7. Blank or not set
+8. Blank or not set
 
    Default to import ows_cfg object in ``datacube_ows/ows_cfg.py`` as described above.
 
