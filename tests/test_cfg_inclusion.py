@@ -30,23 +30,23 @@ def test_get_file_loc(monkeypatch):
 
 
 def test_get_file_loc_s3_disable(monkeypatch):
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ConfigException) as excinfo:
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "NO")
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ConfigException) as excinfo:
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "FALSE")
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ConfigException) as excinfo:
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "0")
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ConfigException) as excinfo:
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "N")
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ConfigException) as excinfo:
         _ = get_file_loc("s3://testbucket/foo.bar")
 
 
