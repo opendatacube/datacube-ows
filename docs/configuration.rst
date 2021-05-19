@@ -7,6 +7,7 @@ OWS Configuration
    :hidden:
    :glob:
 
+   configuration
    cfg_global
    cfg_wms
    cfg_wmts
