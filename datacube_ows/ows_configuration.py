@@ -24,11 +24,12 @@ from ows import Version
 from slugify import slugify
 
 from babel.messages.catalog import Catalog
+from babel.messages.pofile import read_po
 
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
-                                       OWSMessageFile, OWSMetadataConfig,
+                                       OWSMetadataConfig,
                                        cfg_expand, get_file_loc,
                                        import_python_obj, load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
@@ -1039,8 +1040,8 @@ class OWSConfig(OWSMetadataConfig):
     def make_ready(self, dc, *args, **kwargs):
         if self.msg_file_name:
             try:
-                with open(self.msg_file_name, "r") as fp:
-                    self.set_msg_src(OWSMessageFile(fp))
+                with open(self.msg_file_name, "rb") as fp:
+                    self.set_msg_src(read_po(fp, locale=self.default_locale, domain=self.message_domain))
             except FileNotFoundError:
                 _LOG.warning("Message file %s does not exist - using metadata from config file", self.msg_file_name)
         else:

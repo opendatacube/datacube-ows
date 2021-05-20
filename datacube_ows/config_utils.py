@@ -244,7 +244,12 @@ class OWSMetadataConfig(OWSConfigEntry):
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
         if self._msg_src is not None:
-            return self._msg_src.get(lookup, self._metadata_registry.get(lookup))
+            msg = self._msg_src.get(lookup)
+            if not msg:
+                msg = self._metadata_registry.get(lookup)
+            else:
+                msg = msg.string
+            return msg
         return self._metadata_registry.get(lookup)
 
     def read_inheritance(self, lbl, fld):
@@ -275,76 +280,6 @@ class OWSMetadataConfig(OWSConfigEntry):
             return self.read_local_metadata(FLD_ATTRIBUTION)
         else:
             return super().__getattribute__(name)
-
-
-class OWSMessageFile:
-    # Parser states
-    START = 0
-    GOT_ID = 1
-    IN_STR = 2
-
-    def __init__(self, fp):
-        self._index = {}
-        self.state = self.START
-        self.msgstr = ""
-        self.msgid  = ""
-        self.line_no = 0
-        self.read_file(fp)
-
-    def _new_element(self):
-        if self.msgid:
-            self._index[self.msgid] = self.msgstr
-        self.state = self.START
-        self.msgstr = ""
-        self.msgid  = ""
-
-    def __getitem__(self, item):
-        return self._index[item]
-
-    def __contains__(self, item):
-        return item in self._index
-
-    def get(self, item, default=None):
-        return self._index.get(item, default)
-
-    def unescape(self, esc_str):
-        return esc_str.encode("utf-8").decode("unicode-escape")
-
-    def read_file(self, fp):
-        for line in fp.readlines():
-            self.line_no += 1
-            if line.startswith("msgid "):
-                if self.state == self.GOT_ID:
-                    raise ConfigException(f"Unexpected msgid line in message file: at line {self.line_no}")
-                self._new_element()
-                self.msgid = line[7:-2]
-                if self.msgid in self:
-                    raise ConfigException(f"Duplicate msgid: at line {self.line_no}")
-                self.state = self.GOT_ID
-            elif line.strip() == "":
-                if self.state == self.IN_STR:
-                    self._new_element()
-            elif line.startswith("msgstr "):
-                if self.state == self.START:
-                    raise ConfigException(f"msgstr without msgid: at line {self.line_no}")
-                elif self.state == self.IN_STR:
-                    raise ConfigException(f"Badly formatted multi-line msgstr: at line {self.line_no}")
-                # GOT_ID:
-                self.msgstr = self.unescape(line[8:-2])
-                self.state = self.IN_STR
-            elif line.startswith('"'):
-                if self.state == self.START:
-                    raise ConfigException(f"untagged string: at line {self.line_no}")
-                elif self.state == self.GOT_ID:
-                    raise ConfigException(f"Multiline msgids not supported by OWS: at line {self.line_no}")
-                # IN_STR
-                self.msgstr += self.unescape(line[1:-2])
-            elif line.startswith("#"):
-                if self.state == self.IN_STR:
-                    self._new_element()
-            else:
-                raise ConfigException(f"Invalid message file: error at line {self.line_no}")
-        self._new_element()
 
 
 class OWSEntryNotFound(ConfigException):

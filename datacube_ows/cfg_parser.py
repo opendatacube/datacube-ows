@@ -134,6 +134,7 @@ def parse_path(path, cfg_only, parse_only, folders, styles, input_file, output_f
         layers_report(cfg.product_index, input_file, output_file)
     if msg_file:
         write_msg_file(msg_file, cfg)
+        print(f"Message file {msg_file} written")
     return True
 
 
