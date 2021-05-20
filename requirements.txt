@@ -4,10 +4,11 @@ pytest
 pytest-cov
 pylint==2.4.4
 flask
+flask-cors
 colour
 pandas==1.0.5
 scikit-image
-gevent==1.4.0
+gevent
 python-slugify
 geoalchemy2
 eventlet
@@ -15,6 +16,7 @@ gunicorn
 gunicorn[gevent]
 gunicorn[eventlet]
 boto3
+moto
 rasterio>=1.0.9
 ruamel.yaml
 prometheus-client
@@ -35,4 +37,6 @@ pytest-helpers-namespace
 prometheus-flask-exporter
 setuptools_scm
 deepdiff
+s3fs
+fsspec
 regex

@@ -7,6 +7,9 @@ import json
 import os
 from importlib import import_module
 from typing import Mapping, Sequence
+from urllib.parse import urlparse
+
+import fsspec
 
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -41,14 +44,12 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
                     try:
                         # Try in inherited working directory
                         json_obj = load_json_obj(path)
-                        abs_path = os.path.abspath(path)
-                        cwd = os.path.dirname(abs_path)
                     # pylint: disable=broad-except
                     except Exception:
                         json_obj = None
                 if json_obj is None:
                     raise ConfigException("Could not find json file %s" % raw_path)
-                return cfg_expand(load_json_obj(abs_path), cwd=cwd, inclusions=ninclusions)
+                return cfg_expand(json_obj, cwd=cwd, inclusions=ninclusions)
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
                 return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
@@ -61,9 +62,26 @@ def cfg_expand(cfg_unexpanded, cwd=None, inclusions=[]):
     else:
         return cfg_unexpanded
 
+def get_file_loc(x: str):
+    """Helper function to deal with local / remote "working directory"
+
+    Returns the absolute pathname for a local file
+    and the URL location of a remote file.
+    """
+    xp = urlparse(x)
+    if xp.scheme in ("s3",): # NOTE: could add http/s, ...
+        enable_s3 = os.environ.get("DATACUBE_OWS_CFG_ALLOW_S3", "no")
+        if not enable_s3.lower() in ("yes", "true", "1", "y"):
+            raise ConfigException("Please set environment variable 'DATACUBE_OWS_CFG_ALLOW_S3=YES' "
+                              + "to enable OWS config from AWS S3")
+        cwd = xp.scheme + "://" + xp.netloc +  xp.path.rsplit("/", 1)[0]
+    else:
+        abs_path = os.path.abspath(x)
+        cwd = os.path.dirname(abs_path)
+    return cwd
 
 def load_json_obj(path):
-    with open(path) as json_file:
+    with fsspec.open(path) as json_file:
         return json.load(json_file)
 
 

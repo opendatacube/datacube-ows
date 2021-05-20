@@ -1341,6 +1341,11 @@ ows_cfg = {
                 "geographic": True,
                 "vertical_coord_first": True
             },
+            "EPSG:3111": {  # VicGrid94 for delwp.vic.gov.au
+               "geographic": False,
+                "horizontal_coord": "x",
+                "vertical_coord": "y",
+            },
             "EPSG:3577": {  # GDA-94, internal representation
                 "geographic": False,
                 "horizontal_coord": "x",
@@ -1932,7 +1937,3 @@ ows_cfg = {
         } ##### End of mangrove_cover definition
     ]  ##### End of "layers" list.
 } #### End of example configuration object
-
-
-
-
