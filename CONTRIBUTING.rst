@@ -64,7 +64,7 @@ Get Started!
 
     $ git clone git@github.com:your_name_here/datacube-ows.git
 
-3. Follow the instructions in `README.rst`__  to build a working python environment.
+3. Follow the instructions in `README.rst<https://datacube-ows.readthedocs.io/en/latest/readme.html>`_  to build a working python environment.
 
 4. Create a branch for local development::
 

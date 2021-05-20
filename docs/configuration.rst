@@ -295,12 +295,15 @@ To separate your metadata from config (either as an end in itself, or as prepara
    Subsequently, text in messages.po will over-ride text in the config file. Update as needed, restart wsgi process to take effect.
    Any field not included in the message file will be loaded directly from the config, as previously.
 
-The msgid's in the messages file are symbolic. E.g.
+The msgid's in the message file are symbolic. E.g.
 
 * ``global.title``: The title for the whole service.
 * ``folder.<label>.title``: The title for a folder, identified by label.
 * ``layer.<name>.title``: The title for a named layer, identified by name.
 * ``style.<layer_name>.<style_name>.title``: The title for a style, identified by layer name and style name.
+
+The msgstr's in the message file are the text used by OWS for global/layer/style metadata, in preference
+to the values in the config file.
 
 Fields that can be included in the message file are:
 
@@ -313,7 +316,49 @@ Fields that can be included in the message file are:
 *    Contact Info Organisation (global only)
 *    Contact Info Position (global only)
 
-N.B. Internationalisation/language translation, built on this foundation, is planned for a future release.
+Internationalisation/Translation of Metadata
+++++++++++++++++++++++++++++++++++++++++++++
+
+Once you have extracted your metadata into a single file, separate from the main body of configuration,
+as described `above<#metadata-separation>`_, internationalisation can be achieved as follows:
+
+Firstly, add to the global section of the configuration file:
+
+1. A list of supported languages in the global section of the configuration.
+   Use ISO-639 two or three letter language codes.  The first language code is the default language,
+   which will be sent to clients that do not nominate a preferred language, or that doesn't
+   indicate that it accepts any of the supported languages.  The default language is also the
+   initial language that the other translations are made from.
+
+2. The path to the translations directory.  This the directory that translation file templates are
+   written to, and translation files are read from.
+
+::
+    global = {
+        "message_file": "config/messages.po",
+        "locales": "config/locales",
+        "supported_languages": [
+            "en", # English (default language)
+            "fr", # French
+            "de", # German
+            "sw", # Swahili
+        ],
+        ...
+    }
+
+
+Secondly, generate translation files templates from the message file using the config parser tool:
+
+::
+
+    python cfg_parser.py -t
+
+This will:
+
+1. Read in the current metadata from the configuration file and/or messages file.
+2. Create the translations directory if it does not already exist.
+3. Generate a complete messages.po file for the configured default language.
+4. Generate a template messages.po file for every non-default configured language.
 
 General Config Structure
 ------------------------
