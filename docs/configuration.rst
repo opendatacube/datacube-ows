@@ -55,8 +55,8 @@ Configuration can be read from a python file, a json file, or a collection of py
 and/or json files.
 
 A json file can optionally also be fetched from AWS S3 if access to S3 is configured correctly for datacube_ows
- and the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3`` is set to ``YES``. Please note that this is not
- possible for configurations as python file.
+and the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3`` is set to ``YES``. Please note that this is not
+possible for configurations as python file.
 
 .. _DATACUBE_OWS_CFG:
 
@@ -82,19 +82,19 @@ alternative applies):
 
    Config loaded from **json** file in working directory.
 
-5. Contains a dot (.), e.g. ``package.sub_package.module.cfg_object_name``
-
-   Imported as python object (expected to be a dictionary).
-
-   N.B. It is up to you to ensure that the Python file in question is in your Python path and
-   that all package directories have a ``__init__.py`` file, etc.
-
-6. Has a valid ``s3://`` URL and a ``.json`` extension
+5. Has a valid ``s3://`` URL and a ``.json`` extension
 
    The configuration is fetched from AWS S3 in json format.
 
    N.B. Configuration can only be loaded from S3 if the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3``
    is set to ``yes``, otherwise a ``ConfigurationException`` will be raised.
+
+6. Contains a dot (.), e.g. ``package.sub_package.module.cfg_object_name``
+
+   Imported as python object (expected to be a dictionary).
+
+   N.B. It is up to you to ensure that the Python file in question is in your Python path and
+   that all package directories have a ``__init__.py`` file, etc.
 
 7. Valid python object name, e.g. ``cfg_prod``
 
