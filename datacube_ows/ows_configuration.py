@@ -11,7 +11,7 @@
 #
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
-
+import datetime
 import json
 import logging
 import math
@@ -22,6 +22,8 @@ from importlib import import_module
 from datacube.utils import geometry
 from ows import Version
 from slugify import slugify
+
+from babel.messages.catalog import Catalog
 
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
@@ -1031,6 +1033,7 @@ class OWSConfig(OWSMetadataConfig):
                 raise ConfigException(
                     "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
                 )
+            self.catalog = None
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
@@ -1047,16 +1050,32 @@ class OWSConfig(OWSMetadataConfig):
         super().make_ready(dc, *args, **kwargs)
 
     def export_metadata(self):
-        for k, v in self._metadata_registry.items():
-            if self._inheritance_registry[k]:
-                continue
-            if k in [
-                    "folder.ows_root_hidden.title",
-                    "folder.ows_root_hidden.abstract",
-                    "folder.ows_root_hidden.local_keywords",
-             ]:
-                continue
-            yield k, v
+        if self.catalog is None:
+            now = datetime.datetime.now()
+            self.catalog = Catalog(locale=self.default_locale,
+                                   domain=self.message_domain,
+                                   header_comment=f"""# Translations for datacube-ows metadata instance:
+#      {self.title}
+#
+# {self.contact_info.organisation} {now.isoformat()} 
+#""",
+                                   project=self.title,
+                                   version="{now.isoformat()}",
+                                   copyright_holder=self.contact_info.organisation,
+                                   msgid_bugs_address=self.contact_info.email,
+                                   creation_date=now,
+                                   revision_date=now)
+            for k, v in self._metadata_registry.items():
+                if self._inheritance_registry[k]:
+                    continue
+                if k in [
+                        "folder.ows_root_hidden.title",
+                        "folder.ows_root_hidden.abstract",
+                        "folder.ows_root_hidden.local_keywords",
+                 ]:
+                    continue
+                self.catalog.add(id=k, string=v, auto_comments=[v])
+        return self.catalog
 
     def parse_global(self, cfg, ignore_msgfile):
         self._response_headers = cfg.get("response_headers", {})
@@ -1065,6 +1084,8 @@ class OWSConfig(OWSMetadataConfig):
         self.wcs = cfg.get("services", {}).get("wcs", False)
         if not self.wms and not self.wmts and not self.wcs:
             raise ConfigException("At least one service must be active.")
+        self.default_locale = cfg.get("default_locale", "en")
+        self.message_domain = cfg.get("message_domain", "ows_cfg")
         if ignore_msgfile:
             self.msg_file_name = None
         else:

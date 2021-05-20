@@ -12,6 +12,8 @@ import click
 from datacube import Datacube
 from deepdiff import DeepDiff
 
+from babel.messages.pofile import write_po
+
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
                                             OWSFolder, read_config)
@@ -136,20 +138,8 @@ def parse_path(path, cfg_only, parse_only, folders, styles, input_file, output_f
 
 
 def write_msg_file(msg_file, cfg):
-    with open(msg_file, "w") as fp:
-        for key, value in cfg.export_metadata():
-            if value:
-                print("", file=fp)
-                lines = list(value.split("\n"))
-                for line in lines:
-                    print(f"#. {line}", file=fp)
-                print(f'msgid "{key}"', file=fp)
-                if len(lines) == 1:
-                    print(f'msgstr "{value}"', file=fp)
-                else:
-                    print('msgstr ""', file=fp)
-                    for line in lines:
-                        print(f'"{line}\\n"', file=fp)
+    with open(msg_file, "wb") as fp:
+        write_po(fp, cfg.export_metadata(), omit_header=True)
 
 
 def layers_report(config_values, input_file, output_file):

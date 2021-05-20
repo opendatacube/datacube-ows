@@ -21,6 +21,7 @@ requirements = [
     'matplotlib',
     'numpy',
     'Pillow',
+    'Babel',
     'prometheus_client',
     'psycopg2',
     'python_dateutil',
