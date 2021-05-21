@@ -6,8 +6,9 @@ include README.rst
 graft datacube_ows/templates
 graft datacube_ows/sql
 
-recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
+prune integration_tests/
+prune tests/
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
