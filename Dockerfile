@@ -23,6 +23,12 @@ RUN echo "version=\"`python setup.py --version`\"" > datacube_ows/_version.py
 RUN pip install .
 
 
+## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
+ARG PYDEV_DEBUG="no"
+RUN if [ "$PYDEV_DEBUG"=="yes" ]; then \
+    pip install pydevd-pycharm~=211.7142.13 \
+;fi
+
 # Runner image starts here
 FROM opendatacube/geobase-runner:${V_BASE}
 
@@ -40,10 +46,8 @@ RUN apt-get update && apt install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install postgres client 11
-RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
-    sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
-    apt-get update && apt-get install -y \
-    postgresql-client-11 \
+RUN apt-get update && apt-get install -y \
+    postgresql-client-12 \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure user
@@ -59,11 +63,6 @@ ENV PATH=${py_env_path}/bin:$PATH \
     GDAL_HTTP_MAX_RETRY="10" \
     GDAL_HTTP_RETRY_DELAY="1"
 
-## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
-ARG PYDEV_DEBUG="no"
-RUN if [ "$PYDEV_DEBUG"="yes" ]; then \
-    pip install pydevd-pycharm~=211.7142.13 \
-;fi
 
 RUN chown 1000:100 /dev/shm
 
