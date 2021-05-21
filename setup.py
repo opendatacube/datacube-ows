@@ -76,7 +76,7 @@ Features
             'datacube-ows-cfg-parse=datacube_ows.cfg_parser:main'
         ]
     },
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests", "tests.cfg", "integration_tests", "integration_tests.cfg"]),
     include_package_data=True,
     install_requires=requirements,
     license="Apache Software License 2.0",
