@@ -1061,11 +1061,12 @@ class OWSConfig(OWSMetadataConfig):
 # {self.contact_info.organisation} {now.isoformat()} 
 #""",
                                    project=self.title,
-                                   version="{now.isoformat()}",
+                                   version=f"{now.isoformat()}",
                                    copyright_holder=self.contact_info.organisation,
                                    msgid_bugs_address=self.contact_info.email,
                                    creation_date=now,
-                                   revision_date=now)
+                                   revision_date=now,
+                                   fuzzy=False)
             for k, v in self._metadata_registry.items():
                 if self._inheritance_registry[k]:
                     continue

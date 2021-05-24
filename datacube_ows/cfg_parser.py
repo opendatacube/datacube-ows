@@ -27,7 +27,7 @@ from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
 def main(version):
     # --version
     if version:
-        click.echo("Open Data Cube Open Web Services (datacube-ows) version", __version__)
+        click.echo(f"Open Data Cube Open Web Services (datacube-ows) version {__version__}")
         return 0
 
 
@@ -102,11 +102,11 @@ def parse_path(path, parse_only, folders, styles, input_file, output_file):
             with Datacube() as dc:
                 cfg.make_ready(dc)
     except ConfigException as e:
-        click.echo("Config exception for path", str(e))
+        click.echo(f"Config exception for path {str(e)}")
         return False
     click.echo("Configuration parsed OK")
-    click.echo("Configured message file location:", cfg.msg_file_name)
-    click.echo("Configured translations directory location:", cfg.translations_dir)
+    click.echo(f"Configured message file location: {cfg.msg_file_name}")
+    click.echo(f"Configured translations directory location: {cfg.translations_dir}")
     if folders:
         click.echo()
         click.echo("Folder/Layer Hierarchy")
@@ -118,7 +118,7 @@ def parse_path(path, parse_only, folders, styles, input_file, output_file):
         click.echo("Layers and Styles")
         click.echo("=================")
         for lyr in cfg.product_index.values():
-            click.echo(lyr.name, f"[{','.join(lyr.product_names)}]")
+            click.echo(f"{lyr.name} [{','.join(lyr.product_names)}]")
             print_styles(lyr)
         click.echo()
     if input_file or output_file:
@@ -140,7 +140,7 @@ def parse_path(path, parse_only, folders, styles, input_file, output_file):
     default="messages.po",
     help="Write to a message file with the translatable metadata from the configuration. (Defaults to 'messages.po')"
 )
-@click.argument("path", nargs=1)
+@click.argument("path", nargs=1, required=False)
 def extract(path, cfg_only, msg_file):
     """Extract metadata from existing configuration into a message file template.
 
@@ -154,11 +154,11 @@ def extract(path, cfg_only, msg_file):
         with Datacube() as dc:
             cfg.make_ready(dc)
     except ConfigException as e:
-        click.echo("Config exception for path", str(e))
+        click.echo(f"Config exception for path {str(e)}")
         return False
     click.echo("Configuration parsed OK")
-    click.echo("Configured message file location:", cfg.msg_file_name)
-    click.echo("Configured translations directory location:", cfg.translations_dir)
+    click.echo(f"Configured message file location: {cfg.msg_file_name}")
+    click.echo(f"Configured translations directory location: {cfg.translations_dir}")
     write_msg_file(msg_file, cfg)
     click.echo(f"Message file {msg_file} written")
 
@@ -203,7 +203,7 @@ def new_translation(languages, msg_file, domain, translations_dir, cfg):
             raw_cfg = read_config(cfg)
             cfg = OWSConfig(refresh=True, cfg=raw_cfg)
         except ConfigException as e:
-            click.echo("Config exception for path", str(e))
+            click.echo(f"Config exception for path: {str(e)}")
             sys.exit(1)
         if domain is None:
             click.echo(f"Using message domain '{cfg.message_domain}' from configuration")
@@ -223,7 +223,6 @@ def new_translation(languages, msg_file, domain, translations_dir, cfg):
         all_langs = cfg.locales
     else:
         all_langs = []
-
     try:
         fp = open(msg_file, "rb")
         fp.close()
@@ -247,7 +246,7 @@ def create_translation(msg_file, translations_dir, domain, locale):
 
 def write_msg_file(msg_file, cfg):
     with open(msg_file, "wb") as fp:
-        write_po(fp, cfg.export_metadata(), omit_header=True)
+        write_po(fp, cfg.export_metadata())
 
 
 def layers_report(config_values, input_file, output_file):
