@@ -293,18 +293,19 @@ To separate your metadata from config (either as an end in itself, or as prepara
 
 1. Add a unique ``label`` to each of your folder layers.
 
-   This step is strongly recommended optional. OWS will autogenerate
+   This step is optional, but strongly recommended. OWS will autogenerate
    a unique but non-obvious label for each folder if you do not supply one.
 
-2. Run ``python cfg_parser.py -c -m messages.po``
+2. Run ``datacube-ows-cfg extract -m messages.po``
 
-   This extracts all the translatable/human-readable text from your config file, and writes it to the named file in gettext "po" file
-   format.
+   This extracts all the translatable/human-readable text from your config file, and writes it to the
+   named file in gettext "po" file format.
 
-   Add ``"message_file": "/path/to/messages.po"`` to the global section of your OWS config file.
+3. Add ``"message_file": "/path/to/messages.po"`` to the global section of your OWS config file.
 
-   Subsequently, text in messages.po will over-ride text in the config file. Update as needed, restart wsgi process to take effect.
-   Any field not included in the message file will be loaded directly from the config, as previously.
+   Subsequently, text in messages.po will over-ride text in the config file. Update as needed, restart
+   wsgi process to take effect. Any field not included in the message file will be loaded directly
+   from the config, as previously.
 
 The msgid's in the message file are symbolic. E.g.
 
@@ -331,45 +332,32 @@ Internationalisation/Translation of Metadata
 ++++++++++++++++++++++++++++++++++++++++++++
 
 Once you have extracted your metadata into a single file, separate from the main body of configuration,
-as described `above<#metadata-separation>`_, internationalisation can be achieved as follows:
-
-Firstly, add to the global section of the configuration file:
-
-1. A list of supported languages in the global section of the configuration.
-   Use ISO-639 two or three letter language codes.  The first language code is the default language,
-   which will be sent to clients that do not nominate a preferred language, or that doesn't
-   indicate that it accepts any of the supported languages.  The default language is also the
-   initial language that the other translations are made from.
-
-2. The path to the translations directory.  This the directory that translation file templates are
-   written to, and translation files are read from.
-
-::
-    global = {
-        "message_file": "config/messages.po",
-        "locales": "config/locales",
-        "supported_languages": [
-            "en", # English (default language)
-            "fr", # French
-            "de", # German
-            "sw", # Swahili
-        ],
-        ...
-    }
-
-
-Secondly, generate translation files templates from the message file using the config parser tool:
+as described `above<#metadata-separation>`_, generate a translation catalog for every language you want
+translations for - including the "native" language that your messages file is already in:
 
 ::
 
-    python cfg_parser.py -t
+    # Create translation catalogs for English (en), German (de), French (Fr) and Swahili (Sw).
 
-This will:
+    datacube-ows-cfg new-translation -D my_ows_project -d /config/translations -m /config/messages.po en de fr sw
 
-1. Read in the current metadata from the configuration file and/or messages file.
-2. Create the translations directory if it does not already exist.
-3. Generate a complete messages.po file for the configured default language.
-4. Generate a template messages.po file for every non-default configured language.
+This will create the following files:
+
+::
+
+   /config/translations/en/LC_MESSAGES/my_ows_project.po
+   /config/translations/de/LC_MESSAGES/my_ows_project.po
+   /config/translations/fr/LC_MESSAGES/my_ows_project.po
+   /config/translations/sw/LC_MESSAGES/my_ows_project.po
+
+
+These files are currently identical, apart from the language in the header.  These files should be distributed to
+translators for the respective languages.  The translators keep the file in the same format, but replace
+the ``msg_str`` sections with the translated text in their language and return the translated message
+file to you.  Then you keep then save them into the directory structure above, replacing the untranslated
+templates.
+
+
 
 General Config Structure
 ------------------------

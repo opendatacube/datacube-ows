@@ -74,7 +74,7 @@ Features
         'console_scripts': [
             'datacube-ows=datacube_ows.wsgi:main',
             'datacube-ows-update=datacube_ows.update_ranges:main',
-            'datacube-ows-cfg-parse=datacube_ows.cfg_parser:main'
+            'datacube-ows-cfg=datacube_ows.cfg_parser:main'
         ]
     },
     packages=find_packages(exclude=["tests", "tests.cfg", "integration_tests", "integration_tests.cfg"]),
