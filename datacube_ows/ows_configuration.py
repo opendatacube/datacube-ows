@@ -1090,6 +1090,7 @@ class OWSConfig(OWSMetadataConfig):
             raise ConfigException("You must support at least one language.")
         self.default_locale = self.locales[0]
         self.message_domain = cfg.get("message_domain", "ows_cfg")
+        self.translations_dir = cfg.get("translations_directory")
         if ignore_msgfile:
             self.msg_file_name = None
         else:

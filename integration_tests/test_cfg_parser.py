@@ -16,55 +16,56 @@ def test_cfg_parser_simple(runner):
 
 
 def test_cfg_parser_parse_only(runner):
-    result = runner.invoke(main, ["-p"])
+    result = runner.invoke(main, ["check", "-p"])
+    print(repr(result))
     assert result.exit_code == 0
 
 
 def test_cfg_parser_folder_hierarchy(runner):
-    result = runner.invoke(main, ["-f"])
+    result = runner.invoke(main, ["check", "-f"])
     assert result.exit_code == 0
 
 
 def test_cfg_parser_styles(runner):
-    result = runner.invoke(main, ["-s"])
+    result = runner.invoke(main, ["check", "-s"])
     assert result.exit_code == 0
 
 
 def test_cfg_parser_folder_hierarchy_and_styles(runner):
-    result = runner.invoke(main, ["-f", "-s"])
+    result = runner.invoke(main, ["check", "-f", "-s"])
     assert result.exit_code == 0
 
 
 def test_cfg_parser_folders_parse_only(runner):
-    result = runner.invoke(main, ["-f", "-p"])
+    result = runner.invoke(main, ["check", "-f", "-p"])
     assert result.exit_code == 1
 
 
 def test_cfg_parser_input_file_compare(runner):
     this_dir = os.path.dirname(os.path.dirname(__file__))
-    result = runner.invoke(main, ["-i", f"{this_dir}/ows_cfg_report.json"])
+    result = runner.invoke(main, ["check", "-i", f"{this_dir}/ows_cfg_report.json"])
     assert result.exit_code == 0
 
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_msg_file(runner):
-    result = runner.invoke(main, ["-m", "messages.po"])
+    result = runner.invoke(main, ["extract", "-m", "messages.po"])
     assert result.exit_code == 0
 
 
 def test_cfg_parser_msg_file_null(runner):
-    result = runner.invoke(main, ["-m", "/dev/null"])
+    result = runner.invoke(main, ["extract", "-m", "/dev/null"])
     assert result.exit_code == 0
 
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_output_file_compare(runner):
-    result = runner.invoke(main, ["-o", "inventory.json"])
+    result = runner.invoke(main, ["check", "-o", "inventory.json"])
     assert result.exit_code == 0
 
 
 def test_cfg_parser_output_file_compare_null(runner):
-    result = runner.invoke(main, ["-o", "/dev/null"])
+    result = runner.invoke(main, ["check", "-o", "/dev/null"])
     assert result.exit_code == 0
 
 
@@ -74,11 +75,11 @@ def test_cfg_parser_version(runner):
 
 
 def test_cfg_parser_bad_cfgenv(runner):
-    result = runner.invoke(main, [], env={"DATACUBE_OWS_CFG": "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"})
+    result = runner.invoke(main, ["check"], env={"DATACUBE_OWS_CFG": "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"})
     assert result.exit_code == 1
 
 
 def test_cfg_parser_bad_cfgarg(runner):
-    result = runner.invoke(main, ["integration_tests.cfg.ows_test_cfg.ows,cfg", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
+    result = runner.invoke(main, ["check", "integration_tests.cfg.ows_test_cfg.ows,cfg", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
     assert result.exit_code == 1
 
