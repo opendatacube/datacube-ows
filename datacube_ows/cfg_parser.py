@@ -140,7 +140,7 @@ def parse_path(path, parse_only, folders, styles, input_file, output_file):
     default="messages.po",
     help="Write to a message file with the translatable metadata from the configuration. (Defaults to 'messages.po')"
 )
-@click.argument("path", nargs=-1)
+@click.argument("path", nargs=1)
 def extract(path, cfg_only, msg_file):
     """Extract metadata from existing configuration into a message file template.
 
@@ -163,37 +163,85 @@ def extract(path, cfg_only, msg_file):
     click.echo(f"Message file {msg_file} written")
 
 
+@main.command()
 @click.option(
-    "-t",
-    "--translations",
-    default=False,
-    help="Update the configured translations directory with fresh translation-templates for the listed languages, based on the configured message file. "
-        + "Use a comma separated list of language codes or 'all'."
+    "-m",
+    "--msg-file",
+    default=None,
+    help="Use this message file as the template for translation files. (defaults to message filename from configuration)"
 )
-def will_be_translations(translations):
-    if translations:
-        if not cfg.translations_dir:
-            click.echo("No translations directory location configured")
-            return False
-        if translations == "all":
-            translations = cfg.locales
-        else:
-            locs = []
-            for locale in translations.split(","):
-                if locale in cfg.locales:
-                    locs.append(locale)
-                else:
-                    click.echo("Language " + locale + " not supported.")
-            if not locs:
-                click.echo("No supported languages listed in locales. Supported languages are:", ",".join(cfg.locales))
-                return False
-            translations = locs
+@click.option(
+    "-d",
+    "--translations-dir",
+    default=None,
+    help="Path to the output translations directory. Defaults to value from configuration"
+)
+@click.option(
+    "-D",
+    "--domain",
+    default=None,
+    help="The domain of the translation files. Defaults to value from configuration"
+)
+@click.option(
+    "-c",
+    "--cfg",
+    default=None,
+    help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
+)
+@click.argument("languages", nargs=-1)
+def new_translation(languages, msg_file, domain, translations_dir, cfg):
+    """Generate a new translations catalog based on the specified message file.
 
-        translations_dir = cfg.translations_dir
-        for locale in translations:
-            click.echo("Creating template for language", locale)
-            os.system(f"pybabel init -i {cfg.msg_file_name} -d {translations_dir} -D {cfg.message_domain} -l {locale}")
-        click.echo("Language templates created.")
+    Takes a list of languages to generate catalogs for. "all" can be included as a shorthand
+    for all languages listed as supported in the configuration.
+    """
+    if len(languages) == 0:
+        click.echo("No language(s) specified.")
+        sys.exit(1)
+    if msg_file is None or domain is None or translations_dir is None or "all" in languages:
+        try:
+            raw_cfg = read_config(cfg)
+            cfg = OWSConfig(refresh=True, cfg=raw_cfg)
+        except ConfigException as e:
+            click.echo("Config exception for path", str(e))
+            sys.exit(1)
+        if domain is None:
+            click.echo(f"Using message domain '{cfg.message_domain}' from configuration")
+            domain = cfg.message_domain
+        if translations_dir is None and cfg.translations_dir is None:
+            click.echo("No translations directory was supplied or is configured")
+            sys.exit(1)
+        elif translations_dir is None:
+            click.echo(f"Using translations directory '{cfg.translations_dir}' from configuration")
+            translations_dir = cfg.translations_dir
+        if msg_file is None and cfg.msg_file_name is None:
+            click.echo("No message file name was supplied or is configured")
+            sys.exit(1)
+        else:
+            click.echo(f"Using message file location '{cfg.msg_file_name}' from configuration")
+            msg_file_name = cfg.msg_file_name
+        all_langs = cfg.locales
+    else:
+        all_langs = []
+
+    try:
+        fp = open(msg_file, "rb")
+        fp.close()
+    except:
+        click.echo("Message file {msg_file} does not exist or cannot be read.")
+        sys.exit(1)
+    for language in languages:
+        if language == "all":
+            for supp_lang in all_langs:
+                create_translation(msg_file, translations_dir, domain, supp_lang)
+        else:
+            create_translation(msg_file, translations_dir, domain, language)
+    click.echo("Language templates created.")
+
+
+def create_translation(msg_file, translations_dir, domain, locale):
+    click.echo(f"Creating template for language: {locale}")
+    os.system(f"pybabel init -i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
     return True
 
 
@@ -230,23 +278,23 @@ def print_layers(layers, styles, depth):
     for lyr in layers:
         if isinstance(lyr, OWSFolder):
             indent(depth)
-            click.echo("*", lyr.title)
-            click.echo(lyr.child_layers, styles, depth + 1)
+            click.echo(f"* {lyr.title}")
+            click.echo(f"{lyr.child_layers} {styles} {depth + 1}")
         else:
             indent(depth)
-            click.echo(lyr.name, f"[{','.join(lyr.product_names)}]")
+            click.echo(f"{lyr.name} [{','.join(lyr.product_names)}]")
             if styles:
-                click.echo(lyr, depth)
+                click.echo(f"{lyr} {depth}")
 
 
 def print_styles(lyr, depth=0):
     for styl in lyr.styles:
         indent(0, for_styles=True)
-        print(".", styl.name)
+        print(f". {styl.name}")
 
 
 def indent(depth, for_styles=False):
     for i in range(depth):
-        print("  ", end="")
+        click.echo("  ", nl=False)
     if for_styles:
-        print("      ", end="")
+        click.echo("      ", nl=False)
