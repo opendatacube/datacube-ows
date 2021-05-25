@@ -337,9 +337,9 @@ translations for - including the "native" language that your messages file is al
 
 ::
 
-    # Create translation catalogs for English (en), German (de), French (Fr) and Swahili (Sw).
+    # Create new translation catalogs for English (en), German (de), French (Fr) and Swahili (Sw).
 
-    datacube-ows-cfg new-translation -D my_ows_project -d /config/translations -m /config/messages.po en de fr sw
+    datacube-ows-cfg translation -n -D my_ows_project -d /config/translations -m /config/messages.po en de fr sw
 
 This will create the following files:
 
@@ -357,7 +357,21 @@ the ``msg_str`` sections with the translated text in their language and return t
 file to you.  Then you keep then save them into the directory structure above, replacing the untranslated
 templates.
 
+Once the translations have been placed in translations directory, they must be compiled:
 
+::
+
+    datacube-ows-cfg compile -D my_ows_project -d /config/translations en de fr sw
+
+This creates the following machine-readable message (.mo) files:
+
+   /config/translations/en/LC_MESSAGES/my_ows_project.mo
+   /config/translations/de/LC_MESSAGES/my_ows_project.mo
+   /config/translations/fr/LC_MESSAGES/my_ows_project.mo
+   /config/translations/sw/LC_MESSAGES/my_ows_project.mo
+
+You can now update the `global section of your OWS Configuration<>`_ and restart the web service and
+you are serving multi-lingually!  (Adjust your client's "Accept-Languages" header to test.)
 
 General Config Structure
 ------------------------

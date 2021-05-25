@@ -165,6 +165,13 @@ def extract(path, cfg_only, msg_file):
 
 @main.command()
 @click.option(
+    "-n",
+    "--new",
+    is_flag=True,
+    default=False,
+    help="Create a new translation template. (Default is to update an existing one.)"
+)
+@click.option(
     "-m",
     "--msg-file",
     default=None,
@@ -189,7 +196,7 @@ def extract(path, cfg_only, msg_file):
     help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
 )
 @click.argument("languages", nargs=-1)
-def new_translation(languages, msg_file, domain, translations_dir, cfg):
+def translation(languages, msg_file, new, domain, translations_dir, cfg):
     """Generate a new translations catalog based on the specified message file.
 
     Takes a list of languages to generate catalogs for. "all" can be included as a shorthand
@@ -232,15 +239,90 @@ def new_translation(languages, msg_file, domain, translations_dir, cfg):
     for language in languages:
         if language == "all":
             for supp_lang in all_langs:
-                create_translation(msg_file, translations_dir, domain, supp_lang)
+                if new:
+                    create_translation(msg_file, translations_dir, domain, supp_lang)
+                else:
+                    update_translation(msg_file, translations_dir, domain, supp_lang)
         else:
-            create_translation(msg_file, translations_dir, domain, language)
+            if new:
+                create_translation(msg_file, translations_dir, domain, language)
+            else:
+                update_translation(msg_file, translations_dir, domain, language)
     click.echo("Language templates created.")
 
 
 def create_translation(msg_file, translations_dir, domain, locale):
     click.echo(f"Creating template for language: {locale}")
     os.system(f"pybabel init -i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
+    return True
+
+
+def update_translation(msg_file, translations_dir, domain, locale):
+    click.echo(f"Updating template for language: {locale}")
+    os.system(f"pybabel update --no-fuzzy-matching --ignore-obsolete -i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
+    return True
+
+
+@main.command()
+@click.option(
+    "-d",
+    "--translations-dir",
+    default=None,
+    help="Path to the output translations directory. Defaults to value from configuration"
+)
+@click.option(
+    "-D",
+    "--domain",
+    default=None,
+    help="The domain of the translation files. Defaults to value from configuration"
+)
+@click.option(
+    "-c",
+    "--cfg",
+    default=None,
+    help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
+)
+@click.argument("languages", nargs=-1)
+def compile(languages, domain, translations_dir, cfg):
+    """Compile completed translation files.
+
+    Takes a list of languages to generate catalogs for. "all" can be included as a shorthand
+    for all languages listed as supported in the configuration.
+    """
+    if len(languages) == 0:
+        click.echo("No language(s) specified.")
+        sys.exit(1)
+    if domain is None or translations_dir is None or "all" in languages:
+        try:
+            raw_cfg = read_config(cfg)
+            cfg = OWSConfig(refresh=True, cfg=raw_cfg)
+        except ConfigException as e:
+            click.echo(f"Config exception for path: {str(e)}")
+            sys.exit(1)
+        if domain is None:
+            click.echo(f"Using message domain '{cfg.message_domain}' from configuration")
+            domain = cfg.message_domain
+        if translations_dir is None and cfg.translations_dir is None:
+            click.echo("No translations directory was supplied or is configured")
+            sys.exit(1)
+        elif translations_dir is None:
+            click.echo(f"Using translations directory '{cfg.translations_dir}' from configuration")
+            translations_dir = cfg.translations_dir
+        all_langs = cfg.locales
+    else:
+        all_langs = []
+    for language in languages:
+        if language == "all":
+            for supp_lang in all_langs:
+                compile_translation(translations_dir, domain, supp_lang)
+        else:
+            compile_translation(translations_dir, domain, language)
+    click.echo("Language templates created.")
+
+
+def compile_translation(translations_dir, domain, language):
+    click.echo(f"Compiling template for language: {language}")
+    os.system(f"pybabel compile -d {translations_dir} -D {domain} -l {language}")
     return True
 
 

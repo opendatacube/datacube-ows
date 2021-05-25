@@ -198,6 +198,9 @@ class OWSLayer(OWSMetadataConfig):
         else:
             self.attribution = self.global_cfg.attribution
 
+    def global_config(self):
+        return self.global_cfg
+
     def can_inherit_from(self):
         if self.parent_layer:
             return self.parent_layer
@@ -1092,6 +1095,7 @@ class OWSConfig(OWSMetadataConfig):
         self.default_locale = self.locales[0]
         self.message_domain = cfg.get("message_domain", "ows_cfg")
         self.translations_dir = cfg.get("translations_directory")
+        self.internationalised =  self.translations_dir and len(self.locales) > 1
         if ignore_msgfile:
             self.msg_file_name = None
         else:

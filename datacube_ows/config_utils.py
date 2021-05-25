@@ -243,6 +243,8 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
+        if self.global_config().internationalised:
+            pass
         if self._msg_src is not None:
             msg = self._msg_src.get(lookup)
             if not msg:
@@ -266,6 +268,9 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     def is_inherited(self, fld):
         return self.read_inheritance(self.get_obj_label(), fld)
+
+    def global_config(self):
+        return self
 
     def __getattribute__(self, name):
         if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION):
