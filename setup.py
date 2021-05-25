@@ -22,6 +22,7 @@ requirements = [
     'numpy',
     'Pillow',
     'Babel',
+    'Flask-Babel',
     'prometheus_client',
     'psycopg2',
     'python_dateutil',
