@@ -41,7 +41,7 @@ cfg = parse_config_file()
 app = initialise_flask(__name__)
 
 babel = None
-if cfg.internationalised:
+if cfg and cfg.internationalised:
     app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
     babel = Babel(app,
                   default_locale=cfg.locales[0],

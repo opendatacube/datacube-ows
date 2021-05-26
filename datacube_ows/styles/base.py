@@ -428,7 +428,11 @@ class BandIdxProxy:
         return band
 
 
+class GlobalCfgProxy:
+    internationalised = False
+
+
 class StandaloneProductProxy:
     name = "standalone"
-    global_cfg = None
+    global_cfg = GlobalCfgProxy()
     band_idx = BandIdxProxy()
