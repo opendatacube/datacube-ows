@@ -45,16 +45,13 @@ RUN apt-get update && apt-get install -y \
     postgresql-client-12 \
     && rm -rf /var/lib/apt/lists/*
 
-
-ARG py_env_path
-COPY --from=env_builder ${py_env_path} ${py_env_path}
-
 # Configure user
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
 WORKDIR "/home/ows"
 
 # Copy python libs, add them to the path, configure GDAL
 ARG py_env_path
+COPY --from=env_builder ${py_env_path} ${py_env_path}
 ENV PATH=${py_env_path}/bin:$PATH \
     PYTHONPATH=${py_env_path} \
     GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
