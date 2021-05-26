@@ -36,17 +36,13 @@ ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     SHELL=bash
 
-COPY --from=env_builder ${py_env_path} ${py_env_path}
-
 ENV PATH="/env/bin:${PATH}"
 
-RUN apt-get update && apt install -y \
+COPY --from=env_builder ${py_env_path} ${py_env_path}
+
+RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install postgres client 11
-RUN apt-get update && apt-get install -y \
     postgresql-client-12 \
     && rm -rf /var/lib/apt/lists/*
 
