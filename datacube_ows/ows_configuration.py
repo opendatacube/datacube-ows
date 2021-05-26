@@ -1095,7 +1095,7 @@ class OWSConfig(OWSMetadataConfig):
         self.default_locale = self.locales[0]
         self.message_domain = cfg.get("message_domain", "ows_cfg")
         self.translations_dir = cfg.get("translations_directory")
-        self.internationalised =  self.translations_dir and len(self.locales) > 1
+        self.internationalised = self.translations_dir and len(self.locales) > 1
         if ignore_msgfile:
             self.msg_file_name = None
         else:

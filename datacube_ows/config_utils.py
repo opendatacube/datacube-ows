@@ -10,6 +10,7 @@ from typing import Mapping, Sequence
 from urllib.parse import urlparse
 
 import fsspec
+from flask_babel import gettext as _
 
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -244,7 +245,9 @@ class OWSMetadataConfig(OWSConfigEntry):
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
         if self.global_config().internationalised:
-            pass
+            trans = _(lookup)
+            if trans != lookup:
+                return trans
         if self._msg_src is not None:
             msg = self._msg_src.get(lookup)
             if not msg:

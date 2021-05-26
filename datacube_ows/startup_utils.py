@@ -30,7 +30,9 @@ __all__ = [
     'initialise_flask',
     'initialise_prometheus',
     'initialise_prometheus_register',
+    'generate_locale_selector'
 ]
+
 
 
 def initialise_logger(name=None):
@@ -108,8 +110,10 @@ def initialise_aws_credentials(log=None):
 def parse_config_file(log=None):
     # Cache a parsed config file object
     # (unless deferring to first request)
+    cfg = None
     if not os.environ.get("DEFER_CFG_PARSE"):
-        get_config()
+        cfg = get_config()
+    return cfg
 
 
 def initialise_flask(name):
@@ -142,3 +146,12 @@ def initialise_prometheus_register(metrics):
                 }
             )
         )
+
+
+def generate_locale_selector(locales):
+    def selector_template():
+        from flask import request
+
+        return request.accept_languages.best_match(locales)
+    return selector_template
+

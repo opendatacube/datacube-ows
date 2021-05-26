@@ -8,6 +8,7 @@ import traceback
 from time import monotonic
 
 from flask import g, render_template, request
+from flask_babel import Babel
 from flask_log_request_id import current_request_id
 
 from datacube_ows import __version__
@@ -34,10 +35,20 @@ initialise_sentry(_LOG)
 initialise_aws_credentials(_LOG)
 
 # Prepare parsed configuration object
-parse_config_file()
+cfg = parse_config_file()
 
 # Initialise Flask
 app = initialise_flask(__name__)
+
+babel = None
+if cfg.internationalised:
+    app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
+    babel = Babel(app,
+                  default_locale=cfg.locales[0],
+                  default_domain=cfg.message_domain,
+                  configure_jinja=False
+                 )
+    babel.localeselector(generate_locale_selector(cfg.locales))
 
 # Initialisation of external libraries that depend on Flask
 # (controlled by environment variables)
