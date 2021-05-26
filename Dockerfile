@@ -25,7 +25,7 @@ RUN pip install . && cd .. && rm -rf /code
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
-RUN if [ "$PYDEV_DEBUG" == "yes" ]; then \
+RUN if [[ "$PYDEV_DEBUG" == "yes" ]]; then \
     pip install pydevd-pycharm~=211.7142.13 \
 ;fi
 
