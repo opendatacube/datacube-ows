@@ -32,13 +32,13 @@ RUN if [ "$PYDEV_DEBUG" == "yes" ]; then \
 # Runner image starts here
 FROM opendatacube/geobase-runner:${V_BASE}
 
+COPY --from=env_builder ${py_env_path} ${py_env_path}
+
 ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     SHELL=bash
 
 ENV PATH="/env/bin:${PATH}"
-
-COPY --from=env_builder ${py_env_path} ${py_env_path}
 
 RUN apt-get update && apt-get install -y \
     curl \
