@@ -32,8 +32,6 @@ RUN if [ "$PYDEV_DEBUG" == "yes" ]; then \
 # Runner image starts here
 FROM opendatacube/geobase-runner:${V_BASE}
 
-ARG py_env_path
-COPY --from=env_builder ${py_env_path} ${py_env_path}
 
 ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
@@ -46,6 +44,10 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     postgresql-client-12 \
     && rm -rf /var/lib/apt/lists/*
+
+
+ARG py_env_path
+COPY --from=env_builder ${py_env_path} ${py_env_path}
 
 # Configure user
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
