@@ -25,28 +25,23 @@ RUN pip install .
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
-RUN if [ "$PYDEV_DEBUG" == "yes" ]; then \
+RUN if [[ "$PYDEV_DEBUG" == "yes" ]]; then \
     pip install pydevd-pycharm~=211.7142.13 \
 ;fi
 
 # Runner image starts here
 FROM opendatacube/geobase-runner:${V_BASE}
 
+
 ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     SHELL=bash
 
-COPY --from=env_builder ${py_env_path} ${py_env_path}
-
 ENV PATH="/env/bin:${PATH}"
 
-RUN apt-get update && apt install -y \
+RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install postgres client 11
-RUN apt-get update && apt-get install -y \
     postgresql-client-12 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -56,6 +51,7 @@ WORKDIR "/home/ows"
 
 # Copy python libs, add them to the path, configure GDAL
 ARG py_env_path
+COPY --from=env_builder ${py_env_path} ${py_env_path}
 ENV PATH=${py_env_path}/bin:$PATH \
     PYTHONPATH=${py_env_path} \
     GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
