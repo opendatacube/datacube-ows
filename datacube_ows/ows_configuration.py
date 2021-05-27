@@ -25,7 +25,6 @@ from datacube.utils import geometry
 from ows import Version
 from slugify import slugify
 
-
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
