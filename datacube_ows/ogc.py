@@ -87,6 +87,7 @@ def ogc_impl():
             # Defaulting to WMS because that's what we already have.
             raise WMSException("Invalid service and/or request", locator="Service and request parameters")
         else:
+            # pylint: disable=redefined-outer-name
             cfg = get_config()
             url = nocase_args.get('Host', nocase_args['url_root'])
             base_url = get_service_base_url(cfg.allowed_urls, url)
@@ -184,6 +185,7 @@ def ping():
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
 def legend(layer, style, dates=None):
+    # pylint: disable=redefined-outer-name
     cfg = get_config()
     product = cfg.product_index.get(layer)
     if not product:

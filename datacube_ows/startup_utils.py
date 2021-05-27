@@ -150,8 +150,6 @@ def initialise_prometheus_register(metrics):
 
 def generate_locale_selector(locales):
     def selector_template():
-        from flask import request
-
         return request.accept_languages.best_match(locales)
     return selector_template
 
