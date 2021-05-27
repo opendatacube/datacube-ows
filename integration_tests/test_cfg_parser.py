@@ -83,3 +83,9 @@ def test_cfg_parser_bad_cfgarg(runner):
     result = runner.invoke(main, ["check", "integration_tests.cfg.ows_test_cfg.ows,cfg", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
     assert result.exit_code == 1
 
+
+def test_cfg_write_new_translation_directory(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "de"])
+    assert result.exit_code == 0
+
