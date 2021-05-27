@@ -1037,6 +1037,7 @@ class OWSConfig(OWSMetadataConfig):
                     "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
                 )
             self.catalog = None
+            self.initialised = True
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
