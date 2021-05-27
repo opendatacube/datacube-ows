@@ -19,19 +19,19 @@ import os
 from collections.abc import Mapping
 from importlib import import_module
 
+from babel.messages.catalog import Catalog
+from babel.messages.pofile import read_po
 from datacube.utils import geometry
 from ows import Version
 from slugify import slugify
 
-from babel.messages.catalog import Catalog
-from babel.messages.pofile import read_po
 
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
-                                       OWSMetadataConfig,
-                                       cfg_expand, get_file_loc,
-                                       import_python_obj, load_json_obj)
+                                       OWSMetadataConfig, cfg_expand,
+                                       get_file_loc, import_python_obj,
+                                       load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,

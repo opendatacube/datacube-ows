@@ -10,10 +10,9 @@ import os
 import sys
 
 import click
+from babel.messages.pofile import write_po
 from datacube import Datacube
 from deepdiff import DeepDiff
-
-from babel.messages.pofile import write_po
 
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
