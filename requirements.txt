@@ -11,10 +11,8 @@ scikit-image
 gevent
 python-slugify
 geoalchemy2
-eventlet
 gunicorn
 gunicorn[gevent]
-gunicorn[eventlet]
 boto3
 moto
 rasterio>=1.0.9
