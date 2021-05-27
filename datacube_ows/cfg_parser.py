@@ -20,7 +20,7 @@ from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
                                             OWSFolder, read_config)
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.option(
     "--version", is_flag=True, default=False, help="Show OWS version number and exit"
 )
