@@ -14,6 +14,7 @@ def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     cfg.make_ready(minimal_dc)
     assert cfg.ready
+    assert cfg.initialised
 
 
 def test_global_no_title(minimal_global_raw_cfg):
