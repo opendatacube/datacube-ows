@@ -155,7 +155,7 @@ def test_cfg_new_translation_no_language(runner):
 
 
 @pytest.mark.xfail(reason="Permission denied")
-def test_cfg_parser_output_file_compare(runner):
+def test_cfg_parser_compile(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "en"])
     assert result.exit_code == 0
