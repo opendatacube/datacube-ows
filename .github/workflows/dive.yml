@@ -42,7 +42,7 @@ jobs:
         uses: yuichielectric/dive-action@0.0.4
         with:
           image: "${ORG}/${IMAGE}:_builder"
-          config-file: .dive-ci.yml
+          config-file: ${{ github.workspace }}/.dive-ci.yml
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker image size check
         uses: wemake-services/docker-image-size-limit@master
