@@ -232,7 +232,7 @@ def translation(languages, msg_file, new, domain, translations_dir, cfg):
     try:
         fp = open(msg_file, "rb")
         fp.close()
-    except:
+    except IOError:
         click.echo("Message file {msg_file} does not exist or cannot be read.")
         sys.exit(1)
     for language in languages:
@@ -262,7 +262,7 @@ def update_translation(msg_file, translations_dir, domain, locale):
     return True
 
 
-@main.command()
+@main.command(name="compile")
 @click.option(
     "-d",
     "--translations-dir",
@@ -282,7 +282,7 @@ def update_translation(msg_file, translations_dir, domain, locale):
     help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
 )
 @click.argument("languages", nargs=-1)
-def compile(languages, domain, translations_dir, cfg):
+def compile_cmd(languages, domain, translations_dir, cfg):
     """Compile completed translation files.
 
     Takes a list of languages to generate catalogs for. "all" can be included as a shorthand

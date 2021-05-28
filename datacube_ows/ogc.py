@@ -87,8 +87,7 @@ def ogc_impl():
             # Defaulting to WMS because that's what we already have.
             raise WMSException("Invalid service and/or request", locator="Service and request parameters")
         else:
-            # pylint: disable=redefined-outer-name
-            cfg = get_config()
+            cfg = get_config()   # pylint: disable=redefined-outer-name
             url = nocase_args.get('Host', nocase_args['url_root'])
             base_url = get_service_base_url(cfg.allowed_urls, url)
             return (render_template(
