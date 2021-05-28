@@ -32,20 +32,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build image
+      - name: check div-ci file
         run: |
-          docker build \
-            --target env_builder \
-            --tag    ${ORG}/${IMAGE}:_builder \
-            .
-      - name: Dive
-        uses: yuichielectric/dive-action@0.0.4
-        with:
-          image: "${ORG}/${IMAGE}:_builder"
-          config-file: ${{ github.workspace }}/.dive-ci.yml
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Docker image size check
-        uses: wemake-services/docker-image-size-limit@master
-        with:
-          image: "${ORG}/${IMAGE}:_builder"
-          size: "300"
+          ls ${{ github.workspace }}
+          pwd
+      # - name: Build image
+      #   run: |
+      #     docker build \
+      #       --target env_builder \
+      #       --tag    ${ORG}/${IMAGE}:_builder \
+      #       .
+      # - name: Dive
+      #   uses: yuichielectric/dive-action@0.0.4
+      #   with:
+      #     image: "${ORG}/${IMAGE}:_builder"
+      #     config-file: ${{ github.workspace }}/.dive-ci.yml
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Docker image size check
+      #   uses: wemake-services/docker-image-size-limit@master
+      #   with:
+      #     image: "${ORG}/${IMAGE}:_builder"
+      #     size: "300"
