@@ -42,5 +42,5 @@ jobs:
         uses: yuichielectric/dive-action@0.0.4
         with:
           image: "${ORG}/${IMAGE}:_builder"
-          config-file: ${{ github.workspace }}/.dive-ci.yml
+          config-file: ./.dive-ci.yml
           github-token: ${{ secrets.GITHUB_TOKEN }}
