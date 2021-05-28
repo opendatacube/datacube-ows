@@ -58,6 +58,11 @@ def test_cfg_parser_msg_file_null(runner):
     assert result.exit_code == 0
 
 
+def test_cfg_parser_msg_file_null_badcfg(runner):
+    result = runner.invoke(main, ["extract", "-m", "/dev/null", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
+    assert result.exit_code == 0
+
+
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_output_file_compare(runner):
     result = runner.invoke(main, ["check", "-o", "inventory.json"])
@@ -87,6 +92,17 @@ def test_cfg_parser_bad_cfgarg(runner):
 def test_cfg_write_new_translation_directory(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "de"])
+    assert result.exit_code == 0
+
+
+def test_cfg_write_new_translation_directory_cfg(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["translation", "-n",
+                                  "-m", f"{this_dir}/cfg/message.po",
+                                  "-d", f"{this_dir}/cfg/test_translations",
+                                  "-D", "ows_cfg",
+                                  "-c", "integration_tests.cfg.ows_test_cfg.ows_cfg",
+                                  "de"])
     assert result.exit_code == 0
 
 
@@ -127,6 +143,7 @@ def test_cfg_write_new_translation_directory_no_directory(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["translation", "-n",
                                   "-m", f"{this_dir}/cfg/message.po",
+                                  "-D", "ows_cfg",
                                   "all"])
     assert result.exit_code == 1
 
@@ -135,5 +152,12 @@ def test_cfg_new_translation_no_language(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg"])
     assert result.exit_code == 1
+
+
+@pytest.mark.xfail(reason="Permission denied")
+def test_cfg_parser_output_file_compare(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "en"])
+    assert result.exit_code == 0
 
 

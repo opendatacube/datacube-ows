@@ -160,6 +160,7 @@ def extract(path, cfg_only, msg_file):
     click.echo(f"Configured translations directory location: {cfg.translations_dir}")
     write_msg_file(msg_file, cfg)
     click.echo(f"Message file {msg_file} written")
+    return 0
 
 
 @main.command()
@@ -248,6 +249,7 @@ def translation(languages, msg_file, new, domain, translations_dir, cfg):
             else:
                 update_translation(msg_file, translations_dir, domain, language)
     click.echo("Language templates created.")
+    return 0
 
 
 def create_translation(msg_file, translations_dir, domain, locale):
@@ -317,6 +319,7 @@ def compile_cmd(languages, domain, translations_dir, cfg):
         else:
             compile_translation(translations_dir, domain, language)
     click.echo("Language templates created.")
+    return 0
 
 
 def compile_translation(translations_dir, domain, language):
