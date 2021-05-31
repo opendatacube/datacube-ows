@@ -86,7 +86,7 @@ def test_cfg_parser_bad_cfgenv(runner):
 
 def test_cfg_parser_good_cfgarg(runner):
     result = runner.invoke(main, ["check", "integration_tests.cfg.ows_test_cfg.ows_cfg"])
-    assert result.exit_code == 1
+    assert result.exit_code == 0
 
 
 def test_cfg_parser_bad_cfgarg(runner):
@@ -97,6 +97,12 @@ def test_cfg_parser_bad_cfgarg(runner):
 def test_cfg_write_new_translation_directory(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "de"])
+    assert result.exit_code == 0
+
+
+def test_cfg_write_update_translation_directory(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["translation", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "de"])
     assert result.exit_code == 0
 
 
@@ -114,6 +120,12 @@ def test_cfg_write_new_translation_directory_cfg(runner):
 def test_cfg_write_new_translation_directory_all_langs(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"])
+    assert result.exit_code == 0
+
+
+def test_cfg_write_update_translation_directory_all_langs(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["translation", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"])
     assert result.exit_code == 0
 
 
