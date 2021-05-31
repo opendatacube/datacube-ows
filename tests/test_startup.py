@@ -72,3 +72,16 @@ def test_supported_version():
     from datacube_ows.protocol_versions import supported_versions
     supported = supported_versions()
     assert supported["wms"].versions[0].service == "wms"
+
+
+def test_generate_locale_sel(monkeypatch):
+    import flask
+    class AcceptLangMock:
+        def best_match(self, locales):
+            return locales[-1]
+    class RequestMock:
+        accept_languages = AcceptLangMock()
+    monkeypatch.setattr(flask, "request", RequestMock())
+    from datacube_ows.startup_utils import generate_locale_selector
+    selector = generate_locale_selector(["en", "de", "sw"])
+    assert selector() == "sw"
