@@ -84,6 +84,11 @@ def test_cfg_parser_bad_cfgenv(runner):
     assert result.exit_code == 1
 
 
+def test_cfg_parser_good_cfgarg(runner):
+    result = runner.invoke(main, ["check", "integration_tests.cfg.ows_test_cfg.ows_cfg"])
+    assert result.exit_code == 1
+
+
 def test_cfg_parser_bad_cfgarg(runner):
     result = runner.invoke(main, ["check", "integration_tests.cfg.ows_test_cfg.ows_cfg", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
     assert result.exit_code == 1
