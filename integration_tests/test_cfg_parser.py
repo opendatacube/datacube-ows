@@ -177,4 +177,22 @@ def test_cfg_parser_compile(runner):
     result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "en"])
     assert result.exit_code == 0
 
+@pytest.mark.xfail(reason="Permission denied")
+def test_cfg_parser_compile_all(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"])
+    assert result.exit_code == 0
+
+
+def test_cfg_parser_compile_no_lang(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg"])
+    assert result.exit_code == 1
+
+
+def test_cfg_parser_compile_no_domain(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "en"])
+    assert result.exit_code == 0
+
 
