@@ -73,9 +73,9 @@ data from the Collection 3 Fractional Cover product:
     # Time coordinates come back slightly differently from the two products, so we need
     # to align them before we combine.
 
-    discrete_data.coords["time"] = parallel_data.coords["time"]
+    wofs_data.coords["time"] = fc_data.coords["time"]
     combined_data = xr.combine_by_coords(
-            [parallel_data, discrete_data],
+            [fc_data, wofs_data],
             join="exact")
 
 Example: No Masking
