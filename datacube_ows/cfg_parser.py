@@ -54,19 +54,16 @@ from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
 @click.option(
     "-i",
     "--input-file",
-    default=False,
     help="Provide a file path for the input inventory json file to be compared with config file",
 )
 @click.option(
     "-o",
     "--output-file",
-    default=False,
     help="Provide an output inventory file name with extension .json",
 )
 @click.option(
     "-m",
     "--msg-file",
-    default=False,
     help="Write a message file containing the translatable metadata from the configuration.",
 )
 

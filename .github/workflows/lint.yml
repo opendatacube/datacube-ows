@@ -1,24 +1,30 @@
 ---
-name: Linting
+name: Code Linting
 
 on:
   pull_request:
+    branches:
+      - 'master'
     paths:
       - '**'
+      - '.github/workflows/lint.yml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
+      - '!.github/**'
 
   push:
     branches:
       - 'master'
     paths:
       - '**'
+      - '.github/workflows/lint.yml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
+      - '!.github/**'
 
 env:
   ORG: opendatacube
