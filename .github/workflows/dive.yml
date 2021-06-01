@@ -36,6 +36,8 @@ jobs:
         uses: luke142367/Docker-Lint-Action@v1.0.0
         with:
           target: Dockerfile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: check div-ci file
         run: |
           ls ${{ github.workspace }}
