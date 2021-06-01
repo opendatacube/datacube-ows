@@ -4,9 +4,10 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import flask
 import os
 from unittest.mock import patch
+
+import flask
 
 
 def test_fake_creds(monkeypatch):
