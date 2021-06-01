@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import flask
 import os
 from unittest.mock import patch
 
@@ -74,17 +75,9 @@ def test_supported_version():
     assert supported["wms"].versions[0].service == "wms"
 
 
-def test_generate_locale_sel(monkeypatch):
-    import flask
-
-    class AcceptLangMock:
-        def best_match(self, locales):
-            return locales[-1]
-
-    class RequestMock:
-        accept_languages = AcceptLangMock()
-
-    monkeypatch.setattr(flask, "request", RequestMock())
+def test_generate_locale_sel():
+    app = flask.Flask("test_generate_locale_selector")
     from datacube_ows.startup_utils import generate_locale_selector
-    selector = generate_locale_selector(["en", "de", "sw"])
-    assert selector() == "sw"
+    with app.test_request_context(headers={"Accept-Language": "sw, fr;q=0.7, de;q=0.2"}):
+        selector = generate_locale_selector(["en", "de", "sw"])
+        assert selector() == "sw"
