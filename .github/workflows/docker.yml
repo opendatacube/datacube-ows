@@ -7,6 +7,10 @@ on:
       - master
     paths:
       - "**"
+      - '!docs/**'
+      - '!*.rst'
+      - '!*.md'
+      - '!datacube_ows/__init__.py'
 
   release:
     types: [created, edited, published]

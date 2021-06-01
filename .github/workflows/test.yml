@@ -7,10 +7,12 @@ on:
         - 'master'
     paths:
       - '**'
+      - '.github/workflows/test.yml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
+      - '!.github/**'
 
   push:
     branches:
@@ -21,6 +23,7 @@ on:
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
+      - '!.github/**'
 
 env:
   ORG: opendatacube

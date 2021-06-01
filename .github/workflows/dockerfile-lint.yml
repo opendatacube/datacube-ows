@@ -7,12 +7,15 @@ on:
         - 'master'
     paths:
       - 'Dockerfile'
+      - '.github/workflows/dockerfile-lint.yml'
 
   push:
     branches:
       - 'master'
     paths:
       - 'Dockerfile'
+      - '.github/workflows/dockerfile-lint.yml'
+
 
 jobs:
   dockerfile-lint:
