@@ -56,13 +56,11 @@ def main(version):
 @click.option(
     "-i",
     "--input-file",
-    default=False,
     help="Provide a file path for the input inventory json file to be compared with config file",
 )
 @click.option(
     "-o",
     "--output-file",
-    default=False,
     help="Provide an output inventory file name with extension .json",
 )
 def check(parse_only, folders, styles, input_file, output_file, paths):

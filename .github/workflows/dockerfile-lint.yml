@@ -1,0 +1,34 @@
+---
+name: dockerfile Linting
+
+on:
+  pull_request:
+    branches:
+        - 'master'
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/dockerfile-lint.yml'
+
+  push:
+    branches:
+      - 'master'
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/dockerfile-lint.yml'
+
+
+jobs:
+  dockerfile-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: lint Dockerfile
+        uses: hadolint/hadolint-action@v1.5.0
+        with:
+          dockerfile: Dockerfile
+          ignore: DL3008
