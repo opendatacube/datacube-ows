@@ -19,6 +19,7 @@ on:
       - 'master'
     paths:
       - '**'
+      - '.github/workflows/test.yml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
