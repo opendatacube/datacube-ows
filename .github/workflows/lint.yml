@@ -3,6 +3,8 @@ name: Code Linting
 
 on:
   pull_request:
+    branches:
+      - 'master'
     paths:
       - '**'
       - '!docs/**'

@@ -3,6 +3,8 @@ name: dockerfile Linting
 
 on:
   pull_request:
+    branches:
+        - 'master'
     paths:
       - 'Dockerfile'
 
