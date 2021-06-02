@@ -165,6 +165,7 @@ def test_cfg_write_new_translation_directory_no_directory(runner):
     result = runner.invoke(main, ["translation", "-n",
                                   "-m", f"{this_dir}/cfg/message.po",
                                   "-D", "ows_cfg",
+                                  "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg",
                                   "all"])
     assert result.exit_code == 1
 
@@ -198,5 +199,4 @@ def test_cfg_parser_compile_no_domain(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "en"])
     assert result.exit_code == 0
-
 
