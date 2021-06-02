@@ -44,6 +44,8 @@ def test_cfg_parser_folders_parse_only(runner):
 def test_cfg_parser_input_file_compare(runner):
     this_dir = os.path.dirname(os.path.dirname(__file__))
     result = runner.invoke(main, ["check", "-i", f"{this_dir}/ows_cfg_report.json"])
+    assert result.exception is None
+    assert b"Configuration parsed OK" in result.stdout_bytes
     assert result.exit_code == 0
 
 
@@ -71,6 +73,8 @@ def test_cfg_parser_output_file_compare(runner):
 
 def test_cfg_parser_output_file_compare_null(runner):
     result = runner.invoke(main, ["check", "-o", "/dev/null"])
+    assert result.exception is None
+    assert b"Configuration parsed OK" in result.stdout_bytes
     assert result.exit_code == 0
 
 
