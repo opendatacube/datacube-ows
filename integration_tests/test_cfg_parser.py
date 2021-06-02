@@ -233,6 +233,9 @@ def test_cfg_parser_compile_no_dir(runner):
 
 def test_cfg_parser_compile_bad_cfg(runner):
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["compile", "-c", f"integration_tests.cfg.ows_test_cfg_bad.ows_cfg", "-d", f"{this_dir}/cfg/test_translations", "en"])
+    result = runner.invoke(main, ["compile",
+                                  "-c", f"integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
+                                  "-d", f"{this_dir}/cfg/test_translations",
+                                  "en"])
     assert result.exit_code == 1
 
