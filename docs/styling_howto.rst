@@ -32,6 +32,11 @@ For thorough technical description of the configuration format,
 `see the configuration documentation
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
 
+Setting up an ODC environment and installing datacube-ows is also beyond the scope
+of this HOWTO, but if you are using a JupyterHubs based system like DEA Sandbox,
+a `Quick Start Guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto_jupyter.html>`_
+is available.
+
 Introduction - Testing styles
 -----------------------------
 
