@@ -1090,7 +1090,7 @@ class OWSConfig(OWSMetadataConfig):
         if not self.wms and not self.wmts and not self.wcs:
             raise ConfigException("At least one service must be active.")
         self.locales = cfg.get("supported_languages", ["en"])
-        if len(self.locales) < 0:
+        if len(self.locales) < 1:
             raise ConfigException("You must support at least one language.")
         self.default_locale = self.locales[0]
         self.message_domain = cfg.get("message_domain", "ows_cfg")
