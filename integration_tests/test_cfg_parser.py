@@ -157,8 +157,26 @@ def test_cfg_write_new_translation_directory_no_msg_file(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["translation", "-n",
                                   "-d", f"{this_dir}/cfg/test_translations",
+                                  "-D", "ows_cfg",
                                   "all"])
     assert result.exit_code == 1
+
+def test_cfg_write_new_translation_directory_missing_msg_file(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["translation", "-n",
+                                  "-d", f"{this_dir}/cfg/test_translations",
+                                  "-m", f"{this_dir}/cfg/non_existent_file.po",
+                                  "-D", "ows_cfg",
+                                  "all"])
+    assert result.exit_code == 1
+
+def test_cfg_write_translation_directory_cfg_directory(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["translation",
+                                  "-m", f"{this_dir}/cfg/message.po",
+                                  "-D", "ows_cfg",
+                                  "all"])
+    assert result.exit_code == 0
 
 def test_cfg_write_new_translation_directory_no_directory(runner):
     this_dir = os.path.dirname(__file__)
@@ -199,4 +217,22 @@ def test_cfg_parser_compile_no_domain(runner):
     this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "en"])
     assert result.exit_code == 0
+
+
+@pytest.mark.xfail(reason="Permission denied")
+def test_cfg_parser_compile_default_dir(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["compile", "en"])
+    assert result.exit_code == 0
+
+
+def test_cfg_parser_compile_no_dir(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["compile", "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg", "en"])
+    assert result.exit_code == 0
+
+def test_cfg_parser_compile_bad_cfg(runner):
+    this_dir = os.path.dirname(__file__)
+    result = runner.invoke(main, ["compile", "-c", f"integration_tests.cfg.ows_test_cfg_bad.ows_cfg", "-d", f"{this_dir}/cfg/test_translations", "en"])
+    assert result.exit_code == 1
 
