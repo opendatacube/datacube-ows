@@ -73,7 +73,7 @@ arthimetic operators like `+ - / *` and parentheses for precedence.
 
     ndvi_unidirection_cfg = {
         "index_expression": "(nir-red)/(nir+red)",
-        "mpl_ramp": "ocean_r",
+        "mpl_ramp": "ocean_r",    #  ocean_r is the "ocean" ramp, reversed.
         "range": [0.0, 1.0]
     }
 
