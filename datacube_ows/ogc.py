@@ -34,10 +34,12 @@ initialise_sentry(_LOG)
 initialise_aws_credentials(_LOG)
 
 # Prepare parsed configuration object
-parse_config_file()
+cfg = parse_config_file()
 
 # Initialise Flask
 app = initialise_flask(__name__)
+
+babel = initialise_babel(cfg, app)
 
 # Initialisation of external libraries that depend on Flask
 # (controlled by environment variables)
@@ -76,7 +78,7 @@ def ogc_impl():
             # Defaulting to WMS because that's what we already have.
             raise WMSException("Invalid service and/or request", locator="Service and request parameters")
         else:
-            cfg = get_config()
+            cfg = get_config()   # pylint: disable=redefined-outer-name
             url = nocase_args.get('Host', nocase_args['url_root'])
             base_url = get_service_base_url(cfg.allowed_urls, url)
             return (render_template(
@@ -173,6 +175,7 @@ def ping():
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
 def legend(layer, style, dates=None):
+    # pylint: disable=redefined-outer-name
     cfg = get_config()
     product = cfg.product_index.get(layer)
     if not product:

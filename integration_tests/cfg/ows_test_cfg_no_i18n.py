@@ -445,9 +445,6 @@ ows_cfg = {
             "https://localhost/odc_ows",
             "https://alternateurl.domain.org/odc_ows",
         ],
-        "translations_directory": "/code/integration_tests/cfg/translations",
-        "supported_languages": ["en", "de"],
-
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",

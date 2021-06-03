@@ -5,7 +5,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+import flask
+import pytest
 
 
 def test_fake_creds(monkeypatch):
@@ -72,3 +75,40 @@ def test_supported_version():
     from datacube_ows.protocol_versions import supported_versions
     supported = supported_versions()
     assert supported["wms"].versions[0].service == "wms"
+
+
+def test_generate_locale_sel():
+    app = flask.Flask("test_generate_locale_selector")
+    from datacube_ows.startup_utils import generate_locale_selector
+    with app.test_request_context(headers={"Accept-Language": "sw, fr;q=0.7, de;q=0.2"}):
+        selector = generate_locale_selector(["en", "de", "sw"])
+        assert selector() == "sw"
+
+
+@pytest.fixture
+def babel_cfg():
+    cfg = MagicMock()
+    cfg.internationalised = True
+    cfg.locales = ["en", "de"]
+    cfg.translations_dir = f"{os.path.dirname(__file__)}/translations"
+    cfg.message_domain = "ows_cfg"
+    return cfg
+
+@pytest.fixture
+def flask_app():
+    app = flask.Flask("test_flask_app")
+    return app
+
+def test_init_babel_on(babel_cfg, flask_app):
+    from datacube_ows.startup_utils import initialise_babel
+    bab = initialise_babel(babel_cfg, flask_app)
+    assert bab is not None
+    assert bab.default_locale.language == "en"
+
+
+def test_init_babel_off(babel_cfg, flask_app):
+    from datacube_ows.startup_utils import initialise_babel
+    babel_cfg.internationalised = False
+    bab = initialise_babel(babel_cfg, flask_app)
+    assert bab is None
+

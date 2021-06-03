@@ -88,6 +88,9 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 
+    def global_config(self):
+        return self.product.global_cfg
+
     def get_obj_label(self):
         return f"style.{self.product.name}.{self.name}"
 
@@ -425,7 +428,11 @@ class BandIdxProxy:
         return band
 
 
+class GlobalCfgProxy:
+    internationalised = False
+
+
 class StandaloneProductProxy:
     name = "standalone"
-    global_cfg = None
+    global_cfg = GlobalCfgProxy()
     band_idx = BandIdxProxy()

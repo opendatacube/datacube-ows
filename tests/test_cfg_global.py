@@ -158,3 +158,11 @@ def test_crs_lookup_fail(minimal_global_raw_cfg, minimal_dc):
         crs = cfg.crs("EPSG:111")
     assert "EPSG:111" in str(excinfo.value)
     assert "is not published" in str(excinfo.value)
+
+
+def test_no_langs(minimal_global_raw_cfg, minimal_dc):
+    OWSConfig._instance = None
+    minimal_global_raw_cfg["global"]["supported_languages"] = []
+    with pytest.raises(ConfigException) as excinfo:
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "at least one language" in str(excinfo.value)

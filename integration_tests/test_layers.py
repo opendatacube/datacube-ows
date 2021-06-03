@@ -13,7 +13,7 @@ src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def test_metadata_export():
     cfg = get_config(refresh=True)
 
-    export = dict(cfg.export_metadata())
+    export = cfg.export_metadata()
     assert "folder.0.title" not in export
     assert "folder.landsat.title" in export
 

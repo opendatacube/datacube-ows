@@ -26,6 +26,8 @@ watchdog
 timezonefinderL
 python-slugify
 bottleneck
+Babel
+Flask-Babel
 sentry-sdk
 blinker
 pyows
