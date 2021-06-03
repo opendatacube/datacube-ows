@@ -64,15 +64,16 @@ so ``ocean_r`` is the reverse - from white through darker blues to dark green.
 So now we get white in the negative and zero areas, with positive areas
 getting darkening blues with close to 1.0 being dark green.
 
+This configuration also demonstrates another method for defining the index - with
+a simple expression language instead of referencing an explicit python function.
+The expression language includes band names and literal numbers, as well as simple
+arthimetic operators like `+ - / *` and parentheses for precedence.
+
 ::
 
     ndvi_unidirection_cfg = {
-        "index_function": {
-            "function": "datacube_ows.band_utils.norm_diff",
-            "mapped_bands": True,
-            "kwargs": {"band1": "nir", "band2": "red"},
-        },
-        "mpl_ramp": "ocean_r",
+        "index_expression": "(nir-red)/(nir+red)",
+        "mpl_ramp": "ocean_r",    #  ocean_r is the "ocean" ramp, reversed.
         "range": [0.0, 1.0]
     }
 
