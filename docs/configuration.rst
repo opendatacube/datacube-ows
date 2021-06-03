@@ -36,8 +36,8 @@ All examples in this documentation will always be presented in Python syntax.  J
 note that there are some important differences:
 
 1. JSON string literals must always be delimited with double quotes - so no Python-style single quote strings!
-2. JSON boolean literals are all lowercase (`true`, `false`) and Python boolean literals are title case (e.g.
-   `True`, `False`)
+2. JSON boolean literals are all lowercase (``true``, ``false``) and Python boolean literals are title case (e.g.
+   ``True``, ``False``)
 3. JSON does not allow commas after the last element of lists and objects (dictionaries in Python terms).
 4. JSON does not support comments of any kind.
 
@@ -332,7 +332,7 @@ Internationalisation/Translation of Metadata
 ++++++++++++++++++++++++++++++++++++++++++++
 
 Once you have extracted your metadata into a single file, separate from the main body of configuration,
-as described `above<#metadata-separation>`_, generate a translation catalog for every language you want
+as described `above <#metadata-separation>`_, generate a translation catalog for every language you want
 translations for - including the "native" language that your messages file is already in:
 
 ::
@@ -365,13 +365,17 @@ Once the translations have been placed in translations directory, they must be c
 
 This creates the following machine-readable message (.mo) files:
 
+::
+
    /config/translations/en/LC_MESSAGES/my_ows_project.mo
    /config/translations/de/LC_MESSAGES/my_ows_project.mo
    /config/translations/fr/LC_MESSAGES/my_ows_project.mo
    /config/translations/sw/LC_MESSAGES/my_ows_project.mo
 
-You can now update the `global section of your OWS Configuration<>`_ and restart the web service and
-you are serving multi-lingually!  (Adjust your client's "Accept-Languages" header to test.)
+You can now update the
+`global section of your OWS Configuration <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#metadata-separation-and-internationalisation>`_
+section and restart the web service and
+you are serving multi-lingually!  (Adjust your client's "Accept-Language" header to test.)
 
 General Config Structure
 ------------------------
