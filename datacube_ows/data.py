@@ -258,7 +258,7 @@ class DataStacker:
                             for dt in data.time.values:
                                 band_time_slices.append(timeless_band_data)
                             timed_band_data = xarray.concat(band_time_slices, data.time)
-                            data_new_bands[band] = timed_band_data
+                            data_new_bands[band] = timed_band_data[band]
                     data = data.assign(data_new_bands)
                     continue
             elif len(qry_result.time) == 0:
@@ -272,7 +272,7 @@ class DataStacker:
                 qry_result = template.copy(data=new_data)
                 data_new_bands = {}
                 for band in pbq.bands:
-                    data_new_bands[band] = qry_result
+                    data_new_bands[band] = qry_result[band]
                 data = data.assign(data_new_bands)
                 continue
             qry_result.coords["time"] = data.coords["time"]
