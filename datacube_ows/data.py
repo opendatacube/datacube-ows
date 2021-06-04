@@ -216,6 +216,9 @@ class DataStacker:
         # datasets is an XArray DataArray of datasets grouped by time.
         data = None
         for pbq, datasets in datasets_by_query.items():
+            if data is not None and len(data.time) == 0:
+                # No data, so no need for masking data.
+                continue
             measurements = pbq.products[0].lookup_measurements(pbq.bands)
             fuse_func = pbq.fuse_func
             if pbq.manual_merge:
@@ -258,6 +261,18 @@ class DataStacker:
                             data_new_bands[band] = timed_band_data
                     data = data.assign(data_new_bands)
                     continue
+            elif len(qry_result.time) == 0:
+                # Time-aware mask product has no data, but main product does.
+                var = "No data vars in result"
+                for var in data.data_vars.variables.keys():
+                    break
+                template = getattr(data, var)
+                new_data = numpy.ndarray(template.shape)
+                new_data.fill(0)
+                qry_result = template.copy(data=new_data)
+                data_new_bands = {}
+                for band in pbq.bands:
+                    data_new_bands[band] = qry_result
             qry_result.coords["time"] = data.coords["time"]
             data = xarray.combine_by_coords([data, qry_result], join="exact")
 
