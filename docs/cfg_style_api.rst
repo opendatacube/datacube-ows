@@ -123,6 +123,13 @@ There are two API functions that provide this functionality: ``apply_ows_style``
     image = apply_ows_style_cfg(cfg, data, valid_data_mask=mask)
     image = apply_ows_style(style, data, valid_data_mask=mask)
 
+For more detailed examples,
+refer to the
+`styling how-to guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto.html>`_.
+
+Saving or Displaying Images
+---------------------------
+
 A helper method is provided to convert a uint8 RGBA Xarray (such as are returned by
 the ``apply_ows_style`` methods discussed above) into a PNG image:
 
@@ -131,9 +138,35 @@ the ``apply_ows_style`` methods discussed above) into a PNG image:
     with open("filename.png", "wb") as fp:
         fp.write(xarray_image_as_png(image)
 
-For more detailed examples,
-refer to the
-`styling how-to guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto.html>`_.
+
+Helper methods are also supplied to display uint8 RGBA Xarray images via matplotlib
+(e.g. for JupyterHub and similar environments):
+
+::
+
+    # Displaying an xarray image (assumes coordinates are called "x" and "y")
+    plot_image(image)
+
+    # Displaying an xarray image, specifying the horizontal and vertical coordinate names
+    plot_image(image, x="Longitude", y="Latitude")
+
+    # Displaying an xarray image, specifying image height in inches (defaults to 10)
+    plot_image(image, size=4)
+
+Shortcut methods are also available for applying a style to some data and displaying the image in
+one step:
+
+::
+
+    # Using a standalone style object
+    plot_image_with_style(style, data, x="long", y="lat", size=7.5)
+
+    # Using a style configuration dictionary
+    plot_image_with_style_cfg({
+                "index_expression": "(nir-red)/(nir+red)",
+                "mpl_ramp": "ocean_r",
+                "range": [0,1],
+            }, data, x="long", y="lat", size=7.5)
 
 Bulk Processing
 ---------------
