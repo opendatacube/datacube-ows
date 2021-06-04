@@ -9,6 +9,7 @@ from datacube_ows.styles.api import (StandaloneStyle, apply_ows_style,
                                      apply_ows_style_cfg, create_geobox,
                                      generate_ows_legend_style,
                                      generate_ows_legend_style_cfg,
+                                     plot_image, plot_image_with_style, plot_image_with_style_cfg,
                                      xarray_image_as_png)
 
 
@@ -416,4 +417,18 @@ def test_loopover(xyt_dummydata, multi_date_cfg):
     assert len(image.x) == len(xyt_dummydata.x)
     assert len(image.y) == len(xyt_dummydata.y)
     assert len(image.time) == len(xyt_dummydata.time)
+
+
+def test_plot_image(dummy_raw_data, simple_rgb_style_cfg):
+    image = apply_ows_style_cfg(simple_rgb_style_cfg, dummy_raw_data)
+    plot_image(image)
+
+
+def test_plot_image_with_style(dummy_raw_data, simple_rgb_style_cfg):
+    style = StandaloneStyle(simple_rgb_style_cfg)
+    plot_image_with_style(style, dummy_raw_data)
+
+
+def test_plot_image_with_style_cfg(dummy_raw_data, simple_rgb_style_cfg):
+    plot_image_with_style_cfg(simple_rgb_style_cfg, dummy_raw_data)
 
