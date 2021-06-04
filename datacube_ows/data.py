@@ -273,6 +273,8 @@ class DataStacker:
                 data_new_bands = {}
                 for band in pbq.bands:
                     data_new_bands[band] = qry_result
+                data = data.assign(data_new_bands)
+                continue
             qry_result.coords["time"] = data.coords["time"]
             data = xarray.combine_by_coords([data, qry_result], join="exact")
 
