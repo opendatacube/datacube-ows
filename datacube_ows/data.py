@@ -243,12 +243,15 @@ class DataStacker:
                         for var in data.data_vars.variables.keys():
                             break
                         template = getattr(data, var)
-                        new_data = numpy.ndarray(template.shape)
+                        new_data = numpy.ndarray(template.shape, dtype="uint8")
                         new_data.fill(0)
                         qry_result = template.copy(data=new_data)
                         data_new_bands = {}
                         for band in pbq.bands:
                             data_new_bands[band] = qry_result
+                        data = data.assign(data_new_bands)
+                        for band in pbq.bands:
+                            data[band].attrs["flags_definition"] = pbq.products[0].measurements[band].flags_definition
                     else:
                         data_new_bands = {}
                         for band in pbq.bands:
