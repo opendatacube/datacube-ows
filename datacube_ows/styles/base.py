@@ -77,7 +77,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if self.stand_alone:
             self.flag_products = []
         else:
-            self.flag_products = FlagProductBands.build_list_from_masks(self.masks)
+            self.flag_products = FlagProductBands.build_list_from_masks(self.masks, self.product)
 
         self.raw_needed_bands = set()
         self.raw_flag_bands = set()

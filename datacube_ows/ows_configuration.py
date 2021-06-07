@@ -508,7 +508,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
             pq_names_to_lowres_names[pns] = lrpns
         # pylint: disable=dict-values-not-iterating
-        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values())
+        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values(), self)
 
     # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):

@@ -410,8 +410,9 @@ class OWSFlagBand(OWSConfigEntry):
 
 
 class FlagProductBands(OWSConfigEntry):
-    def __init__(self, flag_band):
+    def __init__(self, flag_band, layer):
         super().__init__({})
+        self.layer = layer
         self.bands = set()
         self.bands.add(flag_band.pq_band)
         self.flag_bands = {flag_band.pq_band: flag_band}
@@ -421,6 +422,9 @@ class FlagProductBands(OWSConfigEntry):
         self.declare_unready("low_res_products")
         self.manual_merge = flag_band.pq_manual_merge
         self.fuse_func = flag_band.pq_fuse_func
+        self.main_product = self.products_match(layer.product_names)
+        if self.main_product:
+            self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
 
     def products_match(self, product_names):
         return tuple(product_names) == self.product_names
@@ -448,7 +452,7 @@ class FlagProductBands(OWSConfigEntry):
         super().make_ready(dc, *args, **kwargs)
 
     @classmethod
-    def build_list_from_masks(cls, masks):
+    def build_list_from_masks(cls, masks, layer):
         flag_products = []
         for mask in masks:
             handled = False
@@ -458,11 +462,11 @@ class FlagProductBands(OWSConfigEntry):
                     handled = True
                     break
             if not handled:
-                flag_products.append(cls(mask.band))
+                flag_products.append(cls(mask.band, layer))
         return flag_products
 
     @classmethod
-    def build_list_from_flagbands(cls, flagbands):
+    def build_list_from_flagbands(cls, flagbands, layer):
         flag_products = []
         for fb in flagbands:
             handled = False
@@ -472,5 +476,5 @@ class FlagProductBands(OWSConfigEntry):
                 handled = True
                 break
             if not handled:
-                flag_products.append(cls(fb))
+                flag_products.append(cls(fb, layer))
         return flag_products
