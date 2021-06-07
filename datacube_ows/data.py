@@ -210,6 +210,21 @@ class DataStacker:
                 return result
         return OrderedDict(results)
 
+    def create_zero_filled_flag_bands(self, data, pbq):
+        var = "No data vars in result"
+        for var in data.data_vars.variables.keys():
+            break
+        template = getattr(data, var)
+        new_data = numpy.ndarray(template.shape, dtype="uint8")
+        new_data.fill(0)
+        qry_result = template.copy(data=new_data)
+        data_new_bands = {}
+        for band in pbq.bands:
+            data_new_bands[band] = qry_result
+        data = data.assign(data_new_bands)
+        for band in pbq.bands:
+            data[band].attrs["flags_definition"] = pbq.products[0].measurements[band].flags_definition
+
     @log_call
     def data(self, datasets_by_query, skip_corrections=False):
         # pylint: disable=too-many-locals, consider-using-enumerate
@@ -239,19 +254,8 @@ class DataStacker:
                     qry_result["time"] = data.time
                 else:
                     if len(qry_result.time) == 0:
-                        var = "No data vars in result"
-                        for var in data.data_vars.variables.keys():
-                            break
-                        template = getattr(data, var)
-                        new_data = numpy.ndarray(template.shape, dtype="uint8")
-                        new_data.fill(0)
-                        qry_result = template.copy(data=new_data)
-                        data_new_bands = {}
-                        for band in pbq.bands:
-                            data_new_bands[band] = qry_result
-                        data = data.assign(data_new_bands)
-                        for band in pbq.bands:
-                            data[band].attrs["flags_definition"] = pbq.products[0].measurements[band].flags_definition
+                        self.create_zero_filled_flag_bands(data, pbq)
+                        continue
                     else:
                         data_new_bands = {}
                         for band in pbq.bands:
@@ -266,19 +270,7 @@ class DataStacker:
                     continue
             elif len(qry_result.time) == 0:
                 # Time-aware mask product has no data, but main product does.
-                var = "No data vars in result"
-                for var in data.data_vars.variables.keys():
-                    break
-                template = getattr(data, var)
-                new_data = numpy.ndarray(template.shape, dtype="uint8")
-                new_data.fill(0)
-                qry_result = template.copy(data=new_data)
-                data_new_bands = {}
-                for band in pbq.bands:
-                    data_new_bands[band] = qry_result
-                data = data.assign(data_new_bands)
-                for band in pbq.bands:
-                    data[band].attrs["flags_definition"] = pbq.products[0].measurements[band].flags_definition
+                self.create_zero_filled_flag_bands(data, pbq)
                 continue
             qry_result.coords["time"] = data.coords["time"]
             data = xarray.combine_by_coords([data, qry_result], join="exact")
