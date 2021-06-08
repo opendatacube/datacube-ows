@@ -155,7 +155,7 @@ style_ndvi = {
 }
 
 style_ndvi_expr = {
-    "name": "ndvi",
+    "name": "ndvi_expr",
     "title": "NDVI",
     "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
     "index_expression": "(nir-red)/(nir+red)",
