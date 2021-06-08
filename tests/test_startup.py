@@ -9,7 +9,6 @@ from unittest.mock import MagicMock, patch
 
 import flask
 import pytest
-import os
 
 
 def test_fake_creds(monkeypatch):
