@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import flask
 import pytest
+import os
 
 
 def test_fake_creds(monkeypatch):
@@ -25,6 +26,12 @@ def test_fake_creds(monkeypatch):
         initialise_aws_credentials()
         assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
 
+def test_s3_endpoint_default(monkeypatch):
+    from datacube_ows.startup_utils import initialise_aws_credentials
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
+    monkeypatch.setenv("AWS_S3_ENDPOINT", "")
+    initialise_aws_credentials()
+    assert "AWS_S3_ENDPOINT" not in os.environ
 
 def test_initialise_logger():
     from datacube_ows.startup_utils import initialise_logger
