@@ -105,7 +105,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             for mask in self.masks:
                 fb = mask.band
                 if fb.pq_names == self.product.product_names:
-                    self.needed_bands.add(fb.pq_band)
+                    self.needed_bands.add(self.local_band(fb.pq_band))
                     self.flag_bands.add(fb.pq_band)
                     continue
                 handled = False
