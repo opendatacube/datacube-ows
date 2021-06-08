@@ -105,6 +105,9 @@ def initialise_aws_credentials(log=None):
             else:
                 log.info("S3 access configured with signed requests")
         credentials = configure_s3_access(aws_unsigned=unsigned, requester_pays=requester_pays)
+
+        if "AWS_S3_ENDPOINT" in os.environ and os.environ["AWS_S3_ENDPOINT"] == "":
+            del os.environ["AWS_S3_ENDPOINT"]
     elif log:
         log.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
