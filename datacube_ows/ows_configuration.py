@@ -108,9 +108,9 @@ class BandIndex(OWSConfigEntry):
         super().make_ready(dc, *args, **kwargs)
 
     def band(self, name_alias):
-        if name_alias not in self._idx:
-            raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
-        return self._idx[name_alias]
+        if name_alias in self._idx:
+            return self._idx[name_alias]
+        raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
 
     def band_label(self, name_alias):
         name = self.band(name_alias)

@@ -423,8 +423,6 @@ class FlagProductBands(OWSConfigEntry):
         self.manual_merge = flag_band.pq_manual_merge
         self.fuse_func = flag_band.pq_fuse_func
         self.main_product = self.products_match(layer.product_names)
-        if self.main_product:
-            self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
 
     def products_match(self, product_names):
         return tuple(product_names) == self.product_names
@@ -449,6 +447,8 @@ class FlagProductBands(OWSConfigEntry):
             self.products = fb.pq_products
             self.low_res_products = fb.pq_low_res_products
             break
+        if self.main_product:
+            self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
         super().make_ready(dc, *args, **kwargs)
 
     @classmethod
