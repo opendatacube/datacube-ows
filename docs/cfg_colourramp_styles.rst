@@ -539,7 +539,7 @@ An aggregator function is defined that takes
 aggregator_function
 ===================
 
-The `aggegator_function` entry is required for colour ramp style
+The `aggregator_function` entry is required for colour ramp style
 multi-date handlers.  It is a function defined using OWS's
 `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 
@@ -578,7 +578,7 @@ E.g. ::
         # Only 2 dates makes sense for delta.
         "allowed_count_range": [2,2],
         # Calculating the difference
-        "aggegator_function": {
+        "aggregator_function": {
             "function": "datacube_ows.band_utils.multi_date_delta",
         },
         # The delta colour ramp.
