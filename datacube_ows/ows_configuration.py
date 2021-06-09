@@ -108,9 +108,9 @@ class BandIndex(OWSConfigEntry):
         super().make_ready(dc, *args, **kwargs)
 
     def band(self, name_alias):
-        if name_alias not in self._idx:
-            raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
-        return self._idx[name_alias]
+        if name_alias in self._idx:
+            return self._idx[name_alias]
+        raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
 
     def band_label(self, name_alias):
         name = self.band(name_alias)
@@ -508,7 +508,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
             pq_names_to_lowres_names[pns] = lrpns
         # pylint: disable=dict-values-not-iterating
-        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values())
+        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values(), self)
 
     # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):

@@ -77,7 +77,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if self.stand_alone:
             self.flag_products = []
         else:
-            self.flag_products = FlagProductBands.build_list_from_masks(self.masks)
+            self.flag_products = FlagProductBands.build_list_from_masks(self.masks, self.product)
 
         self.raw_needed_bands = set()
         self.raw_flag_bands = set()
@@ -105,7 +105,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             for mask in self.masks:
                 fb = mask.band
                 if fb.pq_names == self.product.product_names:
-                    self.needed_bands.add(fb.pq_band)
+                    self.needed_bands.add(self.local_band(fb.pq_band))
                     self.flag_bands.add(fb.pq_band)
                     continue
                 handled = False

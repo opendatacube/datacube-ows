@@ -94,7 +94,6 @@ class ProductBandQuery:
                                    manual_merge=layer.data_manual_merge,
                                    fuse_func=layer.fuse_func,
                                    resource_limited=False)
-
         ]
         for fpb in layer.allflag_productbands:
             if fpb.products_match(layer.product_names):
