@@ -239,18 +239,17 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 {
                     # Make noncontiguous and invalid data transparent
                     "title": "",
-                    "abstract": "",
                     "flags": {
                         "or": {
                             "noncontiguous": True,
                             "nodata": True,
+                        },
                     },
                     "alpha": 0.0,
                     "color": "#ffffff",
                 },
                 {
                     "title": "Cloudy Steep Terrain",
-                    "abstract": "",
                     "flags": {
                         "and": {
                             "high_slope": True,
@@ -261,7 +260,6 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 },
                 {
                     "title": "Cloudy Water",
-                    "abstract": "",
                     "flags": {
                         "and": {
                             "water_observed": True,
@@ -272,7 +270,6 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 },
                 {
                     "title": "Shaded Water",
-                    "abstract": "",
                     "flags": {
                         "and": {
                             "water_observed": True,
@@ -283,19 +280,16 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 },
                 {
                     "title": "Cloud",
-                    "abstract": "",
                     "flags": {"cloud": True},
                     "color": "#c2c1c0",
                 },
                 {
                     "title": "Cloud Shadow",
-                    "abstract": "",
                     "flags": {"cloud_shadow": True},
                     "color": "#4b4b37",
                 },
                 {
                     "title": "Terrain Shadow or Low Sun Angle",
-                    "abstract": "",
                     flags": {
                         "or": {
                             "terrain_shadow": True,
@@ -313,9 +307,7 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 {
                     "title": "Water",
                     "abstract": "",
-                    "flags": {
-                        "water_observed": True,
-                    },
+                    "flags": {"water_observed": True},
                     "color": "#4f81bd",
                 },
                 {
