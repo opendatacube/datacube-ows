@@ -147,7 +147,7 @@ Datacube OWS defines a wide range of utility functions in `datacube_ows.band_uti
 can implement the style above using the supplied normalised difference function ``norm_diff``, all you
 have to do is pass in the band names.
 
-A list of avaialable band utility functions can be found
+A list of available band utility functions can be found
 `in the documentation <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html#band-utils-functions>`_.
 
 Example: red-ndvi-blue (half scale)
