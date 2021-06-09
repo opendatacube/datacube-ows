@@ -29,7 +29,7 @@ on Christmas Day 2020 and yields a 1038 by 815 pixel image:
     from datacube import Datacube
     dc = Datacube()
 
-    data = dc.load(
+    wofs_data = dc.load(
         product='ga_ls_wo_3',
         measurements=['water'],
         latitude=(-15.9098, -15.0496),
