@@ -1,0 +1,54 @@
+---
+name: docker checker
+
+on:
+  pull_request:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!*.rst'
+      - '!*.md'
+      - '!datacube_ows/__init__.py'
+
+  push:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!*.rst'
+      - '!*.md'
+      - '!datacube_ows/__init__.py'
+
+env:
+  ORG: opendatacube
+  IMAGE: ows-local
+
+jobs:
+  dive:
+    runs-on: ubuntu-latest
+    name: Analyze image efficiency
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: lint
+        uses: luke142367/Docker-Lint-Action@v1.0.0
+        with:
+          target: Dockerfile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        run: |
+          docker build -t ${ORG}/${IMAGE}:latest .
+
+      - name: Dive
+        uses: yuichielectric/dive-action@0.0.3
+        with:
+          image: ${{ env.ORG }}/${{ env.IMAGE}}:latest
+          config-file: ${{ github.workspace }}/dive-ci.yml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker image size check
+        uses: wemake-services/docker-image-size-limit@master
+        with:
+          image: ${{ env.ORG }}/${{ env.IMAGE}}:latest
+          size: "1.1 GiB"
