@@ -37,8 +37,6 @@ ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     SHELL=bash
 
-ENV PATH="/env/bin:${PATH}"
-
 RUN apt-get update && apt-get install -y --no-install-recommends\
     curl \
     gnupg \
