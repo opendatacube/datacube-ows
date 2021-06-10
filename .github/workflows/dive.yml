@@ -11,8 +11,6 @@ on:
       - '!datacube_ows/__init__.py'
 
   push:
-    branches:
-      - 'master'
     paths:
       - '**'
       - '!docs/**'

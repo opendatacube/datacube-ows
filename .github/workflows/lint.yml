@@ -15,8 +15,6 @@ on:
       - '!.github/**'
 
   push:
-    branches:
-      - 'master'
     paths:
       - '**'
       - '.github/workflows/lint.yml'

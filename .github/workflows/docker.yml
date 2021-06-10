@@ -3,8 +3,6 @@ name: Build Docker Image
 
 on:
   push:
-    branches:
-      - master
     paths:
       - "**"
       - '!docs/**'
