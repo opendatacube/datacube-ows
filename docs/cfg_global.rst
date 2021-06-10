@@ -14,15 +14,67 @@ to all services and all layers/coverages.
 
 The Global section is always required and contains the following entries:
 
-Message File (message_file)
-===========================
+Metadata Separation and Internationalisation
+============================================
 
-The "message_file" entry gives the path to the message file used for
+The following global configuration items are relevant to
 `metadata separation and internationalisation
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
 
+Message File (message_file)
++++++++++++++++++++++++++++
+
+The "message_file" entry gives the path to the message file.
+
 Any metadata fields supplied in the metadata file will over-ride the values
 supplied in the configuration.
+
+This is also used as the default message template file location by the ``datacube-ows-cfg (cfg_parser.py)`` utility
+when either extracting metadata from config or creating or updating translation templates.
+
+The default is None/null, meaning no message file is used.
+
+Message Domain (message_domain)
++++++++++++++++++++++++++++++++
+
+The message domain used by internationalisation.  Defaults to "ows_cfg".
+
+
+Translations Directory (translations_directory)
++++++++++++++++++++++++++++++++++++++++++++++++
+
+The path to the directory containing translation subdirectories.  Traditionally known as "locales".
+Defaults to None, meaning no translation support.
+
+Required for internationalisation.
+
+Supported Languages (supported_languages)
++++++++++++++++++++++++++++++++++++++++++
+
+A list of supported languages for internationalisation.  Defaults to English only (``['en']``).
+The first language listed is treated as the default language, and it is assumed that all metadata
+in the main configuration and in the message file are in this default language, with all other
+supported languages being translations derived from the default.
+
+List members should be two or three letter ISO-639 language code.
+
+Internationalisation is activated if ``translations_directory`` points to a valid locales
+directory structure and ``supported_languages`` includes more than one language.
+
+E.g.
+
+::
+
+    "message_file": "my_project_messages.po",
+    "message_domain": "my_project",
+    "translations_directory": "/config/translations",
+    "supported_languages": [
+        "en", # English  - the default language, the language used in the untranslated metadata.
+        "fr", # French
+        "de", # German
+        "sw", # Swahili
+        "egy", # Ancient Egyptian - 3 letter ISO-639-2 codes are fine!
+    ]
 
 Service Title (title)
 =====================

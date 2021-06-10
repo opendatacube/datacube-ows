@@ -60,12 +60,6 @@ style_rgb = {
     # The raw band value range to be compressed to an 8 bit range for the output image tiles.
     # Band values outside this range are clipped to 0 or 255 as appropriate.
     "scale_range": [0.0, 65535.0],
-    "pq_masks": [
-        {
-            "band": "quality",
-            "flags": {"cloud": False}
-        }
-    ]
 }
 
 style_rgb_clone = {
@@ -123,42 +117,6 @@ style_ndvi = {
     # List of bands used by this style. The band may not be passed to the index function if it is not declared
     # here, resulting in an error.  Band aliases can be used here.
     "needed_bands": ["red", "nir"],
-    # The color ramp. Values between specified entries have both their alphas and colours
-    # interpolated.
-    "color_ramp": [
-        # Any value less than the first entry will have colour and alpha of the first entry.
-        # (i.e. in this example all negative values will be fully transparent (alpha=0.0).)
-        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
-        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
-        {
-            # do not have to defined alpha value
-            # if no alpha is specified, alpha will default to 1.0 (fully opaque)
-            "value": 0.1,
-            "color": "#A35F18",
-        },
-        {"value": 0.2, "color": "#B88512"},
-        {"value": 0.3, "color": "#CEAC0E"},
-        {"value": 0.4, "color": "#E5D609"},
-        {"value": 0.5, "color": "#FFFF0C"},
-        {"value": 0.6, "color": "#C3DE09"},
-        {"value": 0.7, "color": "#88B808"},
-        {"value": 0.8, "color": "#529400"},
-        {"value": 0.9, "color": "#237100"},
-        # Values greater than the last entry will use the colour and alpha of the last entry.
-        # (N.B. This will not happen for this example because it is normalised so that 1.0 is
-        # maximum possible value.)
-        {"value": 1.0, "color": "#114D04"},
-    ],
-    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
-    # Defaults to True.
-    "include_in_feature_info": True,
-}
-
-style_ndvi_expr = {
-    "name": "ndvi_expr",
-    "title": "NDVI",
-    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-    "index_expression": "(nir-red)/(nir+red)",
     # The color ramp. Values between specified entries have both their alphas and colours
     # interpolated.
     "color_ramp": [
@@ -277,7 +235,6 @@ style_ls_simple_rgb = {
     "abstract": "Simple true-colour image, using the red, green and blue bands",
     "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
     "scale_range": [0.0, 3000.0],
-
 }
 
 style_fc_simple = {
@@ -488,9 +445,6 @@ ows_cfg = {
             "https://localhost/odc_ows",
             "https://alternateurl.domain.org/odc_ows",
         ],
-        "translations_directory": "/code/integration_tests/cfg/translations",
-        "supported_languages": ["en", "de"],
-
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",
@@ -681,7 +635,6 @@ ows_cfg = {
                     "flags": [
                         {
                             "band": "quality",
-                            "product": "ls8_usgs_level1_scene",
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "manual_merge": True,
@@ -718,7 +671,6 @@ ows_cfg = {
                             style_infrared_false_colour,
                             style_pure_ls8_blue,
                             style_ndvi,
-                            style_ndvi_expr,
                             style_ndvi_delta,
                             style_rgb_ndvi,
                         ],

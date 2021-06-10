@@ -77,7 +77,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if self.stand_alone:
             self.flag_products = []
         else:
-            self.flag_products = FlagProductBands.build_list_from_masks(self.masks)
+            self.flag_products = FlagProductBands.build_list_from_masks(self.masks, self.product)
 
         self.raw_needed_bands = set()
         self.raw_flag_bands = set()
@@ -87,6 +87,9 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.parse_legend_cfg(style_cfg.get("legend", {}))
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
+
+    def global_config(self):
+        return self.product.global_cfg
 
     def get_obj_label(self):
         return f"style.{self.product.name}.{self.name}"
@@ -102,7 +105,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             for mask in self.masks:
                 fb = mask.band
                 if fb.pq_names == self.product.product_names:
-                    self.needed_bands.add(fb.pq_band)
+                    self.needed_bands.add(self.local_band(fb.pq_band))
                     self.flag_bands.add(fb.pq_band)
                     continue
                 handled = False
@@ -425,7 +428,11 @@ class BandIdxProxy:
         return band
 
 
+class GlobalCfgProxy:
+    internationalised = False
+
+
 class StandaloneProductProxy:
     name = "standalone"
-    global_cfg = None
+    global_cfg = GlobalCfgProxy()
     band_idx = BandIdxProxy()

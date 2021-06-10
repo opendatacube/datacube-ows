@@ -105,7 +105,12 @@ If we wanted a greyscale image of a single band (say red), you could do this:
 Example: Mixing bands
 +++++++++++++++++++++
 
-What if we want to mix more than one band to make each channel? Here we average all three visible bands
+What if we want to mix more than one band to make each channel?  We can simply add more bands to the
+various colour channel dictionaries, with multiplying factors.  Normally we ensure that the multiplying
+factors for each channel sum to 1.0, so the result is a (possibly weighted) average of the input bands,
+but this is not enforced.
+
+Here we average all three visible bands
 into the red channel, put near infra-red in the green channel and average the two shortwave infrared
 bands to make the blue channel:
 
@@ -114,16 +119,22 @@ bands to make the blue channel:
     all_bands_cfg = {
         "components": {
             "red": {
-             "red": 0.333,
-             "green": 0.333,
-             "blue": 0.333,
+                # Weighting factors should sum to (close to) 1.0
+                # 0.333 + 0.333 + 0.333 = 0.999 ~ 1.0
+                "red": 0.333,
+                "green": 0.333,
+                "blue": 0.333,
             },
             "green": {
-             "nir": 1.0
+                # Weighting factors should sum to (close to) 1.0
+                # So use 1.0 for a single band.
+                "nir": 1.0
             },
             "blue": {
-             "swir1": 0.5,
-             "swir2": 0.5,
+                # Weighting factors should sum to (close to) 1.0
+                # 0.5 + 0.5 = 1.0
+                "swir1": 0.5,
+                "swir2": 0.5,
             },
         },
         "scale_range": (50, 3000),

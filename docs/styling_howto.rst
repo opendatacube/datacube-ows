@@ -32,6 +32,11 @@ For thorough technical description of the configuration format,
 `see the configuration documentation
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
 
+Setting up an ODC environment and installing datacube-ows is also beyond the scope
+of this HOWTO, but if you are using a JupyterHubs based system like DEA Sandbox,
+a `Quick Start Guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto_jupyter.html>`_
+is available.
+
 Introduction - Testing styles
 -----------------------------
 
@@ -95,6 +100,9 @@ The resulting image looks like this:
 
 `View full size
 <https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
+
+Refer to `the documentation <https://datacube-ows.readthedocs.io/en/latest/cfg_style_api.html>`_ for more
+information about the OWS styling API.
 
 `Next <https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html>`_
 we start to look at how style configurations work.

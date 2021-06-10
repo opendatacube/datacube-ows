@@ -46,7 +46,7 @@ For example, given this function, containing a simple unscaled implementation of
 
     def ndvi(data):
         # Returns data in range (-1, 1)
-        return (data["nir"] - data["red"]) / (data["nir"] + data["red")
+        return (data["nir"] - data["red"]) / (data["nir"] + data["red"])
 
 
 Using ``"green": ndvi,`` in the components dictionary would sort of work, but would
@@ -62,7 +62,7 @@ not what we want. We can add scaling like this:
         # Scale to [-1.0 - 1.0] to [0 - 255]
         scaled = ((unscaled + 1.0) * 255/2).clip(0, 255)
 
-        returned scaled
+        return scaled
 
     r_ndvi_b_fullrange_cfg = {
         "components": {
@@ -102,7 +102,6 @@ for a more streamlined solution to scaling:
 
 Example: red-ndvi-blue (half scale)
 +++++++++++++++++++++++++++++++++++
-
 
 ::
 
@@ -148,7 +147,7 @@ Datacube OWS defines a wide range of utility functions in `datacube_ows.band_uti
 can implement the style above using the supplied normalised difference function ``norm_diff``, all you
 have to do is pass in the band names.
 
-A list of avaialable band utility functions can be found
+A list of available band utility functions can be found
 `in the documentation <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html#band-utils-functions>`_.
 
 Example: red-ndvi-blue (half scale)

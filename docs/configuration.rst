@@ -7,6 +7,7 @@ OWS Configuration
    :hidden:
    :glob:
 
+   configuration
    cfg_global
    cfg_wms
    cfg_wmts
@@ -35,8 +36,8 @@ All examples in this documentation will always be presented in Python syntax.  J
 note that there are some important differences:
 
 1. JSON string literals must always be delimited with double quotes - so no Python-style single quote strings!
-2. JSON boolean literals are all lowercase (`true`, `false`) and Python boolean literals are title case (e.g.
-   `True`, `False`)
+2. JSON boolean literals are all lowercase (``true``, ``false``) and Python boolean literals are title case (e.g.
+   ``True``, ``False``)
 3. JSON does not allow commas after the last element of lists and objects (dictionaries in Python terms).
 4. JSON does not support comments of any kind.
 
@@ -292,25 +293,29 @@ To separate your metadata from config (either as an end in itself, or as prepara
 
 1. Add a unique ``label`` to each of your folder layers.
 
-   This step is strongly recommended optional. OWS will autogenerate
+   This step is optional, but strongly recommended. OWS will autogenerate
    a unique but non-obvious label for each folder if you do not supply one.
 
-2. Run ``python cfg_parser.py -c -m messages.po``
+2. Run ``datacube-ows-cfg extract -m messages.po``
 
-   This extracts all the translatable/human-readable text from your config file, and writes it to the named file in gettext "po" file
-   format.
+   This extracts all the translatable/human-readable text from your config file, and writes it to the
+   named file in gettext "po" file format.
 
-   Add ``"message_file": "/path/to/messages.po"`` to the global section of your OWS config file.
+3. Add ``"message_file": "/path/to/messages.po"`` to the global section of your OWS config file.
 
-   Subsequently, text in messages.po will over-ride text in the config file. Update as needed, restart wsgi process to take effect.
-   Any field not included in the message file will be loaded directly from the config, as previously.
+   Subsequently, text in messages.po will over-ride text in the config file. Update as needed, restart
+   wsgi process to take effect. Any field not included in the message file will be loaded directly
+   from the config, as previously.
 
-The msgid's in the messages file are symbolic. E.g.
+The msgid's in the message file are symbolic. E.g.
 
 * ``global.title``: The title for the whole service.
 * ``folder.<label>.title``: The title for a folder, identified by label.
 * ``layer.<name>.title``: The title for a named layer, identified by name.
 * ``style.<layer_name>.<style_name>.title``: The title for a style, identified by layer name and style name.
+
+The msgstr's in the message file are the text used by OWS for global/layer/style metadata, in preference
+to the values in the config file.
 
 Fields that can be included in the message file are:
 
@@ -323,7 +328,54 @@ Fields that can be included in the message file are:
 *    Contact Info Organisation (global only)
 *    Contact Info Position (global only)
 
-N.B. Internationalisation/language translation, built on this foundation, is planned for a future release.
+Internationalisation/Translation of Metadata
+++++++++++++++++++++++++++++++++++++++++++++
+
+Once you have extracted your metadata into a single file, separate from the main body of configuration,
+as described `above <#metadata-separation>`_, generate a translation catalog for every language you want
+translations for - including the "native" language that your messages file is already in:
+
+::
+
+    # Create new translation catalogs for English (en), German (de), French (Fr) and Swahili (Sw).
+
+    datacube-ows-cfg translation -n -D my_ows_project -d /config/translations -m /config/messages.po en de fr sw
+
+This will create the following files:
+
+::
+
+   /config/translations/en/LC_MESSAGES/my_ows_project.po
+   /config/translations/de/LC_MESSAGES/my_ows_project.po
+   /config/translations/fr/LC_MESSAGES/my_ows_project.po
+   /config/translations/sw/LC_MESSAGES/my_ows_project.po
+
+
+These files are currently identical, apart from the language in the header.  These files should be distributed to
+translators for the respective languages.  The translators keep the file in the same format, but replace
+the ``msg_str`` sections with the translated text in their language and return the translated message
+file to you.  Then you keep then save them into the directory structure above, replacing the untranslated
+templates.
+
+Once the translations have been placed in translations directory, they must be compiled:
+
+::
+
+    datacube-ows-cfg compile -D my_ows_project -d /config/translations en de fr sw
+
+This creates the following machine-readable message (.mo) files:
+
+::
+
+   /config/translations/en/LC_MESSAGES/my_ows_project.mo
+   /config/translations/de/LC_MESSAGES/my_ows_project.mo
+   /config/translations/fr/LC_MESSAGES/my_ows_project.mo
+   /config/translations/sw/LC_MESSAGES/my_ows_project.mo
+
+You can now update the
+`global section of your OWS Configuration <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#metadata-separation-and-internationalisation>`_
+section and restart the web service and
+you are serving multi-lingually!  (Adjust your client's "Accept-Language" header to test.)
 
 General Config Structure
 ------------------------

@@ -11,7 +11,7 @@
 #
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
-
+import datetime
 import json
 import logging
 import math
@@ -19,6 +19,8 @@ import os
 from collections.abc import Mapping
 from importlib import import_module
 
+from babel.messages.catalog import Catalog
+from babel.messages.pofile import read_po
 from datacube.utils import geometry
 from ows import Version
 from slugify import slugify
@@ -26,9 +28,9 @@ from slugify import slugify
 from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
-                                       OWSMessageFile, OWSMetadataConfig,
-                                       cfg_expand, get_file_loc,
-                                       import_python_obj, load_json_obj)
+                                       OWSMetadataConfig, cfg_expand,
+                                       get_file_loc, import_python_obj,
+                                       load_json_obj)
 from datacube_ows.cube_pool import cube, get_cube, release_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
@@ -106,9 +108,9 @@ class BandIndex(OWSConfigEntry):
         super().make_ready(dc, *args, **kwargs)
 
     def band(self, name_alias):
-        if name_alias not in self._idx:
-            raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
-        return self._idx[name_alias]
+        if name_alias in self._idx:
+            return self._idx[name_alias]
+        raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
 
     def band_label(self, name_alias):
         name = self.band(name_alias)
@@ -194,6 +196,9 @@ class OWSLayer(OWSMetadataConfig):
             self.attribution = self.parent_layer.attribution
         else:
             self.attribution = self.global_cfg.attribution
+
+    def global_config(self):
+        return self.global_cfg
 
     def can_inherit_from(self):
         if self.parent_layer:
@@ -503,7 +508,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise ConfigException(f"Product name mismatch in flags section for layer {self.name}: product_names {pns} has multiple distinct low-res product names")
             pq_names_to_lowres_names[pns] = lrpns
         # pylint: disable=dict-values-not-iterating
-        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values())
+        self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values(), self)
 
     # pylint: disable=attribute-defined-outside-init
     def parse_urls(self, cfg):
@@ -1031,14 +1036,15 @@ class OWSConfig(OWSMetadataConfig):
                 raise ConfigException(
                     "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
                 )
+            self.catalog = None
             self.initialised = True
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
         if self.msg_file_name:
             try:
-                with open(self.msg_file_name, "r") as fp:
-                    self.set_msg_src(OWSMessageFile(fp))
+                with open(self.msg_file_name, "rb") as fp:
+                    self.set_msg_src(read_po(fp, locale=self.default_locale, domain=self.message_domain))
             except FileNotFoundError:
                 _LOG.warning("Message file %s does not exist - using metadata from config file", self.msg_file_name)
         else:
@@ -1048,16 +1054,33 @@ class OWSConfig(OWSMetadataConfig):
         super().make_ready(dc, *args, **kwargs)
 
     def export_metadata(self):
-        for k, v in self._metadata_registry.items():
-            if self._inheritance_registry[k]:
-                continue
-            if k in [
-                    "folder.ows_root_hidden.title",
-                    "folder.ows_root_hidden.abstract",
-                    "folder.ows_root_hidden.local_keywords",
-             ]:
-                continue
-            yield k, v
+        if self.catalog is None:
+            now = datetime.datetime.now()
+            self.catalog = Catalog(locale=self.default_locale,
+                                   domain=self.message_domain,
+                                   header_comment=f"""# Translations for datacube-ows metadata instance:
+#      {self.title}
+#
+# {self.contact_info.organisation} {now.isoformat()} 
+#""",
+                                   project=self.title,
+                                   version=f"{now.isoformat()}",
+                                   copyright_holder=self.contact_info.organisation,
+                                   msgid_bugs_address=self.contact_info.email,
+                                   creation_date=now,
+                                   revision_date=now,
+                                   fuzzy=False)
+            for k, v in self._metadata_registry.items():
+                if self._inheritance_registry[k]:
+                    continue
+                if k in [
+                        "folder.ows_root_hidden.title",
+                        "folder.ows_root_hidden.abstract",
+                        "folder.ows_root_hidden.local_keywords",
+                 ]:
+                    continue
+                self.catalog.add(id=k, string=v, auto_comments=[v])
+        return self.catalog
 
     def parse_global(self, cfg, ignore_msgfile):
         self._response_headers = cfg.get("response_headers", {})
@@ -1066,6 +1089,15 @@ class OWSConfig(OWSMetadataConfig):
         self.wcs = cfg.get("services", {}).get("wcs", False)
         if not self.wms and not self.wmts and not self.wcs:
             raise ConfigException("At least one service must be active.")
+        self.locales = cfg.get("supported_languages", ["en"])
+        if len(self.locales) < 1:
+            raise ConfigException("You must support at least one language.")
+        self.default_locale = self.locales[0]
+        self.message_domain = cfg.get("message_domain", "ows_cfg")
+        self.translations_dir = cfg.get("translations_directory")
+        self.internationalised = self.translations_dir and len(self.locales) > 1
+        if self.internationalised:
+            _LOG.info("Internationalisation enabled.")
         if ignore_msgfile:
             self.msg_file_name = None
         else:

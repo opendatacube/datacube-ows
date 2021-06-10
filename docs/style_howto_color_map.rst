@@ -29,7 +29,7 @@ on Christmas Day 2020 and yields a 1038 by 815 pixel image:
     from datacube import Datacube
     dc = Datacube()
 
-    data = dc.load(
+    wofs_data = dc.load(
         product='ga_ls_wo_3',
         measurements=['water'],
         latitude=(-15.9098, -15.0496),
@@ -137,11 +137,11 @@ matches determining the colour of the pixel.  Let's start with a simple example:
 
 The results look like this:
 
-.. image:: https://user-images.githubusercontent.com/4548530/113242261-44494b00-92fc-11eb-8f67-ff83a412746d.png
+.. image:: https://user-images.githubusercontent.com/4548530/121298369-1bb28280-c937-11eb-8f9d-bc3ab55a331e.png
     :width: 600
 
 `View full size:
-<https://user-images.githubusercontent.com/4548530/113242261-44494b00-92fc-11eb-8f67-ff83a412746d.png>`_
+<https://user-images.githubusercontent.com/4548530/121298369-1bb28280-c937-11eb-8f9d-bc3ab55a331e.png>`_
 
 This all looks a bit of a mess. The problem is that rules are evaluated in order, which can result in
 unexpected behaviour if you are not paying attention.
@@ -211,11 +211,11 @@ Let's construct a better ordering:
         }
     }
 
-.. image::  https://user-images.githubusercontent.com/4548530/113243120-2250c800-92fe-11eb-8554-360f0bb089d5.png
+.. image::  https://user-images.githubusercontent.com/4548530/121298626-895eae80-c937-11eb-9d26-32414c8eb7bc.png
     :width: 600
 
 `View full size:
-<https://user-images.githubusercontent.com/4548530/113243120-2250c800-92fe-11eb-8554-360f0bb089d5.png>`_
+<https://user-images.githubusercontent.com/4548530/121298626-895eae80-c937-11eb-9d26-32414c8eb7bc.png>`_
 
 Note the differences coming from the order in which the rules are evaluated.
 
@@ -233,24 +233,23 @@ Secondly, all pixels that do not match any rules default to being transparent.
 
 ::
 
-    transparency_map_config = {
+    transparency_map_cfg = {
         "value_map": {
             "water": [
                 {
                     # Make noncontiguous and invalid data transparent
                     "title": "",
-                    "abstract": "",
                     "flags": {
                         "or": {
                             "noncontiguous": True,
                             "nodata": True,
+                        },
                     },
                     "alpha": 0.0,
                     "color": "#ffffff",
                 },
                 {
                     "title": "Cloudy Steep Terrain",
-                    "abstract": "",
                     "flags": {
                         "and": {
                             "high_slope": True,
@@ -261,7 +260,6 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 },
                 {
                     "title": "Cloudy Water",
-                    "abstract": "",
                     "flags": {
                         "and": {
                             "water_observed": True,
@@ -272,7 +270,6 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 },
                 {
                     "title": "Shaded Water",
-                    "abstract": "",
                     "flags": {
                         "and": {
                             "water_observed": True,
@@ -283,20 +280,17 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 },
                 {
                     "title": "Cloud",
-                    "abstract": "",
                     "flags": {"cloud": True},
                     "color": "#c2c1c0",
                 },
                 {
                     "title": "Cloud Shadow",
-                    "abstract": "",
                     "flags": {"cloud_shadow": True},
                     "color": "#4b4b37",
                 },
                 {
                     "title": "Terrain Shadow or Low Sun Angle",
-                    "abstract": "",
-                    flags": {
+                    "flags": {
                         "or": {
                             "terrain_shadow": True,
                             "low_solar_angle": True
@@ -313,9 +307,7 @@ Secondly, all pixels that do not match any rules default to being transparent.
                 {
                     "title": "Water",
                     "abstract": "",
-                    "flags": {
-                        "water_observed": True,
-                    },
+                    "flags": {"water_observed": True},
                     "color": "#4f81bd",
                 },
                 {
@@ -332,11 +324,11 @@ As with the Colour Ramp examples already seen, transparency is declared with and
 0.0 (fully transparent) to 1.0 (fully opaque).  You must define a colour, even if alpha is zero.  Alpha is
 optional and defaults to 1.0 (fully opaque).
 
-.. image:: https://user-images.githubusercontent.com/4548530/113661392-560a6400-96e9-11eb-920d-26e7e8d84d7f.png
+.. image:: https://user-images.githubusercontent.com/4548530/121300057-a72d1300-c939-11eb-9b25-add2b2701709.png
     :width: 600
 
 `View full size:
-<https://user-images.githubusercontent.com/4548530/113661392-560a6400-96e9-11eb-920d-26e7e8d84d7f.png>`_
+<https://user-images.githubusercontent.com/4548530/121300057-a72d1300-c939-11eb-9b25-add2b2701709.png>`_
 
 The clouds are clearly visible, with only the separately derived terrain data and the noisy water-detection
 bits visible through the cloud, with clearly defined cloud shadows and clear water detection.

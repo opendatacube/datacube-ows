@@ -1,0 +1,528 @@
+# Translations for datacube-ows metadata instance:
+# Open web-services for the Open Data Cube
+#
+# Acme Corporation 2021-06-02T15:25:24.869477
+msgid ""
+msgstr ""
+"Project-Id-Version: Open web-services for the Open Data Cube "
+"2021-06-02T15:25:24.869477\n"
+"Report-Msgid-Bugs-To: test@example.com\n"
+"POT-Creation-Date: 2021-06-02 15:25+1005\n"
+"PO-Revision-Date: 2021-06-02 15:30+1000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#. Open web-services for the Open Data Cube
+msgid "global.title"
+msgstr "Open web-services for the Open Data Cube"
+
+#. This web-service serves georectified raster data from our very own special
+#. Open Datacube instance.
+msgid "global.abstract"
+msgstr ""
+"This web-service serves georectified raster data from our very own "
+"special Open Datacube instance."
+
+#. time-series,satellite,australia
+msgid "global.local_keywords"
+msgstr "time-series,satellite,australia"
+
+#. none
+msgid "global.fees"
+msgstr "none"
+
+#. none
+msgid "global.access_constraints"
+msgstr "none"
+
+#. Acme Corporation
+msgid "global.contact_org"
+msgstr "Acme Corporation"
+
+#. CIO (Chief Imaginary Officer)
+msgid "global.contact_position"
+msgstr "CIO (Chief Imaginary Officer)"
+
+#. Landsat
+msgid "folder.landsat.title"
+msgstr "Landsat"
+
+#. Images from the Landsat satellite
+msgid "folder.landsat.abstract"
+msgstr "Images from the Landsat satellite"
+
+#. landsat,landsat8,landsat7
+msgid "folder.landsat.local_keywords"
+msgstr "landsat,landsat8,landsat7"
+
+#. Open Data Cube - OWS
+msgid "folder.landsat.attribution_title"
+msgstr "Open Data Cube - OWS"
+
+#. Level 1 USGS Landsat-8 Public Data Set
+msgid "layer.ls8_usgs_level1_scene_layer.title"
+msgstr "Level 1 USGS Landsat-8 Public Data Set"
+
+#. Imagery from the Level 1 Landsat-8 USGS Public Data Set
+msgid "layer.ls8_usgs_level1_scene_layer.abstract"
+msgstr "Imagery from the Level 1 Landsat-8 USGS Public Data Set"
+
+msgid "layer.ls8_usgs_level1_scene_layer.local_keywords"
+msgstr ""
+
+#. Simple RGB
+msgid "style.ls8_usgs_level1_scene_layer.simple_rgb.title"
+msgstr "Simple RGB"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.ls8_usgs_level1_scene_layer.simple_rgb.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. Simple RGB Clone
+msgid "style.ls8_usgs_level1_scene_layer.simple_rgb_clone.title"
+msgstr "Simple RGB Clone"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.ls8_usgs_level1_scene_layer.simple_rgb_clone.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. False colour multi-band infra-red
+msgid "style.ls8_usgs_level1_scene_layer.infra_red.title"
+msgstr "False colour multi-band infra-red"
+
+#. Simple false-colour image, using the near and short-wave infra-red bands
+msgid "style.ls8_usgs_level1_scene_layer.infra_red.abstract"
+msgstr "Simple false-colour image, using the near and short-wave infra-red bands"
+
+#. Spectral band 2 - Blue
+msgid "style.ls8_usgs_level1_scene_layer.blue.title"
+msgstr "Spectral band 2 - Blue"
+
+#. Blue band, approximately 453nm to 511nm
+msgid "style.ls8_usgs_level1_scene_layer.blue.abstract"
+msgstr "Blue band, approximately 453nm to 511nm"
+
+#. NDVI
+msgid "style.ls8_usgs_level1_scene_layer.ndvi.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.ls8_usgs_level1_scene_layer.ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI Delta
+msgid "style.ls8_usgs_level1_scene_layer.ndvi_delta.title"
+msgstr "NDVI Delta"
+
+#. Normalised Difference Vegetation Index - with delta support
+msgid "style.ls8_usgs_level1_scene_layer.ndvi_delta.abstract"
+msgstr "Normalised Difference Vegetation Index - with delta support"
+
+#. NDVI plus RGB
+msgid "style.ls8_usgs_level1_scene_layer.rgb_ndvi.title"
+msgstr "NDVI plus RGB"
+
+#. Normalised Difference Vegetation Index (blended with RGB) - a derived index
+#. that correlates well with the existence of vegetation
+msgid "style.ls8_usgs_level1_scene_layer.rgb_ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index (blended with RGB) - a derived "
+"index that correlates well with the existence of vegetation"
+
+#. Level 1 USGS Landsat-8 Public Data Set Clone
+msgid "layer.ls8_usgs_level1_scene_layer_clone.title"
+msgstr "Level 1 USGS Landsat-8 Public Data Set Clone"
+
+#. Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone
+msgid "layer.ls8_usgs_level1_scene_layer_clone.abstract"
+msgstr "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone"
+
+msgid "layer.ls8_usgs_level1_scene_layer_clone.local_keywords"
+msgstr ""
+
+#. Simple RGB
+msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb.title"
+msgstr "Simple RGB"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. Simple RGB Clone
+msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb_clone.title"
+msgstr "Simple RGB Clone"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb_clone.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. False colour multi-band infra-red
+msgid "style.ls8_usgs_level1_scene_layer_clone.infra_red.title"
+msgstr "False colour multi-band infra-red"
+
+#. Simple false-colour image, using the near and short-wave infra-red bands
+msgid "style.ls8_usgs_level1_scene_layer_clone.infra_red.abstract"
+msgstr "Simple false-colour image, using the near and short-wave infra-red bands"
+
+#. Spectral band 2 - Blue
+msgid "style.ls8_usgs_level1_scene_layer_clone.blue.title"
+msgstr "Spectral band 2 - Blue"
+
+#. Blue band, approximately 453nm to 511nm
+msgid "style.ls8_usgs_level1_scene_layer_clone.blue.abstract"
+msgstr "Blue band, approximately 453nm to 511nm"
+
+#. NDVI
+msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI Delta
+msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_delta.title"
+msgstr "NDVI Delta"
+
+#. Normalised Difference Vegetation Index - with delta support
+msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_delta.abstract"
+msgstr "Normalised Difference Vegetation Index - with delta support"
+
+#. NDVI plus RGB
+msgid "style.ls8_usgs_level1_scene_layer_clone.rgb_ndvi.title"
+msgstr "NDVI plus RGB"
+
+#. Normalised Difference Vegetation Index (blended with RGB) - a derived index
+#. that correlates well with the existence of vegetation
+msgid "style.ls8_usgs_level1_scene_layer_clone.rgb_ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index (blended with RGB) - a derived "
+"index that correlates well with the existence of vegetation"
+
+#. Fractional Cover
+msgid "folder.fc.title"
+msgstr "Fractional Cover"
+
+#. Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers
+#. Equal Area projection (EPSG:3577). Data is only visible at higher
+#. resolutions; when zoomed-out the available area will be displayed as a
+#. shaded region. Fractional cover provides information about the the
+#. proportions of green vegetation, non-green vegetation (including deciduous
+#. trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m
+#. ground footprint. Fractional cover provides insight into how areas of dry
+#. vegetation and/or bare soil and green vegetation are changing over time. The
+#. fractional cover algorithm was developed by the Joint Remote Sensing
+#. Research Program, for more information please see
+#. data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+#. Fractional Cover products use Water Observations from Space (WOfS) to mask
+#. out areas of water, cloud and other phenomena. To be considered in the FCP
+#. product a pixel must have had at least 10 clear observations over the year.
+#. For service status information, see https://status.dea.ga.gov.au
+msgid "folder.fc.abstract"
+msgstr ""
+"\n"
+"Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers "
+"Equal Area projection (EPSG:3577). Data is only visible at higher "
+"resolutions; when zoomed-out the available area will be displayed as a "
+"shaded region.\n"
+"Fractional cover provides information about the the proportions of green "
+"vegetation, non-green vegetation (including deciduous trees during "
+"autumn, dry grass, etc.), and bare areas for every 25m x 25m ground "
+"footprint. Fractional cover provides insight into how areas of dry "
+"vegetation and/or bare soil and green vegetation are changing over time. "
+"The fractional cover algorithm was developed by the Joint Remote Sensing "
+"Research Program, for more information please see "
+"data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover"
+"\n"
+"Fractional Cover products use Water Observations from Space (WOfS) to "
+"mask out areas of water, cloud and other phenomena. To be considered in "
+"the FCP product a pixel must have had at least 10 clear observations over"
+" the year.\n"
+"For service status information, see https://status.dea.ga.gov.au\n"
+
+msgid "folder.fc.local_keywords"
+msgstr ""
+
+#. Fractional Cover 25m 100km tile (Fractional Cover Landsat 5)
+msgid "layer.ls5_fc_albers.title"
+msgstr "Fractional Cover 25m 100km tile (Fractional Cover Landsat 5)"
+
+#. Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers
+#. Equal Area projection (EPSG:3577). Data is only visible at higher
+#. resolutions; when zoomed-out the available area will be displayed as a
+#. shaded region. Fractional cover provides information about the the
+#. proportions of green vegetation, non-green vegetation (including deciduous
+#. trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m
+#. ground footprint. Fractional cover provides insight into how areas of dry
+#. vegetation and/or bare soil and green vegetation are changing over time. The
+#. fractional cover algorithm was developed by the Joint Remote Sensing
+#. Research Program, for more information please see
+#. data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+#. Fractional Cover products use Water Observations from Space (WOfS) to mask
+#. out areas of water, cloud and other phenomena. This product contains
+#. Fractional Cover dervied from the Landsat 5 satellite For service status
+#. information, see https://status.dea.ga.gov.au
+msgid "layer.ls5_fc_albers.abstract"
+msgstr ""
+"\n"
+"Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers "
+"Equal Area projection (EPSG:3577). Data is only visible at higher "
+"resolutions; when zoomed-out the available area will be displayed as a "
+"shaded region.\n"
+"Fractional cover provides information about the the proportions of green "
+"vegetation, non-green vegetation (including deciduous trees during "
+"autumn, dry grass, etc.), and bare areas for every 25m x 25m ground "
+"footprint. Fractional cover provides insight into how areas of dry "
+"vegetation and/or bare soil and green vegetation are changing over time. "
+"The fractional cover algorithm was developed by the Joint Remote Sensing "
+"Research Program, for more information please see "
+"data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover"
+"\n"
+"Fractional Cover products use Water Observations from Space (WOfS) to "
+"mask out areas of water, cloud and other phenomena.\n"
+"This product contains Fractional Cover dervied from the Landsat 5 "
+"satellite\n"
+"For service status information, see https://status.dea.ga.gov.au\n"
+
+msgid "layer.ls5_fc_albers.local_keywords"
+msgstr ""
+
+#. Fractional Cover
+msgid "style.ls5_fc_albers.simple_fc.title"
+msgstr "Fractional Cover"
+
+#. Fractional cover representation, with green vegetation in green, dead
+#. vegetation in blue, and bare soil in red
+msgid "style.ls5_fc_albers.simple_fc.abstract"
+msgstr ""
+"Fractional cover representation, with green vegetation in green, dead "
+"vegetation in blue, and bare soil in red"
+
+#. Water Observations from Space 25m albers (WOfS Daily Observations)
+msgid "layer.wofs_albers.title"
+msgstr "Water Observations from Space 25m albers (WOfS Daily Observations)"
+
+#. Water Observations from Space (WOfS) provides surface water observations
+#. derived from satellite imagery for all of Australia. The current product
+#. (Version 2.1.5) includes observations taken from 1986 to the present, from
+#. the Landsat 5, 7 and 8 satellites. WOfS covers all of mainland Australia and
+#. Tasmania but excludes off-shore Territories. The WOfS product allows users
+#. to get a better understanding of where water is normally present in a
+#. landscape, where water is seldom observed, and where inundation has occurred
+#. occasionally. Data is provided as Water Observation Feature Layers (WOFLs),
+#. in a 1 to 1 relationship with the input satellite data. Hence there is one
+#. WOFL for each satellite dataset processed for the occurrence of water. The
+#. details of the WOfS algorithm and derived statistics are available at
+#. http://dx.doi.org/10.1016/j.rse.2015.11.003. For service status information,
+#. see https://status.dea.ga.gov.au
+msgid "layer.wofs_albers.abstract"
+msgstr ""
+"\n"
+"Water Observations from Space (WOfS) provides surface water observations "
+"derived from satellite imagery for all of Australia. The current product "
+"(Version 2.1.5) includes observations taken from 1986 to the present, "
+"from the Landsat 5, 7 and 8 satellites. WOfS covers all of mainland "
+"Australia and Tasmania but excludes off-shore Territories.\n"
+"The WOfS product allows users to get a better understanding of where "
+"water is normally present in a landscape, where water is seldom observed,"
+" and where inundation has occurred occasionally.\n"
+"Data is provided as Water Observation Feature Layers (WOFLs), in a 1 to 1"
+" relationship with the input satellite data. Hence there is one WOFL for "
+"each satellite dataset processed for the occurrence of water. The details"
+" of the WOfS algorithm and derived statistics are available at "
+"http://dx.doi.org/10.1016/j.rse.2015.11.003.\n"
+"For service status information, see https://status.dea.ga.gov.au\n"
+
+msgid "layer.wofs_albers.local_keywords"
+msgstr ""
+
+#. Observations
+msgid "style.wofs_albers.observations.title"
+msgstr "Observations"
+
+#. Observations
+msgid "style.wofs_albers.observations.abstract"
+msgstr "Observations"
+
+#. Wet Only
+msgid "style.wofs_albers.wet.title"
+msgstr "Wet Only"
+
+#. Wet Only
+msgid "style.wofs_albers.wet.abstract"
+msgstr "Wet Only"
+
+#. Fractional Cover 25m 100km tile (Fractional Cover Landsat 7)
+msgid "layer.ls7_fc_albers.title"
+msgstr "Fractional Cover 25m 100km tile (Fractional Cover Landsat 7)"
+
+#. Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers
+#. Equal Area projection (EPSG:3577). Data is only visible at higher
+#. resolutions; when zoomed-out the available area will be displayed as a
+#. shaded region. Fractional cover provides information about the the
+#. proportions of green vegetation, non-green vegetation (including deciduous
+#. trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m
+#. ground footprint. Fractional cover provides insight into how areas of dry
+#. vegetation and/or bare soil and green vegetation are changing over time. The
+#. fractional cover algorithm was developed by the Joint Remote Sensing
+#. Research Program, for more information please see
+#. data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+#. Fractional Cover products use Water Observations from Space (WOfS) to mask
+#. out areas of water, cloud and other phenomena. This product contains
+#. Fractional Cover dervied from the Landsat 7 satellite For service status
+#. information, see https://status.dea.ga.gov.au
+msgid "layer.ls7_fc_albers.abstract"
+msgstr ""
+"\n"
+"Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers "
+"Equal Area projection (EPSG:3577). Data is only visible at higher "
+"resolutions; when zoomed-out the available area will be displayed as a "
+"shaded region.\n"
+"Fractional cover provides information about the the proportions of green "
+"vegetation, non-green vegetation (including deciduous trees during "
+"autumn, dry grass, etc.), and bare areas for every 25m x 25m ground "
+"footprint. Fractional cover provides insight into how areas of dry "
+"vegetation and/or bare soil and green vegetation are changing over time. "
+"The fractional cover algorithm was developed by the Joint Remote Sensing "
+"Research Program, for more information please see "
+"data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover"
+"\n"
+"Fractional Cover products use Water Observations from Space (WOfS) to "
+"mask out areas of water, cloud and other phenomena.\n"
+"This product contains Fractional Cover dervied from the Landsat 7 "
+"satellite\n"
+"For service status information, see https://status.dea.ga.gov.au\n"
+
+msgid "layer.ls7_fc_albers.local_keywords"
+msgstr ""
+
+#. Fractional Cover
+msgid "style.ls7_fc_albers.simple_fc.title"
+msgstr "Fractional Cover"
+
+#. Fractional cover representation, with green vegetation in green, dead
+#. vegetation in blue, and bare soil in red
+msgid "style.ls7_fc_albers.simple_fc.abstract"
+msgstr ""
+"Fractional cover representation, with green vegetation in green, dead "
+"vegetation in blue, and bare soil in red"
+
+#. Fractional Cover 25m 100km tile (Fractional Cover Landsat 8)
+msgid "layer.ls8_fc_albers.title"
+msgstr "Fractional Cover 25m 100km tile (Fractional Cover Landsat 8)"
+
+#. Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers
+#. Equal Area projection (EPSG:3577). Data is only visible at higher
+#. resolutions; when zoomed-out the available area will be displayed as a
+#. shaded region. Fractional cover provides information about the the
+#. proportions of green vegetation, non-green vegetation (including deciduous
+#. trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m
+#. ground footprint. Fractional cover provides insight into how areas of dry
+#. vegetation and/or bare soil and green vegetation are changing over time. The
+#. fractional cover algorithm was developed by the Joint Remote Sensing
+#. Research Program, for more information please see
+#. data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+#. Fractional Cover products use Water Observations from Space (WOfS) to mask
+#. out areas of water, cloud and other phenomena. This product contains
+#. Fractional Cover dervied from the Landsat 8 satellite For service status
+#. information, see https://status.dea.ga.gov.au
+msgid "layer.ls8_fc_albers.abstract"
+msgstr ""
+"\n"
+"Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers "
+"Equal Area projection (EPSG:3577). Data is only visible at higher "
+"resolutions; when zoomed-out the available area will be displayed as a "
+"shaded region.\n"
+"Fractional cover provides information about the the proportions of green "
+"vegetation, non-green vegetation (including deciduous trees during "
+"autumn, dry grass, etc.), and bare areas for every 25m x 25m ground "
+"footprint. Fractional cover provides insight into how areas of dry "
+"vegetation and/or bare soil and green vegetation are changing over time. "
+"The fractional cover algorithm was developed by the Joint Remote Sensing "
+"Research Program, for more information please see "
+"data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover"
+"\n"
+"Fractional Cover products use Water Observations from Space (WOfS) to "
+"mask out areas of water, cloud and other phenomena.\n"
+"This product contains Fractional Cover dervied from the Landsat 8 "
+"satellite\n"
+"For service status information, see https://status.dea.ga.gov.au\n"
+
+msgid "layer.ls8_fc_albers.local_keywords"
+msgstr ""
+
+#. Fractional Cover
+msgid "style.ls8_fc_albers.simple_fc.title"
+msgstr "Fractional Cover"
+
+#. Fractional cover representation, with green vegetation in green, dead
+#. vegetation in blue, and bare soil in red
+msgid "style.ls8_fc_albers.simple_fc.abstract"
+msgstr ""
+"Fractional cover representation, with green vegetation in green, dead "
+"vegetation in blue, and bare soil in red"
+
+#. Fractional Cover 25m 100km tile (Fractional Cover Combined)
+msgid "layer.fc_albers_combined.title"
+msgstr "Fractional Cover 25m 100km tile (Fractional Cover Combined)"
+
+#. Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers
+#. Equal Area projection (EPSG:3577). Data is only visible at higher
+#. resolutions; when zoomed-out the available area will be displayed as a
+#. shaded region. Fractional cover provides information about the the
+#. proportions of green vegetation, non-green vegetation (including deciduous
+#. trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m
+#. ground footprint. Fractional cover provides insight into how areas of dry
+#. vegetation and/or bare soil and green vegetation are changing over time. The
+#. fractional cover algorithm was developed by the Joint Remote Sensing
+#. Research Program, for more information please see
+#. data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
+#. Fractional Cover products use Water Observations from Space (WOfS) to mask
+#. out areas of water, cloud and other phenomena. This product contains
+#. Fractional Cover dervied from the Landsat 5, 7 and 8 satellites For service
+#. status information, see https://status.dea.ga.gov.au
+msgid "layer.fc_albers_combined.abstract"
+msgstr ""
+"\n"
+"Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers "
+"Equal Area projection (EPSG:3577). Data is only visible at higher "
+"resolutions; when zoomed-out the available area will be displayed as a "
+"shaded region. Fractional cover provides information about the the "
+"proportions of green vegetation, non-green vegetation (including "
+"deciduous trees during autumn, dry grass, etc.), and bare areas for every"
+" 25m x 25m ground footprint. Fractional cover provides insight into how "
+"areas of dry vegetation and/or bare soil and green vegetation are "
+"changing over time. The fractional cover algorithm was developed by the "
+"Joint Remote Sensing Research Program, for more information please see "
+"data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover"
+" Fractional Cover products use Water Observations from Space (WOfS) to "
+"mask out areas of water, cloud and other phenomena. This product contains"
+" Fractional Cover dervied from the Landsat 5, 7 and 8 satellites For "
+"service status information, see https://status.dea.ga.gov.au\n"
+
+msgid "layer.fc_albers_combined.local_keywords"
+msgstr ""
+
+#. Fractional Cover
+msgid "style.fc_albers_combined.simple_fc.title"
+msgstr "Fractional Cover"
+
+#. Fractional cover representation, with green vegetation in green, dead
+#. vegetation in blue, and bare soil in red
+msgid "style.fc_albers_combined.simple_fc.abstract"
+msgstr ""
+"Fractional cover representation, with green vegetation in green, dead "
+"vegetation in blue, and bare soil in red"
+

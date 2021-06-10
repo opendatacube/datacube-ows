@@ -10,6 +10,7 @@ from typing import Mapping, Sequence
 from urllib.parse import urlparse
 
 import fsspec
+from flask_babel import gettext as _
 
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -243,8 +244,17 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     def read_metadata(self, lbl, fld):
         lookup = ".".join([lbl, fld])
+        if self.global_config().internationalised:
+            trans = _(lookup)
+            if trans != lookup:
+                return trans
         if self._msg_src is not None:
-            return self._msg_src.get(lookup, self._metadata_registry.get(lookup))
+            msg = self._msg_src.get(lookup)
+            if not msg:
+                msg = self._metadata_registry.get(lookup)
+            else:
+                msg = msg.string
+            return msg
         return self._metadata_registry.get(lookup)
 
     def read_inheritance(self, lbl, fld):
@@ -262,6 +272,9 @@ class OWSMetadataConfig(OWSConfigEntry):
     def is_inherited(self, fld):
         return self.read_inheritance(self.get_obj_label(), fld)
 
+    def global_config(self):
+        return self
+
     def __getattribute__(self, name):
         if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION):
             return self.read_local_metadata(name)
@@ -275,76 +288,6 @@ class OWSMetadataConfig(OWSConfigEntry):
             return self.read_local_metadata(FLD_ATTRIBUTION)
         else:
             return super().__getattribute__(name)
-
-
-class OWSMessageFile:
-    # Parser states
-    START = 0
-    GOT_ID = 1
-    IN_STR = 2
-
-    def __init__(self, fp):
-        self._index = {}
-        self.state = self.START
-        self.msgstr = ""
-        self.msgid  = ""
-        self.line_no = 0
-        self.read_file(fp)
-
-    def _new_element(self):
-        if self.msgid:
-            self._index[self.msgid] = self.msgstr
-        self.state = self.START
-        self.msgstr = ""
-        self.msgid  = ""
-
-    def __getitem__(self, item):
-        return self._index[item]
-
-    def __contains__(self, item):
-        return item in self._index
-
-    def get(self, item, default=None):
-        return self._index.get(item, default)
-
-    def unescape(self, esc_str):
-        return esc_str.encode("utf-8").decode("unicode-escape")
-
-    def read_file(self, fp):
-        for line in fp.readlines():
-            self.line_no += 1
-            if line.startswith("msgid "):
-                if self.state == self.GOT_ID:
-                    raise ConfigException(f"Unexpected msgid line in message file: at line {self.line_no}")
-                self._new_element()
-                self.msgid = line[7:-2]
-                if self.msgid in self:
-                    raise ConfigException(f"Duplicate msgid: at line {self.line_no}")
-                self.state = self.GOT_ID
-            elif line.strip() == "":
-                if self.state == self.IN_STR:
-                    self._new_element()
-            elif line.startswith("msgstr "):
-                if self.state == self.START:
-                    raise ConfigException(f"msgstr without msgid: at line {self.line_no}")
-                elif self.state == self.IN_STR:
-                    raise ConfigException(f"Badly formatted multi-line msgstr: at line {self.line_no}")
-                # GOT_ID:
-                self.msgstr = self.unescape(line[8:-2])
-                self.state = self.IN_STR
-            elif line.startswith('"'):
-                if self.state == self.START:
-                    raise ConfigException(f"untagged string: at line {self.line_no}")
-                elif self.state == self.GOT_ID:
-                    raise ConfigException(f"Multiline msgids not supported by OWS: at line {self.line_no}")
-                # IN_STR
-                self.msgstr += self.unescape(line[1:-2])
-            elif line.startswith("#"):
-                if self.state == self.IN_STR:
-                    self._new_element()
-            else:
-                raise ConfigException(f"Invalid message file: error at line {self.line_no}")
-        self._new_element()
 
 
 class OWSEntryNotFound(ConfigException):
@@ -467,8 +410,9 @@ class OWSFlagBand(OWSConfigEntry):
 
 
 class FlagProductBands(OWSConfigEntry):
-    def __init__(self, flag_band):
+    def __init__(self, flag_band, layer):
         super().__init__({})
+        self.layer = layer
         self.bands = set()
         self.bands.add(flag_band.pq_band)
         self.flag_bands = {flag_band.pq_band: flag_band}
@@ -478,6 +422,7 @@ class FlagProductBands(OWSConfigEntry):
         self.declare_unready("low_res_products")
         self.manual_merge = flag_band.pq_manual_merge
         self.fuse_func = flag_band.pq_fuse_func
+        self.main_product = self.products_match(layer.product_names)
 
     def products_match(self, product_names):
         return tuple(product_names) == self.product_names
@@ -502,10 +447,12 @@ class FlagProductBands(OWSConfigEntry):
             self.products = fb.pq_products
             self.low_res_products = fb.pq_low_res_products
             break
+        if self.main_product:
+            self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
         super().make_ready(dc, *args, **kwargs)
 
     @classmethod
-    def build_list_from_masks(cls, masks):
+    def build_list_from_masks(cls, masks, layer):
         flag_products = []
         for mask in masks:
             handled = False
@@ -515,11 +462,11 @@ class FlagProductBands(OWSConfigEntry):
                     handled = True
                     break
             if not handled:
-                flag_products.append(cls(mask.band))
+                flag_products.append(cls(mask.band, layer))
         return flag_products
 
     @classmethod
-    def build_list_from_flagbands(cls, flagbands):
+    def build_list_from_flagbands(cls, flagbands, layer):
         flag_products = []
         for fb in flagbands:
             handled = False
@@ -529,5 +476,5 @@ class FlagProductBands(OWSConfigEntry):
                 handled = True
                 break
             if not handled:
-                flag_products.append(cls(fb))
+                flag_products.append(cls(fb, layer))
         return flag_products

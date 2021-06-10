@@ -94,7 +94,6 @@ class ProductBandQuery:
                                    manual_merge=layer.data_manual_merge,
                                    fuse_func=layer.fuse_func,
                                    resource_limited=False)
-
         ]
         for fpb in layer.allflag_productbands:
             if fpb.products_match(layer.product_names):
@@ -210,12 +209,30 @@ class DataStacker:
                 return result
         return OrderedDict(results)
 
+    def create_zero_filled_flag_bands(self, data, pbq):
+        var = "No data vars in result"
+        for var in data.data_vars.variables.keys():
+            break
+        template = getattr(data, var)
+        new_data = numpy.ndarray(template.shape, dtype="uint8")
+        new_data.fill(0)
+        qry_result = template.copy(data=new_data)
+        data_new_bands = {}
+        for band in pbq.bands:
+            data_new_bands[band] = qry_result
+        data = data.assign(data_new_bands)
+        for band in pbq.bands:
+            data[band].attrs["flags_definition"] = pbq.products[0].measurements[band].flags_definition
+
     @log_call
     def data(self, datasets_by_query, skip_corrections=False):
         # pylint: disable=too-many-locals, consider-using-enumerate
         # datasets is an XArray DataArray of datasets grouped by time.
         data = None
         for pbq, datasets in datasets_by_query.items():
+            if data is not None and len(data.time) == 0:
+                # No data, so no need for masking data.
+                continue
             measurements = pbq.products[0].lookup_measurements(pbq.bands)
             fuse_func = pbq.fuse_func
             if pbq.manual_merge:
@@ -236,16 +253,8 @@ class DataStacker:
                     qry_result["time"] = data.time
                 else:
                     if len(qry_result.time) == 0:
-                        var = "No data vars in result"
-                        for var in data.data_vars.variables.keys():
-                            break
-                        template = getattr(data, var)
-                        new_data = numpy.ndarray(template.shape)
-                        new_data.fill(0)
-                        qry_result = template.copy(data=new_data)
-                        data_new_bands = {}
-                        for band in pbq.bands:
-                            data_new_bands[band] = qry_result
+                        self.create_zero_filled_flag_bands(data, pbq)
+                        continue
                     else:
                         data_new_bands = {}
                         for band in pbq.bands:
@@ -258,6 +267,10 @@ class DataStacker:
                             data_new_bands[band] = timed_band_data
                     data = data.assign(data_new_bands)
                     continue
+            elif len(qry_result.time) == 0:
+                # Time-aware mask product has no data, but main product does.
+                self.create_zero_filled_flag_bands(data, pbq)
+                continue
             qry_result.coords["time"] = data.coords["time"]
             data = xarray.combine_by_coords([data, qry_result], join="exact")
 

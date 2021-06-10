@@ -12,6 +12,7 @@ import warnings
 import sentry_sdk
 from datacube.utils.aws import configure_s3_access
 from flask import Flask, request
+from flask_babel import Babel
 from flask_log_request_id import RequestID, RequestIDLogFilter
 from prometheus_flask_exporter.multiprocess import \
     GunicornInternalPrometheusMetrics
@@ -21,6 +22,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from datacube_ows.ows_configuration import get_config
 
 __all__ = [
+    'initialise_babel',
     'initialise_logger',
     'initialise_ignorable_warnings',
     'initialise_debugging',
@@ -30,7 +32,9 @@ __all__ = [
     'initialise_flask',
     'initialise_prometheus',
     'initialise_prometheus_register',
+    'generate_locale_selector'
 ]
+
 
 
 def initialise_logger(name=None):
@@ -101,6 +105,9 @@ def initialise_aws_credentials(log=None):
             else:
                 log.info("S3 access configured with signed requests")
         credentials = configure_s3_access(aws_unsigned=unsigned, requester_pays=requester_pays)
+
+        if "AWS_S3_ENDPOINT" in os.environ and os.environ["AWS_S3_ENDPOINT"] == "":
+            del os.environ["AWS_S3_ENDPOINT"]
     elif log:
         log.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
@@ -108,8 +115,10 @@ def initialise_aws_credentials(log=None):
 def parse_config_file(log=None):
     # Cache a parsed config file object
     # (unless deferring to first request)
+    cfg = None
     if not os.environ.get("DEFER_CFG_PARSE"):
-        get_config()
+        cfg = get_config()
+    return cfg
 
 
 def initialise_flask(name):
@@ -142,3 +151,22 @@ def initialise_prometheus_register(metrics):
                 }
             )
         )
+
+
+def generate_locale_selector(locales):
+    def selector_template():
+        return request.accept_languages.best_match(locales)
+    return selector_template
+
+def initialise_babel(cfg, app):
+    if cfg and cfg.internationalised:
+        app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
+        babel = Babel(app,
+                      default_locale=cfg.locales[0],
+                      default_domain=cfg.message_domain,
+                      configure_jinja=False
+                      )
+        babel.localeselector(generate_locale_selector(cfg.locales))
+        return babel
+    else:
+        return None

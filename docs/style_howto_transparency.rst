@@ -73,9 +73,9 @@ data from the Collection 3 Fractional Cover product:
     # Time coordinates come back slightly differently from the two products, so we need
     # to align them before we combine.
 
-    discrete_data.coords["time"] = parallel_data.coords["time"]
+    wofs_data.coords["time"] = fc_data.coords["time"]
     combined_data = xr.combine_by_coords(
-            [parallel_data, discrete_data],
+            [fc_data, wofs_data],
             join="exact")
 
 Example: No Masking
@@ -91,9 +91,9 @@ vegetation (npv)" band mapped to blue.
         "components": {
             "red": {"bs": 1.0},
             "green": {"pv": 1.0},
-            "blue": {"npv": 1.0}},
+            "blue": {"npv": 1.0}
+        },
         "scale_range": [0.0, 100.0],
-        }
     }
 
 .. image:: https://user-images.githubusercontent.com/4548530/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.png
@@ -117,9 +117,9 @@ keep in the image - pixels that fail any of the pq_mask rules will be transparen
         "components": {
             "red": {"bs": 1.0},
             "green": {"pv": 1.0},
-            "blue": {"npv": 1.0}},
-        "scale_range": [0.0, 100.0],
+            "blue": {"npv": 1.0}
         },
+        "scale_range": [0.0, 100.0],
         "pq_masks": [
             # Pixels must match all flags to remain visible.
             {
@@ -303,6 +303,7 @@ transparent with values between 0 and 0.5 shown partially transparent:
         },
         "scale_range": (50, 3000),
     }
+
 .. image:: https://user-images.githubusercontent.com/4548530/113795937-5d854800-9791-11eb-9a49-25ea8cbced64.png
     :width: 600
 
