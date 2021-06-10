@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
     curl \
     gnupg \
     postgresql-client-12 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/log/dpkg.log
 
 # Configure user
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
