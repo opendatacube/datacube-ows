@@ -49,7 +49,7 @@ jobs:
             --tag    ${ORG}/${IMAGE}:_builder \
             .
       - name: Dive
-        uses: yuichielectric/dive-action@0.0.4
+        uses: yuichielectric/dive-action@0.0.3
         with:
           image: "${ORG}/${IMAGE}:_builder"
           config-file: ${{ github.workspace }}/dive-ci.yml
