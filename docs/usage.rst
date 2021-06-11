@@ -2,12 +2,37 @@
 Usage
 =====
 
+.. contents:: Table of Contents
+
 As a Python Module
 ------------------
 
 To use datacube-ows in a project::
 
     import datacube_ows
+
+To use the `stand-alone styling API <https://datacube-ows.readthedocs.io/en/latest/cfg_style_api.html>`_::
+
+    from datacube_ows.styles.api import *
+
+
+OWS Command Line Tools
+----------------------------
+
+Datacube-OWS provides two command line tools:
+
+* ``datacube-ows-update`` that for creating and maintaining OWS's
+  `database tables and views <https://datacube-ows.readthedocs.io/en/latest/database.html>`_.
+* ``datacube-ows-cfg`` which is used for managing
+  `OWS configuration files <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
+
+.. click:: datacube_ows.update_ranges:main
+    :prog: datacube-ows-update
+    :nested: full
+
+.. click:: datacube_ows.cfg_parser:main
+    :prog: datacube-ows-update
+    :nested: full
 
 As a Web-Service in Docker with Layers deployed
 -----------------------------------------------
