@@ -18,6 +18,7 @@ from psycopg2.sql import SQL
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.product_ranges import add_ranges, get_sqlconn
+from datacube_ows.startup_utils import initialise_debugging
 
 
 @click.command()
@@ -101,11 +102,10 @@ def main(layers, blocking,
         print("Sorry, role only makes sense for updating the schema")
         return 1
 
-    if os.environ.get("PYDEV_DEBUG"):
-        import pydevd_pycharm
-        pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+    initialise_debugging()
 
     dc = Datacube(app="ows_update_ranges")
+    cfg = get_config(called_from_update_ranges=True)
     if schema:
         print("Checking schema....")
         print("Creating or replacing WMS database schema...")
@@ -125,7 +125,7 @@ def main(layers, blocking,
 
     print("Deriving extents from materialised views")
     if not layers:
-        layers = list(get_config().product_index.keys())
+        layers = list(cfg.product_index.keys())
     try:
         add_ranges(dc, layers, summary, merge_only)
     except (psycopg2.errors.UndefinedColumn,

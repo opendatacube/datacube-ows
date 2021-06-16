@@ -588,9 +588,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             try:
                 native_bounding_box = self.bboxes[self.native_CRS]
             except KeyError:
-                _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
-                             self.name,
-                             self.native_CRS)
+                if not self.global_cfg.called_from_update_ranges:
+                    _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
+                                 self.name,
+                                 self.native_CRS)
                 self.hide = True
                 return
             self.origin_x = native_bounding_box["left"]
@@ -705,7 +706,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.bboxes = self.extract_bboxes()
         # pylint: disable=broad-except
         except Exception as a:
-            _LOG.warning("get_ranges failed for layer %s: %s", self.name, str(a))
+            if not self.global_cfg.called_from_update_ranges:
+                _LOG.warning("get_ranges failed for layer %s: %s", self.name, str(a))
             self.hide = True
             self.bboxes = {}
         finally:
@@ -995,7 +997,8 @@ class OWSConfig(OWSMetadataConfig):
 
     default_abstract = ""
 
-    def __init__(self, refresh=False, cfg=None, ignore_msgfile=False):
+    def __init__(self, refresh=False, cfg=None, ignore_msgfile=False, called_from_update_ranges=False):
+        self.called_from_update_ranges = called_from_update_ranges
         if not self.initialised or refresh:
             self.msgfile = None
             if not cfg:
@@ -1247,8 +1250,8 @@ class OWSConfig(OWSMetadataConfig):
         return hdrs
 
 
-def get_config(refresh=False):
-    cfg = OWSConfig(refresh=refresh)
+def get_config(refresh=False, called_from_update_ranges=False):
+    cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)
     if not cfg.ready:
         with cube() as dc:
             cfg.make_ready(dc)
