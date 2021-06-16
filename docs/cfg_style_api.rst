@@ -217,6 +217,9 @@ multi-date handler legends.  By default, the main style legend is used.
 The return value is a PIL Image object.  Note that this is a very different output format
 to the Apply OWS Style methods described above.
 
+PIL objects are well supported by Notebookes. Simply calling any of the method below, and/or evaluating the returned
+PIL Image object will display the image in JupyterHub, Notebooks, etc.
+
 ::
 
     from datacube_ows.styles.api import StandaloneStyle, generate_ows_legend_style_cfg, generate_ows_legend_style
