@@ -20,6 +20,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.product_ranges import add_ranges, get_sqlconn
 from datacube_ows.startup_utils import initialise_debugging
 
+
 @click.command()
 @click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
 @click.option("--blocking/--no-blocking", is_flag=True, default=False, help="Obsolete")
