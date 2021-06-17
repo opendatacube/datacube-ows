@@ -361,6 +361,21 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self.time_resolution not in TIMERES_VALS:
             raise ConfigException(
                 "Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
+        self.time_axis = cfg.get("time_axis")
+        if self.time_axis:
+            self.regular_time_axis = True
+            if "time_interval" not in self.time_axis:
+                raise ConfigException("No time_interval supplied in time_axis")
+            self.time_axis_interval = self.time_axis["time_interval"]
+            if not isinstance(self.time_axis_interval, int):
+                raise ConfigException("time_interval is")
+            if self.time_axis_interval > 0:
+                raise ConfigException("time_interval")
+
+        else:
+            self.regular_time_axis = False
+            self.time_axis_interval = 0
+
         self.dynamic = cfg.get("dynamic", False)
 
         self.declare_unready("_ranges")
