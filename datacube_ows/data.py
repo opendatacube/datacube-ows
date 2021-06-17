@@ -223,6 +223,7 @@ class DataStacker:
         data = data.assign(data_new_bands)
         for band in pbq.bands:
             data[band].attrs["flags_definition"] = pbq.products[0].measurements[band].flags_definition
+        return data
 
     @log_call
     def data(self, datasets_by_query, skip_corrections=False):
@@ -253,7 +254,7 @@ class DataStacker:
                     qry_result["time"] = data.time
                 else:
                     if len(qry_result.time) == 0:
-                        self.create_zero_filled_flag_bands(data, pbq)
+                        data = self.create_zero_filled_flag_bands(data, pbq)
                         continue
                     else:
                         data_new_bands = {}
@@ -269,7 +270,7 @@ class DataStacker:
                     continue
             elif len(qry_result.time) == 0:
                 # Time-aware mask product has no data, but main product does.
-                self.create_zero_filled_flag_bands(data, pbq)
+                data = self.create_zero_filled_flag_bands(data, pbq)
                 continue
             qry_result.coords["time"] = data.coords["time"]
             data = xarray.combine_by_coords([data, qry_result], join="exact")
