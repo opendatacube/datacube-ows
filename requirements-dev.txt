@@ -1,2 +1,3 @@
 # For Pycharm 2020.3
 pydevd-pycharm~=211.7142.13
+sphinx_click

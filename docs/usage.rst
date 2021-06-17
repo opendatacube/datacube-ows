@@ -21,8 +21,8 @@ OWS Command Line Tools
 
 Datacube-OWS provides two command line tools:
 
-* ``datacube-ows-update`` that for creating and maintaining OWS's
-  `database tables and views <https://datacube-ows.readthedocs.io/en/latest/database.html>`_.
+* ``datacube-ows-update`` which is used for creating and maintaining
+  `OWS's database tables and views <https://datacube-ows.readthedocs.io/en/latest/database.html>`_.
 * ``datacube-ows-cfg`` which is used for managing
   `OWS configuration files <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
 
