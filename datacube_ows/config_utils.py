@@ -398,8 +398,10 @@ class OWSFlagBand(OWSConfigEntry):
         self.info_mask = ~0
         # A (hopefully) representative product
         product = self.pq_products[0]
-        meas = product.lookup_measurements([self.pq_band])
-        self.flags_def = meas[self.pq_band]["flags_definition"]
+        meas = product.lookup_measurements([self.pq_band])[self.pq_band]
+        if "flags_definition" not in meas:
+            raise ConfigException(f"Band {self.pq_band} in product {product.name} has no flags_definition in ODC - cannot be used as a flag band for layer {self.product.name}.")
+        self.flags_def = meas["flags_definition"]
         for bitname in self.ignore_info_flags:
             bit = self.flags_def[bitname]["bits"]
             if not isinstance(bit, int):
