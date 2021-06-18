@@ -194,20 +194,20 @@ E.g.::
      "color_ramp": [
         {
             "value": -0.00000000001,
-            "colour": "#000",
+            "color": "#000",
             "alpha": 0.0
         },
         {
             "value": 0.0,
-            "colour": "#000",
+            "color": "#000",
         },
         {
             "value": 1.0,
-            "colour": "#F00",
+            "color": "#F00",
         },
         {
             "value": 10.0,
-            "colour": "#00F",
+            "color": "#00F",
         }
      ],
 
