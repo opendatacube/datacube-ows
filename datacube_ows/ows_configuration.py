@@ -375,12 +375,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.time_axis_end = self.time_axis.get("end_date")
             if self.time_axis_start is not None:
                 try:
-                    self.time_axis_start = datetime.date.fromisoformat(self.time_axis_start)
+                    # Don't actually need a date, just checking validity
+                    datetime.date.fromisoformat(self.time_axis_start)
                 except ValueError:
                     raise ConfigException(f"time_axis start_date is not valid ISO format date string")
             if self.time_axis_end is not None:
                 try:
-                    self.time_axis_end = datetime.date.fromisoformat(self.time_axis_end)
+                    # Don't actually need a date, just checking validity
+                    datetime.date.fromisoformat(self.time_axis_end)
                 except ValueError:
                     raise ConfigException(f"time_axis end_date is not valid ISO format date string")
         else:
@@ -430,6 +432,19 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 #            self.sub_product_extractor = None
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
+
+    def time_axis_representation(self):
+        if self.regular_time_axis:
+            if self.time_axis_start:
+                start = self.time_axis_start
+            else:
+                start = self.ranges.times[0]
+            if self.time_axis_end:
+                end = self.time_axis_end
+            else:
+                end = self.ranges.times[-1]
+            return f"{start}/{end}/P{self.time_axis_interval}D"
+        return ""
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
