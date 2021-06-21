@@ -368,10 +368,21 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise ConfigException("No time_interval supplied in time_axis")
             self.time_axis_interval = self.time_axis["time_interval"]
             if not isinstance(self.time_axis_interval, int):
-                raise ConfigException("time_interval is")
+                raise ConfigException("time_interval must be an integer")
             if self.time_axis_interval > 0:
-                raise ConfigException("time_interval")
-
+                raise ConfigException("time_interval must be greater than zero")
+            self.time_axis_start = self.time_axis.get("start_date")
+            self.time_axis_end = self.time_axis.get("end_date")
+            if self.time_axis_start is not None:
+                try:
+                    self.time_axis_start = datetime.date.fromisoformat(self.time_axis_start)
+                except ValueError:
+                    raise ConfigException(f"time_axis start_date is not valid ISO format date string")
+            if self.time_axis_end is not None:
+                try:
+                    self.time_axis_end = datetime.date.fromisoformat(self.time_axis_end)
+                except ValueError:
+                    raise ConfigException(f"time_axis end_date is not valid ISO format date string")
         else:
             self.regular_time_axis = False
             self.time_axis_interval = 0
