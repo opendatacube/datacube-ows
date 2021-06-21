@@ -369,20 +369,18 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.time_axis_interval = self.time_axis["time_interval"]
             if not isinstance(self.time_axis_interval, int):
                 raise ConfigException("time_interval must be an integer")
-            if self.time_axis_interval > 0:
+            if self.time_axis_interval <= 0:
                 raise ConfigException("time_interval must be greater than zero")
             self.time_axis_start = self.time_axis.get("start_date")
             self.time_axis_end = self.time_axis.get("end_date")
             if self.time_axis_start is not None:
                 try:
-                    # Don't actually need a date, just checking validity
-                    datetime.date.fromisoformat(self.time_axis_start)
+                    self.time_axis_start = datetime.date.fromisoformat(self.time_axis_start)
                 except ValueError:
                     raise ConfigException(f"time_axis start_date is not valid ISO format date string")
             if self.time_axis_end is not None:
                 try:
-                    # Don't actually need a date, just checking validity
-                    datetime.date.fromisoformat(self.time_axis_end)
+                    self.time_axis_end = datetime.date.fromisoformat(self.time_axis_end)
                 except ValueError:
                     raise ConfigException(f"time_axis end_date is not valid ISO format date string")
         else:
@@ -436,13 +434,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def time_axis_representation(self):
         if self.regular_time_axis:
             if self.time_axis_start:
-                start = self.time_axis_start
+                start = self.time_axis_start.isoformat()
             else:
-                start = self.ranges.times[0]
+                start = self.ranges["times"][0].isoformat()
             if self.time_axis_end:
-                end = self.time_axis_end
+                end = self.time_axis_end.isoformat()
             else:
-                end = self.ranges.times[-1]
+                end = self.ranges["times"][-1].isoformat()
             return f"{start}/{end}/P{self.time_axis_interval}D"
         return ""
 
