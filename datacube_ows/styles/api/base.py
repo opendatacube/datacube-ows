@@ -129,7 +129,7 @@ def generate_ows_legend_style_cfg(cfg, ndates=0):
     return generate_ows_legend_style(StandaloneStyle(cfg), ndates)
 
 
-def plot_image(xr_image, x="x", y="y", size=10):
+def plot_image(xr_image, x="x", y="y", size=10, aspect=None):
     """
     Plot an Xarray image with matplotlib. (e.g. for display in JupyterHub)
 
@@ -137,6 +137,8 @@ def plot_image(xr_image, x="x", y="y", size=10):
     :param x: The name of the dimension to be plotted horizontally (optional, defaults to "x")
     :param y: The name of the dimension to be plotted vertically (optional, defaults to "y")
     :param size: The height of the plotted image, in inches (optional, defaults to 10)
+    :param aspect: The aspect ratio of the plotted image (width/height of plotted image).
+                (defaults to None, which means use the aspect ratio of the data.)
     """
     width = len(xr_image[x])
     height = len(xr_image[y])
@@ -147,7 +149,7 @@ def plot_image(xr_image, x="x", y="y", size=10):
     rgb.plot.imshow(x=x, y=y, size=size, aspect=aspect)
 
 
-def plot_image_with_style(style, data, x="x", y="y", size=10, valid_data_mask=None):
+def plot_image_with_style(style, data, x="x", y="y", size=10, aspect=None, valid_data_mask=None):
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 
@@ -162,12 +164,14 @@ def plot_image_with_style(style, data, x="x", y="y", size=10, valid_data_mask=No
     :param x: The name of the dimension to be plotted horizontally (optional, defaults to "x")
     :param y: The name of the dimension to be plotted vertically (optional, defaults to "y")
     :param size: The height of the plotted image, in inches (optional, defaults to 10)
+    :param aspect: The aspect ratio of the plotted image (width/height of plotted image).
+                (defaults to None, which means use the aspect ratio of the data.)
     :param valid_data_mask: (optional) An xarray DataArray mask, with dimensions and coordinates matching data.
     """
-    plot_image(apply_ows_style(style, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size)
+    plot_image(apply_ows_style(style, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size, aspect=aspect)
 
 
-def plot_image_with_style_cfg(cfg, data, x="x", y="y", size=10, valid_data_mask=None):
+def plot_image_with_style_cfg(cfg, data, x="x", y="y", size=10, aspect=None, valid_data_mask=None):
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 
@@ -186,7 +190,9 @@ def plot_image_with_style_cfg(cfg, data, x="x", y="y", size=10, valid_data_mask=
     :param x: The name of the dimension to be plotted horizontally (optional, defaults to "x")
     :param y: The name of the dimension to be plotted vertically (optional, defaults to "y")
     :param size: The height of the plotted image, in inches (optional, defaults to 10)
+    :param aspect: The aspect ratio of the plotted image (width/height of plotted image).
+                (defaults to None, which means use the aspect ratio of the data.)
     :param valid_data_mask: (optional) An xarray DataArray mask, with dimensions and coordinates matching data.
     """
-    plot_image(apply_ows_style_cfg(cfg, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size)
+    plot_image(apply_ows_style_cfg(cfg, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size, aspect=aspect)
 
