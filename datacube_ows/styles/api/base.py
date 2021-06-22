@@ -138,10 +138,13 @@ def plot_image(xr_image, x="x", y="y", size=10):
     :param y: The name of the dimension to be plotted vertically (optional, defaults to "y")
     :param size: The height of the plotted image, in inches (optional, defaults to 10)
     """
+    width = len(xr_image[x])
+    height = len(xr_image[y])
+    aspect = width/height
     rgb = xr_image.to_array(dim="color")
     rgb = rgb.transpose(*(rgb.dims[1:] + rgb.dims[:1]))
     rgb = rgb / 255
-    rgb.plot.imshow(x=x, y=y, size=size)
+    rgb.plot.imshow(x=x, y=y, size=size, aspect=aspect)
 
 
 def plot_image_with_style(style, data, x="x", y="y", size=10, valid_data_mask=None):
