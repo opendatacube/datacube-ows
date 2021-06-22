@@ -53,20 +53,7 @@ tab:
     # Install new kernel (tell jupyter about it)
     ./${EE}/bin/python3 -m ipykernel install --user --name 'ows' --display-name 'ODC (OWS)'
 
-Now you can simply launch a new terminal tab using the new "ODC (OWS)" environment and install datacube-ows
-using ``pip install``, as described above.
+    # Install datacube-ows into the new environment
+    ./${EE}/bin/pip install datacube-ows
 
-Displaying images
------------------
-
-To display an xarray image in JupyterHub, as returned by the Styling API, the following function is helpful.
-Something similar will be included in a future release of the API:
-
-::
-
-    def plot_image(xr_image, x="x", y="y", size=10):
-        rgb = xr_image.to_array(dim="color")
-        rgb = rgb.transpose(*(rgb.dims[1:] + rgb.dims[:1]))
-        rgb = rgb / 255
-        rgb.plot.imshow(x=x, y=y, size=size)
-
+If you return to the Jupyter homepage, and the new environment should be visible.
