@@ -98,6 +98,13 @@ The resulting image looks like this:
 .. image:: https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png
     :width: 600
 
+If you are using a notebooks based environment like JupyterHub, you can display the image using the ``plot_image`` API functions:
+
+::
+
+    plot_image_with_style_cfg(rgb_cfg, data)
+
+
 `View full size
 <https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
 
