@@ -433,15 +433,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     def time_axis_representation(self):
         if self.regular_time_axis:
-            if self.time_axis_start:
-                start = self.time_axis_start.isoformat()
-            else:
-                start = self.ranges["times"][0].isoformat()
-            if self.time_axis_end:
-                end = self.time_axis_end.isoformat()
-            else:
-                end = self.ranges["times"][-1].isoformat()
-            return f"{start}/{end}/P{self.time_axis_interval}D"
+            start, end = self.time_range(self.ranges)
+            return f"{start.isoformat()}/{end.isoformat()}/P{self.time_axis_interval}D"
         return ""
 
     # pylint: disable=attribute-defined-outside-init
@@ -752,6 +745,20 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         finally:
             if not ext_dc:
                 release_cube(dc)
+
+    def time_range(self, ranges=None):
+        if ranges is None:
+            ranges = self.ranges
+        if self.regular_time_axis and self.time_axis_start:
+            start = self.time_axis_start
+        else:
+            start = ranges["time"][0]
+        if self.regular_time_axis and self.time_axis_end:
+            end = self.time_axis_end
+        else:
+            end = ranges["time"][-1]
+        return (start, end)
+
     @property
     def ranges(self):
         if self.dynamic:

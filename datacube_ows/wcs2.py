@@ -184,14 +184,7 @@ def create_coverage_description(cfg, product):
         axes = list(reversed(axes))
 
     if product.regular_time_axis:
-        if product.time_axis_start:
-            start = product.time_axis_start
-        else:
-            start = product.ranges["times"][0]
-        if product.time_axis_end:
-            end = product.time_axis_end
-        else:
-            end = product.ranges["times"][-1]
+        start, end = product.time_range()
         size = (end - start).days // product.time_axis_interval
         axes.append(
             RegularAxis(
