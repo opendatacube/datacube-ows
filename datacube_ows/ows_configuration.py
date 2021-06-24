@@ -386,6 +386,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         else:
             self.regular_time_axis = False
             self.time_axis_interval = 0
+            self.time_axis_start = None
+            self.time_axis_end = None
 
         self.dynamic = cfg.get("dynamic", False)
 
