@@ -529,7 +529,7 @@ def test_invalid_native_format(minimal_layer_cfg, minimal_global_cfg):
 def test_time_range_irreg(minimal_layer_cfg, minimal_global_cfg):
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     ranges = {
-        "time": [
+        "times": [
             datetime.date(2021, 1, 5),
             datetime.date(2021, 1, 6),
             datetime.date(2021, 1, 7),
@@ -547,7 +547,7 @@ def test_time_range_reg_default(minimal_layer_cfg, minimal_global_cfg):
     }
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     ranges = {
-        "time": [
+        "times": [
             datetime.date(2021, 1, 5),
             datetime.date(2021, 1, 6),
             datetime.date(2021, 1, 7),
@@ -567,7 +567,7 @@ def test_time_range_reg_custom(minimal_layer_cfg, minimal_global_cfg):
     }
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     lyr._ranges = {
-        "time": [
+        "times": [
             datetime.date(2021, 1, 5),
             datetime.date(2021, 1, 6),
             datetime.date(2021, 1, 7),
@@ -587,7 +587,7 @@ def test_time_axis_representation_irreg(minimal_layer_cfg, minimal_global_cfg):
     }
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     lyr._ranges = {
-        "time": [
+        "times": [
             datetime.date(2021, 1, 7),
             datetime.date(2021, 1, 8),
         ]

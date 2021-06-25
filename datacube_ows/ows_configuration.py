@@ -754,11 +754,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self.regular_time_axis and self.time_axis_start:
             start = self.time_axis_start
         else:
-            start = ranges["time"][0]
+            start = ranges["times"][0]
         if self.regular_time_axis and self.time_axis_end:
             end = self.time_axis_end
         else:
-            end = ranges["time"][-1]
+            end = ranges["times"][-1]
         return (start, end)
 
     @property
