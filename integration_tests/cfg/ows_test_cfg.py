@@ -732,7 +732,7 @@ ows_cfg = {
                     "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
                     "name": "ls8_usgs_level1_scene_layer_clone",
                     "time_axis": {
-                        "time_axis_interval": 1
+                        "time_interval": 1
                     }
                 },
             ],
