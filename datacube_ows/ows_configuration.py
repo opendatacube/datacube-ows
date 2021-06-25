@@ -377,12 +377,16 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 try:
                     self.time_axis_start = datetime.date.fromisoformat(self.time_axis_start)
                 except ValueError:
-                    raise ConfigException(f"time_axis start_date is not valid ISO format date string")
+                    raise ConfigException("time_axis start_date is not a valid ISO format date string")
             if self.time_axis_end is not None:
                 try:
                     self.time_axis_end = datetime.date.fromisoformat(self.time_axis_end)
                 except ValueError:
-                    raise ConfigException(f"time_axis end_date is not valid ISO format date string")
+                    raise ConfigException("time_axis end_date is not a valid ISO format date string")
+            if (self.time_axis_end is not None
+                    and self.time_axis_start is not None
+                    and self.time_axis_end < self.time_axis_start):
+                raise ConfigException("time_axis end_date must be greater than or equal to the start_date if both are provided")
         else:
             self.regular_time_axis = False
             self.time_axis_interval = 0
