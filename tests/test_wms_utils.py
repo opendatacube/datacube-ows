@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+import datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -159,3 +160,82 @@ def test_parse_unsorted_colorscalerange(dummy_product):
                                 "colorscalerange": "2,0"
                             })
     assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
+
+def test_parse_item_1(dummy_product):
+    dummy_product.ranges = {
+        "times": [
+            datetime.date(2021, 1, 6),
+            datetime.date(2021, 1, 7),
+            datetime.date(2021, 1, 8),
+            datetime.date(2021, 1, 9),
+            datetime.date(2021, 1, 10),
+        ]
+    }
+    dt = datacube_ows.wms_utils.parse_time_item("2010-01-01/2021-01-08", dummy_product)
+    assert dt == dummy_product.ranges["times"][0]
+    dummy_product.regular_time_axis = True
+    with pytest.raises(WMSException) as e:
+        dt = datacube_ows.wms_utils.parse_time_item("2010-01-01/2010-01-08", dummy_product)
+    assert "No data available for time dimension range" in str(e.value)
+    dummy_product.regular_time_axis = False
+    with pytest.raises(WMSException) as e:
+        dt = datacube_ows.wms_utils.parse_time_item("2010-01-01/2010-01-08", dummy_product)
+    assert "Time dimension range" in str(e.value)
+    assert "not valid for this layer" in str(e.value)
+    dt = datacube_ows.wms_utils.parse_time_item("", dummy_product)
+    assert dt == dummy_product.ranges["times"][-1]
+    with pytest.raises(WMSException) as e:
+        dt = datacube_ows.wms_utils.parse_time_item("this_is_not_a_date, mate", dummy_product)
+    assert "Time dimension value" in str(e.value)
+    assert "not valid for this layer" in str(e.value)
+
+
+def test_parse_item_2(dummy_product):
+    dummy_product.ranges = {
+        "times": [
+            datetime.date(2021, 1, 6),
+            datetime.date(2021, 1, 7),
+            datetime.date(2021, 1, 8),
+            datetime.date(2021, 1, 10),
+        ]
+    }
+    dummy_product.ranges["time_set"] = set(dummy_product.ranges["times"])
+    dummy_product.time_range.return_value = (
+        datetime.date(2021, 1, 6), datetime.date(2021, 1, 10),
+    )
+    dummy_product.regular_time_axis = False
+
+    dt = datacube_ows.wms_utils.parse_time_item("2021-01-08", dummy_product)
+    assert dt == datetime.date(2021, 1, 8)
+
+    with pytest.raises(WMSException) as e:
+        dt = datacube_ows.wms_utils.parse_time_item("2021-01-01", dummy_product)
+    assert "Time dimension value" in str(e.value)
+    assert "not valid for this layer" in str(e.value)
+
+    dummy_product.regular_time_axis = True
+    dummy_product.time_axis_interval = 1
+
+    dt = datacube_ows.wms_utils.parse_time_item("2021-01-08", dummy_product)
+    assert dt == datetime.date(2021, 1, 8)
+
+    dt = datacube_ows.wms_utils.parse_time_item("2021-01-09", dummy_product)
+    assert dt == datetime.date(2021, 1, 9)
+
+    with pytest.raises(WMSException) as e:
+        dt = datacube_ows.wms_utils.parse_time_item("2021-01-01", dummy_product)
+    assert "Time dimension value" in str(e.value)
+    assert "not valid for this layer" in str(e.value)
+
+    with pytest.raises(WMSException) as e:
+        dt = datacube_ows.wms_utils.parse_time_item("2021-01-15", dummy_product)
+    assert "Time dimension value" in str(e.value)
+    assert "not valid for this layer" in str(e.value)
+
+    dummy_product.time_axis_interval = 3
+
+    with pytest.raises(WMSException) as e:
+        dt = datacube_ows.wms_utils.parse_time_item("2021-01-07", dummy_product)
+    assert "Time dimension value" in str(e.value)
+    assert "not valid for this layer" in str(e.value)
+
