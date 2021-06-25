@@ -4,7 +4,6 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-
 from unittest.mock import MagicMock, patch
 
 import pytest
