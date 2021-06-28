@@ -361,6 +361,38 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self.time_resolution not in TIMERES_VALS:
             raise ConfigException(
                 "Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
+        self.time_axis = cfg.get("time_axis")
+        if self.time_axis:
+            self.regular_time_axis = True
+            if "time_interval" not in self.time_axis:
+                raise ConfigException("No time_interval supplied in time_axis")
+            self.time_axis_interval = self.time_axis["time_interval"]
+            if not isinstance(self.time_axis_interval, int):
+                raise ConfigException("time_interval must be an integer")
+            if self.time_axis_interval <= 0:
+                raise ConfigException("time_interval must be greater than zero")
+            self.time_axis_start = self.time_axis.get("start_date")
+            self.time_axis_end = self.time_axis.get("end_date")
+            if self.time_axis_start is not None:
+                try:
+                    self.time_axis_start = datetime.date.fromisoformat(self.time_axis_start)
+                except ValueError:
+                    raise ConfigException("time_axis start_date is not a valid ISO format date string")
+            if self.time_axis_end is not None:
+                try:
+                    self.time_axis_end = datetime.date.fromisoformat(self.time_axis_end)
+                except ValueError:
+                    raise ConfigException("time_axis end_date is not a valid ISO format date string")
+            if (self.time_axis_end is not None
+                    and self.time_axis_start is not None
+                    and self.time_axis_end < self.time_axis_start):
+                raise ConfigException("time_axis end_date must be greater than or equal to the start_date if both are provided")
+        else:
+            self.regular_time_axis = False
+            self.time_axis_interval = 0
+            self.time_axis_start = None
+            self.time_axis_end = None
+
         self.dynamic = cfg.get("dynamic", False)
 
         self.declare_unready("_ranges")
@@ -404,6 +436,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 #            self.sub_product_extractor = None
         # And finally, add to the global product index.
         self.global_cfg.product_index[self.name] = self
+
+    def time_axis_representation(self):
+        if self.regular_time_axis:
+            start, end = self.time_range(self.ranges)
+            return f"{start.isoformat()}/{end.isoformat()}/P{self.time_axis_interval}D"
+        return ""
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc, *args, **kwargs):
@@ -713,6 +751,20 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         finally:
             if not ext_dc:
                 release_cube(dc)
+
+    def time_range(self, ranges=None):
+        if ranges is None:
+            ranges = self.ranges
+        if self.regular_time_axis and self.time_axis_start:
+            start = self.time_axis_start
+        else:
+            start = ranges["times"][0]
+        if self.regular_time_axis and self.time_axis_end:
+            end = self.time_axis_end
+        else:
+            end = ranges["times"][-1]
+        return (start, end)
+
     @property
     def ranges(self):
         if self.dynamic:

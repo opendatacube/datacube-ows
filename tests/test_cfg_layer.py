@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -524,3 +525,115 @@ def test_invalid_native_format(minimal_layer_cfg, minimal_global_cfg):
     assert "a_layer" in str(excinfo.value)
     assert "geosplunge" in str(excinfo.value)
 
+
+def test_time_range_irreg(minimal_layer_cfg, minimal_global_cfg):
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    ranges = {
+        "times": [
+            datetime.date(2021, 1, 5),
+            datetime.date(2021, 1, 6),
+            datetime.date(2021, 1, 7),
+            datetime.date(2021, 1, 8),
+        ]
+    }
+    start, end = lyr.time_range(ranges)
+    assert start == datetime.date(2021, 1, 5)
+    assert end == datetime.date(2021, 1, 8)
+
+
+def test_time_range_reg_default(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["time_axis"] = {
+        "time_interval": 1
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    ranges = {
+        "times": [
+            datetime.date(2021, 1, 5),
+            datetime.date(2021, 1, 6),
+            datetime.date(2021, 1, 7),
+            datetime.date(2021, 1, 8),
+        ]
+    }
+    start, end = lyr.time_range(ranges)
+    assert start == datetime.date(2021, 1, 5)
+    assert end == datetime.date(2021, 1, 8)
+
+
+def test_time_range_reg_custom(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["time_axis"] = {
+        "time_interval": 1,
+        "start_date": "2021-01-01",
+        "end_date": "2021-01-10",
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    lyr._ranges = {
+        "times": [
+            datetime.date(2021, 1, 5),
+            datetime.date(2021, 1, 6),
+            datetime.date(2021, 1, 7),
+            datetime.date(2021, 1, 8),
+        ]
+    }
+    start, end = lyr.time_range()
+    assert start == datetime.date(2021, 1, 1)
+    assert end == datetime.date(2021, 1, 10)
+
+
+def test_time_axis_representation_irreg(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["time_axis"] = {
+        "time_interval": 1,
+        "start_date": "2021-01-01",
+        "end_date": "2021-01-10",
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    lyr._ranges = {
+        "times": [
+            datetime.date(2021, 1, 7),
+            datetime.date(2021, 1, 8),
+        ]
+    }
+    assert lyr.time_axis_representation() == "2021-01-01/2021-01-10/P1D"
+
+
+def test_time_axis_representation_reg(minimal_layer_cfg, minimal_global_cfg):
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert lyr.time_axis_representation() == ""
+
+
+def test_time_axis_errors(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["time_axis"] = {"start_date": "2010-11-22"}
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert "No time_interval supplied in time_axis" in str(e.value)
+    minimal_layer_cfg["time_axis"] = {"time_interval": 0.6}
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert "time_interval must be an integer" in str(e.value)
+    minimal_layer_cfg["time_axis"] = {"time_interval": 0}
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert "time_interval must be greater than zero" in str(e.value)
+    minimal_layer_cfg["time_axis"] = {
+        "time_interval": 7,
+        "start_date": "exactly one year before Thursday week",
+        "end_date": "2010-11-22",
+    }
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert "time_axis start_date is not a valid ISO format date string" in str(e.value)
+    minimal_layer_cfg["time_axis"] = {
+        "time_interval": 7,
+        "start_date": "2010-11-22",
+        "end_date": "seven fortnights before the last full moon",
+    }
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert "time_axis end_date is not a valid ISO format date string" in str(e.value)
+    minimal_layer_cfg["time_axis"] = {
+        "time_interval": 7,
+        "start_date": "2010-11-22",
+        "end_date": "1999-12-31",
+    }
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert "time_axis end_date must be greater than or equal to the start_date if both are provided" in str(e.value)

@@ -183,20 +183,34 @@ def create_coverage_description(cfg, product):
     if product.native_CRS_def.get("vertical_coord_first"):
         axes = list(reversed(axes))
 
-    # TODO: has this setting been removed?
-    # if not product.wcs_sole_time:
-    axes.append(
-        IrregularAxis(
-            label='time',
-            index_label='k',
-            positions=[
-                f'{t.isoformat()}T00:00:00.000Z'
-                for t in product.ranges['times']
-            ],
-            uom='ISO-8601',
-            type=SpatioTemporalType.TEMPORAL,
+    if product.regular_time_axis:
+        start, end = product.time_range()
+        size = (end - start).days // product.time_axis_interval
+        axes.append(
+            RegularAxis(
+                label='time',
+                index_label='k',
+                lower_bound=start.isoformat(),
+                upper_bound=end.isoformat(),
+                resolution=f'P{product.time_axis_interval}D',
+                uom="ISO-8601",
+                type=SpatioTemporalType.TEMPORAL,
+                size=size,
+            )
         )
-    )
+    else:
+        axes.append(
+            IrregularAxis(
+                label='time',
+                index_label='k',
+                positions=[
+                    f'{t.isoformat()}T00:00:00.000Z'
+                    for t in product.ranges['times']
+                ],
+                uom='ISO-8601',
+                type=SpatioTemporalType.TEMPORAL,
+            )
+        )
 
     return CoverageDescription(
         identifier=product.name,

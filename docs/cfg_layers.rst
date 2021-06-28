@@ -5,7 +5,7 @@ OWS Configuration - Layers
 .. contents:: Table of Contents
 
 Layers Section
---------------
+==============
 
 The "layers" section of the `root configuration object
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
@@ -109,7 +109,7 @@ above, folder layers have a "layers" element which is a list of child
 layers (which may be named layers, folder layers with their own
 child layers).
 
-A folder layer may also have a `label` element which is used only
+A folder layer may also have a ``label`` element which is used only
 for
 `metadata separation and internationalisation
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
@@ -290,8 +290,45 @@ are mapped to user-accessible dates. The acceptable values are:
 (All datacube_ows services currently only accept requests by
 date.  Any time component in the request will be ignored.)
 
-Note that it will usually be necessary to rerun update_ranges.py
+Note that it will usually be necessary to rerun `datacube-ows-update
+<https://datacube-ows.readthedocs.io/en/latest/database.html#updating-range-tables-for-individual-layers>`_
 for the layer after changing the time resolution.
+
+-----------------------------
+Regular Time Axis (time_axis)
+-----------------------------
+
+The time axis is how OWS publishes the dates for which data is available.  The default
+behaviour (``time_axis`` not specified or ``None``) is to use an irregular time axis, where the available dates
+(as cached in `the OWS range tables <datacube-ows-update <https://datacube-ows.readthedocs.io/en/latest/database.html>`_)
+are listed individually.  These long lists of dates lead to unncessarily large capabilities documents
+for all supported protocols.
+
+A regular time axis is where the available dates are published as a start date, an end date and an interval size. This
+can result in a dramatic reduction in capabilities document sizes and can be useful for certain types of composite
+products.
+
+Specify a regular time axis by declaring a ``time_interval``, which is a positive integer, measured in days:
+
+::
+
+    "time_axis": {
+        "time_interval": 14,  # data every 14 days.
+    },
+
+The default behaviour is to use the earliest and latest date for the layer from the range tables as the
+start and end date.  This can be over-ridden by manually specifying a ``start_date`` and/or an ``end_date``
+(using ISO date format). If either is omitted, the earliest or latest (as appropriate) date from the range table
+is used.
+
+::
+
+    "time_axis": {
+        "time_interval": 1,  # daily data
+        "start_date": "1988-01-07", # Data from 1st July 1988 to 31st December 2019
+        "end_date": "2019-12-31",
+    },
+
 
 ---------------------------
 Dynamic Data Flag (dynamic)
@@ -307,7 +344,7 @@ Bands Dictionary (bands)
 ------------------------
 
 The "bands" section is required for all named layers.
-It contains a dictionary of supported bands and alises:
+It contains a dictionary of supported bands and aliases:
 
 ::
 

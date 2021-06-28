@@ -731,6 +731,9 @@ ows_cfg = {
                     "title": "Level 1 USGS Landsat-8 Public Data Set Clone",
                     "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
                     "name": "ls8_usgs_level1_scene_layer_clone",
+                    "time_axis": {
+                        "time_interval": 1
+                    }
                 },
             ],
         },  ### End of Landsat folder.

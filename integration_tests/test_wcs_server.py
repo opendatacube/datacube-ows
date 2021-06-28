@@ -923,8 +923,9 @@ def test_wcs20_server(ows_server):
     assert contents
 
     # Test DescribeCoverage
-    desc_cov = wcs.getDescribeCoverage(contents[0])
-    assert desc_cov
+    for cov in contents:
+        desc_cov = wcs.getDescribeCoverage(cov)
+        assert desc_cov
 
 
 def test_wcs20_getcoverage_geotiff(ows_server):

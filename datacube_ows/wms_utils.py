@@ -206,6 +206,11 @@ def parse_time_item(item, product):
         if matching_times:
             # default to the first matching time
             return matching_times[0]
+        elif product.regular_time_axis:
+            raise WMSException(
+                "No data available for time dimension range '%s'-'%s' for this layer" % (start, end),
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
         else:
             raise WMSException(
                 "Time dimension range '%s'-'%s' not valid for this layer" % (start, end),
@@ -224,11 +229,29 @@ def parse_time_item(item, product):
             locator="Time parameter")
 
     # Validate time parameter for requested layer.
-    if time not in product.ranges["time_set"]:
-        raise WMSException(
-            "Time dimension value '%s' not valid for this layer" % times[0],
-            WMSException.INVALID_DIMENSION_VALUE,
-            locator="Time parameter")
+    if product.regular_time_axis:
+        start, end = product.time_range()
+        if time < start:
+            raise WMSException(
+                "Time dimension value '%s' not valid for this layer" % times[0],
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
+        if time > end:
+            raise WMSException(
+                "Time dimension value '%s' not valid for this layer" % times[0],
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
+        if (time - start).days % product.time_axis_interval != 0:
+            raise WMSException(
+                "Time dimension value '%s' not valid for this layer" % times[0],
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
+    else:
+        if time not in product.ranges["time_set"]:
+            raise WMSException(
+                "Time dimension value '%s' not valid for this layer" % times[0],
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
     return time
 
 
