@@ -262,9 +262,10 @@ def get_coverage_data(request):
 
         output = stacker.data(datasets, skip_corrections=True)
 
-    # Clean extent flag band from output
+        # Clean extent flag band from output
+        raw_bands = [layer.band_idx.band(b) for b in bands]
         for k, v in output.data_vars.items():
-            if k not in bands:
+            if k not in raw_bands:
                 output = output.drop_vars([k])
 
     #
