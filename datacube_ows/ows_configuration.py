@@ -68,6 +68,8 @@ def read_config(path=None):
 
 class BandIndex(OWSMetadataConfig):
     METADATA_DEFAULT_BANDS = True
+    METADATA_TITLE = False
+    METADATA_ABSTRACT = False
 
     def __init__(self, layer, band_cfg):
         super().__init__(band_cfg)
@@ -184,8 +186,6 @@ class SuppURL(OWSConfigEntry):
 
 
 class OWSLayer(OWSMetadataConfig):
-    METADATA_TITLE = False
-    METADATA_ABSTRACT = False
     METADATA_KEYWORDS = True
     METADATA_ATTRIBUTION = True
 
