@@ -158,6 +158,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     METADATA_FEES = False
     METADATA_ACCESS_CONSTRAINTS = False
     METADATA_ATTRIBUTION = False
+    METADATA_DEFAULT_BANDS = False
 
     _metadata_registry = {}
     _inheritance_registry = {}
@@ -234,6 +235,12 @@ class OWSMetadataConfig(OWSConfigEntry):
                 self.register_metadata(self.get_obj_label(), FLD_CONTACT_ORGANISATION, org)
             if position:
                 self.register_metadata(self.get_obj_label(), FLD_CONTACT_POSITION, position)
+        if self.METADATA_DEFAULT_BANDS:
+            for k,v in cfg.items():
+                if len(v):
+                    self.register_metadata(self.get_obj_label(), k, v[0])
+                else:
+                    self.register_metadata(self.get_obj_label(), k, k)
     @property
     def keywords(self):
         return self._keywords

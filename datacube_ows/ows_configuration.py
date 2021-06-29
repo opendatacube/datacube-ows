@@ -66,7 +66,9 @@ def read_config(path=None):
     return cfg_expand(cfg, cwd=cwd)
 
 
-class BandIndex(OWSConfigEntry):
+class BandIndex(OWSMetadataConfig):
+    METADATA_DEFAULT_BANDS = True
+
     def __init__(self, layer, band_cfg):
         super().__init__(band_cfg)
         self.product = layer
@@ -75,10 +77,14 @@ class BandIndex(OWSConfigEntry):
             self.band_cfg = {}
         else:
             self.band_cfg = band_cfg
+        self.parse_metadata(band_cfg)
         self._idx = {}
         self.add_aliases(self.band_cfg)
         self.declare_unready("native_bands")
         self.declare_unready("_nodata_vals")
+
+    def get_obj_label(self):
+        return self.product.get_obj_label() + ".bands"
 
     def add_aliases(self, cfg):
         for b, aliases in cfg.items():
@@ -178,6 +184,8 @@ class SuppURL(OWSConfigEntry):
 
 
 class OWSLayer(OWSMetadataConfig):
+    METADATA_TITLE = False
+    METADATA_ABSTRACT = False
     METADATA_KEYWORDS = True
     METADATA_ATTRIBUTION = True
 
