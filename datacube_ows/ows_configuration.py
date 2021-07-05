@@ -72,7 +72,10 @@ class BandIndex(OWSMetadataConfig):
     METADATA_ABSTRACT = False
 
     def __init__(self, layer, band_cfg):
+        if band_cfg is None:
+            band_cfg = {}
         super().__init__(band_cfg)
+        self.band_cfg = band_cfg
         self.product = layer
         self.product_name = layer.name
         if band_cfg is None:
@@ -84,6 +87,9 @@ class BandIndex(OWSMetadataConfig):
         self.add_aliases(self.band_cfg)
         self.declare_unready("native_bands")
         self.declare_unready("_nodata_vals")
+
+    def global_config(self):
+        return self.product.global_config()
 
     def get_obj_label(self):
         return self.product.get_obj_label() + ".bands"
@@ -121,11 +127,8 @@ class BandIndex(OWSMetadataConfig):
         raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
 
     def band_label(self, name_alias):
-        name = self.band(name_alias)
-        if self.band_cfg[name]:
-            return self.band_cfg[name][0]
-        else:
-            return name
+        canonical_name = self.band(name_alias)
+        return self.read_local_metadata(canonical_name)
 
     def nodata_val(self, name_alias):
         name = self.band(name_alias)
