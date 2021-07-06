@@ -78,10 +78,6 @@ class BandIndex(OWSMetadataConfig):
         self.band_cfg = band_cfg
         self.product = layer
         self.product_name = layer.name
-        if band_cfg is None:
-            self.band_cfg = {}
-        else:
-            self.band_cfg = band_cfg
         self.parse_metadata(band_cfg)
         self._idx = {}
         self.add_aliases(self.band_cfg)
