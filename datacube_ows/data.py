@@ -372,6 +372,8 @@ def user_date_sorter(odc_dates, geom, user_dates):
     )
     return xrresult
 
+class EmptyResponse(Exception):
+    pass
 
 @log_call
 def get_map(args):
@@ -389,102 +391,106 @@ def get_map(args):
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
     qprof["n_dates"] = n_dates
     with cube() as dc:
-        if not dc:
-            raise WMSException("Database connectivity failure")
-        # Tiling.
-        stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
-        zoomed_out = params.zf < params.product.min_zoom
-        qprof["zoom_factor"] = params.zf
-        qprof.start_event("count-datasets")
-        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-        qprof.end_event("count-datasets")
-        qprof["n_datasets"] = n_datasets
-        too_many_datasets = (params.product.max_datasets_wms > 0
-                             and n_datasets > params.product.max_datasets_wms
-                             )
-        if qprof.active:
-            qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
-        if too_many_datasets or zoomed_out:
-            stacker.resource_limited = True
-            qprof["too_many_datasets"] = too_many_datasets
-            qprof["zoomed_out"] = zoomed_out
+        try:
+            if not dc:
+                raise WMSException("Database connectivity failure")
+            # Tiling.
+            stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
+            zoomed_out = params.zf < params.product.min_zoom
+            qprof["zoom_factor"] = params.zf
+            qprof.start_event("count-datasets")
+            n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+            qprof.end_event("count-datasets")
+            qprof["n_datasets"] = n_datasets
+            too_many_datasets = (params.product.max_datasets_wms > 0
+                                 and n_datasets > params.product.max_datasets_wms
+                                 )
+            if qprof.active:
+                qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
+            if too_many_datasets or zoomed_out:
+                stacker.resource_limited = True
+                qprof["too_many_datasets"] = too_many_datasets
+                qprof["zoomed_out"] = zoomed_out
 
-        if stacker.resource_limited and not params.product.low_res_product_names:
-            qprof.start_event("extent-in-query")
-            extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
-            qprof.end_event("extent-in-query")
-            if extent is None:
-                qprof["write_action"] = "No extent: Write Empty"
-                qprof.start_event("write")
-                body = _write_empty(params.geobox)
-                qprof.end_event("write")
+            if stacker.resource_limited and not params.product.low_res_product_names:
+                qprof.start_event("extent-in-query")
+                extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
+                qprof.end_event("extent-in-query")
+                if extent is None:
+                    qprof["write_action"] = "No extent: Write Empty"
+                    raise EmptyResponse()
+                else:
+                    qprof["write_action"] = "Polygon"
+                    qprof.start_event("write")
+                    body = _write_polygon(
+                        params.geobox,
+                        extent,
+                        params.product.zoom_fill,
+                        params.product)
+                    qprof.end_event("write")
+            elif n_datasets == 0:
+                qprof["write_action"] = "No datasets: Write Empty"
+                raise EmptyResponse()
             else:
-                qprof["write_action"] = "Polygon"
-                qprof.start_event("write")
-                body = _write_polygon(
-                    params.geobox,
-                    extent,
-                    params.product.zoom_fill,
-                    params.product)
-                qprof.end_event("write")
-        elif n_datasets == 0:
-            qprof["write_action"] = "No datsets: Write Empty"
+                if stacker.resource_limited:
+                    qprof.start_event("count-summary-datasets")
+                    qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+                    qprof.end_event("count-summary-datasets")
+                qprof.start_event("fetch-datasets")
+                datasets = stacker.datasets(dc.index)
+                for flagband, dss in datasets.items():
+                    if not dss.any():
+                        _LOG.warning("Flag band %s returned no data", str(flagband))
+                    if len(dss.time) != n_dates and flagband.main:
+                        qprof["write_action"] = f"{n_dates} requested, only {len(dss.time)} found - returning empty image"
+                        raise EmptyResponse()
+                qprof.end_event("fetch-datasets")
+                _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
+                qprof.start_event("load-data")
+                data = stacker.data(datasets)
+                qprof.end_event("load-data")
+                _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
+                qprof.start_event("build-masks")
+                td_masks = []
+                for npdt in data.time.values:
+                    td = data.sel(time=npdt)
+                    td_ext_mask = None
+                    for band in params.style.needed_bands:
+                        if band not in params.style.flag_bands:
+                            if params.product.data_manual_merge:
+                                if td_ext_mask is None:
+                                    td_ext_mask = ~numpy.isnan(td[band])
+                                else:
+                                    td_ext_mask &= ~numpy.isnan(td[band])
+                            else:
+                                for f in params.product.extent_mask_func:
+                                    if td_ext_mask is None:
+                                        td_ext_mask = f(td, band)
+                                    else:
+                                        td_ext_mask &= f(td, band)
+                    if params.product.data_manual_merge:
+                        td_ext_mask = xarray.DataArray(td_ext_mask)
+                    td_masks.append(td_ext_mask)
+                extent_mask = xarray.concat(td_masks, dim=data.time)
+                qprof.end_event("build-masks")
+
+                if not data:
+                    qprof["write_action"] = "No Data: Write Empty"
+                    raise EmptyResponse()
+                else:
+                    qprof["write_action"] = "Write Data"
+                    if mdh and  mdh.preserve_user_date_order:
+                        sorter = user_date_sorter(data.time.values,
+                                              params.geobox.geographic_extent,
+                                              params.times)
+                        data = data.sortby(sorter)
+                        extent_mask = extent_mask.sortby(sorter)
+
+                    body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
+        except EmptyResponse:
             qprof.start_event("write")
             body = _write_empty(params.geobox)
             qprof.end_event("write")
-        else:
-            if stacker.resource_limited:
-                qprof.start_event("count-summary-datasets")
-                qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-                qprof.end_event("count-summary-datasets")
-            qprof.start_event("fetch-datasets")
-            datasets = stacker.datasets(dc.index)
-            for flagband, dss in datasets.items():
-                if not dss.any():
-                    _LOG.warning("Flag band %s returned no data", str(flagband))
-            qprof.end_event("fetch-datasets")
-            _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
-            qprof.start_event("load-data")
-            data = stacker.data(datasets)
-            qprof.end_event("load-data")
-            _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
-            qprof.start_event("build-masks")
-            td_masks = []
-            for npdt in data.time.values:
-                td = data.sel(time=npdt)
-                td_ext_mask = None
-                for band in params.style.needed_bands:
-                    if band not in params.style.flag_bands:
-                        if params.product.data_manual_merge:
-                            if td_ext_mask is None:
-                                td_ext_mask = ~numpy.isnan(td[band])
-                            else:
-                                td_ext_mask &= ~numpy.isnan(td[band])
-                        else:
-                            for f in params.product.extent_mask_func:
-                                if td_ext_mask is None:
-                                    td_ext_mask = f(td, band)
-                                else:
-                                    td_ext_mask &= f(td, band)
-                if params.product.data_manual_merge:
-                    td_ext_mask = xarray.DataArray(td_ext_mask)
-                td_masks.append(td_ext_mask)
-            extent_mask = xarray.concat(td_masks, dim=data.time)
-            qprof.end_event("build-masks")
-
-            if not data:
-                qprof["write_action"] = "No Data: Write Empty"
-                body = _write_empty(params.geobox)
-            else:
-                qprof["write_action"] = "Write Data"
-                if mdh and  mdh.preserve_user_date_order:
-                    sorter = user_date_sorter(data.time.values,
-                                          params.geobox.geographic_extent,
-                                          params.times)
-                    data = data.sortby(sorter)
-                    extent_mask = extent_mask.sortby(sorter)
-
-                body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
 
     if params.ows_stats:
         return json_response(qprof.profile())
