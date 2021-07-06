@@ -236,7 +236,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if position:
                 self.register_metadata(self.get_obj_label(), FLD_CONTACT_POSITION, position)
         if self.METADATA_DEFAULT_BANDS:
-            for k,v in cfg.items():
+            for k, v in cfg.items():
                 if len(v):
                     self.register_metadata(self.get_obj_label(), k, v[0])
                 else:
