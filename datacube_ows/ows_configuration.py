@@ -126,6 +126,16 @@ class BandIndex(OWSMetadataConfig):
             return self._idx[name_alias]
         raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
 
+    def locale_band(self, name_alias):
+        try:
+            return self.band(name_alias)
+        except ConfigException:
+            pass
+        for b in self.band_cfg.keys():
+            if name_alias == self.band_label(b):
+                return b
+        raise ConfigException(f"Unknown band: {name_alias} in layer {self.product.name}")
+
     def band_label(self, name_alias):
         canonical_name = self.band(name_alias)
         return self.read_local_metadata(canonical_name)

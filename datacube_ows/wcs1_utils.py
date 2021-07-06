@@ -162,7 +162,7 @@ class WCS1GetCoverageRequest():
                 if not b:
                     continue
                 try:
-                    self.bands.append(self.product.band_idx.band(b))
+                    self.bands.append(self.product.band_idx.locale_band(b))
                 except ConfigException:
                     raise WCS1Exception(f"Invalid measurement: {b}",
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
