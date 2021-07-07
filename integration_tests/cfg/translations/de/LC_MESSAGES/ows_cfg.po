@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Open web-services for the Open Data Cube "
 "2021-06-02T15:25:24.869477\n"
 "Report-Msgid-Bugs-To: test@example.com\n"
-"POT-Creation-Date: 2021-06-02 15:25+1005\n"
+"POT-Creation-Date: 2021-07-07 09:57+1005\n"
 "PO-Revision-Date: 2021-06-02 15:30+1000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -26,10 +26,10 @@ msgstr "This is the German translation of the title"
 #. Open Datacube instance.
 msgid "global.abstract"
 msgstr ""
-"This is the German translation of the abstract of this very "
-"special Open Datacube instance."
+"This is the German translation of the abstract of this very special Open "
+"Datacube instance."
 
-#. time-series,satellite,australia
+#. satellite,time-series,australia
 msgid "global.local_keywords"
 msgstr "time-series,satellite,australia"
 
@@ -57,7 +57,7 @@ msgstr "Landsat"
 msgid "folder.landsat.abstract"
 msgstr "Images from the Landsat satellite"
 
-#. landsat,landsat8,landsat7
+#. landsat,landsat7,landsat8
 msgid "folder.landsat.local_keywords"
 msgstr "landsat,landsat8,landsat7"
 
@@ -75,6 +75,54 @@ msgstr "Imagery from the Level 1 Landsat-8 USGS Public Data Set"
 
 msgid "layer.ls8_usgs_level1_scene_layer.local_keywords"
 msgstr ""
+
+#. band_1
+msgid "layer.ls8_usgs_level1_scene_layer.bands.coastal_aerosol"
+msgstr "band_1"
+
+#. band_2
+msgid "layer.ls8_usgs_level1_scene_layer.bands.blue"
+msgstr "blau"
+
+#. band_3
+msgid "layer.ls8_usgs_level1_scene_layer.bands.green"
+msgstr "gruen"
+
+#. band_4
+msgid "layer.ls8_usgs_level1_scene_layer.bands.red"
+msgstr "rot"
+
+#. nir
+msgid "layer.ls8_usgs_level1_scene_layer.bands.nir"
+msgstr "nir"
+
+#. band_6
+msgid "layer.ls8_usgs_level1_scene_layer.bands.swir1"
+msgstr "band_6"
+
+#. band_7
+msgid "layer.ls8_usgs_level1_scene_layer.bands.swir2"
+msgstr "band_7"
+
+#. band_8
+msgid "layer.ls8_usgs_level1_scene_layer.bands.panchromatic"
+msgstr "band_8"
+
+#. band_9
+msgid "layer.ls8_usgs_level1_scene_layer.bands.cirrus"
+msgstr "band_9"
+
+#. band_10
+msgid "layer.ls8_usgs_level1_scene_layer.bands.lwir1"
+msgstr "band_10"
+
+#. band_11
+msgid "layer.ls8_usgs_level1_scene_layer.bands.lwir2"
+msgstr "band_11"
+
+#. QUALITY
+msgid "layer.ls8_usgs_level1_scene_layer.bands.quality"
+msgstr "QUALITY"
 
 #. Simple RGB
 msgid "style.ls8_usgs_level1_scene_layer.simple_rgb.title"
@@ -119,6 +167,17 @@ msgstr ""
 "Normalised Difference Vegetation Index - a derived index that correlates "
 "well with the existence of vegetation"
 
+#. NDVI
+msgid "style.ls8_usgs_level1_scene_layer.ndvi_expr.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.ls8_usgs_level1_scene_layer.ndvi_expr.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
 #. NDVI Delta
 msgid "style.ls8_usgs_level1_scene_layer.ndvi_delta.title"
 msgstr "NDVI Delta"
@@ -148,6 +207,54 @@ msgstr "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone"
 
 msgid "layer.ls8_usgs_level1_scene_layer_clone.local_keywords"
 msgstr ""
+
+#. band_1
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.coastal_aerosol"
+msgstr "band_1"
+
+#. band_2
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.blue"
+msgstr "band_2"
+
+#. band_3
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.green"
+msgstr "band_3"
+
+#. band_4
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.red"
+msgstr "band_4"
+
+#. nir
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.nir"
+msgstr "nir"
+
+#. band_6
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.swir1"
+msgstr "band_6"
+
+#. band_7
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.swir2"
+msgstr "band_7"
+
+#. band_8
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.panchromatic"
+msgstr "band_8"
+
+#. band_9
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.cirrus"
+msgstr "band_9"
+
+#. band_10
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.lwir1"
+msgstr "band_10"
+
+#. band_11
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.lwir2"
+msgstr "band_11"
+
+#. QUALITY
+msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.quality"
+msgstr "QUALITY"
 
 #. Simple RGB
 msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb.title"
@@ -188,6 +295,17 @@ msgstr "NDVI"
 #. Normalised Difference Vegetation Index - a derived index that correlates
 #. well with the existence of vegetation
 msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI
+msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_expr.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_expr.abstract"
 msgstr ""
 "Normalised Difference Vegetation Index - a derived index that correlates "
 "well with the existence of vegetation"
@@ -299,6 +417,18 @@ msgstr ""
 msgid "layer.ls5_fc_albers.local_keywords"
 msgstr ""
 
+#. bare_soil
+msgid "layer.ls5_fc_albers.bands.BS"
+msgstr "bare_soil"
+
+#. photosynthetic_vegetation
+msgid "layer.ls5_fc_albers.bands.PV"
+msgstr "photosynthetic_vegetation"
+
+#. non_photosynthetic_vegetation
+msgid "layer.ls5_fc_albers.bands.NPV"
+msgstr "non_photosynthetic_vegetation"
+
 #. Fractional Cover
 msgid "style.ls5_fc_albers.simple_fc.title"
 msgstr "Fractional Cover"
@@ -347,6 +477,10 @@ msgstr ""
 
 msgid "layer.wofs_albers.local_keywords"
 msgstr ""
+
+#. water
+msgid "layer.wofs_albers.bands.water"
+msgstr "water"
 
 #. Observations
 msgid "style.wofs_albers.observations.title"
@@ -408,6 +542,18 @@ msgstr ""
 msgid "layer.ls7_fc_albers.local_keywords"
 msgstr ""
 
+#. bare_soil
+msgid "layer.ls7_fc_albers.bands.BS"
+msgstr "bare_soil"
+
+#. photosynthetic_vegetation
+msgid "layer.ls7_fc_albers.bands.PV"
+msgstr "photosynthetic_vegetation"
+
+#. non_photosynthetic_vegetation
+msgid "layer.ls7_fc_albers.bands.NPV"
+msgstr "non_photosynthetic_vegetation"
+
 #. Fractional Cover
 msgid "style.ls7_fc_albers.simple_fc.title"
 msgstr "Fractional Cover"
@@ -463,6 +609,18 @@ msgstr ""
 msgid "layer.ls8_fc_albers.local_keywords"
 msgstr ""
 
+#. bare_soil
+msgid "layer.ls8_fc_albers.bands.BS"
+msgstr "bare_soil"
+
+#. photosynthetic_vegetation
+msgid "layer.ls8_fc_albers.bands.PV"
+msgstr "photosynthetic_vegetation"
+
+#. non_photosynthetic_vegetation
+msgid "layer.ls8_fc_albers.bands.NPV"
+msgstr "non_photosynthetic_vegetation"
+
 #. Fractional Cover
 msgid "style.ls8_fc_albers.simple_fc.title"
 msgstr "Fractional Cover"
@@ -514,6 +672,18 @@ msgstr ""
 
 msgid "layer.fc_albers_combined.local_keywords"
 msgstr ""
+
+#. bare_soil
+msgid "layer.fc_albers_combined.bands.BS"
+msgstr "bare_soil"
+
+#. photosynthetic_vegetation
+msgid "layer.fc_albers_combined.bands.PV"
+msgstr "photosynthetic_vegetation"
+
+#. non_photosynthetic_vegetation
+msgid "layer.fc_albers_combined.bands.NPV"
+msgstr "non_photosynthetic_vegetation"
 
 #. Fractional Cover
 msgid "style.fc_albers_combined.simple_fc.title"
