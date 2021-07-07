@@ -66,19 +66,29 @@ def read_config(path=None):
     return cfg_expand(cfg, cwd=cwd)
 
 
-class BandIndex(OWSConfigEntry):
+class BandIndex(OWSMetadataConfig):
+    METADATA_DEFAULT_BANDS = True
+    METADATA_TITLE = False
+    METADATA_ABSTRACT = False
+
     def __init__(self, layer, band_cfg):
+        if band_cfg is None:
+            band_cfg = {}
         super().__init__(band_cfg)
+        self.band_cfg = band_cfg
         self.product = layer
         self.product_name = layer.name
-        if band_cfg is None:
-            self.band_cfg = {}
-        else:
-            self.band_cfg = band_cfg
+        self.parse_metadata(band_cfg)
         self._idx = {}
         self.add_aliases(self.band_cfg)
         self.declare_unready("native_bands")
         self.declare_unready("_nodata_vals")
+
+    def global_config(self):
+        return self.product.global_config()
+
+    def get_obj_label(self):
+        return self.product.get_obj_label() + ".bands"
 
     def add_aliases(self, cfg):
         for b, aliases in cfg.items():
@@ -112,12 +122,19 @@ class BandIndex(OWSConfigEntry):
             return self._idx[name_alias]
         raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
 
+    def locale_band(self, name_alias):
+        try:
+            return self.band(name_alias)
+        except ConfigException:
+            pass
+        for b in self.band_cfg.keys():
+            if name_alias == self.band_label(b):
+                return b
+        raise ConfigException(f"Unknown band: {name_alias} in layer {self.product.name}")
+
     def band_label(self, name_alias):
-        name = self.band(name_alias)
-        if self.band_cfg[name]:
-            return self.band_cfg[name][0]
-        else:
-            return name
+        canonical_name = self.band(name_alias)
+        return self.read_local_metadata(canonical_name)
 
     def nodata_val(self, name_alias):
         name = self.band(name_alias)

@@ -14,9 +14,13 @@ from datacube_ows.ows_configuration import BandIndex
 
 @pytest.fixture
 def minimal_prod():
+    glob = MagicMock()
+    glob.internationalised = False
     product = MagicMock()
     product.name = "foo"
     product.product_name = "foo"
+    product.get_obj_label.return_value = "layer.foo"
+    product.global_config.return_value = glob
     return product
 
 

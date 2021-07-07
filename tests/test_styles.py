@@ -42,6 +42,7 @@ def product_layer():
     product_layer._unready_attributes = []
     product_layer.global_cfg = MagicMock()
     product_layer.name = "test_product"
+    product_layer.object_label = "layer.test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
     product_layer.products = [FakeODCProduct('test_odc_product')]
@@ -74,6 +75,12 @@ def product_layer():
     product_layer.fuse_func = None
     product_layer.allflag_productbands = [FakeProductBand()]
     product_layer.style_index = {}
+    product_layer.band_idx._metadata_registry = {
+        "layer.test_product.bands.red": "crimson",
+        "layer.test_product.bands.green": "green",
+        "layer.test_product.bands.blue": "azure",
+        "layer.test_product.bands.fake": "fake",
+    }
     return product_layer
 
 

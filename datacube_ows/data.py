@@ -131,7 +131,7 @@ class DataStacker:
         if style:
             self._needed_bands = list(style.needed_bands)
         elif bands:
-            self._needed_bands = [self._product.band_idx.band(b) for b in bands]
+            self._needed_bands = [self._product.band_idx.locale_band(b) for b in bands]
         else:
             self._needed_bands = list(self._product.band_idx.native_bands.index)
 
