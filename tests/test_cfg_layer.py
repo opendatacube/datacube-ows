@@ -368,7 +368,7 @@ def test_multi_product_name_mismatch(minimal_multiprod_cfg, minimal_global_cfg):
 
 def test_resource_limit_zoomfill(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["resource_limits"] = {
-        "zoomed_out_fill_colour": [128,128,128]
+        "zoomed_out_fill_colour": [128, 128, 128]
     }
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)

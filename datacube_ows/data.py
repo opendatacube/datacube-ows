@@ -19,8 +19,8 @@ import xarray
 from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
 from pandas import Timestamp
-from rasterio.io import MemoryFile
 from rasterio.features import rasterize
+from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
 
 from datacube_ows.cube_pool import cube
