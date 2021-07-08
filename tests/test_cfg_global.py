@@ -15,6 +15,7 @@ def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
     cfg.make_ready(minimal_dc)
     assert cfg.ready
     assert cfg.initialised
+    assert cfg.wcs_tiff_statistics
 
 
 def test_global_no_title(minimal_global_raw_cfg):
@@ -150,6 +151,14 @@ def test_bad_wcs_format(minimal_global_raw_cfg, wcs_global_cfg):
     assert "jpeg2000" in str(excinfo.value)
     assert "not a supported format" in str(excinfo.value)
 
+
+def test_tiff_stats(minimal_global_raw_cfg, wcs_global_cfg)
+    OWSConfig._instance = None
+    minimal_global_raw_cfg["global"]["services"] = {"wcs": True}
+    minimal_global_raw_cfg["wcs"] = wcs_global_cfg
+    minimal_global_raw_cfg["wcs"]["calculate_tiff_statistics"] = False
+    cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert not cfg.wcs_tiff_statistics
 
 def test_crs_lookup_fail(minimal_global_raw_cfg, minimal_dc):
     OWSConfig._instance = None

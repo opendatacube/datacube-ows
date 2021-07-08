@@ -307,6 +307,7 @@ def get_tiff(request, data, crs, product, width, height, affine):
 
     # TODO: convert other parameters as-well
     gtiff = request.geotiff_encoding_parameters
+    cfg = get_config()
 
     data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
@@ -345,10 +346,11 @@ def get_tiff(request, data, crs, product, width, height, affine):
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
                 dst.set_band_description(idx, product.band_idx.band_label(band))
-                dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
-                dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())
-                dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
-                dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
+                if cfg.wcs_tiff_statistics:
+                    dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
+                    dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())
+                    dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
+                    dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
         return memfile.read()
 
 
