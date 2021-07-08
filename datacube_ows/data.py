@@ -20,8 +20,8 @@ from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
 from pandas import Timestamp
 from rasterio.io import MemoryFile
+from rasterio.features import rasterize
 from rasterio.warp import Resampling
-from skimage.draw import polygon as skimg_polygon
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
@@ -561,6 +561,33 @@ def get_coordlist(geo, layer_name):
 
 @log_call
 def _write_polygon(geobox, polygon, zoom_fill, layer):
+    geobox_ext = geobox.extent
+    if geobox_ext.within(polygon):
+        data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
+    else:
+        if len(zoom_fill) == 3:
+            zoom_fill += ["255"]
+        data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
+        data = rasterize(shapes=[polygon],
+                          fill=0,
+                          default_value=2,
+                          out=data,
+                          transform=geobox.affine
+                        )
+    with MemoryFile() as memfile:
+        with memfile.open(driver='PNG',
+                          width=geobox.width,
+                          height=geobox.height,
+                          count=4,
+                          transform=None,
+                          nodata=0,
+                          dtype='uint8') as thing:
+            for idx, fill in enumerate(zoom_fill, start=1):
+                thing.write_band(idx, data * fill)
+        return memfile.read()
+
+@log_call
+def _skimg_write_polygon(geobox, polygon, zoom_fill, layer):
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")

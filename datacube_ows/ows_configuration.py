@@ -506,6 +506,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         wms_cfg = cfg.get("wms", {})
         wcs_cfg = cfg.get("wcs", {})
         self.zoom_fill = wms_cfg.get("zoomed_out_fill_colour", [150, 180, 200, 160])
+        if len(self.zoom_fill) == 3:
+            self.zoom_fill += [255]
+        if len(self.zoom_fill) != 4:
+            raise ConfigException("zoomed_out_fill_colour must have 3 or 4 elements")
         self.min_zoom = wms_cfg.get("min_zoom_factor", 300.0)
         self.max_datasets_wms = wms_cfg.get("max_datasets", 0)
         self.max_datasets_wcs = wcs_cfg.get("max_datasets", 0)
