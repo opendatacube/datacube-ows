@@ -15,7 +15,7 @@ def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
     cfg.make_ready(minimal_dc)
     assert cfg.ready
     assert cfg.initialised
-    assert cfg.wcs_tiff_statistics
+    assert not cfg.wcs_tiff_statistics
 
 
 def test_global_no_title(minimal_global_raw_cfg):
@@ -40,6 +40,7 @@ def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     assert cfg.wcs
     assert not cfg.wms
     assert not cfg.wmts
+    assert cfg.wcs_tiff_statistics
 
 
 def test_contact_details_parse(minimal_global_cfg):
