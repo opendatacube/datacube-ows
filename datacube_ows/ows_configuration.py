@@ -1252,16 +1252,13 @@ class OWSConfig(OWSMetadataConfig):
             self.native_wcs_format = cfg["native_format"]
             if self.native_wcs_format not in self.wcs_formats_by_name:
                 raise ConfigException(f"Configured native WCS format ({self.native_wcs_format}) not a supported format.")
+            self.wcs_tiff_statistics = cfg.get("calculate_tiff_statistics", True)
         else:
-            self.default_geographic_CRS = None
-            self.default_geographic_CRS_def = None
             self.wcs_formats = []
             self.wcs_formats_by_name = {}
             self.wcs_formats_by_mime = {}
             self.native_wcs_format = None
-        # shouldn't need to keep these?
-        # self.dummy_wcs_grid = False
-        # self.create_wcs_grid = False
+            self.wcs_tiff_statistics = False
 
     def parse_wmts(self, cfg):
         tms_cfgs = TileMatrixSet.default_tm_sets.copy()
