@@ -565,8 +565,6 @@ def _write_polygon(geobox, polygon, zoom_fill, layer):
     if geobox_ext.within(polygon):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
     else:
-        if len(zoom_fill) == 3:
-            zoom_fill += ["255"]
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
         data = rasterize(shapes=[polygon],
                           fill=0,
