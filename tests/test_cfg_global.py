@@ -152,7 +152,7 @@ def test_bad_wcs_format(minimal_global_raw_cfg, wcs_global_cfg):
     assert "not a supported format" in str(excinfo.value)
 
 
-def test_tiff_stats(minimal_global_raw_cfg, wcs_global_cfg)
+def test_tiff_stats(minimal_global_raw_cfg, wcs_global_cfg):
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {"wcs": True}
     minimal_global_raw_cfg["wcs"] = wcs_global_cfg
