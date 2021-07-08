@@ -21,6 +21,7 @@ flask-log-request-id
 pytest-localserver
 pytest-mock
 requests
+scipy
 watchdog
 timezonefinderL
 python-slugify

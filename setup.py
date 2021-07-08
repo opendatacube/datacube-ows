@@ -20,6 +20,7 @@ requirements = [
     'lxml',
     'matplotlib',
     'numpy',
+    'scipy',
     'Pillow',
     'Babel',
     'Flask-Babel',
