@@ -30,7 +30,6 @@ requirements = [
     'rasterio',
     'regex',
     's3fs',
-    'scikit-image',
     'timezonefinderL',
     'python-slugify',
     'geoalchemy',

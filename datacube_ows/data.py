@@ -586,32 +586,6 @@ def _write_polygon(geobox, polygon, zoom_fill, layer):
                 thing.write_band(idx, data * fill)
         return memfile.read()
 
-@log_call
-def _skimg_write_polygon(geobox, polygon, zoom_fill, layer):
-    geobox_ext = geobox.extent
-    if geobox_ext.within(polygon):
-        data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
-    else:
-        data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
-        coordinates_list = get_coordlist(polygon, layer.name)
-        for polygon_coords in coordinates_list:
-            pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
-            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords],
-                                   shape=[geobox.width, geobox.height])
-            data[rs, cs] = 1
-
-    with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=geobox.width,
-                          height=geobox.height,
-                          count=len(zoom_fill),
-                          transform=None,
-                          nodata=0,
-                          dtype='uint8') as thing:
-            for idx, fill in enumerate(zoom_fill, start=1):
-                thing.write_band(idx, data * fill)
-        return memfile.read()
-
 
 @log_call
 def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):

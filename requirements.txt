@@ -7,7 +7,6 @@ flask
 flask-cors
 colour
 pandas==1.0.5
-scikit-image
 gevent
 python-slugify
 geoalchemy2
