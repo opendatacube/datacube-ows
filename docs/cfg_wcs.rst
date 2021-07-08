@@ -81,3 +81,20 @@ activated (specified in the `global services <https://datacube-ows.readthedocs.i
 section) and must contain the name of one of the formats in
 defined in the
 `formats <#supported-output-formats-formats>`_ section.
+
+GEOTiff Statistics (calculate_tiff_statistics)
+==============================================
+
+An optional boolean (defaults to True) that only applies for geotiff coverage responses.
+
+It specifies whether or not channel statistics (max/min/avg/stddev) are calculated and stored
+in TIFF metadata.  Calculating statistics results in better interoperability with some clients
+(e.g. QGIS) but results in increased memory usage when generating very large coverage files.
+
+We recommend leaving this setting false (the default) unless you particularly need to
+support very large coverage files.
+
+::
+
+    # Suppress tiff statistics to support very large geotiff responses
+    "calculate_tiff_statistics": False,

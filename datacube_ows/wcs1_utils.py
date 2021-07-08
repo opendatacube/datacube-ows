@@ -404,10 +404,11 @@ def get_tiff(req, data):
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
                 dst.set_band_description(idx, req.product.band_idx.band_label(band))
-                dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
-                dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())
-                dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
-                dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
+                if cfg.wcs_tiff_statistics:
+                    dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
+                    dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())
+                    dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
+                    dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
         return memfile.read()
 
 
