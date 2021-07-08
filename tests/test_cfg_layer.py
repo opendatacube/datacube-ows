@@ -366,6 +366,21 @@ def test_multi_product_name_mismatch(minimal_multiprod_cfg, minimal_global_cfg):
     assert "a_layer" in str(excinfo.value)
 
 
+def test_resource_limit_zoomfill(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["resource_limits"] = {
+        "wms": {"zoomed_out_fill_colour": [128, 128, 128]}
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert len(lyr.zoom_fill) == 4
+    assert lyr.zoom_fill[3] == 255
+    minimal_layer_cfg["resource_limits"]["wms"]["zoomed_out_fill_colour"] = [13, 254]
+    with pytest.raises(ConfigException) as excinfo:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "zoomed_out_fill_colour must have 3 or 4 elements" in str(excinfo.value)
+
+
 def test_manual_merge(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["image_processing"]["manual_merge"] = True
     minimal_layer_cfg["image_processing"]["apply_solar_corrections"] = False

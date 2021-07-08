@@ -7,7 +7,6 @@ flask
 flask-cors
 colour
 pandas==1.0.5
-scikit-image
 gevent
 python-slugify
 geoalchemy2
@@ -22,6 +21,7 @@ flask-log-request-id
 pytest-localserver
 pytest-mock
 requests
+scipy
 watchdog
 timezonefinderL
 python-slugify

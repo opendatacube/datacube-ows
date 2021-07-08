@@ -19,9 +19,9 @@ import xarray
 from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
 from pandas import Timestamp
+from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 from rasterio.warp import Resampling
-from skimage.draw import polygon as skimg_polygon
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
@@ -566,18 +566,17 @@ def _write_polygon(geobox, polygon, zoom_fill, layer):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
     else:
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
-        coordinates_list = get_coordlist(polygon, layer.name)
-        for polygon_coords in coordinates_list:
-            pixel_coords = [~geobox.transform * coords for coords in polygon_coords[0]]
-            rs, cs = skimg_polygon([c[1] for c in pixel_coords], [c[0] for c in pixel_coords],
-                                   shape=[geobox.width, geobox.height])
-            data[rs, cs] = 1
-
+        data = rasterize(shapes=[polygon],
+                          fill=0,
+                          default_value=2,
+                          out=data,
+                          transform=geobox.affine
+                        )
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=geobox.width,
                           height=geobox.height,
-                          count=len(zoom_fill),
+                          count=4,
                           transform=None,
                           nodata=0,
                           dtype='uint8') as thing:
