@@ -4,10 +4,10 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-from pytz import utc
 
 import pytest
 import xarray
+from pytz import utc
 
 import datacube_ows.ogc_utils
 
