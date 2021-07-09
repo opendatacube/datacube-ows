@@ -7,6 +7,7 @@ import datetime
 
 import pytest
 import xarray
+from pytz import utc
 
 import datacube_ows.ogc_utils
 
@@ -200,8 +201,8 @@ def test_mask_by_nan():
 
 def test_day_summary_date_range():
     start, end = datacube_ows.ogc_utils.day_summary_date_range(datetime.date(2015, 5, 12))
-    assert start == datetime.datetime(2015, 5, 12, 0, 0, 0)
-    assert end == datetime.datetime(2015, 5, 12, 23, 59, 59)
+    assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=utc)
+    assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=utc)
 
 xyt_coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),

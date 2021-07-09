@@ -81,8 +81,8 @@ def test_sumday_timeres(dummy_sumday_layer):
 
     assert dummy_sumday_layer.search_times(datetime(2020, 6, 7, 0, 0, 0, tzinfo=pytz.utc)
     ) == (
-        datetime(2020, 6, 7, 0, 0, 0),
-        datetime(2020, 6, 7, 23, 59, 59)
+        datetime(2020, 6, 7, 0, 0, 0, tzinfo=pytz.utc),
+        datetime(2020, 6, 7, 23, 59, 59, tzinfo=pytz.utc)
     )
 
 
@@ -103,8 +103,8 @@ def test_mon_timeres(dummy_monthly_layer, simple_geobox):
         datetime(2020, 6, 1, tzinfo=pytz.utc),
         simple_geobox,
     ) == (
-               datetime(2020, 6, 1),
-               datetime(2020, 6, 30),
+               datetime(2020, 6, 1, tzinfo=pytz.utc),
+               datetime(2020, 6, 30, tzinfo=pytz.utc),
            )
 
 
@@ -125,6 +125,6 @@ def test_year_timeres(dummy_yearly_layer):
         datetime(2020, 6, 1, tzinfo=pytz.utc),
         simple_geobox,
     ) == (
-               datetime(2020, 1, 1),
-               datetime(2020, 12, 31, 23, 59, 59),
+               datetime(2020, 1, 1, tzinfo=pytz.utc),
+               datetime(2020, 12, 31, 23, 59, 59, tzinfo=pytz.utc),
            )
