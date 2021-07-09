@@ -84,24 +84,24 @@ def local_solar_date_range(geobox, date):
 
 
 def month_date_range(date):
-    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0)
+    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=utc)
     y = date.year
     m = date.month + 1
     if m == 13:
         m = 1
         y = y + 1
-    end = datetime.datetime(y, m, 1, 0, 0, 0) - datetime.timedelta(days=1)
+    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=utc) - datetime.timedelta(days=1)
     return start, end
 
 
 def year_date_range(date):
-    start = datetime.datetime(date.year, 1, 1, 0, 0, 0)
-    end = datetime.datetime(date.year, 12, 31, 23, 59, 59)
+    start = datetime.datetime(date.year, 1, 1, 0, 0, 0, tzinfo=utc)
+    end = datetime.datetime(date.year, 12, 31, 23, 59, 59, tzinfo=utc)
     return start, end
 
 def day_summary_date_range(date):
-    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0)
-    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59)
+    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=utc)
+    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=utc)
     return start, end
 
 def tz_for_geometry(geom):
