@@ -78,7 +78,7 @@ def test_month_date_range_wrap():
     d = datetime.date(2019, 12, 1)
     a, b = datacube_ows.ogc_utils.month_date_range(d)
     assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=utc)
-    assert b == datetime.datetime(2019, 12, 31, 0, 0, 0,tzinfo=utc)
+    assert b == datetime.datetime(2019, 12, 31, 0, 0, 0, tzinfo=utc)
 
 
 def test_get_service_base_url():
