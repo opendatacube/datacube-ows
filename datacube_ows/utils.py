@@ -5,10 +5,12 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 from functools import wraps
+from typing import Any, Callable, TypeVar
 from time import monotonic
 
+F = TypeVar('F', bound=Callable[..., Any])
 
-def log_call(func):
+def log_call(func: F) -> F:
     """
     Profiling function decorator
 
@@ -23,7 +25,7 @@ def log_call(func):
     return log_wrapper
 
 
-def time_call(func):
+def time_call(func: F) -> F:
     """
     Profiling function decorator
 
@@ -34,16 +36,16 @@ def time_call(func):
     """
     @wraps(func)
     def timing_wrapper(*args, **kwargs):
-        start = monotonic()
-        result = func(*args, **kwargs)
-        stop = monotonic()
+        start: float = monotonic()
+        result: Any = func(*args, **kwargs)
+        stop: float = monotonic()
         _LOG = logging.getLogger()
         _LOG.debug("%s took: %d ms", func.__name__, int((stop - start) * 1000))
         return result
     return timing_wrapper
 
 
-def group_by_statistical():
+def group_by_statistical() -> "datacube.api.query.GroupBy":
     """
     Returns an ODC GroupBy object, suitable for daily statistical/summary data.
     """
@@ -57,7 +59,7 @@ def group_by_statistical():
     )
 
 
-def get_sqlconn(dc):
+def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
     """
     Extracts a SQLAlchemy database connection from a Datacube object.
 
