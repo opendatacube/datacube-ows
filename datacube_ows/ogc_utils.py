@@ -50,7 +50,6 @@ def dataset_center_time(dataset: "datacube.model.Dataset") -> datetime.datetime:
 
 class NoTimezoneException(Exception):
     """Exception, raised internally if no timezone can be found"""
-    pass
 
 
 def solar_date(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.date:
@@ -282,7 +281,6 @@ class ConfigException(Exception):
     """
     General exception for OWS Configuration issues.
     """
-    pass
 
 
 # Function wrapper for configurable functional elements
