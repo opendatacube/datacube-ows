@@ -45,12 +45,13 @@ def test_dataset_center_time():
 @pytest.fixture
 def dummy_ds():
     ds = MagicMock()
-    ds.extent = geometry.polygon([
-        (149.0, -35.3),
-        (149.1, -35.3),
-        (149.1, -35.4),
-        (149.0, -35.4),
-        (149.0, -35.3),
+    ds.extent = geometry.polygon(
+        [
+            (149.0, -35.3),
+            (149.1, -35.3),
+            (149.1, -35.4),
+            (149.0, -35.4),
+            (149.0, -35.3),
         ],
         crs="EPSG:4326"
     )
@@ -74,10 +75,10 @@ def test_local_date(dummy_ds):
 
 
 def test_month_date_range_wrap():
-    d = datetime.date(2019,12,1)
+    d = datetime.date(2019, 12, 1)
     a, b = datacube_ows.ogc_utils.month_date_range(d)
-    assert a == datetime.datetime(2019,12,1,0,0,0,tzinfo=utc)
-    assert b == datetime.datetime(2019,12,31,0,0,0,tzinfo=utc)
+    assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=utc)
+    assert b == datetime.datetime(2019, 12, 31, 0, 0, 0,tzinfo=utc)
 
 
 def test_get_service_base_url():
@@ -269,21 +270,27 @@ def test_time_call(monkeypatch):
     class FakeLogger:
         _instance = None
         slot = None
+
         def __new__(cls, *args, **kwargs):
             if not cls._instance:
                 cls._instance = super().__new__(cls)
             return cls._instance
+
         def debug(self, template, *args):
             self.slot = template % args
+
         def addHandler(self, handler):
             pass
+
         def removeHandler(self, handler):
             pass
 
     monkeypatch.setattr("logging.getLogger", FakeLogger)
+
     @datacube_ows.utils.time_call
     def timed_func(x):
         return x + 1
+
     assert timed_func(7) == 8
     assert "timed_func" in FakeLogger._instance.slot
     assert "took" in FakeLogger._instance.slot
@@ -294,21 +301,27 @@ def test_log_call(monkeypatch):
     class FakeLogger:
         _instance = None
         slot = None
+
         def __new__(cls, *args, **kwargs):
             if not cls._instance:
                 cls._instance = super().__new__(cls)
             return cls._instance
+
         def debug(self, template, *args):
             self.slot = template % args
+
         def addHandler(self, handler):
             pass
+
         def removeHandler(self, handler):
             pass
 
     monkeypatch.setattr("logging.getLogger", FakeLogger)
+
     @datacube_ows.utils.log_call
     def timed_func(x):
         return x + 1
+
     assert timed_func(7) == 8
     assert "timed_func" in FakeLogger._instance.slot
     assert "args" in FakeLogger._instance.slot
