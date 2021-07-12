@@ -3,14 +3,18 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from __future__ import absolute_import, division, print_function
-
 import logging
 from functools import wraps
 from time import monotonic
 
 
 def log_call(func):
+    """
+    Profiling function decorator
+
+    Placing @log_call at the top of a function or method, results in all calls to that function or method
+    being logged at debug level.
+    """
     @wraps(func)
     def log_wrapper(*args, **kwargs):
         _LOG = logging.getLogger()
@@ -20,6 +24,14 @@ def log_call(func):
 
 
 def time_call(func):
+    """
+    Profiling function decorator
+
+    Placing @log_call at the top of a function or method, results in all calls to that function or method
+    being timed at debug level.
+
+    For debugging or optimisation research only.  Should not occur in mainline code.
+    """
     @wraps(func)
     def timing_wrapper(*args, **kwargs):
         start = monotonic()
@@ -32,6 +44,9 @@ def time_call(func):
 
 
 def group_by_statistical():
+    """
+    Returns an ODC GroupBy object, suitable for daily statistical/summary data.
+    """
     from datacube.api.query import GroupBy
 
     return GroupBy(
@@ -43,5 +58,11 @@ def group_by_statistical():
 
 
 def get_sqlconn(dc):
+    """
+    Extracts a SQLAlchemy database connection from a Datacube object.
+
+    :param dc: An initialised Datacube object
+    :return: A SQLAlchemy database connection object.
+    """
     # pylint: disable=protected-access
     return dc.index._db._engine.connect()
