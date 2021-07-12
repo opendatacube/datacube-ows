@@ -7,9 +7,9 @@ import datetime
 import logging
 from importlib import import_module
 from itertools import chain
-from urllib.parse import urlparse
 from typing import (Any, Callable, Mapping, MutableMapping, Optional, Sequence,
                     Tuple, TypeVar, Union, cast)
+from urllib.parse import urlparse
 
 import numpy
 from affine import Affine
