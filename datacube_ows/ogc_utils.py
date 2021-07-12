@@ -3,11 +3,8 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from __future__ import absolute_import, division, print_function
-
 import datetime
 import logging
-import re
 from importlib import import_module
 from itertools import chain
 from urllib.parse import urlparse
@@ -212,7 +209,7 @@ class FunctionWrapper:
             self._args = func_cfg.get("args", [])
             self._kwargs = func_cfg.get("kwargs", {})
             if "pass_product_cfg" in func_cfg:
-                print("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
+                _LOG.warning("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
                       "'mapped_bands'.  Please update your config accordingly")
             if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
                 if hasattr(product_or_style_cfg, "band_idx"):
@@ -287,19 +284,14 @@ def mask_by_nan(data, band):
     return ~numpy.isnan(data[band])
 
 
-# Sub-product extractors
-
-ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
-
-
-def ls8_subproduct(ds):
-    return int(ls8_s3_path_pattern.search(ds.uris[0]).group("path"))
+# Sub-product extractors - Subproducts are currently unsupported
+#
+# ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
+#
+# def ls8_subproduct(ds):
+#     return int(ls8_s3_path_pattern.search(ds.uris[0]).group("path"))
 
 # Method for formatting urls, e.g. for use in feature_info custom inclusions.
-
-
-def feature_info_url_template(data, template):
-    return template.format(data=data)
 
 
 def lower_get_args():

@@ -5,9 +5,12 @@
 # SPDX-License-Identifier: Apache-2.0
 from unittest.mock import MagicMock
 
+import pytest
+
 import datacube_ows.config_utils
 import datacube_ows.ogc_utils
 import datacube_ows.ows_configuration
+from tests.utils import test_function
 
 
 def test_function_wrapper_lyr():
@@ -33,3 +36,22 @@ def test_function_wrapper_lyr():
     assert result[0] == "apple  beagle  couple"
     assert result[1]["foo"] == "bar"
     assert f.band_mapper is None
+
+
+def test_func_naked():
+    lyr = MagicMock()
+    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
+        f = datacube_ows.ogc_utils.FunctionWrapper(lyr, {
+            "function": test_function,
+        })
+    assert str("Directly including callable objects in configuration is no longer supported.")
+    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
+        f = datacube_ows.ogc_utils.FunctionWrapper(lyr, test_function)
+    assert str("Directly including callable objects in configuration is no longer supported.")
+    f = datacube_ows.ogc_utils.FunctionWrapper(lyr, {
+        "function": test_function,
+    }, stand_alone=True)
+    assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"
+    f = datacube_ows.ogc_utils.FunctionWrapper(lyr, test_function, stand_alone=True)
+    assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"
+
