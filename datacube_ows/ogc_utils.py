@@ -8,8 +8,8 @@ import logging
 from importlib import import_module
 from itertools import chain
 from urllib.parse import urlparse
-from typing import Optional, Union, Tuple, Mapping, TypeVar, Callable, Any, \
-    cast, Sequence, MutableMapping
+from typing import (Any, Callable, Mapping, MutableMapping, Optional, Sequence,
+                    Tuple, TypeVar, Union, cast)
 
 import numpy
 from affine import Affine

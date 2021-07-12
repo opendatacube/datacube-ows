@@ -5,8 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 from functools import wraps
-from typing import Any, Callable, TypeVar
 from time import monotonic
+from typing import Any, Callable, TypeVar
 
 F = TypeVar('F', bound=Callable[..., Any])
 
