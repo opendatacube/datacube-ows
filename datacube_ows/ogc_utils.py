@@ -336,12 +336,29 @@ def create_geobox(
     return geometry.GeoBox(width, height, affine, crs)
 
 
-def xarray_image_as_png(img_data, mask=None, loop_over=None):
-    if loop_over:
+def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
+    """Create PNG's from input Xarray
+
+    Args:
+        img_data ([type]): Xarray loaded via Datacube
+        mask ([type], optional): [description]. Defaults to None.
+        loop_over ([type], optional): [description]. Defaults to None.
+        animate (bool, optional): [description]. Defaults to False.
+
+    Raises:
+        Exception: [description]
+
+    Returns:
+        [type]: [description]
+    """
+    if loop_over and not animate:
         return [
             xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask)
             for coord in img_data.coords[loop_over].values
         ]
+    # TODO: Render XArray to APNG
+    if loop_over and animate:
+        pass
     band_index = {
         "red": 1,
         "green": 2,
@@ -362,6 +379,11 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None):
         raise Exception("Could not identify spatial coordinates")
     width = len(img_data.coords[xcoord])
     height = len(img_data.coords[ycoord])
+    # TODO: Render APNG via Pillow 
+    # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#apng-sequences
+    if loop_over and animate:
+        return
+    # TODO: Change PNG rendering to Pillow
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
                           width=width,

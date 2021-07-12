@@ -222,3 +222,13 @@ def test_png_loop_over():
         })
     imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time")
     assert len(imgs) == 2
+
+def test_png_loop_over_anim():
+    data = xarray.Dataset({
+        "red": dummy_da(100, "red", xyt_coords, dtype="uint8"),
+        "green": dummy_da(70, "green", xyt_coords, dtype="uint8"),
+        "blue": dummy_da(150, "blue", xyt_coords, dtype="uint8"),
+        "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
+    })
+    imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time", animate=True)
+    assert False
