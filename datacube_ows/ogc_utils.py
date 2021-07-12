@@ -8,6 +8,8 @@ import logging
 from importlib import import_module
 from itertools import chain
 from urllib.parse import urlparse
+from typing import Optional, Union, Tuple, Mapping, TypeVar, Callable, Any, \
+    cast, Sequence, MutableMapping
 
 import numpy
 from affine import Affine
@@ -18,12 +20,11 @@ from pytz import timezone, utc
 from rasterio import MemoryFile
 from timezonefinderL import TimezoneFinder
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 tf = TimezoneFinder(in_memory=True)
 
 
-
-def dataset_center_time(dataset):
+def dataset_center_time(dataset: "datacube.model.Dataset") -> datetime.datetime:
     """
     Determine a center_time for the dataset
 
@@ -34,13 +35,13 @@ def dataset_center_time(dataset):
     :param dataset:  An ODC dataset.
     :return: A datetime object representing the datasets center time
     """
-    center_time = dataset.center_time
+    center_time: datetime.datetime = dataset.center_time
     try:
-        metadata_time = dataset.metadata_doc['extent']['center_dt']
+        metadata_time: str = dataset.metadata_doc['extent']['center_dt']
         center_time = parse(metadata_time)
     except KeyError:
         try:
-            metadata_time = dataset.metadata_doc['properties']['dtr:start_datetime']
+            metadata_time: str = dataset.metadata_doc['properties']['dtr:start_datetime']
             center_time = parse(metadata_time)
         except KeyError:
             pass
@@ -52,7 +53,7 @@ class NoTimezoneException(Exception):
     pass
 
 
-def solar_date(dt, tz):
+def solar_date(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.date:
     """
     Convert a datetime to a new timezone, and evalute as a date.
 
@@ -63,7 +64,7 @@ def solar_date(dt, tz):
     return dt.astimezone(tz).date()
 
 
-def local_date(ds, tz=None):
+def local_date(ds: "datacube.model.Dataset", tz: Optional[datetime.tzinfo] = None) -> datetime.date:
     """
     Calculate the local (solar) date for a dataset.
 
@@ -71,13 +72,13 @@ def local_date(ds, tz=None):
     :param tz: (optional) A timezone object. If not provided, determine the timezone from extent of the dataset.
     :return: A date object.
     """
-    dt_utc = dataset_center_time(ds)
+    dt_utc: datetime.datetime = dataset_center_time(ds)
     if not tz:
-        tz = solar_date(dt_utc, tz_for_geometry(ds.extent))
+        tz = tz_for_geometry(ds.extent)
     return solar_date(dt_utc, tz)
 
 
-def tz_for_dataset(ds):
+def tz_for_dataset(ds: "datacube.model.Dataset") -> datetime.tzinfo:
     """
     Determine the timezone for a dataset (using it's extent)
 
@@ -87,7 +88,7 @@ def tz_for_dataset(ds):
     return tz_for_geometry(ds.extent)
 
 
-def tz_for_coord(lon, lat):
+def tz_for_coord(lon: Union[float, int], lat: Union[float, int]) -> datetime.tzinfo:
     """
     Determine the Timezone for given lat/long coordinates
 
@@ -97,7 +98,7 @@ def tz_for_coord(lon, lat):
     :raises: NoTimezoneException
     """
     try:
-        tzn = tf.timezone_at(lng=lon, lat=lat)
+        tzn: Optional[str] = tf.timezone_at(lng=lon, lat=lat)
     except Exception as e:
         # Generally shouldn't happen - a common symptom of various geographic and timezone related bugs
         _LOG.warning("Timezone detection failed for lat %f, lon %s (%s)", lat, lon, str(e))
@@ -107,7 +108,7 @@ def tz_for_coord(lon, lat):
     return timezone(tzn)
 
 
-def local_solar_date_range(geobox, date):
+def local_solar_date_range(geobox: geometry.GeoBox, date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
     """
     Converts a date to a local solar date datetime range.
 
@@ -115,13 +116,13 @@ def local_solar_date_range(geobox, date):
     :param date: A date object
     :return: A tuple of two UTC datetime objects, spanning 1 second shy of 24 hours.
     """
-    tz = tz_for_geometry(geobox.geographic_extent)
+    tz: datetime.tzinfo = tz_for_geometry(geobox.geographic_extent)
     start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
     end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
     return (start.astimezone(utc), end.astimezone(utc))
 
 
-def month_date_range(date):
+def month_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
     """
     Take a month from a date and convert to a one month long UTC datetime range encompassing the month.
 
@@ -131,8 +132,8 @@ def month_date_range(date):
     :return: A tuple of two UTC datetime objects, delimiting an entire calendar month.
     """
     start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=utc)
-    y = date.year
-    m = date.month + 1
+    y: int = date.year
+    m: int = date.month + 1
     if m == 13:
         m = 1
         y = y + 1
@@ -140,7 +141,7 @@ def month_date_range(date):
     return start, end
 
 
-def year_date_range(date):
+def year_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
     """
     Convert a date to a UTC datetime range encompassing the calendar year including the date.
 
@@ -154,7 +155,7 @@ def year_date_range(date):
     return start, end
 
 
-def day_summary_date_range(date):
+def day_summary_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
     """
     Convert a date to a UTC datetime range encompassing the calendar date.
 
@@ -168,7 +169,7 @@ def day_summary_date_range(date):
     return start, end
 
 
-def tz_for_geometry(geom):
+def tz_for_geometry(geom: geometry.Geometry) -> datetime.tzinfo:
     """
     Determine the timezone from a geometry.  Be clever if we can,
     otherwise use a minimal timezone based on the longitude.
@@ -177,8 +178,8 @@ def tz_for_geometry(geom):
     :return: A timezone object
     """
     crs_geo = geometry.CRS("EPSG:4326")
-    geo_geom = geom.to_crs(crs_geo)
-    centroid = geo_geom.centroid
+    geo_geom: geometry.Geometry = geom.to_crs(crs_geo)
+    centroid: geometry.Geometry = geo_geom.centroid
     try:
         # 1. Try being smart with the centroid of the geometry
         return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
@@ -195,7 +196,7 @@ def tz_for_geometry(geom):
     return datetime.timezone(datetime.timedelta(hours=offset))
 
 
-def resp_headers(d):
+def resp_headers(d: Mapping[str, str]) -> Mapping[str, str]:
     """
     Take a dictionary of http response headers and all required response headers from the configuration.
 
@@ -206,7 +207,10 @@ def resp_headers(d):
     return get_config().response_headers(d)
 
 
-def get_function(func):
+F = TypeVar('F', bound=Callable[..., Any])
+
+
+def get_function(func: Union[F, str]) -> F:
     """Converts a config entry to a function, if necessary
 
     :param func: Either a Callable object or a fully qualified function name str, or None
@@ -217,10 +221,10 @@ def get_function(func):
         mod = import_module(mod_name)
         func = getattr(mod, func_name)
         assert callable(func)
-    return func
+    return cast(F, func)
 
 
-def parse_for_base_url(url):
+def parse_for_base_url(url: str) -> str:
     """
     Extract the base URL from a URL
 
@@ -232,7 +236,7 @@ def parse_for_base_url(url):
     return parsed
 
 
-def get_service_base_url(allowed_urls, request_url):
+def get_service_base_url(allowed_urls: Union[Sequence[str], str], request_url: str) -> str:
     """
     Choose the base URL to advertise in XML.
 
@@ -240,12 +244,12 @@ def get_service_base_url(allowed_urls, request_url):
     :param request_url: The URL the incoming request came from
     :return: Return one of the allowed URLs.  Either one that seems to match the request, or the first in the list
     """
-    if not isinstance(allowed_urls, list):
+    if isinstance(allowed_urls, str):
         return allowed_urls
     parsed_request_url = parse_for_base_url(request_url)
     parsed_allowed_urls = [parse_for_base_url(u) for u in allowed_urls]
     try:
-        idx = parsed_allowed_urls.index(parsed_request_url)
+        idx: Optional[int] = parsed_allowed_urls.index(parsed_request_url)
     except ValueError:
         idx = None
     url = allowed_urls[idx] if idx is not None else allowed_urls[0]
@@ -255,7 +259,9 @@ def get_service_base_url(allowed_urls, request_url):
 
 
 # Collects additional headers from flask request objects
-def capture_headers(req, args_dict):
+def capture_headers(req: "flask.Request",
+                    args_dict: MutableMapping[str, Optional[str]]) \
+        -> MutableMapping[str, Optional[str]]:
     """
     Capture significant flask metadata into the args dictionary
 
@@ -271,11 +277,13 @@ def capture_headers(req, args_dict):
 
     return args_dict
 
+
 class ConfigException(Exception):
     """
     General exception for OWS Configuration issues.
     """
     pass
+
 
 # Function wrapper for configurable functional elements
 
@@ -284,8 +292,12 @@ class FunctionWrapper:
     """
     Function wrapper for configurable functional elements
     """
-    def __init__(self, product_or_style_cfg, func_cfg,
-                 stand_alone=False):
+
+    def __init__(self,
+                 product_or_style_cfg: Union[
+                     "datacube_ows.ows_configuration.OWSNamedLayer", "datacube_ows.styles.StyleDef"],
+                 func_cfg: Union[F, Mapping[str, Any]],
+                 stand_alone: bool = False) -> None:
         """
 
         :param product_or_style_cfg: An instance of either NamedLayer or Style,
@@ -296,7 +308,8 @@ class FunctionWrapper:
         """
         if callable(func_cfg):
             if not stand_alone:
-                raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+                raise ConfigException(
+                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
             self._func = func_cfg
             self._args = []
             self._kwargs = {}
@@ -318,21 +331,24 @@ class FunctionWrapper:
             self._kwargs = func_cfg.get("kwargs", {})
             if "pass_product_cfg" in func_cfg:
                 _LOG.warning("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
-                      "'mapped_bands'.  Please update your config accordingly")
+                             "'mapped_bands'.  Please update your config accordingly")
             if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
                 if hasattr(product_or_style_cfg, "band_idx"):
                     # NamedLayer
-                    b_idx = product_or_style_cfg.band_idx
+                    named_layer = cast("datacube_ows.ows_configuration.OWSNamedLayer",
+                                       product_or_style_cfg)
+                    b_idx = named_layer.band_idx
                     self.band_mapper = b_idx.band
                 else:
                     # Style
-                    b_idx = product_or_style_cfg.product.band_idx
-                    delocaliser = product_or_style_cfg.local_band
+                    style = cast("datacube_ows.styles.StyleDef", product_or_style_cfg)
+                    b_idx = style.product.band_idx
+                    delocaliser = style.local_band
                     self.band_mapper = lambda b: b_idx.band(delocaliser(b))
             else:
                 self.band_mapper = None
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> Any:
         if args and self._args:
             calling_args = chain(args, self._args)
         elif args:
@@ -350,13 +366,12 @@ class FunctionWrapper:
         if self.band_mapper:
             calling_kwargs["band_mapper"] = self.band_mapper
 
-
         return self._func(*calling_args, **calling_kwargs)
 
 
 # Extent Mask Functions
 
-def mask_by_val(data, band, val=None):
+def mask_by_val(data: "xarray.Dataset", band: str, val: Optional[Any] = None) -> "xarray.DataArray":
     """
     Mask by value.
     Value to mask by may be supplied, or is taken from 'nodata' metadata by default.
@@ -369,7 +384,7 @@ def mask_by_val(data, band, val=None):
         return data[band] != val
 
 
-def mask_by_val2(data, band):
+def mask_by_val2(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     """
     Mask by value, using ODC canonical nodata value
 
@@ -378,14 +393,14 @@ def mask_by_val2(data, band):
     return data[band] != data[band].nodata
 
 
-def mask_by_bitflag(data, band):
+def mask_by_bitflag(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     """
     Mask by ODC metadata nodata value, as a bitflag
     """
     return ~data[band] & data[band].attrs['nodata']
 
 
-def mask_by_val_in_band(data, band, mask_band, val=None):
+def mask_by_val_in_band(data: "xarray.Dataset", band: str, mask_band: str, val: Any = None) -> "xarray.DataArray":
     """
     Mask all bands by a value in a particular band
 
@@ -395,7 +410,7 @@ def mask_by_val_in_band(data, band, mask_band, val=None):
     return mask_by_val(data, mask_band, val)
 
 
-def mask_by_quality(data, band):
+def mask_by_quality(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     """
     Mask by a quality band.
 
@@ -407,7 +422,7 @@ def mask_by_quality(data, band):
     return mask_by_val(data, "quality")
 
 
-def mask_by_extent_flag(data, band):
+def mask_by_extent_flag(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     """
     Mask by extent.
 
@@ -416,7 +431,7 @@ def mask_by_extent_flag(data, band):
     return data["extent"] == 1
 
 
-def mask_by_extent_val(data, band):
+def mask_by_extent_val(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     """
     Mask by extent value using metadata nodata.
 
@@ -425,7 +440,7 @@ def mask_by_extent_val(data, band):
     return mask_by_val(data, "extent")
 
 
-def mask_by_nan(data, band):
+def mask_by_nan(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     """
     Mask by nan, for bands with floating point data
     """
@@ -442,7 +457,7 @@ def mask_by_nan(data, band):
 # Method for formatting urls, e.g. for use in feature_info custom inclusions.
 
 
-def lower_get_args():
+def lower_get_args() -> MutableMapping[str, str]:
     """
     Return Flask request arguments, with argument names converted to lower case.
 
@@ -459,11 +474,11 @@ def lower_get_args():
 
 
 def create_geobox(
-        crs,
-        minx, miny,
-        maxx, maxy,
-        width=None, height=None,
-):
+        crs: geometry.CRS,
+        minx: Union[float, int], miny: Union[float, int],
+        maxx: Union[float, int], maxy: Union[float, int],
+        width: Optional[int] = None, height: Optional[int] = None,
+) -> geometry.GeoBox:
     """
     Create an ODC Geobox.
 
@@ -479,20 +494,20 @@ def create_geobox(
     if width is None and height is None:
         raise Exception("Must supply at least a width or height")
     if height is not None:
-        scale_y = (miny - maxy) / height
+        scale_y = (float(miny) - float(maxy)) / height
     if width is not None:
-        scale_x = (maxx - minx) / width
+        scale_x = (float(maxx) - float(minx)) / width
     else:
         scale_x = -scale_y
-        width = round((maxx - minx) / scale_x)
+        width = int(round((float(maxx) - float(minx)) / scale_x))
     if height is None:
         scale_y = - scale_x
-        height = round((miny - maxy) / scale_y)
+        height = int(round((float(miny) - float(maxy)) / scale_y))
     affine = Affine.translation(minx, maxy) * Affine.scale(scale_x, scale_y)
     return geometry.GeoBox(width, height, affine, crs)
 
 
-def xarray_image_as_png(img_data, mask=None, loop_over=None):
+def xarray_image_as_png(img_data, mask, loop_over=None):
     """
     Render an Xarray image as a PNG.
 
@@ -555,5 +570,3 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None):
                     alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
                 thing.write_band(4, alpha_mask)
         return memfile.read()
-
-
