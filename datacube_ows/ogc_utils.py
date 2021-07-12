@@ -19,16 +19,21 @@ from rasterio import MemoryFile
 from timezonefinderL import TimezoneFinder
 
 _LOG = logging.getLogger(__name__)
-
-
 tf = TimezoneFinder(in_memory=True)
 
-# Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
-# datacube-core center time accessed through the dataset API is calculated and may
-# not agree with the metadata document
 
 
 def dataset_center_time(dataset):
+    """
+    Determine a center_time for the dataset
+
+    Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
+    datacube-core center time accessed through the dataset API is calculated and may
+    not agree with the metadata document.
+
+    :param dataset:  An ODC dataset.
+    :return: A datetime object representing the datasets center time
+    """
     center_time = dataset.center_time
     try:
         metadata_time = dataset.metadata_doc['extent']['center_dt']
@@ -43,29 +48,58 @@ def dataset_center_time(dataset):
 
 
 class NoTimezoneException(Exception):
+    """Exception, raised internally if no timezone can be found"""
     pass
 
 
 def solar_date(dt, tz):
+    """
+    Convert a datetime to a new timezone, and evalute as a date.
+
+    :param dt: A datetime in an aribitrary timezone.
+    :param tz: The timezone to evaluate the date in.
+    :return: A date object.
+    """
     return dt.astimezone(tz).date()
 
 
 def local_date(ds, tz=None):
+    """
+    Calculate the local (solar) date for a dataset.
+
+    :param ds: An ODC dataset object
+    :param tz: (optional) A timezone object. If not provided, determine the timezone from extent of the dataset.
+    :return: A date object.
+    """
     dt_utc = dataset_center_time(ds)
-    if tz:
-        return dt_utc.astimezone(tz).date()
-    else:
-        return dt_utc.astimezone(tz_for_geometry(ds.extent)).date()
+    if not tz:
+        tz = solar_date(dt_utc, tz_for_geometry(ds.extent))
+    return solar_date(dt_utc, tz)
 
 
 def tz_for_dataset(ds):
+    """
+    Determine the timezone for a dataset (using it's extent)
+
+    :param ds: An ODC dataset object
+    :return: A timezone object
+    """
     return tz_for_geometry(ds.extent)
 
 
 def tz_for_coord(lon, lat):
+    """
+    Determine the Timezone for given lat/long coordinates
+
+    :param lon: Longitude, in degress
+    :param lat: Latitude, in degrees
+    :return: A timezone object
+    :raises: NoTimezoneException
+    """
     try:
         tzn = tf.timezone_at(lng=lon, lat=lat)
     except Exception as e:
+        # Generally shouldn't happen - a common symptom of various geographic and timezone related bugs
         _LOG.warning("Timezone detection failed for lat %f, lon %s (%s)", lat, lon, str(e))
         raise
     if not tzn:
@@ -74,6 +108,13 @@ def tz_for_coord(lon, lat):
 
 
 def local_solar_date_range(geobox, date):
+    """
+    Converts a date to a local solar date datetime range.
+
+    :param geobox: Geometry used to determine the appropriate timezone for local date conversion
+    :param date: A date object
+    :return: A tuple of two UTC datetime objects, spanning 1 second shy of 24 hours.
+    """
     tz = tz_for_geometry(geobox.geographic_extent)
     start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
     end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
@@ -81,6 +122,14 @@ def local_solar_date_range(geobox, date):
 
 
 def month_date_range(date):
+    """
+    Take a month from a date and convert to a one month long UTC datetime range encompassing the month.
+
+    Ignores timezone effects - suitable for statistical/summary data
+
+    :param date: A date or datetime object to take the month and year from
+    :return: A tuple of two UTC datetime objects, delimiting an entire calendar month.
+    """
     start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=utc)
     y = date.year
     m = date.month + 1
@@ -92,33 +141,67 @@ def month_date_range(date):
 
 
 def year_date_range(date):
+    """
+    Convert a date to a UTC datetime range encompassing the calendar year including the date.
+
+    Ignores timezone effects - suitable for statistical/summary data
+
+    :param date: A date or datetime object to take the year from
+    :return: A tuple of two UTC datetime objects, delimiting an entire calendar year.
+    """
     start = datetime.datetime(date.year, 1, 1, 0, 0, 0, tzinfo=utc)
     end = datetime.datetime(date.year, 12, 31, 23, 59, 59, tzinfo=utc)
     return start, end
 
+
 def day_summary_date_range(date):
+    """
+    Convert a date to a UTC datetime range encompassing the calendar date.
+
+    Ignores timezone effects - suitable for statistical/summary data
+
+    :param date: A date or datetime object to take the day, month and year from
+    :return: A tuple of two UTC datetime objects, delimiting a calendar day.
+    """
     start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=utc)
     end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=utc)
     return start, end
 
+
 def tz_for_geometry(geom):
+    """
+    Determine the timezone from a geometry.  Be clever if we can,
+    otherwise use a minimal timezone based on the longitude.
+
+    :param geom: A geometry object
+    :return: A timezone object
+    """
     crs_geo = geometry.CRS("EPSG:4326")
     geo_geom = geom.to_crs(crs_geo)
     centroid = geo_geom.centroid
     try:
+        # 1. Try being smart with the centroid of the geometry
         return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
     except NoTimezoneException:
         pass
     for pt in geo_geom.boundary.coords:
         try:
+            # 2. Try being smart all the points in the geometry
             return tz_for_coord(pt[0], pt[1])
         except NoTimezoneException:
             pass
+    # 3. Meh, just use longitude
     offset = round(centroid.coords[0][0] / 15.0)
     return datetime.timezone(datetime.timedelta(hours=offset))
 
 
 def resp_headers(d):
+    """
+    Take a dictionary of http response headers and all required response headers from the configuration.
+
+    :param d:
+    :return:
+    """
     from datacube_ows.ows_configuration import get_config
     return get_config().response_headers(d)
 
@@ -138,12 +221,25 @@ def get_function(func):
 
 
 def parse_for_base_url(url):
+    """
+    Extract the base URL from a URL
+
+    :param url: A URL
+    :return: The base URL (path and parameters stripped)
+    """
     parsed = urlparse(url)
     parsed = (parsed.netloc + parsed.path).rstrip("/")
     return parsed
 
 
 def get_service_base_url(allowed_urls, request_url):
+    """
+    Choose the base URL to advertise in XML.
+
+    :param allowed_urls: A list of allowed URLs, or a single allowed URL.
+    :param request_url: The URL the incoming request came from
+    :return: Return one of the allowed URLs.  Either one that seems to match the request, or the first in the list
+    """
     if not isinstance(allowed_urls, list):
         return allowed_urls
     parsed_request_url = parse_for_base_url(request_url)
@@ -160,6 +256,13 @@ def get_service_base_url(allowed_urls, request_url):
 
 # Collects additional headers from flask request objects
 def capture_headers(req, args_dict):
+    """
+    Capture significant flask metadata into the args dictionary
+
+    :param req: A Flask request
+    :param args_dict: A Flask args dictionary
+    :return:
+    """
     args_dict['referer'] = req.headers.get('Referer', None)
     args_dict['origin'] = req.headers.get('Origin', None)
     args_dict['requestid'] = req.environ.get("FLASK_REQUEST_ID")
@@ -168,24 +271,29 @@ def capture_headers(req, args_dict):
 
     return args_dict
 
-# Exceptions raised when attempting to create a
-# product layer from a bad config or without correct
-# product range
-
-
-class ProductLayerException(Exception):
-    pass
-
-
 class ConfigException(Exception):
+    """
+    General exception for OWS Configuration issues.
+    """
     pass
 
 # Function wrapper for configurable functional elements
 
 
 class FunctionWrapper:
+    """
+    Function wrapper for configurable functional elements
+    """
     def __init__(self, product_or_style_cfg, func_cfg,
                  stand_alone=False):
+        """
+
+        :param product_or_style_cfg: An instance of either NamedLayer or Style,
+                the context in which the wrapper operates.
+        :param func_cfg: A function or a configuration dictionary representing a function.
+        :param stand_alone: Optional boolean.
+                If False (the default) then only configuration dictionaries will be accepted.
+        """
         if callable(func_cfg):
             if not stand_alone:
                 raise ConfigException("Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
@@ -249,6 +357,12 @@ class FunctionWrapper:
 # Extent Mask Functions
 
 def mask_by_val(data, band, val=None):
+    """
+    Mask by value.
+    Value to mask by may be supplied, or is taken from 'nodata' metadata by default.
+
+    :param val: The value to mask by, defaults to None, which means use the 'nodata' value in ODC metadata
+    """
     if val is None:
         return data[band] != data[band].attrs['nodata']
     else:
@@ -256,31 +370,65 @@ def mask_by_val(data, band, val=None):
 
 
 def mask_by_val2(data, band):
-    # REVISIT: Is this the same as mask_by_val or subtlely different?
+    """
+    Mask by value, using ODC canonical nodata value
+
+    Usually (always?) equivalent to mask_by_val(data, band, val=None)
+    """
     return data[band] != data[band].nodata
 
 
 def mask_by_bitflag(data, band):
+    """
+    Mask by ODC metadata nodata value, as a bitflag
+    """
     return ~data[band] & data[band].attrs['nodata']
 
 
 def mask_by_val_in_band(data, band, mask_band, val=None):
+    """
+    Mask all bands by a value in a particular band
+
+    :param mask_band: The band to mask by
+    :param val: The value to mask by (defaults to metadata 'nodata' for the maskband)
+    """
     return mask_by_val(data, mask_band, val)
 
 
 def mask_by_quality(data, band):
+    """
+    Mask by a quality band.
+
+    Equivalent to mask_by_val_in_band(mask_band="quality")
+    :param data:
+    :param band:
+    :return:
+    """
     return mask_by_val(data, "quality")
 
 
 def mask_by_extent_flag(data, band):
+    """
+    Mask by extent.
+
+    Equivalent to mask_by_val_in_band(data, band, mask_band="extent", val=1)
+    """
     return data["extent"] == 1
 
 
 def mask_by_extent_val(data, band):
+    """
+    Mask by extent value using metadata nodata.
+
+    Equivalent to mask_by_val_in_band(data, band, mask_band="extent")
+    """
     return mask_by_val(data, "extent")
 
 
 def mask_by_nan(data, band):
+    """
+    Mask by nan, for bands with floating point data
+    """
     return ~numpy.isnan(data[band])
 
 
@@ -295,9 +443,13 @@ def mask_by_nan(data, band):
 
 
 def lower_get_args():
-    # Get parameters in WMS are case-insensitive, and intended to be single use.
-    # Spec does not specify which instance should be used if a parameter is provided more than once.
-    # This function uses the LAST instance.
+    """
+    Return Flask request arguments, with argument names converted to lower case.
+
+    Get parameters in WMS are case-insensitive, and intended to be single use.
+    Spec does not specify which instance should be used if a parameter is provided more than once.
+    This function uses the LAST instance.
+    """
     d = {}
     for k in request.args.keys():
         kl = k.lower()
@@ -312,6 +464,18 @@ def create_geobox(
         maxx, maxy,
         width=None, height=None,
 ):
+    """
+    Create an ODC Geobox.
+
+    :param crs:  The CRS (name or object) to use.
+    :param minx: The minimum X coordinate of the geobox.
+    :param miny: The minimum Y coordinate of the geobox.
+    :param maxx: The maximum X coordinate of the geobox.
+    :param maxy: The maximum Y coordinate of the geobox.
+    :param width: The width of the Geobox, in pixels
+    :param height: The height of the Geobox, in pixels
+    :return: An ODC geobox object
+    """
     if width is None and height is None:
         raise Exception("Must supply at least a width or height")
     if height is not None:
@@ -329,6 +493,16 @@ def create_geobox(
 
 
 def xarray_image_as_png(img_data, mask=None, loop_over=None):
+    """
+    Render an Xarray image as a PNG.
+
+    :param img_data: An xarray dataset, containing 3 or 4 uint8 variables: red, greed, blue, and optionally alpha.
+    :param mask: Optional. An boolean xarray dataarray.  The alpha value of any pixel in img_data corresponding to a
+                a False pixel in mask is set to zero in the image.
+    :param loop_over: Optional name of a dimension on img_data.  If set, xarray_image_as_png is called in a loop
+                over all coordinate values for the named dimension.
+    :return: A list of bytes representing a PNG image file. (Or a list of lists of bytes, if loop_over was set.)
+    """
     if loop_over:
         return [
             xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask)
