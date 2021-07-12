@@ -4,12 +4,14 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
+from unittest.mock import MagicMock
 
 import pytest
 import xarray
 from pytz import utc
 
 import datacube_ows.ogc_utils
+import datacube_ows.utils
 
 
 class DSCT:
@@ -222,3 +224,54 @@ def test_png_loop_over():
         })
     imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time")
     assert len(imgs) == 2
+
+
+def test_time_call(monkeypatch):
+    class FakeLogger:
+        _instance = None
+        slot = None
+        def __new__(cls, *args, **kwargs):
+            if not cls._instance:
+                cls._instance = super().__new__(cls)
+            return cls._instance
+        def debug(self, template, *args):
+            self.slot = template % args
+        def addHandler(self, handler):
+            pass
+        def removeHandler(self, handler):
+            pass
+
+    monkeypatch.setattr("logging.getLogger", FakeLogger)
+    @datacube_ows.utils.time_call
+    def timed_func(x):
+        return x + 1
+    assert timed_func(7) == 8
+    assert "timed_func" in FakeLogger._instance.slot
+    assert "took" in FakeLogger._instance.slot
+    assert "ms" in FakeLogger._instance.slot
+
+
+def test_log_call(monkeypatch):
+    class FakeLogger:
+        _instance = None
+        slot = None
+        def __new__(cls, *args, **kwargs):
+            if not cls._instance:
+                cls._instance = super().__new__(cls)
+            return cls._instance
+        def debug(self, template, *args):
+            self.slot = template % args
+        def addHandler(self, handler):
+            pass
+        def removeHandler(self, handler):
+            pass
+
+    monkeypatch.setattr("logging.getLogger", FakeLogger)
+    @datacube_ows.utils.log_call
+    def timed_func(x):
+        return x + 1
+    assert timed_func(7) == 8
+    assert "timed_func" in FakeLogger._instance.slot
+    assert "args" in FakeLogger._instance.slot
+    assert "7" in FakeLogger._instance.slot
+
