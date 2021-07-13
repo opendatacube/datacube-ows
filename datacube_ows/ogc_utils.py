@@ -6,11 +6,10 @@
 import datetime
 import logging
 from importlib import import_module
-from itertools import chain
 from io import BytesIO
-from typing import ValuesView
+from itertools import chain
 from typing import (Any, Callable, Mapping, MutableMapping, Optional, Sequence,
-                    Tuple, TypeVar, Union, cast)
+                    Tuple, TypeVar, Union, ValuesView, cast)
 from urllib.parse import urlparse
 
 import numpy
@@ -589,7 +588,7 @@ def _img2bands_array(img_data, mask, width, height):
         elif band == "alpha":
             masked = True
         buffer[index, :, :] = band_data
-        index +=1
+        index += 1
         last_band = band_data
     if not masked:
         if mask is None:
