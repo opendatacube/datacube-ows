@@ -4,19 +4,17 @@ name: docker checker
 on:
   pull_request:
     paths:
-      - '**'
-      - '!docs/**'
-      - '!*.rst'
-      - '!*.md'
-      - '!datacube_ows/__init__.py'
+      - '.github/workflows/dive.yml'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - 'Dockerfile'
 
   push:
     paths:
-      - '**'
-      - '!docs/**'
-      - '!*.rst'
-      - '!*.md'
-      - '!datacube_ows/__init__.py'
+      - '.github/workflows/dive.yml'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - 'Dockerfile'
 
 env:
   ORG: opendatacube
