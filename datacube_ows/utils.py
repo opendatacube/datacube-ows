@@ -3,14 +3,20 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from __future__ import absolute_import, division, print_function
-
 import logging
 from functools import wraps
 from time import monotonic
+from typing import Any, Callable, TypeVar
 
+F = TypeVar('F', bound=Callable[..., Any])
 
-def log_call(func):
+def log_call(func: F) -> F:
+    """
+    Profiling function decorator
+
+    Placing @log_call at the top of a function or method, results in all calls to that function or method
+    being logged at debug level.
+    """
     @wraps(func)
     def log_wrapper(*args, **kwargs):
         _LOG = logging.getLogger()
@@ -19,19 +25,30 @@ def log_call(func):
     return log_wrapper
 
 
-def time_call(func):
+def time_call(func: F) -> F:
+    """
+    Profiling function decorator
+
+    Placing @log_call at the top of a function or method, results in all calls to that function or method
+    being timed at debug level.
+
+    For debugging or optimisation research only.  Should not occur in mainline code.
+    """
     @wraps(func)
     def timing_wrapper(*args, **kwargs):
-        start = monotonic()
-        result = func(*args, **kwargs)
-        stop = monotonic()
+        start: float = monotonic()
+        result: Any = func(*args, **kwargs)
+        stop: float = monotonic()
         _LOG = logging.getLogger()
         _LOG.debug("%s took: %d ms", func.__name__, int((stop - start) * 1000))
         return result
     return timing_wrapper
 
 
-def group_by_statistical():
+def group_by_statistical() -> "datacube.api.query.GroupBy":
+    """
+    Returns an ODC GroupBy object, suitable for daily statistical/summary data.
+    """
     from datacube.api.query import GroupBy
 
     return GroupBy(
@@ -42,6 +59,12 @@ def group_by_statistical():
     )
 
 
-def get_sqlconn(dc):
+def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
+    """
+    Extracts a SQLAlchemy database connection from a Datacube object.
+
+    :param dc: An initialised Datacube object
+    :return: A SQLAlchemy database connection object.
+    """
     # pylint: disable=protected-access
     return dc.index._db._engine.connect()
