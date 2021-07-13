@@ -10,6 +10,8 @@ import logging
 import re
 from importlib import import_module
 from itertools import chain
+from io import BytesIO
+from typing import ValuesView
 from urllib.parse import urlparse
 
 import numpy
@@ -17,6 +19,7 @@ from affine import Affine
 from datacube.utils import geometry
 from dateutil.parser import parse
 from flask import request
+from PIL import Image
 from pytz import timezone, utc
 from rasterio import MemoryFile
 from timezonefinderL import TimezoneFinder
@@ -356,15 +359,6 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
             xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask)
             for coord in img_data.coords[loop_over].values
         ]
-    # TODO: Render XArray to APNG
-    if loop_over and animate:
-        pass
-    band_index = {
-        "red": 1,
-        "green": 2,
-        "blue": 3,
-        "alpha": 4,
-    }
     xcoord = None
     ycoord = None
     for cc in ("x", "longitude", "Longitude", "long", "lon"):
@@ -379,10 +373,26 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
         raise Exception("Could not identify spatial coordinates")
     width = len(img_data.coords[xcoord])
     height = len(img_data.coords[ycoord])
-    # TODO: Render APNG via Pillow 
+
+    # TODO: Render XArray to APNG via Pillow
     # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#apng-sequences
     if loop_over and animate:
-        return
+        time_slices_array = [
+            xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask, animate=True)
+            for coord in img_data.coords[loop_over].values
+        ]
+        images = []
+        img_io = BytesIO()
+        for t_slice in time_slices_array:
+            im = Image.fromarray(t_slice, "RGBA")
+            images.append(im)
+        images[0].save(img_io, "PNG", save_all=True, default_image=True, loop=0, duration=1000, append_images=images)
+        img_io.seek(0)
+        return img_io.read()
+    
+    masked_data = _img2bands_array(img_data, mask, width, height)
+    if not loop_over and animate:
+        return masked_data
     # TODO: Change PNG rendering to Pillow
     with MemoryFile() as memfile:
         with memfile.open(driver='PNG',
@@ -391,25 +401,36 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
                           count=4,
                           transform=None,
                           dtype='uint8') as thing:
-            masked = False
-            last_band = None
-            for band in img_data.data_vars:
-                idx = band_index[band]
-                band_data = img_data[band].values
-                if band == "alpha" and mask is not None:
-                    band_data = numpy.where(mask, band_data, 0)
-                    masked = True
-                elif band == "alpha":
-                    masked = True
-                thing.write_band(idx, band_data)
-                last_band = band_data
-            if not masked:
-                if mask is None:
-                    alpha_mask = numpy.empty(last_band.shape).astype('uint8')
-                    alpha_mask.fill(255)
-                else:
-                    alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
-                thing.write_band(4, alpha_mask)
+            thing.write(masked_data)
+
         return memfile.read()
 
-
+def _img2bands_array(img_data, mask, width, height):
+    masked = False
+    last_band = None
+    buffer = numpy.zeros((4, width, height), numpy.uint8)
+    band_index = {
+        "red": 0,
+        "green": 1,
+        "blue": 2,
+        "alpha": 3,
+    }
+    for band in img_data.data_vars:
+        index = band_index[band]
+        band_data = img_data[band].values
+        if band == "alpha" and mask is not None:
+            band_data = numpy.where(mask, band_data, 0)
+            masked = True
+        elif band == "alpha":
+            masked = True
+        buffer[index, :, :] = band_data
+        index +=1
+        last_band = band_data
+    if not masked:
+        if mask is None:
+            alpha_mask = numpy.empty(last_band.shape).astype('uint8')
+            alpha_mask.fill(255)
+        else:
+            alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+        buffer[3, :, :] = alpha_mask
+    return buffer
