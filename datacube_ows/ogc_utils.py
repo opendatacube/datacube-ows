@@ -9,7 +9,7 @@ from importlib import import_module
 from io import BytesIO
 from itertools import chain
 from typing import (Any, Callable, Mapping, MutableMapping, Optional, Sequence,
-                    Tuple, TypeVar, Union, ValuesView, cast)
+                    Tuple, TypeVar, Union, cast)
 from urllib.parse import urlparse
 
 import numpy
