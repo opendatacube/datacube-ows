@@ -6,7 +6,7 @@
 import logging
 from contextlib import contextmanager
 from threading import Lock
-from typing import Iterator, MutableMapping, Optional
+from typing import Generator, MutableMapping, Optional
 
 from datacube import Datacube
 
@@ -124,7 +124,7 @@ def pool_size(app: str = "ows") -> int:
 
 # High Level Cube Pool API
 @contextmanager
-def cube(app: str = "ows") -> Iterator[Datacube]:
+def cube(app: str = "ows") -> Generator[Optional["datacube.api.core.Datacube"], None, None]:
     """
     Context manager for using a Datacube object from a pool.
 

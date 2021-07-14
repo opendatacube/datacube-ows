@@ -4,7 +4,9 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import json
+import datetime
 from enum import Enum
+from typing import cast, Any, Iterable, Optional, Tuple, Union
 
 from datacube.utils.geometry import Geometry as ODCGeom
 from geoalchemy2 import Geometry
@@ -14,12 +16,12 @@ from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.sql.functions import count
 
 
-def get_sqlalc_engine(index):
+def get_sqlalc_engine(index: "datacube.index.Index") -> "sqlalchemy.engine.base.Engine":
     # pylint: disable=protected-access
     return index._db._engine
 
 
-def get_st_view(meta):
+def get_st_view(meta: MetaData) -> Table:
     return Table('space_time_view', meta,
              Column('id', UUID()),
              Column('dataset_type_ref', SMALLINT()),
@@ -46,23 +48,29 @@ class MVSelectOpts(Enum):
     EXTENT = 3
     DATASETS = 4
 
-    def sel(self, stv):
+    def sel(self, stv: Table) -> Iterable["sqlalchemy.sql.elements.ClauseElement"]:
         if self == self.ALL:
             return [stv]
         if self == self.IDS or self == self.DATASETS:
             return [stv.c.id]
         if self == self.COUNT:
-            return [count(stv.c.id)]
+            return [cast("sqlalchemy.sql.elements.ClauseElement", count(stv.c.id))]
         if self == self.EXTENT:
             return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
         assert False
 
 
-def mv_search(index,
-                       sel=MVSelectOpts.IDS,
-                       times=None,
-                       geom=None,
-                       products=None):
+def mv_search(index: "datacube.index.Index",
+              sel: MVSelectOpts = MVSelectOpts.IDS,
+              times: Optional[Iterable[Tuple[datetime.datetime, datetime.datetime]]] = None,
+              geom: Optional[ODCGeom] = None,
+              products: Optional[Iterable["datacube.model.DatasetType"]] = None) -> Union[
+        Iterable[Iterable[Any]],
+        Iterable[str],
+        Iterable["datacube.model.Dataset"],
+        int,
+        None,
+        ODCGeom]:
     """
     Perform a dataset query via the space_time_view
 
@@ -123,4 +131,3 @@ def mv_search(index,
     if sel == MVSelectOpts.DATASETS:
         ids = [r[0] for r in conn.execute(s)]
         return index.datasets.bulk_get(ids)
-    assert False
