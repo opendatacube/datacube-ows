@@ -3,10 +3,10 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-import json
 import datetime
+import json
 from enum import Enum
-from typing import cast, Any, Iterable, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 from datacube.utils.geometry import Geometry as ODCGeom
 from geoalchemy2 import Geometry
