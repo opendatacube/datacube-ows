@@ -3,35 +3,55 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from __future__ import absolute_import, division, print_function
-
 import logging
 from contextlib import contextmanager
 from threading import Lock
+from typing import MutableMapping, Optional, Iterator
 
 from datacube import Datacube
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
+# CubePool class
+class CubePool:
+    """
+    A Cube pool is a thread-safe resource pool for managing Datacube objects (which map to database connections).
+    """
+    # _instances, global mapping of CubePools by app name
+    _instances: MutableMapping[str, "CubePool"] = {}
 
-class CubePool():
-    _instances = {}
-    _cubes = None
-    _cubes_lock = None
+    _cubes_: bool = False
+    _cubes_lock_: bool = False
 
-    def __new__(cls, app):
+    def __new__(cls, app: str) -> "CubePool":
+        """
+        Construction of CubePools is managed. Constructing a cubepool for an app string that already has a cubepool
+        constructed, returns the existing cubepool, not a new one.
+        """
         if app not in cls._instances:
             cls._instances[app] = super(CubePool, cls).__new__(cls)
         return cls._instances[app]
 
-    def __init__(self, app):
-        self.app = app
-        if not self._cubes:
-            self._cubes = {}
-        if not self._cubes_lock:
-            self._cubes_lock = Lock()
+    def __init__(self, app: str) -> None:
+        """
+        Obtain the cube pool for the nominated app string, or create one if one does not exist yet.
 
-    def get_cube(self):
+        :param app: The app string used to construct any Datacube objects created by the pool.
+        """
+        self.app: str = app
+        if not self._cubes_:
+            self._cubes: MutableMapping[Datacube, bool] = {}
+            self._cubes_ = True
+        if not self._cubes_lock_:
+            self._cubes_lock: Lock = Lock()
+            self._cubes_lock_ = True
+
+    def get_cube(self) -> Optional[Datacube]:
+        """
+        Return a Datacube object.  Either generating a new Datacube, or recycling an unassigned one already in the pool.
+
+        :return:  a Datacube object (or None on error).
+        """
         self._cubes_lock.acquire()
         for c, assigned in self._cubes.items():
             if not assigned:
@@ -49,37 +69,75 @@ class CubePool():
             self._cubes_lock.release()
         return c
 
-    def release_cube(self, c):
+    def release_cube(self, c: Datacube) -> None:
+        """
+        Return a datacube to the pool for reassignment.
+
+        :param c: A Datacube object originally created by this CubePool and that is no longer required.
+        """
         if c not in self._cubes:
             raise Exception("Cannot release non-pool datacube.")
         self._cubes_lock.acquire()
         self._cubes[c] = False
         self._cubes_lock.release()
 
-    def _new_cube(self):
+    def _new_cube(self) -> Datacube:
         return Datacube(app=self.app)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._cubes)
 
 
-def get_cube(app="wms"):
+# Lowlevel CubePool API
+def get_cube(app: str = "ows") -> Optional[Datacube]:
+    """
+    Obtain a Datacube object from the appropriate pool
+
+    :param app: The app pool to use - defaults to "ows".
+    :return: a Datacube object (or None) in case of database error.
+    """
     pool = CubePool(app=app)
     return pool.get_cube()
 
 
-def release_cube(c, app="wms"):
+def release_cube(c: Datacube, app: str = "ows") -> None:
+    """
+    Return a Datacube to the pool for reuse.
+
+    :param c: a Datacube object, allocated by a previous call to get_cube(app).
+    :param app: the name of the pool to return the cube from - defaults to "ows"
+    """
     pool = CubePool(app=app)
     return pool.release_cube(c)
 
 
-def pool_size(app="wms"):
+def pool_size(app: str = "ows") -> int:
+    """
+    Return the total number of cubes (available and allocated) in a particular pool.
+
+    :param app: The name of the pool to measure - defaults to "ows"
+    :return: the total number of cubes in the pool.
+    """
     pool = CubePool(app=app)
     return len(pool)
 
 
+# High Level Cube Pool API
 @contextmanager
-def cube(app="wms"):
+def cube(app: str = "ows") -> Iterator[Datacube]:
+    """
+    Context manager for using a Datacube object from a pool.
+
+    E.g.
+
+    with cube() as dc:
+         # Do stuff that needs a datacube object here.
+         data = dc.load(.....)
+
+
+    :param app: The pool to obtain the app from - defaults to "ows".
+    :return: A Datacube context manager.
+    """
     dc = get_cube(app)
     try:
         yield dc
