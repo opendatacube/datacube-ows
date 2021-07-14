@@ -20,5 +20,5 @@ def test_release_nonalloc():
     release_cube(dc_alloc, app="test")
     with pytest.raises(Exception) as e:
         release_cube(dc_unalloc, app="test")
-    assert "non-pool database" in str(e.value)
+    assert "non-pool datacube" in str(e.value)
 
