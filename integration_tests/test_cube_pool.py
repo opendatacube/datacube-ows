@@ -1,6 +1,6 @@
 import pytest
-
 from datacube import Datacube
+
 from datacube_ows.cube_pool import get_cube, release_cube, pool_size
 
 
