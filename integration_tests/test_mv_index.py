@@ -20,6 +20,30 @@ def test_full_layer():
         assert sel > 0
 
 
+def test_select_all():
+    cfg = get_config()
+    lyr = list(cfg.product_index.values())[0]
+    with cube() as dc:
+        rows = mv_search(dc.index, MVSelectOpts.ALL, products=lyr.products)
+        for row in rows:
+            assert len(row) > 1
+
+
+def test_no_products():
+    with cube() as dc:
+        with pytest.raises(Exception) as e:
+            sel = mv_search(dc.index, MVSelectOpts.COUNT)
+        assert "Must filter by product/layer" in str(e.value)
+
+
+def test_bad_set_opt():
+    cfg = get_config()
+    lyr = list(cfg.product_index.values())[0]
+    with cube() as dc:
+        with pytest.raises(AssertionError) as e:
+            sel = mv_search(dc.index, MVSelectOpts.INVALID, products=lyr.products)
+
+
 class MockGeobox:
     def __init__(self, geom):
         if geom.crs != "EPSG:4326":
