@@ -308,6 +308,7 @@ def datasets_exist(dc, product_name):
 def add_ranges(dc, product_names, summary=False, merge_only=False):
     odc_products = {}
     ows_multiproducts = []
+    errors = False
     for pname in product_names:
         dc_product = None
         ows_product = get_config().product_index.get(pname)
@@ -335,6 +336,7 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                     odc_products[pname] = {"ows": [None]}
             else:
                 print("Unrecognised product name:", pname)
+                errors = True
                 continue
 
     if ows_multiproducts and merge_only:
@@ -344,6 +346,7 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
             dc_product = dc.index.products.get_by_name(pname)
             if dc_product is None:
                 print("Could not find ODC product:", pname)
+                errors = True
             elif datasets_exist(dc, dc_product.name):
                 prod_summary = summary
                 for ows_prod in ows_prods["ows"]:
@@ -353,12 +356,12 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                 create_range_entry(dc, dc_product, get_crses(), prod_summary)
             else:
                 print("Could not find any datasets for: ", pname)
-
+                errors = True
     for mp in ows_multiproducts:
         create_multiprod_range_entry(dc, mp, get_crses())
 
     print("Done.")
-
+    return errors
 
 def get_ranges(dc, product, path=None, is_dc_product=False):
     cfg = product.global_cfg

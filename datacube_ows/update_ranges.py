@@ -127,7 +127,7 @@ def main(layers, blocking,
     if not layers:
         layers = list(cfg.product_index.keys())
     try:
-        add_ranges(dc, layers, summary, merge_only)
+        errors = add_ranges(dc, layers, summary, merge_only)
     except (psycopg2.errors.UndefinedColumn,
             sqlalchemy.exc.ProgrammingError):
         print("ERROR: OWS schema or extent materialised views appear to be missing",
@@ -135,6 +135,9 @@ def main(layers, blocking,
               "       Try running with the --schema options first."
               )
         return 1
+    if errors:
+        return 1
+
     return 0
 
 
