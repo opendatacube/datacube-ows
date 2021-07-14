@@ -6,7 +6,7 @@
 """Test update ranges on DB using Click testing
 https://click.palletsprojects.com/en/7.x/testing/
 """
-from datacube_ows.update_ranges import main
+from datacube_ows.update_ranges_impl import main
 
 
 def test_updates_ranges_schema(runner, role_name):
