@@ -131,6 +131,9 @@ def multi_date_delta(data, time_direction=-1):
     else:
         return data2 - data1
 
+def multi_date_pass(data):
+    return data
+
 
 @band_modulator
 @scalable

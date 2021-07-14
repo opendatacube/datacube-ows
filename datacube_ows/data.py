@@ -486,7 +486,7 @@ def get_map(args):
                         data = data.sortby(sorter)
                         extent_mask = extent_mask.sortby(sorter)
 
-                    body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
+                    body = _write_png(data, params.style, extent_mask, qprof)
         except EmptyResponse:
             qprof.start_event("write")
             body = _write_empty(params.geobox)
@@ -510,7 +510,7 @@ def png_response(body, cfg=None, extra_headers=None):
 
 
 @log_call
-def _write_png(data, style, extent_mask, geobox, qprof):
+def _write_png(data, style, extent_mask, qprof):
     qprof.start_event("combine-masks")
     mask = style.to_mask(data, extent_mask)
     qprof.end_event("combine-masks")
