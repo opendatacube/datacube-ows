@@ -37,6 +37,10 @@ def test_function_wrapper_lyr():
     assert result[0] == "apple  beagle  couple"
     assert result[1]["foo"] == "bar"
     assert f.band_mapper is None
+    f = datacube_ows.ogc_utils.FunctionWrapper(lyr, func_cfg)
+    result = f(a="pple", b="eagle")
+    assert result[0] == "apple  beagle  couple"
+    assert result[1]["foo"] == "bar"
     func_cfg = {
         "function": "tests.utils.a_function",
         "args": ["bar", "ouple"]
@@ -44,6 +48,10 @@ def test_function_wrapper_lyr():
     f = datacube_ows.ogc_utils.FunctionWrapper(lyr, func_cfg)
     result = f("pple")
     assert result[0] == "apple  bbar  couple"
+    assert f.band_mapper is None
+    f = datacube_ows.ogc_utils.FunctionWrapper(lyr, func_cfg)
+    result = f()
+    assert result[0] == "abar  bouple  c3"
     assert f.band_mapper is None
 
 

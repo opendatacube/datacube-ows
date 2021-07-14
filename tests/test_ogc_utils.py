@@ -64,6 +64,11 @@ def test_tz_for_dataset(dummy_ds):
     assert ret.zone == "Australia/Sydney"
 
 
+def test_tz_bad_coords():
+    with pytest.raises(Exception) as e:
+        tzinf = datacube_ows.ogc_utils.tz_for_coord(-88.8, 155.2)
+
+
 def test_local_date(dummy_ds):
     ld = datacube_ows.ogc_utils.local_date(dummy_ds)
     assert ld.year == 2020
