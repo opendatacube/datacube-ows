@@ -6,7 +6,7 @@
 import logging
 from contextlib import contextmanager
 from threading import Lock
-from typing import MutableMapping, Optional, Iterator
+from typing import Iterator, MutableMapping, Optional
 
 from datacube import Datacube
 
