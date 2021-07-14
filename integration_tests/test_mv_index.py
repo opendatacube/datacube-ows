@@ -41,7 +41,7 @@ def test_bad_set_opt():
     lyr = list(cfg.product_index.values())[0]
     with cube() as dc:
         with pytest.raises(AssertionError) as e:
-            sel = mv_search(dc.index, 999999, products=lyr.products)
+            sel = mv_search(dc.index, MVSelectOpts.INVALID, products=lyr.products)
 
 
 class MockGeobox:

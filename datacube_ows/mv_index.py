@@ -47,6 +47,7 @@ class MVSelectOpts(Enum):
     COUNT = 2
     EXTENT = 3
     DATASETS = 4
+    INVALID = 9999
 
     def sel(self, stv: Table) -> Iterable["sqlalchemy.sql.elements.ClauseElement"]:
         if self == self.ALL:
