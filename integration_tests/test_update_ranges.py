@@ -37,6 +37,13 @@ def test_update_ranges_product(runner, product_name):
     assert result.exit_code == 0
 
 
+def test_update_ranges_bad_product(runner, product_name):
+    result = runner.invoke(main, ["not_a_real_product_name"])
+    assert "not_a_real_product_name" in result.output
+    assert "Unrecognised product name" in result.output
+    assert result.exit_code == 1
+
+
 def test_update_ranges(runner):
     result = runner.invoke(main)
     assert "ERROR" not in result.output

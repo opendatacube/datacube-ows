@@ -7,6 +7,7 @@
 
 import os
 import re
+import sys
 
 import click
 import pkg_resources
@@ -21,22 +22,19 @@ from datacube_ows.product_ranges import add_ranges, get_sqlconn
 from datacube_ows.startup_utils import initialise_debugging
 
 
+
+
 @click.command()
 @click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
-@click.option("--blocking/--no-blocking", is_flag=True, default=False, help="Obsolete")
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
 @click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products")
 @click.option("--merge-only/--no-merge-only", default=False, help="When used with a multiproduct layer, the ranges for underlying datacube products are not updated.")
-@click.option("--product", default=None, help="Deprecated option provided for backwards compatibility")
-@click.option("--multiproduct", default=None, help="Deprecated option provided for backwards compatibility.")
-@click.option("--calculate-extent/--no-calculate-extent", default=None, help="Has no effect any more.  Provided for backwards compatibility only")
 @click.option("--version", is_flag=True, default=False, help="Print version string and exit")
 @click.argument("layers", nargs=-1)
-def main(layers, blocking,
+def main(layers,
          merge_only, summary,
-         schema, views, role, version,
-         product, multiproduct, calculate_extent):
+         schema, views, role, version):
     """Manage datacube-ows range tables.
 
     Valid invocations:
@@ -60,47 +58,22 @@ def main(layers, blocking,
         print("Open Data Cube Open Web Services (datacube-ows) version",
               __version__
                )
-        return 0
+        sys.exit(0)
     # Handle old-style calls
     if not layers:
         layers = []
-    if product:
-        print("********************************************************************************")
-        print("Warning: The product flag is deprecated and will be removed in a future release.")
-        print("          The correct way to make this call is now:")
-        print("          ")
-        print("          python3 update_ranges.py %s" % product)
-        print("********************************************************************************")
-        layers.append(product)
-    if multiproduct:
-        print("********************************************************************************")
-        print("Warning: The product flag is deprecated and will be removed in a future release.")
-        print("          The correct way to make this call is now:")
-        print("          ")
-        if merge_only:
-            print("          python3 update_ranges.py --merge-only %s" % multiproduct)
-        else:
-            print("          python3 update_ranges.py %s" % multiproduct)
-        print("********************************************************************************")
-        layers.append(multiproduct)
-    if calculate_extent is not None:
-        print("********************************************************************************")
-        print("Warning: The calculate-extent and no-calculate-extent flags no longer have ")
-        print("         any effect.  They are kept only for backwards compatibility and will")
-        print("         be removed in a future release.")
-        print("********************************************************************************")
     if schema and layers:
         print("Sorry, cannot update the schema and ranges in the same invocation.")
-        return 1
+        sys.exit(1)
     elif views and layers:
         print("Sorry, cannot update the materialised views and ranges in the same invocation.")
-        return 1
+        sys.exit(1)
     elif schema and not role:
         print("Sorry, cannot update schema without specifying a role, use: '--schema --role myrole'")
-        return 1
+        sys.exit(1)
     elif role and not schema:
         print("Sorry, role only makes sense for updating the schema")
-        return 1
+        sys.exit(1)
 
     initialise_debugging()
 
@@ -115,9 +88,6 @@ def main(layers, blocking,
         print("Done")
         return 0
     elif views:
-        if blocking:
-            print("WARNING: The 'blocking' flag is "
-                  "no longer supported and will be ignored.")
         print("Refreshing materialised views...")
         refresh_views(dc)
         print("Done")
@@ -134,9 +104,9 @@ def main(layers, blocking,
               "\n",
               "       Try running with the --schema options first."
               )
-        return 1
+        sys.exit(1)
     if errors:
-        return 1
+        sys.exit(1)
 
     return 0
 
