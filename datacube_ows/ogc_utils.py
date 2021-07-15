@@ -608,4 +608,4 @@ def render_frame(img_data, mask, width, height):
         else:
             alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
         buffer[3, :, :] = alpha_mask
-    return buffer
+    return buffer.transpose()

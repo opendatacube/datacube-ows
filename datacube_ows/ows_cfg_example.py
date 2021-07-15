@@ -993,17 +993,59 @@ style_ndvi_anim = {
             "aggregator_function": {
                 "function": "datacube_ows.band_utils.multi_date_pass"
             },
-            # The multi-date color ramp.  May be defined as an explicit colour ramp, as shown above for the single
-            # date case; or may be defined with a range and unscaled color ramp as shown here.
-            #
-            # The range specifies the min and max values for the color ramp.  Required if an explicit color
-            # ramp is not defined.
-            "range": [-1.0, 1.0],
-            # The name of a named matplotlib color ramp.
-            # Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
-            # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
-            # kind of ugly) blue-to-red rainbow ramp.
-            "mpl_ramp": "RdBu",
+            # The color ramp for single-date requests - same as ndvi style example above
+            "color_ramp": [
+                {
+                    "value": -0.0,
+                    "color": "#8F3F20",
+                    "alpha": 0.0
+                },
+                {
+                    "value": 0.0,
+                    "color": "#8F3F20",
+                    "alpha": 1.0
+                },
+                {
+                    "value": 0.1,
+                    "color": "#A35F18"
+                },
+                {
+                    "value": 0.2,
+                    "color": "#B88512"
+                },
+                {
+                    "value": 0.3,
+                    "color": "#CEAC0E"
+                },
+                {
+                    "value": 0.4,
+                    "color": "#E5D609"
+                },
+                {
+                    "value": 0.5,
+                    "color": "#FFFF0C"
+                },
+                {
+                    "value": 0.6,
+                    "color": "#C3DE09"
+                },
+                {
+                    "value": 0.7,
+                    "color": "#88B808"
+                },
+                {
+                    "value": 0.8,
+                    "color": "#529400"
+                },
+                {
+                    "value": 0.9,
+                    "color": "#237100"
+                },
+                {
+                    "value": 1.0,
+                    "color": "#114D04"
+                }
+            ],
             "legend": {
                 # Legend only covers positive part of ramp.
                 "begin": "0.0",

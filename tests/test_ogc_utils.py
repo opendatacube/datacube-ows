@@ -273,7 +273,7 @@ def test_png_loop_over_anim():
         "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
     })
     imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time", animate=True)
-    assert len(imgs) == 223
+    assert len(imgs) == 173
     assert imgs.find(b"\x89PNG") == 0
 
 def test_time_call(monkeypatch):
