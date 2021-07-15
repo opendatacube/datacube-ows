@@ -22,8 +22,6 @@ from datacube_ows.product_ranges import add_ranges, get_sqlconn
 from datacube_ows.startup_utils import initialise_debugging
 
 
-
-
 @click.command()
 @click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
