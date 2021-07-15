@@ -19,7 +19,6 @@ from dateutil.parser import parse
 from flask import request
 from PIL import Image
 from pytz import timezone, utc
-from rasterio import MemoryFile
 from timezonefinderL import TimezoneFinder
 
 _LOG: logging.Logger = logging.getLogger(__name__)
