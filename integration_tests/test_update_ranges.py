@@ -16,10 +16,6 @@ def test_updates_ranges_schema(runner, role_name):
 
 
 def test_update_ranges_views(runner):
-    result = runner.invoke(main, ["--views", "--blocking"])
-    assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
-
     result = runner.invoke(main, ["--views"])
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
@@ -53,16 +49,16 @@ def test_update_ranges(runner):
 def test_update_ranges_misuse_cases(runner, role_name, product_name):
     result = runner.invoke(main, ["--schema"])
     assert "Sorry" in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 1
 
     result = runner.invoke(main, ["--role", role_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 1
 
     result = runner.invoke(main, ["--views", product_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 1
 
     result = runner.invoke(main, ["--schema", product_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 1
