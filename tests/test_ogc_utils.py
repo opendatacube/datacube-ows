@@ -264,6 +264,8 @@ def test_png_loop_over():
         })
     imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time")
     assert len(imgs) == 2
+    assert len(imgs[0]) == 78
+    assert imgs[0].find(b"\x89PNG") == 0
 
 def test_png_loop_over_anim():
     data = xarray.Dataset({

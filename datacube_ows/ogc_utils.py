@@ -538,7 +538,7 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
         raise Exception("Could not identify spatial coordinates")
     width = len(img_data.coords[xcoord])
     height = len(img_data.coords[ycoord])
-
+    img_io = BytesIO()
     # Render XArray to APNG via Pillow
     # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#apng-sequences
     if loop_over and animate:
@@ -547,7 +547,7 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
             for coord in img_data.coords[loop_over].values
         ]
         images = []
-        img_io = BytesIO()
+        
         for t_slice in time_slices_array:
             im = Image.fromarray(t_slice, "RGBA")
             images.append(im)
@@ -558,16 +558,12 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
     masked_data = render_frame(img_data, mask, width, height)
     if not loop_over and animate:
         return masked_data
-    # TODO: Change PNG rendering to Pillow
-    with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=width,
-                          height=height,
-                          count=4,
-                          transform=None,
-                          dtype='uint8') as thing:
-            thing.write(masked_data)
-        return memfile.read()
+   
+    # Change PNG rendering to Pillow
+    im_final = Image.fromarray(masked_data, "RGBA")
+    im_final.save(img_io, "PNG")
+    img_io.seek(0)
+    return img_io.read()
 
 def render_frame(img_data, mask, width, height):
     """Render to a 3D numpy array an Xarray input with masking
