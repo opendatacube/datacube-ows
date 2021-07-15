@@ -555,7 +555,7 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
         img_io.seek(0)
         return img_io.read()
 
-    masked_data = _img2bands_array(img_data, mask, width, height)
+    masked_data = render_frame(img_data, mask, width, height)
     if not loop_over and animate:
         return masked_data
     # TODO: Change PNG rendering to Pillow
@@ -569,7 +569,18 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
             thing.write(masked_data)
         return memfile.read()
 
-def _img2bands_array(img_data, mask, width, height):
+def render_frame(img_data, mask, width, height):
+    """Render to a 3D numpy array an Xarray input with masking
+
+    Args:
+        img_data ([type]): Input 3D XArray
+        mask ([type]): Masking array, possibly None
+        width ([type]): Width of the frame to render
+        height ([type]): Height of the frame to render
+
+    Returns:
+        numpy.ndarray: 3D Rendered Xarray as numpy array
+    """
     masked = False
     last_band = None
     buffer = numpy.zeros((4, width, height), numpy.uint8)
