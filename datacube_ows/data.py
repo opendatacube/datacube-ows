@@ -518,8 +518,12 @@ def _write_png(data, style, extent_mask, qprof):
     img_data = style.transform_data(data, mask)
     qprof.end_event("apply-style")
     qprof.start_event("write")
-    # TODO: Activate loop_over and animate flags for APNG
-    image = xarray_image_as_png(img_data, mask)
+    # If time dimension is present animate over it.
+    # Verified using : https://docs.dea.ga.gov.au/notebooks/Frequently_used_code/Animated_timeseries.html
+    if 'time' in img_data.coords:
+        image = xarray_image_as_png(img_data, mask, loop_over='time', animate=True)
+    else:
+        image = xarray_image_as_png(img_data, mask)
     qprof.end_event("write")
     return image
 

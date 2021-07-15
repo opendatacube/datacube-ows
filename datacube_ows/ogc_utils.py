@@ -539,7 +539,7 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
     width = len(img_data.coords[xcoord])
     height = len(img_data.coords[ycoord])
 
-    # TODO: Render XArray to APNG via Pillow
+    # Render XArray to APNG via Pillow
     # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#apng-sequences
     if loop_over and animate:
         time_slices_array = [
