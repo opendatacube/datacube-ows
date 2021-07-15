@@ -44,7 +44,7 @@ def test_multidate_handler():
     }
 
     fake_cfg_anim = {
-        "allowed_count_range": [2,10],
+        "allowed_count_range": [2, 10],
         "aggregator_function": "datacube_ows.band_utils.multi_date_pass",
         "animate": True,
     }
