@@ -56,3 +56,34 @@ def test_deepinherit_deep():
     assert child["b"]["c"]["wing"] == "chicken"
     assert child["b"]["z"] == [11]
     assert child["b"]["y"] == ["some", "body", "once", "told", "me"]
+
+
+def test_array_inheritance():
+    inherit_from = {
+        "foo": "bar",
+        "ding": "dong",
+        "bing": "bang",
+        "wham": ["a-lam", "a-bing", "bong"],
+        "king": {
+            "tide": "oceanography",
+            "crab": "crustacean",
+            "Sick-Nasty": "Spades",
+        }
+    }
+    inherit_to = {
+        "foo": "baz",
+        "wham": [],
+        "king": {
+            "Penguin": "Antarctica"
+        }
+    }
+    inherited = deepinherit(inherit_from, inherit_to)
+    assert inherited["foo"] == "baz"
+    assert inherited["wham"] == []
+    assert inherited["king"]["Penguin"] == "Antarctica"
+    assert inherited["king"]["tide"] == "oceanography"
+
+    inherit_to["wham"] = ["bim", "bala", "boom"]
+    inherited = deepinherit(inherit_from, inherit_to)
+    assert "a-bing" in inherited["wham"]
+    assert "bim" in inherited["wham"]
