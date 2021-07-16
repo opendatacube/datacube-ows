@@ -286,6 +286,11 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             self.min_count, self.max_count = cfg["allowed_count_range"]
             if self.max_count < self.min_count:
                 raise ConfigException("multi_date handler allowed_count_range: minimum must be less than equal to maximum")
+
+            self.animate = cfg.get("animate", False)
+            if self.animate:
+                _LOG.warning("animations are experimental, use at your own risk")
+                
             if "aggregator_function" in cfg:
                 self.aggregator = FunctionWrapper(style.product, cfg["aggregator_function"])
             else:

@@ -43,6 +43,12 @@ def test_multidate_handler():
         "aggregator_function": "datacube_ows.band_utils.multi_date_delta",
     }
 
+    fake_cfg_anim = {
+        "allowed_count_range": [2, 10],
+        "aggregator_function": "datacube_ows.band_utils.multi_date_pass",
+        "animate": True,
+    }
+
     fake_cfg_equal = {
         "allowed_count_range": [1, 1],
         "aggregator_function": "datacube_ows.band_utils.multi_date_delta",
@@ -55,6 +61,10 @@ def test_multidate_handler():
     assert isinstance(mdh.range_str(), str)
     assert mdh.applies_to(2)
     assert not mdh.applies_to(11)
+    assert not mdh.animate
+
+    mdh_anim = StyleDefBase.MultiDateHandler(FakeMdhStyle(), fake_cfg_anim)
+    assert mdh_anim.animate
 
     mdh_equal = StyleDefBase.MultiDateHandler(FakeMdhStyle(), fake_cfg_equal)
     assert isinstance(mdh_equal.range_str(), str)

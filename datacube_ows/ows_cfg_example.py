@@ -816,6 +816,247 @@ style_ndvi_delta = {
     ]
 }
 
+# Examples of non-linear colour-ramped style with multi-date animation support.
+style_ndvi_anim = {
+    "name": "ndvi_anim",
+    "title": "NDVI Animation",
+    "abstract": "Normalised Difference Vegetation Index - with animation support",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {
+            "band1": "nir",
+            "band2": "red"
+        }
+    },
+    "needed_bands": ["red", "nir"],
+    # The color ramp for single-date requests - same as ndvi style example above
+    "color_ramp": [
+        {
+            "value": -0.0,
+            "color": "#8F3F20",
+            "alpha": 0.0
+        },
+        {
+            "value": 0.0,
+            "color": "#8F3F20",
+            "alpha": 1.0
+        },
+        {
+            "value": 0.1,
+            "color": "#A35F18"
+        },
+        {
+            "value": 0.2,
+            "color": "#B88512"
+        },
+        {
+            "value": 0.3,
+            "color": "#CEAC0E"
+        },
+        {
+            "value": 0.4,
+            "color": "#E5D609"
+        },
+        {
+            "value": 0.5,
+            "color": "#FFFF0C"
+        },
+        {
+            "value": 0.6,
+            "color": "#C3DE09"
+        },
+        {
+            "value": 0.7,
+            "color": "#88B808"
+        },
+        {
+            "value": 0.8,
+            "color": "#529400"
+        },
+        {
+            "value": 0.9,
+            "color": "#237100"
+        },
+        {
+            "value": 1.0,
+            "color": "#114D04"
+        }
+    ],
+    "include_in_feature_info": True,
+    "legend": {
+        # Show the legend (default True for colour ramp styles)
+        "show_legend": True,
+        # Example config for colour ramp style auto-legend generation.
+
+        # The range covered by the legend.
+        # Defaults to the first and last non transparent (alpha != 0.0)
+        # entry in the explicit colour ramp, or the values in the range parameter.
+        # It is recommended that values be supplied as integers or strings rather
+        # than floating point.
+        "begin": "0.0",
+        "end": "1.0",
+        # Ticks.
+        # One of the following alternatives.  All the examples below result in the same tick behaviour, given
+        # the begin and end values above.
+        #
+        # 1. Regularly spaced ticks, by size, starting from the begin tick.
+        "ticks_every": "0.2",
+        # 2. Regularly spaced ticks, by number of ticks, not counting the begin tick, but including the end tick. (int)
+        # "tick_count": 5,
+        # 3. Explicit ticks
+        # "ticks": [ "0.0", "0.2", "0.4", "0.6". "0.8", "1.0"]
+        # Default is a tick_count of 1, which means only the begin and end ticks.
+        # Legend title.  Defaults to the style name.
+        "title": "This is not a legend",
+
+        # Units
+        # added to title of legend in parenthesis, default is to not display units.  To emulate
+        # the previous default behaviour use:
+        "units": "unitless",
+
+        # decimal_places. 1 for "1.0" style labels, 2 for "1.00" and 0 for "1", etc.
+        # (default 1)
+        "decimal_places": 1,
+
+        # tick_labels
+        # Labels for individual ticks can be customised"
+        "tick_labels": {
+            # The special entry "default" allows setting
+            # a prefix and/or suffix for all labels.
+            # Default is no prefix or suffix
+            "default": {
+                # E.g. this encloses every tick label in parentheses.
+                "prefix": "(",
+                "suffix": ")",
+            },
+            # Other entries override the label for individual ticks.
+            # If they do not match a tick, as defined by the tick behaviour
+            # described above, the entry is ignored.  If you are having trouble
+            # getting the right tick value, use the "ticks" option to explicitly
+            # declare your tick locations and make sure you use strings instead of
+            # floats.
+            # The default prefix and suffix can be over-ridden.
+            "0.0": {
+                # E.g. to remove the parentheses for the 0.0 tick
+                "prefix": "",
+                "suffix": "",
+            },
+            # Or the label can changed.  Note that the default prefix and suffix
+            # are still applied unless explicitly over-ridden.
+            # E.g. To display "(max)" for the 1.0 tick:
+            "1.0": {
+                "label": "max"
+            }
+        },
+
+        # MatPlotLib rcparams options.
+        # Defaults to {} (i.e. matplotlib defaults)
+        # See https://matplotlib.org/3.2.2/tutorials/introductory/customizing.html
+        "rcParams": {
+                 "lines.linewidth": 2,
+                 "font.weight": "bold",
+        },
+
+        # Image size (in "inches").
+        # Matplotlib's default dpi is 100, so measured in hundreds of pixels unless the dpi
+        # is over-ridden by the rcParams above.
+        # Default is 4x1.25, i.e. 400x125 pixels
+        "width": 4,
+        "height": 1.25,
+
+        # strip_location
+        # The location and size of the coloured strip, in format:
+        #  [ left, bottom, width, height ], as passed to Matplotlib Figure.add_axes function.
+        # All values as fractions of the width and height.  (i.e. between 0.0 and 1.0)
+        # The default is:
+        "strip_location": [0.05, 0.5, 0.9, 0.15]
+    },
+    # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
+    "multi_date": [
+        # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
+        {
+            # The count range for which this handler is to be used - a tuple of two ints, the smallest and
+            # largest date counts for which this handler will be used.  Required.
+            # For animations consider the RAM usage on OWS pods and keep the maximum time steps reasonable
+            "allowed_count_range": [2, 10],
+            # Re-sort data returned from the ODC so the order of date coordinates in the "time" dimension
+            # matches the date order supplied by the user in the WMS request.
+            # Optional. Defaults to False (date coordinates in the "time" dimension are always sorted chronologically)
+            "preserve_user_date_order": True,
+            # Flag that an animation should be generated. Without this only the most recent frame is returned. Optional.
+            "animate": True,
+            # A function, expressed in the standard format as described elsewhere in this example file.
+            # The function is assumed to take one arguments, an xarray Dataset.
+            # The function returns an xarray Dataset with a with multiple-bands per time step, output is defined
+            # by colour ramp below
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_pass"
+            },
+            # The color ramp for single-date requests - same as ndvi style example above
+            "color_ramp": [
+                {
+                    "value": -0.0,
+                    "color": "#8F3F20",
+                    "alpha": 0.0
+                },
+                {
+                    "value": 0.0,
+                    "color": "#8F3F20",
+                    "alpha": 1.0
+                },
+                {
+                    "value": 0.1,
+                    "color": "#A35F18"
+                },
+                {
+                    "value": 0.2,
+                    "color": "#B88512"
+                },
+                {
+                    "value": 0.3,
+                    "color": "#CEAC0E"
+                },
+                {
+                    "value": 0.4,
+                    "color": "#E5D609"
+                },
+                {
+                    "value": 0.5,
+                    "color": "#FFFF0C"
+                },
+                {
+                    "value": 0.6,
+                    "color": "#C3DE09"
+                },
+                {
+                    "value": 0.7,
+                    "color": "#88B808"
+                },
+                {
+                    "value": 0.8,
+                    "color": "#529400"
+                },
+                {
+                    "value": 0.9,
+                    "color": "#237100"
+                },
+                {
+                    "value": 1.0,
+                    "color": "#114D04"
+                }
+            ],
+            "legend": {
+                # Legend only covers positive part of ramp.
+                "begin": "0.0",
+                "end": "1.0"
+            },
+            # The feature info label for the multi-date animation performs a pixel drill.
+            "feature_info_label": "ndvi_anim"
+        }
+    ]
+}
+
 # Examples of Matplotlib Color-Ramp styles
 style_deform = {
     "name": "deform",

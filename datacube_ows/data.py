@@ -486,7 +486,7 @@ def get_map(args):
                         data = data.sortby(sorter)
                         extent_mask = extent_mask.sortby(sorter)
 
-                    body = _write_png(data, params.style, extent_mask, params.geobox, qprof)
+                    body = _write_png(data, params.style, extent_mask, qprof)
         except EmptyResponse:
             qprof.start_event("write")
             body = _write_empty(params.geobox)
@@ -510,7 +510,7 @@ def png_response(body, cfg=None, extra_headers=None):
 
 
 @log_call
-def _write_png(data, style, extent_mask, geobox, qprof):
+def _write_png(data, style, extent_mask, qprof):
     qprof.start_event("combine-masks")
     mask = style.to_mask(data, extent_mask)
     qprof.end_event("combine-masks")
@@ -518,7 +518,12 @@ def _write_png(data, style, extent_mask, geobox, qprof):
     img_data = style.transform_data(data, mask)
     qprof.end_event("apply-style")
     qprof.start_event("write")
-    image = xarray_image_as_png(img_data, mask)
+    # If time dimension is present animate over it.
+    # Verified using : https://docs.dea.ga.gov.au/notebooks/Frequently_used_code/Animated_timeseries.html
+    if 'time' in img_data.coords:
+        image = xarray_image_as_png(img_data, mask, loop_over='time', animate=True)
+    else:
+        image = xarray_image_as_png(img_data, mask)
     qprof.end_event("write")
     return image
 

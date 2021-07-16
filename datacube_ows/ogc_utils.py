@@ -6,6 +6,7 @@
 import datetime
 import logging
 from importlib import import_module
+from io import BytesIO
 from itertools import chain
 from typing import (Any, Callable, Mapping, MutableMapping, Optional, Sequence,
                     Tuple, TypeVar, Union, cast)
@@ -16,8 +17,8 @@ from affine import Affine
 from datacube.utils import geometry
 from dateutil.parser import parse
 from flask import request
+from PIL import Image
 from pytz import timezone, utc
-from rasterio import MemoryFile
 from timezonefinderL import TimezoneFinder
 
 _LOG: logging.Logger = logging.getLogger(__name__)
@@ -505,7 +506,7 @@ def create_geobox(
     return geometry.GeoBox(width, height, affine, crs)
 
 
-def xarray_image_as_png(img_data, mask, loop_over=None):
+def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
     """
     Render an Xarray image as a PNG.
 
@@ -514,19 +515,14 @@ def xarray_image_as_png(img_data, mask, loop_over=None):
                 a False pixel in mask is set to zero in the image.
     :param loop_over: Optional name of a dimension on img_data.  If set, xarray_image_as_png is called in a loop
                 over all coordinate values for the named dimension.
+    :param animate: Optional generate animated PNG
     :return: A list of bytes representing a PNG image file. (Or a list of lists of bytes, if loop_over was set.)
     """
-    if loop_over:
+    if loop_over and not animate:
         return [
             xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask)
             for coord in img_data.coords[loop_over].values
         ]
-    band_index = {
-        "red": 1,
-        "green": 2,
-        "blue": 3,
-        "alpha": 4,
-    }
     xcoord = None
     ycoord = None
     for cc in ("x", "longitude", "Longitude", "long", "lon"):
@@ -541,30 +537,70 @@ def xarray_image_as_png(img_data, mask, loop_over=None):
         raise Exception("Could not identify spatial coordinates")
     width = len(img_data.coords[xcoord])
     height = len(img_data.coords[ycoord])
-    with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=width,
-                          height=height,
-                          count=4,
-                          transform=None,
-                          dtype='uint8') as thing:
-            masked = False
-            last_band = None
-            for band in img_data.data_vars:
-                idx = band_index[band]
-                band_data = img_data[band].values
-                if band == "alpha" and mask is not None:
-                    band_data = numpy.where(mask, band_data, 0)
-                    masked = True
-                elif band == "alpha":
-                    masked = True
-                thing.write_band(idx, band_data)
-                last_band = band_data
-            if not masked:
-                if mask is None:
-                    alpha_mask = numpy.empty(last_band.shape).astype('uint8')
-                    alpha_mask.fill(255)
-                else:
-                    alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
-                thing.write_band(4, alpha_mask)
-        return memfile.read()
+    img_io = BytesIO()
+    # Render XArray to APNG via Pillow
+    # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#apng-sequences
+    if loop_over and animate:
+        time_slices_array = [
+            xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask, animate=True)
+            for coord in img_data.coords[loop_over].values
+        ]
+        images = []
+        
+        for t_slice in time_slices_array:
+            im = Image.fromarray(t_slice, "RGBA")
+            images.append(im)
+        images[0].save(img_io, "PNG", save_all=True, default_image=True, loop=0, duration=1000, append_images=images)
+        img_io.seek(0)
+        return img_io.read()
+
+    masked_data = render_frame(img_data, mask, width, height)
+    if not loop_over and animate:
+        return masked_data
+   
+    # Change PNG rendering to Pillow
+    im_final = Image.fromarray(masked_data, "RGBA")
+    im_final.save(img_io, "PNG")
+    img_io.seek(0)
+    return img_io.read()
+
+def render_frame(img_data, mask, width, height):
+    """Render to a 3D numpy array an Xarray input with masking
+
+    Args:
+        img_data ([type]): Input 3D XArray
+        mask ([type]): Masking array, possibly None
+        width ([type]): Width of the frame to render
+        height ([type]): Height of the frame to render
+
+    Returns:
+        numpy.ndarray: 3D Rendered Xarray as numpy array
+    """
+    masked = False
+    last_band = None
+    buffer = numpy.zeros((4, width, height), numpy.uint8)
+    band_index = {
+        "red": 0,
+        "green": 1,
+        "blue": 2,
+        "alpha": 3,
+    }
+    for band in img_data.data_vars:
+        index = band_index[band]
+        band_data = img_data[band].values
+        if band == "alpha" and mask is not None:
+            band_data = numpy.where(mask, band_data, 0)
+            masked = True
+        elif band == "alpha":
+            masked = True
+        buffer[index, :, :] = band_data
+        index += 1
+        last_band = band_data
+    if not masked:
+        if mask is None:
+            alpha_mask = numpy.empty(last_band.shape).astype('uint8')
+            alpha_mask.fill(255)
+        else:
+            alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+        buffer[3, :, :] = alpha_mask
+    return buffer.transpose()
