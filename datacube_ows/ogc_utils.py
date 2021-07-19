@@ -554,7 +554,10 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
         img_io.seek(0)
         return img_io.read()
 
-    masked_data = render_frame(img_data, mask, width, height)
+
+    if mask is not None:
+        mask = mask.transpose(xcoord, ycoord)
+    masked_data = render_frame(img_data.transpose(xcoord, ycoord), mask, width, height)
     if not loop_over and animate:
         return masked_data
    

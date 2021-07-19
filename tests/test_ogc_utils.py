@@ -251,6 +251,11 @@ def test_day_summary_date_range():
     assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=utc)
     assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=utc)
 
+xy_coords = [
+    ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
+    ("y", [-1.0, -0.5]),
+]
+
 xyt_coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
     ("y", [-1.0, -0.5, 0.0, 0.5, 1.0]),
@@ -282,6 +287,18 @@ def test_png_loop_over_anim():
     imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time", animate=True)
     assert len(imgs) == 173
     assert imgs.find(b"\x89PNG") == 0
+
+
+def test_render_frame():
+    data = xarray.Dataset({
+        "red": dummy_da(100, "red", xy_coords, dtype="uint8"),
+        "green": dummy_da(70, "green", xy_coords, dtype="uint8"),
+        "blue": dummy_da(150, "blue", xy_coords, dtype="uint8"),
+        "alpha": dummy_da(200, "alpha", xy_coords, dtype="uint8"),
+    })
+    png = datacube_ows.ogc_utils.render_frame(data, None, 5, 2)
+    assert png.shape == (2, 5, 4)
+
 
 def test_time_call(monkeypatch):
     class FakeLogger:
