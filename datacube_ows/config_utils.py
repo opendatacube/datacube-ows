@@ -358,13 +358,33 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     @property
     def keywords(self) -> Set[str]:
+        """
+        Return the keywords for this object (with inheritance, but without metadata separation or translation)
+        :return: A set of keywords.
+        """
         return self._keywords
 
     @classmethod
     def set_msg_src(cls, src: "babel.messages.Catalog") -> None:
+        """
+        Allow all OWSMetadatConfig subclasses to share a common message catalog.
+        :param src: A Message Catalog object
+        """
         OWSMetadataConfig._msg_src = src
 
     def read_metadata(self, lbl: str, fld: str) -> Optional[str]:
+        """
+        Read a general piece of metadata (potentially from another object).
+        Resolution order:
+
+        1) Via gettext translation if internationalisation is enabled.
+        2) Via externalised message catalog, if configured.
+        3) From raw config.
+
+        :param lbl: Object label
+        :param fld: Metadata type label
+        :return: Displayable metadata.
+        """
         lookup = ".".join([lbl, fld])
         if self.global_config().internationalised:
             trans = _(lookup)
@@ -380,24 +400,64 @@ class OWSMetadataConfig(OWSConfigEntry):
         return self._metadata_registry.get(lookup)
 
     def read_inheritance(self, lbl: str, fld: str) -> bool:
+        """
+        Determine whether an arbitrary piece of metadata is inherited from a parent object.
+        :param lbl: Object label
+        :param fld: Metadata type label
+        :return: True if the metadata is inherited from a parent object, False otherwise.
+        """
         lookup = ".".join([lbl, fld])
         return self._inheritance_registry.get(lookup, False)
 
     def register_metadata(self, lbl: str, fld: str, val: str, inherited: bool = False) -> None:
+        """
+        Register a piece of metadata at config-parse time with it's raw config default value.
+
+        :param lbl: Object label
+        :param fld: Metadata type label
+        :param val: The default value, as recorded in the raw config.
+        :param inherited: If true, metadata is considered inherited and is not handled independently.
+        """
         lookup = ".".join([lbl, fld])
         self._metadata_registry[lookup] = val
         self._inheritance_registry[lookup] = inherited
 
     def read_local_metadata(self, fld: str) -> Optional[str]:
+        """
+        Read a general piece of metadata for this object.
+        Resolution order:
+
+        1) Via gettext translation if internationalisation is enabled.
+        2) Via externalised message catalog, if configured.
+        3) From raw config.
+
+        :param fld: Metadata type label
+        :return: Displayable metadata.
+        """
         return self.read_metadata(self.get_obj_label(), fld)
 
     def is_inherited(self, fld: str) -> bool:
+        """
+        Determine whether an piece of metadata for this object is inherited from the parent object.
+        :param fld: Metadata type label
+        :return: True if the metadata is inherited from the parent object, False otherwise.
+        """
         return self.read_inheritance(self.get_obj_label(), fld)
 
     def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
+        """
+        Return the global config object.
+
+        Should be over-ridden by child classes as appropriate.
+
+        :return: The global (OWSConfig) configuration object.
+        """
         return cast("datacube_ows.ows_configuration.OWSConfig", self)
 
     def __getattribute__(self, name: str) -> Any:
+        """"
+        Expose separated or internationalised metadata as attributes
+        """
         if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION):
             return self.read_local_metadata(name)
         elif name == FLD_KEYWORDS:
@@ -415,13 +475,26 @@ class OWSMetadataConfig(OWSConfigEntry):
 # Inheritable configuration
 
 class OWSEntryNotFound(ConfigException):
-    pass
+    """
+    Exception thrown when looking up an indexed config entry that does not exist.
+    """
 
 
 class OWSIndexedConfigEntry(OWSConfigEntry):
+    """
+    A Config Entry object that can be looked up by name (i.e. so it can be inherited from)
+    """
     INDEX_KEYS: List[str] = []
 
-    def __init__(self, cfg: RAW_CFG, keyvals, *args, **kwargs) -> None:
+    def __init__(self, cfg: RAW_CFG, keyvals: Mapping[str, Any], *args, **kwargs) -> None:
+        """
+        Validate and store keyvals for indexed lookup.
+
+        :param cfg: Raw configuration for object.
+        :param keyvals: Key values identifying this object
+        :param args:
+        :param kwargs:
+        """
         super().__init__(cfg, *args, **kwargs)
 
         for k in self.INDEX_KEYS:
@@ -429,21 +502,27 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
                 raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
         self.keyvals = keyvals
 
-    def lookup(self, cfg, keyvals, subs=None):
-        if subs is None:
-            subs = {}
-        for k in self.INDEX_KEYS:
-            if k not in keyvals:
-                raise ConfigException(f"Key value {k} missing from keyvals: {keyvals!r}")
-        return self.lookup_impl(cfg, keyvals, subs)
-
     @classmethod
-    def lookup_impl(cls, cfg, keyvals, subs=None):
+    def lookup_impl(cls, cfg: OWSConfigEntry,
+                    keyvals: Mapping[str, Any],
+                    subs: Optional[Mapping[str, Any]] = None) -> "OWSIndexedConfigEntry":
+        """
+        Lookup a config entry of this type by identifying label(s)
+
+        :param cfg:  The parent object that the desired object lives under.
+        :param keyvals: Keyword dictionary of identifying label(s)
+        :param subs:  Dictionary of keyword substitutions.  Used for e.g. looking up a style from a different layer.
+        :return: The desired config object
+        :raises: OWSEntryNotFound exception if no matching object found.
+        """
         raise NotImplementedError()
 
 
 # pylint: disable=abstract-method
 class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
+    """
+    A configuration object that can inherit from and extend an existing configuration object of the same type.
+    """
     def __init__(self,
                  cfg: RAW_CFG, keyvals: MutableMapping[str, str], global_cfg: "datacube_ows.ows_configuration.OWSConfig",
                  *args,
@@ -451,6 +530,15 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                  keyval_defaults: Optional[MutableMapping[str, str]] = None,
                  expanded: bool = False,
                  **kwargs) -> None:
+        """
+        Apply inheritance expansion and overrides to raw config.
+        :param cfg: Raw (unexpanded) configuration
+        :param keyvals: Dictionary of lookup keys to values
+        :param global_cfg: global configuration object
+        :param keyval_subs: (optional) Dictionary of keyword substitutions
+        :param keyval_defaults: (optional) Dictionary of keyword defaults
+        :param expanded: (optional, defaults to False) If true, assume expansion has already been applied.
+        """
         if not expanded:
             cfg = self.expand_inherit(cast(MutableMapping[str, RAW_CFG], cfg), global_cfg,
                                       keyval_subs=keyval_subs, keyval_defaults=keyval_defaults)
@@ -462,6 +550,15 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                        cfg: MutableMapping[str, RAW_CFG], global_cfg: "datacube_ows.ows_configuration.OWSConfig",
                        keyval_subs: Optional[MutableMapping[str, str]] = None,
                        keyval_defaults: Optional[MutableMapping[str, str]] = None) -> RAW_CFG:
+        """
+        Expand inherited config, and apply overrides.
+
+        :param cfg: Unexpanded configuration
+        :param global_cfg: Global config object
+        :param keyval_subs: (optional) Dictionary of keyword substitutions
+        :param keyval_defaults: (optional) Dictionary of keyword defaults
+        :return: Fully expanded config, with inheritance and overrides applied.
+        """
         if "inherits" in cfg:
             lookup = True
             # Precludes e.g. defaulting style lookup to current layer.
@@ -481,7 +578,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                 parent_cfg = parent._raw_cfg
             else:
                 parent_cfg = cfg["inherits"]
-            cfg = deepinherit(parent_cfg, cfg)
+            cfg = deepinherit(cast(MutableMapping[str, Any], parent_cfg), cfg)
             cfg["inheritance_expanded"] = True
         return cfg
 
@@ -489,13 +586,25 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
 # Managing multiproduct flag-bands
 
 class OWSFlagBandStandalone:
+    """"
+    Minimal proxy for OWSFlagBand, for use in StandAlone API which doesn't need anything more than the band name.
+    """
     def __init__(self, band: str) -> None:
         self.pq_band = band
 
 
 class OWSFlagBand(OWSConfigEntry):
+    """
+    Represents a flag band, which may come from the main product or a parallel secondary product.
+    """
     def __init__(self, cfg: MutableMapping[str, RAW_CFG], product_cfg: "datacube_ows.ows_configuration.OWSNamedLayer",
                  **kwargs) -> None:
+        """
+        Class constructor, first round initialisation
+
+        :param cfg: Raw config
+        :param product_cfg:  The OWSNamedLayer object this flag-band is associated with
+        """
         super().__init__(cfg, **kwargs)
         cfg = cast(MutableMapping[str, RAW_CFG], self._raw_cfg)
         self.product = product_cfg
@@ -516,6 +625,11 @@ class OWSFlagBand(OWSConfigEntry):
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc: "datacube.Datacube", *args, **kwargs) -> None:
+        """
+        Second round (db-aware) intialisation.
+
+        :param dc: A Datacube object
+        """
         # pyre-ignore[16]
         self.pq_products: List["datacube.model.DatasetType"] = []
         # pyre-ignore[16]
@@ -556,8 +670,17 @@ class OWSFlagBand(OWSConfigEntry):
 
 
 class FlagProductBands(OWSConfigEntry):
+    """
+    A collection of flag bands for a layer that all come from the same product (or multi-product product collection).
+    """
     def __init__(self, flag_band: OWSFlagBand,
                  layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> None:
+        """
+        Class constructor, first round initialisation
+
+        :param flag_band: A Flag-band object
+        :param layer: the named layer these flag-bands are associated with.
+        """
         super().__init__({})
         self.layer = layer
         self.bands: Set[str] = set()
@@ -573,9 +696,20 @@ class FlagProductBands(OWSConfigEntry):
         self.main_product = self.products_match(layer.product_names)
 
     def products_match(self, product_names: Iterable[str]) -> bool:
+        """
+        Compare a list of product names to this objects list of product names.
+
+        :param product_names: The product names to compare to this object
+        :return: True if the product names lists match, False otherwise.
+        """
         return tuple(product_names) == self.product_names
 
     def add_flag_band(self, fb: OWSFlagBand) -> None:
+        """
+        Add an additional flag band to this collection
+
+        :param fb:  A flag-band object.  Must match product_names with this collection.
+        """
         self.flag_bands[fb.pq_band] = fb
         self.bands.add(fb.pq_band)
         if fb.pq_manual_merge:
@@ -591,6 +725,11 @@ class FlagProductBands(OWSConfigEntry):
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, dc: "datacube.Datacube", *args, **kwargs) -> None:
+        """
+        Second round (db-aware) intialisation.
+
+        :param dc: A Datacube object
+        """
         for fb in self.flag_bands.values():
             # pyre-ignore [16]
             self.products: List["datacube.model.DatasetType"] = fb.pq_products
@@ -604,6 +743,15 @@ class FlagProductBands(OWSConfigEntry):
     @classmethod
     def build_list_from_masks(cls, masks: Iterable["datacube_ows.styles.base.StyleMask"],
                               layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> List["FlagProductBands"]:
+        """
+        Class method to instantiate a list of FlagProductBands from a list of style masks.
+
+        Bands from the same product (or multi-product collection) will be grouped into the same FlagProductBand
+
+        :param masks: A list of StyleMask objects.
+        :param layer: A named layer object
+        :return: A list of FlagProductBands objects
+        """
         flag_products = []
         for mask in masks:
             handled = False
@@ -619,6 +767,15 @@ class FlagProductBands(OWSConfigEntry):
     @classmethod
     def build_list_from_flagbands(cls, flagbands: Iterable[OWSFlagBand],
                                   layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> List["FlagProductBands"]:
+        """
+        Class method to instantiate a list of FlagProductBands from a list of OWS Flag Bands.
+
+        Bands from the same product (or multi-product collection) will be grouped into the same FlagProductBand
+
+        :param masks: A list of OWSFlagBand objects.
+        :param layer: A named layer object
+        :return: A list of FlagProductBands objects
+        """
         flag_products = []
         for fb in flagbands:
             handled = False

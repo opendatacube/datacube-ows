@@ -347,13 +347,6 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                     collapsed = collapsed & m
             return collapsed
 
-    def lookup(self, cfg, keyvals, subs=None):
-        if subs is None:
-            subs = {}
-        if "layer" not in keyvals and "layer" not in subs:
-            keyvals["layer"] = self.product.name
-        return super().lookup(cfg, keyvals, subs)
-
     @classmethod
     def lookup_impl(cls, cfg, keyvals, subs=None):
         if subs is None:
