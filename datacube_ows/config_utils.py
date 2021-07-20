@@ -6,9 +6,8 @@
 import json
 import os
 from importlib import import_module
-from typing import (Any, Iterable, List, MutableMapping,
-                    Mapping, Optional, Sequence,
-                    Set, Union, cast)
+from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
+                    Sequence, Set, Union, cast)
 from urllib.parse import urlparse
 
 import fsspec
@@ -16,7 +15,6 @@ from flask_babel import gettext as _
 
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
-
 
 RAW_CFG = Union[
         None,
@@ -278,7 +276,7 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     # Holders for managing inheritance.
     default_title: Optional[str] = None
-    default_abstract : Optional[str] = None
+    default_abstract: Optional[str] = None
 
     _keywords: Set[str] = set()
 
