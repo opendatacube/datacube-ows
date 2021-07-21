@@ -72,3 +72,26 @@ def test_func_naked():
     f = datacube_ows.ogc_utils.FunctionWrapper(lyr, a_function, stand_alone=True)
     assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"
 
+
+def test_base_class_unready():
+    cfg = datacube_ows.config_utils.OWSConfigEntry({"foo": "bar", "pot": "noodle"})
+    cfg.declare_unready("wow")
+    cfg.declare_unready("pow")
+    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
+        assert cfg.wow == "bagger"
+    assert "wow" in str(e.value)
+    assert "The following parameters have not been initialised" in str(e.value)
+    cfg.wow = "bagger"
+    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
+        cfg.make_ready(MagicMock())
+    assert "pow" in str(e.value)
+    assert "The following parameters have not been initialised" in str(e.value)
+    cfg.pow = "splat"
+    cfg.make_ready(MagicMock())
+    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
+        cfg.declare_unready("woah")
+    assert "Cannot declare woah as unready on a ready object" in str(e.value)
+
+def test_base_class_get():
+    cfg = datacube_ows.config_utils.OWSConfigEntry({"foo": "bar", "pot": "noodle"})
+    assert cfg.get("wow", "bagger") == "bagger"

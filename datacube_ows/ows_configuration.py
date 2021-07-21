@@ -854,12 +854,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
 
-    def lookup(self, cfg, keyvals, subs=None):
-        if not subs and "layer" not in keyvals:
-            subs = {
-                "layer": self.product
-            }
-        return super().lookup(cfg, keyvals, subs)
     @classmethod
     def lookup_impl(cls, cfg, keyvals, subs=None):
         try:
