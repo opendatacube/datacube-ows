@@ -313,6 +313,18 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
 def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
     product_layer.style_index[style_def.name] = style_def
+    assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
+
+
+def test_unresolvable_style(product_layer):
+    with pytest.raises(ConfigException) as e:
+        style_def = datacube_ows.styles.StyleDef(product_layer, {
+            "foo": "This is not real",
+            "name": "gotaname",
+            "abstract": "gotabstract",
+            "splunge": "doodly-doo"
+        })
+    assert "could not determine style type" in str(e.value)
 
 
 def test_style_inheritance(product_layer, style_cfg_lin, style_cfg_lin_clone):
