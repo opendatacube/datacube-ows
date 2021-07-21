@@ -5,9 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import io
 import logging
-from typing import (
-            Any, Iterable, List, Mapping, MutableMapping,
-            Optional, Set, Tuple, Type, Union, cast)
+from typing import (Any, Iterable, List, Mapping, MutableMapping,
+                    Optional, Set, Tuple, Type, Union, cast)
 
 import numpy as np
 import xarray as xr
@@ -18,9 +17,9 @@ from datacube_ows.config_utils import (CFG_DICT, RAW_CFG,
                                        FlagBand,
                                        FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
-                                       OWSIndexedConfigEntry,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
+                                       OWSIndexedConfigEntry,
                                        OWSMetadataConfig)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
