@@ -5,7 +5,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import io
 import logging
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Set, Tuple, Type, Union, cast
+from typing import (
+            Any, Iterable, List, Mapping, MutableMapping,
+            Optional, Set, Tuple, Type, Union, cast
+)
 
 import numpy as np
 import xarray as xr
