@@ -25,6 +25,8 @@ RAW_CFG = Union[
         MutableMapping[str, Any]
 ]
 
+CFG_DICT = MutableMapping[str, RAW_CFG]
+
 
 # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
 # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
@@ -280,7 +282,7 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     _keywords: Set[str] = set()
 
-    def parse_metadata(self, cfg: MutableMapping[str, RAW_CFG]) -> None:
+    def parse_metadata(self, cfg: CFG_DICT) -> None:
         """
         Read some raw configuration for this object, and setup metadata handling.
         Must be called early in __init__() (before super().__init__().)
@@ -501,13 +503,13 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
         self.keyvals = keyvals
 
     @classmethod
-    def lookup_impl(cls, cfg: OWSConfigEntry,
+    def lookup_impl(cls, cfg: "datacube_ows.ows_configuration.OWSConfig",
                     keyvals: Mapping[str, Any],
                     subs: Optional[Mapping[str, Any]] = None) -> "OWSIndexedConfigEntry":
         """
         Lookup a config entry of this type by identifying label(s)
 
-        :param cfg:  The parent object that the desired object lives under.
+        :param cfg:  The global config object that the desired object lives under.
         :param keyvals: Keyword dictionary of identifying label(s)
         :param subs:  Dictionary of keyword substitutions.  Used for e.g. looking up a style from a different layer.
         :return: The desired config object
@@ -538,14 +540,14 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
         :param expanded: (optional, defaults to False) If true, assume expansion has already been applied.
         """
         if not expanded:
-            cfg = self.expand_inherit(cast(MutableMapping[str, RAW_CFG], cfg), global_cfg,
+            cfg = self.expand_inherit(cast(CFG_DICT, cfg), global_cfg,
                                       keyval_subs=keyval_subs, keyval_defaults=keyval_defaults)
 
         super().__init__(cfg, keyvals, global_cfg=global_cfg, *args, **kwargs)
 
     @classmethod
     def expand_inherit(cls,
-                       cfg: MutableMapping[str, RAW_CFG], global_cfg: "datacube_ows.ows_configuration.OWSConfig",
+                       cfg: CFG_DICT, global_cfg: "datacube_ows.ows_configuration.OWSConfig",
                        keyval_subs: Optional[MutableMapping[str, str]] = None,
                        keyval_defaults: Optional[MutableMapping[str, str]] = None) -> RAW_CFG:
         """
@@ -589,13 +591,17 @@ class OWSFlagBandStandalone:
     """
     def __init__(self, band: str) -> None:
         self.pq_band = band
+        self.pq_names: List["datacube.model.DatasetType"] = []
+        self.pq_ignore_time = False
+        self.pq_manual_merge = False
+        self.pq_fuse_func: Optional[FunctionWrapper] = None
 
 
 class OWSFlagBand(OWSConfigEntry):
     """
     Represents a flag band, which may come from the main product or a parallel secondary product.
     """
-    def __init__(self, cfg: MutableMapping[str, RAW_CFG], product_cfg: "datacube_ows.ows_configuration.OWSNamedLayer",
+    def __init__(self, cfg: CFG_DICT, product_cfg: "datacube_ows.ows_configuration.OWSNamedLayer",
                  **kwargs) -> None:
         """
         Class constructor, first round initialisation
@@ -604,14 +610,14 @@ class OWSFlagBand(OWSConfigEntry):
         :param product_cfg:  The OWSNamedLayer object this flag-band is associated with
         """
         super().__init__(cfg, **kwargs)
-        cfg = cast(MutableMapping[str, RAW_CFG], self._raw_cfg)
+        cfg = cast(CFG_DICT, self._raw_cfg)
         self.product = product_cfg
         pq_names = self.product.parse_pq_names(cfg)
         self.pq_names = pq_names["pq_names"]
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.pq_band = cfg["band"]
         if "fuse_func" in cfg:
-            self.pq_fuse_func = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
+            self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = cfg.get("ignore_time", False)
@@ -666,12 +672,13 @@ class OWSFlagBand(OWSConfigEntry):
             self.info_mask &= ~flag
         super().make_ready(dc, *args, **kwargs)
 
+FlagBand = Union[OWSFlagBand, OWSFlagBandStandalone]
 
 class FlagProductBands(OWSConfigEntry):
     """
     A collection of flag bands for a layer that all come from the same product (or multi-product product collection).
     """
-    def __init__(self, flag_band: OWSFlagBand,
+    def __init__(self, flag_band: FlagBand,
                  layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> None:
         """
         Class constructor, first round initialisation
@@ -702,7 +709,7 @@ class FlagProductBands(OWSConfigEntry):
         """
         return tuple(product_names) == self.product_names
 
-    def add_flag_band(self, fb: OWSFlagBand) -> None:
+    def add_flag_band(self, fb: FlagBand) -> None:
         """
         Add an additional flag band to this collection
 
