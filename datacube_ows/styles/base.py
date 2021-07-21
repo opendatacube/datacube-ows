@@ -5,16 +5,15 @@
 # SPDX-License-Identifier: Apache-2.0
 import io
 import logging
-from typing import (Any, Iterable, List, Mapping, MutableMapping,
-                    Optional, Set, Tuple, Type, Union, cast)
+from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
+                    Set, Tuple, Type, Union, cast)
 
 import numpy as np
 import xarray as xr
 from datacube.utils.masking import make_mask
 from PIL import Image
 
-from datacube_ows.config_utils import (CFG_DICT, RAW_CFG,
-                                       FlagBand,
+from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, FlagBand,
                                        FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
