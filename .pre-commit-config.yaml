@@ -1,0 +1,23 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/PyCQA/isort
+    rev: 5.9.2
+    hooks:
+    -   id: isort
+-   repo: https://github.com/PyCQA/flake8
+    rev: 3.9.2
+    hooks:
+    -   id: flake8
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.7.0
+    hooks:
+    -   id: bandit
+-   repo: https://github.com/PyCQA/pylint
+    rev: v2.9.5
+    hooks:
+      - id: pylint
