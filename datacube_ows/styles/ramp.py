@@ -557,7 +557,7 @@ class ColorRampDef(StyleDefBase):
 
     def apply_index(self, data):
         index_data = self.index_function(data)
-        data['index_function'] = (index_data.dims, index_data)
+        data['index_function'] = (index_data.dims, index_data.data)
         return data["index_function"]
 
     def transform_single_date_data(self, data):
