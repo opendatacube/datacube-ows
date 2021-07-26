@@ -47,7 +47,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                                  + self.component_ratio * component_band_data)
             else:
                 img_band_data = rampdata * 255.0
-            imgdata[band] = (d.dims, img_band_data.astype("uint8"))
+            imgdata[band] = (d.dims, img_band_data.astype("uint8").data)
 
         return imgdata
 
