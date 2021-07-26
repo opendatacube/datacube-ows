@@ -109,8 +109,9 @@ class WCS1GetCoverageRequest():
         #    self.times = [parse(self.product.wcs_sole_time).date()]
         if "time" not in args:
             #      CEOS treats no supplied time argument as all time.
-            # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING - treat it as "now"
-            self.times = [self.product.ranges["times"][-1]]
+            # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING - use configured
+            # default.
+            self.times = [self.product.default_time]
         else:
             # TODO: the min/max/res format option?
             # It's a bit underspeced. I'm not sure what the "res" would look like.
