@@ -339,6 +339,9 @@ TIMERES_YR  = "year"
 
 TIMERES_VALS = [TIMERES_RAW, TIMERES_DAY, TIMERES_MON, TIMERES_YR]
 
+DEF_TIME_LATEST = "latest"
+DEF_TIME_EARLIEST = "earliest"
+
 
 class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
@@ -378,6 +381,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self.time_resolution not in TIMERES_VALS:
             raise ConfigException(
                 "Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
+        self.default_time_rule = cfg.get("default_time", DEF_TIME_LATEST)
+        if self.default_time_rule not in (DEF_TIME_LATEST, DEF_TIME_EARLIEST):
+            try:
+                self.default_time_rule = datetime.date.fromisoformat(self.default_time_rule)
+            except ValueError:
+                raise ConfigException(
+                    f"Invalid default_time value in named layer {self.name} ({self.default_time_rule})"
+                )
         self.time_axis = cfg.get("time_axis")
         if self.time_axis:
             self.regular_time_axis = True
@@ -764,7 +775,20 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if self._ranges is None:
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
-            self.default_time = self._ranges["time"][-1]
+            if self.default_time_rule == DEF_TIME_EARLIEST:
+                self.default_time = self._ranges["start_time"]
+            elif isinstance(self.default_time_rule,
+                            datetime.date) and self.default_time_rule in self._ranges["time_set"]:
+                self.default_time = self.default_time_rule
+            elif isinstance(self.default_time_rule, datetime.date):
+                _LOG.warning("default_time for named_layer %s is explicit date (%s) that is "
+                             " not available for the layer. Using most recent available date instead." % (
+                                    self.name, self.default_time_rule.isoformat())
+                )
+                self.default_time = self._ranges["end_time"]
+            else:
+                self.default_time = self._ranges["end_time"]
+
         # pylint: disable=broad-except
         except Exception as a:
             if not self.global_cfg.called_from_update_ranges:

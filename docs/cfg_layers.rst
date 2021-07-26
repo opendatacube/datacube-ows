@@ -294,6 +294,29 @@ Note that it will usually be necessary to rerun `datacube-ows-update
 <https://datacube-ows.readthedocs.io/en/latest/database.html#updating-range-tables-for-individual-layers>`_
 for the layer after changing the time resolution.
 
+-------------------------------------
+WMS Default Time Value (default_time)
+-------------------------------------
+
+Specifies which time value to use by default if not specified in request.  Applies to WMS, WMTS and WCS1.
+
+Optional (default = "latest")
+
+Allowed values:
+
+1. "latest" (the default).   Use most recent available date.
+2. "earliest".   Use earliest available date.
+3. ISO Format date (e.g. "2021-05-26").  If the specified date is not available, a warning is raised and the latest
+   available date is used instead.
+
+E.g.
+
+::
+
+    "default_time": "latest",
+    # "default_time": "earliest",
+    # "default_time": "2020-07-25",
+
 -----------------------------
 Regular Time Axis (time_axis)
 -----------------------------
