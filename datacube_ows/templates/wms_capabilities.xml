@@ -85,7 +85,7 @@
             />
         {% endfor %}
         {% if lyr.regular_time_axis %}
-        <Dimension name="time" units="ISO8601" default="{{ lyr_ranges.times[-1].isoformat() }}">{{ lyr.time_axis_representation() }}</Dimension>
+        <Dimension name="time" units="ISO8601" default="{{ lyr.default_time.isoformat() }}">{{ lyr.time_axis_representation() }}</Dimension>
         {% elif lyr_ranges.times|length > 1 %}
         <Dimension name="time" units="ISO8601" default="{{ lyr_ranges.times[-1].isoformat() }}">
             {% for t in lyr_ranges.times %}{{ t }}{% if not loop.last %},{% endif %}{% endfor %}

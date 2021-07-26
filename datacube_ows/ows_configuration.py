@@ -412,6 +412,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         self.dynamic = cfg.get("dynamic", False)
 
+        self.declare_unready("default_time")
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
         # TODO: sub-ranges
@@ -763,6 +764,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if self._ranges is None:
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
+            self.default_time = self._ranges["time"][-1]
         # pylint: disable=broad-except
         except Exception as a:
             if not self.global_cfg.called_from_update_ranges:
