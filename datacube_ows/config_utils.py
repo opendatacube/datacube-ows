@@ -17,7 +17,6 @@ from flask_babel import gettext as _
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
-
 RAW_CFG = Union[
         None,
         str,
@@ -27,6 +26,7 @@ RAW_CFG = Union[
         MutableMapping[str, Any]
 ]
 
+CFG_DICT = MutableMapping[str, RAW_CFG]
 
 # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
 # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
@@ -278,7 +278,7 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     # Holders for managing inheritance.
     default_title: Optional[str] = None
-    default_abstract : Optional[str] = None
+    default_abstract: Optional[str] = None
 
     _keywords: Set[str] = set()
 
@@ -667,6 +667,9 @@ class OWSFlagBand(OWSConfigEntry):
             flag = 1 << bit
             self.info_mask &= ~flag
         super().make_ready(dc, *args, **kwargs)
+
+
+FlagBand = Union[OWSFlagBand, OWSFlagBandStandalone]
 
 
 class FlagProductBands(OWSConfigEntry):
