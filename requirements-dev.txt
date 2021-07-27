@@ -1,3 +1,6 @@
 # For Pycharm 2020.3
 pydevd-pycharm~=211.7142.13
 sphinx_click
+
+# For git pre-commit
+pre-commit==2.13.0
