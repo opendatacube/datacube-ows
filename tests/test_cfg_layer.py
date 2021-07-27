@@ -165,6 +165,7 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, 
         lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
+    assert lyr.default_time == mock_range["times"][-1]
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
 
@@ -652,3 +653,74 @@ def test_time_axis_errors(minimal_layer_cfg, minimal_global_cfg):
     with pytest.raises(ConfigException) as e:
         lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert "time_axis end_date must be greater than or equal to the start_date if both are provided" in str(e.value)
+
+
+def test_earliest_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+    minimal_layer_cfg["default_time"] = "earliest"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert lyr.name == "a_layer"
+    assert not lyr.ready
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
+    assert lyr.ready
+    assert not lyr.hide
+    assert lyr.default_time == mock_range["times"][0]
+    assert "a_layer" in str(lyr)
+    assert len(lyr.low_res_products) == 0
+
+def test_latest_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+    minimal_layer_cfg["default_time"] = "latest"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert lyr.name == "a_layer"
+    assert not lyr.ready
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
+    assert lyr.ready
+    assert not lyr.hide
+    assert lyr.default_time == mock_range["times"][-1]
+    assert "a_layer" in str(lyr)
+    assert len(lyr.low_res_products) == 0
+
+def test_valid_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+    minimal_layer_cfg["default_time"] = "2010-01-02"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert lyr.name == "a_layer"
+    assert not lyr.ready
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
+    assert lyr.ready
+    assert not lyr.hide
+    assert lyr.default_time == datetime.date(2010, 1, 2)
+    assert "a_layer" in str(lyr)
+    assert len(lyr.low_res_products) == 0
+
+def test_missing_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+    minimal_layer_cfg["default_time"] = "2020-01-22"
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert lyr.name == "a_layer"
+    assert not lyr.ready
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
+    assert lyr.ready
+    assert not lyr.hide
+    assert lyr.default_time == mock_range["times"][-1]
+    assert "a_layer" in str(lyr)
+    assert len(lyr.low_res_products) == 0
+
+def test_invalid_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+    minimal_layer_cfg["default_time"] = "Not-a-date"
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    assert "a_layer" in str(e.value)
+    assert "Not-a-date" in str(e.value)
+    assert "Invalid default_time value" in str(e.value)
+

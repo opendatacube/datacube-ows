@@ -23,7 +23,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
     def transform_single_date_data(self, data):
         #pylint: disable=too-many-locals
         if self.index_function is not None:
-            data['index_function'] = (data.dims, self.index_function(data))
+            data['index_function'] = (data.dims, self.index_function(data).data)
 
         imgdata = Dataset(coords=data)
 
@@ -47,7 +47,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                                  + self.component_ratio * component_band_data)
             else:
                 img_band_data = rampdata * 255.0
-            imgdata[band] = (d.dims, img_band_data.astype("uint8"))
+            imgdata[band] = (d.dims, img_band_data.astype("uint8").data)
 
         return imgdata
 
