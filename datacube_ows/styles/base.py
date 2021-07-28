@@ -6,7 +6,7 @@
 import io
 import logging
 from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
-                    Set, Tuple, Type, Union, cast)
+                    Set, Sized, Tuple, Type, Union, cast)
 
 import numpy as np
 import xarray as xr
@@ -290,10 +290,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         :param mask: Optional additional mask to apply.
         :return: Xarray dataset with RGBA uint8 bands. (time MAY be collapsed)
         """
-        if not data.time.shape:
-            input_date_count = 1
-        else:
-            input_date_count = len(data.coords["time"])
+        input_date_count = self.count_dates(data)
         mdh = self.get_multi_date_handler(input_date_count)
         if mdh is None:
             img_data = self.transform_single_date_data(data)
@@ -331,11 +328,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         :param dates: The number of dates to render the legend for (e.g. for delta)
         :return: A PIL Image object, or None.
         """
-        if isinstance(dates, int):
-            ndates: int = dates
-        else:
-            ndates = len(dates)
-        mdh = self.get_multi_date_handler(ndates)
+        mdh = self.get_multi_date_handler(dates)
         url = self.legend_override_with_url(mdh)
         if url:
             return get_image_from_url(url)
@@ -369,13 +362,28 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             return mdh.legend_url_override
         return self.legend_url_override
 
-    def get_multi_date_handler(self, count: int) -> Optional["StyleDefBase.MultiDateHandler"]:
+    @staticmethod
+    def count_dates(count_or_sized_or_ds: Union[int, Sized, xr.Dataset]) -> int:
+        if isinstance(count_or_sized_or_ds, int):
+            return cast(int, count_or_sized_or_ds)
+        elif isinstance(count_or_sized_or_ds, xr.Dataset):
+            data = cast(xr.Dataset, count_or_sized_or_ds)
+            if not data.time.shape:
+                return 1
+            else:
+                return len(data.coords["time"])
+        else:
+            return len(cast(Sized, count_or_sized_or_ds))
+
+    def get_multi_date_handler(self, count_or_sized_or_ds: Union[int, Sized, xr.Dataset]
+                               ) -> Optional["StyleDefBase.MultiDateHandler"]:
         """
         Get the appropriate multidate handler.
 
         :param count: The number of dates in the query
         :return: A multidate handler object, or None, for the default single-date case.
         """
+        count = self.count_dates(count_or_sized_or_ds)
         for mdh in self.multi_date_handlers:
             if mdh.applies_to(count):
                 return mdh
@@ -443,12 +451,14 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             self.animate = cast(bool, cfg.get("animate", False))
             if self.animate:
                 _LOG.warning("animations are experimental, use at your own risk")
-                
+
+            self.frame_duration: int = 1000
             if "aggregator_function" in cfg:
                 self.aggregator = FunctionWrapper(style.product,
                                                   cast(CFG_DICT, cfg["aggregator_function"]))
             elif self.animate:
                 self.aggregator = FunctionWrapper(style.product, lambda x: x, stand_alone=True)
+                self.frame_duration = cfg.get("frame_duration", 1000)
             else:
                 raise ConfigException("Aggregator function is required for non-animated multi-date handlers.")
             self.parse_legend_cfg(cast(CFG_DICT, cfg.get("legend", {})))

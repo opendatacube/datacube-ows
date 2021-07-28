@@ -506,7 +506,7 @@ def create_geobox(
     return geometry.GeoBox(width, height, affine, crs)
 
 
-def xarray_image_as_png(img_data, loop_over=None, animate=False):
+def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=1000):
     """
     Render an Xarray image as a PNG.
 
@@ -548,7 +548,7 @@ def xarray_image_as_png(img_data, loop_over=None, animate=False):
         for t_slice in time_slices_array:
             im = Image.fromarray(t_slice, "RGBA")
             images.append(im)
-        images[0].save(img_io, "PNG", save_all=True, default_image=True, loop=0, duration=1000, append_images=images)
+        images[0].save(img_io, "PNG", save_all=True, default_image=True, loop=0, duration=frame_duration, append_images=images)
         img_io.seek(0)
         return img_io.read()
 
