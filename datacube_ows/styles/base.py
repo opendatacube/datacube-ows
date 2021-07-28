@@ -217,13 +217,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
         :param data: Dataset with all flag bands.
         :param extra_mask: Extra mask. (e.g. extent mask)
-        :return: A spatial mask with no time dimension
+        :return: A spatial mask with same dimensions and coordinates as data (including time).
         """
 
-        def single_date_make_mask(data: xr.Dataset, mask: StyleMask) -> xr.DataArray:
+        def render_mask(data: xr.Dataset, mask: StyleMask) -> xr.DataArray:
             """
             Calculate a style mask.
-            :param data: Raw Data, with single valued time dimension
+            :param data: Raw Data
             :param mask: A StyleMask object to calculate
             :return: A DataArray boolean mask with no time dimension
             """
@@ -232,45 +232,35 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                 odc_mask = make_mask(pq_data, **cast(CFG_DICT, mask.flags))
             else:
                 odc_mask = pq_data == mask.enum
-            odc_mask = odc_mask.squeeze(dim="time", drop=True)
+            if mask.invert:
+                odc_mask = ~odc_mask
             return odc_mask
 
         if not data.coords["time"].shape:
             date_count = 1
         else:
             date_count = len(data.coords["time"])
-        mdh = self.get_multi_date_handler(date_count)
-        if mdh:
-            # TODO multidate
-            if extra_mask is not None:
-                extra_mask = mdh.collapse_mask(extra_mask)
-            mask_maker = mdh.make_mask
-        else:
-            if extra_mask is not None:
-                extra_mask = extra_mask.squeeze(dim="time", drop=True)
-            mask_maker = single_date_make_mask
-
         result = extra_mask
         for mask in self.masks:
-            mask_data = mask_maker(data, mask)
-            if mask.invert:
-                mask_data = ~mask_data
+            mask_data = render_mask(data, mask)
             if result is None:
                 result = mask_data
             else:
                 result = result & mask_data
         return result
 
-    def apply_mask_to_image(self, img_data: xr.Dataset, mask: Optional[xr.DataArray]) -> xr.Dataset:
+    def apply_mask_to_image(self, img_data: xr.Dataset, mask: Optional[xr.DataArray],
+                            input_date_count: int, output_date_count: int) -> xr.Dataset:
         """
         Apply a mask to an image xarray.
 
         :param img_data: XArray with uint8 bands red, green and blue - and optionally alpha.
         :param mask: Optional mask, as returned by to_mask()
+        :param input_date_count: Number of timeslices in raw data (and therefore in the mask if supplied)
+        :param output_date_count: Number of timeslices in img_data
         :return: XArray with uint8
         """
-        if mask is None:
-            return img_data
+
         if "alpha" not in img_data.data_vars.keys():
             nda_alpha = np.ndarray(img_data["red"].shape, dtype='uint8')
             nda_alpha.fill(255)
@@ -281,7 +271,17 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             )
         else:
             alpha = img_data.alpha
-        alpha = alpha.where(mask, other=0)
+        if mask is not None:
+            if output_date_count == 1 and input_date_count > 1:
+                flat_mask: Optional[xr.DataArray] = None
+                for coord in mask.coords["time"].values:
+                    mask_slice = mask.sel(time=coord)
+                    if flat_mask is None:
+                        flat_mask = mask_slice
+                    else:
+                        flat_mask &= mask_slice
+                mask = cast(xr.DataArray, flat_mask)
+            alpha = alpha.where(mask, other=0)
         img_data = img_data.assign({"alpha": alpha})
         return img_data
 
@@ -291,20 +291,24 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
         :param data: Raw ODC data, with all required data bands and flag bands.
         :param mask: Optional additional mask to apply.
-        :return: Xarray dataset with RGBA uint8 bands.
+        :return: Xarray dataset with RGBA uint8 bands. (time MAY be collapsed)
         """
         if not data.time.shape:
-            date_count = 1
+            input_date_count = 1
         else:
-            date_count = len(data.coords["time"])
-            if date_count == 1:
-                data = data.squeeze(dim="time", drop=True)
-        mdh = self.get_multi_date_handler(date_count)
+            input_date_count = len(data.coords["time"])
+        mdh = self.get_multi_date_handler(input_date_count)
         if mdh is None:
             img_data = self.transform_single_date_data(data)
         else:
             img_data = mdh.transform_data(data)
-        img_data = self.apply_mask_to_image(img_data, mask)
+        if "time" not in img_data.coords or not img_data.time.shape:
+            output_date_count = 1
+        else:
+            output_date_count = len(data.coords["time"])
+            if output_date_count == 1:
+                img_data = img_data.squeeze(dim="time", drop=True)
+        img_data = self.apply_mask_to_image(img_data, mask, input_date_count, output_date_count)
         return img_data
 
     def transform_single_date_data(self, data: xr.Dataset) -> xr.Dataset:
@@ -474,27 +478,6 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             """
             raise NotImplementedError()
 
-        def make_mask(self, data: xr.Dataset, mask: "StyleMask") -> xr.DataArray:
-            """
-            Calculate a style mask.
-
-            :param data: Raw Data
-            :param mask: A StyleMask object to calculate
-            :return: A DataArray boolean mask
-            """
-            odc_mask: Optional[xr.DataArray] = None
-            for dt in data.coords["time"].values:
-                tpqdata: xr.DataArray = getattr(data.sel(time=dt), mask.band_name)
-                if mask.flags:
-                    dt_mask = make_mask(tpqdata, **cast(CFG_DICT, mask.flags))
-                else:
-                    dt_mask = tpqdata == mask.enum
-                if odc_mask is None:
-                    odc_mask = dt_mask
-                else:
-                    odc_mask |= dt_mask
-            return cast(xr.DataArray, odc_mask)
-
         # pylint: disable=attribute-defined-outside-init
         def parse_legend_cfg(self, cfg: CFG_DICT) -> None:
             self.show_legend = cast(bool, cfg.get("show_legend", self.auto_legend))
@@ -508,28 +491,6 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             :param bytesio: 
             """
 
-        # Defaults to an "AND" over time - data only where all dates have data.
-        # Override for "OR" functionality.
-        def collapse_mask(self, mask: xr.DataArray) -> xr.DataArray:
-            """
-            Collapse a multi-time mask into a single time slice mask.
-
-            TODO: This function existing is holding back animations
-
-            Defaults to an "AND" over time - data only where all dates have data.
-            Override for "OR" functionality.
-
-            :param mask: multi-time mask array
-            :return: timeless mask array
-            """
-            collapsed = None
-            for dt in mask.coords["time"].values:
-                m = mask.sel(time=dt)
-                if collapsed is None:
-                    collapsed = m
-                else:
-                    collapsed = collapsed & m
-            return collapsed
 
     @classmethod
     def lookup_impl(cls,

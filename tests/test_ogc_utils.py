@@ -272,7 +272,7 @@ def test_png_loop_over():
             "blue": dummy_da(150, "blue", xyt_coords, dtype="uint8"),
             "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
         })
-    imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time")
+    imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, loop_over="time")
     assert len(imgs) == 2
     assert len(imgs[0]) == 78
     assert imgs[0].find(b"\x89PNG") == 0
@@ -284,7 +284,7 @@ def test_png_loop_over_anim():
         "blue": dummy_da(150, "blue", xyt_coords, dtype="uint8"),
         "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
     })
-    imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, None, loop_over="time", animate=True)
+    imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, loop_over="time", animate=True)
     assert len(imgs) == 173
     assert imgs.find(b"\x89PNG") == 0
 
@@ -296,7 +296,7 @@ def test_render_frame():
         "blue": dummy_da(150, "blue", xy_coords, dtype="uint8"),
         "alpha": dummy_da(200, "alpha", xy_coords, dtype="uint8"),
     })
-    png = datacube_ows.ogc_utils.render_frame(data, None, 5, 2)
+    png = datacube_ows.ogc_utils.render_frame(data, 5, 2)
     assert png.shape == (2, 5, 4)
 
 
