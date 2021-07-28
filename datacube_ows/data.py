@@ -520,8 +520,8 @@ def _write_png(data, style, extent_mask, qprof):
     qprof.start_event("write")
     # If time dimension is present animate over it.
     # Verified using : https://docs.dea.ga.gov.au/notebooks/Frequently_used_code/Animated_timeseries.html
-    if 'time' in img_data.dims:
-        mdh = style.get_multi_date_handler(img_data)
+    mdh = style.get_multi_date_handler(img_data)
+    if mdh:
         image = xarray_image_as_png(img_data, loop_over='time', animate=True, frame_duration=mdh.frame_duration)
     else:
         image = xarray_image_as_png(img_data)

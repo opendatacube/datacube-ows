@@ -552,6 +552,8 @@ def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=
         img_io.seek(0)
         return img_io.read()
 
+    if "time" in img_data.coords:
+        img_data = img_data.squeeze(dim="time", drop=True)
 
     pillow_data = render_frame(img_data.transpose(xcoord, ycoord), width, height)
     if not loop_over and animate:
