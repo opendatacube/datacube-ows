@@ -298,6 +298,13 @@ def test_render_frame():
     })
     png = datacube_ows.ogc_utils.render_frame(data, 5, 2)
     assert png.shape == (2, 5, 4)
+    data = xarray.Dataset({
+        "red": dummy_da(100, "red", xy_coords, dtype="uint8"),
+        "green": dummy_da(70, "green", xy_coords, dtype="uint8"),
+        "blue": dummy_da(150, "blue", xy_coords, dtype="uint8"),
+    })
+    png = datacube_ows.ogc_utils.render_frame(data, 5, 2)
+    assert png.shape == (2, 5, 4)
 
 
 def test_time_call(monkeypatch):
