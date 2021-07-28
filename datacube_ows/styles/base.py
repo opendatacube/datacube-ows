@@ -13,6 +13,7 @@ import xarray as xr
 from datacube.utils.masking import make_mask
 from PIL import Image
 
+import datacube_ows.band_utils
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, FlagBand,
                                        FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
@@ -208,10 +209,10 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     def parse_multi_date(self, cfg: CFG_DICT) -> None:
         """Used by __init__()"""
         self.multi_date_handlers: List["StyleDefBase.MultiDateHandler"] = []
-        for mb_cfg in cast(List[RAW_CFG], cfg.get("multi_date", [])):
-            self.multi_date_handlers.append(self.MultiDateHandler(self, cast(CFG_DICT, mb_cfg)))
+        for mb_cfg in cast(List[CFG_DICT], cfg.get("multi_date", [])):
+            self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
-    def to_mask(self, data: xr.Dataset, extra_mask: Optional[xr.DataArray] = None) -> xr.DataArray:
+    def to_mask(self, data: xr.Dataset, extra_mask: Optional[xr.DataArray] = None) -> Optional[xr.DataArray]:
         """
         Generate a mask for some data.
 
@@ -236,10 +237,6 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                 odc_mask = ~odc_mask
             return odc_mask
 
-        if not data.coords["time"].shape:
-            date_count = 1
-        else:
-            date_count = len(data.coords["time"])
         result = extra_mask
         for mask in self.masks:
             mask_data = render_mask(data, mask)
@@ -450,8 +447,10 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             if "aggregator_function" in cfg:
                 self.aggregator = FunctionWrapper(style.product,
                                                   cast(CFG_DICT, cfg["aggregator_function"]))
+            elif self.animate:
+                self.aggregator = FunctionWrapper(style.product, lambda x: x, stand_alone=True)
             else:
-                raise ConfigException("Aggregator function is required for multi-date handlers.")
+                raise ConfigException("Aggregator function is required for non-animated multi-date handlers.")
             self.parse_legend_cfg(cast(CFG_DICT, cfg.get("legend", {})))
             self.preserve_user_date_order = cast(bool, cfg.get("preserve_user_date_order", False))
 
@@ -476,7 +475,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             :param data: Raw data
             :return: RGBA image xarray.  May have a time dimension
             """
-            raise NotImplementedError()
+            return self.style.transform_single_date_data(data)
 
         # pylint: disable=attribute-defined-outside-init
         def parse_legend_cfg(self, cfg: CFG_DICT) -> None:

@@ -528,7 +528,7 @@ class ColorRampDef(StyleDefBase):
     auto_legend = True
     def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
         super(ColorRampDef, self).__init__(product, style_cfg,
-                           stand_alone=stand_alone, defer_multi_date=defer_multi_date, user_defined=user_defined)
+                           stand_alone=stand_alone, defer_multi_date=True, user_defined=user_defined)
         style_cfg = self._raw_cfg
         self.color_ramp = ColorRamp(self, style_cfg)
         self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
@@ -576,9 +576,12 @@ class ColorRampDef(StyleDefBase):
         auto_legend = True
         def __init__(self, style, cfg):
             super().__init__(style, cfg)
-            self.feature_info_label = cfg.get("feature_info_label", None)
-
-            self.color_ramp = ColorRamp(style, cfg)
+            if self.animate:
+                self.feature_info_label = None
+                self.color_ramp = style.color_ramp
+            else:
+                self.feature_info_label = cfg.get("feature_info_label", None)
+                self.color_ramp = ColorRamp(style, cfg)
 
         def transform_data(self, data):
             xformed_data = self.style.apply_index(data)
@@ -586,6 +589,8 @@ class ColorRampDef(StyleDefBase):
             return self.color_ramp.apply(agg)
 
         def legend(self, bytesio):
+            if self.animate and not self.legend_cfg:
+                return self.style.single_date_legend(bytesio)
             title = self.legend_cfg.get("title", self.range_str() + " Dates")
             name = self.style.product.name + f"_{self.min_count}"
             colour_ramp_legend(bytesio,

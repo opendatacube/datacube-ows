@@ -32,6 +32,7 @@ def test_multidate_handler():
             self.product = "test"
             self.needed_bands = ["test"]
             self.index_function = lambda x: FakeData()
+            self.transform_single_date_data = lambda x: x
 
     data = np.random.randint(0, 255, size=(4, 3), dtype=np.uint8)
     locs = ["IA", "IL", "IN"]
@@ -94,7 +95,4 @@ def test_multidate_handler():
 
     assert "Aggregator function is required" in str(excinfo.value)
 
-    with pytest.raises(NotImplementedError) as excinfo:
-        mdh.transform_data(None)
-
-    assert str(excinfo) == "<ExceptionInfo NotImplementedError() tblen=2>"
+    assert mdh.transform_data(None) == None
