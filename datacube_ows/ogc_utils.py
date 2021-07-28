@@ -564,7 +564,7 @@ def xarray_image_as_png(img_data, loop_over=None, animate=False):
     return img_io.read()
 
 def render_frame(img_data, width, height):
-    """Render to a 3D numpy array an Xarray input
+    """Render to a 3D numpy array an Xarray RGB(A) input
 
     Args:
         img_data ([type]): Input 3D XArray
