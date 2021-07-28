@@ -351,6 +351,29 @@ E.g. ::
         }
     ],
 
-Currently multi_date is only supported
-for `Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date-requests>`__,
-but will likely be extended to other style types in future.
+All styles support time-series animation as a multi-date handler, as discussed below.
+
+Specific style types may support other forms of multi-date handlers. In particular,
+`Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date-requests>`__
+have additional specialised multi-date handler behaviour.
+
+Time Series Animation
+%%%%%%%%%%%%%%%%%%%%%
+
+Time series animation is supported as a multi-date handler for all style subtypes. To enable, simply create
+a multi-date handler with the "animate" flag set to True.  E.g.:
+
+::
+
+    "multi_date": [
+        {
+            "allowed_count_range": [2, 10],
+            "animate": True,
+            "frame_duration": 800,  #  0.8s per frame.
+            "preserve_user_date_order": True,
+        }
+    ],
+
+This returns an animated image in the Animated PNG format, with one frame per requested date value.  The
+frame rate of the animation can be controlled with the optional ``frame_duration`` element, which is
+measured in milliseconds and defaults to 1000 if not supplied.
