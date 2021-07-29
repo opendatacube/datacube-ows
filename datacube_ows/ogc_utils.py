@@ -506,13 +506,11 @@ def create_geobox(
     return geometry.GeoBox(width, height, affine, crs)
 
 
-def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
+def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=1000):
     """
     Render an Xarray image as a PNG.
 
     :param img_data: An xarray dataset, containing 3 or 4 uint8 variables: red, greed, blue, and optionally alpha.
-    :param mask: Optional. An boolean xarray dataarray.  The alpha value of any pixel in img_data corresponding to a
-                a False pixel in mask is set to zero in the image.
     :param loop_over: Optional name of a dimension on img_data.  If set, xarray_image_as_png is called in a loop
                 over all coordinate values for the named dimension.
     :param animate: Optional generate animated PNG
@@ -520,7 +518,7 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
     """
     if loop_over and not animate:
         return [
-            xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask)
+            xarray_image_as_png(img_data.sel(**{loop_over: coord}))
             for coord in img_data.coords[loop_over].values
         ]
     xcoord = None
@@ -542,7 +540,7 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
     # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#apng-sequences
     if loop_over and animate:
         time_slices_array = [
-            xarray_image_as_png(img_data.sel(**{loop_over: coord}), mask=mask, animate=True)
+            xarray_image_as_png(img_data.sel(**{loop_over: coord}), animate=True)
             for coord in img_data.coords[loop_over].values
         ]
         images = []
@@ -550,29 +548,28 @@ def xarray_image_as_png(img_data, mask=None, loop_over=None, animate=False):
         for t_slice in time_slices_array:
             im = Image.fromarray(t_slice, "RGBA")
             images.append(im)
-        images[0].save(img_io, "PNG", save_all=True, default_image=True, loop=0, duration=1000, append_images=images)
+        images[0].save(img_io, "PNG", save_all=True, default_image=True, loop=0, duration=frame_duration, append_images=images)
         img_io.seek(0)
         return img_io.read()
 
+    if "time" in img_data.dims:
+        img_data = img_data.squeeze(dim="time", drop=True)
 
-    if mask is not None:
-        mask = mask.transpose(xcoord, ycoord)
-    masked_data = render_frame(img_data.transpose(xcoord, ycoord), mask, width, height)
+    pillow_data = render_frame(img_data.transpose(xcoord, ycoord), width, height)
     if not loop_over and animate:
-        return masked_data
+        return pillow_data
    
     # Change PNG rendering to Pillow
-    im_final = Image.fromarray(masked_data, "RGBA")
+    im_final = Image.fromarray(pillow_data, "RGBA")
     im_final.save(img_io, "PNG")
     img_io.seek(0)
     return img_io.read()
 
-def render_frame(img_data, mask, width, height):
-    """Render to a 3D numpy array an Xarray input with masking
+def render_frame(img_data, width, height):
+    """Render to a 3D numpy array an Xarray RGB(A) input
 
     Args:
         img_data ([type]): Input 3D XArray
-        mask ([type]): Masking array, possibly None
         width ([type]): Width of the frame to render
         height ([type]): Height of the frame to render
 
@@ -591,19 +588,13 @@ def render_frame(img_data, mask, width, height):
     for band in img_data.data_vars:
         index = band_index[band]
         band_data = img_data[band].values
-        if band == "alpha" and mask is not None:
-            band_data = numpy.where(mask, band_data, 0)
-            masked = True
-        elif band == "alpha":
+        if band == "alpha":
             masked = True
         buffer[index, :, :] = band_data
         index += 1
         last_band = band_data
     if not masked:
-        if mask is None:
-            alpha_mask = numpy.empty(last_band.shape).astype('uint8')
-            alpha_mask.fill(255)
-        else:
-            alpha_mask = numpy.where(mask, 255, 0).astype('uint8')
+        alpha_mask = numpy.empty(last_band.shape).astype('uint8')
+        alpha_mask.fill(255)
         buffer[3, :, :] = alpha_mask
     return buffer.transpose()

@@ -531,7 +531,7 @@ E.g.::
 Multi-Date Requests
 -------------------
 
-Colour Ramp Styles support customised handlers for
+Colour Ramp Styles support customised non-animated handlers for
 `multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_.
 
 An aggregator function is defined that takes
