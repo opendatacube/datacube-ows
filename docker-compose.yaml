@@ -24,7 +24,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}
       # Where the config file is (must match the volume mount)
-      WMS_CONFIG_PATH: ${OWS_CFG_FILE}
+      WMS_CONFIG_PATH: /env/config/${OWS_CFG_FILE}
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
       PYTHONPATH: ${PYTHONPATH}
       DATACUBE_OWS_CFG: ${DATACUBE_OWS_CFG}
