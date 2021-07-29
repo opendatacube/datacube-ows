@@ -5,7 +5,7 @@ History
 0.1.0 (2017-02-24)
 ------------------
 
-* First release on PyPI.
+* First release on (DEA internal) PyPI.
 
 0.2.0 (2019-01-09)
 ------------------
@@ -65,9 +65,15 @@ History
 1.8.5 (2021-03-25)
 ------------------
 
+First release to
+PyPI: `https://pypi.org/project/datacube-ows/1.8.5/ <https://pypi.org/project/datacube-ows/1.8.5/>`_
+
 * Date delta can now control subtraction direction from config (#535)
 * New helper functions in standalone API (#538)
 * Bug fixes in standalone API. (#542, #543)
 * First draft of new "HOWTO" Styling guide. (#540, #543)
 * Miscellaneous cleanup. (#533, #534, #537, #541)
 * Prep for PyPI (#544)
+
+From 1.8.5 onwards, release notes are archived
+at `https://github.com/opendatacube/datacube-ows/releases <https://github.com/opendatacube/datacube-ows/releases>`_
