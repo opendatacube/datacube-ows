@@ -356,7 +356,6 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                 create_range_entry(dc, dc_product, get_crses(), prod_summary)
             else:
                 print("Could not find any datasets for: ", pname)
-                errors = True
     for mp in ows_multiproducts:
         create_multiprod_range_entry(dc, mp, get_crses())
 
