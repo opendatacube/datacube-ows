@@ -396,14 +396,14 @@ def get_map(args):
                 raise WMSException("Database connectivity failure")
             # Tiling.
             stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
-            zoomed_out = params.zf < params.product.min_zoom
+            zoomed_out = params.zf < params.product.resource_limits.min_zoom
             qprof["zoom_factor"] = params.zf
             qprof.start_event("count-datasets")
             n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
             qprof.end_event("count-datasets")
             qprof["n_datasets"] = n_datasets
-            too_many_datasets = (params.product.max_datasets_wms > 0
-                                 and n_datasets > params.product.max_datasets_wms
+            too_many_datasets = (params.product.resource_limits.max_datasets_wms > 0
+                                 and n_datasets > params.product.resource_limits.max_datasets_wms
                                  )
             if qprof.active:
                 qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)

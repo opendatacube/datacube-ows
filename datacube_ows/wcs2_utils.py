@@ -245,10 +245,10 @@ def get_coverage_data(request):
                               bands=bands)
         n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
 
-        if layer.max_datasets_wcs > 0 and n_datasets > layer.max_datasets_wcs:
+        if layer.resource_limits.max_datasets_wcs > 0 and n_datasets > layer.resource_limits.max_datasets_wcs:
             raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
                                 "Please reduce the bounds of your request and try again."
-                                "(max: %d, this request requires: %d)" % (layer.max_datasets_wcs, n_datasets))
+                                "(max: %d, this request requires: %d)" % (layer.resource_limits.max_datasets_wcs, n_datasets))
         elif n_datasets == 0:
             raise WCS2Exception("The requested spatio-temporal subsets return no data.",
                                 WCS2Exception.INVALID_SUBSETTING,

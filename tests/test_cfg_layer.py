@@ -373,8 +373,8 @@ def test_resource_limit_zoomfill(minimal_layer_cfg, minimal_global_cfg):
     }
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    assert len(lyr.zoom_fill) == 4
-    assert lyr.zoom_fill[3] == 255
+    assert len(lyr.resource_limits.zoom_fill) == 4
+    assert lyr.resource_limits.zoom_fill[3] == 255
     minimal_layer_cfg["resource_limits"]["wms"]["zoomed_out_fill_colour"] = [13, 254]
     with pytest.raises(ConfigException) as excinfo:
         lyr = parse_ows_layer(minimal_layer_cfg,
