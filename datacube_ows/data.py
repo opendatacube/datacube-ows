@@ -425,7 +425,7 @@ def get_map(args):
                     body = _write_polygon(
                         params.geobox,
                         extent,
-                        params.product.zoom_fill,
+                        params.product.resource_limits.zoom_fill,
                         params.product)
                     qprof.end_event("write")
             elif n_datasets == 0:
@@ -495,7 +495,7 @@ def get_map(args):
     if params.ows_stats:
         return json_response(qprof.profile())
     else:
-        return png_response(body, extra_headers=params.product.wms_cache_rules.cache_headers(n_datasets))
+        return png_response(body, extra_headers=params.product.resource_limits.wms_cache_rules.cache_headers(n_datasets))
 
 
 def png_response(body, cfg=None, extra_headers=None):

@@ -282,7 +282,7 @@ def get_coverage_data(request):
         "Content-Type": fmt.mime,
         'content-disposition': f'attachment; filename={request.coverage_id}.{fmt.extension}',
     }
-    headers.update(layer.wcs_cache_rules.cache_headers(n_datasets))
+    headers.update(layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))
     return output, headers
 
 
