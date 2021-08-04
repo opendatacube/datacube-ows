@@ -70,6 +70,9 @@ target/
 # VSCode project files
 .vscode/
 
+# Local pyre files
+.pyre/
+
 wsgi_local.py
 wms_cfg_local.py
 ows_*_cfg.py
@@ -81,3 +84,4 @@ ows_cfg.py
 _version.py
 .env
 ows_refactored/
+local_cfg/
