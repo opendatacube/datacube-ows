@@ -19,6 +19,7 @@ from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.resource_limits import ResourceLimited
 
 
 class WCS1GetCoverageRequest():
@@ -347,10 +348,12 @@ def get_coverage_data(req):
 
             return n_datasets, data
 
-        if req.product.resource_limits.max_datasets_wcs > 0 and n_datasets > req.product.resource_limits.max_datasets_wcs:
-            raise WCS1Exception("This request processes too much data to be served in a reasonable amount of time."
-                                "Please reduce the bounds of your request and try again."
-                                "(max: %d, this request requires: %d)" % (req.product.resource_limits.max_datasets_wcs, n_datasets))
+        try:
+            req.product.resource_limits.check_wcs(n_datasets)
+        except ResourceLimited as e:
+            raise WCS1Exception(
+                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                + "Please reduce the bounds of your request and try again.")
         datasets = stacker.datasets(index=dc.index)
         output = stacker.data(datasets, skip_corrections=True)
 
