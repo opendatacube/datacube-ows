@@ -1,6 +1,6 @@
 from typing import List, Mapping, Optional, cast
 
-from datacube_ows.config_utils import OWSConfigEntry, CFG_DICT, RAW_CFG
+from datacube_ows.config_utils import CFG_DICT, OWSConfigEntry, RAW_CFG
 from datacube_ows.ogc_utils import ConfigException
 
 
