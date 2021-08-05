@@ -29,7 +29,7 @@ def test_update_version(runner):
 
 def test_update_ranges_product(runner, product_name):
     result = runner.invoke(main, [product_name])
-    assert "ERROR" not in result.output
+    assert "ERROR" in result.output
     assert result.exit_code == 0
 
 
