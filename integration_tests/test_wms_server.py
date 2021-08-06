@@ -155,6 +155,45 @@ def test_wms_getmap(ows_server):
     assert img.info()["Content-Type"] == "image/png"
 
 
+def test_wms_getmap_requests(ows_server):
+    resp = requests.get(ows_server.url + '/wms', params={
+        "service": "WMS",
+        "version": "1.3.0",
+        "request": "GetMap",
+        "layers": "ls8_usgs_level1_scene_layer",
+        "width": "150",
+        "height": "150",
+        "crs": "EPSG:4326",
+        "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+        "format": "image/png",
+        "exceptions": "XML",
+        "time": "2019-07-09"
+    })
+    # Confirm success
+    assert resp.status_code == 200
+
+
+def test_wms_getmap_qprof(ows_server):
+    resp = requests.get(ows_server.url + '/wms', params={
+                            "service": "WMS",
+                            "version": "1.3.0",
+                            "request": "GetMap",
+                            "layers": "ls8_usgs_level1_scene_layer",
+                            "width": "150",
+                            "height": "150",
+                            "crs": "EPSG:4326",
+                            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+                            "format": "image/png",
+                            "exceptions": "XML",
+                            "time": "2019-07-09",
+                            "ows_stats": "yes"
+    })
+    # Confirm success
+    assert resp.status_code == 200
+    js = resp.json()
+    assert js["info"]["zoom_factor"] > 0.0
+
+
 def test_wms_multiproduct_getmap(ows_server, multiproduct_name):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)

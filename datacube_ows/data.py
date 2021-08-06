@@ -31,6 +31,7 @@ from datacube_ows.ogc_utils import (ConfigException, dataset_center_time,
                                     xarray_image_as_png)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
+from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import (GetFeatureInfoParameters, GetMapParameters,
                                     img_coords_to_geopoint, solar_correct_data)
@@ -396,22 +397,18 @@ def get_map(args):
                 raise WMSException("Database connectivity failure")
             # Tiling.
             stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
-            zoomed_out = params.zf < params.product.min_zoom
             qprof["zoom_factor"] = params.zf
             qprof.start_event("count-datasets")
             n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
             qprof.end_event("count-datasets")
             qprof["n_datasets"] = n_datasets
-            too_many_datasets = (params.product.max_datasets_wms > 0
-                                 and n_datasets > params.product.max_datasets_wms
-                                 )
+            try:
+                params.product.resource_limits.check_wms(n_datasets, params.zf)
+            except ResourceLimited as e:
+                stacker.resource_limited = True
+                qprof["resource_limited"] = str(e)
             if qprof.active:
                 qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
-            if too_many_datasets or zoomed_out:
-                stacker.resource_limited = True
-                qprof["too_many_datasets"] = too_many_datasets
-                qprof["zoomed_out"] = zoomed_out
-
             if stacker.resource_limited and not params.product.low_res_product_names:
                 qprof.start_event("extent-in-query")
                 extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
@@ -425,7 +422,7 @@ def get_map(args):
                     body = _write_polygon(
                         params.geobox,
                         extent,
-                        params.product.zoom_fill,
+                        params.product.resource_limits.zoom_fill,
                         params.product)
                     qprof.end_event("write")
             elif n_datasets == 0:
@@ -495,7 +492,7 @@ def get_map(args):
     if params.ows_stats:
         return json_response(qprof.profile())
     else:
-        return png_response(body, extra_headers=params.product.wms_cache_rules.cache_headers(n_datasets))
+        return png_response(body, extra_headers=params.product.resource_limits.wms_cache_rules.cache_headers(n_datasets))
 
 
 def png_response(body, cfg=None, extra_headers=None):

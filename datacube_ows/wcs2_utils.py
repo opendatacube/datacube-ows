@@ -19,6 +19,7 @@ from datacube_ows.data import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
 _LOG = logging.getLogger(__name__)
@@ -245,14 +246,17 @@ def get_coverage_data(request):
                               bands=bands)
         n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
 
-        if layer.max_datasets_wcs > 0 and n_datasets > layer.max_datasets_wcs:
-            raise WCS2Exception("This request processes too much data to be served in a reasonable amount of time."
-                                "Please reduce the bounds of your request and try again."
-                                "(max: %d, this request requires: %d)" % (layer.max_datasets_wcs, n_datasets))
-        elif n_datasets == 0:
+        if n_datasets == 0:
             raise WCS2Exception("The requested spatio-temporal subsets return no data.",
-                                WCS2Exception.INVALID_SUBSETTING,
-                                http_response=404)
+                            WCS2Exception.INVALID_SUBSETTING,
+                            http_response=404)
+
+        try:
+            layer.resource_limits.check_wcs(n_datasets)
+        except ResourceLimited as e:
+            raise WCS2Exception(
+                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                + "Please reduce the bounds of your request and try again.")
 
         datasets = stacker.datasets(dc.index)
         if fmt.multi_time and len(times) > 1:
@@ -282,7 +286,7 @@ def get_coverage_data(request):
         "Content-Type": fmt.mime,
         'content-disposition': f'attachment; filename={request.coverage_id}.{fmt.extension}',
     }
-    headers.update(layer.wcs_cache_rules.cache_headers(n_datasets))
+    headers.update(layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))
     return output, headers
 
 

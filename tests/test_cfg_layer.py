@@ -10,6 +10,7 @@ import pytest
 
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
+from datacube_ows.resource_limits import ResourceLimited
 
 
 def test_missing_title(minimal_global_cfg):
@@ -373,13 +374,28 @@ def test_resource_limit_zoomfill(minimal_layer_cfg, minimal_global_cfg):
     }
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    assert len(lyr.zoom_fill) == 4
-    assert lyr.zoom_fill[3] == 255
+    assert len(lyr.resource_limits.zoom_fill) == 4
+    assert lyr.resource_limits.zoom_fill[3] == 255
     minimal_layer_cfg["resource_limits"]["wms"]["zoomed_out_fill_colour"] = [13, 254]
     with pytest.raises(ConfigException) as excinfo:
         lyr = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "zoomed_out_fill_colour must have 3 or 4 elements" in str(excinfo.value)
+
+
+def test_resource_limit_checks(minimal_layer_cfg, minimal_global_cfg):
+    minimal_layer_cfg["resource_limits"] = {
+        "wms": {"min_zoom_factor": 300.0, "max_datasets": 8},
+        "wcs": {"max_datasets": 8},
+    }
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with pytest.raises(ResourceLimited) as e:
+        lyr.resource_limits.check_wms(n_datasets=9, zoom_factor=400.0)
+    assert "too many datasets" in str(e.value)
+    with pytest.raises(ResourceLimited) as e:
+        lyr.resource_limits.check_wcs(n_datasets=9)
+    assert "too many datasets" in str(e.value)
 
 
 def test_manual_merge(minimal_layer_cfg, minimal_global_cfg):

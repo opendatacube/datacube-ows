@@ -365,15 +365,15 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     @staticmethod
     def count_dates(count_or_sized_or_ds: Union[int, Sized, xr.Dataset]) -> int:
         if isinstance(count_or_sized_or_ds, int):
-            return cast(int, count_or_sized_or_ds)
+            return count_or_sized_or_ds
         elif isinstance(count_or_sized_or_ds, xr.Dataset):
-            data = cast(xr.Dataset, count_or_sized_or_ds)
+            data = count_or_sized_or_ds
             if not data.time.shape:
                 return 1
             else:
                 return len(data.coords["time"])
         else:
-            return len(cast(Sized, count_or_sized_or_ds))
+            return len(count_or_sized_or_ds)
 
     def get_multi_date_handler(self, count_or_sized_or_ds: Union[int, Sized, xr.Dataset]
                                ) -> Optional["StyleDefBase.MultiDateHandler"]:
@@ -458,7 +458,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                                                   cast(CFG_DICT, cfg["aggregator_function"]))
             elif self.animate:
                 self.aggregator = FunctionWrapper(style.product, lambda x: x, stand_alone=True)
-                self.frame_duration = cfg.get("frame_duration", 1000)
+                self.frame_duration = cast(int, cfg.get("frame_duration", 1000))
             else:
                 raise ConfigException("Aggregator function is required for non-animated multi-date handlers.")
             self.parse_legend_cfg(cast(CFG_DICT, cfg.get("legend", {})))
