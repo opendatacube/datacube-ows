@@ -3,14 +3,12 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-import math
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import WCSFormat, parse_ows_layer
-
 
 
 def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
