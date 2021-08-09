@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
 from datacube.utils.geometry import CRS, polygon
@@ -6,7 +8,10 @@ from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
 from datacube_ows.ogc_utils import ConfigException
 
 
+# pyre-ignore[13]
 class RequestScale:
+    standard_scale: "RequestScale"
+
     def __init__(self,
                  native_crs: CRS,
                  native_resolution: Tuple[Union[float, int], Union[float, int]],
@@ -21,16 +26,20 @@ class RequestScale:
         self.bands = request_bands
         assert (request_bands is not None) ^ (total_band_size is not None)
         if total_band_size is not None:
-            self.total_band_size = total_band_size
+            self.total_band_size: int = total_band_size
         else:
-            self.total_band_size = sum(np.dtype(band['dtype']).itemsize for band in request_bands)
+            self.total_band_size = sum(
+                np.dtype(band['dtype']).itemsize
+                for band in cast(Iterable[Mapping[str, Any]], request_bands)
+            )
         self.scale_factor: float = (float(self.n_dates) * self.pixel_size[0] * self.pixel_size[1] *
                                     self.total_band_size / self.resolution[0] / self.resolution[1])
 
-    def _metre_resolution(self, crs, resolution):
+    def _metre_resolution(self, crs: CRS, resolution: Tuple[Union[float, int], Union[float, int]]) \
+            -> Tuple[float, float]:
         # Convert native resolution to metres for ready comparison.
         if crs.units == ('metre', 'metre'):
-            return [abs(r) for r in resolution]
+            return cast(Tuple[float, float], tuple(abs(r) for r in resolution))
         resolution_rectangle = polygon(
                             ((0, 0), (0, resolution[1]), resolution, (0, resolution[0]), (0, 0)),
                             crs=crs)
@@ -39,6 +48,26 @@ class RequestScale:
             abs(proj_bbox.right - proj_bbox.left),
             abs(proj_bbox.top - proj_bbox.bottom),
         )
+
+    def res_xy(self) -> Union[int, float]:
+        return self.resolution[0] * self.resolution[1]
+
+    def __truediv__(self, other: "RequestScale") -> float:
+        ratio = 1.0
+        ratio = ratio * self.n_dates / other.n_dates
+        for i in range(2):
+            ratio = ratio * self.pixel_size[i] / other.pixel_size[i]
+        ratio = ratio * self.total_band_size / other.total_band_size
+        ratio = ratio * other.res_xy() / self.res_xy()
+        return ratio
+
+    @property
+    def load_factor(self) -> float:
+        return self / self.standard_scale
+
+    @property
+    def zoom_lvl_offset(self) -> float:
+        return math.log(self.load_factor, 4)
 
 
 RequestScale.standard_scale = RequestScale(CRS("EPSG:3857"), (25.0, 25.0),
