@@ -1,50 +1,7 @@
-import numpy as np
+from typing import List, Mapping, Optional, cast
 
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
-
-from datacube.utils.geometry import CRS, polygon
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
 from datacube_ows.ogc_utils import ConfigException
-
-
-class RequestScale:
-    def __init__(self,
-                 native_crs: CRS,
-                 native_resolution: Tuple[Union[float, int], Union[float, int]],
-                 pixel_size: Tuple[int, int],
-                 n_dates: int,
-                 request_bands: Optional[Iterable[Mapping[str, Any]]] = None,
-                 total_band_size: Optional[int] = None) -> None:
-        self.resolution = self._metre_resolution(native_crs, native_resolution)
-        self.crs = native_crs
-        self.pixel_size = pixel_size
-        self.n_dates = n_dates
-        self.bands = request_bands
-        assert (request_bands is not None) ^ (total_band_size is not None)
-        if total_band_size is not None:
-            self.total_band_size = total_band_size
-        else:
-            self.total_band_size = sum(np.dtype(band['dtype']).itemsize for band in request_bands)
-        self.scale_factor: float = (float(self.n_dates) * self.pixel_size[0] * self.pixel_size[1] *
-                                    self.total_band_size / self.resolution[0] / self.resolution[1])
-
-    def _metre_resolution(self, crs, resolution):
-        # Convert native resolution to metres for ready comparison.
-        if crs.units == ('metre', 'metre'):
-            return [abs(r) for r in resolution]
-        resolution_rectangle = polygon(
-                            ((0, 0), (0, resolution[1]), resolution, (0, resolution[0]), (0, 0)),
-                            crs=crs)
-        proj_bbox = resolution_rectangle.to_crs("EPSG:3857").boundingbox
-        return (
-            abs(proj_bbox.right - proj_bbox.left),
-            abs(proj_bbox.top - proj_bbox.bottom),
-        )
-
-
-RequestScale.standard_scale = RequestScale(CRS("EPSG:3857"), (25.0, 25.0),
-                                           (256, 256), 1,
-                                           total_band_size=(3 * 2))
 
 
 class CacheControlRules(OWSConfigEntry):
