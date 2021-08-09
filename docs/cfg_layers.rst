@@ -404,7 +404,7 @@ Native Coordinate Reference System and resolution (native_crs and native_resolut
 ------------------------------------------------------------------------------------
 
 In many cases, OWS can determine the native coordinate system
-ans resolution directly from the ODC metadata. In such cases
+and resolution directly from the ODC metadata. In such cases
 they need not be explicitly provided (and indeed, will be ignored
 if they are.)
 
