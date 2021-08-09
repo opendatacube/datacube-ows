@@ -159,7 +159,7 @@ def minimal_dc():
         elif 'nativecrs' in s:
             mprod.definition["storage"]["crs"] = "EPSG:4326"
         else:
-            pass
+            mprod.definition["storage"]["crs"] = "EPSG:4326"
         if 'nonativeres' in s:
             pass
         elif 'nativeres' in s:
@@ -168,7 +168,10 @@ def minimal_dc():
                 "longitude": 0.001,
             }
         else:
-            pass
+            mprod.definition["storage"]["resolution"] = {
+                "latitude": 0.001,
+                "longitude": 0.001,
+            }
         return mprod
     dc.index.products.get_by_name = product_by_name
     return dc

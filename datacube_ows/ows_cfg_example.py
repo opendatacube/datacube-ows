@@ -8,91 +8,10 @@
 
 # Example configuration file for datacube_ows.
 #
-# For detailed formal documentation see:
+# For detailed and up to date formal documentation see:
 #
 #   https://datacube-ows.readthedocs.io/en/latest/configuration.html
-#
-# OVERVIEW
-#
-# This file forms the primary documentation for the configuration file format at this stage.
-#
-# The actual configuration is held in a single serialisable object that can be directly
-# declared as a python object or imported from JSON.
-#
-# WHERE IS CONFIGURATION READ FROM?
-#
-# Configuration is read by default from the ows_cfg object in datacube_ows/ows_cfg.py
-#
-# but this can be overridden by setting the $DATACUBE_OWS_CFG environment variable.
-#
-# $DATACUBE_OWS_CFG is interpreted as follows (first matching alternative applies):
-#
-# 1. Has a leading slash, e.g. "/opt/odc_ows_cfg/odc_ows_cfg_prod.json"
-#    Config loaded as json from absolute file path.
-#
-# 2. Contains a slash, e.g. "configs/prod.json"
-#    Config loaded as json from relative file path.
-#
-# 3. Begins with an open brace "{", e.g. "{...}"
-#    Config loaded directly from the environment variable as json (not recommended)
-#
-# 4. Ends in ".json", e.g. "cfg_prod.json"
-#    Config loaded as json from file in working directory.
-#
-# 5. Contains a dot (.), e.g. "package.sub_package.module.cfg_object_name"
-#    Imported as python object (expected to be a dictionary).
-#    N.B. It is up to you that the Python file in question is in your Python path.
-#
-# 6. Valid python object name, e.g. "cfg_prod"
-#    Imported as python object from named object in datacube_ows/ows_cfg.py
-#
-# 7. Blank or not set
-#    Default to import ows_cfg object in datacube_ows/ows_cfg.py as described above.
-#
-# REUSING CHUNKS OF CONFIGURATION
-#
-# Often it is desirable to re-use chunks of configuration in multiple places.  E.g. a set
-# of related data products may share a band index or style definition configurations.
-#
-# If you are loading config as a Python object, this is trivial, as demonstrated in this
-# example file.
-#
-# If you want to reuse chunks of config in json, or wish to combine bits of json config
-# with bits of python config, the following convention applies in both Python and JSON
-# configuration:
-#
-# Any JSON or Python element that forms the full configuration tree or a subset of it,
-# can be supplied in any of the following ways:
-#
-# 1. Directly embed the config content:
-#       {
-#           "a_cfg_entry": 1,
-#           "another_entry": "llama",
-#       }
-#
-# 2. Include a python object (by FQN):
-#       {
-#           "include": "path.to.module.object",
-#           "type": "python"
-#       }
-#
-#       N.B. It is up to you to make sure the included Python file is in your Python Path.
-#            Relative Python imports are not supported.
-#
-# 3. Include a JSON file (by absolute or relative file path):
-#       {
-#           "include": "path/to/file.json",
-#           "type": "json"
-#       }
-#
-#       N.B. Resolution of relative file paths is done in the following order:
-#           a) Relative to the working directory of the web app.
-#           b) If a JSON file is being included from another JSON file, relative to
-#              directory in which the including file resides.
-#
-# Note that this does not just apply to dictionaries. Either of the above include dictionaries
-# could expand to an array, or even to single integer or string.
-#
+
 # THIS EXAMPLE FILE
 #
 # In this example file, there are some reusable code chunks defined at the top.  The actual
@@ -1787,6 +1706,18 @@ ows_cfg = {
                     # * "month" (for monthly summary datasets)
                     # * "year" (for annual summary datasets)
                     "time_resolution": "raw",
+                    # The "native" CRS.  (as used for resource management calculations and WCS metadata)
+                    # (Used for resource management calculations and WCS metadata)
+                    # Must be in the global "published_CRSs" list.
+                    # Can be omitted if the product has a single native CRS, as this will be used in preference.
+                    "native_crs": "EPSG:3577",
+                    # The native resolution (x,y)
+                    # (Used for resource management calculations and WCS metadata)
+                    # This is the number of CRS units (e.g. degrees, metres) per pixel in the horizontal
+                    # and vertical directions for the native CRS.
+                    # Can be omitted if the product has a single native resolution, as this will be used in preference.
+                    # E.g. for EPSG:3577; (25.0,25.0) for Landsat-8 and (10.0,10.0 for Sentinel-2)
+                    "native_resolution": [25.0, 25.0],
                     "flags": {
                         # Data may include flags that mark which pixels have missing or poor-quality data,
                         # or contain cloud, or cloud-shadow, etc.  This section describes how
@@ -1875,14 +1806,7 @@ ows_cfg = {
                     # If the WCS section is not supplied, then this named layer will NOT appear as a WCS
                     # coverage (but will still be a layer in WMS and WMTS).
                     "wcs": {
-                        # The "native" CRS for WCS. Must be in the global "published_CRSs" list.
-                        # Can be omitted if the product has a single native CRS, as this will be used in preference.
-                        "native_crs": "EPSG:3577",
-                        # The resolution (x,y) for WCS.  Required for WCS-enabled layers.
-                        # This is the number of CRS units (e.g. degrees, metres) per pixel in the horizontal
-                        # and vertical # directions for the native resolution.
-                        # E.g. for EPSG:3577; (25.0,25.0) for Landsat-8 and (10.0,10.0 for Sentinel-2)
-                        "native_resolution": [25.0, 25.0],
+
                         # The default bands for a WCS request.
                         # 1. Must be provided if WCS is activated.
                         # 2. Must contain at least one band.
@@ -1997,6 +1921,7 @@ ows_cfg = {
                     "product_name": "ls8_level1_usgs",
                     "bands": landsat8_bands,
                     "resource_limits": standard_resource_limits,
+                    # native_crs and native_resolution taken from product meta-data
                     "flags": {
                         "band": "quality",
                         "ignore_time": False,
@@ -2022,8 +1947,6 @@ ows_cfg = {
                         "apply_solar_corrections": True
                     },
                     "wcs": {
-                        "native_crs": "EPSG:3857",
-                        "native_resolution": [25.0, 25.0],
                         "default_bands": ["red", "green", "blue"],
                     },
                     "styling": {
@@ -2050,13 +1973,13 @@ ows_cfg = {
                     "bands": {"frequency": []},
                     "resource_limits": standard_resource_limits,
                     "flags": None,
+                    "native_crs": "EPSG:3857",
+                    "native_resolution": [25.0, 25.0],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
                     },
                     "wcs": {
-                        "native_crs": "EPSG:3857",
-                        "native_resolution": [25.0, 25.0],
                         "default_bands": ["frequency"],
                     },
                     "styling": {
@@ -2090,6 +2013,8 @@ ows_cfg = {
                     "resource_limits": standard_resource_limits,
                     # Near Real Time datasets are being regularly updated - do not cache ranges in memory.
                     "dynamic": True,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [10.0, 10.0],
                     "flags": {
                         "band": "quality",
                         "ignore_time": False,
@@ -2104,8 +2029,6 @@ ows_cfg = {
                         "apply_solar_corrections": False,
                     },
                     "wcs": {
-                        "native_crs": "EPSG:3577",
-                        "native_resolution": [10.0, 10.0],
                         "default_bands": ["red", "green", "blue"],
                     },
                     "identifiers": {
@@ -2150,8 +2073,6 @@ ows_cfg = {
                 "apply_solar_corrections": False,
             },
             "wcs": {
-                "native_crs": "EPSG:3577",
-                "native_resolution": [25.0, 25.0],
                 "default_bands": ["canopy_cover_class"],
             },
             "identifiers": {

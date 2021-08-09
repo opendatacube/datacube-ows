@@ -399,6 +399,51 @@ Band aliases are useful:
 * when you wish to share configuration chunks that reference
   bands between layers but the native band names do not match.
 
+------------------------------------------------------------------------------------
+Native Coordinate Reference System and resolution (native_crs and native_resolution)
+------------------------------------------------------------------------------------
+
+In many cases, OWS can determine the native coordinate system
+and resolution directly from the ODC metadata. In such cases
+they need not be explicitly provided (and indeed, will be ignored
+if they are.)
+
+However some ODC products do not have a product wide CRS,
+but rather define a native CRS from for each dataset from a family
+of related CRSs. (e.g. Sentinel-2 data is usually packaged like this.)
+In this case you must manually declare a "native" CRS. Similarly,
+if the native resolution is included in product-level metadata in
+the ODC, it must be declared explicitly.
+
+The "native" CRS and resolution
+allows OWS to treat the entire layer as a single coverage, and
+are used for calculating request resource limits.
+
+The native_crs can be any CRS
+declared in the `global published_CRSs section
+<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_
+and need not be related to the CRSs that the data is actually
+stored in.
+
+The native_resolution is
+the number of native CRS units (e.g. degrees, metres) per pixel in
+the horizontal and vertical directions.
+
+E.g. for EPSG:3577 (measured in metres) you would use (25.0, 25.0)
+for Landsat and (10.0, 10.0) for Sentinel-2.
+
+Depending on the native CRS and the way the data has been processed,
+Landsat resolution may be closer to 30m. If the native CRS is measured
+in degrees, then the native resolution must also be measured in
+degrees, not metres.
+
+E.g.
+
+::
+
+        "native_crs": "EPSG:3577",
+        "native_resolution": [25.0, 25.0],
+
 ---------------------------------
 Resource Limits (resource_limits)
 ---------------------------------
@@ -879,50 +924,8 @@ E.g.
 ::
 
     "wcs": {
-        "native_crs": "EPSG:3577",
-        "native_resolution": [25.0, 25.0],
         "default_bands": ["red", "green", "blue"]
     }
-
-Native Coordinate Reference System (native_crs)
-+++++++++++++++++++++++++++++++++++++++++++++++
-
-In many cases, OWS can determine the native coordinate system
-directly from the ODC metadata. In such cases the native_crs
-need not be explicitly provided (and indeed, will be ignored
-if it is.)
-
-However some ODC products do not have a product wide CRS, but
-rather define a native CRS from for each dataset from a family
-of related CRSs. (e.g.
-Sentinel-2 data is usually packaged like this.)  In this case
-you must manually declare a "native" CRS (if WCS is active).
-This can be any CRS
-declared in the `global published_CRSs section
-<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_
-and need not be related to the CRSs that the data is actually
-stored in.
-
-Native Resolution (native_resolution)
-+++++++++++++++++++++++++++++++++++++
-
-In many cases, OWS can determine the native resolution
-directly from the ODC metadata. In such cases the native_resolution
-need not be explicitly provided (and indeed, will be ignored
-if it is.)
-
-A native_resolution is required for WCS-enabled layers where
-is cannot be determined from ODC metadata.  It is
-the number of native CRS units (e.g. degrees, metres) per pixel in
-the horizontal and vertical directions.
-
-E.g. for EPSG:3577 (measured in metres) you would use (25.0, 25.0)
-for Landsat and (10.0, 10.0) for Sentinel-2.
-
-Depending on the native CRS and the way the data has been processed,
-Landsat resolution may be closer to 30m. If the native CRS is measured
-in degrees, then the native resolution must also be measured in
-degrees, not metres.
 
 Default WCS Bands (default_bands)
 +++++++++++++++++++++++++++++++++

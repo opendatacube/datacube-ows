@@ -377,6 +377,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("bboxes")
         # TODO: sub-ranges
         self.band_idx = BandIndex(self, cfg.get("bands"))
+        self.cfg_native_resolution = cfg.get("native_resolution")
+        self.cfg_native_crs = cfg.get("native_crs")
+        self.declare_unready("resolution_x")
+        self.declare_unready("resolution_y")
         self.resource_limits = OWSResourceManagementRules(cfg.get("resource_limits", {}), f"Layer {self.name}")
         try:
             self.parse_flags(cfg.get("flags", {}))
@@ -451,6 +455,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise ConfigException(f"Duplicate flag band name: {fb.pq_band}")
             self.all_flag_band_names.add(fb.pq_band)
         self.ready_image_processing(dc)
+        self.ready_native_specs()
         if self.global_cfg.wcs:
             self.ready_wcs(dc)
         for style in self.styles:
@@ -538,22 +543,40 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def parse_wcs(self, cfg):
-        if cfg is None:
+        if cfg is None or not self.global_cfg.wcs:
             self.wcs = False
             return
         else:
             self.wcs = True
+
+        if "native_resolution" in cfg:
+            if not self.cfg_native_resolution:
+                _LOG.warning(
+                    "Specifying native_resolution in wcs section of layer %s is now deprecated, please move to "
+                    "main layer section if required.", self.name)
+                self.cfg_native_resolution = cfg.get("native_resolution")
+            else:
+                _LOG.warning(
+                    "Native_resolution in wcs section of layer %s ignored in favour of value in "
+                    "main layer section.", self.name)
+
         # Native CRS
-        self.cfg_native_crs = cfg.get("native_crs")
+        if "native_crs" in cfg:
+            if not self.cfg_native_crs:
+                _LOG.warning("Specifying native_crs in wcs section of layer %s is now deprecated, pleas move to "
+                             "main layer section if required", self.name)
+                self.cfg_native_crs = cfg["native_crs"]
+            else:
+                _LOG.warning(
+                    "native_crs in wcs section of layer %s ignored in favour of value in "
+                    "main layer section.", self.name)
+
         self.declare_unready("native_CRS")
         self.declare_unready("native_CRS_def")
 
         # Rectified Grids
         self.declare_unready("origin_x")
         self.declare_unready("origin_y")
-        self.cfg_native_resolution = cfg.get("native_resolution")
-        self.declare_unready("resolution_x")
-        self.declare_unready("resolution_y")
         self.declare_unready("grid_high_x")
         self.declare_unready("grid_high_y")
         self.declare_unready("grids")
@@ -570,26 +593,67 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.native_format = self.global_cfg.native_wcs_format
 
     # pylint: disable=attribute-defined-outside-init
+    def ready_native_specs(self):
+        # Native CRS
+        try:
+            self.native_CRS = self.product.definition["storage"]["crs"]
+            if self.cfg_native_crs == self.native_CRS:
+                _LOG.debug(
+                    "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                    self.name)
+            else:
+                _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                             self.name, self.cfg_native_crs, self.native_CRS)
+        except KeyError:
+            self.native_CRS = self.cfg_native_crs
+
+        if not self.native_CRS:
+            raise ConfigException(f"No native CRS could be found for layer {self.name}")
+        if self.native_CRS not in self.global_cfg.published_CRSs:
+            raise ConfigException(
+                f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs")
+        self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
+
+        try:
+            # Native CRS
+            self.resolution_x = self.product.definition["storage"]["resolution"][
+                self.native_CRS_def["horizontal_coord"]]
+            self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
+        except KeyError:
+            self.resolution_x = None
+            self.resolution_y = None
+
+        if self.resolution_x is None:
+            try:
+                if self.cfg_native_resolution is None:
+                    raise KeyError
+                self.resolution_x, self.resolution_y = self.cfg_native_resolution
+            except KeyError:
+                raise ConfigException(
+                    f"No native resolution supplied for layer {self.name} with no product-native resolution defined in ODC."
+                )
+            except ValueError:
+                raise ConfigException(f"Invalid native resolution supplied for layer {self.name}")
+            except TypeError:
+                raise ConfigException(f"Invalid native resolution supplied for layer {self.name}")
+        elif self.cfg_native_resolution:
+            config_x, config_y = (float(r) for r in self.cfg_native_resolution)
+            if (
+                    math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
+                    and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
+            ):
+                _LOG.debug(
+                    "Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                    self.name)
+            else:
+                _LOG.warning(
+                    "Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
+                    self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
+
+    # pylint: disable=attribute-defined-outside-init
     def ready_wcs(self, dc):
         if self.global_cfg.wcs and self.wcs:
-            # Native CRS
-            try:
-                self.native_CRS = self.product.definition["storage"]["crs"]
-                if self.cfg_native_crs == self.native_CRS:
-                    _LOG.debug(
-                        "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                        self.name)
-                else:
-                    _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
-                                 self.name, self.cfg_native_crs, self.native_CRS)
-            except KeyError:
-                self.native_CRS = self.cfg_native_crs
 
-            if not self.native_CRS:
-                raise ConfigException(f"No native CRS could be found for layer {self.name}")
-            if self.native_CRS not in self.global_cfg.published_CRSs:
-                raise ConfigException(f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs")
-            self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
             # Prepare Rectified Grids
             try:
                 native_bounding_box = self.bboxes[self.native_CRS]
@@ -603,38 +667,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.origin_x = native_bounding_box["left"]
             self.origin_y = native_bounding_box["bottom"]
 
-            try:
-                self.resolution_x = self.product.definition["storage"]["resolution"][
-                    self.native_CRS_def["horizontal_coord"]]
-                self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
-            except KeyError:
-                self.resolution_x = None
-                self.resolution_y = None
-
-            if self.resolution_x is None:
-                try:
-                    if self.cfg_native_resolution is None:
-                        raise KeyError
-                    self.resolution_x, self.resolution_y = self.cfg_native_resolution
-                except KeyError:
-                    raise ConfigException(f"No native resolution supplied for WCS enabled layer {self.name}")
-                except ValueError:
-                    raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
-                except TypeError:
-                    raise ConfigException(f"Invalid native resolution supplied for WCS enabled layer {self.name}")
-            elif self.cfg_native_resolution:
-                config_x, config_y = (float(r) for r in self.cfg_native_resolution)
-                if (
-                        math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
-                        and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)
-                ):
-                    _LOG.debug(
-                        "Native resolution for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                        self.name)
-                else:
-                    _LOG.warning(
-                        "Native resolution for layer %s is specified in config as %s - overridden to (%.15f, %.15f) by ODC metadata",
-                        self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
 
             if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
                 ConfigException(
