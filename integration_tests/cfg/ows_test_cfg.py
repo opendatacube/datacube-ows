@@ -678,6 +678,8 @@ ows_cfg = {
                     "user_band_math": True,
                     "bands": ls8_usgs_level1_bands,
                     "resource_limits": standard_resource_limits,
+                    "native_crs": "EPSG:4326",
+                    "native_resolution": [0.000225, 0.000225],
                     "flags": [
                         {
                             "band": "quality",
@@ -706,8 +708,6 @@ ows_cfg = {
                         "apply_solar_corrections": True,
                     },
                     "wcs": {
-                        "native_crs": "EPSG:4326",
-                        "native_resolution": [0.000225, 0.000225],
                         "default_bands": ["red", "green", "blue"],
                     },
                     "styling": {
@@ -760,6 +760,8 @@ For service status information, see https://status.dea.ga.gov.au
                     "product_name": "ls5_fc_albers",
                     "bands": bands_fc,
                     "resource_limits": reslim_aster,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [25, -25],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [],
@@ -775,9 +777,7 @@ For service status information, see https://status.dea.ga.gov.au
                         },
                     ],
                     "wcs": {
-                        "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
-                        "native_resolution": [25, -25],
                     },
                     "styling": {
                         "default_style": "simple_fc",
@@ -799,6 +799,8 @@ For service status information, see https://status.dea.ga.gov.au
                     "bands": bands_wofs_obs,
                     "resource_limits": reslim_wofs_obs,
                     "dynamic": True,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [25, -25],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_bitflag",
                         "always_fetch_bands": [],
@@ -806,8 +808,6 @@ For service status information, see https://status.dea.ga.gov.au
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
                     },
                     "wcs": {
-                        "native_crs": "EPSG:3577",
-                        "native_resolution": [25, -25],
                         "default_bands": ["water"],
                     },
                     "styling": {
@@ -829,6 +829,8 @@ For service status information, see https://status.dea.ga.gov.au
                     "bands": bands_fc,
                     "resource_limits": reslim_aster,
                     "dynamic": True,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [25, -25],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [],
@@ -844,9 +846,7 @@ For service status information, see https://status.dea.ga.gov.au
                         },
                     ],
                     "wcs": {
-                        "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
-                        "native_resolution": [25, -25],
                     },
                     "styling": {
                         "default_style": "simple_fc",
@@ -869,6 +869,8 @@ For service status information, see https://status.dea.ga.gov.au
                     "bands": bands_fc,
                     "resource_limits": reslim_aster,
                     "dynamic": True,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [25, -25],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [],
@@ -884,9 +886,7 @@ For service status information, see https://status.dea.ga.gov.au
                         },
                     ],
                     "wcs": {
-                        "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
-                        "native_resolution": [25, -25],
                     },
                     "styling": {
                         "default_style": "simple_fc",
@@ -910,6 +910,8 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                     "bands": bands_fc,
                     "resource_limits": reslim_aster,
                     "dynamic": True,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [25, -25],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [],
@@ -925,9 +927,7 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                         },
                     ],
                     "wcs": {
-                        "native_crs": "EPSG:3577",
                         "default_bands": ["BS", "PV", "NPV"],
-                        "native_resolution": [25, -25],
                     },
                     "styling": {
                         "default_style": "simple_fc",
