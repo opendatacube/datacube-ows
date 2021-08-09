@@ -552,23 +552,23 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if "native_resolution" in cfg:
             if not self.cfg_native_resolution:
                 _LOG.warning(
-                    "Specifying native_resolution in wcs section of layer %s is now deprecated, please move to " +
+                    "Specifying native_resolution in wcs section of layer %s is now deprecated, please move to " \
                     "main layer section if required.", self.name)
                 self.cfg_native_resolution = cfg.get("native_resolution")
             else:
                 _LOG.warning(
-                    "Native_resolution in wcs section of layer %s ignored in favour of value in " +
+                    "Native_resolution in wcs section of layer %s ignored in favour of value in " \
                     "main layer section.", self.name)
 
         # Native CRS
         if "native_crs" in cfg:
             if not self.cfg_native_crs:
-                _LOG.warning("Specifying native_crs in wcs section of layer %s is now deprecated, pleas move to " +
+                _LOG.warning("Specifying native_crs in wcs section of layer %s is now deprecated, pleas move to " \
                              "main layer section if required", self.name)
                 self.cfg_native_crs = cfg["native_crs"]
             else:
                 _LOG.warning(
-                    "native_crs in wcs section of layer %s ignored in favour of value in " +
+                    "native_crs in wcs section of layer %s ignored in favour of value in " \
                     "main layer section.", self.name)
 
         self.declare_unready("native_CRS")
