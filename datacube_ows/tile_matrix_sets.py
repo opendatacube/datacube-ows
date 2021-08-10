@@ -107,6 +107,9 @@ class TileMatrixSet(OWSConfigEntry):
     def height_exponent(self, scale_no):
         return self.exponent(1, scale_no)
 
+    def zoom_level(self, geobox):
+        return
+
     def wms_bbox_coords(self, tile_matrix, row, col):
         # Convert WMTS params to coordinate window for WMS
         pixel = [col, row]

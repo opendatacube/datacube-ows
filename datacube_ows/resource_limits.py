@@ -1,11 +1,12 @@
 import math
 
+import affine
 import numpy as np
 from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
-from datacube.utils.geometry import CRS, polygon
+from datacube.utils.geometry import CRS, GeoBox, point, polygon
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.ogc_utils import ConfigException, create_geobox
 
 
 # pyre-ignore[13]
@@ -15,13 +16,14 @@ class RequestScale:
     def __init__(self,
                  native_crs: CRS,
                  native_resolution: Tuple[Union[float, int], Union[float, int]],
-                 pixel_size: Tuple[int, int],
+                 geobox: GeoBox,
                  n_dates: int,
                  request_bands: Optional[Iterable[Mapping[str, Any]]] = None,
                  total_band_size: Optional[int] = None) -> None:
         self.resolution = self._metre_resolution(native_crs, native_resolution)
         self.crs = native_crs
-        self.pixel_size = pixel_size
+        self.geobox = self._standardise_geobox(geobox)
+        self.pixel_size = (geobox.width, geobox.height)
         self.n_dates = n_dates
         self.bands = request_bands
         assert (request_bands is not None) ^ (total_band_size is not None)
@@ -32,8 +34,16 @@ class RequestScale:
                 np.dtype(band['dtype']).itemsize
                 for band in cast(Iterable[Mapping[str, Any]], request_bands)
             )
-        self.scale_factor: float = (float(self.n_dates) * self.pixel_size[0] * self.pixel_size[1] *
-                                    self.total_band_size / self.resolution[0] / self.resolution[1])
+
+    def _standardise_geobox(self, geobox: GeoBox) -> GeoBox:
+        if geobox.crs == 'EPSG:3857':
+            return geobox
+        bbox = geobox.extent.to_crs('EPSG:3857').boundingbox
+        return create_geobox(CRS('EPSG:3857'),
+                             bbox.left, bbox.bottom,
+                             bbox.right, bbox.top,
+                             width=geobox.width, height=geobox.height
+                             )
 
     def _metre_resolution(self, crs: CRS, resolution: Tuple[Union[float, int], Union[float, int]]) \
             -> Tuple[float, float]:
@@ -48,6 +58,24 @@ class RequestScale:
             abs(proj_bbox.right - proj_bbox.left),
             abs(proj_bbox.top - proj_bbox.bottom),
         )
+
+    def pixel_span(self) -> Tuple[float, float]:
+        bbox = self.geobox.extent.boundingbox
+        return (
+            (bbox.right - bbox.left) / self.geobox.width,
+            (bbox.bottom - bbox.top) / self.geobox.height
+        )
+
+    @property
+    def scale_denominator(self) -> float:
+        xy_denoms = [
+            abs(ps / 0.00028)
+            for ps in self.pixel_span()
+        ]
+        return sum(xy_denoms) / 2.0
+
+    def base_zoom_level(self) -> float:
+        return math.log(559082264.0287178 / self.scale_denominator, 2)
 
     def res_xy(self) -> Union[int, float]:
         return self.resolution[0] * self.resolution[1]
@@ -71,8 +99,8 @@ class RequestScale:
 
 
 RequestScale.standard_scale = RequestScale(CRS("EPSG:3857"), (25.0, 25.0),
-                                           (256, 256), 1,
-                                           total_band_size=(3 * 2))
+                                           GeoBox(width=256, height=256, affine=affine.identity, crs="EPSG:3857"),
+                                           1, total_band_size=(3 * 2))
 
 
 

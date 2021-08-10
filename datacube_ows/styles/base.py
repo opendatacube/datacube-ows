@@ -8,6 +8,7 @@ import logging
 from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
                     Set, Sized, Tuple, Type, Union, cast)
 
+import datacube.model
 import numpy as np
 import xarray as xr
 from datacube.utils.masking import make_mask
@@ -192,6 +193,9 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                     self.needed_bands.add(band)
                     self.flag_bands.add(band)
         super().make_ready(dc, *args, **kwargs)
+
+    def odc_needed_bands(self) -> Iterable[datacube.model.Measurement]:
+        return [self.product.band_idx.native_bands.loc[b] for b in self.needed_bands]
 
     def local_band(self, band: str) -> str:
         """

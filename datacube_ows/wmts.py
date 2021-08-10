@@ -90,11 +90,11 @@ def get_capabilities(args):
             "wmts_capabilities.xml",
             cfg=cfg,
             base_url=base_url,
-            show_service_id = show_service_id,
-            show_service_provider = show_service_provider,
-            show_ops_metadata = show_ops_metadata,
-            show_contents = show_contents,
-            show_themes = show_themes),
+            show_service_id=show_service_id,
+            show_service_provider=show_service_provider,
+            show_ops_metadata=show_ops_metadata,
+            show_contents=show_contents,
+            show_themes=show_themes),
         200,
         cfg.response_headers(
             {"Content-Type": "application/xml", "Cache-Control": "max-age=10"}
