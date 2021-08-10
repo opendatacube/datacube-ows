@@ -1,8 +1,6 @@
-from unittest.mock import MagicMock
-
 import pytest
-
 from datacube.utils import geometry as geom
+
 import datacube_ows.resource_limits
 from datacube_ows.ogc_utils import create_geobox
 

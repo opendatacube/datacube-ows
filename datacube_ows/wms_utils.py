@@ -5,30 +5,27 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import absolute_import, division, print_function
 
-from datacube_ows.resource_limits import RequestScale
-from datacube_ows.styles import StyleDef
-from datacube_ows.styles.expression import ExpressionException
 
-import regex as re
 
 import math
 from datetime import datetime
 
 import numpy
+import regex as re
+from affine import Affine
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
 from pytz import utc
-
 from rasterio.warp import Resampling
-
-
-from affine import Affine
 from datacube.utils import geometry
 
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, create_geobox
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.resource_limits import RequestScale
+from datacube_ows.styles import StyleDef
+from datacube_ows.styles.expression import ExpressionException
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,

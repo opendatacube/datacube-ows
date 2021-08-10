@@ -1,9 +1,9 @@
 import math
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
 
 import affine
 import numpy as np
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
-from datacube.utils.geometry import CRS, GeoBox, point, polygon
+from datacube.utils.geometry import CRS, GeoBox, polygon
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
 from datacube_ows.ogc_utils import ConfigException, create_geobox
