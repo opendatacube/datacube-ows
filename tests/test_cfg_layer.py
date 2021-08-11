@@ -11,7 +11,7 @@ import pytest
 
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
-from datacube_ows.resource_limits import ResourceLimited, RequestScale
+from datacube_ows.resource_limits import ResourceLimited
 
 
 def test_missing_title(minimal_global_cfg):
