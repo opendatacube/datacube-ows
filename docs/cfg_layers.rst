@@ -541,9 +541,9 @@ min_zoom_level
 ++++++++++++++
 
 The recommended way to set resource limits is with ``min_zoom_level``.  This refers to
-the "GoogleMap" zoom level. i.e. zoom level 0 is the entire world map in a single tile,
-with each zoom level up consisting of tiles covering one quarter the area of the previous
-zoom level.
+the "GoogleMap" zoom level. i.e. zoom level 0 is the entire world map (EPSG:3857, Web Mercator)
+in a single tile, zoom level 1 covers the world in 4 tiles, and so on, with each tile of a
+given zoom level made up of 4 tiles of previous level.
 
 The min_zoom_level you set is for a "standard request", as defined below.  The effective
 minimum zoom level for actual request is adjusted to correct for the following factors
@@ -562,9 +562,8 @@ A "standard request" is considered to be:
 * Native resolution of 25m x 25m.
 
 For example, if ``min_zoom_level`` is set to 6, then a standard request will trigger the resource-limited
-behaviour from zoom levels 0 to 5, and fully render from zoom levels 6 and up.
-
-Requests that differ from a standard request will have their effective minimum zoom level automatically adjusted so
+behaviour from zoom levels 0 to 5, and fully render from zoom levels 6 and up. Requests that differ from a
+standard request will have their effective minimum zoom level automatically adjusted so
 that the maximum  memory and I/O resources required for a request is approximately conserved.
 
 Reducing the zoom level by one corresponds to 4 times the resource requirements, so for example:
