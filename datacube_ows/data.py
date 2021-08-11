@@ -403,7 +403,7 @@ def get_map(args):
             qprof.end_event("count-datasets")
             qprof["n_datasets"] = n_datasets
             try:
-                params.product.resource_limits.check_wms(n_datasets, params.zf)
+                params.product.resource_limits.check_wms(n_datasets, params.zf, params.resources)
             except ResourceLimited as e:
                 stacker.resource_limited = True
                 qprof["resource_limited"] = str(e)

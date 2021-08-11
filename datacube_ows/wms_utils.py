@@ -5,35 +5,25 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import absolute_import, division, print_function
 
-from datacube_ows.styles import StyleDef
-from datacube_ows.styles.expression import ExpressionException
-
-try:
-    import regex as re
-except ImportError:
-    import re
-
+import math
 from datetime import datetime
 
 import numpy
+import regex as re
+from affine import Affine
+from datacube.utils import geometry
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
 from pytz import utc
-
-try:
-    from rasterio.warp import Resampling
-except ImportError:
-    from rasterio.warp import RESAMPLING as Resampling
-
-import math
-
-from affine import Affine
-from datacube.utils import geometry
+from rasterio.warp import Resampling
 
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, create_geobox
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.resource_limits import RequestScale
+from datacube_ows.styles import StyleDef
+from datacube_ows.styles.expression import ExpressionException
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,
@@ -45,7 +35,7 @@ RESAMPLING_METHODS = {
 }
 
 
-def _bounding_pts(minx, miny, maxx, maxy, width, height, src_crs, dst_crs=None):
+def _bounding_pts(minx, miny, maxx, maxy, src_crs, dst_crs=None):
     # pylint: disable=too-many-locals
     p1 = geometry.point(minx, maxy, src_crs)
     p2 = geometry.point(minx, miny, src_crs)
@@ -87,7 +77,6 @@ def _get_geobox(args, src_crs, dst_crs=None):
         minx, miny, maxx, maxy = _bounding_pts(
             minx, miny,
             maxx, maxy,
-            width, height,
             src_crs, dst_crs=dst_crs
         )
 
@@ -124,7 +113,6 @@ def zoom_factor(args, crs):
     minx, miny, maxx, maxy = _bounding_pts(
         minx, miny,
         maxx, maxy,
-        width, height,
         crs, dst_crs=geo_crs
     )
     # Create geobox affine transformation (N.B. Don't need an actual Geobox)
@@ -434,6 +422,14 @@ class GetMapParameters(GetParameters):
 
         # TODO: Do we need to make resampling method configurable?
         self.resampling = Resampling.nearest
+
+        self.resources = RequestScale(
+            native_crs=geometry.CRS(self.product.native_CRS),
+            native_resolution=(self.product.resolution_x, self.product.resolution_y),
+            geobox=self.geobox,
+            n_dates=len(self.times),
+            request_bands=self.style.odc_needed_bands(),
+        )
 
 
 class GetFeatureInfoParameters(GetParameters):

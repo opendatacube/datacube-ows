@@ -1,7 +1,112 @@
-from typing import List, Mapping, Optional, cast
+import math
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
+
+import affine
+import numpy as np
+from datacube.utils.geometry import CRS, GeoBox, polygon
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.ogc_utils import ConfigException, create_geobox
+
+
+# pyre-ignore[13]
+class RequestScale:
+    standard_scale: "RequestScale"
+
+    def __init__(self,
+                 native_crs: CRS,
+                 native_resolution: Tuple[Union[float, int], Union[float, int]],
+                 geobox: GeoBox,
+                 n_dates: int,
+                 request_bands: Optional[Iterable[Mapping[str, Any]]] = None,
+                 total_band_size: Optional[int] = None) -> None:
+        self.resolution = self._metre_resolution(native_crs, native_resolution)
+        self.crs = native_crs
+        self.geobox = self._standardise_geobox(geobox)
+        self.pixel_size = (geobox.width, geobox.height)
+        self.n_dates = n_dates
+        self.bands = request_bands
+        assert (request_bands is not None) ^ (total_band_size is not None)
+        if total_band_size is not None:
+            self.total_band_size: int = total_band_size
+        else:
+            self.total_band_size = sum(
+                np.dtype(band['dtype']).itemsize
+                for band in cast(Iterable[Mapping[str, Any]], request_bands)
+            )
+
+    def _standardise_geobox(self, geobox: GeoBox) -> GeoBox:
+        if geobox.crs == 'EPSG:3857':
+            return geobox
+        bbox = geobox.extent.to_crs('EPSG:3857').boundingbox
+        return create_geobox(CRS('EPSG:3857'),
+                             bbox.left, bbox.bottom,
+                             bbox.right, bbox.top,
+                             width=geobox.width, height=geobox.height
+                             )
+
+    def _metre_resolution(self, crs: CRS, resolution: Tuple[Union[float, int], Union[float, int]]) \
+            -> Tuple[float, float]:
+        # Convert native resolution to metres for ready comparison.
+        if crs.units == ('metre', 'metre'):
+            return cast(Tuple[float, float], tuple(abs(r) for r in resolution))
+        resolution_rectangle = polygon(
+                            ((0, 0), (0, resolution[1]), resolution, (0, resolution[0]), (0, 0)),
+                            crs=crs)
+        proj_bbox = resolution_rectangle.to_crs("EPSG:3857").boundingbox
+        return (
+            abs(proj_bbox.right - proj_bbox.left),
+            abs(proj_bbox.top - proj_bbox.bottom),
+        )
+
+    def pixel_span(self) -> Tuple[float, float]:
+        bbox = self.geobox.extent.boundingbox
+        return (
+            (bbox.right - bbox.left) / self.geobox.width,
+            (bbox.bottom - bbox.top) / self.geobox.height
+        )
+
+    @property
+    def scale_denominator(self) -> float:
+        xy_denoms = [
+            abs(ps / 0.00028)
+            for ps in self.pixel_span()
+        ]
+        return sum(xy_denoms) / 2.0
+
+    @property
+    def base_zoom_level(self) -> float:
+        return math.log(559082264.0287178 / self.scale_denominator, 2)
+
+    @property
+    def load_adjusted_zoom_level(self) -> float:
+        return self.base_zoom_level - self.zoom_lvl_offset
+
+    def res_xy(self) -> Union[int, float]:
+        return self.resolution[0] * self.resolution[1]
+
+    def __truediv__(self, other: "RequestScale") -> float:
+        ratio = 1.0
+        ratio = ratio * self.n_dates / other.n_dates
+        for i in range(2):
+            ratio = ratio * self.pixel_size[i] / other.pixel_size[i]
+        ratio = ratio * self.total_band_size / other.total_band_size
+        ratio = ratio * other.res_xy() / self.res_xy()
+        return ratio
+
+    @property
+    def load_factor(self) -> float:
+        return self / self.standard_scale
+
+    @property
+    def zoom_lvl_offset(self) -> float:
+        return math.log(self.load_factor, 4)
+
+
+RequestScale.standard_scale = RequestScale(CRS("EPSG:3857"), (25.0, 25.0),
+                                           GeoBox(width=256, height=256, affine=affine.identity, crs="EPSG:3857"),
+                                           1, total_band_size=(3 * 2))
+
 
 
 class CacheControlRules(OWSConfigEntry):
@@ -94,25 +199,32 @@ class OWSResourceManagementRules(OWSConfigEntry):
             self.zoom_fill += [255]
         if len(self.zoom_fill) != 4:
             raise ConfigException(f"zoomed_out_fill_colour must have 3 or 4 elements in {context}")
-        self.min_zoom = cast(float, wms_cfg.get("min_zoom_factor", 300.0))
+        self.min_zoom = cast(Optional[float], wms_cfg.get("min_zoom_factor"))
+        self.min_zoom_lvl = cast(Optional[Union[int, float]], wms_cfg.get("min_zoom_level"))
         self.max_datasets_wms = cast(int, wms_cfg.get("max_datasets", 0))
         self.max_datasets_wcs = cast(int, wcs_cfg.get("max_datasets", 0))
         self.wms_cache_rules = CacheControlRules(wms_cfg.get("dataset_cache_rules"), context, self.max_datasets_wms)
         self.wcs_cache_rules = CacheControlRules(wcs_cfg.get("dataset_cache_rules"), context, self.max_datasets_wcs)
 
-    def check_wms(self, n_datasets: int, zoom_factor: float) -> None:
+    def check_wms(self, n_datasets: int, zoom_factor: float, request_scale: RequestScale) -> None:
         """
         Check whether a WMS requests exceeds the configured resource limits.
 
         :param n_datasets: The number of datasets for the query
         :param zoom_factor: The zoom factor of the query
+        :param request_scale: Model of the resource-intensiveness of the query
         :raises: ResourceLimited if any limits are exceeded.
         """
         limits_exceeded: List[str] = []
         if self.max_datasets_wms > 0 and n_datasets > self.max_datasets_wms:
             limits_exceeded.append("too many datasets")
-        if zoom_factor < self.min_zoom:
-            limits_exceeded.append("zoomed out too far")
+        if self.min_zoom is not None:
+            if zoom_factor < self.min_zoom:
+                limits_exceeded.append("zoomed out too far")
+        if self.min_zoom_lvl is not None:
+            fuzz_factor = 0.01
+            if request_scale.load_adjusted_zoom_level < self.min_zoom_lvl - fuzz_factor:
+                limits_exceeded.append("too much projected resource requirements")
         if limits_exceeded:
             raise ResourceLimited(limits_exceeded)
 
