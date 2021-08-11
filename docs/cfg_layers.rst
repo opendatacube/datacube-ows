@@ -473,7 +473,7 @@ E.g.
     "resource_limits": {
         "wms": {
             "zoomed_out_fill_colour": [150, 180, 200, 160],
-            "min_zoom_factor": 300.0,
+            "min_zoom_level": 7,
             "max_datasets": 12,
             "dataset_cache_rules": [
                 {
@@ -536,39 +536,85 @@ Note that this entry has no effect if
 `low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
 have been declared for the product.
 
-+++++++++++++++
-min_zoom_factor
-+++++++++++++++
+++++++++++++++
+min_zoom_level
+++++++++++++++
 
-The first WMS/WMTS resource limit is min_zoom_factor.  It
-gives a more consistent transition for users when zooming
-and is generally the preferred way to constrain resource
-limits.
+The recommended way to set resource limits is with ``min_zoom_level``.  This refers to
+the "GoogleMap" zoom level. i.e. zoom level 0 is the entire world map in a single tile,
+with each zoom level up consisting of tiles covering one quarter the area of the previous
+zoom level.
 
-The zoom factor is a (floating point) number calculated from
-the request in a way that is independent
-of the CRS. A higher zoom factor corresponds to a more
-zoomed in view.
+The min_zoom_level you set is for a "standard request", as defined below.  The effective
+minimum zoom level for actual request is adjusted to correct for the following factors
+that can influence I/O and memory resource usage:
 
-If the zoom factor of the request is less than the
-configured minimum zoom factor (i.e. is zoomed out too far)
-then the resource limit is triggered.
+* Number of time slices in the request
+* Number of bands required by the style (and the size of the datatypes of those bands)
+* The number of pixels in the image tile.
+* The native resolution of the source data
 
-(If you want a more technical explanation, it is the inverse
-of the determinant of the affine matrix representing the
-transformation from the source data to the output image.)
+A "standard request" is considered to be:
 
-Values around 250.0-800.0 are usually appropriate.  min_zoom_factor
-is optional and defaults to 300.0.
+* One time slice
+* Requiring three 16-bit measurement bands
+* 256x256 image tile.
+* Native resolution of 25m x 25m.
+
+For example, if ``min_zoom_level`` is set to 6, then a standard request will trigger the resource-limited
+behaviour from zoom levels 0 to 5, and fully render from zoom levels 6 and up.
+
+Requests that differ from a standard request will have their effective minimum zoom level automatically adjusted so
+that the maximum  memory and I/O resources required for a request is approximately conserved.
+
+Reducing the zoom level by one corresponds to 4 times the resource requirements, so for example:
+
+* Increasing the tile size from 256x256 to 512x512 will *increase* the effective minimum zoom
+  level by one.
+* A style accessing four time slices instead of one will *increase* the effective minimum zoom
+  level by one.
+* A request that accesses data with 100m x 100m resolution would *decrease* the effective minimum zoom
+  by two.
 
 ++++++++++++
 max_datasets
 ++++++++++++
 
-The second WMS/WMTS resource limit is max_datasets.  It is an integer that
+The simplest WMS/WMTS resource limit is ``max_datasets``.  It is an integer that
 specifies the maximum number of Open Datacube datasets that can be read
 from during the request.  A value of zero is interpreted to mean "no maximum
 dataset limit" and is the default.
+
+This is typically not a suitable method for managing tiled maps of multi-dataset
+products as tiles straddling dataset boundaries will have very different dataset count
+to those that don't at the same map zoom level.  If you want the resource limit to
+cut in at a consistent zoom level, you should use one of the other resource limits.
+However, ``max_datasets`` maybe be a useful fallback to use in conjunction with ``min_zoom_level``
+or ``min_zoom_factor`` in some situations.
+
++++++++++++++++
+min_zoom_factor
++++++++++++++++
+
+The other WMS/WMTS resource limit is min_zoom_factor.  It
+also gives a more consistent transition for users when zooming
+but does not account for the relative resource requirements
+like ``max_zoom_level``. It is no longer recommended and will be
+deprecated in a future release.
+
+The zoom factor is a (floating point) number calculated from
+the request in a way that is independent of the CRS. A higher
+zoom factor corresponds to a more zoomed in view. If the
+zoom factor of the request is less than the
+configured minimum zoom factor (i.e. is zoomed out too far)
+then the resource limit is triggered.
+
+(If you want a more technical explanation, it is the inverse
+square root of the determinant of the affine matrix representing the
+transformation from the source data to the output image.)
+
+Values around 250.0-800.0 are usually appropriate.  ``min_zoom_factor`` is optional and
+defaults to None, which means the limit is not applied.
 
 +++++++++++++++++++
 dataset_cache_rules

@@ -74,8 +74,13 @@ class RequestScale:
         ]
         return sum(xy_denoms) / 2.0
 
+    @property
     def base_zoom_level(self) -> float:
         return math.log(559082264.0287178 / self.scale_denominator, 2)
+
+    @property
+    def load_adjusted_zoom_level(self) -> float:
+        return self.base_zoom_level - self.zoom_lvl_offset
 
     def res_xy(self) -> Union[int, float]:
         return self.resolution[0] * self.resolution[1]
@@ -194,25 +199,32 @@ class OWSResourceManagementRules(OWSConfigEntry):
             self.zoom_fill += [255]
         if len(self.zoom_fill) != 4:
             raise ConfigException(f"zoomed_out_fill_colour must have 3 or 4 elements in {context}")
-        self.min_zoom = cast(float, wms_cfg.get("min_zoom_factor", 300.0))
+        self.min_zoom = cast(Optional[float], wms_cfg.get("min_zoom_factor"))
+        self.min_zoom_lvl = cast(Optional[Union[int, float]], wms_cfg.get("min_zoom_level"))
         self.max_datasets_wms = cast(int, wms_cfg.get("max_datasets", 0))
         self.max_datasets_wcs = cast(int, wcs_cfg.get("max_datasets", 0))
         self.wms_cache_rules = CacheControlRules(wms_cfg.get("dataset_cache_rules"), context, self.max_datasets_wms)
         self.wcs_cache_rules = CacheControlRules(wcs_cfg.get("dataset_cache_rules"), context, self.max_datasets_wcs)
 
-    def check_wms(self, n_datasets: int, zoom_factor: float) -> None:
+    def check_wms(self, n_datasets: int, zoom_factor: float, request_scale: RequestScale) -> None:
         """
         Check whether a WMS requests exceeds the configured resource limits.
 
         :param n_datasets: The number of datasets for the query
         :param zoom_factor: The zoom factor of the query
+        :param request_scale: Model of the resource-intensiveness of the query
         :raises: ResourceLimited if any limits are exceeded.
         """
         limits_exceeded: List[str] = []
         if self.max_datasets_wms > 0 and n_datasets > self.max_datasets_wms:
             limits_exceeded.append("too many datasets")
-        if zoom_factor < self.min_zoom:
-            limits_exceeded.append("zoomed out too far")
+        if self.min_zoom is not None:
+            if zoom_factor < self.min_zoom:
+                limits_exceeded.append("zoomed out too far")
+        if self.min_zoom_lvl is not None:
+            fuzz_factor = 0.01
+            if request_scale.load_adjusted_zoom_level < self.min_zoom_lvl - fuzz_factor:
+                limits_exceeded.append("too much projected resource requirements")
         if limits_exceeded:
             raise ResourceLimited(limits_exceeded)
 

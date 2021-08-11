@@ -11,7 +11,7 @@ import pytest
 
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
-from datacube_ows.resource_limits import ResourceLimited
+from datacube_ows.resource_limits import ResourceLimited, RequestScale
 
 
 def test_missing_title(minimal_global_cfg):
@@ -391,12 +391,27 @@ def test_resource_limit_checks(minimal_layer_cfg, minimal_global_cfg):
     }
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
+    mock_req_scale = MagicMock()
+    mock_req_scale.load_adjusted_zoom_level = 4.8
     with pytest.raises(ResourceLimited) as e:
-        lyr.resource_limits.check_wms(n_datasets=9, zoom_factor=400.0)
+        lyr.resource_limits.check_wms(n_datasets=9, zoom_factor=400.0, request_scale=mock_req_scale)
     assert "too many datasets" in str(e.value)
+    assert "zoomed out too far" not in str(e.value)
+    assert "too much projected resource requirements" not in str(e.value)
     with pytest.raises(ResourceLimited) as e:
         lyr.resource_limits.check_wcs(n_datasets=9)
     assert "too many datasets" in str(e.value)
+    assert "zoomed out too far" not in str(e.value)
+    assert "too much projected resource requirements" not in str(e.value)
+    minimal_layer_cfg["resource_limits"]["wms"]["min_zoom_level"] = 5
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with pytest.raises(ResourceLimited) as e:
+        lyr.resource_limits.check_wms(n_datasets=9, zoom_factor=100.0, request_scale=mock_req_scale)
+    assert "too many datasets" in str(e.value)
+    assert "zoomed out too far" in str(e.value)
+    assert "too much projected resource requirements" in str(e.value)
+
 
 
 def test_manual_merge(minimal_layer_cfg, minimal_global_cfg):

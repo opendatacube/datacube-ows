@@ -30,4 +30,5 @@ def test_request_scale():
                                                    stdtile, 64,
                                                    total_band_size=6)
     assert pytest.approx(rs3.zoom_lvl_offset, 1e-8) == 3.0
-    assert pytest.approx(rs3.base_zoom_level(), 0.1) == 0.0
+    assert pytest.approx(rs3.base_zoom_level, 0.1) == 0.0
+    assert pytest.approx(rs3.load_adjusted_zoom_level, 0.1) == -3.0
