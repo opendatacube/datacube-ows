@@ -115,6 +115,17 @@ def test_catch_invalid_folder_layers(minimal_global_cfg):
     assert len(lyr.unready_layers) == 0
 
 
+def test_catch_folder_as_list(minimal_global_cfg):
+    lyr = OWSFolder({
+        "title": "The Title",
+        "abstract": "The Abstract",
+        "layers": [
+            [{"title": "wrong", "abstract": "wrong", "layers": []}]
+        ]
+    }, global_cfg=minimal_global_cfg)
+    assert len(lyr.unready_layers) == 0
+
+
 def test_duplicate_folder_label(minimal_global_cfg):
     with pytest.raises(ConfigException) as e:
         lyr = OWSFolder({

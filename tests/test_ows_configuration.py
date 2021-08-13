@@ -53,7 +53,14 @@ def test_function_wrapper_lyr():
     result = f()
     assert result[0] == "abar  bouple  c3"
     assert f.band_mapper is None
-
+    func_cfg = {
+        "function": "so_fake.not_real.not_a_function",
+        "args": ["bar", "ouple"]
+    }
+    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
+        f = datacube_ows.ogc_utils.FunctionWrapper(lyr, func_cfg)
+    assert "Could not import python object" in str(e.value)
+    assert "so_fake.not_real.not_a_function" in str(e.value)
 
 def test_func_naked():
     lyr = MagicMock()
