@@ -122,7 +122,12 @@ def import_python_obj(path: str) -> RAW_CFG:
     :return: a Python object, or None
     """
     mod_name, obj_name = path.rsplit('.', 1)
-    mod = import_module(mod_name)
+    try:
+        mod = import_module(mod_name)
+    except ImportError:
+        raise ConfigException(f"Could not import python object: {path}")
+    except ValueError:
+        raise ConfigException(f"Could not import python object: {path}")
     obj = getattr(mod, obj_name)
     return cast(RAW_CFG, obj)
 
