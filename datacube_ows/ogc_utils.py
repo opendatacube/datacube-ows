@@ -218,8 +218,11 @@ def get_function(func: Union[F, str]) -> F:
     """
     if func is not None and not callable(func):
         mod_name, func_name = func.rsplit('.', 1)
-        mod = import_module(mod_name)
-        func = getattr(mod, func_name)
+        try:
+            mod = import_module(mod_name)
+            func = getattr(mod, func_name)
+        except (ImportError, ModuleNotFoundError, ValueError, AttributeError):
+            raise ConfigException(f"Could not import python object: {func}")
         assert callable(func)
     return cast(F, func)
 

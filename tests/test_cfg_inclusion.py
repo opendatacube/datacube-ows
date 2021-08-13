@@ -304,6 +304,15 @@ def test_cfg_py_mixed_1(monkeypatch):
     assert cfg["test"] == 1234
 
 
+def test_cfg_py_broken_mixed(monkeypatch):
+    monkeypatch.chdir(src_dir)
+    monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.broken_nested.mixed_3")
+    with pytest.raises(ConfigException) as e:
+        cfg = read_config()
+    assert "Could not import python object" in str(e.value)
+    assert "tests.cfg.simple.doesnt_exist" in str(e.value)
+
+
 def test_cfg_py_mixed_2(monkeypatch):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.mixed_nested.mixed_2")
