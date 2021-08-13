@@ -254,12 +254,15 @@ class OWSFolder(OWSLayer):
             raise ConfigException("No layers section in folder layer %s" % self.title)
         child = 0
         for lyr_cfg in cfg["layers"]:
-            try:
-                lyr = parse_ows_layer(lyr_cfg, global_cfg=global_cfg, parent_layer=self, sibling=child)
-                self.unready_layers.append(lyr)
-            except ConfigException as e:
-                _LOG.error("Could not parse layer: %s", str(e))
-            child += 1
+            if isinstance(lyr_cfg, Mapping):
+                try:
+                    lyr = parse_ows_layer(lyr_cfg, global_cfg=global_cfg, parent_layer=self, sibling=child)
+                    self.unready_layers.append(lyr)
+                except ConfigException as e:
+                    _LOG.error("Could not parse layer: %s", str(e))
+                child += 1
+            else:
+                _LOG.error("Non-dictionary where dictionary expected - check for trailing comma? %s...", repr(lyr_cfg)[0:50])
         global_cfg.folder_index[obj_lbl] = self
 
     def unready_layer_count(self):
