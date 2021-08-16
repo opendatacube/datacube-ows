@@ -6,7 +6,7 @@
 import lark
 
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.styles.expr import formula_parser
+from datacube.virtual.expr import formula_parser
 
 identity = lambda ev, x: x
 
