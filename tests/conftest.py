@@ -253,6 +253,12 @@ def minimal_layer_cfg():
         "abstract": "The Abstract",
         "name": "a_layer",
         "product_name": "foo",
+        "bands": {
+            "band1": ["band1", "band_1"],
+            "band2": ["band2", "band_2"],
+            "band3": ["band3", "band_3"],
+            "band4": ["band4", "band_4"],
+        },
         "image_processing": {
             "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
         },
