@@ -7,7 +7,7 @@ import numpy as np
 from typing import cast, Any, Callable, Hashable, List, MutableMapping, Optional, Union
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT, RAW_CFG
+from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 
@@ -50,8 +50,9 @@ class ComponentStyleDef(StyleDefBase):
                     for b in cast(List[str], style_cfg.get("additional_bands", [])):
                         self.raw_needed_bands.add(b)
             else:
-                self.raw_rgb_components[imgband] = cast(LINEAR_COMP_DICT, components)
-                for k in self.raw_rgb_components.keys():
+                components = cast(LINEAR_COMP_DICT, components)
+                self.raw_rgb_components[imgband] = components
+                for k in components.keys():
                     if k != "scale_range":
                         self.raw_needed_bands.add(k)
         self.declare_unready("rgb_components")

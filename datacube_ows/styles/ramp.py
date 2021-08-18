@@ -3,10 +3,12 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+import io
 import logging
 from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
+from typing import cast, Any, Hashable, Iterable, List, MutableMapping, Optional, Tuple, Union
 
 import matplotlib
 import numpy
@@ -17,82 +19,120 @@ from xarray import Dataset
 
 matplotlib.use('Agg')
 
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
+from datacube_ows.config_utils import CFG_DICT
+from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, F
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 
 _LOG = logging.getLogger(__name__)
 
-UNSCALED_DEFAULT_RAMP = [
-    {
-        "value": -1e-24,
-        "color": "#000080",
-        "alpha": 0.0
-    },
-    {
-        "value": 0.0,
-        "color": "#000080",
-    },
-    {
-        "value": 0.1,
-        "color": "#0000FF",
-    },
-    {
-        "value": 0.3,
-        "color": "#00FFFF",
-    },
-    {
-        "value": 0.5,
-        "color": "#00FF00",
-    },
-    {
-        "value": 0.7,
-        "color": "#FFFF00",
-    },
-    {
-        "value": 0.9,
-        "color": "#FF0000",
-    },
-    {
-        "value": 1.0,
-        "color": "#800000",
-    },
-]
+RAMP_SPEC = List[CFG_DICT]
+
+UNSCALED_DEFAULT_RAMP = cast(RAMP_SPEC,
+                             [
+                                {
+                                    "value": -1e-24,
+                                    "color": "#000080",
+                                    "alpha": 0.0
+                                },
+                                {
+                                    "value": 0.0,
+                                    "color": "#000080",
+                                },
+                                {
+                                    "value": 0.1,
+                                    "color": "#0000FF",
+                                },
+                                {
+                                    "value": 0.3,
+                                    "color": "#00FFFF",
+                                },
+                                {
+                                    "value": 0.5,
+                                    "color": "#00FF00",
+                                },
+                                {
+                                    "value": 0.7,
+                                    "color": "#FFFF00",
+                                },
+                                {
+                                    "value": 0.9,
+                                    "color": "#FF0000",
+                                },
+                                {
+                                    "value": 1.0,
+                                    "color": "#800000",
+                                },
+                             ]
+)
 
 
-def scale_unscaled_ramp(rmin, rmax, unscaled):
-    if isinstance(rmin, str):
-        rmin = float(rmin)
-    if isinstance(rmax, str):
-        rmax = float(rmax)
+def scale_unscaled_ramp(rmin: Union[int, float, str], rmax: Union[int, float, str], unscaled: RAMP_SPEC) -> RAMP_SPEC:
+    """
+    Take a unscaled (normalised) ramp that covers values from 0.0 to 1.0 and scale it linearly to cover the
+    provided range.
+
+    :param rmin: The new minimum value for the ramp range.
+    :param rmax: The new maximum value for the ramp range.
+    :param unscaled: The unscaled (normalised) ramp.
+    :return: The scaled ramp.
+    """
+    if isinstance(rmin, float):
+        nmin: float = rmin
+    else:
+        nmin = float(rmin)
+    if isinstance(rmax, float):
+        nmax: float = rmax
+    else:
+        nmax = float(rmax)
     return [
         {
-            "value": (rmax - rmin) * u["value"] + rmin,
+            "value": (nmax - nmin) * cast(float, u["value"]) + nmin,
             "color": u["color"],
             "alpha": u.get("alpha", 1.0)
         } for u in unscaled
     ]
 
 
-def crack_ramp(ramp):
-    values = []
-    red = []
-    green = []
-    blue = []
-    alpha = []
+def crack_ramp(ramp: RAMP_SPEC) -> Tuple[
+    List[float],
+    List[float], List[float],
+    List[float], List[float],
+]:
+    """
+    Split a colour ramp into separate (input) value and (output) RGBA lists.
+
+    :param ramp: input (scaled) colour-ramp definition
+    :return: A tuple of four lists of floats: representing values, red, green, blue, alpha.
+    """
+    values = cast(List[float], [])
+    red = cast(List[float], [])
+    green = cast(List[float], [])
+    blue = cast(List[float], [])
+    alpha = cast(List[float], [])
     for r in ramp:
-        values.append(float(r["value"]))
+        if isinstance(r["value"], float):
+            value: float = cast(float, r["value"])
+        else:
+            value = float(cast(Union[int, str], r["value"]))
+        values.append(value)
         color = Color(r["color"])
         red.append(color.red)
         green.append(color.green)
         blue.append(color.blue)
-        alpha.append(r.get("alpha", 1.0))
+        alpha.append(float(cast(Union[float, int, str], r.get("alpha", 1.0))))
 
-    return (values, red, green, blue, alpha)
+    return values, red, green, blue, alpha
 
 
-def read_mpl_ramp(mpl_ramp: str):
-    unscaled_cmap = []
+def read_mpl_ramp(mpl_ramp: str) -> RAMP_SPEC:
+    """
+    Extract a named colour ramp from Matplotlib as a normalised OWS-compatible ramp specification
+
+    :param mpl_ramp: The name of Matplotlib colour ramp
+    :return: A normalised ramp specification.
+    """
+    unscaled_cmap = cast(RAMP_SPEC, [])
     try:
         cmap = plt.get_cmap(mpl_ramp)
     except:
@@ -117,25 +157,35 @@ def read_mpl_ramp(mpl_ramp: str):
     return unscaled_cmap
 
 
-def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
-                       default_title):
-    if colour_ramp.legend_legacy:
-        return legacy_colour_ramp_legend(bytesio, legend_cfg,
-                                  colour_ramp, map_name,
-                                  default_title)
+def colour_ramp_legend(bytesio: io.BytesIO,
+                       legend_cfg: CFG_DICT,
+                       colour_ramp: "ColorRamp",
+                       map_name: str,
+                       default_title: str) -> None:
+    """
+    Generate a matplotlib legend for a colour ramp
 
-    def create_cdict_ticks(cfg, ramp):
-        normalize_factor = ramp.legend_end - ramp.legend_begin
+    :param bytesio: A BytesIO object to write the legend image into
+    :param legend_cfg: Legend configuration
+    :param colour_ramp: A ColorRamp object
+    :param map_name: a name for the transient MPL colourmap object
+    :param default_title: The default title to use (used if no title is set in legend_cfg)
+    """
+    def create_cdict_ticks(cfg: CFG_DICT, ramp: "ColorRamp") -> Tuple[
+        MutableMapping[str, List[Tuple[float, float, float]]],
+        MutableMapping[float, str],
+    ]:
+        normalize_factor = float(ramp.legend_end) - float(ramp.legend_begin)
 
-        cdict = dict()
-        bands = defaultdict(list)
+        cdict = cast(MutableMapping[str, List[Tuple[float, float, float]]], dict())
+        bands = cast(MutableMapping[str, List[Tuple[float, float, float]]], defaultdict(list))
         started = False
         finished = False
         for index, ramp_point in enumerate(ramp.ramp):
             if finished:
                 continue
 
-            value = ramp_point.get("value")
+            value = cast(Union[float, int], ramp_point.get("value"))
             normalized = (value - float(ramp.legend_begin)) / float(normalize_factor)
 
             if not started:
@@ -151,16 +201,14 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
                 bands[band].append((normalized, intensity[index], intensity[index]))
 
         for band, blist in bands.items():
-            cdict[band] = tuple(blist)
+            cdict[band] = blist
 
-        ticks = dict()
+        ticks = cast(MutableMapping[float, str], dict())
         for tick, tick_lbl in zip(ramp.ticks, ramp.tick_labels):
             value = float(tick)
             normalized = (value - float(ramp.legend_begin)) / float(normalize_factor)
-            ticks[normalized] = tick_lbl
+            ticks[normalized] = tick_lbl   # REVISIT: map on float???
 
-        if len(ticks) == 0:
-            ticks = None
         return cdict, ticks
 
     cdict, ticks = create_cdict_ticks(legend_cfg, colour_ramp)
@@ -168,8 +216,7 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
     plt.rcdefaults()
     if colour_ramp.legend_mpl_rcparams:
         plt.rcParams.update(colour_ramp.legend_mpl_rcparams)
-    fig = plt.figure(figsize=(colour_ramp.legend_width,
-                              colour_ramp.legend_height))
+    fig = plt.figure(figsize=(colour_ramp.legend_width, colour_ramp.legend_height))
     ax = fig.add_axes(colour_ramp.legend_strip_location)
     custom_map = LinearSegmentedColormap(map_name, cdict)
     color_bar = matplotlib.colorbar.ColorbarBase(
@@ -177,7 +224,7 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
         cmap=custom_map,
         orientation="horizontal")
 
-    if ticks is not None:
+    if ticks:
         color_bar.set_ticks(list(ticks.keys()))
         color_bar.set_ticklabels(list(ticks.values()))
 
@@ -190,137 +237,50 @@ def colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
     plt.savefig(bytesio, format='png')
 
 
-def legacy_colour_ramp_legend(bytesio, legend_cfg, colour_ramp, map_name,
-                       default_title):
-    def custom_label(label, custom_config):
-        prefix = custom_config.get("prefix", "")
-        l = custom_config.get("label", label)
-        suffix = custom_config.get("suffix", "")
-        return f"{prefix}{l}{suffix}"
-
-    # Create custom cdict for matplotlib colorramp
-    # Matplot lib color dicts must start at 0 and end at 1
-    # because of this we normalize the values
-    # Also create tick labels based on configuration
-    # ticks are also normalized between 0 - 1.0
-    # so they are position correctly on the colorbar
-    def create_cdict_ticks(cfg, ramp):
-        generate = (cfg.get("major_ticks", None) is not None or
-                    cfg.get("scale_by", None) is not None or
-                    cfg.get("radix_point", None) is not None)
-
-        return from_definition(cfg, ramp, generate)
-
-    def find_clc(ramp, last=False):
-        l = ramp.ramp if not last else reversed(ramp.ramp)
-        for index, value in enumerate(l):
-            fwd_index = index if not last else (len(ramp.ramp) - (index + 1))
-            if "legend" in value:
-                return fwd_index
-        return 0 if not last else (len(ramp.ramp) - 1)
-
-    def from_definition(cfg, ramp, generate):
-        tick_mod = cfg.get("major_ticks", 1)
-        tick_offset = cfg.get("offset", 0)
-        tick_scale = cfg.get("scale_by", 1)
-        places = cfg.get("radix_point", 1)
-
-        start_index = find_clc(ramp) if not generate else 0
-        stop_index = find_clc(ramp, last=True) if not generate else (len(ramp.ramp) - 1)
-
-        start = ramp.ramp[start_index].get("value")
-        stop = ramp.ramp[stop_index].get("value")
-        normalize_factor = stop - start
-
-        ticks = dict()
-        cdict = dict()
-        bands = defaultdict(list)
-        for index, ramp_val in enumerate(ramp.ramp):
-            if index < start_index or index > stop_index:
-                continue
-
-            value = ramp_val.get("value")
-            normalized = (value - start) / normalize_factor
-            custom_legend_cfg = ramp_val.get("legend", None)
-
-            mod_close = False
-            mod_equal = False
-            if generate:
-                mod_close = isclose((value * tick_scale + tick_offset) % (tick_mod * tick_scale), 0.0, abs_tol=1e-8)
-                mod_equal = value % tick_mod == 0
-
-            if mod_close or mod_equal:
-                label = value * tick_scale + tick_offset
-                label = round(label, places) if places > 0 else int(label)
-                ticks[normalized] = label
-
-            if custom_legend_cfg is not None:
-                label = custom_label(value, custom_legend_cfg)
-                ticks[normalized] = label
-
-            for band, intensity in ramp.components.items():
-                bands[band].append((normalized, intensity[index], intensity[index]))
-
-        for band, blist in bands.items():
-            cdict[band] = tuple(blist)
-
-        if len(ticks) == 0:
-            ticks = None
-        return cdict, ticks
-
-    cdict, ticks = create_cdict_ticks(legend_cfg, colour_ramp)
-
-    # TODO: Potentially short-circuit this if using string based mpl_ramp
-    # custom_map = plt.get_cmap(style_cfg["mpl_ramp"]) should return a LinearSegmentedColormap
-
-    plt.rcdefaults()
-    if legend_cfg.get("rcParams", None) is not None:
-        plt.rcParams.update(legend_cfg.get("rcParams"))
-    fig = plt.figure(figsize=(legend_cfg.get("width", 4),
-                              legend_cfg.get("height", 1.25)))
-    ax_pos = legend_cfg.get("axes_position", [0.05, 0.5, 0.9, 0.15])
-    ax = fig.add_axes(ax_pos)
-    custom_map = LinearSegmentedColormap(map_name, cdict)
-    color_bar = matplotlib.colorbar.ColorbarBase(
-        ax,
-        cmap=custom_map,
-        orientation="horizontal")
-
-    if ticks is not None:
-        color_bar.set_ticks(list(ticks.keys()))
-        color_bar.set_ticklabels([str(l) for l in ticks.values()])
-
-    title = legend_cfg.get("title", default_title)
-    unit = legend_cfg.get("units", "unitless")
-    title = title + "(" + unit + ")"
-
-    color_bar.set_label(title)
-
-    plt.savefig(bytesio, format='png')
-
-
 class ColorRamp:
-    def __init__(self, style, ramp_cfg):
+    """
+    Represents a colour ramp for image and legend rendering purposes
+    """
+    def __init__(self, style: StyleDefBase, ramp_cfg: CFG_DICT) -> None:
+        """
+        :param style: The style owning the ramp
+        :param ramp_cfg: Style config
+        """
         self.style = style
         if "color_ramp" in ramp_cfg:
             raw_scaled_ramp = ramp_cfg["color_ramp"]
         else:
-            rmin, rmax = ramp_cfg["range"]
+            rmin, rmax = cast(List[float], ramp_cfg["range"])
             unscaled_ramp = UNSCALED_DEFAULT_RAMP
             if "mpl_ramp" in ramp_cfg:
-                unscaled_ramp = read_mpl_ramp(ramp_cfg["mpl_ramp"])
-            raw_scaled_ramp = scale_unscaled_ramp(
-                rmin, rmax, unscaled_ramp)
+                unscaled_ramp = read_mpl_ramp(cast(str, ramp_cfg["mpl_ramp"]))
+            raw_scaled_ramp = scale_unscaled_ramp(rmin, rmax, unscaled_ramp)
         self.ramp = raw_scaled_ramp
-        legend_cfg = ramp_cfg.get("legend", {})
+        legend_cfg = cast(CFG_DICT, ramp_cfg.get("legend", {}))
+
+        # Legend typing
+        self.legend_begin = Decimal("nan")
+        self.legend_end = Decimal("nan")
+        self.ticks = cast(List[Decimal], [])
+        self.tick_labels = cast(List[str], [])
+        self.legend_mpl_rcparams = cast(MutableMapping[str, str], {})
+        self.legend_width = 0.0
+        self.legend_height = 0.0
+        self.legend_strip_location = cast(List[float], [])
+        self.legend_title = ""
+        self.legend_units = ""
+        self.legend_decimal_places = Decimal("nan")
+        self.rounder = Decimal("nan")
         if legend_cfg.get("show_legend", True) and not legend_cfg.get("url"):
             self.parse_legend(legend_cfg)
         else:
             self.auto_legend = False
 
+        self.values = cast(List[float], [])
+        self.components = cast(MutableMapping[str, List[float]], {})
         self.crack_ramp()
 
-        if self.auto_legend and not self.legend_legacy:
+        if self.auto_legend:
             fbegin = float(self.legend_begin)
             fend = float(self.legend_end)
             begin_in_ramp = False
@@ -366,7 +326,7 @@ class ColorRamp:
             if not end_in_ramp or not begin_in_ramp:
                 self.crack_ramp()
 
-    def crack_ramp(self):
+    def crack_ramp(self) -> None:
         values, r, g, b, a = crack_ramp(self.ramp)
         self.values = values
         self.components = {
@@ -376,8 +336,8 @@ class ColorRamp:
             "alpha": a
         }
 
-    def parse_legend(self, cfg):
-        def rounder_str(prec):
+    def parse_legend(self, cfg: CFG_DICT) -> None:
+        def rounder_str(prec: int) -> str:
             rstr = "1"
             if prec == 0:
                 return rstr
@@ -398,11 +358,12 @@ class ColorRamp:
         self.parse_legend_ticks(cfg)
         self.parse_legend_tick_labels(cfg)
         self.parse_legend_matplotlib_args(cfg)
-        self.legend_legacy = any(
+        # Check for old style config - was deprecated, now not supported
+        legend_legacy = any(
             legent in cfg
             for legent in ["major_ticks", "offset", "scale_by", "radix_point"]
         )
-        if not self.legend_legacy and all(
+        if not legend_legacy and all(
             legent not in cfg
             for legent in ["begin", "end", "decimal_places", "ticks_every", "tick_count", "tick_labels", "ticks"]
         ):
@@ -410,56 +371,51 @@ class ColorRamp:
             # Check ramp for legend tips
             for r in self.ramp:
                 if "legend" in r:
-                    self.legend_legacy = True
+                    legend_legacy = True
                     break
-        if self.legend_legacy:
-            _LOG.warning("Style %s uses deprecated legend configuration.  Please refer to the documentation and update your config",
+        if legend_legacy:
+            raise ConfigException("Style %s uses a no-longer supported format for legend configuration.  Please refer to the documentation and update your config",
                          self.style.name)
 
-    def parse_legend_range(self, cfg):
-        # pylint: disable=attribute-defined-outside-init
-        self.legend_begin = None
-        # pylint: disable=attribute-defined-outside-init
-        self.legend_end = None
+    def parse_legend_range(self, cfg: CFG_DICT) -> None:
         if "begin" in cfg:
-            self.legend_begin = Decimal(cfg["begin"])
+            self.legend_begin = Decimal(cast(Union[str, float, int], cfg["begin"]))
         else:
             for col_def in self.ramp:
                 if isclose(col_def.get("alpha", 1.0), 1.0, abs_tol=1e-9):
                     self.legend_begin = Decimal(col_def["value"])
                     break
-            if self.legend_begin is None:
+            if self.legend_begin.is_nan():
                 self.legend_begin = Decimal(self.ramp[0]["value"])
         if "end" in cfg:
-            self.legend_end = Decimal(cfg["end"])
+            self.legend_end = Decimal(cast(Union[str, float, int], cfg["end"]))
         else:
             for col_def in reversed(self.ramp):
                 if col_def.get("alpha", 1.0) == 1.0:
                     self.legend_end = Decimal(col_def["value"])
                     break
-            if self.legend_end is None:
+            if self.legend_end.is_nan():
                 self.legend_end = Decimal(self.ramp[-1]["value"])
 
-    def parse_legend_ticks(self, cfg):
+    def parse_legend_ticks(self, cfg: CFG_DICT) -> None:
         # Ticks
-        ticks = []
         if "ticks_every" in cfg:
             if "tick_count" in cfg:
                 raise ConfigException("Cannot use tick count and ticks_every in the same legend")
             if "ticks" in cfg:
                 raise ConfigException("Cannot use ticks and ticks_every in the same legend")
-            delta = Decimal(cfg["ticks_every"])
+            delta = Decimal(cast(Union[int, float, str], cfg["ticks_every"]))
             tickval = self.legend_begin
             while tickval < self.legend_end:
-                ticks.append(tickval)
+                self.ticks.append(tickval)
                 tickval += delta
-            ticks.append(tickval)
+            self.ticks.append(tickval)
         if "ticks" in cfg:
             if "tick_count" in cfg:
                 raise ConfigException("Cannot use tick count and ticks in the same legend")
-            ticks = [Decimal(t) for t in cfg["ticks"]]
-        if not ticks:
-            count = int(cfg.get("tick_count", 1))
+            self.ticks = [Decimal(t) for t in cast(List[Union[str, int, float]], cfg["ticks"])]
+        if not self.ticks:
+            count = int(cast(Union[str, int], cfg.get("tick_count", 1)))
             if count < 0:
                 raise ConfigException("tick_count cannot be negative")
             delta = self.legend_end - self.legend_begin
@@ -467,17 +423,14 @@ class ColorRamp:
 
             for i in range(0, count + 1):
                 tickval = self.legend_begin + (Decimal(i) / dcount) * delta
-                ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
-        # pylint: disable=attribute-defined-outside-init
-        self.ticks = ticks
+                self.ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
 
-    def parse_legend_tick_labels(self, cfg):
-        labels = cfg.get("tick_labels", {})
+    def parse_legend_tick_labels(self, cfg: CFG_DICT) -> None:
+        labels = cast(MutableMapping[str, MutableMapping[str, str]], cfg.get("tick_labels", {}))
         defaults = labels.get("default", {})
         default_prefix = defaults.get("prefix", "")
         default_suffix = defaults.get("suffix", "")
         # pylint: disable=attribute-defined-outside-init
-        self.tick_labels = []
         for tick in self.ticks:
             label_cfg = labels.get(str(tick))
             if label_cfg:
@@ -489,29 +442,30 @@ class ColorRamp:
                 self.tick_labels.append(
                     default_prefix + str(tick) + default_suffix
                 )
-    def parse_legend_matplotlib_args(self, cfg):
-        # pylint: disable=attribute-defined-outside-init
-        self.legend_mpl_rcparams = cfg.get("rcParams", {})
-        self.legend_width = cfg.get("width", 4)
-        self.legend_height = cfg.get("height", 1.25)
-        self.legend_strip_location = cfg.get("strip_location",
-                                      [0.05, 0.5, 0.9, 0.15])
 
-    def get_value(self, data, band):
+    def parse_legend_matplotlib_args(self, cfg: CFG_DICT) -> None:
+        self.legend_mpl_rcparams = cast(MutableMapping[str, str], cfg.get("rcParams", {}))
+        self.legend_width = cast(float, cfg.get("width", 4.0))
+        self.legend_height = cast(float, cfg.get("height", 1.25))
+        self.legend_strip_location = cast(List[float],
+                                          cfg.get("strip_location", [0.05, 0.5, 0.9, 0.15]))
+
+    def get_value(self, data: Union[float, "xarray.DataArray"], band: str) -> numpy.typing.NDArray:
         return numpy.interp(data, self.values, self.components[band])
 
-    def get_8bit_value(self, data, band):
-        val = self.get_value(data, band)
-        return (val * 255).astype("uint8")
+    def get_8bit_value(self, data: "xarray.DataArray", band: str) -> numpy.typing.NDArray:
+        val: numpy.typing.NDArray = self.get_value(data, band)
+        val = cast(numpy.typing.NDArray, val * 255)
+        return val.astype("uint8")
 
-    def apply(self, data):
-        imgdata = {}
+    def apply(self, data: "xarray.DataArray") -> "xarray.Dataset":
+        imgdata = cast(MutableMapping[Hashable, Any], {})
         for band in self.components:
             imgdata[band] = (data.dims, self.get_8bit_value(data, band))
         imgdataset = Dataset(imgdata, coords=data.coords)
         return imgdataset
 
-    def color_alpha_at(self, val):
+    def color_alpha_at(self, val: float) -> Tuple[Color, float]:
         color = Color(
             rgb=(
                 self.get_value(val, "red").item(),
@@ -519,29 +473,40 @@ class ColorRamp:
                 self.get_value(val, "blue").item(),
             )
         )
-        alpha = self.get_value(val, "alpha")
-
+        alpha = cast(float, self.get_value(val, "alpha"))
         return color, alpha
 
 
 class ColorRampDef(StyleDefBase):
+    """
+    Colour ramp Style subclass
+    """
     auto_legend = True
-    def __init__(self, product, style_cfg, stand_alone=False, defer_multi_date=False, user_defined=False):
+
+    def __init__(self,
+                 product: "datacube_ows.ows_configuration.OWSNamedLayer",
+                 style_cfg: CFG_DICT,
+                 stand_alone: bool = False,
+                 defer_multi_date: bool = False,
+                 user_defined: bool = False) -> None:
+        """"
+        Constructor - refer to StyleDefBase
+        """
         super(ColorRampDef, self).__init__(product, style_cfg,
                            stand_alone=stand_alone, defer_multi_date=True, user_defined=user_defined)
-        style_cfg = self._raw_cfg
+        style_cfg = cast(CFG_DICT, self._raw_cfg)
         self.color_ramp = ColorRamp(self, style_cfg)
-        self.include_in_feature_info = style_cfg.get("include_in_feature_info", True)
+        self.include_in_feature_info = bool(style_cfg.get("include_in_feature_info", True))
 
         if "index_function" in style_cfg:
             self.index_function = FunctionWrapper(self,
-                                                  style_cfg["index_function"],
+                                                  cast(CFG_DICT, style_cfg["index_function"]),
                                                   stand_alone=self.stand_alone)
             if not self.stand_alone:
-                for band in style_cfg["needed_bands"]:
+                for band in cast(List[str], style_cfg["needed_bands"]):
                     self.raw_needed_bands.add(band)
         elif "index_expression" in style_cfg:
-            self.index_function = Expression(self, style_cfg["index_expression"])
+            self.index_function = Expression(self, cast(str, style_cfg["index_expression"]))
             for band in self.index_function.needed_bands:
                 self.raw_needed_bands.add(band)
             if self.stand_alone:
@@ -555,52 +520,91 @@ class ColorRampDef(StyleDefBase):
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 
-    def apply_index(self, data):
+    def apply_index(self, data: "xarray.Dataset") -> "xarray.DataArray":
+        """
+        Caclulate index value across data.
+
+        :param data: Input dataset
+        :return: Matching dataarray carrying the index value
+        """
         index_data = self.index_function(data)
         data['index_function'] = (index_data.dims, index_data.data)
         return data["index_function"]
 
-    def transform_single_date_data(self, data):
+    def transform_single_date_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
+        """
+        Apply style to raw data to make an RGBA image xarray (single time slice only)
+
+        :param data: Raw data, all bands.
+        :return: RGBA uint8 xarray
+        """
         d = self.apply_index(data)
         return self.color_ramp.apply(d)
 
-    def single_date_legend(self, bytesio):
+    def single_date_legend(self, bytesio: io.BytesIO) -> None:
+        """
+        Write a legend into a bytes buffer as a PNG image.
+
+        :param bytesio:  io.BytesIO byte buffer.
+        """
         colour_ramp_legend(bytesio,
                            self.legend_cfg,
                            self.color_ramp,
                            self.product.name,
-                           self.title
+                           self.title      # pyre-ignore[16]
                            )
 
     class MultiDateHandler(StyleDefBase.MultiDateHandler):
+        """
+        MultiDateHandler base class.
+
+        Handles "aggregator"-based index-value multi-date requests (e.g. delta)
+        """
         auto_legend = True
-        def __init__(self, style, cfg):
+
+        def __init__(self, style: "ColorRampDef", cfg: CFG_DICT) -> None:
+            """
+            First stage initialisation
+
+            :param style: The parent style object
+            :param cfg: The multidate handler configuration
+            """
             super().__init__(style, cfg)
             if self.animate:
-                self.feature_info_label = None
+                self.feature_info_label: Optional[str] = None
                 self.color_ramp = style.color_ramp
             else:
-                self.feature_info_label = cfg.get("feature_info_label", None)
+                self.feature_info_label = cast(Optional[str], cfg.get("feature_info_label", None))
                 self.color_ramp = ColorRamp(style, cfg)
 
-        def transform_data(self, data):
-            xformed_data = self.style.apply_index(data)
+        def transform_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
+            """
+            Apply image transformation
+
+            :param data: Raw data
+            :return: RGBA image xarray.  May have a time dimension
+            """
+            xformed_data = cast("ColorRampDef", self.style).apply_index(data)
             agg = self.aggregator(xformed_data)
             return self.color_ramp.apply(agg)
 
-        def legend(self, bytesio):
-            if self.animate and not self.legend_cfg:
-                return self.style.single_date_legend(bytesio)
-            title = self.legend_cfg.get("title", self.range_str() + " Dates")
-            name = self.style.product.name + f"_{self.min_count}"
-            colour_ramp_legend(bytesio,
-                               self.legend_cfg,
-                               self.color_ramp,
-                               name,
-                               title
-                               )
-            return True
+        def legend(self, bytesio: io.BytesIO) -> None:
+            """
+            Write a legend as a png to a bytesio buffer.
 
-StyleDefBase.register_subclass(ColorRampDef,
-                               ("range", "color_ramp")
-)
+            :param bytesio:
+            """
+            if self.animate and not self.legend_cfg:
+                self.style.single_date_legend(bytesio)
+            else:
+                title = self.legend_cfg.get("title", self.range_str() + " Dates")
+                name = self.style.product.name + f"_{self.min_count}"
+                colour_ramp_legend(bytesio,
+                                   self.legend_cfg,
+                                   self.color_ramp,
+                                   name,
+                                   title
+                                   )
+
+# Register ColorRampDef as Style subclass.
+StyleDefBase.register_subclass(ColorRampDef, ("range", "color_ramp"))
