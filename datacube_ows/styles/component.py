@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any, Callable, Hashable, List, MutableMapping, Optional, Union, cast
+
 import numpy as np
 from xarray import DataArray, Dataset
 

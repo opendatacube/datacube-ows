@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 from typing import Optional, Union, cast
+
 from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import CFG_DICT
