@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any, Type, cast
+
 import lark
 from datacube.virtual.expr import formula_parser
 
