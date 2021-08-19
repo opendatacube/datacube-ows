@@ -21,7 +21,7 @@ def test_fake_creds(monkeypatch):
         s3a.return_value = None
         initialise_aws_credentials()
         assert os.getenv("AWS_NO_SIGN_REQUEST") is None
-        monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "indubitably")
+        monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "yes")
         initialise_aws_credentials()
         assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
 

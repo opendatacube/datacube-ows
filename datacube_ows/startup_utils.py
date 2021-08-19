@@ -85,16 +85,24 @@ def initialise_aws_credentials(log=None):
 
     # Boto3/AWS
     if os.environ.get("AWS_DEFAULT_REGION"):
-        env_nosign = os.environ.get("AWS_NO_SIGN_REQUEST", "yes")
-        unsigned = bool(env_nosign)
-        if not unsigned or env_nosign.lower() in ("n", "f", "no", "false", "0"):
-            unsigned = False
-            # delete env variable
-            del os.environ["AWS_NO_SIGN_REQUEST"]
+        if "AWS_NO_SIGN_REQUEST" in os.environ:
+            env_nosign = os.environ["AWS_NO_SIGN_REQUEST"]
+            if env_nosign.lower() in ("y", "t", "yes", "true", "1"):
+                unsigned = True
+                # Workaround for rasterio bug
+                os.environ["AWS_NO_SIGN_REQUEST"] = "yes"
+                os.environ["AWS_ACCESS_KEY_ID"] = "fake"
+                os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
+            else:
+                unsigned = False
+                # delete env variable
+                del os.environ["AWS_NO_SIGN_REQUEST"]
         else:
-            # Workaround for rasterio bug
-            os.environ["AWS_ACCESS_KEY_ID"] = "fake"
-            os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
+            unsigned = False
+            if log:
+                log.warning("AWS_NO_SIGN_REQUEST is not set. " +
+                            "The default behaviour has recently changed to False (i.e. signed requests) " +
+                            "Please explicitly set $AWS_NO_SIGN_REQUEST to 'no' for unsigned requests.")
         env_requester_pays = os.environ.get("AWS_REQUEST_PAYER", "")
         requester_pays = False
         if env_requester_pays.lower() == "requester":
