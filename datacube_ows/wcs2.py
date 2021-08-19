@@ -3,8 +3,7 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from __future__ import absolute_import, division, print_function
-
+import logging
 from flask import request
 from ows.common import WGS84BoundingBox
 from ows.common.v20.decoders import kvp_decode_get_capabilities
@@ -21,6 +20,9 @@ from datacube_ows.ogc_utils import get_service_base_url, resp_headers
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import log_call
 from datacube_ows.wcs2_utils import get_coverage_data
+
+
+_LOG = logging.getLogger(__name__)
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
@@ -279,10 +281,6 @@ def desc_coverages(args):
         })
     )
 
-
-import logging
-
-_LOG = logging.getLogger(__name__)
 
 
 @log_call

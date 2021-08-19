@@ -3,8 +3,8 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from typing import Any, Callable, Hashable, List, MutableMapping, Optional, Union, cast
 import numpy as np
-from typing import cast, Any, Callable, Hashable, List, MutableMapping, Optional, Union
 from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import CFG_DICT
@@ -102,7 +102,7 @@ class ComponentStyleDef(StyleDefBase):
 
         self.raw_rgb_components: MutableMapping[str, Union[Callable, LINEAR_COMP_DICT]] = {}
 
-    def dealias_components(self, comp_in: Optional[LINEAR_COMP_DICT]) ->Optional[LINEAR_COMP_DICT]:
+    def dealias_components(self, comp_in: Optional[LINEAR_COMP_DICT]) -> Optional[LINEAR_COMP_DICT]:
         """
         Convert a component dictionary with band aliases to a component dictionary using canonical band names.
 

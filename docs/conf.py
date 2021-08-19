@@ -31,7 +31,7 @@ project_root = os.path.dirname(cwd)
 # version is used.
 sys.path.insert(0, project_root)
 
-import datacube_ows
+import datacube_ows  # isort:skip
 
 # -- General configuration ---------------------------------------------
 

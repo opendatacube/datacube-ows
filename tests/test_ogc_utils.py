@@ -13,6 +13,7 @@ from pytz import utc
 
 import datacube_ows.ogc_utils
 import datacube_ows.utils
+from tests.utils import dummy_da
 
 
 class DSCT:
@@ -150,7 +151,6 @@ def test_create_geobox():
     assert "Must supply at least a width or height" in str(excinfo.value)
 
 
-from tests.utils import dummy_da
 
 coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
