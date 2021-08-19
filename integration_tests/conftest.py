@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 
-pytest_plugins = ["helpers_namespace"]
+pytest_plugins = ["helpers_namespace"]  # isort:skip
 import pytest
 from click.testing import CliRunner
 from pytest_localserver.http import WSGIServer

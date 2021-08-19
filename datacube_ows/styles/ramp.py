@@ -8,7 +8,8 @@ import logging
 from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
-from typing import cast, Any, Hashable, Iterable, List, MutableMapping, Optional, Tuple, Union
+from typing import (Any, Hashable, List, MutableMapping, Optional,
+                    Tuple, Union, cast)
 
 import matplotlib
 import numpy
@@ -17,14 +18,13 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex
 from xarray import Dataset
 
-matplotlib.use('Agg')
-
 from datacube_ows.config_utils import CFG_DICT
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper, F
+from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 
 _LOG = logging.getLogger(__name__)
+matplotlib.use('Agg')
 
 RAMP_SPEC = List[CFG_DICT]
 
@@ -374,8 +374,9 @@ class ColorRamp:
                     legend_legacy = True
                     break
         if legend_legacy:
-            raise ConfigException("Style %s uses a no-longer supported format for legend configuration.  Please refer to the documentation and update your config",
-                         self.style.name)
+            raise ConfigException(
+                        "Style %s uses a no-longer supported format for legend configuration.  " +
+                        "Please refer to the documentation and update your config" % self.style.name)
 
     def parse_legend_range(self, cfg: CFG_DICT) -> None:
         if "begin" in cfg:

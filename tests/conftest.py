@@ -10,7 +10,6 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 import requests
-import xarray
 import xarray as xr
 from s3fs.core import S3FileSystem
 
@@ -613,7 +612,7 @@ def dummy_raw_fc_data():
 
 @pytest.fixture
 def dummy_raw_fc_plus_wo(dummy_raw_fc_data, dummy_raw_wo_data):
-    return xarray.combine_by_coords(
+    return xr.combine_by_coords(
             [dummy_raw_fc_data, dummy_raw_wo_data],
             join="exact")
 
@@ -1184,7 +1183,7 @@ xyt_coords = [
 
 @pytest.fixture
 def xyt_dummydata():
-    return xarray.Dataset({
+    return xr.Dataset({
             "red": dummy_da(1400, "red", xyt_coords, dtype="int16"),
             "green": dummy_da(700, "green", xyt_coords, dtype="int16"),
             "blue": dummy_da(1500, "blue", xyt_coords, dtype="int16"),
