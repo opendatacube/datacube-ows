@@ -55,7 +55,7 @@ class ComponentStyleDef(StyleDefBase):
                 for k in components.keys():
                     if k != "scale_range":
                         self.raw_needed_bands.add(k)
-        self.declare_unready("rgb_components")
+        self.rgb_components = cast(MutableMapping[str, Union[None, Callable, LINEAR_COMP_DICT]], {})
 
         self.scale_factor = style_cfg.get("scale_factor")
         if "scale_range" in style_cfg:
@@ -90,7 +90,6 @@ class ComponentStyleDef(StyleDefBase):
 
         :param dc: A datacube object
         """
-        # pyre-ignore[16]
         self.rgb_components = cast(MutableMapping[str, Union[None, Callable, LINEAR_COMP_DICT]], {})
         for band, component in self.raw_rgb_components.items():
             if not component or callable(component):
@@ -137,13 +136,11 @@ class ComponentStyleDef(StyleDefBase):
     def transform_single_date_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
         """
         Apply style to raw data to make an RGBA image xarray (single time slice only)
-        Over-ridden by subclasses.
 
         :param data: Raw data, all bands.
         :return: RGBA uint8 xarray
         """
         imgdata = cast(MutableMapping[Hashable, Any], {})
-        # pyre-ignore[16]
         for imgband, components in self.rgb_components.items():
             if callable(components):
                 imgband_data = components(data)
