@@ -87,6 +87,7 @@ def scale_unscaled_ramp(rmin: Union[int, float, str], rmax: Union[int, float, st
         nmax = float(rmax)
     return [
         {
+            # pyre-ignore[6]
             "value": (nmax - nmin) * cast(float, u["value"]) + nmin,
             "color": u["color"],
             "alpha": u.get("alpha", 1.0)
