@@ -53,9 +53,10 @@ AWS_NO_SIGN_REQUEST:
     S3 access will be unsigned if this environment variable is set
     to "y", "t", "yes", "true" or "1".
 
-    If requests are signed then the ``$AWS_ACCESS_KEY_ID``
-    ``$AWS_SECRET_ACCESS_KEY`` environment variables must be
-    set - refer to the boto3 documentation for more information).
+    If requests are signed then you will also need to ensure that
+    boto3 has access to appropriate AWS credentials - typically
+    the ``$AWS_ACCESS_KEY_ID`` and ``$AWS_SECRET_ACCESS_KEY`` environment
+    variables.
 
     N.B. Signed requests are the default behaviour - explicitly
     set ``$AWS_NO_SIGN_REQUEST`` to 'yes' to use unsigned request.
