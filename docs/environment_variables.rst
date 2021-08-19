@@ -51,13 +51,16 @@ AWS_DEFAULT_REGION:
 
 AWS_NO_SIGN_REQUEST:
     S3 access will be unsigned if this environment variable is set
-    to a non-empty value other than "n", "f", "no", "false" or "0".
+    to "y", "t", "yes", "true" or "1".
 
-    N.B. Unsigned requests is the default behaviour - explicitly
-    set ``$AWS_NO_SIGN_REQUEST`` to an empty string to sign requests
-    (and set the ``$AWS_ACCESS_KEY_ID`` and
-    ``$AWS_SECRET_ACCESS_KEY`` environment variables - refer to
-    the boto3 documentation for more information).
+    If requests are signed then the ``$AWS_ACCESS_KEY_ID``
+    ``$AWS_SECRET_ACCESS_KEY`` environment variables must be
+    set - refer to the boto3 documentation for more information).
+
+    N.B. Signed requests are the default behaviour - explicitly
+    set ``$AWS_NO_SIGN_REQUEST`` to 'yes' to use unsigned request.
+    The default behaviour for this variable changed in version 1.8.17.
+
 
 AWS_REQUEST_PAYER:
     Set to "requester" if accessing requester-pays S3 buckets.
