@@ -81,9 +81,9 @@ def initialise_sentry(log=None):
 class CredentialManager:
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, log=None):
         if not cls._instance:
-            cls._instance = super().__new__()
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self, log=None):
