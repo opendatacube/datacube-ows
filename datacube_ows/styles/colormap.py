@@ -61,7 +61,7 @@ class ValueMapRule(OWSConfigEntry):
             flags = cast(CFG_DICT, cfg["flags"])
             self.or_flags: bool = False
             if "or" in flags and "and" in flags:
-                raise ConfigException(f"ValueMap rule in style {self.style.name} combines 'and' and 'or' rules")
+                raise ConfigException(f"ValueMap rule in style {self.style.name} of layer {self.style.product.name} combines 'and' and 'or' rules")
             elif "or" in flags:
                 self.or_flags = True
                 flags = cast(CFG_DICT, flags["or"])
@@ -76,9 +76,9 @@ class ValueMapRule(OWSConfigEntry):
         else:
             self.values = None
         if not self.flags and not self.values:
-            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} must have a non-empty 'flags' or a 'values' section.")
+            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} must have a non-empty 'flags' or 'values' section.")
         if self.flags and self.values:
-            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} has a both a 'flags' and a 'values' section - choose one.")
+            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} has both a 'flags' and a 'values' section - choose one.")
 
     def create_mask(self, data: DataArray) -> DataArray:
         """

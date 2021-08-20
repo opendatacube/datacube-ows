@@ -263,12 +263,59 @@ def style_cfg_map_alpha_3():
     return cfg
 
 
-def test_valuemap_errors():
+def test_valuemap_ctor():
     style = MagicMock()
     style.name = "style_name"
     style.product.name = "layer_name"
 
-
+    vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+        "title": "",
+        "abstract": "Abstract abstractions",
+        "values": [1, 2],
+        "color": "#FFFFFF"
+    })
+    assert vm.label == "Abstract abstractions"
+    with pytest.raises(ConfigException) as e:
+        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+            "title": "",
+            "abstract": "Abstract abstractions",
+            "flags": {
+                "and": {
+                    "flag": "val",
+                },
+                "or": {
+                    "other_flag": "other_val"
+                }
+            },
+            "color": "#FFFFFF"
+        })
+    assert "combines 'and' and 'or' rules" in str(e.value)
+    assert "style_name" in str(e.value)
+    assert "layer_name" in str(e.value)
+    with pytest.raises(ConfigException) as e:
+        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+            "title": "",
+            "abstract": "Abstract abstractions",
+            "flags": {
+                "and": {
+                    "flag": "val",
+                },
+            },
+            "values": [1, 2, 3],
+            "color": "#FFFFFF"
+        })
+    assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
+    assert "style_name" in str(e.value)
+    assert "layer_name" in str(e.value)
+    with pytest.raises(ConfigException) as e:
+        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+            "title": "",
+            "abstract": "Abstract abstractions",
+            "color": "#FFFFFF"
+        })
+    assert "must have a non-empty 'flags' or 'values' section" in str(e.value)
+    assert "style_name" in str(e.value)
+    assert "layer_name" in str(e.value)
 
 
 @pytest.fixture
