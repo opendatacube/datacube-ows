@@ -18,9 +18,7 @@ from datacube_ows.ogc_utils import (capture_headers, get_service_base_url,
                                     lower_get_args, resp_headers)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.protocol_versions import supported_versions
-# See startup_utils.py for initialisation methods called at startup.
-# pylint: disable=wildcard-import,unused-wildcard-import
-from datacube_ows.startup_utils import *
+from datacube_ows.startup_utils import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from datacube_ows.wcs1 import WCS_REQUESTS
 from datacube_ows.wms import WMS_REQUESTS
 

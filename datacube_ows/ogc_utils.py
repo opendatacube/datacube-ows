@@ -442,11 +442,11 @@ def mask_by_extent_val(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     return mask_by_val(data, "extent")
 
 
-def mask_by_nan(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
+def mask_by_nan(data: "xarray.Dataset", band: str) -> "numpy.NDArray":
     """
     Mask by nan, for bands with floating point data
     """
-    return ~numpy.isnan(data[band])
+    return ~numpy.isnan(cast(numpy.generic, data[band]))
 
 
 # Sub-product extractors - Subproducts are currently unsupported

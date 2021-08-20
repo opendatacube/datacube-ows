@@ -116,6 +116,30 @@ def style_cfg_lin_clone():
 
 
 @pytest.fixture
+def style_cfg_nonlin():
+    cfg = {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["red", "green", "blue"],
+        "scale_factor": 1.0,
+        "components": {
+            "red": {"red": 1.0},
+            "green": {
+                "function": "datacube_ows.band_utils.norm_diff",
+                "kwargs": {
+                    "band1": "red",
+                    "band2": "green",
+                }
+            },
+            "blue": {"blue": 1.0}
+        },
+        "additional_bands": [],
+    }
+    return cfg
+
+
+@pytest.fixture
 def style_cfg_map():
     cfg = {
         "name": "test_style",
@@ -239,6 +263,61 @@ def style_cfg_map_alpha_3():
     return cfg
 
 
+def test_valuemap_ctor():
+    style = MagicMock()
+    style.name = "style_name"
+    style.product.name = "layer_name"
+
+    vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+        "title": "",
+        "abstract": "Abstract abstractions",
+        "values": [1, 2],
+        "color": "#FFFFFF"
+    })
+    assert vm.label == "Abstract abstractions"
+    with pytest.raises(ConfigException) as e:
+        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+            "title": "",
+            "abstract": "Abstract abstractions",
+            "flags": {
+                "and": {
+                    "flag": "val",
+                },
+                "or": {
+                    "other_flag": "other_val"
+                }
+            },
+            "color": "#FFFFFF"
+        })
+    assert "combines 'and' and 'or' rules" in str(e.value)
+    assert "style_name" in str(e.value)
+    assert "layer_name" in str(e.value)
+    with pytest.raises(ConfigException) as e:
+        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+            "title": "",
+            "abstract": "Abstract abstractions",
+            "flags": {
+                "and": {
+                    "flag": "val",
+                },
+            },
+            "values": [1, 2, 3],
+            "color": "#FFFFFF"
+        })
+    assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
+    assert "style_name" in str(e.value)
+    assert "layer_name" in str(e.value)
+    with pytest.raises(ConfigException) as e:
+        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+            "title": "",
+            "abstract": "Abstract abstractions",
+            "color": "#FFFFFF"
+        })
+    assert "must have a non-empty 'flags' or 'values' section" in str(e.value)
+    assert "style_name" in str(e.value)
+    assert "layer_name" in str(e.value)
+
+
 @pytest.fixture
 def style_cfg_ramp():
     cfg = {
@@ -308,6 +387,35 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
     assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
+
+
+def test_correct_style_nonlin_hybrid(product_layer, style_cfg_nonlin):
+    style_cfg_nonlin["component_ratio"] = 1.0
+    style_cfg_nonlin["range"] = [1, 2]
+    style_cfg_nonlin["index_function"] = {
+        "function": "datacube_ows.band_utils.constant",
+        "mapped_bands": True,
+        "kwargs": {
+            "const": "0.1"
+        }
+    }
+    style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_nonlin)
+    assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
+
+
+def test_invalid_component_ratio(product_layer, style_cfg_nonlin):
+    style_cfg_nonlin["component_ratio"] = 2.0
+    style_cfg_nonlin["range"] = [1, 2]
+    style_cfg_nonlin["index_function"] = {
+        "function": "datacube_ows.band_utils.constant",
+        "mapped_bands": True,
+        "kwargs": {
+            "const": "0.1"
+        }
+    }
+    with pytest.raises(ConfigException) as e:
+        style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_nonlin)
+    assert "Component ratio must be a floating point number between 0 and 1" in str(e.value)
 
 
 def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone):

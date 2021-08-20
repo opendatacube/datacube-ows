@@ -3,18 +3,25 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from typing import Any, Type, cast
+
 import lark
+from datacube.virtual.expr import formula_parser
 
 from datacube_ows.ogc_utils import ConfigException
-from datacube_ows.styles.expr import formula_parser
+
+# Lark stuff.
 
 identity = lambda ev, x: x
+
 
 def empty_gen(ev, a):
     return set()
 
+
 def union(ev, a, b):
     return a.union(b)
+
 
 def not_supported(op_name):
     def impl(ev, a=None, b=None, c=None):
@@ -24,6 +31,9 @@ def not_supported(op_name):
 
 @lark.v_args(inline=True)
 class ExpressionEvaluator(lark.Transformer):
+    """
+    Standard expression evaluator
+    """
     from operator import add, floordiv, mod, mul, neg, pos, pow, sub, truediv
     not_ = inv = or_ = and_ = xor = not_supported("Bitwise logical operators")
     eq = ne = le = ge = lt = gt = not_supported("Comparison operators")
@@ -39,11 +49,19 @@ class ExpressionEvaluator(lark.Transformer):
 
 @lark.v_args(inline=True)
 class UserDefinedExpressionEvaluator(ExpressionEvaluator):
+    """
+    Expression evaluator for user-defined expressions.
+
+    (Doesn't support exponent operator)
+    """
     pow = not_supported("Exponent operator")
 
 
 @lark.v_args(inline=True)
 class BandListEvaluator(ExpressionEvaluator):
+    """
+    Expression evaluator that returns a list of needed bands for the expression.
+    """
     neg = pos = identity
     add = sub = mul = truediv = floordiv = mod = pow = union
 
@@ -54,11 +72,25 @@ class BandListEvaluator(ExpressionEvaluator):
         return set([self.ows_style.local_band(key.value)])
 
 
+### Expression wrapper - callable wrapper for a configurable expression
+
 class ExpressionException(ConfigException):
-    pass
+    """
+    Exception for invalid expressions
+    """
+
 
 class Expression:
-    def __init__(self, style, expr_str):
+    """
+    Expression wrapper for configurable expression elements
+    """
+    def __init__(self, style: "datacube_ows.styles.StyleDef", expr_str: str) -> None:
+        """
+        Class constructor
+
+        :param style: The style to which the expression belongs (may be a statically configured style, or user-defined.
+        :param expr_str: The expression string to be parsed.
+        """
         self.style = style
         self.expr_str = expr_str
         parser = formula_parser()
@@ -72,17 +104,24 @@ class Expression:
         if len(self.needed_bands) == 0:
             raise ExpressionException(f"Expression references no bands: {self.expr_str}")
 
-
-    def __call__(self, data):
+    def eval_cls(self, data: "xarray.Dataset") -> ExpressionEvaluator:
+        """"
+        Return an appropriate Expression Evaluator for a given Dataset
+        """
         if self.style.user_defined:
-            evaluator = UserDefinedExpressionEvaluator
+            evaluator_cls: Type[ExpressionEvaluator] = UserDefinedExpressionEvaluator
         else:
-            evaluator = ExpressionEvaluator
+            evaluator_cls = ExpressionEvaluator
 
         @lark.v_args(inline=True)
-        class ExpressionDataEvaluator(evaluator):
+        class ExpressionDataEvaluator(evaluator_cls):
             def var_name(self, key):
                 return data[self.ows_style.local_band(key.value)]
 
-        return ExpressionDataEvaluator(self.style).transform(self.tree)
+        # pyre-ignore[19]
+        return cast(ExpressionEvaluator, ExpressionDataEvaluator(self.style))
+
+    def __call__(self, data: "xarray.Dataset") -> Any:
+        evaluator: ExpressionEvaluator = self.eval_cls(data)
+        return evaluator.transform(self.tree)
 
