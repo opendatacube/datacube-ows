@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 import warnings
-from time import clock_gettime, CLOCK_REALTIME
+from time import CLOCK_REALTIME, clock_gettime
 
 import sentry_sdk
 from datacube.utils.aws import configure_s3_access
