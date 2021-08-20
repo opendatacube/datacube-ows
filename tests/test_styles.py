@@ -129,11 +129,12 @@ def style_cfg_nonlin():
                 "function": "datacube_ows.band_utils.norm_diff",
                 "kwargs": {
                     "band1": "red",
-                    "band2": "nir",
+                    "band2": "green",
                 }
             },
             "blue": {"blue": 1.0}
-        }
+        },
+        "additional_bands": [],
     }
     return cfg
 
@@ -260,6 +261,14 @@ def style_cfg_map_alpha_3():
         }
     }
     return cfg
+
+
+def test_valuemap_errors():
+    style = MagicMock()
+    style.name = "style_name"
+    style.product.name = "layer_name"
+
+
 
 
 @pytest.fixture
