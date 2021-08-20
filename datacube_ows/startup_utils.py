@@ -7,6 +7,7 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import os
+from time import clock_gettime, CLOCK_REALTIME
 import warnings
 
 import sentry_sdk
@@ -32,7 +33,8 @@ __all__ = [
     'initialise_flask',
     'initialise_prometheus',
     'initialise_prometheus_register',
-    'generate_locale_selector'
+    'generate_locale_selector',
+    'CredentialManager',
 ]
 
 
@@ -76,48 +78,80 @@ def initialise_sentry(log=None):
         if log:
             log.info("Sentry initialised")
 
+class CredentialManager:
+    _instance = None
 
-def initialise_aws_credentials(log=None):
-    # Startup initialisation of libraries controlled by environment variables
-    #
-    # Move to a function to facilitate unit testing.
-    # Should be done in a more flexible pluggable way.
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__()
+        return cls._instance
 
-    # Boto3/AWS
-    if os.environ.get("AWS_DEFAULT_REGION"):
-        if "AWS_NO_SIGN_REQUEST" in os.environ:
-            env_nosign = os.environ["AWS_NO_SIGN_REQUEST"]
-            if env_nosign.lower() in ("y", "t", "yes", "true", "1"):
-                unsigned = True
-                # Workaround for rasterio bug
-                os.environ["AWS_NO_SIGN_REQUEST"] = "yes"
-                os.environ["AWS_ACCESS_KEY_ID"] = "fake"
-                os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
+    def __init__(self, log=None):
+        # Startup initialisation of libraries controlled by environment variables
+        self.use_aws = False
+        self.unsigned = False
+        self.requester_pays = False
+        self.credentials = None
+        self.last_updated = 0.0
+
+        # Boto3/AWS
+        if os.environ.get("AWS_DEFAULT_REGION"):
+            if "AWS_NO_SIGN_REQUEST" in os.environ:
+                env_nosign = os.environ["AWS_NO_SIGN_REQUEST"]
+                if env_nosign.lower() in ("y", "t", "yes", "true", "1"):
+                    unsigned = True
+                    # Workaround for rasterio bug
+                    os.environ["AWS_NO_SIGN_REQUEST"] = "yes"
+                    os.environ["AWS_ACCESS_KEY_ID"] = "fake"
+                    os.environ["AWS_SECRET_ACCESS_KEY"] = "fake"
+                else:
+                    unsigned = False
+                    # delete env variable
+                    del os.environ["AWS_NO_SIGN_REQUEST"]
             else:
                 unsigned = False
-                # delete env variable
-                del os.environ["AWS_NO_SIGN_REQUEST"]
-        else:
-            unsigned = False
+                if log:
+                    log.warning("AWS_NO_SIGN_REQUEST is not set. " +
+                                "The default behaviour has recently changed to False (i.e. signed requests) " +
+                                "Please explicitly set $AWS_NO_SIGN_REQUEST to 'no' for unsigned requests.")
+            env_requester_pays = os.environ.get("AWS_REQUEST_PAYER", "")
+            requester_pays = False
+            if env_requester_pays.lower() == "requester":
+                requester_pays = True
+            self.use_aws = True
             if log:
-                log.warning("AWS_NO_SIGN_REQUEST is not set. " +
-                            "The default behaviour has recently changed to False (i.e. signed requests) " +
-                            "Please explicitly set $AWS_NO_SIGN_REQUEST to 'no' for unsigned requests.")
-        env_requester_pays = os.environ.get("AWS_REQUEST_PAYER", "")
-        requester_pays = False
-        if env_requester_pays.lower() == "requester":
-            requester_pays = True
-        if log:
-            if unsigned:
-                log.info("S3 access configured with unsigned requests")
-            else:
-                log.info("S3 access configured with signed requests")
-        credentials = configure_s3_access(aws_unsigned=unsigned, requester_pays=requester_pays)
+                if unsigned:
+                    log.info("S3 access configured with unsigned requests")
+                else:
+                    log.info("S3 access configured with signed requests")
+            self.unsigned = unsigned
+            self.requester_pays = requester_pays
+            self.credentials = self.renew_creds(clock_gettime(CLOCK_REALTIME))
 
-        if "AWS_S3_ENDPOINT" in os.environ and os.environ["AWS_S3_ENDPOINT"] == "":
-            del os.environ["AWS_S3_ENDPOINT"]
-    elif log:
-        log.warning("Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
+            if "AWS_S3_ENDPOINT" in os.environ and os.environ["AWS_S3_ENDPOINT"] == "":
+                del os.environ["AWS_S3_ENDPOINT"]
+        elif log:
+            self.last_update = 0
+            log.warning(
+                "Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
+
+    @classmethod
+    def check_cred(cls):
+        if cls._instance.use_aws:
+            now = clock_gettime(CLOCK_REALTIME)
+            if now - cls._instance.last_updated > 3500.0:
+                cls.renew_creds(now)
+
+    @classmethod
+    def renew_creds(cls, now):
+        if cls._instance.use_aws:
+            cls._instance.credentials = configure_s3_access(aws_unsigned=cls._instance.unsigned,
+                                                            requester_pays=cls._instance.requester_pays)
+            cls._instance.last_updated = now
+
+
+def initialise_aws_credentials(log=None):
+    cm = CredentialManager(log)
 
 
 def parse_config_file(log=None):
