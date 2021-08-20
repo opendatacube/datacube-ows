@@ -7,10 +7,10 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import os
+from time import clock_gettime, CLOCK_REALTIME
 import warnings
 
 import sentry_sdk
-from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
 from flask import Flask, request
 from flask_babel import Babel
@@ -73,7 +73,7 @@ def initialise_sentry(log=None):
         sentry_sdk.init(
             dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
             environment=SENTRY_ENV_TAG,
-            integrations=[FlaskIntegration()]
+            integrations = [FlaskIntegration()]
         )
         if log:
             log.info("Sentry initialised")
@@ -81,9 +81,9 @@ def initialise_sentry(log=None):
 class CredentialManager:
     _instance = None
 
-    def __new__(cls, log=None):
+    def __new__(cls):
         if not cls._instance:
-            cls._instance = super().__new__(cls)
+            cls._instance = super().__new__()
         return cls._instance
 
     def __init__(self, log=None):
@@ -92,9 +92,7 @@ class CredentialManager:
         self.unsigned = False
         self.requester_pays = False
         self.credentials = None
-        self.log = log
-
-        log.error("Initialising CredentialManager")
+        self.last_updated = 0.0
 
         # Boto3/AWS
         if os.environ.get("AWS_DEFAULT_REGION"):
@@ -128,28 +126,29 @@ class CredentialManager:
                     log.info("S3 access configured with signed requests")
             self.unsigned = unsigned
             self.requester_pays = requester_pays
-            self.credentials = self.renew_creds()
+            self.credentials = self.renew_creds(clock_gettime(CLOCK_REALTIME))
 
             if "AWS_S3_ENDPOINT" in os.environ and os.environ["AWS_S3_ENDPOINT"] == "":
                 del os.environ["AWS_S3_ENDPOINT"]
         elif log:
+            self.last_update = 0
             log.warning(
                 "Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
     @classmethod
     def check_cred(cls):
-        if cls._instance.credentials and isinstance(cls._instance.credentials, RefreshableCredentials) and cls._instance.credentials.refresh_needed():
-            cls.renew_creds()
+        if cls._instance.use_aws:
+            now = clock_gettime(CLOCK_REALTIME)
+            if now - cls._instance.last_updated > 3500.0:
+                cls.renew_creds(now)
 
     @classmethod
-    def renew_creds(cls):
+    def renew_creds(cls, now):
         if cls._instance.use_aws:
-            cls._instance.log.error("Calling configure_s3_access")
             cls._instance.credentials = configure_s3_access(aws_unsigned=cls._instance.unsigned,
                                                             requester_pays=cls._instance.requester_pays)
-            cls._instance.log.error("Credentials of type %s", cls._instance.credentials.__class__.__name__)
-            if isinstance(cls._instance.credentials, RefreshableCredentials):
-                cls._instance.log.error("%s seconds remaining", str(cls._instance.credentials._seconds_remaining()))
+            cls._instance.last_updated = now
+
 
 def initialise_aws_credentials(log=None):
     cm = CredentialManager(log)
