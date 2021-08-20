@@ -38,7 +38,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
         style_cfg = cast(CFG_DICT, self._raw_cfg)
         self.component_ratio = float(cast(Union[float, str], style_cfg["component_ratio"]))
         if self.component_ratio < 0.0 or self.component_ratio > 1.0:
-            raise ConfigException("Component ration must be a floating point number between 0 and 1")
+            raise ConfigException("Component ratio must be a floating point number between 0 and 1")
 
     def transform_single_date_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
         """
@@ -59,23 +59,20 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                                  coords=d.coords,
                                  dims=d.dims)
             component_band_data: Optional[DataArray] = None
-            if band in self.rgb_components:
-                for c_band, c_intensity in self.rgb_components[band].items():
-                    if callable(c_intensity):
-                        imgband_component_data = cast(DataArray, c_intensity(data[c_band], c_band, band))
-                    else:
-                        imgband_component_data = cast(DataArray, data[c_band] * cast(DataArray, c_intensity))
-                    if component_band_data is not None:
-                        component_band_data += imgband_component_data
-                    else:
-                        component_band_data = imgband_component_data
-                    if band != "alpha":
-                        component_band_data = self.compress_band(band, component_band_data)
-                img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
-                                 + self.component_ratio * cast(DataArray,
-                                                               component_band_data))
-            else:
-                img_band_data = rampdata * 255.0
+            for c_band, c_intensity in self.rgb_components[band].items():
+                if callable(c_intensity):
+                    imgband_component_data = cast(DataArray, c_intensity(data[c_band], c_band, band))
+                else:
+                    imgband_component_data = cast(DataArray, data[c_band] * cast(DataArray, c_intensity))
+                if component_band_data is not None:
+                    component_band_data += imgband_component_data
+                else:
+                    component_band_data = imgband_component_data
+                if band != "alpha":
+                    component_band_data = self.compress_band(band, component_band_data)
+            img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
+                             + self.component_ratio * cast(DataArray,
+                                                           component_band_data))
             imgdata[band] = (d.dims, img_band_data.astype("uint8").data)
 
         return imgdata
