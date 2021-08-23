@@ -11,6 +11,7 @@ import warnings
 from time import CLOCK_REALTIME, clock_gettime
 
 import sentry_sdk
+from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
 from flask import Flask, request
 from flask_babel import Babel
@@ -92,7 +93,6 @@ class CredentialManager:
         self.unsigned = False
         self.requester_pays = False
         self.credentials = None
-        self.last_updated = 0.0
 
         # Boto3/AWS
         if os.environ.get("AWS_DEFAULT_REGION"):
@@ -126,28 +126,24 @@ class CredentialManager:
                     log.info("S3 access configured with signed requests")
             self.unsigned = unsigned
             self.requester_pays = requester_pays
-            self.credentials = self.renew_creds(clock_gettime(CLOCK_REALTIME))
+            self.credentials = self.renew_creds()
 
             if "AWS_S3_ENDPOINT" in os.environ and os.environ["AWS_S3_ENDPOINT"] == "":
                 del os.environ["AWS_S3_ENDPOINT"]
         elif log:
-            self.last_update = 0
             log.warning(
                 "Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
     @classmethod
     def check_cred(cls):
-        if cls._instance.use_aws:
-            now = clock_gettime(CLOCK_REALTIME)
-            if now - cls._instance.last_updated > 3500.0:
-                cls.renew_creds(now)
+        if cls._instance.credentials and isinstance(cls._instance.credentials, RefreshableCredentials):
+            cls.renew_creds()
 
     @classmethod
-    def renew_creds(cls, now):
+    def renew_creds(cls):
         if cls._instance.use_aws:
             cls._instance.credentials = configure_s3_access(aws_unsigned=cls._instance.unsigned,
                                                             requester_pays=cls._instance.requester_pays)
-            cls._instance.last_updated = now
 
 
 def initialise_aws_credentials(log=None):
