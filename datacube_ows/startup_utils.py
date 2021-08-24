@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 import warnings
-from time import CLOCK_REALTIME, clock_gettime
 
 import sentry_sdk
 from botocore.credentials import RefreshableCredentials
