@@ -55,7 +55,7 @@ class ProductBandQuery:
     def __str__(self):
         return f"Query bands {self.bands} from products {self.products}"
 
-    def  __hash__(self):
+    def __hash__(self):
         return hash(self.key)
 
     @classmethod
