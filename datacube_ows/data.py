@@ -180,7 +180,7 @@ class DataStacker:
             queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
         else:
             # Just take needed bands.
-            queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
+            queries = [ProductBandQuery.simple_layer_query(self._product, self.needed_bands())]
 
         if point:
             geom = point
