@@ -37,8 +37,6 @@ services:
       FLASK_APP: /code/datacube_ows/ogc.py
       FLASK_ENV: ${FLASK_ENV}
       PYDEV_DEBUG: "${PYDEV_DEBUG}"
-    ports:
-      - "8000:8000"
     volumes:
       - ${OWS_CFG_FOLDER}:${OWS_CFG_CONTAINER_FOLDER}
       - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
