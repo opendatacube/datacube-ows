@@ -152,6 +152,7 @@ class CredentialManager:
             if cls._instance.log:
                 cls._instance.log.error("Credentials of type %s", cls._instance.credentials.__class__.__name__)
             if isinstance(cls._instance.credentials, RefreshableCredentials):
+                # pylint: disable=protected-access
                 cls._instance.log.error("%s seconds remaining", str(cls._instance.credentials._seconds_remaining()))
 
 def initialise_aws_credentials(log=None):
