@@ -92,6 +92,10 @@ class CredentialManager:
         self.unsigned = False
         self.requester_pays = False
         self.credentials = None
+        self.log = log
+
+        if log:
+            log.error("Initialising CredentialManager")
 
         # Boto3/AWS
         if os.environ.get("AWS_DEFAULT_REGION"):
@@ -135,15 +139,20 @@ class CredentialManager:
 
     @classmethod
     def check_cred(cls):
-        if cls._instance.credentials and isinstance(cls._instance.credentials, RefreshableCredentials):
+        if cls._instance.credentials and isinstance(cls._instance.credentials, RefreshableCredentials) and cls._instance.credentials.refresh_needed():
             cls.renew_creds()
 
     @classmethod
     def renew_creds(cls):
         if cls._instance.use_aws:
+            if cls._instance.log:
+                cls._instance.log.error("Calling configure_s3_access")
             cls._instance.credentials = configure_s3_access(aws_unsigned=cls._instance.unsigned,
                                                             requester_pays=cls._instance.requester_pays)
-
+            if cls._instance.log:
+                cls._instance.log.error("Credentials of type %s", cls._instance.credentials.__class__.__name__)
+            if isinstance(cls._instance.credentials, RefreshableCredentials):
+                cls._instance.log.error("%s seconds remaining", str(cls._instance.credentials._seconds_remaining()))
 
 def initialise_aws_credentials(log=None):
     cm = CredentialManager(log)
