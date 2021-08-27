@@ -402,6 +402,8 @@ def get_map(args):
             n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
             qprof.end_event("count-datasets")
             qprof["n_datasets"] = n_datasets
+            qprof["zoom_level_base"] = params.resources.base_zoom_level
+            qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
             try:
                 params.product.resource_limits.check_wms(n_datasets, params.zf, params.resources)
             except ResourceLimited as e:

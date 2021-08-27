@@ -71,7 +71,7 @@ def initialise_sentry(log=None):
         sentry_sdk.init(
             dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
             environment=SENTRY_ENV_TAG,
-            integrations = [FlaskIntegration()]
+            integrations=[FlaskIntegration()]
         )
         if log:
             log.info("Sentry initialised")
