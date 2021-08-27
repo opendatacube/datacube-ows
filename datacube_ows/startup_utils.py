@@ -139,8 +139,12 @@ class CredentialManager:
 
     @classmethod
     def check_cred(cls):
-        if cls._instance.credentials and isinstance(cls._instance.credentials, RefreshableCredentials) and cls._instance.credentials.refresh_needed():
-            cls.renew_creds()
+        if cls._instance.credentials and isinstance(cls._instance.credentials, RefreshableCredentials):
+            if cls._instance.credentials.refresh_needed():
+                cls.renew_creds()
+            elif cls._instance.log:
+                # pylint: disable=protected-access
+                cls._instance.log.error("Credentials look OK: %s seconds remaining", str(cls._instance.credentials._seconds_remaining()))
 
     @classmethod
     def renew_creds(cls):
