@@ -323,12 +323,15 @@ class DataStacker:
     # Read data for given datasets and measurements per the output_geobox
     @log_call
     def read_data(self, datasets, measurements, geobox, resampling=Resampling.nearest, fuse_func=None):
-        return datacube.Datacube.load_data(
-                datasets,
-                geobox,
-                measurements=measurements,
-                fuse_func=fuse_func)
-
+        try:
+            return datacube.Datacube.load_data(
+                    datasets,
+                    geobox,
+                    measurements=measurements,
+                    fuse_func=fuse_func)
+        except Exception as e:
+            _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
+            raise
     # Read data for single datasets and measurements per the output_geobox
     @log_call
     def read_data_for_single_dataset(self, dataset, measurements, geobox, resampling=Resampling.nearest, fuse_func=None):
@@ -337,11 +340,15 @@ class DataStacker:
             dc_datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
         else:
             dc_datasets = datacube.Datacube.group_datasets(datasets, 'time')
-        return datacube.Datacube.load_data(
-            dc_datasets,
-            geobox,
-            measurements=measurements,
-            fuse_func=fuse_func)
+        try:
+            return datacube.Datacube.load_data(
+                dc_datasets,
+                geobox,
+                measurements=measurements,
+                fuse_func=fuse_func)
+        except Exception as e:
+            _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
+            raise
 
 
 def datasets_in_xarray(xa):
