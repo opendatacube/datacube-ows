@@ -55,7 +55,6 @@ def ogc_impl():
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
-    CredentialManager.check_cred()
 
     if service:
         return ogc_svc_impl(service.lower())
