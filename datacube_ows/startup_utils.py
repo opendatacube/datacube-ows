@@ -129,7 +129,7 @@ class CredentialManager:
                     log.info("S3 access configured with signed requests")
             self.unsigned = unsigned
             self.requester_pays = requester_pays
-            self.credentials = self.renew_creds()
+            self.renew_creds()
 
             if "AWS_S3_ENDPOINT" in os.environ and os.environ["AWS_S3_ENDPOINT"] == "":
                 del os.environ["AWS_S3_ENDPOINT"]
@@ -149,6 +149,7 @@ class CredentialManager:
 
     @classmethod
     def check_cred(cls):
+        # pylint: disable=protected-access
         cls._instance._check_cred()
 
     def renew_creds(self):
