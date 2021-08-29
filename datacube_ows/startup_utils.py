@@ -98,7 +98,7 @@ class CredentialManager:
             log.error("Initialising CredentialManager")
 
         # Boto3/AWS
-        if os.environ.get("AWS_DEFAULT_REGION"):
+        if os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION"):
             if "AWS_NO_SIGN_REQUEST" in os.environ:
                 env_nosign = os.environ["AWS_NO_SIGN_REQUEST"]
                 if env_nosign.lower() in ("y", "t", "yes", "true", "1"):
@@ -137,27 +137,32 @@ class CredentialManager:
             log.warning(
                 "Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
-    @classmethod
-    def check_cred(cls):
-        if cls._instance.credentials and isinstance(cls._instance.credentials, RefreshableCredentials):
-            if cls._instance.credentials.refresh_needed():
-                cls.renew_creds()
-            elif cls._instance.log:
+    def _check_cred(self):
+        if self.credentials and isinstance(self.credentials, RefreshableCredentials):
+            if self.credentials.refresh_needed():
+                self.renew_creds()
+            elif self.log:
                 # pylint: disable=protected-access
-                cls._instance.log.error("Credentials look OK: %s seconds remaining", str(cls._instance.credentials._seconds_remaining()))
+                self.log.error("Credentials look OK: %s seconds remaining", str(self.credentials._seconds_remaining()))
+        elif self.log:
+            self.log.error("Credentials of type %s - NOT RENEWING", self.credentials.__class__.__name__)
 
     @classmethod
-    def renew_creds(cls):
-        if cls._instance.use_aws:
-            if cls._instance.log:
-                cls._instance.log.error("Calling configure_s3_access")
-            cls._instance.credentials = configure_s3_access(aws_unsigned=cls._instance.unsigned,
-                                                            requester_pays=cls._instance.requester_pays)
-            if cls._instance.log:
-                cls._instance.log.error("Credentials of type %s", cls._instance.credentials.__class__.__name__)
-            if isinstance(cls._instance.credentials, RefreshableCredentials):
-                # pylint: disable=protected-access
-                cls._instance.log.error("%s seconds remaining", str(cls._instance.credentials._seconds_remaining()))
+    def check_cred(cls):
+        cls._instance._check_cred()
+
+    def renew_creds(self):
+        if self.use_aws:
+            if self.log:
+                self.log.error("Calling configure_s3_access")
+            self.credentials = configure_s3_access(aws_unsigned=self.unsigned,
+                                                            requester_pays=self.requester_pays)
+            if self.log:
+                self.log.error("Credentials of type %s", self.credentials.__class__.__name__)
+                if isinstance(self.credentials, RefreshableCredentials):
+                    # pylint: disable=protected-access
+                    self.log.error("%s seconds remaining", str(self.credentials._seconds_remaining()))
+
 
 def initialise_aws_credentials(log=None):
     cm = CredentialManager(log)
