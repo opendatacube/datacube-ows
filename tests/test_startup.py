@@ -12,10 +12,12 @@ import pytest
 
 
 def test_fake_creds(monkeypatch):
-    from datacube_ows.startup_utils import initialise_aws_credentials
+    from datacube_ows.startup_utils import initialise_aws_credentials, CredentialManager
+    CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "")
     initialise_aws_credentials(log=log)
+    CredentialManager._instance = None
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
     monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "false")
     monkeypatch.setenv("AWS_REQUEST_PAYER", "requester")
@@ -23,12 +25,14 @@ def test_fake_creds(monkeypatch):
         s3a.return_value = None
         initialise_aws_credentials(log=log)
         assert os.getenv("AWS_NO_SIGN_REQUEST") is None
+        CredentialManager._instance = None
         monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "yes")
         initialise_aws_credentials()
         assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
 
 def test_s3_endpoint_default(monkeypatch):
-    from datacube_ows.startup_utils import initialise_aws_credentials
+    from datacube_ows.startup_utils import initialise_aws_credentials, CredentialManager
+    CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
     monkeypatch.setenv("AWS_S3_ENDPOINT", "")
