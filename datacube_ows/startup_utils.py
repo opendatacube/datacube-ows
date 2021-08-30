@@ -165,6 +165,7 @@ class CredentialManager:
 
 
 def initialise_aws_credentials(log=None):
+    # pylint: disable=protected-access
     if CredentialManager._instance is None:
         cm = CredentialManager(log)
 
