@@ -12,7 +12,7 @@ import pytest
 
 
 def test_fake_creds(monkeypatch):
-    from datacube_ows.startup_utils import initialise_aws_credentials, CredentialManager
+    from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "")
@@ -31,7 +31,7 @@ def test_fake_creds(monkeypatch):
         assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
 
 def test_s3_endpoint_default(monkeypatch):
-    from datacube_ows.startup_utils import initialise_aws_credentials, CredentialManager
+    from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
