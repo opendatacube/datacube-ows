@@ -143,9 +143,9 @@ class CredentialManager:
                 self.renew_creds()
             elif self.log:
                 # pylint: disable=protected-access
-                self.log.error("Credentials look OK: %s seconds remaining", str(self.credentials._seconds_remaining()))
+                self.log.info("Credentials look OK: %s seconds remaining", str(self.credentials._seconds_remaining()))
         elif self.log:
-            self.log.error("Credentials of type %s - NOT RENEWING", self.credentials.__class__.__name__)
+            self.log.debug("Credentials of type %s - NOT RENEWING", self.credentials.__class__.__name__)
 
     @classmethod
     def check_cred(cls):
@@ -155,18 +155,18 @@ class CredentialManager:
     def renew_creds(self):
         if self.use_aws:
             if self.log:
-                self.log.error("Calling configure_s3_access")
+                self.log.info("Establishing/renewing credentials")
             self.credentials = configure_s3_access(aws_unsigned=self.unsigned,
                                                             requester_pays=self.requester_pays)
             if self.log:
-                self.log.error("Credentials of type %s", self.credentials.__class__.__name__)
                 if isinstance(self.credentials, RefreshableCredentials):
                     # pylint: disable=protected-access
-                    self.log.error("%s seconds remaining", str(self.credentials._seconds_remaining()))
+                    self.log.debug("%s seconds remaining", str(self.credentials._seconds_remaining()))
 
 
 def initialise_aws_credentials(log=None):
-    cm = CredentialManager(log)
+    if CredentialManager._instance is None:
+        cm = CredentialManager(log)
 
 
 def parse_config_file(log=None):
