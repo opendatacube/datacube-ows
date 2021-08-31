@@ -575,7 +575,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                     lookup_keys[k] = inherits[k]
                 elif keyval_defaults and k in keyval_defaults:
                     lookup_keys[k] = keyval_defaults[k]
-            if lookup:
+            if lookup and lookup_keys:
                 parent = cls.lookup_impl(global_cfg, keyvals=lookup_keys, subs=keyval_subs)
                 # pylint: disable=protected-access
                 parent_cfg = parent._raw_cfg
