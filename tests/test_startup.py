@@ -53,10 +53,18 @@ def test_initialise_ign_warn():
     initialise_ignorable_warnings()
 
 
-def test_initialise_debugging(monkeypatch):
+def test_initialise_nodebugging(monkeypatch):
     monkeypatch.setenv("PYDEV_DEBUG", "")
     from datacube_ows.startup_utils import initialise_debugging
     initialise_debugging()
+
+
+def test_initialise_debugging(monkeypatch):
+    monkeypatch.setenv("PYDEV_DEBUG", "YES")
+    from datacube_ows.startup_utils import initialise_debugging
+    with patch("pydevd_pycharm.settrace") as set_trc:
+        initialise_debugging()
+        set_trc.assert_called()
 
 
 def test_initialise_sentry(monkeypatch):
@@ -66,8 +74,9 @@ def test_initialise_sentry(monkeypatch):
     initialise_sentry()
     monkeypatch.setenv("SENTRY_KEY", "dummy_key")
     monkeypatch.setenv("SENTRY_PROJECT", "dummy_project")
+    log = MagicMock()
     try:
-        initialise_sentry()
+        initialise_sentry(log)
     except Exception:
         pass
 
