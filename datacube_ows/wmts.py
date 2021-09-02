@@ -184,7 +184,8 @@ def get_tile(args):
 
 @log_call
 def get_feature_info(args):
-    wms_args = wmts_args_to_wms(args)
+    cfg = get_config()
+    wms_args = wmts_args_to_wms(args, cfg)
     wms_args["query_layers"] = wms_args["layers"]
 
     try:

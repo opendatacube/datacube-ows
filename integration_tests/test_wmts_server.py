@@ -6,6 +6,7 @@
 from urllib import request
 
 import pytest
+import requests
 from lxml import etree
 from owslib.util import ServiceException
 from owslib.wmts import WebMapTileService
@@ -125,6 +126,17 @@ def test_wmts_gettile(ows_server):
 
     assert tile
     assert tile.info()["Content-Type"] == "image/png"
+
+def test_wmts_getfeatinfo(ows_server):
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
+                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    resp = requests.get(url)
+    assert resp
+    assert resp.headers["content-type"] == "application/json"
+    js = resp.json()
+    assert js
 
 
 def test_wmts_gettile_wkss(ows_server):
