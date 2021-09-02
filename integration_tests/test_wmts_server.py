@@ -5,8 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from urllib import request
 
-import requests
 import pytest
+import requests
 from lxml import etree
 from owslib.util import ServiceException
 from owslib.wmts import WebMapTileService
