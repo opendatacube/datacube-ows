@@ -91,7 +91,7 @@ def test_wmts_getcap_section(ows_server):
                 section
             ),
             timeout=10,
-            )
+        )
 
         # Confirm success
         assert resp.status_code == 200
