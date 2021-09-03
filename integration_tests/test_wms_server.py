@@ -172,6 +172,40 @@ def test_wms_getmap_requests(ows_server):
     # Confirm success
     assert resp.status_code == 200
 
+def test_wms_getmap_bad_requests(ows_server):
+    resp = requests.get(ows_server.url + '/wms', params={
+        "service": "WMS",
+        "version": "1.3.0",
+        "request": "GetMap",
+        "layers": "ls8_usgs_level1_scene_layer,some_other_layer",
+        "width": "150",
+        "height": "150",
+        "crs": "EPSG:4326",
+        "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+        "format": "image/png",
+        "exceptions": "XML",
+        "time": "2019-07-09"
+    })
+    # Confirm success
+    assert resp.status_code == 400
+    assert "Multi-layer requests not supported" in resp.text
+    resp = requests.get(ows_server.url + '/wms', params={
+        "service": "WMS",
+        "version": "1.3.0",
+        "request": "GetMap",
+        "layers": "not_a_real_layer",
+        "width": "150",
+        "height": "150",
+        "crs": "EPSG:4326",
+        "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+        "format": "image/png",
+        "exceptions": "XML",
+        "time": "2019-07-09"
+    })
+    # Confirm success
+    assert resp.status_code == 400
+    assert "Layer not_a_real_layer is not defined" in resp.text
+
 
 def test_wms_getmap_qprof(ows_server):
     resp = requests.get(ows_server.url + '/wms', params={
