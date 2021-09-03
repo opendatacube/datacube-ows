@@ -94,10 +94,6 @@ def _get_polygon(args, crs):
     return poly
 
 
-def int_trim(val, minval, maxval):
-    return max(min(val, maxval), minval)
-
-
 def zoom_factor(args, crs):
     # Determine the geographic "zoom factor" for the request.
     # (Larger zoom factor means deeper zoom.  Smaller zoom factor means larger area.)
@@ -278,17 +274,6 @@ def parse_wms_time_strings(parts):
     if isinstance(end, relativedelta):
         return start, start + end - a_tiny_bit
     return start, end
-
-
-def bounding_box_to_geom(bbox, bb_crs, target_crs):
-    poly = geometry.polygon([
-        (bbox.left, bbox.top),
-        (bbox.left, bbox.bottom),
-        (bbox.right, bbox.bottom),
-        (bbox.right, bbox.top),
-        (bbox.left, bbox.top),
-    ], bb_crs)
-    return poly.to_crs(target_crs)
 
 
 class GetParameters():
