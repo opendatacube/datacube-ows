@@ -85,7 +85,7 @@ def test_wmts_getcap_section(ows_server):
         "themes",
     ]
     for section in section_options:
-        resp = request.urlopen(
+        resp = requests.get(
             ows_server.url
             + "/wmts?request=GetCapabilities&service=WMTS&version=1.0.0&section={}".format(
                 section
@@ -94,7 +94,14 @@ def test_wmts_getcap_section(ows_server):
         )
 
         # Confirm success
-        assert resp.code == 200
+        assert resp.status_code == 200
+    # invalid section
+    resp = requests.get(
+        ows_server.url
+        + "/wmts?request=GetCapabilities&service=WMTS&version=1.0.0&section=nosebleed",
+        timeout=10,
+    )
+    assert resp.status_code == 400
 
 
 def test_wmts_server(ows_server):
@@ -133,10 +140,67 @@ def test_wmts_getfeatinfo(ows_server):
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
     resp = requests.get(url)
-    assert resp
+    assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
     js = resp.json()
     assert js
+
+
+def test_wmts_gettile_errwrap(ows_server):
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
+                            "TILEROW=5171&TILECOL=7458FORMAT=image%2Fjpg")
+    resp = requests.get(url)
+    assert resp.status_code == 400
+
+
+def test_wmts_getfeatinfo_errwrap(ows_server):
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
+                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fpdf")
+    resp = requests.get(url)
+    assert resp.status_code == 400
+
+
+def test_wmts_arg_errors(ows_server):
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=foo&" +
+                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    resp = requests.get(url)
+    assert resp.status_code == 400
+    assert "Invalid Tile Matrix" in resp.text
+    assert "foo" in resp.text
+
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=666&" +
+                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    resp = requests.get(url)
+    assert resp.status_code == 400
+    assert "Invalid Tile Matrix" in resp.text
+    assert "666" in resp.text
+
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
+                            "TILEROW=foo&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    resp = requests.get(url)
+    assert resp.status_code == 400
+    assert "Invalid Tile Row" in resp.text
+    assert "foo" in resp.text
+
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
+                            "TILEROW=5171&TILECOL=foo&I=102&J=204&INFOFORMAT=application%2Fjson")
+    resp = requests.get(url)
+    assert resp.status_code == 400
+    assert "Invalid Tile Col" in resp.text
+    assert "foo" in resp.text
+
 
 
 def test_wmts_gettile_wkss(ows_server):

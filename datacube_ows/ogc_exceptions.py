@@ -63,6 +63,7 @@ class WMSException(OGCException):
 
 
 class WMTSException(WMSException):
+    INVALID_PARAMETER_VALUE = "InvalidParameterValue"
     version = "1.0.0"
     schema_url = "http://schemas.opengis.net/ows/1.1.0/owsExceptionReport.xsd"
 
