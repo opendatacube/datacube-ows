@@ -142,17 +142,17 @@ def wmts_args_to_wms(args, cfg):
     try:
         tileMatrix = int(tileMatrix)
         if tileMatrix < 0 or tileMatrix >= len(tms.scale_set):
-            raise WMTSException("Invalid Tile Matrix: " + tileMatrix)
+            raise WMTSException(f"Invalid Tile Matrix: {tileMatrix}")
     except ValueError:
-        raise WMTSException("Invalid Tile Matrix: " + tileMatrix)
+        raise WMTSException(f"Invalid Tile Matrix: {tileMatrix}")
     try:
         row = int(row)
     except ValueError:
-        raise WMTSException("Invalid Tile Row: " + row)
+        raise WMTSException(f"Invalid Tile Row {row}")
     try:
         col = int(col)
     except ValueError:
-        raise WMTSException("Invalid Tile Col: " + col)
+        raise WMTSException(f"Invalid Tile Col: {col}")
     wms_args["bbox"] = "%f,%f,%f,%f" % tms.wms_bbox_coords(tileMatrix, row, col)
 
     # GetFeatureInfo only args
