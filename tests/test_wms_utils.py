@@ -37,7 +37,9 @@ def test_parse_wms_time_strings():
 
     for value, result in tests.items():
         assert result == datacube_ows.wms_utils.parse_wms_time_strings(value.split('/'))
-
+    with pytest.raises(WMSException) as e:
+        result = datacube_ows.wms_utils.parse_wms_time_strings(["P1Y", "P1Y"])
+    assert "Could not understand time value" in str(e.value)
 
 def test_parse_wms_time_strings_with_present():
     import datetime as dt
