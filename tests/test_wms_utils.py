@@ -7,6 +7,7 @@ import datetime
 from unittest.mock import MagicMock
 
 import pytest
+from datacube.utils import geometry
 
 import datacube_ows.wms_utils
 from datacube_ows.ogc_exceptions import WMSException
@@ -36,7 +37,9 @@ def test_parse_wms_time_strings():
 
     for value, result in tests.items():
         assert result == datacube_ows.wms_utils.parse_wms_time_strings(value.split('/'))
-
+    with pytest.raises(WMSException) as e:
+        result = datacube_ows.wms_utils.parse_wms_time_strings(["P1Y", "P1Y"])
+    assert "Could not understand time value" in str(e.value)
 
 def test_parse_wms_time_strings_with_present():
     import datetime as dt
@@ -239,3 +242,85 @@ def test_parse_item_2(dummy_product):
     assert "Time dimension value" in str(e.value)
     assert "not valid for this layer" in str(e.value)
 
+
+def test_get_geobox():
+    from datacube_ows.ows_configuration import OWSConfig
+    mock_cfg = MagicMock()
+    OWSConfig._instance = mock_cfg
+    gbox = datacube_ows.wms_utils._get_geobox(
+        args={
+            "width": "256",
+            "height": "256",
+            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+        },
+        src_crs=geometry.CRS("EPSG:4326")
+    )
+    assert gbox.affine
+    assert str(gbox.crs) == "EPSG:4326"
+
+    gbox = datacube_ows.wms_utils._get_geobox(
+        args={
+            "width": "256",
+            "height": "256",
+            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+        },
+        src_crs=geometry.CRS("EPSG:4326"),
+        dst_crs=geometry.CRS("EPSG:3857")
+    )
+    assert gbox.affine
+    assert str(gbox.crs) == "EPSG:3857"
+
+    with pytest.raises(WMSException) as e:
+        gbox = datacube_ows.wms_utils._get_geobox(
+            args={
+                "width": "256",
+                "height": "256",
+                "bbox": "-43.28507087113431,146.18504300790977,-43.28507087113431,146.64289867785524",
+            },
+            src_crs = geometry.CRS("EPSG:4326")
+        )
+    assert "Bounding box must enclose a non-zero area" in str(e.value)
+    OWSConfig._instance = None
+
+
+def test_get_arg():
+    val = datacube_ows.wms_utils.get_arg(
+        {
+            "myval": "Oh Yeah",
+        },
+        "myval", "My Value"
+    )
+    assert val == "Oh Yeah"
+    val = datacube_ows.wms_utils.get_arg(
+        {
+            "myval": "Oh Yeah",
+        },
+        "myval", "My Value", lower=True
+    )
+    assert val == "oh yeah"
+    with pytest.raises(WMSException) as e:
+        val = datacube_ows.wms_utils.get_arg(
+            {
+                "myval": "Oh Yeah",
+            },
+            "meaning_of_life", "Meaning of Life"
+        )
+    assert "No Meaning of Life specified" in str(e.value)
+    val = datacube_ows.wms_utils.get_arg(
+        {
+            "myval": "Oh Yeah",
+        },
+        "myval", "My Value",
+        permitted_values=["Oh Yeah", "No Way", "Meh"],
+    )
+    assert val == "Oh Yeah"
+    with pytest.raises(WMSException) as e:
+        val = datacube_ows.wms_utils.get_arg(
+            {
+                "myval": "Yes and No",
+            },
+            "myval", "My Value",
+            permitted_values=["Oh Yeah", "No Way", "Meh"],
+        )
+    assert "Yes and No" in str(e.value)
+    assert "is not supported" in str(e.value)
