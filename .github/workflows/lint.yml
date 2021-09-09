@@ -32,24 +32,19 @@ env:
   DB_USERNAME: opendatacubeusername
 
 jobs:
-  quality-check:
+  pylint:
     runs-on: ubuntu-latest
-
+    name: Pylint
     steps:
-      - name: Checkout Code
+      - name: checkout git
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      - name: Build Dev OWS image
+      - name: Install requirements.txt and run pylint
         run: |
-          docker build \
-            --target env_builder \
-            --tag    ${ORG}/${IMAGE}:_builder \
-            .
-      - name: Lint dev OWS image
-        run: |
-          docker run ${ORG}/${IMAGE}:_builder /bin/sh -c "./lint-code.sh"
+          pip install -r requirements.txt
+          pip install pylint
+          pylint -j 2 --reports no datacube_ows --disable=C,R,E1136
 
   flake8:
     name: flake8
