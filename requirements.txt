@@ -4,9 +4,7 @@ pytest
 pytest-cov
 pylint==2.4.4
 flask
-flask-cors
 colour
-pandas==1.0.5
 gevent
 python-slugify
 geoalchemy2
@@ -21,7 +19,6 @@ flask-log-request-id
 pytest-localserver
 pytest-mock
 requests
-scipy
 watchdog
 timezonefinderL
 python-slugify
@@ -40,3 +37,13 @@ deepdiff
 s3fs
 fsspec
 regex
+affine
+click
+lxml
+matplotlib
+numpy
+Pillow
+psycopg2
+python-dateutil
+pytz
+xarray
