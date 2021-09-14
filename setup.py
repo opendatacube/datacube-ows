@@ -18,7 +18,7 @@ requirements = [
     'colour',
     'fsspec',
     'lxml',
-    'deepdiff'
+    'deepdiff',
     'matplotlib',
     'numpy',
     'Pillow',
