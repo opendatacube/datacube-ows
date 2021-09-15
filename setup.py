@@ -21,6 +21,7 @@ requirements = [
     'deepdiff',
     'matplotlib',
     'numpy',
+    'scipy',
     'Pillow',
     'Babel',
     'Flask-Babel',

@@ -43,6 +43,7 @@ click
 lxml
 matplotlib
 numpy
+scipy
 Pillow
 psycopg2
 python-dateutil
