@@ -14,14 +14,15 @@ from typing import (Any, Hashable, List, MutableMapping, Optional, Tuple,
 import matplotlib
 import numpy
 from colour import Color
-from datacube_ows.config_utils import CFG_DICT
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
-from datacube_ows.styles.base import StyleDefBase
-from datacube_ows.styles.expression import Expression
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex
 from numpy.typing import NDArray
 from xarray import Dataset
+
+from datacube_ows.config_utils import CFG_DICT
+from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
+from datacube_ows.styles.base import StyleDefBase
+from datacube_ows.styles.expression import Expression
 
 _LOG = logging.getLogger(__name__)
 matplotlib.use('Agg')
