@@ -16,6 +16,7 @@ import numpy
 from colour import Color
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex
+from numpy.typing import NDArray
 from xarray import Dataset
 
 from datacube_ows.config_utils import CFG_DICT
@@ -452,12 +453,12 @@ class ColorRamp:
         self.legend_strip_location = cast(List[float],
                                           cfg.get("strip_location", [0.05, 0.5, 0.9, 0.15]))
 
-    def get_value(self, data: Union[float, "xarray.DataArray"], band: str) -> numpy.typing.NDArray:
+    def get_value(self, data: Union[float, "xarray.DataArray"], band: str) -> NDArray:
         return numpy.interp(data, self.values, self.components[band])
 
-    def get_8bit_value(self, data: "xarray.DataArray", band: str) -> numpy.typing.NDArray:
-        val: numpy.typing.NDArray = self.get_value(data, band)
-        val = cast(numpy.typing.NDArray, val * 255)
+    def get_8bit_value(self, data: "xarray.DataArray", band: str) -> NDArray:
+        val: NDArray = self.get_value(data, band)
+        val = cast(NDArray, val * 255)
         return val.astype("uint8")
 
     def apply(self, data: "xarray.DataArray") -> "xarray.Dataset":
