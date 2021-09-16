@@ -1,5 +1,7 @@
 import pytest
+
 import datacube_ows.protocol_versions
+
 
 class TestException1(Exception):
     pass

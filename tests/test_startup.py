@@ -116,7 +116,7 @@ def test_supported_version():
     assert ver.service == "wts"
     assert ver.service_upper == "WTS"
     assert ver.version == "1.2.3"
-    assert ver.version_parts == ["1", "2", "3"]
+    assert ver.version_parts == [1, 2, 3]
     assert ver.router == "a"
     assert ver.exception_class == "b"
     from datacube_ows.protocol_versions import supported_versions

@@ -17,7 +17,7 @@ class SupportedSvcVersion(object):
         self.service = service.lower()
         self.service_upper = service.upper()
         self.version = version
-        self.version_parts = [ int(i) for i in version.split(".")]
+        self.version_parts = [int(i) for i in version.split(".")]
         assert len(self.version_parts) == 3
         self.router = router
         self.exception_class = exception_class
@@ -42,7 +42,7 @@ class SupportedSvc(object):
     def negotiated_version(self, request_version):
         if not request_version:
             return self.versions[-1]
-        rv_parts = [ int(i) for i in request_version.split(".")]
+        rv_parts = [int(i) for i in request_version.split(".")]
         while len(rv_parts) < 3:
             rv_parts.append(0)
         for v in reversed(self.versions):
