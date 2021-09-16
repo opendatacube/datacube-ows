@@ -29,7 +29,7 @@ WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
 @log_call
 def handle_wcs2(nocase_args):
-    operation = request.args.get("request", "").upper()
+    operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS2Exception("No operation specified", locator="Request parameter")
     elif operation == "GETCAPABILITIES":
@@ -280,7 +280,6 @@ def desc_coverages(args):
             "Cache-Control": "no-cache, max-age=0"
         })
     )
-
 
 
 @log_call
