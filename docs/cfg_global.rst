@@ -34,6 +34,16 @@ when either extracting metadata from config or creating or updating translation 
 
 The default is None/null, meaning no message file is used.
 
+Note: the `message_file` configuration entry is not required (except as an intermediate step)
+if `translations_directory` is set.  The order of metadata resolution is:
+
+1) If Internationalisation is active via the `translations_directory` config entry, take the
+   value from the *.mo file corresponding to the best available language match for the request
+   headers.
+2) If a translation for the metadata entry is not available, or if internationalisation is not
+   active, get the value from the `message_file` if it is configured.
+3) Otherwise, fallback to the value in the main body of the config.
+
 Message Domain (message_domain)
 +++++++++++++++++++++++++++++++
 
@@ -47,6 +57,8 @@ The path to the directory containing translation subdirectories.  Traditionally 
 Defaults to None, meaning no translation support.
 
 Required for internationalisation.
+
+
 
 Supported Languages (supported_languages)
 +++++++++++++++++++++++++++++++++++++++++
