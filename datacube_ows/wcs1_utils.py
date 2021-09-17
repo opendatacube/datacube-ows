@@ -292,9 +292,10 @@ class WCS1GetCoverageRequest():
         scale_aff = Affine.scale(xscale, yscale)
         self.affine = trans_aff * scale_aff
         self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.request_crs)
+        self.ows_stats = bool(args.get("ows_stats"))
 
 
-def get_coverage_data(req):
+def get_coverage_data(req, qprof):
     # pylint: disable=too-many-locals, protected-access
     with cube() as dc:
         if not dc:
@@ -303,9 +304,13 @@ def get_coverage_data(req):
                               req.geobox,
                               req.times,
                               bands=req.bands)
+        qprof.start_event("count-datasets")
         n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+        qprof.end_event("count-datasets")
+        qprof["n_datasets"] = n_datasets
         if n_datasets == 0:
             # Return an empty coverage file with full metadata?
+            qprof.start_event("build_empty_dataset")
             cfg = get_config()
             x_range = (req.minx, req.maxx)
             y_range = (req.miny, req.maxy)
@@ -345,6 +350,8 @@ def get_coverage_data(req):
                     yname: yvals,
                 }
             ).astype("int16")
+            qprof.start_event("end_empty_dataset")
+            qprof["write_action"] = "Write Empty"
 
             return n_datasets, data
 
@@ -354,13 +361,20 @@ def get_coverage_data(req):
             raise WCS1Exception(
                 f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
                 + "Please reduce the bounds of your request and try again.")
+        qprof.start_event("fetch-datasets")
         datasets = stacker.datasets(index=dc.index)
+        qprof.end_event("fetch-datasets")
+        if qprof.active:
+            qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
+        qprof.start_event("load-data")
         output = stacker.data(datasets, skip_corrections=True)
+        qprof.end_event("load-data")
 
         # Clean extent flag band from output
         for k, v in output.data_vars.items():
             if k not in req.bands:
                 output = output.drop_vars([k])
+        qprof["write_action"] = "Write Data"
         return n_datasets, output
 
 
