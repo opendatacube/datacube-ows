@@ -45,11 +45,11 @@ def uniform_crs(cfg, crs):
     return crs
 
 
-def get_coverage_data(request):
+def get_coverage_data(request, qprof):
     # pylint: disable=too-many-locals, protected-access
 
     cfg = get_config()
-
+    qprof.start_event("setup")
     layer_name = request.coverage_id
     layer = cfg.product_index.get(layer_name)
     if not layer or not layer.wcs:
@@ -244,7 +244,11 @@ def get_coverage_data(request):
                               geobox,
                               times,
                               bands=bands)
+        qprof.end_event("setup")
+        qprof.start_event("count-datasets")
         n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
+        qprof.end_event("count-datasets")
+        qprof["n_datasets"] = n_datasets
 
         if n_datasets == 0:
             raise WCS2Exception("The requested spatio-temporal subsets return no data.",
@@ -258,13 +262,19 @@ def get_coverage_data(request):
                 f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
                 + "Please reduce the bounds of your request and try again.")
 
+        qprof.start_event("fetch-datasets")
         datasets = stacker.datasets(dc.index)
+        qprof.end_event("fetch-datasets")
+        if qprof.active:
+            qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
         if fmt.multi_time and len(times) > 1:
             # Group by solar day
             group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
             datasets = dc.group_datasets(datasets, group_by)
 
+        qprof.start_event("load-data")
         output = stacker.data(datasets, skip_corrections=True)
+        qprof.end_event("load-data")
 
         # Clean extent flag band from output
         raw_bands = [layer.band_idx.locale_band(b) for b in bands]

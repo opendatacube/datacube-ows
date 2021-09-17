@@ -16,9 +16,11 @@ from ows.wcs.v20.decoders import (kvp_decode_describe_coverage,
                                   kvp_decode_get_coverage)
 from ows.wcs.v21 import encoders as encoders_v21
 
+from datacube_ows.data import json_response
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ogc_utils import get_service_base_url, resp_headers
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
 from datacube_ows.wcs2_utils import get_coverage_data
 
@@ -37,7 +39,7 @@ def handle_wcs2(nocase_args):
     elif operation == "DESCRIBECOVERAGE":
         return desc_coverages(nocase_args)
     elif operation == "GETCOVERAGE":
-        return get_coverage(request.args.lists())
+        return get_coverage(request.args.lists(), bool(nocase_args.get("ows_stats")))
     else:
         raise WCS2Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
 
@@ -283,10 +285,12 @@ def desc_coverages(args):
 
 
 @log_call
-def get_coverage(args):
+def get_coverage(args, ows_stats=False):
     request_obj = kvp_decode_get_coverage(args)
-
-    output, headers = get_coverage_data(request_obj)
+    qprof = QueryProfiler(ows_stats)
+    output, headers = get_coverage_data(request_obj, qprof)
+    if ows_stats:
+        return json_response(qprof.profile())
     return (
         output,
         200,

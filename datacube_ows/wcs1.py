@@ -120,9 +120,7 @@ def get_coverage(args):
     qprof = QueryProfiler(req.ows_stats)
     n_datasets, data = get_coverage_data(req, qprof)
     if req.ows_stats:
-        return (
-            json_response(qprof.profile())
-        )
+        return json_response(qprof.profile())
     headers = {
         "Content-Type": req.format.mime,
         'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format.extension)
