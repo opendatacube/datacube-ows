@@ -27,8 +27,10 @@ Features
 --------
 
 * Leverages the power of the Open Data Cube, including support for COGs on S3.
-* Supports WMS and WMTS.
-* Experimental support for WCS (1.0, 2.0, 2.1).
+* Fully supports WMS v1.3.0. Partial support (GetMap requests only) for v1.1.1.
+* Supports WMTS 1.0.0
+* Supports WCS versions 1.0.0, 2.0.0 and 2.1.0.
+* Richly featured styling engine for serving data visualisations via WMS and WMTS.
 
 Community
 ---------
@@ -60,22 +62,34 @@ Linting
     autopep8  -r  --diff . --select F401,E201,E202,E203,E502,E241,E225,E306,E231,E226,E123,F811
 
 
+Configuration and Environment
+-----------------------------
+
+The configuration file format for OWS is `fully documented here <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
+
+And example configuration file `datacube_ows/ows_cfg_example.py` is also provided, but
+may not be as up-to-date as the formal documentation.
+
+Environment variables that directly or indirectly affect the running of OWS
+are `documented here<https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
+
 Docker-Compose
 --------------
 
 setup env by export
 ^^^^^^^^^^^^^^^^^^^
-We use docker-compose to make development and testing of the containerised ows images easier
+
+We use docker-compose to make development and testing of the containerised ows images easier.
+
+Set up your environment by creating a `.env` file (see below).
 
 To start OWS with flask connected to a pre-existing database on your local machine: ::
 
-  export DB_USERNAME=username
-  export DB_PASSWORD=password
-  export DB_DATABASE=opendatacube
-  export DB_HOSTNAME=localhost
-  export DB_PORT=5432
-  OWS_CFG_FILE=/path/to/ows_cfg.py
   docker-compose up
+
+The first time you run docker-compose, you will need to add the `--build` option: ::
+
+  docker-compose up --build
 
 To start ows with a pre-indexed database: ::
 
@@ -93,19 +107,14 @@ The default environment variables (in .env file) can be overriden by setting loc
   export FLASK_DEV=production
   docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up --build
 
-  # Change location of default config file (good for testing config changes on a local db)
-  OWS_CFG_FILE=/path/to/ows_cfg.py
-  docker-compose -f docker-compose.yaml
-
 setup env with .env file
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: console
 
     cp .env_simple .env # for a single ows config file setup
     cp .env_ows_root .env # for multi-file ows config with ows_root_cfg.py
     docker-compose up
-
 
 Docker
 ------
@@ -135,42 +144,39 @@ To run the standard Docker image, create a docker volume containing your ows con
 
 The image is based on the standard ODC container.
 
-Manual installation
--------------------
+Installation
+------------
 
-At the time of writing, pre-built pip-installed configurations also work fairly seemlessly:
+The following instructions are for installing on a clean Linux system with established ODC environment.
 
-The folllowing instructions are for installing on a clean Linux system with established ODC environment.
+Refer to the ODC documentation for installing the Open Datacube and dependent libraries, and
+initialising an ODC database.
 
 * Create a
-  new python 3.6 or 3.8 virtualenv and run pip install against the supplied
-  requirements.txt (The --pre flag solves some problems in 3.6 but causes
-  problems in 3.8.)::
+  new python 3.8 or 3.9 virtualenv and install the latest release using pip install:
 
-    pip install [--pre] -r requirements.txt
+    pip install datacube-ows
 
 * Run ::
-    python update_ranges.py --role *datacube_owner_role* --schema
+    datacube-ows-update --role *ows_runner_role* --schema
 
   to create schema, tables and materialised views used by datacube-ows.
 
 * Create a configuration file for your service, and all data products you wish to publish in
-  it.  See `datacube_ows/ows_cfg_example.py` for examples and documentation of the configuration
-  format.  The simplest approach is to make a copy of `ows_cfg_example.py` called `ows_cfg.py`
-  and edit as required.  But for production deployments other approaches such as importing
-  config as json are possible::
+  it.
+  `Detailed documentation of the configuration format can be found here.<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 
-    PYTHONPATH=.
-    DATACUBE_OWS_CFG=ows_cfg_filename.ows_cfg
-    AWS_NO_SIGN_REQUEST=yes
-    AWS_DEFAULT_REGION=ap-southeast-2
+* Set environment variables as required.
+  Environment variables that directly or indirectly affect the running of OWS
+  are `documented here<https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
 
-* Run ``python update_ranges.py`` (in the Datacube virtual environment).
+
+* Run ``datacube-ows-update`` (in the Datacube virtual environment).
 
 * When additional datasets are added to the datacube, the following steps will need to be run::
 
-    python update_ranges.py --views --blocking
-    python update_ranges.py
+    datacube-ows-update --views
+    datacube-ows-update
 
 * If you are accessing data on AWS S3 and running `datacube_ows` on Ubuntu you may encounter errors with ``GetMap``
   similar to:
@@ -220,8 +226,8 @@ Local Postgres database
       | xargs -n1 -I {} datacube dataset add s3://deafrica-data/{}
 
 5. Write an ows config file to identify the products you want available in ows, see example here: https://github.com/opendatacube/datacube-ows/blob/master/datacube_ows/ows_cfg_example.py
-6. Run `python3 https://github.com/opendatacube/datacube-ows/blob/master/update_ranges.py --schema` to create ows specific tables
-7. Run update_ranges.py to generate ows extents `python3 update_ranges.py PRODUCT`
+6. Run `datacube-ows-update --schema --role <db_read_role>` to create ows specific tables
+7. Run `datacube-ows-update` to generate ows extents.
 
 Apache2 mod_wsgi
 ----------------
@@ -229,7 +235,7 @@ Apache2 mod_wsgi
 Getting things working with Apache2 mod_wsgi is not trivial and probably not the best
 approach in most circumstances, but it may make sense for you.
 
-If you use the ``pip install --pre`` approach described above, your OS's
+If you use the ``pip install`` approach described above, your OS's
 pre-packaged python3 apache2-mod-wsgi package should suffice.
 
 * Activate the wsgi module:

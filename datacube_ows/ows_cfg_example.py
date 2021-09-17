@@ -8,9 +8,11 @@
 
 # Example configuration file for datacube_ows.
 #
-# For detailed and up to date formal documentation see:
+# The file was originally the only documentation for the configuration file format.
+# Detailed and up-to-date formal documentation is now available and this this file
+# is no longer actively maintained and may contain errors or obsolete elements.
 #
-#   https://datacube-ows.readthedocs.io/en/latest/configuration.html
+# https://datacube-ows.readthedocs.io/en/latest/configuration.html
 
 # THIS EXAMPLE FILE
 #
@@ -1426,7 +1428,7 @@ ows_cfg = {
         "allowed_urls": ["http://localhost/odc_ows",
                           "https://localhost/odc_ows",
                           "https://alternateurl.domain.org/odc_ows",
-                          "http://127.0.0.1:5000/"],
+                          "http://127.0.0.1:8000/"],
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",
