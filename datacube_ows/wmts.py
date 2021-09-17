@@ -161,6 +161,10 @@ def wmts_args_to_wms(args, cfg):
         wms_args["j"] = args.get("j", "")
         wms_args["info_format"] = args.get("infoformat", "")
 
+
+    if args.get("ows_stats"):
+        wms_args["ows_stats"] = "y"
+
     return wms_args
 
 
