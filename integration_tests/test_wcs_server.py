@@ -561,7 +561,7 @@ def test_wcs1_style(ows_server):
             "resx": "0.01",
             "resy": "0.01",
         },
-        )
+    )
     assert r.status_code == 200
     r = requests.get(
         ows_server.url + "/wcs",
@@ -578,7 +578,7 @@ def test_wcs1_style(ows_server):
             "resx": "0.01",
             "resy": "0.01",
         },
-        )
+    )
     assert r.status_code == 200
 
 def test_wcs1_ows_stats(ows_server):
@@ -1142,7 +1142,7 @@ def test_wcs21_getcoverage(ows_server):
             "scalesize": "x(400),y(400)",
             "subset": subsets,
         },
-        )
+    )
     assert r.status_code == 200
 
 def test_wcs21_ows_stats(ows_server):
