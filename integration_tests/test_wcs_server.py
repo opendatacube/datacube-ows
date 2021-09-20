@@ -561,7 +561,7 @@ def test_wcs1_style(ows_server):
             "resx": "0.01",
             "resy": "0.01",
         },
-    )
+        )
     assert r.status_code == 200
     r = requests.get(
         ows_server.url + "/wcs",
@@ -578,8 +578,37 @@ def test_wcs1_style(ows_server):
             "resx": "0.01",
             "resy": "0.01",
         },
+        )
+    assert r.status_code == 200
+
+def test_wcs1_ows_stats(ows_server):
+    wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
+    contents = list(wcs.contents)
+    test_layer_name = contents[0]
+    cfg = get_config(refresh=True)
+    layer = cfg.product_index[test_layer_name]
+    extents = ODCExtent(layer).wcs1_args(
+        space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
+    )
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "GetCoverage",
+            "service": "WCS",
+            "version": "1.0.0",
+            "coverage": test_layer_name,
+            "crs": "EPSG:4326",
+            "format": "GeoTIFF",
+            "bbox": extents["bbox"],
+            "time": extents["times"],
+            "styles": "simple_rgb",
+            "resx": "0.01",
+            "resy": "0.01",
+            "ows_stats": "y"
+        },
     )
     assert r.status_code == 200
+    assert r.json()["profile"]
 
 
 def test_wcs1_getcov_bad_meas(ows_server):
@@ -1113,8 +1142,38 @@ def test_wcs21_getcoverage(ows_server):
             "scalesize": "x(400),y(400)",
             "subset": subsets,
         },
+        )
+    assert r.status_code == 200
+
+def test_wcs21_ows_stats(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(
+        ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, crs="EPSG:4326"
+    )
+
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "GetCoverage",
+            "coverageid": layer.name,
+            "version": "2.1.0",
+            "service": "WCS",
+            "format": "image/geotiff",
+            "subsettingcrs": "EPSG:4326",
+            "scalesize": "x(400),y(400)",
+            "subset": subsets,
+            "ows_stats": "y"
+        },
     )
     assert r.status_code == 200
+    assert r.json()["profile"]
 
 
 def test_wcs2_getcov_badcov(ows_server):
