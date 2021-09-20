@@ -31,7 +31,7 @@ requirements = [
     'pytz',
     'rasterio',
     'regex',
-    's3fs',
+    's3fs==2021.07.0',
     'timezonefinderL',
     'python-slugify',
     'geoalchemy2',
