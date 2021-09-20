@@ -202,6 +202,15 @@ def test_wmts_arg_errors(ows_server):
     assert "foo" in resp.text
 
 
+def test_wmts_ows_stats(ows_server):
+    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
+                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
+                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson&ows_stats=y")
+    resp = requests.get(url)
+    json = resp.json()
+    assert json["profile"]
+
 
 def test_wmts_gettile_wkss(ows_server):
     wmts = WebMapTileService(url=ows_server.url + "/wmts")
