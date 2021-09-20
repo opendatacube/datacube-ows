@@ -35,7 +35,7 @@ pytest-helpers-namespace
 prometheus-flask-exporter
 setuptools_scm
 deepdiff
-s3fs
+s3fs==2021.07.0
 fsspec
 regex
 affine
