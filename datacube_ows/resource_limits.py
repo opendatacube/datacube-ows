@@ -237,6 +237,6 @@ class OWSResourceManagementRules(OWSConfigEntry):
         """
         limits_exceeded: List[str] = []
         if self.max_datasets_wcs > 0 and n_datasets > self.max_datasets_wcs:
-            limits_exceeded.append("too many datasets")
+            limits_exceeded.append(f"too many datasets ({n_datasets}: maximum={self.max_datasets_wcs}")
         if limits_exceeded:
             raise ResourceLimited(limits_exceeded)
