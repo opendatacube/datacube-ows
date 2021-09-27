@@ -4,7 +4,11 @@ ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     SHELL=bash
 
-RUN apt-get update && apt-get install -y --no-install-recommends\
+# install packages
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends\
+    git \
     curl \
     gnupg \
     # For Psycopg2
@@ -14,14 +18,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
     python3-pip \
     && apt-get autoclean && \
     apt-get autoremove && \
-    rm -rf /var/lib/{apt,dpkg,cache,log}
+    rm -rf /var/lib/{apt,dpkg,cache,log} && \
+    # make folders
+    mkdir -p /conf && mkdir -p /code
 
-RUN mkdir -p /conf
 COPY requirements.txt constraints.txt /conf/
-RUN pip install -r /conf/requirements.txt -c /conf/constraints.txt
+RUN pip install --no-cache-dir -r /conf/requirements.txt -c /conf/constraints.txt
 
 # Copy source code and install it
-RUN mkdir -p /code
 WORKDIR /code
 COPY . /code
 
