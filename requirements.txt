@@ -42,10 +42,11 @@ affine
 click
 lxml
 matplotlib
-numpy==1.21.1
+numpy==1.21.2
 scipy
 Pillow
 psycopg2
 python-dateutil
 pytz
 xarray
+setuptools

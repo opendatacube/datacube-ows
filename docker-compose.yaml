@@ -12,6 +12,8 @@ services:
         - opendatacube/ows:latest
     image: opendatacube/ows:latest
     network_mode: host
+    ports:
+      - 8000:8000
     environment:
       # Defaults are defined in .env file
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
