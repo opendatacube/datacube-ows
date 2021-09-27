@@ -6,7 +6,6 @@ ENV LC_ALL=C.UTF-8 \
 
 # install packages
 RUN apt-get update && \
-    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends\
     git \
     curl \
@@ -18,7 +17,7 @@ RUN apt-get update && \
     python3-pip \
     && apt-get autoclean && \
     apt-get autoremove && \
-    rm -rf /var/lib/{apt,dpkg,cache,log} && \
+    rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/log/dpkg.log && \
     # make folders
     mkdir -p /conf && mkdir -p /code
 
