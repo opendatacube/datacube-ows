@@ -48,10 +48,7 @@ jobs:
       # the production image
       - name: Build dev OWS image (stage 1 - unit test builder)
         run: |
-          docker build \
-            --target env_builder \
-            --tag    ${ORG}/${IMAGE}:_builder \
-            .
+          docker build .
 
       - name: Test and lint dev OWS image (stage 1 - unit test)
         run: |
