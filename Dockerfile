@@ -1,18 +1,24 @@
-ARG V_BASE=3.3.0
-ARG py_env_path=/env
+FROM osgeo/gdal:ubuntu-small-3.3.1
 
-# Build python libs in env_builder
-FROM opendatacube/geobase-builder:${V_BASE} as env_builder
+ENV LC_ALL=C.UTF-8 \
+    DEBIAN_FRONTEND=noninteractive \
+    SHELL=bash
 
-# REVISIT: Does this do anything, given we've already declared it above?
-ARG py_env_path
+RUN apt-get update && apt-get install -y --no-install-recommends\
+    curl \
+    gnupg \
+    # For Psycopg2
+    libpq-dev libpcap-dev python3-dev \
+    gcc \
+    postgresql-client-12 \
+    python3-pip \
+    && apt-get autoclean && \
+    apt-get autoremove && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}
 
-COPY requirements.txt /
-COPY constraints.txt /
-RUN /usr/local/bin/env-build-tool new /requirements.txt /constraints.txt ${py_env_path}
-
-ENV PATH=${py_env_path}/bin:$PATH \
-    PYTHONPATH=${py_env_path}
+RUN mkdir -p /conf
+COPY requirements.txt constraints.txt /conf/
+RUN pip install -r /conf/requirements.txt -c /conf/constraints.txt
 
 # Copy source code and install it
 RUN mkdir -p /code
@@ -29,27 +35,6 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
     pip install --no-cache-dir pydevd-pycharm~=211.7142.13 \
 ;fi
 
-# Runner image starts here
-FROM opendatacube/geobase-runner:${V_BASE}
-
-
-ENV LC_ALL=C.UTF-8 \
-    DEBIAN_FRONTEND=noninteractive \
-    SHELL=bash
-
-RUN apt-get update && apt-get install -y --no-install-recommends\
-    curl \
-    gnupg \
-    postgresql-client-12 \
-    && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/log/dpkg.log
-
-# Configure user
-RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
-WORKDIR "/home/ows"
-
-# Copy python libs, add them to the path, configure GDAL
-ARG py_env_path
-COPY --from=env_builder ${py_env_path} ${py_env_path}
 ENV PATH=${py_env_path}/bin:$PATH \
     PYTHONPATH=${py_env_path} \
     GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
