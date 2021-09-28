@@ -28,7 +28,8 @@ WORKDIR /code
 COPY . /code
 
 RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
-    && pip install --no-cache-dir -r requirements.txt -c constraints.txt
+    && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
+    && pip install --no-cache-dir .
 
 
 # Configure user
