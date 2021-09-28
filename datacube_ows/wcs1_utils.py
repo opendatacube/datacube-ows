@@ -191,7 +191,7 @@ class WCS1GetCoverageRequest():
                     if b not in style.flag_bands:
                         self.bands.add(b)
             else:
-                self.bands = self.product.bands.band_labels()
+                self.bands = self.product.band_idx.band_labels()
         else:
             self.bands = self.product.band_idx.band_labels()
 
