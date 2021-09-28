@@ -408,7 +408,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         if self.global_cfg.wcs:
             try:
-                self.parse_wcs(cfg.get("wcs"))
+                self.parse_wcs(cfg.get("wcs", {}))
             except KeyError as e:
                 raise ConfigException(f"Missing required config item {e} in wcs section for layer {self.name}")
 
@@ -584,8 +584,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("grid_high_y")
         self.declare_unready("grids")
         # Band management
-        self.wcs_raw_default_bands = cfg["default_bands"]
-        self.declare_unready("wcs_default_bands")
+        if cfg.get("default_bands"):
+            _LOG.warning(
+                "wcs section contains a 'default_bands' list.  WCS default_bands list is no longer supported. "
+                "Functionally, the default behaviour is now to return all available bands (as mandated by "
+                "the WCS2.x spec). "
+            )
 
         # Native format
         if "native_format" in cfg:
@@ -723,8 +727,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                             (bbox["top"] - bbox["bottom"]) / self.grid_high_y
                         )
                     }
-            # Band management
-            self.wcs_default_bands = [self.band_idx.band(b) for b in self.wcs_raw_default_bands]
 
     def parse_product_names(self, cfg):
         raise NotImplementedError()

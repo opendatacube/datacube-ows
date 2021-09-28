@@ -560,22 +560,9 @@ def test_no_default_style(minimal_layer_cfg, minimal_global_cfg):
     assert lyr.default_style.name == 'band1'
 
 
-def test_no_wcs_default_bands(minimal_layer_cfg, minimal_global_cfg):
-    minimal_global_cfg.wcs = True
-    minimal_layer_cfg["wcs"] = {}
-    with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
-                              global_cfg=minimal_global_cfg)
-    assert "Missing required" in str(excinfo.value)
-    assert "wcs" in str(excinfo.value)
-    assert "default_bands" in str(excinfo.value)
-    assert "a_layer" in str(excinfo.value)
-
-
 def test_invalid_native_format(minimal_layer_cfg, minimal_global_cfg):
     minimal_global_cfg.wcs = True
     minimal_layer_cfg["wcs"] = {
-        "default_bands": ["band1", "band2"],
         "native_format": "geosplunge"
     }
     with pytest.raises(ConfigException) as excinfo:
@@ -770,7 +757,6 @@ def test_invalid_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc,
 
 def test_native_crs_mismatch(minimal_global_cfg, minimal_layer_cfg, minimal_dc):
     minimal_layer_cfg["native_crs"] = "EPSG:1234"
-    minimal_layer_cfg["default_bands"] = ["band1", "band2", "band3"]
     minimal_layer_cfg["product_name"] = "foo_nativecrs"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
@@ -789,13 +775,11 @@ def test_native_crs_mismatch(minimal_global_cfg, minimal_layer_cfg, minimal_dc):
 # NOTE: retire when native res/crs in wcs section support removed.
 def test_native_crs_res_wcs_mismatch(minimal_global_cfg, minimal_layer_cfg, minimal_dc):
     minimal_layer_cfg["native_crs"] = "EPSG:4326"
-    minimal_layer_cfg["default_bands"] = ["band1", "band2", "band3"]
     minimal_layer_cfg["product_name"] = "foo_nativecrs"
     minimal_global_cfg.wcs = True
     minimal_layer_cfg["wcs"] = {
         "native_crs": "EPSG:1234",
         "native_resolution": [0.123, 0.123],
-        "default_bands": ["band1", "band2", "band3"],
     }
 
     lyr = parse_ows_layer(minimal_layer_cfg,
