@@ -193,7 +193,7 @@ class WCS1GetCoverageRequest():
             else:
                 self.bands = self.product.bands.band_labels()
         else:
-            self.bands = self.product.bands.band_labels()
+            self.bands = self.product.band_idx.band_labels()
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":

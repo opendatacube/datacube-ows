@@ -212,7 +212,7 @@ def get_coverage_data(request, qprof):
                     end = band_labels.index(range_subset.end)
                     bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
         else:
-            bands = layer.bands.band_labels()
+            bands = band_labels
 
         #
         # Format handling
