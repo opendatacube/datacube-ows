@@ -9,19 +9,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
     git \
     curl \
     gnupg \
+    python-setuptools \
     # For Psycopg2
     libpq-dev libpcap-dev python3-dev \
     gcc \
     postgresql-client-12 \
     python3-pip \
 && apt-get clean \
-&& rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log \
-# make folders
-&& mkdir -p /code
+&& rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
 
+ENV PATH=${py_env_path}/bin:$PATH \
+    PYTHONPATH=${py_env_path}
+
+# make folders
+RUN mkdir -p /code
 # Copy source code and install it
-COPY . /code
 WORKDIR /code
+COPY . /code
 
 RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir -r requirements.txt -c constraints.txt
