@@ -708,7 +708,6 @@ ows_cfg = {
                         "apply_solar_corrections": True,
                     },
                     "wcs": {
-                        "default_bands": ["red", "green", "blue"],
                     },
                     "styling": {
                         "default_style": "simple_rgb",
@@ -777,7 +776,6 @@ For service status information, see https://status.dea.ga.gov.au
                         },
                     ],
                     "wcs": {
-                        "default_bands": ["BS", "PV", "NPV"],
                     },
                     "styling": {
                         "default_style": "simple_fc",
@@ -808,7 +806,6 @@ For service status information, see https://status.dea.ga.gov.au
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
                     },
                     "wcs": {
-                        "default_bands": ["water"],
                     },
                     "styling": {
                         "default_style": "observations",
@@ -846,7 +843,6 @@ For service status information, see https://status.dea.ga.gov.au
                         },
                     ],
                     "wcs": {
-                        "default_bands": ["BS", "PV", "NPV"],
                     },
                     "styling": {
                         "default_style": "simple_fc",
@@ -886,7 +882,6 @@ For service status information, see https://status.dea.ga.gov.au
                         },
                     ],
                     "wcs": {
-                        "default_bands": ["BS", "PV", "NPV"],
                     },
                     "styling": {
                         "default_style": "simple_fc",
@@ -927,7 +922,6 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                         },
                     ],
                     "wcs": {
-                        "default_bands": ["BS", "PV", "NPV"],
                     },
                     "styling": {
                         "default_style": "simple_fc",

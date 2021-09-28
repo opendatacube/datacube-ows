@@ -955,33 +955,6 @@ the flag band is read from a separate product.
 If true, OWS assumes that flag product has no time dimension
 (i.e. the same flags apply to all times).
 
------------------------
-Layer WCS Section (wcs)
------------------------
-
-This section is optional, but if the WCS service is
-active and this section is omitted, then this layer
-will not appear as a coverage in WCS (but will still
-appear as a layer in WMS/WMTS).
-
-E.g.
-
-::
-
-    "wcs": {
-        "default_bands": ["red", "green", "blue"]
-    }
-
-Default WCS Bands (default_bands)
-+++++++++++++++++++++++++++++++++
-
-List the bands included in response to a WCS request that does not
-explicitly specify a band list.
-
-Must be provided if WCS is active, and must contain at least one band.
-Bands must be declared in the layer's `bands dictionary <#bands-dictionary-bands>`_
-and may use native band names or aliases.
-
 ---------------------------------
 Identifiers Section (identifiers)
 ---------------------------------

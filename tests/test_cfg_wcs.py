@@ -15,7 +15,6 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
     minimal_global_cfg.wcs = True
     minimal_layer_cfg["native_crs"] = "EPSG:4326"
     minimal_layer_cfg["wcs"] = {
-        "default_bands": ["band1", "band2", "band3"],
     }
     minimal_layer_cfg["product_name"] = "foo_nativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
