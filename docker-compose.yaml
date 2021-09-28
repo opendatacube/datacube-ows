@@ -8,7 +8,7 @@ services:
       args:
         PYDEV_DEBUG: "${PYDEV_DEBUG}"
       cache_from:
-        - opendatacube/ows:latest
+        - opendatacube/ows:_builder
     # image: opendatacube/ows:latest
     network_mode: host
     ports:
