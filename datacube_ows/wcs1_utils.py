@@ -191,9 +191,9 @@ class WCS1GetCoverageRequest():
                     if b not in style.flag_bands:
                         self.bands.add(b)
             else:
-                self.bands = self.product.wcs_default_bands
+                self.bands = self.product.band_idx.band_labels()
         else:
-            self.bands = self.product.wcs_default_bands
+            self.bands = self.product.band_idx.band_labels()
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
