@@ -121,6 +121,12 @@ def minimal_dc():
         "band3": float("nan"),
         "band4": "nan",
     }
+    nb.dtype = {
+        "band1": "int16",
+        "band2": "int16",
+        "band3": "float32",
+        "band4": "float32",
+    }
     lmo = MagicMock()
     lmo.loc = {
         "foo_nativeres": nb,
