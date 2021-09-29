@@ -398,7 +398,7 @@ def test_resource_limit_zoomfill(minimal_layer_cfg, minimal_global_cfg):
 def test_resource_limit_checks(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["resource_limits"] = {
         "wms": {"min_zoom_factor": 300.0, "max_datasets": 8},
-        "wcs": {"max_datasets": 8},
+        "wcs": {"max_datasets": 8, "max_image_size": 100*100*32},
     }
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
@@ -406,14 +406,17 @@ def test_resource_limit_checks(minimal_layer_cfg, minimal_global_cfg):
     mock_req_scale.load_adjusted_zoom_level = 4.8
     with pytest.raises(ResourceLimited) as e:
         lyr.resource_limits.check_wms(n_datasets=9, zoom_factor=400.0, request_scale=mock_req_scale)
+    assert "too much data" not in str(e.value)
     assert "too many datasets" in str(e.value)
     assert "zoomed out too far" not in str(e.value)
     assert "too much projected resource requirements" not in str(e.value)
     with pytest.raises(ResourceLimited) as e:
-        lyr.resource_limits.check_wcs(n_datasets=9)
+        lyr.resource_limits.check_wcs(n_datasets=9, width=640, height=480, pixel_size=64)
+    assert "too much data" in str(e.value)
     assert "too many datasets" in str(e.value)
     assert "zoomed out too far" not in str(e.value)
     assert "too much projected resource requirements" not in str(e.value)
+    assert e.value.wcs_hard
     minimal_layer_cfg["resource_limits"]["wms"]["min_zoom_level"] = 5
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
