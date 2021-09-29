@@ -42,7 +42,7 @@ affine
 click
 lxml
 matplotlib
-numpy==1.21.2
+numpy>=1.21.1
 scipy
 Pillow
 psycopg2
