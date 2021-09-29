@@ -398,7 +398,7 @@ def test_resource_limit_zoomfill(minimal_layer_cfg, minimal_global_cfg):
 def test_resource_limit_checks(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["resource_limits"] = {
         "wms": {"min_zoom_factor": 300.0, "max_datasets": 8},
-        "wcs": {"max_datasets": 8, "max_image_size": 100*100*32},
+        "wcs": {"max_datasets": 8, "max_image_size": 100 * 100 * 32},
     }
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
