@@ -14,6 +14,8 @@ services:
     restart: always
   # Overwrite ows so it can talk to docker db
   ows:
+    ports:
+      - 8000:8000
     network_mode: bridge
     links:
       - postgres:postgres
