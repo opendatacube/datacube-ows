@@ -256,11 +256,16 @@ def get_coverage_data(request, qprof):
                             http_response=404)
 
         try:
-            layer.resource_limits.check_wcs(n_datasets)
+            layer.resource_limits.check_wcs(n_datasets,
+                                                  geobox.height, geobox.width,
+                                                  sum(layer.band_idx.dtype_size(b) for b in bands))
         except ResourceLimited as e:
-            raise WCS2Exception(
-                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                + "Please reduce the bounds of your request and try again.")
+            if e.wcs_hard or layer.low_res_product_names is None:
+                raise WCS2Exception(
+                    f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                    + "Please reduce the bounds of your request and try again.")
+            stacker.resource_limited = True
+            qprof["resource_limited"] = str(e)
 
         qprof.start_event("fetch-datasets")
         datasets = stacker.datasets(dc.index)

@@ -176,8 +176,9 @@ class CacheControlRules(OWSConfigEntry):
 
 
 class ResourceLimited(Exception):
-    def __init__(self, reasons: List[str]):
+    def __init__(self, reasons: List[str], wcs_hard=False):
         self.reasons = reasons
+        self.wcs_hard = wcs_hard
         super().__init__(f"Resource limit(s) exceeded: {','.join(reasons)}")
 
 
@@ -203,6 +204,7 @@ class OWSResourceManagementRules(OWSConfigEntry):
         self.min_zoom_lvl = cast(Optional[Union[int, float]], wms_cfg.get("min_zoom_level"))
         self.max_datasets_wms = cast(int, wms_cfg.get("max_datasets", 0))
         self.max_datasets_wcs = cast(int, wcs_cfg.get("max_datasets", 0))
+        self.max_image_size_wcs = cast(int, wcs_cfg.get("max_image_size", 0))
         self.wms_cache_rules = CacheControlRules(wms_cfg.get("dataset_cache_rules"), context, self.max_datasets_wms)
         self.wcs_cache_rules = CacheControlRules(wcs_cfg.get("dataset_cache_rules"), context, self.max_datasets_wcs)
 
@@ -228,7 +230,10 @@ class OWSResourceManagementRules(OWSConfigEntry):
         if limits_exceeded:
             raise ResourceLimited(limits_exceeded)
 
-    def check_wcs(self, n_datasets: int) -> None:
+    def check_wcs(self, n_datasets: int,
+                  height: int, width: int,
+                  pixel_size: int
+                 ) -> None:
         """
         Check whether a WCS requests exceeds the configured resource limits.
 
@@ -236,7 +241,12 @@ class OWSResourceManagementRules(OWSConfigEntry):
         :raises: ResourceLimited if any limits are exceeded.
         """
         limits_exceeded: List[str] = []
+        hard = False
         if self.max_datasets_wcs > 0 and n_datasets > self.max_datasets_wcs:
             limits_exceeded.append(f"too many datasets ({n_datasets}: maximum={self.max_datasets_wcs}")
+        pixel_count = height * width
+        if self.max_image_size_wcs > 0 and pixel_count * pixel_size > self.max_image_size_wcs:
+            limits_exceeded.append(f"too much data for a single request - try selecting fewer pixels or less bands")
+            hard = True
         if limits_exceeded:
-            raise ResourceLimited(limits_exceeded)
+            raise ResourceLimited(limits_exceeded, wcs_hard=hard)

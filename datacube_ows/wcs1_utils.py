@@ -356,11 +356,16 @@ def get_coverage_data(req, qprof):
             return n_datasets, data
 
         try:
-            req.product.resource_limits.check_wcs(n_datasets)
+            req.product.resource_limits.check_wcs(n_datasets,
+                                                  req.geobox.height, req.geobox.width,
+                                                  sum(req.product.band_idx.dtype_size(b) for b in req.bands))
         except ResourceLimited as e:
-            raise WCS1Exception(
-                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                + "Please reduce the bounds of your request and try again.")
+            if e.wcs_hard or req.product.low_res_product_names is None:
+                raise WCS1Exception(
+                    f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                    + "Please reduce the bounds of your request and try again.")
+            stacker.resource_limited = True
+            qprof["resource_limited"] = str(e)
         qprof.start_event("fetch-datasets")
         datasets = stacker.datasets(index=dc.index)
         qprof.end_event("fetch-datasets")
