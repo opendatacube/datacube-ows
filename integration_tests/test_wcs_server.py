@@ -740,7 +740,7 @@ def test_wcs1_getcoverage_bigimage(ows_server):
                 len(test_layer.timepositions) // 2
             ].strip(),
         )
-    assert "too much data for a single request" in str(e)
+    assert "too much data for a single request" in str(e.value)
 
 
 def test_wcs1_getcoverage_geotiff_respcrs(ows_server):
