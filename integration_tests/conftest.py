@@ -75,6 +75,19 @@ def disjoint_bbox(bbox):
         lat_min - 0.2 * lat_range,
     )
 
+@pytest.helpers.register
+def representative_bbox(bbox):
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    return (
+        lon_min + 0.40 * lon_range,
+        lat_min + 0.45 * lat_range,
+        lon_min + 0.41 * lon_range,
+        lat_min + 0.46 * lat_range,
+    )
+
 
 @pytest.fixture
 def product_name():

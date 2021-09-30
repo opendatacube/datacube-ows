@@ -488,6 +488,7 @@ E.g.
         },
         "wcs": {
             "max_datasets": 18,
+            "max_image_size": 2000 * 2000 * 3 * 2,
             "dataset_cache_rules": [
                 {
                     "min_datasets": 5,
@@ -575,9 +576,9 @@ Reducing the zoom level by one corresponds to 4 times the resource requirements,
 * A request that accesses data with 100m x 100m resolution would *decrease* the effective minimum zoom
   by two.
 
-++++++++++++
-max_datasets
-++++++++++++
+++++++++++++++++++
+max_datasets (WMS)
+++++++++++++++++++
 
 The simplest WMS/WMTS resource limit is ``max_datasets``.  It is an integer that
 specifies the maximum number of Open Datacube datasets that can be read
@@ -702,15 +703,53 @@ Cache-control header is returned according to the number of datasets hit:
 Resource Limits (wcs)
 +++++++++++++++++++++
 
-When a WCS GetCoverage request exceeds a configured resource
-limit setting, an error is returned to the user.
+The considerations for WCS resource limits are different to WMS/WMTS because
+WCS is not tiled and the output file properties (e.g. number of pixels, number of bands,
+type of bands) therefore vary widely between requests in ways that WMS/WMTS requests
+do not.
 
-The only resource limit available to WCS currently is max_datasets,
-which works the same as in wms, `described above <#max_datasets>`_.
+When a WCS GetCoverage request exceeds a configured resource
+limit setting, either an error is returned to the user, or the
+request is satisfied from the
+`low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+depending on which limit(s) have been exceeded, and whether a low-resolution
+summary product has been defined. See the documentation for each limit below for details.
 
 The `dataset_cache_rules <#dataset-cache-rules>`_ element is also
 supported for WCS.  It behaves for WCS GetCoverage requests as
 documented above for WMS GetMap and WMTS GetTile requests.
+
+++++++++++++
+max_datasets
+++++++++++++
+
+``max_datasets`` is an integer that
+specifies the maximum number of Open Datacube datasets that can be read
+from during the request.  A value of zero is interpreted to mean "no maximum
+dataset limit" and is the default.
+
+If a request exceeds this limit, the data is read from the low resolution
+summary product. If no low resolution summary product is defined, an error
+is returned.
+
+++++++++++++++++
+max_image_size
+++++++++++++++++
+
+``max_image_size`` is optional and defaults to no limit. If set, ``max_image_size``
+specifies a maximum size in bytes for the uncompressed image raster.
+
+E.g. a 4096x2048 pixel image, containing three ``int16`` type data-bands
+corresponds to an image size of:
+
+::
+
+    pixel_count = 4096 * 2048 = 8388608
+    pixel_bytes = 3 * 2 = 6
+    image_size = pixel_count * pixel_bytes = 50331648
+
+If the image requested exceeds the ``max_image_size``, an error is always returned.
+
 
 -------------------------------------------
 Image Processing Section (image_processing)

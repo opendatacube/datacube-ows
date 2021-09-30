@@ -308,6 +308,19 @@ def get_coverage_data(req, qprof):
         n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
         qprof.end_event("count-datasets")
         qprof["n_datasets"] = n_datasets
+
+        try:
+            req.product.resource_limits.check_wcs(n_datasets,
+                                                  req.geobox.height, req.geobox.width,
+                                                  sum(req.product.band_idx.dtype_size(b) for b in req.bands),
+                                                  len(req.times))
+        except ResourceLimited as e:
+            if e.wcs_hard or req.product.low_res_product_names is None:
+                raise WCS1Exception(
+                    f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                    + "Please reduce the bounds of your request and try again.")
+            stacker.resource_limited = True
+            qprof["resource_limited"] = str(e)
         if n_datasets == 0:
             # Return an empty coverage file with full metadata?
             qprof.start_event("build_empty_dataset")
@@ -355,12 +368,6 @@ def get_coverage_data(req, qprof):
 
             return n_datasets, data
 
-        try:
-            req.product.resource_limits.check_wcs(n_datasets)
-        except ResourceLimited as e:
-            raise WCS1Exception(
-                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                + "Please reduce the bounds of your request and try again.")
         qprof.start_event("fetch-datasets")
         datasets = stacker.datasets(index=dc.index)
         qprof.end_event("fetch-datasets")

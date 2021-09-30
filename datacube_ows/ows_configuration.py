@@ -19,6 +19,7 @@ import os
 from collections.abc import Mapping
 from importlib import import_module
 
+import numpy
 from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po
 from datacube.utils import geometry
@@ -110,10 +111,12 @@ class BandIndex(OWSMetadataConfig):
             self.add_aliases(self.band_cfg)
         # pylint: disable=attribute-defined-outside-init
         self._nodata_vals = {}
+        self._dtypes = {}
         for b, aliases in self.band_cfg.items():
             if b not in self.native_bands.index:
                 raise ConfigException(f"Unknown band: {b} in layer {self.product.name}")
             self._nodata_vals[b] = self.native_bands['nodata'][b]
+            self._dtypes[b] = numpy.dtype(self.native_bands.dtype[b])
             if isinstance(self._nodata_vals[b], str) and self._nodata_vals[b].lower() == "nan":
                 self._nodata_vals[b] = float("nan")
         super().make_ready(dc, *args, **kwargs)
@@ -140,6 +143,13 @@ class BandIndex(OWSMetadataConfig):
     def nodata_val(self, name_alias):
         name = self.band(name_alias)
         return self._nodata_vals[name]
+
+    def dtype_val(self, name_alias):
+        name = self.band(name_alias)
+        return self._dtypes[name]
+
+    def dtype_size(self, name_alias):
+        return self.dtype_val(name_alias).itemsize
 
     def band_labels(self):
         return [self.band_label(b) for b in self.band_cfg]
