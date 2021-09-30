@@ -715,11 +715,35 @@ def test_wcs1_getcoverage_geotiff(ows_server):
         height=300,
         timeSequence=test_layer.timepositions[
             len(test_layer.timepositions) // 2
-        ].strip(),
+            ].strip(),
     )
 
     assert output
     assert output.info()["Content-Type"] == "image/geotiff"
+
+
+def test_wcs1_getcoverage_bigimage(ows_server):
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
+
+    test_layer = wcs.contents["ls8_usgs_level1_scene_layer_clone"]
+
+    bbox = test_layer.boundingBoxWGS84
+
+    try:
+        output = wcs.getCoverage(
+            identifier="ls8_usgs_level1_scene_layer_clone",
+            format="GeoTIFF",
+            bbox=pytest.helpers.disjoint_bbox(bbox),
+            crs="EPSG:4326",
+            width=2400,
+            height=2300,
+            timeSequence=test_layer.timepositions[
+                len(test_layer.timepositions) // 2
+            ].strip(),
+        )
+    except ServiceException as e:
+        assert "too much data for a single request" in str(e)
 
 
 def test_wcs1_getcoverage_geotiff_respcrs(ows_server):
@@ -745,7 +769,6 @@ def test_wcs1_getcoverage_geotiff_respcrs(ows_server):
             len(test_layer.timepositions) // 2
         ].strip(),
     )
-
     assert output
     assert output.info()["Content-Type"] == "image/geotiff"
 
@@ -979,6 +1002,31 @@ def test_wcs20_getcoverage_geotiff(ows_server):
     )
     assert output
     assert output.info()["Content-Type"] == "image/geotiff"
+
+
+def test_wcs20_getcoverage_geotiff_bigimage(ows_server):
+    cfg = get_config(refresh=True)
+    # Use owslib to confirm that we have a somewhat compliant WCS service
+    wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
+
+    # Ensure that we have at least some layers available
+    contents = list(wcs.contents)
+    layer = cfg.product_index[contents[0]]
+    assert layer.ready and not layer.hide
+    extent = ODCExtent(layer)
+    subsets = extent.wcs2_subsets(
+        ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST, "EPSG:4326"
+    )
+    try:
+        output = wcs.getCoverage(
+            identifier=[layer.name],
+            format="image/geotiff",
+            subsets=subsets,
+            subsettingcrs="EPSG:4326",
+            scalesize="x(400),y(300)",
+        )
+    except ServiceException as e:
+        assert "too much data for a single request" in str(e)
 
 
 def test_wcs20_getcoverage_netcdf(ows_server):
