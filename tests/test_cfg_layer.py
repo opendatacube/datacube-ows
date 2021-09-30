@@ -411,7 +411,7 @@ def test_resource_limit_checks(minimal_layer_cfg, minimal_global_cfg):
     assert "zoomed out too far" not in str(e.value)
     assert "too much projected resource requirements" not in str(e.value)
     with pytest.raises(ResourceLimited) as e:
-        lyr.resource_limits.check_wcs(n_datasets=9, width=640, height=480, pixel_size=64)
+        lyr.resource_limits.check_wcs(n_datasets=9, width=640, height=480, pixel_size=64, n_dates=1)
     assert "too much data" in str(e.value)
     assert "too many datasets" in str(e.value)
     assert "zoomed out too far" not in str(e.value)
