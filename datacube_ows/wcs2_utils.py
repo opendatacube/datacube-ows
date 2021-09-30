@@ -250,11 +250,6 @@ def get_coverage_data(request, qprof):
         qprof.end_event("count-datasets")
         qprof["n_datasets"] = n_datasets
 
-        if n_datasets == 0:
-            raise WCS2Exception("The requested spatio-temporal subsets return no data.",
-                            WCS2Exception.INVALID_SUBSETTING,
-                            http_response=404)
-
         try:
             layer.resource_limits.check_wcs(n_datasets,
                                                   geobox.height, geobox.width,
@@ -266,6 +261,11 @@ def get_coverage_data(request, qprof):
                     + "Please reduce the bounds of your request and try again.")
             stacker.resource_limited = True
             qprof["resource_limited"] = str(e)
+
+        if n_datasets == 0:
+            raise WCS2Exception("The requested spatio-temporal subsets return no data.",
+                            WCS2Exception.INVALID_SUBSETTING,
+                            http_response=404)
 
         qprof.start_event("fetch-datasets")
         datasets = stacker.datasets(dc.index)
