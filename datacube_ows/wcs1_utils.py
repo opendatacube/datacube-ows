@@ -312,7 +312,8 @@ def get_coverage_data(req, qprof):
         try:
             req.product.resource_limits.check_wcs(n_datasets,
                                                   req.geobox.height, req.geobox.width,
-                                                  sum(req.product.band_idx.dtype_size(b) for b in req.bands))
+                                                  sum(req.product.band_idx.dtype_size(b) for b in req.bands),
+                                                  len(req.times))
         except ResourceLimited as e:
             if e.wcs_hard or req.product.low_res_product_names is None:
                 raise WCS1Exception(

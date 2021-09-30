@@ -253,7 +253,9 @@ def get_coverage_data(request, qprof):
         try:
             layer.resource_limits.check_wcs(n_datasets,
                                                   geobox.height, geobox.width,
-                                                  sum(layer.band_idx.dtype_size(b) for b in bands))
+                                                  sum(layer.band_idx.dtype_size(b) for b in bands),
+                                                  len(times)
+                                           )
         except ResourceLimited as e:
             if e.wcs_hard or layer.low_res_product_names is None:
                 raise WCS2Exception(

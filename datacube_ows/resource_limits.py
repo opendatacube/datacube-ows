@@ -232,7 +232,8 @@ class OWSResourceManagementRules(OWSConfigEntry):
 
     def check_wcs(self, n_datasets: int,
                   height: int, width: int,
-                  pixel_size: int
+                  pixel_size: int,
+                  n_dates: int
                  ) -> None:
         """
         Check whether a WCS requests exceeds the configured resource limits.
@@ -245,7 +246,7 @@ class OWSResourceManagementRules(OWSConfigEntry):
         if self.max_datasets_wcs > 0 and n_datasets > self.max_datasets_wcs:
             limits_exceeded.append(f"too many datasets ({n_datasets}: maximum={self.max_datasets_wcs}")
         pixel_count = height * width
-        if self.max_image_size_wcs > 0 and pixel_count * pixel_size > self.max_image_size_wcs:
+        if self.max_image_size_wcs > 0 and n_dates * pixel_count * pixel_size > self.max_image_size_wcs:
             limits_exceeded.append(f"too much data for a single request - try selecting fewer pixels or less bands")
             hard = True
         if limits_exceeded:
