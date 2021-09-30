@@ -715,7 +715,7 @@ def test_wcs1_getcoverage_geotiff(ows_server):
         height=300,
         timeSequence=test_layer.timepositions[
             len(test_layer.timepositions) // 2
-            ].strip(),
+        ].strip(),
     )
 
     assert output
