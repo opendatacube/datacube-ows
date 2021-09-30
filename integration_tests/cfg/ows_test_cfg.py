@@ -731,7 +731,7 @@ ows_cfg = {
                     "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
                     "name": "ls8_usgs_level1_scene_layer_clone",
                     "low_res_product_name": "ls8_usgs_level1_scene",
-                    "resource_limit": {
+                    "resource_limits": {
                         "wcs": {
                             "max_image_size": 2000 * 2000 * 3 * 2,
                         }

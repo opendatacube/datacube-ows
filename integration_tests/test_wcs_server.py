@@ -1004,13 +1004,13 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
-    layer = wcs.contents["ls8_usgs_level1_scene_layer_clone"]
+    layer = cfg.product_index.get("ls8_usgs_level1_scene_layer_clone")
     assert layer.ready and not layer.hide
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
-        ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST, "EPSG:4326"
+        ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.LAST, "EPSG:4326"
     )
-    with pytest.expects(ServiceException) as e:
+    with pytest.raises(ServiceException) as e:
         output = wcs.getCoverage(
             identifier=[layer.name],
             format="image/geotiff",
@@ -1018,7 +1018,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server):
             subsettingcrs="EPSG:4326",
             scalesize="x(3000),y(3000)",
         )
-    assert "too much data for a single request" in str(e)
+    assert "too much data for a single request" in str(e.value)
 
 
 def test_wcs20_getcoverage_netcdf(ows_server):
