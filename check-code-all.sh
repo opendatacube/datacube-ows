@@ -8,9 +8,9 @@ sh ./docker/ows/wait-for-db
 # Users can specify extra folders as arguments.
 
 # On top of base sql sample, index two more product for multiproducts
-datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/wofs/wofs_albers.yaml
-datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/fractional-cover/product-definition.yaml
-datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/fc/ls7_fc_albers.yaml
+datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/inland_water/wofs/wofs_albers.yaml
+datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/land_and_vegetation/fractional-cover/product-definition.yaml
+datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/land_and_vegetation/fc/ls7_fc_albers.yaml
 # datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/fc/ls8_fc_albers.yaml
 
 datacube dataset add https://data.dea.ga.gov.au/WOfS/WOFLs/v2.1.5/combined/x_6/y_-29/2004/05/03/LS_WATER_3577_6_-29_20040503003241500000_v1526732475.yaml
