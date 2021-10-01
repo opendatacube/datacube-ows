@@ -226,9 +226,8 @@ def colour_ramp_legend(bytesio: io.BytesIO,
         cmap=custom_map,
         orientation="horizontal")
 
-    if ticks:
-        color_bar.set_ticks(list(ticks.keys()))
-        color_bar.set_ticklabels(list(ticks.values()))
+    color_bar.set_ticks(list(ticks.keys()))
+    color_bar.set_ticklabels(list(ticks.values()))
 
     title = colour_ramp.legend_title if colour_ramp.legend_title else default_title
     if colour_ramp.legend_units:
@@ -402,31 +401,41 @@ class ColorRamp:
 
     def parse_legend_ticks(self, cfg: CFG_DICT) -> None:
         # Ticks
+        ticks_handled = False
         if "ticks_every" in cfg:
             if "tick_count" in cfg:
                 raise ConfigException("Cannot use tick count and ticks_every in the same legend")
             if "ticks" in cfg:
                 raise ConfigException("Cannot use ticks and ticks_every in the same legend")
+            print("Processing ticks_every")
             delta = Decimal(cast(Union[int, float, str], cfg["ticks_every"]))
             tickval = self.legend_begin
             while tickval < self.legend_end:
                 self.ticks.append(tickval)
                 tickval += delta
             self.ticks.append(tickval)
+            ticks_handled = True
         if "ticks" in cfg:
             if "tick_count" in cfg:
                 raise ConfigException("Cannot use tick count and ticks in the same legend")
+            print("Processing explicit ticks")
             self.ticks = [Decimal(t) for t in cast(List[Union[str, int, float]], cfg["ticks"])]
-        if not self.ticks:
+            ticks_handled = True
+        if not ticks_handled:
+            print("Processing tick_count")
             count = int(cast(Union[str, int], cfg.get("tick_count", 1)))
             if count < 0:
                 raise ConfigException("tick_count cannot be negative")
-            delta = self.legend_end - self.legend_begin
-            dcount = Decimal(count)
+            elif count == 0:
+                self.ticks.append(self.legend_begin)
+            else:
+                delta = self.legend_end - self.legend_begin
+                dcount = Decimal(count)
 
-            for i in range(0, count + 1):
-                tickval = self.legend_begin + (Decimal(i) / dcount) * delta
-                self.ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
+                for i in range(0, count + 1):
+                    tickval = self.legend_begin + (Decimal(i) / dcount) * delta
+                    self.ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
+        print("ticks: ", self.ticks)
 
     def parse_legend_tick_labels(self, cfg: CFG_DICT) -> None:
         labels = cast(MutableMapping[str, MutableMapping[str, str]], cfg.get("tick_labels", {}))

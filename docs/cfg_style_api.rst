@@ -231,15 +231,15 @@ PIL Image object will display the image in JupyterHub, Notebooks, etc.
 
     # Generate a normal (single date) legend:
 
-    image = generate_ows_legend_style(cfg)
+    image = generate_ows_legend_style_cfg(cfg)
     # or
-    image = generate_ows_legend_style_cfg(style)
+    image = generate_ows_legend_style(style)
 
-    # Generate a multi-date legend:
+    # Generate a multi-date legend (and display if in JupyterHub/notebook type environment):
 
-    image = generate_ows_legend_style(cfg, 2)
+    image = generate_ows_legend_style_cfg(cfg, 2)
     # or
-    image = generate_ows_legend_style_cfg(style, ["yesterday", "today"])
+    image = generate_ows_legend_style(style, ["yesterday", "today"])
 
     # Write out as PNG:
     with open("filename.png", "wb") as fp:
