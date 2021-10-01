@@ -407,7 +407,6 @@ class ColorRamp:
                 raise ConfigException("Cannot use tick count and ticks_every in the same legend")
             if "ticks" in cfg:
                 raise ConfigException("Cannot use ticks and ticks_every in the same legend")
-            print("Processing ticks_every")
             delta = Decimal(cast(Union[int, float, str], cfg["ticks_every"]))
             tickval = self.legend_begin
             while tickval < self.legend_end:
@@ -418,11 +417,9 @@ class ColorRamp:
         if "ticks" in cfg:
             if "tick_count" in cfg:
                 raise ConfigException("Cannot use tick count and ticks in the same legend")
-            print("Processing explicit ticks")
             self.ticks = [Decimal(t) for t in cast(List[Union[str, int, float]], cfg["ticks"])]
             ticks_handled = True
         if not ticks_handled:
-            print("Processing tick_count")
             count = int(cast(Union[str, int], cfg.get("tick_count", 1)))
             if count < 0:
                 raise ConfigException("tick_count cannot be negative")
@@ -435,7 +432,6 @@ class ColorRamp:
                 for i in range(0, count + 1):
                     tickval = self.legend_begin + (Decimal(i) / dcount) * delta
                     self.ticks.append(tickval.quantize(self.rounder, rounding=ROUND_HALF_UP))
-        print("ticks: ", self.ticks)
 
     def parse_legend_tick_labels(self, cfg: CFG_DICT) -> None:
         labels = cast(MutableMapping[str, MutableMapping[str, str]], cfg.get("tick_labels", {}))
