@@ -113,7 +113,7 @@ There are three ways to define the colour map:
 
 2. Use a pre-defined MatPlotLib colour ramp.
 
-   To use a MatPlotLib colouor ramp, use the `mpl_ramp <#mpl-ramp>`__
+   To use a MatPlotLib colour ramp, use the `mpl_ramp <#mpl-ramp>`__
    and `range <#ramp-scale-range>`__ style config entries.
 
 3. Define your own colour ramp.
@@ -516,7 +516,7 @@ can be specified with the optional `rcParams` element, defaulting to {}, meaning
 the MatPlotLib defaults for all options.
 
 For a full list of possible options refer to
-`the MatPlotLib documentation <https://matplotlib.org/3.2.2/tutorials/introductory/customizing.html>`__
+`the MatPlotLib documentation <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__
 
 E.g.::
 
