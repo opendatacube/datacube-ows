@@ -16,7 +16,7 @@ Auto-legend-generation for Colour Ramp Styles
 +++++++++++++++++++++++++++++++++++++++++++++
 
 The first type of style that supports automatic legend-generation is
-`colour ramp styles<https://datacube-ows.readthedocs.io/en/latest/style_howto_color_ramp.html>`_.
+`colour ramp styles <https://datacube-ows.readthedocs.io/en/latest/style_howto_color_ramp.html>`_.
 
 For these examples, we will use a simple colour ramp style using a Matplotlib named colour ramp:
 
@@ -94,6 +94,7 @@ must have a unique title that would normally go here.  E.g.
 You can also set a title for the legend separate to the style title.  E.g.
 
 ::
+
     "legend": {
         "title": "Bi-directional NDVI",
     }
@@ -424,6 +425,9 @@ E.g.:
 
 .. image:: https://user-images.githubusercontent.com/4548530/135939082-3fbf736e-3cf8-4049-b59d-d9f8c563ce57.png
     :width: 400
+
+This legend image is too small to fit all the needed data legibly.  This can be fixed by enlarging
+the image:
 
 ::
 
