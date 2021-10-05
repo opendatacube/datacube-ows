@@ -272,11 +272,95 @@ Note that a layer or style can only inherit by name from a parent layer or style
 been parsed by the config parser - i.e. it must appear earlier in the definition of the layers section.
 This restriction can be avoided using direct inheritance.
 
+Behaviour of Lists
+++++++++++++++++++
+
 Care should be taken of the special handling of lists in configuration:
 
 1. If the child entry is an empty list, this will replace the parent entry, resulting in an empty list.
 2. If the child entry is a non-empty list, the values in the child list are appended to the parent entry, resulting
    in a merged list.
+
+This can result in unexpected behaviour.  E.g. the following example does NOT replace
+the color_ramp, but rather appends the "all new" color ramp on to the end of
+the "original" color ramp - which will almost certainly result in a ramp-order error.
+
+::
+
+    original_style = {
+        "name": "original",
+        "title": "Original Style",
+        "abstract": "The original. Accept no substitute!",
+        ... # Stuff that is shared
+        "color_ramp": [ ... ], # Original Color Ramp
+    }
+
+    inherited_style = {
+        "inherits": original_style,
+        "name": "all_new",
+        "title": "All New Style",
+        "abstract": "Just like Original Style, but with a hip new twist!",
+        "color_ramp": [ ... ], # All New Color Ramp
+    }
+
+To replace the color ramp you can either inherit through an intermediate style
+that explicitly sets the colour ramp to an empty list, or inherit both styles from
+a common abstract base style that has an empty list for the color ramp.  Eg.
+
+::
+
+    original_style = {
+        "name": "original",
+        "title": "Original Style",
+        "abstract": "The original. Accept no substitute!",
+        ... # Stuff that is shared
+        "color_ramp": [ ... ], # Original Color Ramp
+    }
+
+    intermediate_style = {
+        "inherits": original_style,
+        "abstract": "I am an ugly hack. I make people feel dirty just by existing.",
+        "color_ramp": [], # Empty Color Ramp
+    }
+
+    inherited_style = {
+        "inherits": intermediate_style,
+        "name": "all_new",
+        "title": "All New Style",
+        "abstract": "Just like Original Style, but with a hip new twist!",
+        "color_ramp": [ ... ], # All New Color Ramp
+    }
+
+Or:
+
+::
+
+    abstract_base_style = {
+        "abstract": """
+            I am an elegant abstract base class.
+            I am beloved by all for my transcendent utility and beauty.
+        """,
+        ... # Stuff that is shared
+        "color_ramp": [], # Empty Color Ramp
+    }
+
+    original_style = {
+        "inherits": abstract_base_style,
+        "name": "original",
+        "title": "Original Style",
+        "abstract": "The original. Accept no substitute!",
+        "color_ramp": [ ... ], # Original Color Ramp
+    }
+
+    inherited_style = {
+        "inherits": abstract_base_style,
+        "name": "all_new",
+        "title": "All New Style",
+        "abstract": "Just like Original Style, but with a hip new twist!",
+        "color_ramp": [ ... ], # All New Color Ramp
+    }
+
+
 
 Metadata Separation and Internationalisation
 --------------------------------------------
