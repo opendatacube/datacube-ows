@@ -304,7 +304,8 @@ class DataStacker:
                             extent_mask = f(d, band)
                         else:
                             extent_mask &= f(d, band)
-                dm = d.where(extent_mask)
+                if extent_mask is not None:
+                    dm = d.where(extent_mask)
                 if self._product.solar_correction and not skip_corrections:
                     for band in non_flag_bands:
                         dm[band] = solar_correct_data(dm[band], ds)
@@ -479,6 +480,8 @@ def get_map(args):
                                         td_ext_mask &= f(td, band)
                     if params.product.data_manual_merge:
                         td_ext_mask = xarray.DataArray(td_ext_mask)
+                    if td_ext_mask is None:
+                        td_ext_mask = ~numpy.zeros(td.shape, dtype=numpy.bool_)
                     td_masks.append(td_ext_mask)
                 extent_mask = xarray.concat(td_masks, dim=data.time)
                 qprof.end_event("build-masks")
