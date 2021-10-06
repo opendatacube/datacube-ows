@@ -497,7 +497,7 @@ def get_map(args):
                     raise EmptyResponse()
                 else:
                     qprof["write_action"] = "Write Data"
-                    if mdh and  mdh.preserve_user_date_order:
+                    if mdh and mdh.preserve_user_date_order:
                         sorter = user_date_sorter(data.time.values,
                                               params.geobox.geographic_extent,
                                               params.times)

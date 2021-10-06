@@ -95,7 +95,7 @@ class CredentialManager:
         self.log = log
 
         if log:
-            log.error("Initialising CredentialManager")
+            log.debug("Initialising CredentialManager")
 
         # Boto3/AWS
         if os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION"):

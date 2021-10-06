@@ -32,7 +32,7 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        OWSMetadataConfig, cfg_expand,
                                        get_file_loc, import_python_obj,
                                        load_json_obj)
-from datacube_ows.cube_pool import cube, get_cube, release_cube
+from datacube_ows.cube_pool import ODCInitException, cube, get_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
                                     local_solar_date_range, month_date_range,
@@ -778,9 +778,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 _LOG.warning("get_ranges failed for layer %s: %s", self.name, str(a))
             self.hide = True
             self.bboxes = {}
-        finally:
-            if not ext_dc:
-                release_cube(dc)
 
     def time_range(self, ranges=None):
         if ranges is None:
@@ -1326,7 +1323,10 @@ class OWSConfig(OWSMetadataConfig):
 def get_config(refresh=False, called_from_update_ranges=False):
     cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)
     if not cfg.ready:
-        with cube() as dc:
-            cfg.make_ready(dc)
+        try:
+            with cube() as dc:
+                cfg.make_ready(dc)
+        except ODCInitException:
+            pass
     return cfg
 

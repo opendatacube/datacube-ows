@@ -12,6 +12,16 @@ from datacube import Datacube
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
+
+class ODCInitException(Exception):
+    def __init__(self, e: Exception):
+        super().__init__(str(e))
+        self.cause = e
+
+    def __str__(self):
+        return "ODC initialisation failed:" + str(self.cause)
+
+
 # CubePool class
 class CubePool:
     """
@@ -20,8 +30,9 @@ class CubePool:
     # _instances, global mapping of CubePools by app name
     _instances: MutableMapping[str, "CubePool"] = {}
 
-    _cubes_: bool = False
     _cubes_lock_: bool = False
+
+    _instance: Optional[Datacube] = None
 
     def __new__(cls, app: str) -> "CubePool":
         """
@@ -39,9 +50,6 @@ class CubePool:
         :param app: The app string used to construct any Datacube objects created by the pool.
         """
         self.app: str = app
-        if not self._cubes_:
-            self._cubes: MutableMapping[Datacube, bool] = {}
-            self._cubes_ = True
         if not self._cubes_lock_:
             self._cubes_lock: Lock = Lock()
             self._cubes_lock_ = True
@@ -53,39 +61,19 @@ class CubePool:
         :return:  a Datacube object (or None on error).
         """
         self._cubes_lock.acquire()
-        for c, assigned in self._cubes.items():
-            if not assigned:
-                self._cubes[c] = True
-                self._cubes_lock.release()
-                return c
         try:
-            c = self._new_cube()
-            self._cubes[c] = True
+            if self._instance is None:
+                self._instance = self._new_cube()
         # pylint: disable=broad-except
         except Exception as e:
             _LOG.error("ODC initialisation failed: %s", str(e))
-            c = None
+            raise(ODCInitException(e))
         finally:
             self._cubes_lock.release()
-        return c
-
-    def release_cube(self, c: Datacube) -> None:
-        """
-        Return a datacube to the pool for reassignment.
-
-        :param c: A Datacube object originally created by this CubePool and that is no longer required.
-        """
-        if c not in self._cubes:
-            raise Exception("Cannot release non-pool datacube.")
-        self._cubes_lock.acquire()
-        self._cubes[c] = False
-        self._cubes_lock.release()
+        return self._instance
 
     def _new_cube(self) -> Datacube:
         return Datacube(app=self.app)
-
-    def __len__(self) -> int:
-        return len(self._cubes)
 
 
 # Lowlevel CubePool API
@@ -95,31 +83,9 @@ def get_cube(app: str = "ows") -> Optional[Datacube]:
 
     :param app: The app pool to use - defaults to "ows".
     :return: a Datacube object (or None) in case of database error.
+    :raises: ODCInitException
     """
-    pool = CubePool(app=app)
-    return pool.get_cube()
-
-
-def release_cube(c: Datacube, app: str = "ows") -> None:
-    """
-    Return a Datacube to the pool for reuse.
-
-    :param c: a Datacube object, allocated by a previous call to get_cube(app).
-    :param app: the name of the pool to return the cube from - defaults to "ows"
-    """
-    pool = CubePool(app=app)
-    return pool.release_cube(c)
-
-
-def pool_size(app: str = "ows") -> int:
-    """
-    Return the total number of cubes (available and allocated) in a particular pool.
-
-    :param app: The name of the pool to measure - defaults to "ows"
-    :return: the total number of cubes in the pool.
-    """
-    pool = CubePool(app=app)
-    return len(pool)
+    return CubePool(app=app).get_cube()
 
 
 # High Level Cube Pool API
@@ -137,10 +103,6 @@ def cube(app: str = "ows") -> Generator[Optional["datacube.api.core.Datacube"], 
 
     :param app: The pool to obtain the app from - defaults to "ows".
     :return: A Datacube context manager.
+    :raises: ODCInitException
     """
-    dc = get_cube(app)
-    try:
-        yield dc
-    finally:
-        if dc:
-            release_cube(dc, app)
+    yield get_cube(app)
