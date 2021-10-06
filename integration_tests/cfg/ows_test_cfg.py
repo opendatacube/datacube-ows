@@ -732,7 +732,8 @@ ows_cfg = {
                     "name": "ls8_usgs_level1_scene_layer_clone",
                     "low_res_product_name": "ls8_usgs_level1_scene",
                     "image_processing": {
-                        "extent_mask_func": []
+                        "extent_mask_func": [],
+                        "manual_merge": False,
                     },
                     "resource_limits": {
                         "wcs": {
