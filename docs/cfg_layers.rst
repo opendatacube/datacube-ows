@@ -802,7 +802,14 @@ E.g.
     "extent_mask_func: [
         "datacube_ows.ogc_utils.mask_by_quality",
         "datacube_ows.ogc_utils.mask_by_val",
-    ]
+    ],
+
+To use NO extent mask function, set:
+
+::
+
+    "extent_mask_func: [],
+
 
 Always Fetch Bands (always_fetch_bands)
 +++++++++++++++++++++++++++++++++++++++
