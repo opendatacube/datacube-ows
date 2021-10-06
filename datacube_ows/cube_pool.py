@@ -15,6 +15,7 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 class ODCInitException(Exception):
     def __init__(self, e: Exception):
+        super().__init__(str(e))
         self.cause = e
 
     def __str__(self):
