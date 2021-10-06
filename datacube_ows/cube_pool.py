@@ -20,8 +20,9 @@ class CubePool:
     # _instances, global mapping of CubePools by app name
     _instances: MutableMapping[str, "CubePool"] = {}
 
-    _cubes_: bool = False
     _cubes_lock_: bool = False
+
+    _instance: Optional[Datacube] = None
 
     def __new__(cls, app: str) -> "CubePool":
         """
@@ -39,9 +40,6 @@ class CubePool:
         :param app: The app string used to construct any Datacube objects created by the pool.
         """
         self.app: str = app
-        if not self._cubes_:
-            self._cubes: MutableMapping[Datacube, bool] = {}
-            self._cubes_ = True
         if not self._cubes_lock_:
             self._cubes_lock: Lock = Lock()
             self._cubes_lock_ = True
@@ -53,21 +51,15 @@ class CubePool:
         :return:  a Datacube object (or None on error).
         """
         self._cubes_lock.acquire()
-        for c, assigned in self._cubes.items():
-            if not assigned:
-                self._cubes[c] = True
-                self._cubes_lock.release()
-                return c
         try:
-            c = self._new_cube()
-            self._cubes[c] = True
+            if self._instance is None:
+                self._instance = self._new_cube()
         # pylint: disable=broad-except
         except Exception as e:
             _LOG.error("ODC initialisation failed: %s", str(e))
-            c = None
         finally:
             self._cubes_lock.release()
-        return c
+        return self._instance
 
     def release_cube(self, c: Datacube) -> None:
         """
@@ -75,11 +67,7 @@ class CubePool:
 
         :param c: A Datacube object originally created by this CubePool and that is no longer required.
         """
-        if c not in self._cubes:
-            raise Exception("Cannot release non-pool datacube.")
-        self._cubes_lock.acquire()
-        self._cubes[c] = False
-        self._cubes_lock.release()
+        # Do Nothing
 
     def _new_cube(self) -> Datacube:
         return Datacube(app=self.app)
