@@ -12,6 +12,15 @@ from datacube import Datacube
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
+
+class ODCInitException(Exception):
+    def __init__(self, e: Exception):
+        self.cause = e
+
+    def __str__(self):
+        return "ODC initialisation failed:" + str(self.cause)
+
+
 # CubePool class
 class CubePool:
     """
@@ -57,6 +66,7 @@ class CubePool:
         # pylint: disable=broad-except
         except Exception as e:
             _LOG.error("ODC initialisation failed: %s", str(e))
+            raise(ODCInitException(e))
         finally:
             self._cubes_lock.release()
         return self._instance
@@ -72,9 +82,9 @@ def get_cube(app: str = "ows") -> Optional[Datacube]:
 
     :param app: The app pool to use - defaults to "ows".
     :return: a Datacube object (or None) in case of database error.
+    :raises: ODCInitException
     """
-    pool = CubePool(app=app)
-    return pool.get_cube()
+    return CubePool(app=app).get_cube()
 
 
 # High Level Cube Pool API
@@ -92,5 +102,6 @@ def cube(app: str = "ows") -> Generator[Optional["datacube.api.core.Datacube"], 
 
     :param app: The pool to obtain the app from - defaults to "ows".
     :return: A Datacube context manager.
+    :raises: ODCInitException
     """
     yield get_cube(app)
