@@ -73,7 +73,10 @@ class CubePool:
         return Datacube(app=self.app)
 
     def __len__(self) -> int:
-        return len(self._cubes)
+        if self._instance is None:
+            return 0
+        else:
+            return 1
 
 
 # Lowlevel CubePool API

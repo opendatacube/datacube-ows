@@ -7,10 +7,10 @@ from datacube_ows.cube_pool import get_cube, pool_size, release_cube
 def test_basic_cube_pool():
     dc_1 = get_cube(app="test")
     dc_2 = get_cube(app="test")
-    assert dc_1 != dc_2
+    assert dc_1 == dc_2
     release_cube(dc_1, app="test")
     release_cube(dc_2, app="test")
-    assert pool_size(app="test") >= 2
+    assert pool_size(app="test") == 1
 
 
 def test_release_nonalloc():
@@ -18,7 +18,4 @@ def test_release_nonalloc():
     dc_unalloc = Datacube(app="test")
     assert dc_alloc != dc_unalloc
     release_cube(dc_alloc, app="test")
-    with pytest.raises(Exception) as e:
-        release_cube(dc_unalloc, app="test")
-    assert "non-pool datacube" in str(e.value)
 
