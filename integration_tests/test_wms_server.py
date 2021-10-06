@@ -136,7 +136,7 @@ def test_wms_getmap(ows_server):
         size=(150, 150),
         format="image/png",
         transparent=True,
-        time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
+        time=test_layer.timepositions[-1].strip(),
     )
     assert img
     assert img.info()["Content-Type"] == "image/png"
@@ -275,27 +275,28 @@ def test_wms_style_looping_getmap(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
-    test_layer_name = contents[0]
-    test_layer = wms.contents[test_layer_name]
+    test_layer_names = ["ls8_usgs_level1_scene_layer", "ls8_usgs_level1_scene_layer_clone"]
+    for test_layer_name in test_layer_names:
+        test_layer = wms.contents[test_layer_name]
 
-    test_layer_styles = wms.contents[test_layer_name].styles
+        test_layer_styles = wms.contents[test_layer_name].styles
 
-    bbox = test_layer.boundingBoxWGS84
-    layer_bbox = pytest.helpers.enclosed_bbox(bbox)
-    layer_time = test_layer.timepositions[-1].strip()
+        bbox = test_layer.boundingBoxWGS84
+        layer_bbox = pytest.helpers.enclosed_bbox(bbox)
+        layer_time = test_layer.timepositions[0].strip()
 
-    for style in test_layer_styles:
-        img = wms.getmap(
-            layers=[test_layer_name],
-            styles=[style],
-            srs="EPSG:4326",
-            bbox=layer_bbox,
-            size=(150, 150),
-            format="image/png",
-            transparent=True,
-            time=layer_time,
-        )
-        assert img.info()["Content-Type"] == "image/png"
+        for style in test_layer_styles:
+            img = wms.getmap(
+                layers=[test_layer_name],
+                styles=[style],
+                srs="EPSG:4326",
+                bbox=layer_bbox,
+                size=(150, 150),
+                format="image/png",
+                transparent=True,
+                time=layer_time,
+            )
+            assert img.info()["Content-Type"] == "image/png"
 
 
 def test_wms_getfeatureinfo(ows_server):

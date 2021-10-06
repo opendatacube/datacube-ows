@@ -465,6 +465,7 @@ def get_map(args):
                 for npdt in data.time.values:
                     td = data.sel(time=npdt)
                     td_ext_mask = None
+                    band = ""
                     for band in params.style.needed_bands:
                         if band not in params.style.flag_bands:
                             if params.product.data_manual_merge:
@@ -481,7 +482,13 @@ def get_map(args):
                     if params.product.data_manual_merge:
                         td_ext_mask = xarray.DataArray(td_ext_mask)
                     if td_ext_mask is None:
-                        td_ext_mask = ~numpy.zeros(td.shape, dtype=numpy.bool_)
+                        td_ext_mask = xarray.DataArray(
+                                            ~numpy.zeros(
+                                                        td[band].values.shape,
+                                                        dtype=numpy.bool_
+                                            ),
+                                            td[band].coords
+                        )
                     td_masks.append(td_ext_mask)
                 extent_mask = xarray.concat(td_masks, dim=data.time)
                 qprof.end_event("build-masks")
