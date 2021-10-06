@@ -61,22 +61,8 @@ class CubePool:
             self._cubes_lock.release()
         return self._instance
 
-    def release_cube(self, c: Datacube) -> None:
-        """
-        Return a datacube to the pool for reassignment.
-
-        :param c: A Datacube object originally created by this CubePool and that is no longer required.
-        """
-        # Do Nothing
-
     def _new_cube(self) -> Datacube:
         return Datacube(app=self.app)
-
-    def __len__(self) -> int:
-        if self._instance is None:
-            return 0
-        else:
-            return 1
 
 
 # Lowlevel CubePool API
@@ -89,28 +75,6 @@ def get_cube(app: str = "ows") -> Optional[Datacube]:
     """
     pool = CubePool(app=app)
     return pool.get_cube()
-
-
-def release_cube(c: Datacube, app: str = "ows") -> None:
-    """
-    Return a Datacube to the pool for reuse.
-
-    :param c: a Datacube object, allocated by a previous call to get_cube(app).
-    :param app: the name of the pool to return the cube from - defaults to "ows"
-    """
-    pool = CubePool(app=app)
-    return pool.release_cube(c)
-
-
-def pool_size(app: str = "ows") -> int:
-    """
-    Return the total number of cubes (available and allocated) in a particular pool.
-
-    :param app: The name of the pool to measure - defaults to "ows"
-    :return: the total number of cubes in the pool.
-    """
-    pool = CubePool(app=app)
-    return len(pool)
 
 
 # High Level Cube Pool API
@@ -129,9 +93,4 @@ def cube(app: str = "ows") -> Generator[Optional["datacube.api.core.Datacube"], 
     :param app: The pool to obtain the app from - defaults to "ows".
     :return: A Datacube context manager.
     """
-    dc = get_cube(app)
-    try:
-        yield dc
-    finally:
-        if dc:
-            release_cube(dc, app)
+    yield get_cube(app)
