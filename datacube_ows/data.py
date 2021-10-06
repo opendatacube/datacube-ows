@@ -485,7 +485,6 @@ def get_map(args):
                     td_masks.append(td_ext_mask)
                 extent_mask = xarray.concat(td_masks, dim=data.time)
                 qprof.end_event("build-masks")
-
                 if not data:
                     qprof["write_action"] = "No Data: Write Empty"
                     raise EmptyResponse()
