@@ -734,6 +734,7 @@ ows_cfg = {
                     "image_processing": {
                         "extent_mask_func": [],
                         "manual_merge": False,
+                        "apply_solar_corrections": False,
                     },
                     "resource_limits": {
                         "wcs": {
