@@ -282,7 +282,7 @@ def test_wms_style_looping_getmap(ows_server):
 
     bbox = test_layer.boundingBoxWGS84
     layer_bbox = pytest.helpers.enclosed_bbox(bbox)
-    layer_time = test_layer.timepositions[len(test_layer.timepositions) // 2].strip()
+    layer_time = test_layer.timepositions[-1].strip()
 
     for style in test_layer_styles:
         img = wms.getmap(
