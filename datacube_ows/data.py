@@ -465,6 +465,7 @@ def get_map(args):
                 for npdt in data.time.values:
                     td = data.sel(time=npdt)
                     td_ext_mask = None
+                    band = ""
                     for band in params.style.needed_bands:
                         if band not in params.style.flag_bands:
                             if params.product.data_manual_merge:
