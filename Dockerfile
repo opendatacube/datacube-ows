@@ -9,10 +9,12 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/
 
 # install packages
 RUN apt-get update && apt-get install -y --no-install-recommends\
+    python3-pip \
     build-essential gcc \
     git \
     curl \
     gnupg \
+    python-setuptools \
     # For Psycopg2
     libpq-dev libpcap-dev python3-dev \
     postgresql-client-12 \
@@ -23,10 +25,11 @@ RUN python -m venv /opt/venv
 # Make sure we use the virtualenv:
 ENV PATH="/opt/venv/bin:$PATH"
 
+WORKDIR /
 COPY requirements.txt .
 COPY constraints.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
+RUN pip install --no-cache-dir -r /requirements.txt -c /constraints.txt
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
@@ -43,8 +46,8 @@ RUN mkdir -p /code
 WORKDIR /code
 COPY . /code
 
-RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
-    && pip install --no-cache-dir .
+# RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
+#     && pip install --no-cache-dir .
 
 # Configure user
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows

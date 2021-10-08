@@ -31,4 +31,4 @@ jobs:
         uses: hadolint/hadolint-action@v1.5.0
         with:
           dockerfile: Dockerfile
-          ignore: DL3008
+          ignore: DL3008,DL4006
