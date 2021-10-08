@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/dive.yml'
       - 'requirements.txt'
+      - 'constraints.txt'
       - 'requirements-dev.txt'
       - 'Dockerfile'
 
@@ -13,6 +14,7 @@ on:
     paths:
       - '.github/workflows/dive.yml'
       - 'requirements.txt'
+      - 'constraints.txt'
       - 'requirements-dev.txt'
       - 'Dockerfile'
 
