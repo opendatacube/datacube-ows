@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
     git \
     curl \
     gnupg \
-    python3-setuptools \
+    python-setuptools \
     # For Psycopg2
     libpq-dev libpcap-dev python3-dev \
     gcc \
@@ -24,12 +24,12 @@ ENV PATH=${py_env_path}/bin:$PATH \
 # make folders
 RUN mkdir -p /code
 # Copy source code and install it
-COPY . /code
 WORKDIR /code
+COPY . /code
 
 RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
-    && pip install --no-cache-dir -e .
+    && pip install --no-cache-dir .
 
 
 # Configure user
