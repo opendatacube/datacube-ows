@@ -8,9 +8,9 @@
 
 from setuptools import find_packages, setup
 
-requirements = [
-    'datacube',
-    'Flask',
+install_requirements = [
+    'datacube[performance,s3]>=1.8.5',
+    'flask',
     'flask_log_request_id',
     'requests',
     'affine',
@@ -20,33 +20,55 @@ requirements = [
     'lxml',
     'deepdiff',
     'matplotlib',
-    'numpy',
+    'numpy>=1.21.1',
     'scipy',
     'Pillow',
     'Babel',
     'Flask-Babel',
-    'prometheus_client',
     'psycopg2',
     'python_dateutil',
     'pytz',
-    'rasterio',
+    'rasterio>=1.0.9',
     'regex',
-    's3fs==2021.07.0',
     'timezonefinderL',
-    'python-slugify',
+    'python_slugify',
     'geoalchemy2',
     'lark-parser',
     'xarray',
     'pyows',
-    'prometheus-flask-exporter',
-    #
+    'prometheus_flask_exporter',
     'setuptools_scm'
 ]
 
 test_requirements = [
-    # TODO: put package test requirements here
-    'pytest', 'pytest-cov', 'pytest_localserver', 'owslib', 'mock', 'pep8', 'pylint==1.6.4', 'pytest-helpers-namespace', 'moto'
+    'pytest', 'pytest_cov', 'pytest_localserver',
+    'owslib==0.21.0', 'pytest_mock', 'pep8',
+    'pytest-helpers-namespace', 'moto', 'flask-cors',
+    's3fs==2021.07.0', 'fsspec==2021.07.0'
 ]
+
+dev_requirements = [
+    'pydevd-pycharm~=212.5080.64', # For Pycharm 2021.2
+    'pylint==2.4.4',
+    'sphinx_click'
+    'pre-commit==2.13.0',
+]
+
+operational_requirements = [
+    "gunicorn", "gunicorn[gevent]", "gevent", "prometheus_client", "sentry_sdk",
+    "prometheus_flask_exporter",
+]
+setup_requirements = ['setuptools_scm', 'setuptools']
+
+extras = {
+    "dev": dev_requirements + operational_requirements,
+    "test": test_requirements,
+    "ops": operational_requirements,
+    "setup": setup_requirements,
+    "all": dev_requirements + test_requirements + operational_requirements,
+}
+
+#  Dropped requirements: ruamel.yaml, bottleneck, blinker, watchdog
 
 setup(
     name='datacube_ows',
@@ -79,9 +101,10 @@ Features
             'datacube-ows-cfg=datacube_ows.cfg_parser_impl:main'
         ]
     },
+    python_requires=">=3.8.0",
     packages=find_packages(exclude=["tests", "tests.cfg", "integration_tests", "integration_tests.cfg"]),
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=install_requirements,
     license="Apache Software License 2.0",
     zip_safe=False,
     keywords='datacube, wms, wcs',
@@ -92,8 +115,9 @@ Features
         'Natural Language :: English',
         'Programming Language :: Python :: 3.5',
     ],
-    setup_requires=['setuptools_scm'],
+    setup_requires=setup_requirements,
     use_scm_version=True,
     test_suite='tests',
-    tests_require=test_requirements
+    tests_require=test_requirements,
+    extras_require=extras
 )
