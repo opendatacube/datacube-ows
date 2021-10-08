@@ -1,4 +1,5 @@
-FROM osgeo/gdal:ubuntu-small-latest
+# FROM osgeo/gdal:ubuntu-small-latest
+FROM osgeo/gdal:alpine-small-latest
 
 ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
