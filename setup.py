@@ -61,7 +61,7 @@ operational_requirements = [
 setup_requirements = ['setuptools_scm', 'setuptools']
 
 extras = {
-    "dev": dev_requirements + operational_requirements,
+    "dev": dev_requirements + test_requirements + operational_requirements,
     "test": test_requirements,
     "ops": operational_requirements,
     "setup": setup_requirements,
