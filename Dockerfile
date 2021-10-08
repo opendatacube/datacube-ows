@@ -1,15 +1,15 @@
 FROM python:3.8 AS compile-image
-RUN apt-get update
 
 ENV LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     SHELL=bash
 
-RUN apt-get install -y --no-install-recommends build-essential gcc
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+&& wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
 # install packages
 RUN apt-get update && apt-get install -y --no-install-recommends\
+    build-essential gcc \
     git \
     curl \
     gnupg \
@@ -23,15 +23,10 @@ RUN python -m venv /opt/venv
 # Make sure we use the virtualenv:
 ENV PATH="/opt/venv/bin:$PATH"
 
-# make folders
-RUN mkdir -p /code
-# Copy source code and install it
-WORKDIR /code
-COPY . /code
+COPY requirements.txt .
+COPY constraints.txt .
 
-RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
-    && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
-    && pip install --no-cache-dir .
+RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
@@ -41,6 +36,15 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
 
 FROM osgeo/gdal:ubuntu-small-3.3.1
 COPY --from=compile-image /opt/venv /opt/venv
+
+# make folders
+RUN mkdir -p /code
+# Copy source code and install it
+WORKDIR /code
+COPY . /code
+
+RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
+    && pip install --no-cache-dir .
 
 # Configure user
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
