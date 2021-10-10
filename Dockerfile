@@ -1,25 +1,16 @@
-FROM osgeo/gdal:ubuntu-small-latest
+FROM ubuntu:20.04 as builder
 
-ENV LC_ALL=C.UTF-8 \
-    DEBIAN_FRONTEND=noninteractive \
-    SHELL=bash
-
-# install packages
-RUN apt-get update && apt-get install -y --no-install-recommends\
-    git \
-    curl \
-    gnupg \
-    python-setuptools \
-    # For Psycopg2
-    libpq-dev libpcap-dev python3-dev \
-    gcc \
-    postgresql-client-12 \
-    python3-pip \
-&& apt-get clean \
-&& rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
-
-ENV PATH=${py_env_path}/bin:$PATH \
-    PYTHONPATH=${py_env_path}
+# Setup build env for postgresql-client-12
+USER root
+RUN apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
+            build-essential ca-certificates \
+            git make cmake wget unzip libtool automake \
+                # For Psycopg2
+            libpq-dev python3-dev \
+            gcc \
+            python3-pip \
+            postgresql-client-12
 
 # make folders
 RUN mkdir -p /code
@@ -27,9 +18,40 @@ RUN mkdir -p /code
 WORKDIR /code
 COPY . /code
 
+RUN cat requirements.txt
 RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
     && pip install --no-cache-dir .
+
+RUN pip list -v
+
+FROM osgeo/gdal:ubuntu-small-latest
+COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
+
+# ENV LC_ALL=C.UTF-8 \
+#     DEBIAN_FRONTEND=noninteractive \
+#     SHELL=bash
+
+# # install packages
+# RUN apt-get update && apt-get install -y --no-install-recommends\
+#     git \
+#     curl \
+#     gnupg \
+#     python-setuptools \
+#     python3-pip \
+# && apt-get clean \
+# && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
+
+# make folders
+RUN mkdir -p /code
+# Copy source code and install it
+WORKDIR /code
+COPY . /code
+
+# RUN cat requirements.txt
+# # RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
+# #     && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
+# #     && pip install --no-cache-dir .
 
 
 # Configure user
