@@ -42,7 +42,7 @@ jobs:
           fetch-depth: 0
       - name: Install requirements.txt and run pylint
         run: |
-          pip install -r requirements.txt
+          pip install .[test,dev]
           pip install pylint
           pylint -j 2 --reports no datacube_ows --disable=C,R,E1136
 
