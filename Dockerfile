@@ -25,12 +25,10 @@ RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
     && pip install --no-cache-dir .
 
-RUN pip list -v
-RUN whereis pg_isready
-
 FROM osgeo/gdal:ubuntu-small-latest
 COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
 COPY --from=builder  /usr/local/bin/moto_server /usr/local/bin/moto_server
+COPY --from=builder  /usr/share/perl /usr/share/perl
 COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
 
 # ENV LC_ALL=C.UTF-8 \
