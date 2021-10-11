@@ -20,8 +20,7 @@ WORKDIR /code
 COPY . /code
 
 RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
-    && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
-    && pip install --no-cache-dir .
+    && pip install --no-cache-dir .[ops,test]
 
 FROM osgeo/gdal:ubuntu-small-latest
 
@@ -57,7 +56,7 @@ WORKDIR "/home/ows"
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
 RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
-    pip install --no-cache-dir pydevd-pycharm~=211.7142.13 \
+    pip install --no-cache-dir .[dev] \
 ;fi
 
 ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \

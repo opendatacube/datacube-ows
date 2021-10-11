@@ -50,13 +50,13 @@ test_requirements = [
 dev_requirements = [
     'pydevd-pycharm~=212.5080.64', # For Pycharm 2021.2
     'pylint==2.4.4',
-    'sphinx_click'
+    'sphinx_click',
     'pre-commit==2.13.0',
 ]
 
 operational_requirements = [
     "gunicorn", "gunicorn[gevent]", "gevent", "prometheus_client", "sentry_sdk",
-    "prometheus_flask_exporter",
+    "prometheus_flask_exporter", "blinker"
 ]
 setup_requirements = ['setuptools_scm', 'setuptools']
 
@@ -68,7 +68,7 @@ extras = {
     "all": dev_requirements + test_requirements + operational_requirements,
 }
 
-#  Dropped requirements: ruamel.yaml, bottleneck, blinker, watchdog
+#  Dropped requirements: ruamel.yaml, bottleneck, watchdog
 
 setup(
     name='datacube_ows',
