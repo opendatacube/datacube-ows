@@ -27,24 +27,29 @@ RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
 
 FROM osgeo/gdal:ubuntu-small-latest
 COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
+COPY --from=builder  /usr/lib/postgresql /usr/lib/postgresql
+COPY --from=builder  /usr/share/postgresql /usr/share/postgresql
 COPY --from=builder  /usr/local/bin/moto_server /usr/local/bin/moto_server
 COPY --from=builder  /usr/share/perl5 /usr/share/perl5
 COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
+COPY --from=builder  /usr/local/bin/datacube /usr/local/bin/datacube
+COPY --from=builder  /usr/local/bin/datacube-ows-update /usr/local/bin/datacube-ows-update
+COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
 
 # ENV LC_ALL=C.UTF-8 \
 #     DEBIAN_FRONTEND=noninteractive \
 #     SHELL=bash
 
 # # install packages
-RUN apt-get update && apt-get install -y --no-install-recommends\
-#     git \
-#     curl \
-#     gnupg \
-#     python-setuptools \
-    postgresql-client-12 \
-    # python3-pip \
-&& apt-get clean \
-&& rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
+# RUN apt-get update && apt-get install -y --no-install-recommends\
+# #     git \
+# #     curl \
+# #     gnupg \
+# #     python-setuptools \
+#     postgresql-client-12 \
+#     # python3-pip \
+# && apt-get clean \
+# && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
 
 # make folders
 RUN mkdir -p /code
