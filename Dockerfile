@@ -28,7 +28,7 @@ RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
 FROM osgeo/gdal:ubuntu-small-latest
 COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
 COPY --from=builder  /usr/local/bin/moto_server /usr/local/bin/moto_server
-COPY --from=builder  /usr/share/perl /usr/share/perl
+COPY --from=builder  /usr/share/perl5 /usr/share/perl5
 COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
 
 # ENV LC_ALL=C.UTF-8 \
