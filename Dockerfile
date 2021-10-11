@@ -5,7 +5,7 @@ USER root
 RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
             git \
-                # For Psycopg2
+            # For Psycopg2
             libpq-dev python3-dev \
             gcc \
             python3-pip \
@@ -22,10 +22,19 @@ COPY . /code
 RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir .[ops,test]
 
+## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
+ARG PYDEV_DEBUG="no"
+RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
+    pip install --no-cache-dir .[dev] \
+;fi
+
+RUN pip freeze
+
 FROM osgeo/gdal:ubuntu-small-latest
 
 # all the python pip installed libraries
 COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
+COPY --from=builder  /usr/lib/python3/dist-packages /usr/lib/python3/dist-packages
 # postgres client
 COPY --from=builder  /usr/lib/postgresql /usr/lib/postgresql
 COPY --from=builder  /usr/share/postgresql /usr/share/postgresql
@@ -42,6 +51,8 @@ COPY --from=builder  /usr/local/bin/datacube-ows-update /usr/local/bin/datacube-
 COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows-cfg
 # flask cli
 COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
+# gunicorn cli
+COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 
 # make folders for testing and keep code in image
 RUN mkdir -p /code
@@ -52,12 +63,6 @@ COPY . /code
 # Configure user
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
 WORKDIR "/home/ows"
-
-## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
-ARG PYDEV_DEBUG="no"
-RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
-    pip install --no-cache-dir .[dev] \
-;fi
 
 ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
