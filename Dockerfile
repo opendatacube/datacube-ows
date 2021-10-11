@@ -36,14 +36,15 @@ COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
 #     SHELL=bash
 
 # # install packages
-# RUN apt-get update && apt-get install -y --no-install-recommends\
-# #     git \
-# #     curl \
-# #     gnupg \
-# #     python-setuptools \
-#     python3-pip \
-# && apt-get clean \
-# && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
+RUN apt-get update && apt-get install -y --no-install-recommends\
+#     git \
+#     curl \
+#     gnupg \
+#     python-setuptools \
+    postgresql-client-12 \
+    # python3-pip \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
 
 # make folders
 RUN mkdir -p /code
