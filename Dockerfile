@@ -1,25 +1,17 @@
-FROM osgeo/gdal:ubuntu-small-latest
+FROM ubuntu:20.04 as builder
 
-ENV LC_ALL=C.UTF-8 \
-    DEBIAN_FRONTEND=noninteractive \
-    SHELL=bash
-
-# install packages
-RUN apt-get update && apt-get install -y --no-install-recommends\
-    git \
-    curl \
-    gnupg \
-    python-setuptools \
-    # For Psycopg2
-    libpq-dev libpcap-dev python3-dev \
-    gcc \
-    postgresql-client-12 \
-    python3-pip \
-&& apt-get clean \
-&& rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
-
-ENV PATH=${py_env_path}/bin:$PATH \
-    PYTHONPATH=${py_env_path}
+# Setup build env for postgresql-client-12
+USER root
+RUN apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
+            git \
+                # For Psycopg2
+            libpq-dev python3-dev \
+            gcc \
+            python3-pip \
+            postgresql-client-12 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
 
 # make folders
 RUN mkdir -p /code
@@ -31,6 +23,32 @@ RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir -r requirements.txt -c constraints.txt \
     && pip install --no-cache-dir .
 
+FROM osgeo/gdal:ubuntu-small-latest
+
+# all the python pip installed libraries
+COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
+# postgres client
+COPY --from=builder  /usr/lib/postgresql /usr/lib/postgresql
+COPY --from=builder  /usr/share/postgresql /usr/share/postgresql
+# moto_server is used for  testing
+COPY --from=builder  /usr/local/bin/moto_server /usr/local/bin/moto_server
+# perl5 is used for pg_isready
+COPY --from=builder  /usr/share/perl5 /usr/share/perl5
+COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
+# datacube cli
+COPY --from=builder  /usr/local/bin/datacube /usr/local/bin/datacube
+# datacube-ows-update cli
+COPY --from=builder  /usr/local/bin/datacube-ows-update /usr/local/bin/datacube-ows-update
+# datacube-ows-cfg check
+COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows-cfg
+# flask cli
+COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
+
+# make folders for testing and keep code in image
+RUN mkdir -p /code
+# Copy source code and install it
+WORKDIR /code
+COPY . /code
 
 # Configure user
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
@@ -42,9 +60,7 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
     pip install --no-cache-dir pydevd-pycharm~=211.7142.13 \
 ;fi
 
-ENV PATH=${py_env_path}/bin:$PATH \
-    PYTHONPATH=${py_env_path} \
-    GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
+ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
     GDAL_HTTP_MAX_RETRY="10" \
     GDAL_HTTP_RETRY_DELAY="1"
