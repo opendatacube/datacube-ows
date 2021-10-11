@@ -42,6 +42,8 @@ COPY --from=builder  /usr/local/bin/datacube-ows-update /usr/local/bin/datacube-
 COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows-cfg
 # flask cli
 COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
+# gunicorn cli
+COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 
 # make folders for testing and keep code in image
 RUN mkdir -p /code
