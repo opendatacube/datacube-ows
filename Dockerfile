@@ -19,7 +19,7 @@ RUN mkdir -p /code
 WORKDIR /code
 COPY . /code
 
-RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
+RUN echo "version=\"$(python3 setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir .[ops,test]
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
@@ -45,6 +45,8 @@ COPY --from=builder  /usr/share/perl5 /usr/share/perl5
 COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
 # datacube cli
 COPY --from=builder  /usr/local/bin/datacube /usr/local/bin/datacube
+# datacube-ows cli
+COPY --from=builder  /usr/local/bin/datacube-ows /usr/local/bin/datacube-ows
 # datacube-ows-update cli
 COPY --from=builder  /usr/local/bin/datacube-ows-update /usr/local/bin/datacube-ows-update
 # datacube-ows-cfg check
