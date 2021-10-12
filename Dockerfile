@@ -19,7 +19,7 @@ RUN mkdir -p /code
 WORKDIR /code
 COPY . /code
 
-RUN echo "version=\"$(python3 setup.py --version)\"" > datacube_ows/_version.py \
+RUN echo "version=\"$(python setup.py --version)\"" > datacube_ows/_version.py \
     && pip install --no-cache-dir .[ops,test]
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
@@ -30,41 +30,41 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
 
 RUN pip freeze
 
-# FROM osgeo/gdal:ubuntu-small-latest
+FROM osgeo/gdal:ubuntu-small-latest
 
-# # all the python pip installed libraries
-# COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
-# COPY --from=builder  /usr/lib/python3/dist-packages /usr/lib/python3/dist-packages
-# # postgres client
-# COPY --from=builder  /usr/lib/postgresql /usr/lib/postgresql
-# COPY --from=builder  /usr/share/postgresql /usr/share/postgresql
-# # moto_server is used for  testing
-# COPY --from=builder  /usr/local/bin/moto_server /usr/local/bin/moto_server
-# # perl5 is used for pg_isready
-# COPY --from=builder  /usr/share/perl5 /usr/share/perl5
-# COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
-# # datacube cli
-# COPY --from=builder  /usr/local/bin/datacube /usr/local/bin/datacube
-# # datacube-ows cli
-# COPY --from=builder  /usr/local/bin/datacube-ows /usr/local/bin/datacube-ows
-# # datacube-ows-update cli
-# COPY --from=builder  /usr/local/bin/datacube-ows-update /usr/local/bin/datacube-ows-update
-# # datacube-ows-cfg check
-# COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows-cfg
-# # flask cli
-# COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
-# # gunicorn cli
-# COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
+# all the python pip installed libraries
+COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
+COPY --from=builder  /usr/lib/python3/dist-packages /usr/lib/python3/dist-packages
+# postgres client
+COPY --from=builder  /usr/lib/postgresql /usr/lib/postgresql
+COPY --from=builder  /usr/share/postgresql /usr/share/postgresql
+# moto_server is used for  testing
+COPY --from=builder  /usr/local/bin/moto_server /usr/local/bin/moto_server
+# perl5 is used for pg_isready
+COPY --from=builder  /usr/share/perl5 /usr/share/perl5
+COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
+# datacube cli
+COPY --from=builder  /usr/local/bin/datacube /usr/local/bin/datacube
+# datacube-ows cli
+COPY --from=builder  /usr/local/bin/datacube-ows /usr/local/bin/datacube-ows
+# datacube-ows-update cli
+COPY --from=builder  /usr/local/bin/datacube-ows-update /usr/local/bin/datacube-ows-update
+# datacube-ows-cfg check
+COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows-cfg
+# flask cli
+COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
+# gunicorn cli
+COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 
-# # make folders for testing and keep code in image
-# RUN mkdir -p /code
-# # Copy source code and install it
-# WORKDIR /code
-# COPY . /code
+# make folders for testing and keep code in image
+RUN mkdir -p /code
+# Copy source code and install it
+WORKDIR /code
+COPY . /code
 
-# # Configure user
-# RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
-# WORKDIR "/home/ows"
+# Configure user
+RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
+WORKDIR "/home/ows"
 
 # ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
 #     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
