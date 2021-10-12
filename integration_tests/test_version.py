@@ -11,6 +11,6 @@ from datacube_ows.update_ranges_impl import main
 
 
 def test_updates_ranges_schema(runner, role_name):
-    result = runner.invoke(main, ["--version])
+    result = runner.invoke(main, ["--version"])
     assert __version__ in result.output
     assert result.exit_code == 0
