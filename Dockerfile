@@ -66,12 +66,12 @@ COPY . /code
 RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
 WORKDIR "/home/ows"
 
-# ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
-#     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
-#     GDAL_HTTP_MAX_RETRY="10" \
-#     GDAL_HTTP_RETRY_DELAY="1"
+ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
+    CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
+    GDAL_HTTP_MAX_RETRY="10" \
+    GDAL_HTTP_RETRY_DELAY="1"
 
-# RUN chown 1000:100 /dev/shm
+RUN chown 1000:100 /dev/shm
 
-# USER ows
-# CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers=3", "--threads=2", "-k", "gevent", "--timeout", "121", "--pid", "/home/ows/gunicorn.pid", "--log-level", "info", "--worker-tmp-dir", "/dev/shm", "--config", "python:datacube_ows.gunicorn_config", "datacube_ows.wsgi"]
+USER ows
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers=3", "--threads=2", "-k", "gevent", "--timeout", "121", "--pid", "/home/ows/gunicorn.pid", "--log-level", "info", "--worker-tmp-dir", "/dev/shm", "--config", "python:datacube_ows.gunicorn_config", "datacube_ows.wsgi"]
