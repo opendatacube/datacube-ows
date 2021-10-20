@@ -62,10 +62,14 @@ AWS_NO_SIGN_REQUEST:
     set ``$AWS_NO_SIGN_REQUEST`` to 'yes' to use unsigned request.
     The default behaviour for this variable changed in version 1.8.17.
 
-
 AWS_REQUEST_PAYER:
     Set to "requester" if accessing requester-pays S3 buckets.
     Default behaviour is to prevent access to requester-pays buckets.
+
+AWS_S3_ENDPOINT:
+    Set to the DNS host name of the S3 endpoint.  Required for accessing
+    non-Amazon implementations of the S3 protocol, and for some newer AWS regions
+    (e.g. Africa).
 
 Configuring Flask
 -----------------
