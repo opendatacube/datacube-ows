@@ -205,9 +205,11 @@ def initialise_prometheus_register(metrics):
                     'query_request': lambda: request.args.get('request'),
                     'query_service': lambda: request.args.get('service'),
                     'query_version': lambda: request.args.get('version'),
-                    'query_wms_layer': lambda: request.args.get('layers'),
-                    'query_wcs_layer': lambda: request.args.get('coverageid'),
-                    'query_wmts_layer': lambda: request.args.get('layer'),
+                    'query_layer': lambda: (request.args.get('layers')          # WMS
+                                            or request.args.get('layer')        # WMTS
+                                            or request.args.get('coverage')     # WCS 1.x
+                                            or request.args.get('coverageid')   # WCS 2.x
+                                            ),
                 }
             )
         )
