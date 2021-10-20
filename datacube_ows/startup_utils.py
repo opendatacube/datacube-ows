@@ -204,8 +204,10 @@ def initialise_prometheus_register(metrics):
                 labels={
                     'query_request': lambda: request.args.get('request'),
                     'query_service': lambda: request.args.get('service'),
-                    'query_layers': lambda: request.args.get('layers'),
-                    'query_url': lambda: request.full_path
+                    'query_version': lambda: request.args.get('version'),
+                    'query_wms_layer': lambda: request.args.get('layers'),
+                    'query_wcs_layer': lambda: request.args.get('coverageid'),
+                    'query_wmts_layer': lambda: request.args.get('layer'),
                 }
             )
         )
