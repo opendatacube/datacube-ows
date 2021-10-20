@@ -200,7 +200,7 @@ def initialise_prometheus_register(metrics):
     if os.environ.get("prometheus_multiproc_dir", False):
         metrics.register_default(
             metrics.summary(
-                'flask_ows_request_full_url', 'Request summary by request url',
+                'flask_ows_request_method_and_layer', 'Request summary by protocol, version, command and layer',
                 labels={
                     'query_request': lambda: request.args.get('request'),
                     'query_service': lambda: request.args.get('service'),
