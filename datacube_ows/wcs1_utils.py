@@ -378,8 +378,9 @@ def get_coverage_data(req, qprof):
         qprof.end_event("load-data")
 
         # Clean extent flag band from output
+        sanitised_bands = [req.product.band_idx.locale_band(b) for b in req.bands]
         for k, v in output.data_vars.items():
-            if k not in req.bands:
+            if k not in sanitised_bands:
                 output = output.drop_vars([k])
         qprof["write_action"] = "Write Data"
         return n_datasets, output
