@@ -41,6 +41,7 @@ def test_function_wrapper_lyr():
     result = f(a="pple", b="eagle")
     assert result[0] == "apple  beagle  couple"
     assert result[1]["foo"] == "bar"
+    assert "a" not in f._kwargs
     func_cfg = {
         "function": "tests.utils.a_function",
         "args": ["bar", "ouple"]
