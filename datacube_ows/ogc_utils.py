@@ -330,7 +330,7 @@ class FunctionWrapper:
             else:
                 self._func = get_function(func_cfg["function"])
             self._args = func_cfg.get("args", [])
-            self._kwargs = func_cfg.get("kwargs", {})
+            self._kwargs = func_cfg.get("kwargs", {}).copy()
             if "pass_product_cfg" in func_cfg:
                 _LOG.warning("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
                              "'mapped_bands'.  Please update your config accordingly")
@@ -361,9 +361,9 @@ class FunctionWrapper:
             calling_kwargs = self._kwargs.copy()
             calling_kwargs.update(kwargs)
         elif kwargs:
-            calling_kwargs = kwargs
+            calling_kwargs = kwargs.copy()
         else:
-            calling_kwargs = self._kwargs
+            calling_kwargs = self._kwargs.copy()
 
         if self.band_mapper:
             calling_kwargs["band_mapper"] = self.band_mapper
