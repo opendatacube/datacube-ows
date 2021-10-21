@@ -38,7 +38,7 @@ Note: the `message_file` configuration entry is not required (except as an inter
 if `translations_directory` is set.  The order of metadata resolution is:
 
 1) If Internationalisation is active via the `translations_directory` config entry, take the
-   value from the *.mo file corresponding to the best available language match for the request
+   value from the `<message_domain>.mo` file corresponding to the best available language match for the request
    headers.
 2) If a translation for the metadata entry is not available, or if internationalisation is not
    active, get the value from the `message_file` if it is configured.
