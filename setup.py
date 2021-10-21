@@ -116,7 +116,9 @@ Features
         'Programming Language :: Python :: 3.5',
     ],
     setup_requires=setup_requirements,
-    use_scm_version=True,
+    use_scm_version={
+        "version_scheme": "post-release",
+    },
     test_suite='tests',
     tests_require=test_requirements,
     extras_require=extras
