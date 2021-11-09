@@ -294,5 +294,5 @@ def get_coverage(args, ows_stats=False):
     return (
         output,
         200,
-        headers
+        resp_headers(headers)
     )
