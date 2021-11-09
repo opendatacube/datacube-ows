@@ -102,8 +102,11 @@ If you are using a notebooks based environment like JupyterHub, you can display 
 
 ::
 
+    # Assumes the spatial dimensions are called "x" and "y".
     plot_image_with_style_cfg(rgb_cfg, data)
 
+    # If the spatial dimensions have other names, you must pass them in manually, e.g.:
+    plot_image_with_style_cfg(rgb_cfg, data, x="longitude", y="latitude")
 
 `View full size
 <https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
