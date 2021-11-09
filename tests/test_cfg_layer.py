@@ -183,6 +183,19 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, 
     assert len(lyr.low_res_products) == 0
 
 
+def test_duplicate_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+    lyr = parse_ows_layer(minimal_layer_cfg,
+                          global_cfg=minimal_global_cfg)
+    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+        get_rng.return_value = mock_range
+        lyr.make_ready(minimal_dc)
+    with pytest.raises(ConfigException) as e:
+        lyr = parse_ows_layer(minimal_layer_cfg,
+                              global_cfg=minimal_global_cfg)
+    assert "a_layer" in str(e.value)
+    assert "Duplicate layer name" in str(e.value)
+
+
 def test_lowres_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
     minimal_layer_cfg["low_res_product_name"] = "smol_foo"
     lyr = parse_ows_layer(minimal_layer_cfg,
