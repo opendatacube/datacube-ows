@@ -7,11 +7,9 @@ import os
 import sys
 
 import pytest
-from fsspec.config import conf as fsspec_conf
 
 from datacube_ows.config_utils import get_file_loc
 from datacube_ows.ows_configuration import ConfigException, read_config
-from tests.utils import MOTO_S3_ENDPOINT_URI
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:

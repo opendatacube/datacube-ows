@@ -4,17 +4,13 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-import time
 from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-import requests
 import xarray as xr
 
-from tests.utils import (MOTO_PORT, MOTO_S3_ENDPOINT_URI, coords, dim1_da,
-                         dummy_da)
-
+from tests.utils import coords, dim1_da, dummy_da
 
 
 @pytest.fixture
