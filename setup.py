@@ -45,7 +45,8 @@ test_requirements = [
     'pytest', 'pytest_cov', 'pytest_localserver',
     'owslib==0.21.0', 'pytest_mock', 'pep8',
     'pytest-helpers-namespace', 'moto', 'flask-cors',
-    's3fs==2021.07.0', 'fsspec==2021.07.0'
+    's3fs==2021.11.0', 'fsspec==2021.11.0',
+    "aiobotocore==1.4.2"
 ]
 
 dev_requirements = [
