@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Install requirements.txt and run pylint
+      - name: Install dependencies and run pylint
         run: |
           pip install .[test,dev]
           pip install pylint
