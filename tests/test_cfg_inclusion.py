@@ -175,7 +175,6 @@ def test_cfg_json_simple(monkeypatch):
 
     assert cfg["test"] == 1234
 
-@pytest.mark.skip("S3FS testing suspended pending aiobotocore dependency issue")
 def test_cfg_json_simple_s3(monkeypatch, s3, s3_config_simple):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
@@ -187,7 +186,6 @@ def test_cfg_json_simple_s3(monkeypatch, s3, s3_config_simple):
 
     assert cfg["test"] == 1234
 
-@pytest.mark.skip("S3FS testing suspended pending aiobotocore dependency issue")
 def test_cfg_json_nested_1_s3(monkeypatch, s3, s3_config_nested_1):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
@@ -208,7 +206,6 @@ def test_cfg_json_nested_2(monkeypatch):
     assert cfg[0]["test"] == 88888
     assert cfg[1]["test"] == 1234
 
-@pytest.mark.skip("S3FS testing suspended pending aiobotocore dependency issue")
 def test_cfg_json_nested_2_s3(monkeypatch, s3_config_nested_2):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
@@ -239,7 +236,6 @@ def test_cfg_json_nested_3(monkeypatch):
     cfg = read_config()
     validated_nested_3(cfg)
 
-@pytest.mark.skip("S3FS testing suspended pending aiobotocore dependency issue")
 def test_cfg_json_nested_3_s3(monkeypatch, s3_config_nested_3):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
@@ -263,7 +259,6 @@ def test_cfg_json_nested_4(monkeypatch):
     assert cfg["things"][2]["test"] == 2574
     validated_nested_3(cfg["things"][2]["thing"])
 
-@pytest.mark.skip("S3FS testing suspended pending aiobotocore dependency issue")
 def test_cfg_json_nested_4_s3(monkeypatch, s3_config_nested_4):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
@@ -346,7 +341,6 @@ def test_cfg_json_mixed(monkeypatch):
     assert cfg["subtest"]["test_py"]["test"] == 123
     assert cfg["subtest"]["test_json"]["test"] == 1234
 
-@pytest.mark.skip("S3FS testing suspended pending aiobotocore dependency issue")
 def test_cfg_json_mixed_s3(monkeypatch, s3_config_mixed_nested):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
