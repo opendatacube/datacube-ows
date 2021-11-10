@@ -14,8 +14,6 @@ from datacube_ows.ows_configuration import WCSFormat, parse_ows_layer
 def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
     minimal_global_cfg.wcs = True
     minimal_layer_cfg["native_crs"] = "EPSG:4326"
-    minimal_layer_cfg["wcs"] = {
-    }
     minimal_layer_cfg["product_name"] = "foo_nativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
@@ -31,6 +29,7 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
     assert "Grid High y is zero" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "EPSG:4326" in str(excinfo.value)
+    minimal_global_cfg.product_index = {}
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     mock_range["bboxes"]["EPSG:4326"] = {

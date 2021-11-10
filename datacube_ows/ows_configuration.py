@@ -430,6 +430,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 #        else:
 #            self.sub_product_extractor = None
         # And finally, add to the global product index.
+        existing = self.global_cfg.product_index.get(self.name)
+        if existing and existing != self:
+            raise ConfigException(f"Duplicate layer name: {self.name}")
         self.global_cfg.product_index[self.name] = self
 
     def time_axis_representation(self):
