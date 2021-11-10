@@ -335,7 +335,7 @@ def layers_report(config_values, input_file, output_file):
     report = {"total_layers_count": len(config_values.values()), "layers": []}
     for lyr in config_values.values():
         layer = {
-            "layer": list(lyr.name),
+            "layer": lyr.name,
             "product": list(lyr.product_names),
             "styles_count": len(lyr.styles),
             "styles_list": [styl.name for styl in lyr.styles],
