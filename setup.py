@@ -20,6 +20,7 @@ install_requirements = [
     'lxml',
     'deepdiff',
     'matplotlib',
+    'pyparsing>=2.2.1,<3',  # resolving dependency conflict between matplotlib and packaging
     'numpy>=1.21.1',
     'scipy',
     'Pillow',
