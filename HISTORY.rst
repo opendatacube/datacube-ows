@@ -15,7 +15,7 @@ Datacube-ows version 1.8.x indicates that it is designed work with datacube-core
 * Apply configured http headers to WCS2 GetCoverage responses (#761)
 * Remove and replace tests based on S3FS, removing test dependency on aiobotocore (#762)
 * Documentation updates (#758)
-* Increment default version number (#???)
+* Increment default version number (#763)
 
 1.8.21 (2021-10-21)
 -------------------
