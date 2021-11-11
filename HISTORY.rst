@@ -7,8 +7,15 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.22 (2021-11-11)
+-------------------
 
-
+* Raise error on duplicate layer names. (#759)
+* Add layer name to config manifest file format (#759)
+* Apply configured http headers to WCS2 GetCoverage responses (#761)
+* Remove and replace tests based on S3FS, removing test dependency on aiobotocore (#762)
+* Documentation updates (#758)
+* Increment default version number (#???)
 
 1.8.21 (2021-10-21)
 -------------------
