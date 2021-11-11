@@ -99,6 +99,8 @@ def get_file_loc(x: str) -> str:
             raise ConfigException("Please set environment variable 'DATACUBE_OWS_CFG_ALLOW_S3=YES' "
                               + "to enable OWS config from AWS S3")
         cwd = xp.scheme + "://" + xp.netloc +  xp.path.rsplit("/", 1)[0]
+    elif xp.scheme:
+        raise ConfigException(f"Unsupported URL scheme in config inheritance: {xp.scheme}")
     else:
         abs_path = os.path.abspath(x)
         cwd = os.path.dirname(abs_path)

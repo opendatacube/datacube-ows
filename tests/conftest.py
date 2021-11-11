@@ -4,103 +4,14 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-import time
 from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-import requests
 import xarray as xr
-from s3fs.core import S3FileSystem
 
-from tests.utils import (MOTO_PORT, MOTO_S3_ENDPOINT_URI, coords, dim1_da,
-                         dummy_da)
+from tests.utils import coords, dim1_da, dummy_da
 
-
-def get_boto3_client():
-    from botocore.session import Session
-    session = Session()
-    return session.create_client("s3", endpoint_url=MOTO_S3_ENDPOINT_URI)
-
-@pytest.fixture
-def s3_base():
-    # writable local S3 system
-    # adapted from https://github.com/dask/s3fs/blob/main/s3fs/tests/test_s3fs.py
-    import subprocess
-
-    proc = subprocess.Popen(["moto_server", "s3", "-p", MOTO_PORT])
-
-    timeout = 5
-    while timeout > 0:
-        try:
-            r = requests.get(MOTO_S3_ENDPOINT_URI)
-            if r.ok:
-                break
-        except:
-            pass
-        timeout -= 0.1
-        time.sleep(0.1)
-    yield
-    proc.terminate()
-    proc.wait()
-
-@pytest.fixture()
-def s3(s3_base, monkeypatch):
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "foo")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "bar")
-
-    client = get_boto3_client()
-    client.create_bucket(Bucket="testbucket")
-
-    S3FileSystem.clear_instance_cache()
-    s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": MOTO_S3_ENDPOINT_URI})
-    s3.invalidate_cache()
-    yield s3
-
-@pytest.fixture
-def s3_config_simple(s3):
-    config_uri = "s3://testbucket/simple.json"
-    with s3.open(config_uri, "wb") as f_open:
-        f_open.write(b'{"test": 1234}')
-
-@pytest.fixture
-def s3_config_nested_1(s3, s3_config_simple):
-    config_uri = "s3://testbucket/nested_1.json"
-    with s3.open(config_uri, "wb") as f_open:
-        f_open.write(b'{"include": "simple.json", "type": "json"}')
-
-@pytest.fixture
-def s3_config_nested_2(s3, s3_config_simple):
-    config_uri = "s3://testbucket/nested_2.json"
-    with s3.open(config_uri, "wb") as f_open:
-        f_open.write(b'[{"test": 88888}, {"include": "simple.json", "type": "json"}]')
-
-@pytest.fixture
-def s3_config_nested_3(s3, s3_config_simple):
-    config_uri = "s3://testbucket/nested_3.json"
-    with s3.open(config_uri, "wb") as f_open:
-        f_open.write(b'{"test": 2222, "things": [{"test": 22562, "thing": null}, \
-            {"test": 22563, "thing": {"include": "simple.json", "type": "json"}}, \
-            {"test": 22564, "thing": {"include": "simple.json", "type": "json"}}]}'
-        )
-
-@pytest.fixture
-def s3_config_nested_4(s3, s3_config_simple, s3_config_nested_3):
-    config_uri = "s3://testbucket/nested_4.json"
-    with s3.open(config_uri, "wb") as f_open:
-        f_open.write(b'{"test": 3222, "things": [{"test": 2572, "thing": null}, \
-            {"test": 2573, "thing": {"include": "simple.json", "type": "json"}}, \
-            {"test": 2574, "thing": {"include": "nested_3.json", "type": "json"}}]}'
-        )
-
-@pytest.fixture
-def s3_config_mixed_nested(s3, s3_config_simple):
-    config_uri = "s3://testbucket/mixed_nested.json"
-    with s3.open(config_uri, "wb") as f_open:
-        f_open.write(b'{"test": 9364, \
-            "subtest": {"test_py": {"include": "tests.cfg.simple.simple", "type": "python"}, \
-            "test_json": {"include": "tests/cfg/simple.json", "type": "json"}}}'
-        )
 
 @pytest.fixture
 def flask_client(monkeypatch):
