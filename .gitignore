@@ -85,3 +85,4 @@ _version.py
 .env
 ows_refactored/
 local_cfg/
+.mypy_cache/
