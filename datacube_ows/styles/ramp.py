@@ -22,11 +22,12 @@ try:
 except ImportError:
     NDArray = numpy.ndarray
 
+from xarray import Dataset
+
 from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
-from xarray import Dataset
 
 _LOG = logging.getLogger(__name__)
 matplotlib.use('Agg')
