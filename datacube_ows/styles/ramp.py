@@ -16,7 +16,12 @@ import numpy
 from colour import Color
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex
-from numpy.typing import NDArray
+
+try:
+    from numpy.typing import NDArray
+except ImportError:
+    NDArray = numpy.ndarray
+
 from xarray import Dataset
 
 from datacube_ows.config_utils import CFG_DICT
