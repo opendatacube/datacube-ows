@@ -6,7 +6,7 @@
 import io
 import logging
 from datetime import datetime
-from typing import List, MutableMapping, Optional, Union, cast
+from typing import Callable, List, MutableMapping, Optional, Union, cast
 
 import numpy
 from colour import Color
@@ -126,6 +126,54 @@ class ValueMapRule(OWSConfigEntry):
         return vmap
 
 
+def apply_value_map(value_map: MutableMapping[str, List[ValueMapRule]],
+                    data: Dataset,
+                    band_mapper: Callable[[str], str]) -> Dataset:
+    imgdata = Dataset(coords=data.coords)
+    for cfg_band, rules in value_map.items():
+        # Run through each item
+        band = band_mapper(cfg_band)
+        bdata = cast(DataArray, data[band])
+        band_data = Dataset()
+        if bdata.dtype.kind == 'f':
+            # Convert back to int for bitmasking
+            bdata = ColorMapStyleDef.reint(bdata)
+        for rule in rules:
+            mask = rule.create_mask(bdata)
+
+            masked = ColorMapStyleDef.create_colordata(bdata, rule.rgb, rule.alpha, mask)
+            band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
+
+        imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
+    imgdata *= 255
+    return imgdata.astype('uint8')
+
+
+def value_map_legend(value_map: MutableMapping[str, List[ValueMapRule]],
+                     legend_cfg: CFG_DICT,
+                     bytesio: io.BytesIO) -> None:
+    patches = []
+    for band in value_map.keys():
+        for rule in reversed(value_map[band]):
+            # only include values that are not transparent (and that have a non-blank title or abstract)
+            if rule.alpha > 0.001 and rule.label:
+                try:
+                    patch = mpatches.Patch(color=rule.rgb.hex_l, label=rule.label)
+                # pylint: disable=broad-except
+                except Exception as e:
+                    print("Error creating patch?", e)
+                patches.append(patch)
+    cfg = legend_cfg
+    plt.rcdefaults()
+    if cfg.get("rcParams", None) is not None:
+        plt.rcParams.update(cfg.get("rcParams"))
+    figure = plt.figure(figsize=(cfg.get("width", 3),
+                                 cfg.get("height", 1.25)))
+    plt.axis('off')
+    legend = plt.legend(handles=patches, loc='center', frameon=False)
+    plt.savefig(bytesio, format='png')
+
+
 class ColorMapStyleDef(StyleDefBase):
     """
     Style subclass for value-map styles
@@ -189,26 +237,7 @@ class ColorMapStyleDef(StyleDefBase):
         #            data[band] = data[band].where(extent_mask, other=data[band].attrs['nodata'])
         #        except AttributeError:
         #            data[band] = data[band].where(extent_mask)
-
-        imgdata = Dataset(coords=data.coords)
-        for cfg_band, rules in self.value_map.items():
-            # Run through each item
-            band = self.product.band_idx.band(cfg_band)
-            bdata = cast(DataArray, data[band])
-            band_data = Dataset()
-            if bdata.dtype.kind == 'f':
-                # Convert back to int for bitmasking
-                bdata = ColorMapStyleDef.reint(bdata)
-            for rule in rules:
-                mask = rule.create_mask(bdata)
-
-                masked = ColorMapStyleDef.create_colordata(bdata, rule.rgb, rule.alpha, mask)
-                band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
-
-            imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
-
-        imgdata *= 255
-        return imgdata.astype('uint8')
+        return apply_value_map(self.value_map, data, self.product.band_idx.band)
 
     def single_date_legend(self, bytesio: io.BytesIO) -> None:
         """
@@ -216,27 +245,37 @@ class ColorMapStyleDef(StyleDefBase):
 
         :param bytesio:  io.BytesIO byte buffer.
         """
-        patches = []
-        for band in self.value_map.keys():
-            for rule in reversed(self.value_map[band]):
-                # only include values that are not transparent (and that have a non-blank title or abstract)
-                if rule.alpha > 0.001 and rule.label:
-                    try:
-                        patch = mpatches.Patch(color=rule.rgb.hex_l, label=rule.label)
-                    # pylint: disable=broad-except
-                    except Exception as e:
-                        print("Error creating patch?", e)
-                    patches.append(patch)
-        cfg = self.legend_cfg
-        plt.rcdefaults()
-        if cfg.get("rcParams", None) is not None:
-            plt.rcParams.update(cfg.get("rcParams"))
-        figure = plt.figure(figsize=(cfg.get("width", 3),
-                                     cfg.get("height", 1.25)))
-        plt.axis('off')
-        legend = plt.legend(handles=patches, loc='center', frameon=False)
-        plt.savefig(bytesio, format='png')
+        value_map_legend(self.value_map, self.legend_cfg, bytesio)
 
+    class MultiDateHandler(StyleDefBase.MultiDateHandler):
+        auto_legend = True
+
+        def __init__(self, style: "ColorMapStyleDef", cfg: CFG_DICT) -> None:
+            """
+            First stage initialisation
+
+            :param style: The parent style object
+            :param cfg: The multidate handler configuration
+            """
+            super().__init__(style, cfg)
+            style_cfg = cast(CFG_DICT, self._raw_cfg)
+
+        @property
+        def value_map(self):
+            if self.animate:
+                return self.style.value_map
+            else:
+                return ValueMapRule.value_map_from_config(self.style, cast(CFG_DICT, self._raw_cfg["value_map"]))
+
+        def transform_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
+            """
+            Apply image transformation
+
+            :param data: Raw data
+            :return: RGBA image xarray.  May have a time dimension
+            """
+            agg = self.aggregator(data)
+            return apply_value_map(self.value_map, agg, self.style.product.band_idx.band)
 
 # Register ColorMapStyleDef as a style subclass.
 StyleDefBase.register_subclass(ColorMapStyleDef, "value_map")
