@@ -197,12 +197,15 @@ class MultiDateValueMapRule(OWSConfigEntry):
         if self.values:
             for d_slice, vals in zip(date_slices, self.values):
                 d_mask: Optional[DataArray] = None
-                for v in cast(List[int], vals):
-                    vmask = d_slice == v
-                    if d_mask is None:
-                        d_mask = vmask
-                    else:
-                        d_mask |= vmask
+                if len(vals) == 0:
+                    d_mask = d_slice == d_slice
+                else:
+                    for v in cast(List[int], vals):
+                        vmask = d_slice == v
+                        if d_mask is None:
+                            d_mask = vmask
+                        else:
+                            d_mask |= vmask
                 if mask is None:
                     mask = d_mask
                 else:
