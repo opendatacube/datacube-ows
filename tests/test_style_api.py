@@ -253,7 +253,8 @@ def simple_colormap_style_cfg():
                     "title": "Possibly Tasty",
                     "abstract": "Tasty and Possible",
                     "flags": {
-                        "impossible": "Woah!"
+                        "flavour": "Tasty",
+                        "impossible": False
                     },
                     "color": "#00FF00"
                 },
@@ -269,7 +270,61 @@ def simple_colormap_style_cfg():
                     "color": "#0000FF"
                 },
             ]
-        }
+        },
+        "multi_date": [
+            {
+                "animate": False,
+                "preserve_user_date_order": True,
+                "allowed_count_range": [2, 2],
+                "value_map": {
+                    "pq": [
+                        {
+                            "title": "Bland to Tasty",
+                            "abstract": "All yummification.",
+                            "flags": [
+                                {
+                                    "flavour": "Bland"
+                                },
+                                {
+                                    "flavour": "Tasty"
+                                },
+                            ],
+                            "color": "#8080FF"
+                        },
+                        {
+                            "title": "Was ugly, is splodgy",
+                            "abstract": "unless they have also been yummified",
+                            "flags": [
+                                {
+                                    "ugly": True,
+                                },
+                                {
+                                    "splodgy": "Splodgy"
+                                }
+                            ],
+                            "color": "#FF00FF"
+                        },
+                        {
+                            "title": "Woah!",
+                            "abstract": "Ended up impossible (may have just always been impossible) - doesn't include impossible yummifications",
+                            "flags": [
+                                {}, # Empty date rule = matches all remaining pixels for that date
+                                {
+                                    "impossible": "Woah!"
+                                }
+                            ],
+                            "color": "#FF0080"
+                        },
+                        {
+                            "title": "Everything else",
+                            "abstract": "The rest of what's left",
+                            "flags": [{}, {}],
+                            "color": "#808080"
+                        }
+                    ]
+                }
+            }
+        ]
     }
 
 
@@ -305,6 +360,41 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     assert result["green"].values[5] == 255
     assert result["blue"].values[5] == 0
 
+def test_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, simple_colormap_style_cfg):
+    result = apply_ows_style_cfg(
+                        simple_colormap_style_cfg,
+                        dummy_col_map_time_data,
+                        valid_data_mask=timed_raw_calc_null_mask)
+    # Point 0: fallback
+    assert result["alpha"].values[0] == 255
+    assert result["red"].values[0] == 128
+    assert result["green"].values[0] == 128
+    assert result["blue"].values[0] == 128
+    # Point 1: Woah!
+    assert result["alpha"].values[1] == 255
+    assert result["red"].values[1] == 255
+    assert result["green"].values[1] == 0
+    assert result["blue"].values[1] == 128
+    # Point 2: ugly to splody
+    assert result["alpha"].values[2] == 255
+    assert result["red"].values[2] == 255
+    assert result["green"].values[2] == 0
+    assert result["blue"].values[2] == 255
+    # Point 3: yummification
+    assert result["alpha"].values[3] == 255
+    assert result["red"].values[3] == 128
+    assert result["green"].values[3] == 128
+    assert result["blue"].values[3] == 255
+    # Point 4: yummification
+    assert result["alpha"].values[4] == 255
+    assert result["red"].values[4] == 128
+    assert result["green"].values[4] == 128
+    assert result["blue"].values[4] == 255
+    # Point 5: yummification
+    assert result["alpha"].values[5] == 255
+    assert result["red"].values[5] == 128
+    assert result["green"].values[5] == 128
+    assert result["blue"].values[5] == 255
 
 @pytest.fixture
 def enum_colormap_style_cfg():

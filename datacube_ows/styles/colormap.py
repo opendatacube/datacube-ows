@@ -163,8 +163,8 @@ class MultiDateValueMapRule(OWSConfigEntry):
         self.values: Optional[List[List[int]]] = []
         if "flags" in cfg:
             date_flags = cast(CFG_DICT, cfg["flags"])
-            if len(date_flags) != len(self.mdh.max_count):
-                pass
+            if len(date_flags) != self.mdh.max_count:
+                raise ConfigException(f"Flags entry has wrong number of rule sets for date count")
             for flags in date_flags:
                 or_flag: bool = False
                 if "or" in flags and "and" in flags:
@@ -216,14 +216,14 @@ class MultiDateValueMapRule(OWSConfigEntry):
                 if not flags:
                     d_mask = d_slice == d_slice
                 elif or_flags:
-                    for f in cast(CFG_DICT, self.flags).items():
+                    for f in cast(CFG_DICT, flags).items():
                         f = {f[0]: f[1]}
                         if d_mask is None:
                             d_mask = make_mask(d_slice, **f)
                         else:
                             d_mask |= make_mask(d_slice, **f)
                 else:
-                    d_mask = make_mask(d_slice, **cast(CFG_DICT, self.flags))
+                    d_mask = make_mask(d_slice, **cast(CFG_DICT, flags))
                 if mask is None:
                     mask = d_mask
                 else:
@@ -265,10 +265,10 @@ def apply_multidate_value_map(value_map: MutableMapping[str, List[MultiDateValue
             bdata = ColorMapStyleDef.reint(bdata)
         for rule in rules:
             mask = rule.create_mask(bdata)
-            masked = ColorMapStyleDef.create_colordata(bdata, rule.rgb, rule.alpha, mask)
+            masked = ColorMapStyleDef.create_colordata(mask, rule.rgb, rule.alpha, mask)
             band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
         imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
-    imgdata *= 255
+    imgdata = imgdata * 255 + 0.5
     return imgdata.astype('uint8')
 
 
