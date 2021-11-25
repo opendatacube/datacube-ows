@@ -427,7 +427,7 @@ flags_def = {
 def dummy_col_map_data():
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     output = xr.Dataset({
-        "pq": dim1_da("pq", [0b01000, 0b11001, 0b01010, 0b10011, 0b00100, 0b10111], dim_coords,
+        "pq": dim1_da("pq", [0b01000, 0b11001, 0b00010, 0b10011, 0b00100, 0b10001], dim_coords,
                       attrs={
                           "flags_definition": flags_def
                       })

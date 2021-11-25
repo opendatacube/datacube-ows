@@ -516,7 +516,7 @@ def test_alpha_style_map(
 
         result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
-        assert (alpha_channel == 127).all()
+        assert (alpha_channel == 128).all()
 
         style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
@@ -626,8 +626,8 @@ def style_cfg_map_mask():
         "value_map": {
             "foo": [
                 {
-                    "title": "Non-Transparent",
-                    "abstract": "A Non-Transparent Value",
+                    "title": "Transparent",
+                    "abstract": "A Transparent Value",
                     "flags": {
                         "bar": 1,
                     },

@@ -52,7 +52,10 @@ class ValueMapRule(OWSConfigEntry):
             self.label = None
         self.color_str = cast(str, cfg["color"])
         self.rgb = Color(self.color_str)
-        self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
+        if cfg.get("mask"):
+            self.alpha = 0.0
+        else:
+            self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
         if "flags" in cfg:
             flags = cast(CFG_DICT, cfg["flags"])
             self.or_flags: bool = False
@@ -156,7 +159,10 @@ class MultiDateValueMapRule(OWSConfigEntry):
             self.label = None
         self.color_str = cast(str, cfg["color"])
         self.rgb = Color(self.color_str)
-        self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
+        if cfg.get("mask"):
+            self.alpha = 0.0
+        else:
+            self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
 
         self.flags: Optional[List[CFG_DICT]] = []
         self.or_flags: Optional[List[bool]] = []
@@ -268,14 +274,14 @@ def apply_multidate_value_map(value_map: MutableMapping[str, List[MultiDateValue
             masked = ColorMapStyleDef.create_colordata(mask, rule.rgb, rule.alpha, mask)
             band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
         imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
-    imgdata = imgdata * 255 + 0.5
+    imgdata = (imgdata * 255 + 0.5).clip(min=0, max=255)
     return imgdata.astype('uint8')
 
 
 def apply_value_map(value_map: MutableMapping[str, List[ValueMapRule]],
                     data: Dataset,
                     band_mapper: Callable[[str], str]) -> Dataset:
-    imgdata = Dataset(coords=data.coords)
+    imgdata = Dataset(coords={k: v for k, v in data.coords.items() if k != "time"})
     for cfg_band, rules in value_map.items():
         # Run through each item
         band = band_mapper(cfg_band)
@@ -290,7 +296,7 @@ def apply_value_map(value_map: MutableMapping[str, List[ValueMapRule]],
             band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
 
         imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
-    imgdata *= 255
+    imgdata = (imgdata * 255 + 0.5).clip(min=0, max=255)
     return imgdata.astype('uint8')
 
 

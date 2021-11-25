@@ -332,8 +332,11 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
-    # point 0 fall through - transparent
-    assert result["alpha"].values[0] == 0
+    # point 0 tasy and possible: green
+    assert result["alpha"].values[0] == 255
+    assert result["red"].values[0] == 0
+    assert result["green"].values[0] == 255
+    assert result["blue"].values[0] == 0
     # point 1 tasty & impossible: red
     assert result["alpha"].values[1] == 255
     assert result["red"].values[1] == 255
@@ -344,21 +347,18 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     assert result["red"].values[2] == 0
     assert result["green"].values[2] == 0
     assert result["blue"].values[2] == 255
-    # point 3 bland & impossible: green
+    # point 3 splodgy or ugly: blue
     assert result["alpha"].values[3] == 255
     assert result["red"].values[3] == 0
-    assert result["green"].values[3] == 255
-    assert result["blue"].values[3] == 0
+    assert result["green"].values[3] == 0
+    assert result["blue"].values[3] == 255
     # point 4 splodgy or ugly: blue
     assert result["alpha"].values[4] == 255
     assert result["red"].values[4] == 0
     assert result["green"].values[4] == 0
     assert result["blue"].values[4] == 255
-    # point 5 bland & impossible: green
-    assert result["alpha"].values[5] == 255
-    assert result["red"].values[5] == 0
-    assert result["green"].values[5] == 255
-    assert result["blue"].values[5] == 0
+    # point 5 fall through -transparent
+    assert result["alpha"].values[5] == 0
 
 def test_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, simple_colormap_style_cfg):
     result = apply_ows_style_cfg(
@@ -416,7 +416,7 @@ def enum_colormap_style_cfg():
                 },
                 {
                     "title": "",
-                    "values": [23],
+                    "values": [17],
                     "color": "#0000FF"
                 },
             ]
@@ -450,7 +450,7 @@ def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colorm
     assert result["red"].values[4] == 0
     assert result["green"].values[4] == 255
     assert result["blue"].values[4] == 0
-    # point 5 (23): blue
+    # point 5 (17): blue
     assert result["alpha"].values[5] == 255
     assert result["red"].values[5] == 0
     assert result["green"].values[5] == 0
