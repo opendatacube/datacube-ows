@@ -26,14 +26,14 @@ CREATE SCHEMA agdc;
 ALTER SCHEMA agdc OWNER TO opendatacube;
 
 --
--- Name: pg_cron; Type: EXTENSION; Schema: -; Owner: 
+-- Name: pg_cron; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pg_cron; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pg_cron; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION pg_cron IS 'Job scheduler for PostgreSQL';
@@ -65,42 +65,42 @@ CREATE SCHEMA wms;
 ALTER SCHEMA wms OWNER TO opendatacube;
 
 --
--- Name: hstore; Type: EXTENSION; Schema: -; Owner: 
+-- Name: hstore; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION hstore; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION hstore; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION hstore IS 'data type for storing sets of (key, value) pairs';
 
 
 --
--- Name: postgis; Type: EXTENSION; Schema: -; Owner: 
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial types and functions';
 
 
 --
--- Name: postgis_topology; Type: EXTENSION; Schema: -; Owner: 
+-- Name: postgis_topology; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS postgis_topology WITH SCHEMA topology;
 
 
 --
--- Name: EXTENSION postgis_topology; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION postgis_topology; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION postgis_topology IS 'PostGIS topology spatial types and functions';
@@ -189,7 +189,7 @@ ALTER FUNCTION agdc.wms_get_min(integer[], text) OWNER TO opendatacube;
 
 CREATE FUNCTION public.asbinary(public.geometry) RETURNS bytea
     LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/postgis-2.5', 'LWGEOM_asBinary';
+    AS '$libdir/postgis-3.1', 'LWGEOM_asBinary';
 
 
 ALTER FUNCTION public.asbinary(public.geometry) OWNER TO postgres;
@@ -200,7 +200,7 @@ ALTER FUNCTION public.asbinary(public.geometry) OWNER TO postgres;
 
 CREATE FUNCTION public.asbinary(public.geometry, text) RETURNS bytea
     LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/postgis-2.5', 'LWGEOM_asBinary';
+    AS '$libdir/postgis-3.1', 'LWGEOM_asBinary';
 
 
 ALTER FUNCTION public.asbinary(public.geometry, text) OWNER TO postgres;
@@ -211,7 +211,7 @@ ALTER FUNCTION public.asbinary(public.geometry, text) OWNER TO postgres;
 
 CREATE FUNCTION public.astext(public.geometry) RETURNS text
     LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/postgis-2.5', 'LWGEOM_asText';
+    AS '$libdir/postgis-3.1', 'LWGEOM_asText';
 
 
 ALTER FUNCTION public.astext(public.geometry) OWNER TO postgres;
@@ -222,7 +222,7 @@ ALTER FUNCTION public.astext(public.geometry) OWNER TO postgres;
 
 CREATE FUNCTION public.estimated_extent(text, text) RETURNS public.box2d
     LANGUAGE c IMMUTABLE STRICT SECURITY DEFINER
-    AS '$libdir/postgis-2.5', 'geometry_estimated_extent';
+    AS '$libdir/postgis-3.1', 'geometry_estimated_extent';
 
 
 ALTER FUNCTION public.estimated_extent(text, text) OWNER TO postgres;
@@ -233,7 +233,7 @@ ALTER FUNCTION public.estimated_extent(text, text) OWNER TO postgres;
 
 CREATE FUNCTION public.estimated_extent(text, text, text) RETURNS public.box2d
     LANGUAGE c IMMUTABLE STRICT SECURITY DEFINER
-    AS '$libdir/postgis-2.5', 'geometry_estimated_extent';
+    AS '$libdir/postgis-3.1', 'geometry_estimated_extent';
 
 
 ALTER FUNCTION public.estimated_extent(text, text, text) OWNER TO postgres;
@@ -266,7 +266,7 @@ ALTER FUNCTION public.geomfromtext(text, integer) OWNER TO postgres;
 
 CREATE FUNCTION public.ndims(public.geometry) RETURNS smallint
     LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/postgis-2.5', 'LWGEOM_ndims';
+    AS '$libdir/postgis-3.1', 'LWGEOM_ndims';
 
 
 ALTER FUNCTION public.ndims(public.geometry) OWNER TO postgres;
@@ -277,7 +277,7 @@ ALTER FUNCTION public.ndims(public.geometry) OWNER TO postgres;
 
 CREATE FUNCTION public.setsrid(public.geometry, integer) RETURNS public.geometry
     LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/postgis-2.5', 'LWGEOM_set_srid';
+    AS '$libdir/postgis-3.1', 'LWGEOM_set_srid';
 
 
 ALTER FUNCTION public.setsrid(public.geometry, integer) OWNER TO postgres;
@@ -288,7 +288,7 @@ ALTER FUNCTION public.setsrid(public.geometry, integer) OWNER TO postgres;
 
 CREATE FUNCTION public.srid(public.geometry) RETURNS integer
     LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/postgis-2.5', 'LWGEOM_get_srid';
+    AS '$libdir/postgis-3.1', 'LWGEOM_get_srid';
 
 
 ALTER FUNCTION public.srid(public.geometry) OWNER TO postgres;

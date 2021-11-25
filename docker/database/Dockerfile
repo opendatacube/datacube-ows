@@ -1,2 +1,2 @@
-FROM kartoza/postgis:12.4
+FROM kartoza/postgis:13-3.1
 COPY dump.sql /docker-entrypoint-initdb.d/
