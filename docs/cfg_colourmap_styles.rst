@@ -463,11 +463,11 @@ You can access this with:
             "value_map": {
                 "level4": [
                     {'title': "Unchanged", 'abstract': "Equal", 'values': [255], 'color': '#000000'},
-                    # Other rules, as per single-value colour map
+                    # ... Other rules, as per the single-value colour map, not shown.
                 ]
             }
         }
     ],
 
-Note that the multi-date value_map is expected to act as single-date value map on the time-flattened
+The multi-date value_map is expected to act as single-date value map on the time-flattened
 data as returned by the aggregator function.
