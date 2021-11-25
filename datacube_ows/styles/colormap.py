@@ -213,7 +213,9 @@ class MultiDateValueMapRule(OWSConfigEntry):
         else:
             for d_slice, flags, or_flags in zip(date_slices, self.flags, self.or_flags):
                 d_mask: Optional[DataArray] = None
-                if or_flags:
+                if not flags:
+                    d_mask = d_slice == d_slice
+                elif or_flags:
                     for f in cast(CFG_DICT, self.flags).items():
                         f = {f[0]: f[1]}
                         if d_mask is None:
@@ -402,7 +404,6 @@ class ColorMapStyleDef(StyleDefBase):
             :param cfg: The multidate handler configuration
             """
             super().__init__(style, cfg)
-            style_cfg = cast(CFG_DICT, self._raw_cfg)
             if self.animate:
                 self._value_map: Optional[MutableMapping[str, Union[ValueMapRule, MultiDateValueMapRule]]] = None
             elif self.aggregator:

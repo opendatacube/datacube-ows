@@ -290,3 +290,99 @@ E.g.::
                  "font.weight": "bold",
         },
     }
+
+-------------------
+Multi-Date Requests
+-------------------
+
+Colour Map Styles support three approaches to
+`multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_.
+
+In addition to `standard animated handlers <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_
+as supported by all style types, Colour Map Styles support two additional approaches
+to produce an non-animated image from a multi-date request:
+
+1. Using a variant of the `value_map`_ entry used for the single-date case. This
+   is a much simpler way of achieving most use cases.
+2. Using an aggregator function, which allows for fully customisable behaviour but
+   requires writing Python code.
+
+Multi-date value_map
+====================
+
+A value_map in a multi-date handler has the same general structure as the
+single date `value_map`_ described above.  The handler must serve a single
+number of date values.  The discussion here will assume an `allowed_count_range``
+of ``[2, 2]``, but higher values should work.
+
+The ``flags`` or ``values`` entry for each rule is replaced by a list of
+single-date entries.  A rule is matched for a pixel in the output image
+if the pixel matches the provided rules at all date values.  Additionally
+an empty rule set of either type for a particular date means
+"matches everything for that date that hasn't matched already".
+
+See this simple example:
+
+E.g.:
+
+::
+
+    style_example = {
+        "name": "multi_date_example",
+        "title": "Multidate enumeration example",
+        "abstract": "This uses enumeration type rules, but bitflag rules can be used in a similar manner",
+        # This is the single date value map.
+        "value_map": {
+            "band_name": [
+                {'title': "A", 'values': [0], 'color': '#000000', 'alpha': 0},
+                {'title': "B", 'values': [1], 'color': '#FF0000', 'alpha': 1},
+                {'title': "C", 'values': [2], 'color': '#00FF00', 'alpha': 1},
+                {'title': "D", 'values': [3], 'color': '#0000FF', 'alpha': 1},
+            ]
+        },
+        "multi_date": [
+            {
+                "animate": False,
+                "preserve_user_date_order": True,
+                "allowed_count_range": [2, 2],
+                #
+                # This is multi-date value-map for a handler with allowed count of 2,
+                # so instead of being a list of integers, the values section of each
+                # rule is a list of two lists of integers.
+                #
+                "value_map": {
+                    "band_name": [
+                        # Simple example rules
+                        {'title': "A (unchanged)", 'values': [[0], [0]], 'color': '#000000', 'alpha': 1},
+                        {'title': "B -> A", 'values': [[1], [0]], 'color': '#300000', 'alpha': 1},
+
+                        # This matches all remaining cases that end in type A, so C->A and D->A
+                        {'title': "Other -> A", 'values': [[], [0]], 'color': '#003030', 'alpha': 1},
+
+                        # This covers C->C, D->D, C->D and D->C
+                        {'title': "C/D -> C/D", 'values': [[2, 3], [2, 3]], 'color': '#00A0A0', 'alpha': 1},
+
+                        # B to anything - except A, as that has already been matched by a previous rule.
+                        {'title': "B -> Other", 'values': [[1], []], 'color': '#A00000', 'alpha': 1},
+
+                        # Matches all remaining combinations
+                        {'title': "Everything else", 'values': [[], []], 'color': '#FFFFFF', 'alpha': 1},
+                    ]
+                },
+            }
+        ]
+    }
+
+Aggregator function
+===================
+
+Alternately, you can define an aggregator function using OWS's
+`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+
+The function is passed a multi-date Xarray Dataset and is expected to return a timeless Dataset,
+which can then be rendered using either the single-date value-map, or a separate single-date value-map
+defined for the handler.
+
+This approach is infinitely flexible, and may be more efficient for some use cases than
+using the multidate value map approach.
+
