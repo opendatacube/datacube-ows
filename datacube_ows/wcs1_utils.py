@@ -315,7 +315,7 @@ def get_coverage_data(req, qprof):
                                                   sum(req.product.band_idx.dtype_size(b) for b in req.bands),
                                                   len(req.times))
         except ResourceLimited as e:
-            if e.wcs_hard or req.product.low_res_product_names is None:
+            if e.wcs_hard or not req.product.low_res_product_names:
                 raise WCS1Exception(
                     f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
                     + "Please reduce the bounds of your request and try again.")
