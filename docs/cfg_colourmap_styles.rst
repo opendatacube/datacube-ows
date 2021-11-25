@@ -321,7 +321,7 @@ if the pixel matches the provided rules at all date values.  Additionally
 an empty rule set of either type for a particular date means
 "matches everything for that date that hasn't matched already".
 
-See this simple example:
+See this simple example using enumeration type rules:
 
 E.g.:
 
@@ -373,6 +373,53 @@ E.g.:
         ]
     }
 
+This fanciful example from the test suite illustrates the syntax for
+bitflag type rules:
+
+::
+
+    "multi_date": [
+        {
+            "animate": False,
+            "preserve_user_date_order": True,
+            "allowed_count_range": [2, 2],
+            "value_map": {
+                "pq": [
+                    {
+                        "title": "Bland to Tasty",
+                        "flags": [
+                            {"flavour": "Bland"}, # Rules for first date
+                            {"flavour": "Tasty"}, # Rules for second date
+                        ],
+                        "color": "#8080FF"
+                    },
+                    {
+                        "title": "Was ugly, is splodgy",
+                        "flags": [
+                            {"ugly": True,},
+                            {"splodgy": "Splodgy"}
+                        ],
+                        "color": "#FF00FF"
+                    },
+                    {
+                        "title": "Woah!",
+                        "flags": [
+                            {}, # Empty date rule = matches all remaining pixels for that date
+                            {"impossible": "Woah!"}
+                        ],
+                        "color": "#FF0080"
+                    },
+                    {
+                        "title": "Everything else",
+                        "abstract": "The rest of what's left",
+                        "flags": [{}, {}],
+                        "color": "#808080"
+                    }
+                ]
+            }
+        }
+    ]
+
 Aggregator function
 ===================
 
@@ -386,3 +433,41 @@ defined for the handler.
 This approach is infinitely flexible, and may be more efficient for some use cases than
 using the multidate value map approach.
 
+As a simple example, given the following callback function:
+
+::
+
+    def detect_equals(data: xr.Dataset) -> xr.Dataset:
+        # Split data in two date slices
+        data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)
+
+        equality_mask = data1["level4"] != data2["level4"]
+
+        # Set pixels that are equal in both date slices to 255, set all
+        # other pixels at the second date-slice value.
+        data1["level4"] = data2["level4"].where(equality_mask, other=255)
+        return data1
+
+You can access this with:
+
+::
+
+    "multi_date": [
+        {
+            "animate": False,
+            "preserve_user_date_order": True,
+            "allowed_count_range": [2, 2],
+            "aggregator_function": {
+                "function": "my_module.my_package.detect_equals",
+            },
+            "value_map": {
+                "level4": [
+                    {'title': "Unchanged", 'abstract': "Equal", 'values': [255], 'color': '#000000'},
+                    # Other rules, as per single-value colour map
+                ]
+            }
+        }
+    ],
+
+Note that the multi-date value_map is expected to act as single-date value map on the time-flattened
+data as returned by the aggregator function.
