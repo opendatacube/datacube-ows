@@ -436,7 +436,7 @@ def enum_colormap_style_cfg():
                         },
                         {
                             "title": "Blah Blah",
-                            "values": [[8,25], [17,30,31]],
+                            "values": [[8, 25], [17, 30, 31]],
                             "color": "#FF0000"
                         },
                         {
