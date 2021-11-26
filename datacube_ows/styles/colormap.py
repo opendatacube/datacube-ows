@@ -119,7 +119,7 @@ class ValueMapRule(AbstractValueMapRule):
         self.values: Optional[List[int]] = None
         super().__init__(style_def=style_cfg, band=band, cfg=cfg)
 
-    def parse_rule_spec(self, cfg:CFG_DICT):
+    def parse_rule_spec(self, cfg: CFG_DICT):
         if "flags" in cfg:
             flags = cast(CFG_DICT, cfg["flags"])
             self.or_flags: bool = False
