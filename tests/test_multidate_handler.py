@@ -32,6 +32,7 @@ def test_multidate_handler():
             self.product = "test"
             self.needed_bands = ["test"]
             self.index_function = lambda x: FakeData()
+            self.stand_alone = True
             self.transform_single_date_data = lambda x: x
 
     data = np.random.randint(0, 255, size=(4, 3), dtype=np.uint8)
