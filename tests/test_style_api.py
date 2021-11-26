@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 
+from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.styles.api import ( # noqa: F401 isort:skip
                                      StandaloneStyle, apply_ows_style,
                                      apply_ows_style_cfg, create_geobox,
@@ -420,7 +421,34 @@ def enum_colormap_style_cfg():
                     "color": "#0000FF"
                 },
             ]
-        }
+        },
+        "multi_date": [
+            {
+                "animate": False,
+                "preserve_user_date_order": True,
+                "allowed_count_range": [2, 2],
+                "value_map": {
+                    "pq": [
+                        {
+                            "title": "Rock and Roll",
+                            "values": [[], [14, 19, 27]],
+                            "color": "#00FF00"
+                        },
+                        {
+                            "title": "Blah Blah",
+                            "values": [[8,25], [17,30,31]],
+                            "color": "#FF0000"
+                        },
+                        {
+                            "title": "Foo Blah",
+                            "values": [[10], []],
+                            "color": "#0000FF",
+                            "alpha": 0.0
+                        },
+                    ]
+                }
+            }
+        ]
     }
 
 
@@ -455,6 +483,127 @@ def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colorm
     assert result["red"].values[5] == 0
     assert result["green"].values[5] == 0
     assert result["blue"].values[5] == 255
+
+def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, enum_colormap_style_cfg):
+    result = apply_ows_style_cfg(enum_colormap_style_cfg,
+                                 dummy_col_map_time_data,
+                                 valid_data_mask=timed_raw_calc_null_mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    # point 0 (8->30) Blah Blah - red
+    assert result["alpha"].values[0] == 255
+    assert result["red"].values[1] == 255
+    assert result["green"].values[1] == 0
+    assert result["blue"].values[1] == 0
+    # point 1 (25->17) Blah - red
+    assert result["alpha"].values[1] == 255
+    assert result["red"].values[1] == 255
+    assert result["green"].values[1] == 0
+    assert result["blue"].values[1] == 0
+    # point 2 (10->13) - Foo Blah, transparent
+    assert result["alpha"].values[2] == 0
+    # point 3 (19->14) - rnr green
+    assert result["alpha"].values[3] == 255
+    assert result["red"].values[3] == 0
+    assert result["green"].values[3] == 255
+    assert result["blue"].values[3] == 0
+    # point 4 (4->27): rnr green
+    assert result["alpha"].values[4] == 255
+    assert result["red"].values[4] == 0
+    assert result["green"].values[4] == 255
+    assert result["blue"].values[4] == 0
+    # point 5 (23->24): fall through - transparent
+    assert result["alpha"].values[5] == 0
+
+
+@pytest.fixture
+def enum_colormap_aggregate_multidate():
+    def test_agg(data):
+        # Split data in two date slices
+        data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)
+
+        mask = (data1["pq"] == 23) & (data2["pq"] == 24)
+        # Set pixels that are equal in both date slices to 255, set all
+        # other pixels at the second date-slice value.
+        data1["pq"] = data2["pq"].where(~mask, other=0).where(mask, other=1)
+        return data1
+
+    return {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "value_map": {
+            "pq": [
+                {
+                    "title": "Blah",
+                    "values": [8, 25],
+                    "color": "#FF0000"
+                },
+                {
+                    "title": "Rock and Roll",
+                    "values": [4, 19, 25],
+                    "color": "#00FF00"
+                },
+                {
+                    "title": "",
+                    "values": [17],
+                    "color": "#0000FF"
+                },
+            ]
+        },
+        "multi_date": [
+            {
+                "animate": False,
+                "preserve_user_date_order": True,
+                "allowed_count_range": [2, 2],
+                "aggregator_function": test_agg,
+                "value_map": {
+                    "pq": [
+                        {
+                            "title": "GGG",
+                            "values": [0],
+                            "color": "#0000FF"
+                        },
+                        {
+                            "title": "SSS",
+                            "values": [1],
+                            "color": "#0000FF",
+                            "mask": True
+                        },
+                    ]
+                },
+            }
+        ]
+    }
+
+def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_data, timed_raw_calc_null_mask):
+    result = apply_ows_style_cfg(enum_colormap_aggregate_multidate,
+                                 dummy_col_map_time_data,
+                                 valid_data_mask=timed_raw_calc_null_mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    # point 0 (8->30) no
+    assert result["alpha"].values[0] == 0
+    # point 1 (25->17) no
+    assert result["alpha"].values[1] == 0
+    # point 2 (10->13) no
+    assert result["alpha"].values[2] == 0
+    # point 3 (19->14) no
+    assert result["alpha"].values[3] == 0
+    # point 4 (4->27): no
+    assert result["alpha"].values[4] == 0
+    # point 5 (23->24): yes!
+    assert result["alpha"].values[5] == 255
+    assert result["red"].values[4] == 0
+    assert result["green"].values[4] == 0
+    assert result["blue"].values[4] == 255
+
+
+def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_cfg):
+    simple_colormap_style_cfg["multi_date"][0]["allowed_count_range"] = [2, 4]
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_colormap_style_cfg)
+    assert "min_count and max_count equal" in str(e.value)
 
 
 def test_ramp_legend(simple_colormap_style_cfg):

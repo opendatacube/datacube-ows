@@ -459,7 +459,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             self.frame_duration: int = 1000
             if "aggregator_function" in cfg:
                 self.aggregator: Optional[FunctionWrapper] = FunctionWrapper(style.product,
-                                                  cast(CFG_DICT, cfg["aggregator_function"]))
+                                                  cast(CFG_DICT, cfg["aggregator_function"]),
+                                                                             stand_alone=self.style.stand_alone)
             elif self.animate:
                 self.aggregator = FunctionWrapper(style.product, lambda x: x, stand_alone=True)
                 self.frame_duration = cast(int, cfg.get("frame_duration", 1000))
