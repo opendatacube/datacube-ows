@@ -21,12 +21,13 @@ from datacube_ows.styles.base import StyleDefBase
 _LOG = logging.getLogger(__name__)
 
 
-class ValueMapRule(OWSConfigEntry):
+class AbstractValueMapRule(OWSConfigEntry):
     """
     A Value Map Rule.
 
     Construct a ValueMap rule-set with ValueMapRule.value_map_from_config
     """
+
     def __init__(self, style_def: "ColorMapStyleDef", band: str, cfg: CFG_DICT) -> None:
         """
         Construct a Value Map Rule
@@ -56,6 +57,69 @@ class ValueMapRule(OWSConfigEntry):
             self.alpha = 0.0
         else:
             self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
+        self.parse_rule_spec(cfg)
+
+    def parse_rule_spec(self, cfg: CFG_DICT):
+        raise NotImplementedError()
+
+    def create_mask(self, data: DataArray) -> DataArray:
+        raise NotImplementedError()
+
+    @classmethod
+    def value_map_from_config(cls,
+                          style_or_mdh: Union["ColorMapStyleDef", "ColorMapStyleDef.MultiDateHandler"],
+                          cfg: CFG_DICT
+                              ) -> MutableMapping[str, List["AbstractValueMapRule"]]:
+        """
+        Create a multi-date value map rule set from a config specification
+
+        :param style: The parent style definition object
+        :param cfg: The specification for the multi-date value map.
+
+        :return: A value map ruleset dictionary.
+        """
+        if isinstance(style_or_mdh, ColorMapStyleDef):
+            typ = ValueMapRule
+        else:
+            mdh = cast(ColorMapStyleDef.MultiDateHandler, style_or_mdh)
+            if mdh.animate:
+                raise ConfigException("Multidate value maps not supported for animation handlers")
+            elif mdh.aggregator:
+                style_or_mdh = mdh.style
+                typ = ValueMapRule
+            else:
+                if mdh.min_count != mdh.max_count:
+                    raise ConfigException(
+                        "MultiDate value map only supported on multi-date handlers with min_count and max_count equal.")
+                typ = MultiDateValueMapRule
+        vmap: MutableMapping[str, List["AbstractValueMapRule"]] = {}
+        for band_name, rules in cfg.items():
+            band_rules = [typ(style_or_mdh, band_name, rule) for rule in cast(List[CFG_DICT], rules)]
+            vmap[band_name] = band_rules
+        return vmap
+
+
+class ValueMapRule(AbstractValueMapRule):
+    """
+    A Value Map Rule.
+
+    Construct a ValueMap rule-set with ValueMapRule.value_map_from_config
+    """
+    def __init__(self, style_cfg: "ColorMapStyleDef", band: str,
+                 cfg: CFG_DICT) -> None:
+        """
+        Construct a Multi-date Value Map Rule
+
+        :param mdh: The owning ColorMapStyleDef object
+        :param band: The name of the flag-band the rules apply to
+        :param cfg: The rule specification
+        """
+        self.flags: Optional[CFG_DICT] = None
+        self.or_flags: bool = False
+        self.values: Optional[List[int]] = None
+        super().__init__(style_def=style_cfg, band=band, cfg=cfg)
+
+    def parse_rule_spec(self, cfg:CFG_DICT):
         if "flags" in cfg:
             flags = cast(CFG_DICT, cfg["flags"])
             self.or_flags: bool = False
@@ -75,9 +139,9 @@ class ValueMapRule(OWSConfigEntry):
         else:
             self.values = None
         if not self.flags and not self.values:
-            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} must have a non-empty 'flags' or 'values' section.")
+            raise ConfigException(f"Value map rule in style {self.style.name} of layer {self.style.product.name} must have a non-empty 'flags' or 'values' section.")
         if self.flags and self.values:
-            raise ConfigException(f"Value map rule in style {style_def.name} of layer {style_def.product.name} has both a 'flags' and a 'values' section - choose one.")
+            raise ConfigException(f"Value map rule in style {self.style.name} of layer {self.style.product.name} has both a 'flags' and a 'values' section - choose one.")
 
     def create_mask(self, data: DataArray) -> DataArray:
         """
@@ -106,67 +170,29 @@ class ValueMapRule(OWSConfigEntry):
             mask = make_mask(data, **cast(CFG_DICT, self.flags))
         return mask
 
-    @classmethod
-    def value_map_from_config(cls,
-                              style: "ColorMapStyleDef",
-                              cfg: CFG_DICT) -> MutableMapping[str, List["ValueMapRule"]]:
-        """
-        Create a value map rule set from a config specification
 
-        :param style: The parent style definition object
-        :param cfg: The specification for the value map.
-
-        :return: A value map ruleset dictionary.
-        """
-        vmap: MutableMapping[str, List["ValueMapRule"]] = {}
-        for band_name, rules in cfg.items():
-            band_rules = [cls(style, band_name, rule) for rule in cast(List[CFG_DICT], rules)]
-            vmap[band_name] = band_rules
-        return vmap
-
-
-class MultiDateValueMapRule(OWSConfigEntry):
-    # TODO: inherit from ValueMapRule? or merge into it?
+class MultiDateValueMapRule(AbstractValueMapRule):
     """
-    A  Mulit-Date Value Map Rule.
+    A  Multi-Date Value Map Rule.
 
     Construct a Multi-Date ValueMap rule-set with MultiDateValueMapRule.value_map_from_config
     """
     def __init__(self, mdh: "ColorMapStyleDef.MultiDateHandler", band: str,
-                 rule_id: int, cfg: CFG_DICT) -> None:
+                 cfg: CFG_DICT) -> None:
         """
         Construct a Multi-date Value Map Rule
 
-        :param style_def: The owning ColorMapStyleDef object
+        :param mdh: The owning ColorMapStyleDef object
         :param band: The name of the flag-band the rules apply to
         :param cfg: The rule specification
         """
-        super().__init__(cfg)
-        cfg = cast(CFG_DICT, self._raw_cfg)
         self.mdh = mdh
-        self.id = rule_id
-        self.band = mdh.style.local_band(band)
-
-        self.title = cast(str, cfg["title"])
-        self.abstract = cast(str, cfg.get("abstract"))
-        if self.title and self.abstract:
-            self.label: Optional[str] = f"{self.title} - {self.abstract}"
-        elif self.title:
-            self.label = self.title
-        elif self.abstract:
-            self.label = self.abstract
-        else:
-            self.label = None
-        self.color_str = cast(str, cfg["color"])
-        self.rgb = Color(self.color_str)
-        if cfg.get("mask"):
-            self.alpha = 0.0
-        else:
-            self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
-
         self.flags: Optional[List[CFG_DICT]] = []
         self.or_flags: Optional[List[bool]] = []
         self.values: Optional[List[List[int]]] = []
+        super().__init__(style_def=mdh.style, band=band, cfg=cfg)
+
+    def parse_rule_spec(self, cfg: CFG_DICT):
         if "flags" in cfg:
             date_flags = cast(CFG_DICT, cfg["flags"])
             if len(date_flags) != self.mdh.max_count:
@@ -187,9 +213,9 @@ class MultiDateValueMapRule(OWSConfigEntry):
         else:
             self.values = None
         if not self.flags and not self.values:
-            raise ConfigException(f"Multi-Date Value map rule in style {mdh.style.name} of layer {mdh.style.product.name} must have a non-empty 'flags' or 'values' section.")
+            raise ConfigException(f"Multi-Date Value map rule in style {self.style.name} of layer {self.style.product.name} must have a non-empty 'flags' or 'values' section.")
         if self.flags and self.values:
-            raise ConfigException(f"Multi-Date Value map rule in style {mdh.style.name} of layer {mdh.style.product.name} has both a 'flags' and a 'values' section - choose one.")
+            raise ConfigException(f"Multi-Date Value map rule in style {self.style.name} of layer {self.style.product.name} has both a 'flags' and a 'values' section - choose one.")
 
     def create_mask(self, data: DataArray) -> DataArray:
         """
@@ -235,26 +261,6 @@ class MultiDateValueMapRule(OWSConfigEntry):
                 else:
                     mask &= d_mask
         return mask
-
-    @classmethod
-    def value_map_from_config(cls,
-                              mdh: "ColorMapStyleDef.MultiDateHandler",
-                              cfg: CFG_DICT) -> MutableMapping[str, List["MultiDateValueMapRule"]]:
-        """
-        Create a multi-date value map rule set from a config specification
-
-        :param style: The parent style definition object
-        :param cfg: The specification for the multi-date value map.
-
-        :return: A value map ruleset dictionary.
-        """
-        vmap: MutableMapping[str, List["ValueMapRule"]] = {}
-        if mdh.min_count != mdh.max_count:
-            raise ConfigException("MultiDate value map only supported on multi-date handlers with min_count and max_count equal.")
-        for i, (band_name, rules) in enumerate(cfg.items()):
-            band_rules = [cls(mdh, band_name, i, rule) for rule in cast(List[CFG_DICT], rules)]
-            vmap[band_name] = band_rules
-        return vmap
 
 
 def apply_multidate_value_map(value_map: MutableMapping[str, List[MultiDateValueMapRule]],
@@ -341,7 +347,7 @@ class ColorMapStyleDef(StyleDefBase):
         """
         super().__init__(product, style_cfg, stand_alone=stand_alone, user_defined=user_defined)
         style_cfg = cast(CFG_DICT, self._raw_cfg)
-        self.value_map = ValueMapRule.value_map_from_config(self, cast(CFG_DICT, style_cfg["value_map"]))
+        self.value_map = AbstractValueMapRule.value_map_from_config(self, cast(CFG_DICT, style_cfg["value_map"]))
         for band in self.value_map.keys():
             self.raw_needed_bands.add(band)
 
@@ -410,12 +416,10 @@ class ColorMapStyleDef(StyleDefBase):
             :param cfg: The multidate handler configuration
             """
             super().__init__(style, cfg)
-            if self.animate:
-                self._value_map: Optional[MutableMapping[str, Union[ValueMapRule, MultiDateValueMapRule]]] = None
-            elif self.aggregator:
-                self._value_map = ValueMapRule.value_map_from_config(self.style, cast(CFG_DICT, self._raw_cfg["value_map"]))
-            else:
-                self._value_map = MultiDateValueMapRule.value_map_from_config(self, cast(CFG_DICT, self._raw_cfg["value_map"]))
+            self._value_map: Optional[MutableMapping[str, AbstractValueMapRule]] = None
+            if not self.animate:
+                self._value_map = AbstractValueMapRule.value_map_from_config(self,
+                                                        cast(CFG_DICT, self._raw_cfg["value_map"]))
 
         @property
         def value_map(self):
