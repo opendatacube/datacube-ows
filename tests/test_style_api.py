@@ -483,9 +483,9 @@ def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colorm
         assert channel in result.data_vars.keys()
     # point 0 (8) Blah - red
     assert result["alpha"].values[0] == 255
-    assert result["red"].values[1] == 255
-    assert result["green"].values[1] == 0
-    assert result["blue"].values[1] == 0
+    assert result["red"].values[0] == 255
+    assert result["green"].values[0] == 0
+    assert result["blue"].values[0] == 0
     # point 1 (25) Blah - red
     assert result["alpha"].values[1] == 255
     assert result["red"].values[1] == 255
@@ -517,9 +517,9 @@ def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_ma
         assert channel in result.data_vars.keys()
     # point 0 (8->30) Blah Blah - red
     assert result["alpha"].values[0] == 255
-    assert result["red"].values[1] == 255
-    assert result["green"].values[1] == 0
-    assert result["blue"].values[1] == 0
+    assert result["red"].values[0] == 255
+    assert result["green"].values[0] == 0
+    assert result["blue"].values[0] == 0
     # point 1 (25->17) Blah - red
     assert result["alpha"].values[1] == 255
     assert result["red"].values[1] == 255
@@ -539,6 +539,58 @@ def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_ma
     assert result["blue"].values[4] == 0
     # point 5 (23->24): fall through - transparent
     assert result["alpha"].values[5] == 0
+
+
+@pytest.fixture
+def enum_animated_value_map():
+    return {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "value_map": {
+            "pq": [
+                {
+                    "title": "Blah",
+                    "values": [8, 25],
+                    "color": "#FF0000"
+                },
+                {
+                    "title": "Rock and Roll",
+                    "values": [4, 19, 25, 30],
+                    "color": "#00FF00"
+                },
+                {
+                    "title": "",
+                    "values": [17],
+                    "color": "#0000FF"
+                },
+            ]
+        },
+        "multi_date": [
+            {
+                "animate": True,
+                "preserve_user_date_order": True,
+                "allowed_count_range": [2, 2],
+            }
+        ]
+    }
+
+def test_animated_colour_map(enum_animated_value_map, dummy_col_map_time_data, timed_raw_calc_null_mask):
+    result = apply_ows_style_cfg(enum_animated_value_map,
+                                 dummy_col_map_time_data,
+                                 valid_data_mask=timed_raw_calc_null_mask)
+    for channel in ("red", "green", "blue", "alpha"):
+        assert channel in result.data_vars.keys()
+    # point 0 (8) Blah - red, green
+    assert result["alpha"].values[0][0] == 255
+    assert result["red"].values[0][0]== 255
+    assert result["green"].values[0][0]== 0
+    assert result["blue"].values[0][0]== 0
+
+    assert result["alpha"].values[0][1] == 255
+    assert result["red"].values[0][1] == 0
+    assert result["green"].values[0][1] == 255
+    assert result["blue"].values[0][1] == 0
 
 
 @pytest.fixture
