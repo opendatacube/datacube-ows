@@ -605,7 +605,38 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
     with pytest.raises(ConfigException) as e:
         style = StandaloneStyle(simple_colormap_style_cfg)
     assert "min_count and max_count equal" in str(e.value)
-
+    simple_colormap_style_cfg["multi_date"][0]["allowed_count_range"] = [2, 2]
+    simple_colormap_style_cfg["multi_date"][0]["animate"] = True
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_colormap_style_cfg)
+    assert "value maps not supported for animation handlers" in str(e.value)
+    simple_colormap_style_cfg["multi_date"][0]["animate"] = False
+    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
+        {
+            "flavour": "Bland"
+        },
+        {
+            "flavour": "Bland"
+        },
+        {
+            "flavour": "Tasty"
+        },
+    ],
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_colormap_style_cfg)
+    assert "Flags entry has wrong number of rule sets for date count" in str(e.value)
+    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
+        {
+            "or": {"flavour": "Bland"},
+            "and": {"flavour": "Tasty"},
+        },
+        {
+            "flavour": "Tasty"
+        },
+    ]
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_colormap_style_cfg)
+    assert "combines 'and' and 'or' rules" in str(e.value)
 
 def test_ramp_legend(simple_colormap_style_cfg):
     img = generate_ows_legend_style_cfg(simple_colormap_style_cfg, 1)

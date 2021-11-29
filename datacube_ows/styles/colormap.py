@@ -82,9 +82,7 @@ class AbstractValueMapRule(OWSConfigEntry):
             typ = ValueMapRule
         else:
             mdh = cast(ColorMapStyleDef.MultiDateHandler, style_or_mdh)
-            if mdh.animate:
-                raise ConfigException("Multidate value maps not supported for animation handlers")
-            elif mdh.aggregator:
+            if mdh.aggregator:
                 style_or_mdh = mdh.style
                 typ = ValueMapRule
             else:
@@ -417,7 +415,10 @@ class ColorMapStyleDef(StyleDefBase):
             """
             super().__init__(style, cfg)
             self._value_map: Optional[MutableMapping[str, AbstractValueMapRule]] = None
-            if not self.animate:
+            if self.animate:
+                if "value_map" in self._raw_cfg:
+                    raise ConfigException("Multidate value maps not supported for animation handlers")
+            else:
                 self._value_map = AbstractValueMapRule.value_map_from_config(self,
                                                         cast(CFG_DICT, self._raw_cfg["value_map"]))
 
