@@ -532,9 +532,10 @@ Multi-Date Requests
 -------------------
 
 Colour Ramp Styles support customised non-animated handlers for
-`multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_.
-
-An aggregator function is defined that takes
+`multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_
+by providing for an aggregator function that converts the multi-date index data
+into a dateless index, and apply either the style's colour ramp (i.e. the same
+as the single-date case), or a separate colour ramp.
 
 aggregator_function
 ===================

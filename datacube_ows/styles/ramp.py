@@ -568,11 +568,6 @@ class ColorRampDef(StyleDefBase):
                            )
 
     class MultiDateHandler(StyleDefBase.MultiDateHandler):
-        """
-        MultiDateHandler base class.
-
-        Handles "aggregator"-based index-value multi-date requests (e.g. delta)
-        """
         auto_legend = True
 
         def __init__(self, style: "ColorRampDef", cfg: CFG_DICT) -> None:

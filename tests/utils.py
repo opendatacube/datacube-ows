@@ -67,3 +67,26 @@ def dim1_da(name, vals, coords, with_time=True, attrs=None):
     )
     return output
 
+def dim1_da_time(name, vals, dates, coords, attrs=None):
+    if len(coords) != len(vals):
+        raise Exception("vals and coords must match lengths")
+    for v in vals:
+        if len(v) != len(dates):
+            raise Exception("dates and coords must match lengths")
+    dims = ["dim", "time"]
+    shape = [len(coords), len(dates)]
+    coords = {
+        "dim": coords,
+        "time": [np.datetime64(d) for d in dates],
+    }
+    buff_arr = np.array(vals)
+    data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
+    output = xr.DataArray(
+        data,
+        coords=coords,
+        dims=dims,
+        attrs=attrs,
+        name=name,
+    )
+    return output
+

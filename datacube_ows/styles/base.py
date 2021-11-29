@@ -435,6 +435,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         """
         auto_legend: bool = False
 
+        non_animate_requires_aggregator = True
+
         def __init__(self, style: "StyleDefBase", cfg: CFG_DICT) -> None:
             """
             First stage initialisation
@@ -456,13 +458,16 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             self.animate = cast(bool, cfg.get("animate", False))
             self.frame_duration: int = 1000
             if "aggregator_function" in cfg:
-                self.aggregator = FunctionWrapper(style.product,
-                                                  cast(CFG_DICT, cfg["aggregator_function"]))
+                self.aggregator: Optional[FunctionWrapper] = FunctionWrapper(style.product,
+                                                  cast(CFG_DICT, cfg["aggregator_function"]),
+                                                                             stand_alone=self.style.stand_alone)
             elif self.animate:
                 self.aggregator = FunctionWrapper(style.product, lambda x: x, stand_alone=True)
                 self.frame_duration = cast(int, cfg.get("frame_duration", 1000))
             else:
-                raise ConfigException("Aggregator function is required for non-animated multi-date handlers.")
+                self.aggregator = None
+                if self.non_animate_requires_aggregator:
+                    raise ConfigException("Aggregator function is required for non-animated multi-date handlers.")
             self.parse_legend_cfg(cast(CFG_DICT, cfg.get("legend", {})))
             self.preserve_user_date_order = cast(bool, cfg.get("preserve_user_date_order", False))
 

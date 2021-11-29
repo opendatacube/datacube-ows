@@ -516,7 +516,7 @@ def test_alpha_style_map(
 
         result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
-        assert (alpha_channel == 127).all()
+        assert (alpha_channel == 128).all()
 
         style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
 
@@ -626,8 +626,8 @@ def style_cfg_map_mask():
         "value_map": {
             "foo": [
                 {
-                    "title": "Non-Transparent",
-                    "abstract": "A Non-Transparent Value",
+                    "title": "Transparent",
+                    "abstract": "A Transparent Value",
                     "flags": {
                         "bar": 1,
                     },
@@ -789,3 +789,9 @@ def test_bad_mpl_ramp():
     with pytest.raises(ConfigException) as e:
         ramp = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
     assert "Invalid Matplotlib name: " in str(e.value)
+
+def test_rule_spec_not_impl(product_layer_mask_map, style_cfg_map_mask, minimal_dc):
+    from datacube_ows.styles.colormap import AbstractValueMapRule
+    with pytest.raises(NotImplementedError):
+        style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask, stand_alone=True)
+        AbstractValueMapRule(style_def, "band", {"title": "Abstract Test", "color": "magenta", "value_map": {}})

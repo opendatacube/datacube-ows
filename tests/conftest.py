@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from tests.utils import coords, dim1_da, dummy_da
+from tests.utils import coords, dim1_da, dim1_da_time, dummy_da
 
 
 @pytest.fixture
@@ -372,56 +372,85 @@ def raw_calc_null_mask():
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     return dim1_da("mask", [True] * len(dim_coords), dim_coords)
 
+@pytest.fixture
+def timed_raw_calc_null_mask():
+    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    dates = [datetime.datetime(2000, 1, 1), datetime.datetime(2020, 1, 1)]
+    return dim1_da_time("mask", [[True] * len(dates)] * len(dim_coords), dates, dim_coords)
+
+
+flags_def = {
+    "joviality": {
+        "bits": 4,
+        "values": {
+            '0': "Melancholic",
+            '1': "Joyous",
+        },
+        "description": "All splodgy looking"
+    },
+    "flavour": {
+        "bits": 3,
+        "values": {
+            '0': "Bland",
+            '1': "Tasty",
+        },
+        "description": "All splodgy looking"
+    },
+    "splodgy": {
+        "bits": 2,
+        "values": {
+            '0': "Splodgeless",
+            '1': "Splodgy",
+        },
+        "description": "All splodgy looking"
+    },
+    "ugly": {
+        "bits": 1,
+        "values": {
+            '0': False,
+            '1': True
+        },
+        "description": "Real, real ugly",
+    },
+    "impossible": {
+        "bits": 0,
+        "values": {
+            '0': False,
+            '1': "Woah!"
+        },
+        "description": "Won't happen. Can't happen. Might happen.",
+    },
+}
+
 
 @pytest.fixture
 def dummy_col_map_data():
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     output = xr.Dataset({
-        "pq": dim1_da("pq", [0b01000, 0b11001, 0b01010, 0b10011, 0b00100, 0b10111], dim_coords,
+        "pq": dim1_da("pq", [0b01000, 0b11001, 0b00010, 0b10011, 0b00100, 0b10001], dim_coords,
                       attrs={
-                          "flags_definition": {
-                              "joviality": {
-                                  "bits": 3,
-                                  "values": {
-                                      '0': "Melancholic",
-                                      '1': "Joyous",
-                                  },
-                                  "description": "All splodgy looking"
-                              },
-                              "flavour": {
-                                  "bits": 3,
-                                  "values": {
-                                      '0': "Bland",
-                                      '1': "Tasty",
-                                  },
-                                  "description": "All splodgy looking"
-                              },
-                              "splodgy": {
-                                  "bits": 2,
-                                  "values": {
-                                      '0': "Splodgeless",
-                                      '1': "Splodgy",
-                                  },
-                                  "description": "All splodgy looking"
-                              },
-                              "ugly": {
-                                  "bits": 1,
-                                  "values": {
-                                      '0': False,
-                                      '1': True
-                                  },
-                                  "description": "Real, real ugly",
-                              },
-                              "impossible": {
-                                  "bits": 0,
-                                  "values": {
-                                      '0': False,
-                                      '1': "Woah!"
-                                  },
-                                  "description": "Won't happen. Can't happen. Might happen.",
-                              },
-                          }
+                          "flags_definition": flags_def
                       })
+    })
+    return output
+
+@pytest.fixture
+def dummy_col_map_time_data():
+    dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
+    dates = [datetime.datetime(2000, 1, 1), datetime.datetime(2020, 1, 1)]
+    output = xr.Dataset({
+        "pq": dim1_da_time("pq", [
+                [0b01000, 0b11110],
+                [0b11001, 0b10001],
+                [0b01010, 0b01101],
+                [0b10011, 0b01110],
+                [0b00100, 0b11011],
+                [0b10111, 0b11000],
+                            ],
+                            dates, dim_coords,
+                            attrs={
+                      "flags_definition": flags_def
+                  })
     })
     return output
 
