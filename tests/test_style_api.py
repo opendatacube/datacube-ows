@@ -318,6 +318,30 @@ def simple_colormap_style_cfg():
                             "color": "#FF0080"
                         },
                         {
+                            "title": "Flawless to Perfect",
+                            "flags": [
+                                {
+                                    "and": {
+                                        "impossible": "Woah!",
+                                        "joviality": "Joyous",
+                                        "flavour": "Tasty",
+                                        "splodgy": "Splodgeless",
+                                        "ugly": False,
+                                    },
+                                },
+                                {
+                                    "or": {
+                                        "impossible": False,
+                                        "joviality": "Melancholic",
+                                        "flavour": "Bland",
+                                        "splodgy": "Splodgy",
+                                        "ugly": True,
+                                    }
+                                }
+                            ],
+                            "color": "#FFFFFF"
+                        },
+                        {
                             "title": "Everything else",
                             "abstract": "The rest of what's left",
                             "flags": [{}, {}],
@@ -611,6 +635,7 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
         style = StandaloneStyle(simple_colormap_style_cfg)
     assert "value maps not supported for animation handlers" in str(e.value)
     simple_colormap_style_cfg["multi_date"][0]["animate"] = False
+    orig_flags = simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"]
     simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
         {
             "flavour": "Bland"
@@ -625,7 +650,7 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
     with pytest.raises(ConfigException) as e:
         style = StandaloneStyle(simple_colormap_style_cfg)
     assert "Flags entry has wrong number of rule sets for date count" in str(e.value)
-    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
+    enum_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
         {
             "or": {"flavour": "Bland"},
             "and": {"flavour": "Tasty"},
@@ -635,8 +660,17 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
         },
     ]
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_colormap_style_cfg)
+        style = StandaloneStyle(enum_colormap_style_cfg)
     assert "combines 'and' and 'or' rules" in str(e.value)
+    del simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"]
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_colormap_style_cfg)
+    assert "must have a non-empty 'flags' or 'values' section" in str(e.value)
+    enum_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = orig_flags
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(enum_colormap_style_cfg)
+    assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
+
 
 def test_ramp_legend(simple_colormap_style_cfg):
     img = generate_ows_legend_style_cfg(simple_colormap_style_cfg, 1)
