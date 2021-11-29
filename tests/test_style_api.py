@@ -583,9 +583,9 @@ def test_animated_colour_map(enum_animated_value_map, dummy_col_map_time_data, t
         assert channel in result.data_vars.keys()
     # point 0 (8) Blah - red, green
     assert result["alpha"].values[0][0] == 255
-    assert result["red"].values[0][0]== 255
-    assert result["green"].values[0][0]== 0
-    assert result["blue"].values[0][0]== 0
+    assert result["red"].values[0][0] == 255
+    assert result["green"].values[0][0] == 0
+    assert result["blue"].values[0][0] == 0
 
     assert result["alpha"].values[0][1] == 255
     assert result["red"].values[0][1] == 0
