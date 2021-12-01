@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -292,3 +293,21 @@ def test_user_date_sorter():
     assert sorter.values[0] == 1
     assert sorter.values[1] == 2
     assert sorter.values[2] == 0
+
+
+def test_create_nodata(dummy_raw_calc_data):
+    from datacube_ows.data import DataStacker
+    ds = DataStacker.__new__(DataStacker)
+    data_in = dummy_raw_calc_data
+    prod = MagicMock()
+    prod.measurements = {
+        "flagband": MagicMock()
+    }
+    prod.measurements["flagband"].nodata = 1
+    pbq = ProductBandQuery(
+                    [prod],
+                    ["flagband",],
+                    False)
+    data_out = ds.create_nodata_filled_flag_bands(data_in, pbq)
+    assert data_out["flagband"][0] == 1
+    assert data_out["flagband"][5] == 1
