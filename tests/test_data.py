@@ -4,15 +4,18 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 import pytz
+
 from datacube.utils import geometry
+from unittest.mock import MagicMock
+from xarray import Dataset
 
 import datacube_ows.data
 from datacube_ows.data import ProductBandQuery, get_s3_browser_uris
+from datacube_ows.ogc_exceptions import WMSException
 from tests.test_styles import product_layer  # noqa: F401
 
 
@@ -311,3 +314,6 @@ def test_create_nodata(dummy_raw_calc_data):
     data_out = ds.create_nodata_filled_flag_bands(data_in, pbq)
     assert data_out["flagband"][0] == 1
     assert data_out["flagband"][5] == 1
+    with pytest.raises(WMSException) as e:
+        data_out = ds.create_nodata_filled_flag_bands(Dataset(), pbq)
+    assert "Cannot add default flag data as there is no non-flag data available" in str(e.value)
