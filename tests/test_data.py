@@ -306,7 +306,7 @@ def test_create_nodata(dummy_raw_calc_data):
     prod.measurements["flagband"].nodata = 1
     pbq = ProductBandQuery(
                     [prod],
-                    ["flagband",],
+                    ["flagband"],
                     False)
     data_out = ds.create_nodata_filled_flag_bands(data_in, pbq)
     assert data_out["flagband"][0] == 1
