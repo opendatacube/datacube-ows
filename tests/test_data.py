@@ -4,14 +4,13 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-from datacube.utils import geometry
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 import pytz
 
 from datacube.utils import geometry
-from unittest.mock import MagicMock
 from xarray import Dataset
 
 import datacube_ows.data
