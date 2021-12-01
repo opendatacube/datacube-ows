@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
+from datacube.utils import geometry
 
 import numpy as np
 import pytest
