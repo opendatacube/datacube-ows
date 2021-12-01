@@ -212,11 +212,10 @@ class DataStacker:
         return OrderedDict(results)
 
     def create_nodata_filled_flag_bands(self, data, pbq):
-        var = None
+        if not data.data_vars.variables:
+            raise WMSException("Cannot add default flag data as there is no non-flag data available")
         for var in data.data_vars.variables.keys():
             break
-        if var is None:
-            raise WMSException("Cannot add default flag data as there is no non-flag data available")
         template = getattr(data, var)
         data_new_bands = {}
         for band in pbq.bands:
