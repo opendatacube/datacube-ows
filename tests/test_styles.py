@@ -499,13 +499,19 @@ def test_alpha_style_map(
     band = np.array([True, True, True])
     timarray = [np.datetime64(datetime.date.today())]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name='foo',
+                         attrs = {
+                            "flags_definition": {
+                                "foo": {"bits": 0},
+                                "floop": {"bits": 1},
+                         }
+    })
     dst = Dataset(data_vars={'foo': da})
     ds = concat([dst], times)
     npmap = np.array([True, True, True])
     damap = DataArray(npmap)
 
-    with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
         
         result = style_def.transform_data(ds, damap)
@@ -673,7 +679,7 @@ def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
     npmap = np.array([True, True, True, True, True, True])
     damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
 
-    with patch('datacube_ows.styles.colormap.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask)
         data = style_def.transform_data(ds, damap)
         r = data["red"]
@@ -790,8 +796,3 @@ def test_bad_mpl_ramp():
         ramp = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
     assert "Invalid Matplotlib name: " in str(e.value)
 
-def test_rule_spec_not_impl(product_layer_mask_map, style_cfg_map_mask, minimal_dc):
-    from datacube_ows.styles.colormap import AbstractValueMapRule
-    with pytest.raises(NotImplementedError):
-        style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask, stand_alone=True)
-        AbstractValueMapRule(style_def, "band", {"title": "Abstract Test", "color": "magenta", "value_map": {}})

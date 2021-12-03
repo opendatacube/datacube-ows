@@ -7,11 +7,13 @@ import json
 import os
 from importlib import import_module
 from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
-                    Sequence, Set, Union, cast)
+                    Sequence, Set, Union, cast, Callable)
 from urllib.parse import urlparse
 
 import fsspec
+from datacube.utils.masking import make_mask
 from flask_babel import gettext as _
+from xarray import DataArray
 
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -797,3 +799,71 @@ class FlagProductBands(OWSConfigEntry):
             if not handled:
                 flag_products.append(cls(fb, layer))
         return flag_products
+
+
+class AbstractMaskRule(OWSConfigEntry):
+    def __init__(self, band: str, cfg: CFG_DICT, mapper: Callable[[str], str] = lambda x: x) -> None:
+        super().__init__(cfg)
+        self.band = mapper(band)
+        self.parse_rule_spec(cfg)
+
+    @property
+    def context(self) -> str:
+        return "a mask rule"
+
+    def parse_rule_spec(self, cfg: CFG_DICT):
+        self.flags: Optional[CFG_DICT] = None
+        self.or_flags: bool = False
+        self.values: Optional[List[int]] = None
+        if "flags" in cfg:
+            flags = cast(CFG_DICT, cfg["flags"])
+            self.or_flags: bool = False
+            if "or" in flags and "and" in flags:
+                raise ConfigException(
+                    f"ValueMap rule in {self.context} combines 'and' and 'or' rules")
+            elif "or" in flags:
+                self.or_flags = True
+                flags = cast(CFG_DICT, flags["or"])
+            elif "and" in flags:
+                flags = cast(CFG_DICT, flags["and"])
+            self.flags: Optional[CFG_DICT] = flags
+        else:
+            self.flags = None
+            self.or_flags = False
+        if "values" in cfg:
+            self.values: Optional[List[int]] = cast(List[int], cfg["values"])
+        else:
+            self.values = None
+        if not self.flags and not self.values:
+            raise ConfigException(
+                f"Mask rule in {self.context} must have a non-empty 'flags' or 'values' section.")
+        if self.flags and self.values:
+            raise ConfigException(
+                f"Mask rule in {self.context} has both a 'flags' and a 'values' section - choose one.")
+
+    def create_mask(self, data: DataArray) -> DataArray:
+        """
+        Create a mask from raw flag band data.
+
+        :param data: Raw flag data, assumed to be for this rule's flag band.
+        :return: A boolean DataArray, True where the data matches this rule
+        """
+        if self.values:
+            mask: Optional[DataArray] = None
+            for v in cast(List[int], self.values):
+                vmask = data == v
+                if mask is None:
+                    mask = vmask
+                else:
+                    mask |= vmask
+        elif self.or_flags:
+            mask = None
+            for f in cast(CFG_DICT, self.flags).items():
+                f = {f[0]: f[1]}
+                if mask is None:
+                    mask = make_mask(data, **f)
+                else:
+                    mask |= make_mask(data, **f)
+        else:
+            mask = make_mask(data, **cast(CFG_DICT, self.flags))
+        return mask

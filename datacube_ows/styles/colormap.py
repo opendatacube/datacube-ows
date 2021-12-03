@@ -15,19 +15,18 @@ from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
 from xarray import DataArray, Dataset, merge
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException, OWSConfigEntry
+from datacube_ows.config_utils import CFG_DICT, ConfigException, AbstractMaskRule
 from datacube_ows.styles.base import StyleDefBase
 
 _LOG = logging.getLogger(__name__)
 
 
-class AbstractValueMapRule(OWSConfigEntry):
+class AbstractValueMapRule(AbstractMaskRule):
     """
     A Value Map Rule.
 
     Construct a ValueMap rule-set with ValueMapRule.value_map_from_config
     """
-
     def __init__(self, style_def: "ColorMapStyleDef", band: str, cfg: CFG_DICT) -> None:
         """
         Construct a Value Map Rule
@@ -36,10 +35,9 @@ class AbstractValueMapRule(OWSConfigEntry):
         :param band: The name of the flag-band the rules apply to
         :param cfg: The rule specification
         """
-        super().__init__(cfg)
-        cfg = cast(CFG_DICT, self._raw_cfg)
         self.style = style_def
-        self.band = style_def.local_band(band)
+        super().__init__(band, cfg, mapper=style_def.local_band)
+        cfg = cast(CFG_DICT, self._raw_cfg)
 
         self.title = cast(str, cfg["title"])
         self.abstract = cast(str, cfg.get("abstract"))
@@ -51,19 +49,19 @@ class AbstractValueMapRule(OWSConfigEntry):
             self.label = self.abstract
         else:
             self.label = None
+        self.parse_color(cfg)
+
+    @property
+    def context(self) -> str:
+        return f"style {self.style.name} in layer {self.style.product.name} valuemap rule"
+
+    def parse_color(self, cfg: CFG_DICT):
         self.color_str = cast(str, cfg["color"])
         self.rgb = Color(self.color_str)
         if cfg.get("mask"):
             self.alpha = 0.0
         else:
             self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
-        self.parse_rule_spec(cfg)
-
-    def parse_rule_spec(self, cfg: CFG_DICT):
-        raise NotImplementedError()
-
-    def create_mask(self, data: DataArray) -> DataArray:
-        raise NotImplementedError()
 
     @classmethod
     def value_map_from_config(cls,
@@ -112,61 +110,7 @@ class ValueMapRule(AbstractValueMapRule):
         :param band: The name of the flag-band the rules apply to
         :param cfg: The rule specification
         """
-        self.flags: Optional[CFG_DICT] = None
-        self.or_flags: bool = False
-        self.values: Optional[List[int]] = None
         super().__init__(style_def=style_cfg, band=band, cfg=cfg)
-
-    def parse_rule_spec(self, cfg: CFG_DICT):
-        if "flags" in cfg:
-            flags = cast(CFG_DICT, cfg["flags"])
-            self.or_flags: bool = False
-            if "or" in flags and "and" in flags:
-                raise ConfigException(f"ValueMap rule in style {self.style.name} of layer {self.style.product.name} combines 'and' and 'or' rules")
-            elif "or" in flags:
-                self.or_flags = True
-                flags = cast(CFG_DICT, flags["or"])
-            elif "and" in flags:
-                flags = cast(CFG_DICT, flags["and"])
-            self.flags: Optional[CFG_DICT] = flags
-        else:
-            self.flags = None
-            self.or_flags = False
-        if "values" in cfg:
-            self.values: Optional[List[int]] = cast(List[int], cfg["values"])
-        else:
-            self.values = None
-        if not self.flags and not self.values:
-            raise ConfigException(f"Value map rule in style {self.style.name} of layer {self.style.product.name} must have a non-empty 'flags' or 'values' section.")
-        if self.flags and self.values:
-            raise ConfigException(f"Value map rule in style {self.style.name} of layer {self.style.product.name} has both a 'flags' and a 'values' section - choose one.")
-
-    def create_mask(self, data: DataArray) -> DataArray:
-        """
-        Create a mask from raw flag band data.
-
-        :param data: Raw flag data, assumed to be for this rule's flag band.
-        :return: A boolean DataArray, True where the data matches this rule
-        """
-        if self.values:
-            mask: Optional[DataArray] = None
-            for v in cast(List[int], self.values):
-                vmask = data == v
-                if mask is None:
-                    mask = vmask
-                else:
-                    mask |= vmask
-        elif self.or_flags:
-            mask = None
-            for f in cast(CFG_DICT, self.flags).items():
-                f = {f[0]: f[1]}
-                if mask is None:
-                    mask = make_mask(data, **f)
-                else:
-                    mask |= make_mask(data, **f)
-        else:
-            mask = make_mask(data, **cast(CFG_DICT, self.flags))
-        return mask
 
 
 class MultiDateValueMapRule(AbstractValueMapRule):
@@ -198,7 +142,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
             for flags in date_flags:
                 or_flag: bool = False
                 if "or" in flags and "and" in flags:
-                    raise ConfigException(f"MultiDateValueMap rule in style {self.mdh.style.name} of layer {self.mdh.style.product.name} combines 'and' and 'or' rules")
+                    raise ConfigException(f"MultiDateValueMap rule in {self.mdh.style.name} of layer {self.mdh.style.product.name} combines 'and' and 'or' rules")
                 elif "or" in flags:
                     or_flag = True
                     flags = cast(CFG_DICT, flags["or"])
@@ -211,9 +155,9 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         else:
             self.values = None
         if not self.flags and not self.values:
-            raise ConfigException(f"Multi-Date Value map rule in style {self.style.name} of layer {self.style.product.name} must have a non-empty 'flags' or 'values' section.")
+            raise ConfigException(f"Multi-Date Value map rule in {self.context} must have a non-empty 'flags' or 'values' section.")
         if self.flags and self.values:
-            raise ConfigException(f"Multi-Date Value map rule in style {self.style.name} of layer {self.style.product.name} has both a 'flags' and a 'values' section - choose one.")
+            raise ConfigException(f"Multi-Date Value map rule in {self.context} has both a 'flags' and a 'values' section - choose one.")
 
     def create_mask(self, data: DataArray) -> DataArray:
         """
