@@ -6,8 +6,8 @@
 import json
 import os
 from importlib import import_module
-from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
-                    Sequence, Set, Union, cast, Callable)
+from typing import (Any, Callable, Iterable, List, Mapping, MutableMapping,
+                    Optional, Sequence, Set, Union, cast)
 from urllib.parse import urlparse
 
 import fsspec

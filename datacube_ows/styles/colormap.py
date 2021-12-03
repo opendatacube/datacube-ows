@@ -15,7 +15,7 @@ from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
 from xarray import DataArray, Dataset, merge
 
-from datacube_ows.config_utils import (AbstractMaskRule, CFG_DICT,
+from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
                                        ConfigException)
 from datacube_ows.styles.base import StyleDefBase
 
