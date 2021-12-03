@@ -815,6 +815,7 @@ class AbstractMaskRule(OWSConfigEntry):
         self.flags: Optional[CFG_DICT] = None
         self.or_flags: bool = False
         self.values: Optional[List[int]] = None
+        self.invert: bool = cfg.get("invert", False)
         if "flags" in cfg:
             flags = cast(CFG_DICT, cfg["flags"])
             self.or_flags: bool = False
@@ -866,4 +867,6 @@ class AbstractMaskRule(OWSConfigEntry):
                     mask |= make_mask(data, **f)
         else:
             mask = make_mask(data, **cast(CFG_DICT, self.flags))
+        if self.invert:
+            mask = ~mask
         return mask

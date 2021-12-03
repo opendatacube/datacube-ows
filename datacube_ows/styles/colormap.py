@@ -15,7 +15,8 @@ from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
 from xarray import DataArray, Dataset, merge
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException, AbstractMaskRule
+from datacube_ows.config_utils import (AbstractMaskRule, CFG_DICT,
+                                       ConfigException)
 from datacube_ows.styles.base import StyleDefBase
 
 _LOG = logging.getLogger(__name__)
@@ -129,12 +130,19 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         :param cfg: The rule specification
         """
         self.mdh = mdh
+        self.invert: List[bool] = []
         self.flags: Optional[List[CFG_DICT]] = []
         self.or_flags: Optional[List[bool]] = []
         self.values: Optional[List[List[int]]] = []
         super().__init__(style_def=mdh.style, band=band, cfg=cfg)
 
     def parse_rule_spec(self, cfg: CFG_DICT):
+        if "invert" in cfg:
+            self.invert = [bool(b) for b in cfg["invert"]]
+        else:
+            self.invert = [False] * self.mdh.max_count
+        if len(self.invert) != self.mdh.max_count:
+            raise ConfigException(f"Invert entry has wrong number of rule sets for date count")
         if "flags" in cfg:
             date_flags = cast(CFG_DICT, cfg["flags"])
             if len(date_flags) != self.mdh.max_count:
@@ -150,6 +158,9 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                     flags = cast(CFG_DICT, flags["and"])
                 self.flags.append(flags)
                 self.or_flags.append(or_flag)
+        else:
+            self.flags = None
+            self.or_flags = None
         if "values" in cfg:
             self.values = cast(List[List[int]], list(cfg["values"]))
         else:
@@ -169,7 +180,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         date_slices = (data.sel(time=dt) for dt in data.coords["time"].values)
         mask: Optional[DataArray] = None
         if self.values:
-            for d_slice, vals in zip(date_slices, self.values):
+            for d_slice, vals, invert in zip(date_slices, self.values, self.invert):
                 d_mask: Optional[DataArray] = None
                 if len(vals) == 0:
                     d_mask = d_slice == d_slice
@@ -180,12 +191,14 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                             d_mask = vmask
                         else:
                             d_mask |= vmask
+                if invert:
+                    d_mask = ~d_mask
                 if mask is None:
                     mask = d_mask
                 else:
                     mask &= d_mask
         else:
-            for d_slice, flags, or_flags in zip(date_slices, self.flags, self.or_flags):
+            for d_slice, flags, or_flags, invert in zip(date_slices, self.flags, self.or_flags, self.invert):
                 d_mask: Optional[DataArray] = None
                 if not flags:
                     d_mask = d_slice == d_slice
@@ -198,6 +211,8 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                             d_mask |= make_mask(d_slice, **f)
                 else:
                     d_mask = make_mask(d_slice, **cast(CFG_DICT, flags))
+                if invert:
+                    d_mask = ~d_mask
                 if mask is None:
                     mask = d_mask
                 else:
