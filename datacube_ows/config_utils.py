@@ -867,6 +867,6 @@ class AbstractMaskRule(OWSConfigEntry):
                     mask |= make_mask(data, **f)
         else:
             mask = make_mask(data, **cast(CFG_DICT, self.flags))
-        if self.invert:
+        if mask is not None and self.invert:
             mask = ~mask
         return mask

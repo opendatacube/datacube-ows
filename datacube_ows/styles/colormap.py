@@ -191,7 +191,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                             d_mask = vmask
                         else:
                             d_mask |= vmask
-                if invert:
+                if d_mask is not None and invert:
                     d_mask = ~d_mask
                 if mask is None:
                     mask = d_mask
