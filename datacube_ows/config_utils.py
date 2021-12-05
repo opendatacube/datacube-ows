@@ -768,12 +768,12 @@ class FlagProductBands(OWSConfigEntry):
         for mask in masks:
             handled = False
             for fp in flag_products:
-                if fp.products_match(mask.band.pq_names):
-                    fp.add_flag_band(mask.band)
+                if fp.products_match(mask.flag_band.pq_names):
+                    fp.add_flag_band(mask.flag_band)
                     handled = True
                     break
             if not handled:
-                flag_products.append(cls(mask.band, layer))
+                flag_products.append(cls(mask.flag_band, layer))
         return flag_products
 
     @classmethod
@@ -811,6 +811,7 @@ class AbstractMaskRule(OWSConfigEntry):
     def context(self) -> str:
         return "a mask rule"
 
+    VALUES_LABEL = "values"
     def parse_rule_spec(self, cfg: CFG_DICT):
         self.flags: Optional[CFG_DICT] = None
         self.or_flags: bool = False
@@ -831,8 +832,12 @@ class AbstractMaskRule(OWSConfigEntry):
         else:
             self.flags = None
             self.or_flags = False
-        if "values" in cfg:
-            self.values: Optional[List[int]] = cast(List[int], cfg["values"])
+        if self.VALUES_LABEL in cfg:
+            val: Any = cfg[self.VALUES_LABEL]
+            if isinstance(val, int):
+                self.values: Optional[List[int]] = [cast(int, val)]
+            else:
+                self.values: Optional[List[int]] = cast(List[int], val)
         else:
             self.values = None
         if not self.flags and not self.values:

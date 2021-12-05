@@ -21,7 +21,7 @@ from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, FlagBand,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
                                        OWSIndexedConfigEntry,
-                                       OWSMetadataConfig)
+                                       OWSMetadataConfig, AbstractMaskRule)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -161,7 +161,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             self.needed_bands.add(self.local_band(band))
         if not self.stand_alone:
             for mask in self.masks:
-                fb = mask.band
+                fb = mask.flag_band
                 # TODO: Should be able to remove this pyre-ignore after ows_configuration is typed.
                 # pyre-ignore[16]
                 if fb.pq_names == self.product.product_names:
@@ -233,11 +233,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             :param mask: A StyleMask object to calculate
             :return: A DataArray boolean mask with no time dimension
             """
-            pq_data = getattr(data, mask.band_name)
-            if mask.flags:
-                odc_mask = make_mask(pq_data, **cast(CFG_DICT, mask.flags))
-            else:
-                odc_mask = pq_data == mask.enum
+            pq_data = getattr(data, mask.band)
+            odc_mask = mask.create_mask(pq_data)
             if mask.invert:
                 odc_mask = ~odc_mask
             return odc_mask
@@ -544,11 +541,35 @@ style_class_priority_reg: List[Tuple[Type[StyleDefBase], Iterable[str]]] = []
 style_class_reg: List[Tuple[Type[StyleDefBase], Iterable[str]]] = []
 
 
-class StyleMask(OWSConfigEntry):
+class StyleMask(AbstractMaskRule):
+    VALUES_LABEL = "enum"
+    def __init__(self, cfg: CFG_DICT, style: StyleDefBase) -> None:
+        band = cast(str, cfg["band"])
+        super().__init__(band, cfg)
+        self.stand_alone = style.stand_alone
+        self.style = style
+        self.stand_alone = style.stand_alone
+        if not self.stand_alone:
+            if not self.style.product.flag_bands:
+                raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
+
+            if band not in self.style.product.flag_bands:
+                raise ConfigException(f"Style {self.style.name} has a mask that references flag band {band} which is not defined for the layer")
+        if self.stand_alone:
+            self.flag_band: FlagBand = OWSFlagBandStandalone(self.band)
+        else:
+            self.flag_band = cast(FlagBand, self.style.product.flag_bands[self.band])
+
+    def create_mask(self, data: xr.DataArray) -> xr.DataArray:
+        mask = super().create_mask(data)
+        return mask
+
+
+class OldStyleMask(OWSConfigEntry):
     """
     A style-mask object
     """
-    def __init__(self, cfg: CFG_DICT, style: StyleDefBase):
+    def __init__(self, cfg: CFG_DICT, style: StyleDefBase) -> None:
         super().__init__(cfg)
         cfg = cast(CFG_DICT, self._raw_cfg)
         self.style = style

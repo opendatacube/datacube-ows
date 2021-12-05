@@ -224,12 +224,12 @@ def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, r
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
     alphas = result["alpha"].values
-    assert alphas[0] == 255
-    assert alphas[1] == 255
-    assert alphas[2] == 255
-    assert alphas[3] == 0
-    assert alphas[4] == 0
-    assert alphas[5] == 0
+    assert alphas[0][0] == 0
+    assert alphas[1][0] == 0
+    assert alphas[2][0] == 0
+    assert alphas[3][0] == 255
+    assert alphas[4][0] == 0
+    assert alphas[5][0] == 0
 
 
 @pytest.fixture
