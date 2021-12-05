@@ -873,5 +873,5 @@ class AbstractMaskRule(OWSConfigEntry):
         else:
             mask = make_mask(data, **cast(CFG_DICT, self.flags))
         if mask is not None and self.invert:
-            mask = ~mask
+            mask = ~mask # pylint: disable=invalid-unary-operand-type
         return mask

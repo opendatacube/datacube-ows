@@ -192,7 +192,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                         else:
                             d_mask |= vmask
                 if d_mask is not None and invert:
-                    d_mask = ~d_mask
+                    d_mask = ~d_mask # pylint: disable=invalid-unary-operand-type
                 if mask is None:
                     mask = d_mask
                 else:
@@ -212,7 +212,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                 else:
                     d_mask = make_mask(d_slice, **cast(CFG_DICT, flags))
                 if invert:
-                    d_mask = ~d_mask
+                    d_mask = ~d_mask # pylint: disable=invalid-unary-operand-type
                 if mask is None:
                     mask = d_mask
                 else:
