@@ -319,6 +319,7 @@ def simple_colormap_style_cfg():
                         },
                         {
                             "title": "Flawless to Perfect",
+                            "invert": [False, True],
                             "flags": [
                                 {
                                     "and": {
@@ -466,6 +467,7 @@ def enum_colormap_style_cfg():
                         },
                         {
                             "title": "Foo Blah",
+                            "invert": [True, False],
                             "values": [[10], []],
                             "color": "#0000FF",
                             "alpha": 0.0
@@ -491,7 +493,7 @@ def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colorm
     assert result["red"].values[1] == 255
     assert result["green"].values[1] == 0
     assert result["blue"].values[1] == 0
-    # point 2 (10) - fall through, transparent
+    # point 2 (10) - Fall through, transparent
     assert result["alpha"].values[2] == 0
     # point 3 (19) - rnr green
     assert result["alpha"].values[3] == 255
@@ -525,7 +527,7 @@ def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_ma
     assert result["red"].values[1] == 255
     assert result["green"].values[1] == 0
     assert result["blue"].values[1] == 0
-    # point 2 (10->13) - Foo Blah, transparent
+    # point 2 (10->13) - Fall through, transparent
     assert result["alpha"].values[2] == 0
     # point 3 (19->14) - rnr green
     assert result["alpha"].values[3] == 255
@@ -537,7 +539,7 @@ def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_ma
     assert result["red"].values[4] == 0
     assert result["green"].values[4] == 255
     assert result["blue"].values[4] == 0
-    # point 5 (23->24): fall through - transparent
+    # point 5 (23->24): Foo Bar - transparent
     assert result["alpha"].values[5] == 0
 
 
@@ -687,6 +689,11 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
         style = StandaloneStyle(simple_colormap_style_cfg)
     assert "value maps not supported for animation handlers" in str(e.value)
     simple_colormap_style_cfg["multi_date"][0]["animate"] = False
+    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][3]["invert"] = [True, False, True]
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_colormap_style_cfg)
+    assert "Invert entry has wrong number of rule sets for date count" in str(e.value)
+    del simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][3]["invert"]
     orig_flags = simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"]
     simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
         {
