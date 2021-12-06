@@ -6,15 +6,15 @@ on:
   push:
     branches:
       - 'master'
-    paths:
-      - 'docs/**'
-      - '.github/workflow/pyspellcheck.yaml'
+    # paths:
+    #   - 'docs/**'
+    #   - '.github/workflow/pyspellcheck.yaml'
   pull_request:
     branches:
       - 'master'
-    paths:
-      - 'docs/**'
-      - '.github/workflow/pyspellcheck.yaml'
+    # paths:
+    #   - 'docs/**'
+    #   - '.github/workflow/pyspellcheck.yaml'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
