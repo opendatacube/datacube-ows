@@ -14,9 +14,9 @@ import xarray as xr
 from PIL import Image
 
 import datacube_ows.band_utils
-from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
-                                       FlagBand, FlagProductBands,
-                                       OWSConfigEntry, OWSEntryNotFound,
+from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule, FlagBand,
+                                       FlagProductBands, OWSConfigEntry,
+                                       OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
                                        OWSIndexedConfigEntry,
