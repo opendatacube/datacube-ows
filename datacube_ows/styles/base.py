@@ -234,8 +234,6 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             """
             pq_data = getattr(data, mask.band)
             odc_mask = mask.create_mask(pq_data)
-            if mask.invert:
-                odc_mask = ~odc_mask
             return odc_mask
 
         result = extra_mask
