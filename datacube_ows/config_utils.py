@@ -4,9 +4,9 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import json
+import logging
 import os
 from importlib import import_module
-import logging
 from typing import (Any, Callable, Iterable, List, Mapping, MutableMapping,
                     Optional, Sequence, Set, Union, cast)
 from urllib.parse import urlparse
