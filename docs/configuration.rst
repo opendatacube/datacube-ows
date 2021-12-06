@@ -13,6 +13,7 @@ OWS Configuration
    cfg_wmts
    cfg_wcs
    cfg_functions
+   cfg_masks
    cfg_layers
    cfg_styling
    cfg_component_styles

@@ -169,40 +169,16 @@ by the bit flags in any of the flag bands defined in the
 `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
 for the layer.
 
-The pq_masks section is a list of mask sections, which are AND'd together.
-i.e. A pixel remains visible if it matches all of the rules in the list.
+The pq_masks entry is a list of mask definitions.  Each mask definition contains:
 
-Mask Sections
-@@@@@@@@@@@@@
+1. A ``band`` identifier, which refers to one of the flag-band identifiers defined in the
+   `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
+   for the layer.
+2. A mask rule, using the
+   `OWS Masking Syntax <https://datacube-ows.readthedocs.io/en/latest/cfg_masks.html>`_
 
-Each mask section contains a "band" identifier and either "flags" dictionary, or a
-"enum" value. A mask section may also optionally include an "invert" flag, which is False by default.
-
-The "band" identifier refers to one of the flag-band identifiers defined in the
-`Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
-for the layer.
-
-Backwards compatibility note: The "band" identifier may be omitted if there is only
-one band identifier defined for the layer.  However this usage is deprecated and will
-be removed in a future release.
-
-Each mask must have either a "flags" entry or an "enum" entry (but not both).
-
-If an enum entry is supplied, it should be a single integer value.  A pixel is displayed
-if the value of the flag band for that pixel is exactly equal to the supplied integer value.
-
-If a flags entry is supplied, it should be a dictionary is passed directly to
-``datacube.utils.masking.make_mask``.
-The keys of the dictionary are the flag names, and the values are the flag values -
-refer to the ODC product metadata for possible values.
-The entries of the dictionary represent bitflag comparisons that
-are ORed together.  Pixels that match ALL of the bitflags match the rule, and
-remain visible (unless made invisible by another rule).
-i.e. A pixel is DISPLAYED if the bitflags for the pixel match ALL of the entries
-specified in the "flags" dictionary. (and it matches all the other rules.)
-
-If the "invert" flag is True, then the output of the masking operation is inverted (logically NOTed).
-i.e. only pixels that DO NOT match the uninverted rule match the inverted rule.
+The mask rules in the pq_masks list are AND'd together.
+i.e. A pixel must match all of the mask rules in the list to remain visible.
 
 E.g.
 
