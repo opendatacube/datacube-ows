@@ -6,6 +6,7 @@
 import json
 import os
 from importlib import import_module
+import logging
 from typing import (Any, Callable, Iterable, List, Mapping, MutableMapping,
                     Optional, Sequence, Set, Union, cast)
 from urllib.parse import urlparse
@@ -17,6 +18,8 @@ from xarray import DataArray
 
 from datacube_ows.config_toolkit import deepinherit
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
+
+_LOG = logging.getLogger(__name__)
 
 RAW_CFG = Union[
         None,
@@ -832,14 +835,22 @@ class AbstractMaskRule(OWSConfigEntry):
         else:
             self.flags = None
             self.or_flags = False
-        if self.VALUES_LABEL in cfg:
-            val: Any = cfg[self.VALUES_LABEL]
+
+        if "values" in cfg:
+            val: Any = cfg["values"]
+        elif "enum" in cfg:
+            val = cfg["enum"]
+            _LOG.warning("enum in pq_masks is deprecated and will be removed in a future release. Refer to the documentation for the new syntax.")
+        else:
+            val = None
+        if val is None:
+            self.values = None
+        else:
             if isinstance(val, int):
                 self.values: Optional[List[int]] = [cast(int, val)]
             else:
                 self.values: Optional[List[int]] = cast(List[int], val)
-        else:
-            self.values = None
+
         if not self.flags and not self.values:
             raise ConfigException(
                 f"Mask rule in {self.context} must have a non-empty 'flags' or 'values' section.")

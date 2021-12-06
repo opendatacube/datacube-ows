@@ -563,61 +563,10 @@ class StyleMask(AbstractMaskRule):
         mask = super().create_mask(data)
         return mask
 
-
-class OldStyleMask(OWSConfigEntry):
-    """
-    A style-mask object
-    """
-    def __init__(self, cfg: CFG_DICT, style: StyleDefBase) -> None:
-        super().__init__(cfg)
-        cfg = cast(CFG_DICT, self._raw_cfg)
-        self.style = style
-        self.stand_alone = style.stand_alone
-        if not self.stand_alone and not self.style.product.flag_bands:
-            raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
-        if "band" in cfg:
-            self.band_name = cast(str, cfg["band"])
-            if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
-                raise ConfigException(
-                    f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
-        else:
-            if self.stand_alone:
-                raise ConfigException(
-                    f"Must provide band name for masks in stand-alone styles"
-                )
-            self.band_name = cast(str, list(self.style.product.flag_bands.keys())[0])
-            _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
-                         self.style.name,
-                         self.style.product.name)
-        if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
-            raise ConfigException(f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
-        if self.stand_alone:
-            self.band: FlagBand = OWSFlagBandStandalone(self.band_name)
-        else:
-            self.band = cast(FlagBand, self.style.product.flag_bands[self.band_name])
-        self.invert = cast(bool, cfg.get("invert", False))
-        if "flags" in cfg:
-            flags: CFG_DICT = cast(CFG_DICT, cfg["flags"])
-            self.flags: Optional[CFG_DICT] = flags
-            self.enum: RAW_CFG = None
-            if "enum" in cfg:
-                raise ConfigException(
-                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has both an enum section and a flags section - please split into two masks.")
-            if len(flags) == 0:
-                raise ConfigException(
-                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has empty enum section.")
-        elif "enum" in cfg:
-            self.enum = cfg["enum"]
-            self.flags = None
-        else:
-            raise ConfigException(f"mask definition in layer {self.style.product.name}, style {self.style.name} has no flags or enum section - nothing to mask on.")
-
-
 # Minimum Viable Proxy Objects, for standalone API
 
 class StandaloneGlobalProxy:
     pass
-
 
 class BandIdxProxy:
     def band(self, band):
