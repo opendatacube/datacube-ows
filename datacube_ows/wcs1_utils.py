@@ -372,7 +372,7 @@ def get_coverage_data(req, qprof):
         datasets = stacker.datasets(index=dc.index)
         qprof.end_event("fetch-datasets")
         if qprof.active:
-            qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
+            qprof["datasets"] = {str(q): ids for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()}
         qprof.start_event("load-data")
         output = stacker.data(datasets, skip_corrections=True)
         qprof.end_event("load-data")

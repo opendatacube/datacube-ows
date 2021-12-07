@@ -11,11 +11,10 @@ from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
 import datacube.model
 import numpy as np
 import xarray as xr
-from datacube.utils.masking import make_mask
 from PIL import Image
 
 import datacube_ows.band_utils
-from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, FlagBand,
+from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule, FlagBand,
                                        FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
@@ -161,7 +160,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             self.needed_bands.add(self.local_band(band))
         if not self.stand_alone:
             for mask in self.masks:
-                fb = mask.band
+                fb = mask.flag_band
                 # TODO: Should be able to remove this pyre-ignore after ows_configuration is typed.
                 # pyre-ignore[16]
                 if fb.pq_names == self.product.product_names:
@@ -233,13 +232,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             :param mask: A StyleMask object to calculate
             :return: A DataArray boolean mask with no time dimension
             """
-            pq_data = getattr(data, mask.band_name)
-            if mask.flags:
-                odc_mask = make_mask(pq_data, **cast(CFG_DICT, mask.flags))
-            else:
-                odc_mask = pq_data == mask.enum
-            if mask.invert:
-                odc_mask = ~odc_mask
+            pq_data = getattr(data, mask.band)
+            odc_mask = mask.create_mask(pq_data)
             return odc_mask
 
         result = extra_mask
@@ -544,60 +538,33 @@ style_class_priority_reg: List[Tuple[Type[StyleDefBase], Iterable[str]]] = []
 style_class_reg: List[Tuple[Type[StyleDefBase], Iterable[str]]] = []
 
 
-class StyleMask(OWSConfigEntry):
-    """
-    A style-mask object
-    """
-    def __init__(self, cfg: CFG_DICT, style: StyleDefBase):
-        super().__init__(cfg)
-        cfg = cast(CFG_DICT, self._raw_cfg)
+class StyleMask(AbstractMaskRule):
+    VALUES_LABEL = "enum"
+    def __init__(self, cfg: CFG_DICT, style: StyleDefBase) -> None:
+        band = cast(str, cfg["band"])
+        super().__init__(band, cfg)
+        self.stand_alone = style.stand_alone
         self.style = style
         self.stand_alone = style.stand_alone
-        if not self.stand_alone and not self.style.product.flag_bands:
-            raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
-        if "band" in cfg:
-            self.band_name = cast(str, cfg["band"])
-            if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
-                raise ConfigException(
-                    f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
-        else:
-            if self.stand_alone:
-                raise ConfigException(
-                    f"Must provide band name for masks in stand-alone styles"
-                )
-            self.band_name = cast(str, list(self.style.product.flag_bands.keys())[0])
-            _LOG.warning("Style %s in layer %s uses a deprecated pq_masks format. Refer to the documentation for the new format",
-                         self.style.name,
-                         self.style.product.name)
-        if not self.stand_alone and self.band_name not in self.style.product.flag_bands:
-            raise ConfigException(f"Style {self.style.name} has a mask that references flag band {self.band_name} which is not defined for the layer")
-        if self.stand_alone:
-            self.band: FlagBand = OWSFlagBandStandalone(self.band_name)
-        else:
-            self.band = cast(FlagBand, self.style.product.flag_bands[self.band_name])
-        self.invert = cast(bool, cfg.get("invert", False))
-        if "flags" in cfg:
-            flags: CFG_DICT = cast(CFG_DICT, cfg["flags"])
-            self.flags: Optional[CFG_DICT] = flags
-            self.enum: RAW_CFG = None
-            if "enum" in cfg:
-                raise ConfigException(
-                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has both an enum section and a flags section - please split into two masks.")
-            if len(flags) == 0:
-                raise ConfigException(
-                    f"mask definition in layer {self.style.product.name}, style {self.style.name} has empty enum section.")
-        elif "enum" in cfg:
-            self.enum = cfg["enum"]
-            self.flags = None
-        else:
-            raise ConfigException(f"mask definition in layer {self.style.product.name}, style {self.style.name} has no flags or enum section - nothing to mask on.")
+        if not self.stand_alone:
+            if not self.style.product.flag_bands:
+                raise ConfigException(f"Style {self.style.name} in layer {self.style.product.name} contains a mask, but the layer has no flag bands")
 
+            if band not in self.style.product.flag_bands:
+                raise ConfigException(f"Style {self.style.name} has a mask that references flag band {band} which is not defined for the layer")
+        if self.stand_alone:
+            self.flag_band: FlagBand = OWSFlagBandStandalone(self.band)
+        else:
+            self.flag_band = cast(FlagBand, self.style.product.flag_bands[self.band])
+
+    def create_mask(self, data: xr.DataArray) -> xr.DataArray:
+        mask = super().create_mask(data)
+        return mask
 
 # Minimum Viable Proxy Objects, for standalone API
 
 class StandaloneGlobalProxy:
     pass
-
 
 class BandIdxProxy:
     def band(self, band):

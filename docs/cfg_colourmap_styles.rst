@@ -117,120 +117,8 @@ Rules
 
 Each Value Rule must also specify the rule to evaluate when it applies.
 
-This can be done either by treating the band as a bit-flag (
-with the `flags <#bitflag-rules-flags>`_ entry) or as an enumeration (
-with the `values <#enumeration-rules-values>`_ entry).
-
-Bitflag Rules (flags)
-&&&&&&&&&&&&&&&&&&&&&
-
-For bitflag bands, the actual logic of the Value Rule is contained in the "flags" entry.
-
-The flags entry is a dictionary with one of three possible formats.  Note
-that formats cannot be combined.  In particular ``and`` and ``or`` logic cannot
-be combined in a single rule.
-
-Refer to the OpenDataCube metadata for the underlying product for the
-valid bitflag names.
-
-Simple Rules
-@@@@@@@@@@@@
-
-A simple rule allows matching a single bitflag value.
-The ``flags`` dictionary contains a single entry, the key is a valid bitflag
-for the band, and the value is boolean.
-
-E.g.::
-
-    "value_map": {
-        "bitflag_band": [
-            ...
-            {
-                ...
-                "flags": {
-                    # matches all pixels that have not already matched a previous rule
-                    # and have the "open_forest" bit flag set to True.
-                   "open_forest": True,
-                }
-            },
-            ...
-    ]
-
-And Rules
-@@@@@@@@@
-
-And Rules allow a pixel match if all the specified comparisons match. The flags
-entry contains an "and" dictionary that in turn contains the individual comparisons.
-
-E.g.::
-
-    "value_map": {
-        "bitflag_band": [
-            ...
-            {
-                ...
-                "flags": {
-                    "and": {
-                        # matches all pixels that have not already matched a previous rule
-                        # and have the "open_forest" bit flag set to True AND the "underwater"
-                        # bit flag set to False.
-                       "open_forest": True,
-                       "underwater": False,
-                    }
-                }
-            },
-            ...
-    ]
-
-Or Rules
-@@@@@@@@
-
-Or Rules allow a pixel match if any of the specified comparisons match. The flags
-entry contains an "or" dictionary that in turn contains the individual comparisons.
-
-E.g.::
-
-    "value_map": {
-        "bitflag_band": [
-            ...
-            {
-                ...
-                "flags": {
-                    "or": {
-                        # matches all pixels that have not already matched a previous rule
-                        # and have either the "open_forest" or the "closed_forest" bit flag set
-                        # to True.
-                       "open_forest": True,
-                       "closed_forest": True,
-                    }
-                }
-            },
-            ...
-    ]
-
-Enumeration Rules (values)
-&&&&&&&&&&&&&&&&&&&&&&&&&&
-
-For bitflag bands, the actual logic of the Value Rule is contained in the "values" entry.
-
-The "values" entry is a list of integers.  Pixels whose exact value is in this list satisfy
-the rule.
-
-E.g.
-
-::
-
-    "value_map": {
-        "enum_band": [
-            ...
-            {
-                ...
-                # Matches pixels whose value is exactly either 2, 3, 7 or 15.
-                "values": [2, 3, 7, 15],
-            },
-            ...
-    ]
-
+For details, refer to the
+`OWS Masking Syntax <https://datacube-ows.readthedocs.io/en/latest/cfg_masks.html>`_.
 
 ------
 Legend
@@ -315,7 +203,7 @@ single date `value_map`_ described above.  The handler must serve a single
 number of date values.  The discussion here will assume an `allowed_count_range``
 of ``[2, 2]``, but higher values should work.
 
-The ``flags`` or ``values`` entry for each rule is replaced by a list of
+The ``flags`` or ``values`` (and invert) entry for each rule is replaced by a list of
 single-date entries.  A rule is matched for a pixel in the output image
 if the pixel matches the provided rules at all date values.  Additionally
 an empty rule set of either type for a particular date means

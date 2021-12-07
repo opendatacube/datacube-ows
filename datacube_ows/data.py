@@ -162,7 +162,7 @@ class DataStacker:
                  all_flag_bands=False,
                  all_time=False, point=None,
                  mode=MVSelectOpts.DATASETS):
-        if mode != MVSelectOpts.DATASETS or all_time:
+        if mode == MVSelectOpts.EXTENT or all_time:
             # Not returning datasets - use main product only
             queries = [
                 ProductBandQuery.simple_layer_query(
@@ -204,6 +204,10 @@ class DataStacker:
                                products=query.products)
             if mode == MVSelectOpts.DATASETS:
                 result = datacube.Datacube.group_datasets(result, self.group_by)
+                if all_time:
+                    return result
+                results.append((query, result))
+            elif mode == MVSelectOpts.IDS:
                 if all_time:
                     return result
                 results.append((query, result))
@@ -424,7 +428,7 @@ def get_map(args):
                 stacker.resource_limited = True
                 qprof["resource_limited"] = str(e)
             if qprof.active:
-                qprof["datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.IDS)
+                qprof["datasets"] = {str(q): ids for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()}
             if stacker.resource_limited and not params.product.low_res_product_names:
                 qprof.start_event("extent-in-query")
                 extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
