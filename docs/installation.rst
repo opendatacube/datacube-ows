@@ -14,7 +14,7 @@ before attempting to install and configure datacube-ows.
 Stable release
 --------------
 
-datacube-ows is not currently being released to PyPI.
+datacube-ows is released to PyPI and the latest release can be found on https://pypi.org/project/datacube-ows/.
 
 Install Postgis
 ----------------
