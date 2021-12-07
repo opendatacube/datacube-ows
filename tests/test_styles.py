@@ -38,6 +38,17 @@ def product_layer():
 
         def products_match(self, name):
             return False
+
+    class FakeFlagBand:
+        def __init__(self, pq_name, band):
+            self.pq_products = [FakeODCProduct(pq_name)]
+            self.pq_low_res_products = None
+            self.pq_band = band
+            self.pq_names = [pq_name]
+            self.pq_ignore_time = False
+            self.pq_manual_merge = False
+            self.pq_fuse_func = None
+
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer._unready_attributes = []
     product_layer.global_cfg = MagicMock()
@@ -73,6 +84,10 @@ def product_layer():
     }
     product_layer.data_manual_merge = False
     product_layer.fuse_func = None
+    product_layer.flag_bands = {
+        "pq": FakeFlagBand("test_masking_product", "pq"),
+        "wongle": FakeFlagBand("wongle", "pq"),
+    }
     product_layer.allflag_productbands = [FakeProductBand()]
     product_layer.style_index = {}
     product_layer.band_idx._metadata_registry = {
@@ -796,3 +811,66 @@ def test_bad_mpl_ramp():
         ramp = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
     assert "Invalid Matplotlib name: " in str(e.value)
 
+@pytest.fixture
+def style_with_pq_masking():
+    cfg = {
+        "name": "test_style",
+        "title": "Test Style",
+        "abstract": "This is a Test Style for Datacube WMS",
+        "needed_bands": ["red", "green", "blue"],
+        "scale_factor": 1.0,
+        "components": {
+            "red": {"red": 1.0},
+            "green": {"green": 1.0},
+            "blue": {"blue": 1.0}
+        },
+        "pq_masks": [
+            {
+                "band": "pq",
+                "values": [0,1,2]
+            }
+        ]
+    }
+    return cfg
+
+def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc):
+    def fake_make_mask(data, **kwargs):
+        val = kwargs["bar"]
+        return data == val
+
+    dim = np.array([0, 1, 2, 3, 4, 5])
+    band = np.array([0, 1, 2, 3, 4, 5])
+    timarray = [np.datetime64(datetime.date.today())]
+    times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
+    data_vars = {
+        "pq": DataArray(band, name='pq', coords={"dim": dim}, dims=["dim"]),
+        "red": DataArray(band, name='red', coords={"dim": dim}, dims=["dim"]),
+        "green": DataArray(band, name='green', coords={"dim": dim}, dims=["dim"]),
+        "blue": DataArray(band, name='blue', coords={"dim": dim}, dims=["dim"]),
+    }
+    dst = Dataset(data_vars=data_vars)
+    ds = concat([dst], times)
+
+    npmap = np.array([True, True, True, True, True, True])
+    damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
+
+    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+        style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
+        style_def.make_ready(minimal_dc)
+        mask = style_def.to_mask(ds, damap)
+        data = style_def.transform_data(ds, mask)
+        a = data["alpha"]
+
+        assert (a.values[2] == 255)
+        assert (a.values[4] == 0)
+
+def test_styles_with_invalid_pq_masks(product_layer, style_with_pq_masking):
+    style_with_pq_masking["pq_masks"][0]["band"] = "invalid_band"
+    with pytest.raises(ConfigException) as e:
+        style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
+    assert "has a mask that references flag band invalid_band which is not defined" in str(e.value)
+    product_layer.flag_bands = {}
+    product_layer.allflag_productbands = []
+    with pytest.raises(ConfigException) as e:
+        style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
+    assert "contains a mask, but the layer has no flag bands" in str(e.value)
