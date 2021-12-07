@@ -827,7 +827,7 @@ def style_with_pq_masking():
         "pq_masks": [
             {
                 "band": "pq",
-                "values": [0,1,2]
+                "values": [0, 1, 2],
             }
         ]
     }
