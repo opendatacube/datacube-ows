@@ -186,7 +186,8 @@ def initialise_flask(name):
 
 def pass_through(undecorated):
     def decorator(*args, **kwargs):
-        return undecorated
+        return undecorated(*args, **kwargs)
+    decorator.__name__ = undecorated.__name__
     return decorator
 
 class FakeMetrics:

@@ -175,8 +175,7 @@ def ping():
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
 @metrics.do_not_track()
-@metrics.summary('legends', "Legend query durations", label={
-    "labels": lambda r: r.status,
+@metrics.summary('legends', "Legend query durations", labels={
     "layer": lambda: request.path.split("/")[2],
     "style": lambda: request.path.split("/")[3],
     "status": lambda r: r.status,
