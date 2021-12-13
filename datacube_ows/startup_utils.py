@@ -184,6 +184,23 @@ def initialise_flask(name):
     RequestID(app)
     return app
 
+def pass_through(undecorated):
+    def decorator(*args, **kwargs):
+        return undecorated(*args, **kwargs)
+    decorator.__name__ = undecorated.__name__
+    return decorator
+
+class FakeMetrics:
+    def do_not_track(self):
+        return pass_through
+    def counter(self, *args, **kwargs):
+        return pass_through
+    def histogram(self, *args, **kwargs):
+        return pass_through
+    def gauge(self, *args, **kwargs):
+        return pass_through
+    def summary(self, *args, **kwargs):
+        return pass_through
 
 def initialise_prometheus(app, log=None):
     # Prometheus
@@ -192,7 +209,7 @@ def initialise_prometheus(app, log=None):
         if log:
             log.info("Prometheus metrics enabled")
         return metrics
-    return None
+    return FakeMetrics()
 
 
 def initialise_prometheus_register(metrics):
@@ -210,6 +227,7 @@ def initialise_prometheus_register(metrics):
                                             or request.args.get('coverage')     # WCS 1.x
                                             or request.args.get('coverageid')   # WCS 2.x
                                             ),
+                    'status': lambda r: r.status,
                 }
             )
         )

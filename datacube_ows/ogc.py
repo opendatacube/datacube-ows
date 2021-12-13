@@ -151,8 +151,9 @@ def ogc_wmts_impl():
 def ogc_wcs_impl():
     return ogc_svc_impl("wcs")
 
-
 @app.route('/ping')
+@metrics.do_not_track()
+@metrics.summary('heartbeat_pings', "Ping durations", labels={"status": lambda r: r.status})
 def ping():
     db_ok = False
     with cube() as dc:
@@ -173,6 +174,12 @@ def ping():
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
+@metrics.do_not_track()
+@metrics.summary('legends', "Legend query durations", labels={
+    "layer": lambda: request.path.split("/")[2],
+    "style": lambda: request.path.split("/")[3],
+    "status": lambda r: r.status,
+})
 def legend(layer, style, dates=None):
     # pylint: disable=redefined-outer-name
     cfg = get_config()
