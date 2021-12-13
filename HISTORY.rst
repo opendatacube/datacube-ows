@@ -7,6 +7,61 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.23.1 (2021-11-16)
+---------------------
+
+Interim administrative release.
+
+* Improved Prometheus metrics for monitoring (#777)
+* Update HISTORY.rst (#778)
+
+1.8.23 (2021-12-10)
+-------------------
+
+In addition to the standard animated handlers previously supported by all style types, this release
+introduces two additional approaches to produce an non-animated image from a multi-date request for
+colour-map (aka value_map) type styles:
+
+* Using a variant of the value_map_ entry used for the single-date case. This is a much simpler way of achieving most use cases.
+* Using an aggregator function, which allows for fully customisable behaviour but requires writing Python code.
+
+The new behaviour is fully documented here: https://datacube-ows.readthedocs.io/en/latest/cfg_colourmap_styles.html#multi-date-requests
+
+This means that OWS now supports rich comparison visualisation techniques for both contiguous and discrete data products.
+
+Also, the masking rule parser for pq_masks sections now uses the same code as the parser for value_map rules in colour map styles.
+
+This means that:
+
+* pq_mask rules now supports and/or operators, consistent with value_map rules.
+* value_map rules now support the invert operator, consistent with pq_mask rules.
+* The old "enum" keyword in pq_masks is now deprecated - please now use the values keyword, as in value_maps.
+
+Full details are in the documentation. Old style syntax will continue to work as before - except the
+enum keyword in pq_masks now produces a deprecated warning message.
+
+Changes in this release:
+++++++++++++++++++++++++
+
+New Feature:
+
+*  Support for non-animated multi-date handlers for "colour-map" type styles. (#770)
+*  Consistent syntax for masking rules in pq_masks and value_map rules (#774)
+
+Bug fixes
+
+* Fix to bug affecting resource-limiting for WCS (#769)
+* Fix bug in handling of missing data when applying cross-product masking (#772)
+
+Dependency management and release process
+
+* Remove constraint requiring very recent versions of numpy (#766)
+* Upgrade to Postgis 3.1 (#767)
+* Add automated spell check of documentation to github actions (#775)
+* Increment default version number. (#776)
+
+This release includes contributions from @Kirill888, @NikitaGandhi, @pindge and @SpacemanPaul
+
 1.8.22 (2021-11-11)
 -------------------
 
