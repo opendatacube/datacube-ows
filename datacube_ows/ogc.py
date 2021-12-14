@@ -46,10 +46,30 @@ metrics = initialise_prometheus(app, _LOG)
 # Protocol/Version lookup table
 OWS_SUPPORTED = supported_versions()
 
+# Prometheus Metrics
+prometheus_ows_ogc_metric=metrics.summary(
+    "ows_ogc",
+    "Summary by OGC request protocol, version, operation, layer, and HTTP Status",
+    labels={
+        'query_request': lambda: request.args.get('request').upper(),
+        'query_service': lambda: request.args.get('service').upper(),
+        'query_version': lambda: request.args.get('version'),
+        'query_layer': lambda: (request.args.get('layers')  # WMS
+                                or request.args.get('layer')  # WMTS
+                                or request.args.get('coverage')  # WCS 1.x
+                                or request.args.get('coverageid')  # WCS 2.x
+                                ),
+        'status': lambda r: r.status_code,
+    }
+)
+
+
+
 # Flask Routes
 
 
 @app.route('/')
+@prometheus_ows_ogc_metric
 def ogc_impl():
     #pylint: disable=too-many-branches
     nocase_args = lower_get_args()
@@ -138,22 +158,24 @@ def ogc_svc_impl(svc):
 
 
 @app.route('/wms')
+@prometheus_ows_ogc_metric
 def ogc_wms_impl():
     return ogc_svc_impl("wms")
 
 
 @app.route('/wmts')
+@prometheus_ows_ogc_metric
 def ogc_wmts_impl():
     return ogc_svc_impl("wmts")
 
 
 @app.route('/wcs')
+@prometheus_ows_ogc_metric
 def ogc_wcs_impl():
     return ogc_svc_impl("wcs")
 
 @app.route('/ping')
-@metrics.do_not_track()
-@metrics.summary('heartbeat_pings', "Ping durations", labels={"status": lambda r: r.status})
+@metrics.summary('ows_heartbeat_pings', "Ping durations", labels={"status": lambda r: r.status})
 def ping():
     db_ok = False
     with cube() as dc:
@@ -174,8 +196,8 @@ def ping():
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
-@metrics.do_not_track()
-@metrics.summary('legends', "Legend query durations", labels={
+@prometheus_ows_ogc_metric
+@metrics.summary('ows_legends', "Legend query durations", labels={
     "layer": lambda: request.path.split("/")[2],
     "style": lambda: request.path.split("/")[3],
     "status": lambda r: r.status,
@@ -221,7 +243,3 @@ def log_time_and_request_response(response):
     _LOG.info("request: %s returned status: %d and took: %d ms", request.url, response.status_code, time_taken)
     return response
 
-
-# Note: register your default metrics after all routes have been set up.
-# Also note, that Gauge metrics registered as default will track the /metrics endpoint, and this can't be disabled at the moment.
-initialise_prometheus_register(metrics)
