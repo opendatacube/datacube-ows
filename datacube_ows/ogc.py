@@ -53,11 +53,11 @@ prometheus_ows_ogc_metric = metrics.summary(
     labels={
         'query_request': lambda: request.args.get('request', "NONE").upper(),
         'query_service': lambda: request.args.get('service', "NONE").upper(),
-        'query_version': lambda: request.args.get('version', "NONE"),
-        'query_layer': lambda: (request.args.get('layers', "NONE")  # WMS
-                                or request.args.get('layer', "NONE")  # WMTS
-                                or request.args.get('coverage', "NONE")  # WCS 1.x
-                                or request.args.get('coverageid', "NONE")  # WCS 2.x
+        'query_version': lambda: request.args.get('version'),
+        'query_layer': lambda: (request.args.get('layers')  # WMS
+                                or request.args.get('layer')  # WMTS
+                                or request.args.get('coverage')  # WCS 1.x
+                                or request.args.get('coverageid')  # WCS 2.x
                                 ),
         'status': lambda r: r.status_code,
     }
