@@ -47,7 +47,7 @@ metrics = initialise_prometheus(app, _LOG)
 OWS_SUPPORTED = supported_versions()
 
 # Prometheus Metrics
-prometheus_ows_ogc_metric=metrics.summary(
+prometheus_ows_ogc_metric = metrics.summary(
     "ows_ogc",
     "Summary by OGC request protocol, version, operation, layer, and HTTP Status",
     labels={

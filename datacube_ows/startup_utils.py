@@ -32,7 +32,6 @@ __all__ = [
     'parse_config_file',
     'initialise_flask',
     'initialise_prometheus',
-    'initialise_prometheus_register',
     'generate_locale_selector',
     'CredentialManager',
 ]
