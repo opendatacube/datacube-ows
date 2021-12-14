@@ -211,27 +211,9 @@ def initialise_prometheus(app, log=None):
         return metrics
     return FakeMetrics()
 
-
-def initialise_prometheus_register(metrics):
-    # Register routes with Prometheus - call after all routes set up.
-    if os.environ.get("prometheus_multiproc_dir", False):
-        metrics.register_default(
-            metrics.summary(
-                'flask_ows_request_method_and_layer', 'Request summary by protocol, version, command and layer',
-                labels={
-                    'query_request': lambda: request.args.get('request'),
-                    'query_service': lambda: request.args.get('service'),
-                    'query_version': lambda: request.args.get('version'),
-                    'query_layer': lambda: (request.args.get('layers')          # WMS
-                                            or request.args.get('layer')        # WMTS
-                                            or request.args.get('coverage')     # WCS 1.x
-                                            or request.args.get('coverageid')   # WCS 2.x
-                                            ),
-                    'status': lambda r: r.status,
-                }
-            )
-        )
-
+def request_extractor():
+    qreq = request.args.get('request')
+    return qreq
 
 def generate_locale_selector(locales):
     def selector_template():

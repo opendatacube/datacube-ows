@@ -106,8 +106,7 @@ def test_initialise_sentry(monkeypatch):
 
 def test_prometheus_inactive(monkeypatch):
     monkeypatch.setenv("prometheus_multiproc_dir", "")
-    from datacube_ows.startup_utils import (  # noqa: F401
-        initialise_prometheus, initialise_prometheus_register)
+    from datacube_ows.startup_utils import initialise_prometheus
 
 
 def test_supported_version():
