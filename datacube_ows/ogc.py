@@ -196,7 +196,6 @@ def ping():
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
-@prometheus_ows_ogc_metric
 @metrics.summary('ows_legends', "Legend query durations", labels={
     "layer": lambda: request.path.split("/")[2],
     "style": lambda: request.path.split("/")[3],
