@@ -7,7 +7,15 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
-1.8.23.1 (2021-11-16)
+1.8.23.2 (2021-12-16)
+---------------------
+
+Interim administrative release.
+
+* Improved Prometheus metrics for monitoring (#779)
+* Update HISTORY.rst (#780)
+
+1.8.23.1 (2021-12-10)
 ---------------------
 
 Interim administrative release.
@@ -15,7 +23,7 @@ Interim administrative release.
 * Improved Prometheus metrics for monitoring (#777)
 * Update HISTORY.rst (#778)
 
-1.8.23 (2021-12-10)
+1.8.23 (2021-11-16)
 -------------------
 
 In addition to the standard animated handlers previously supported by all style types, this release
