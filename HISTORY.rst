@@ -7,7 +7,14 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
-1.8.23.2 (2021-12-16)
+1.8.23.3 (2021-12-16)
+---------------------
+
+Interim administrative release.
+
+* Upgraded Prometheus metrics to histogram type, and updated HISTORY.rst (#781)
+
+1.8.23.2 (2021-12-15)
 ---------------------
 
 Interim administrative release.

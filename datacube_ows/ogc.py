@@ -47,7 +47,7 @@ metrics = initialise_prometheus(app, _LOG)
 OWS_SUPPORTED = supported_versions()
 
 # Prometheus Metrics
-prometheus_ows_ogc_metric = metrics.summary(
+prometheus_ows_ogc_metric = metrics.histogram(
     "ows_ogc",
     "Summary by OGC request protocol, version, operation, layer, and HTTP Status",
     labels={
@@ -196,7 +196,7 @@ def ping():
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
-@metrics.summary('ows_legends', "Legend query durations", labels={
+@metrics.histogram('ows_legends', "Legend query durations", labels={
     "layer": lambda: request.path.split("/")[2],
     "style": lambda: request.path.split("/")[3],
     "status": lambda r: r.status,
