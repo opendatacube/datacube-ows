@@ -143,8 +143,10 @@
                 <ows:Identifier>{{ style.name }}</ows:Identifier>
                 <ows:Title>{{ style.title }}</ows:Title>
                 <ows:Abstract>{{ style.abstract }}</ows:Abstract>
+                {% if style.legend_cfg.show_legend %}
                 <LegendURL format="image/png"
                         xlink:href="{{ base_url }}/legend/{{ layer.name }}/{{ style.name }}/legend.png"/>
+                {% endif %}
             </Style>
             {% endfor %}
             <Format>image/png</Format>

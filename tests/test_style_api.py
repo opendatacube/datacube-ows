@@ -731,11 +731,11 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
     assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
 
 
-def test_ramp_legend(simple_colormap_style_cfg):
+def test_map_legend(simple_colormap_style_cfg):
     img = generate_ows_legend_style_cfg(simple_colormap_style_cfg, 1)
 
     assert img.mode == "RGBA"
-    assert img.size == (300, 125)
+    assert img.size == (400, 125)
 
 
 def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):

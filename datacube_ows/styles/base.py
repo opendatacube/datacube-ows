@@ -28,6 +28,38 @@ from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
+class LegendBase(OWSConfigEntry):
+    """
+    Legend base class.
+    """
+    def __init__(self, style_or_mdh: Union["StyleDefBase","StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
+        super().__init__(cfg)
+        raw_cfg = cast(CFG_DICT, self._raw_cfg)
+        self.style_or_mdh = style_or_mdh
+        if isinstance(self.style_or_mdh, StyleDefBase):
+            self.style: StyleDefBase = self.style_or_mdh
+        else:
+            self.style = self.style_or_mdh.style
+        self.show_legend = cast(bool, raw_cfg.get("show_legend", self.style_or_mdh.auto_legend))
+        self.legend_url_override = cast(Optional[str], raw_cfg.get('url', None))
+
+        self.title: Optional[str] = None
+        self.width: float = 0.0
+        self.height: float = 0.0
+        self.mpl_rcparams: MutableMapping[str, str] = {}
+        if self.show_legend and not self.legend_url_override and self.style.auto_legend:
+            self.parse_common_auto_elements(raw_cfg)
+
+    def parse_common_auto_elements(self, cfg: CFG_DICT):
+        self.title = cast(Optional[str], cfg.get("title"))
+        self.width = cast(float, cfg.get("width", 4.0))
+        self.height = cast(float, cfg.get("height", 1.25))
+        self.mpl_rcparams = cast(MutableMapping[str, str], cfg.get("rcParams", {}))
+
+    def render(self, bytesio: io.BytesIO) -> None:
+        raise NotImplementedError()
+
+
 class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     """"
     Base Class from which all style classes are extended.
@@ -128,7 +160,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.declare_unready("needed_bands")
         self.declare_unready("flag_bands")
 
-        self.parse_legend_cfg(cast(CFG_DICT, raw_cfg.get("legend", {})))
+        self.legend_cfg = self.Legend(self, raw_cfg.get("legend", {}))
         if not defer_multi_date:
             self.parse_multi_date(raw_cfg)
 
@@ -314,52 +346,23 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         """
         raise NotImplementedError()
 
-    # pylint: disable=attribute-defined-outside-init
-    def parse_legend_cfg(self, cfg: CFG_DICT) -> None:
-        """Used by __init__()"""
-        self.show_legend = cast(bool, cfg.get("show_legend", self.auto_legend))
-        self.legend_url_override = cast(Optional[str], cfg.get('url', None))
-        self.legend_cfg = cfg
-
     def render_legend(self, dates: Union[int, List[Any]]) -> Optional["PIL.Image.Image"]:
         """
         Render legend, if possible
         :param dates: The number of dates to render the legend for (e.g. for delta)
         :return: A PIL Image object, or None.
         """
-        mdh = self.get_multi_date_handler(dates)
-        url = self.legend_override_with_url(mdh)
-        if url:
-            return get_image_from_url(url)
-        if not self.auto_legend:
+        legend = self.get_legend_cfg(dates)
+        if not legend.show_legend:
+            return None
+        if legend.legend_url_override:
+            return get_image_from_url(legend.legend_url_override)
+        if not legend.style_or_mdh.auto_legend:
             return None
         bytesio = io.BytesIO()
-        if mdh:
-            mdh.legend(bytesio)
-        else:
-            self.single_date_legend(bytesio)
+        legend.render(bytesio)
         bytesio.seek(0)
         return Image.open(bytesio)
-
-    def single_date_legend(self, bytesio: io.BytesIO) -> None:
-        """
-        Write a legend into a bytes buffer as a PNG image.
-
-        Overridden by subclasses.
-
-        :param bytesio:  io.BytesIO byte buffer.
-        """
-        raise NotImplementedError()
-
-    def legend_override_with_url(self, mdh: Optional["StyleDefBase.MultiDateHandler"] = None) -> Optional[str]:
-        """
-        Find appropriate overide URL
-        :param mdh: Optional multidatehandler.  If None, use default single date override url.
-        :return: A URL string, or None
-        """
-        if mdh:
-            return mdh.legend_url_override
-        return self.legend_url_override
 
     @staticmethod
     def count_dates(count_or_sized_or_ds: Union[int, Sized, xr.Dataset]) -> int:
@@ -373,6 +376,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                 return len(data.coords["time"])
         else:
             return len(count_or_sized_or_ds)
+
+    def get_legend_cfg(self, count_or_sized_or_ds: Union[int, Sized, xr.Dataset]
+                               ) -> LegendBase:
+        mdh = self.get_multi_date_handler(count_or_sized_or_ds)
+        if mdh:
+            return mdh.legend_cfg
+        return self.legend_cfg
 
     def get_multi_date_handler(self, count_or_sized_or_ds: Union[int, Sized, xr.Dataset]
                                ) -> Optional["StyleDefBase.MultiDateHandler"]:
@@ -419,6 +429,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                     return sub
         return None
 
+    class Legend(LegendBase):
+        """
+        Style Legend class.
+
+        May be overridden by style subclasses to support autolegend generation
+        """
+
     class MultiDateHandler(OWSConfigEntry):
         """
         MultiDateHandler base class.
@@ -462,7 +479,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                 self.aggregator = None
                 if self.non_animate_requires_aggregator:
                     raise ConfigException("Aggregator function is required for non-animated multi-date handlers.")
-            self.parse_legend_cfg(cast(CFG_DICT, cfg.get("legend", {})))
+            self.legend_cfg = self.Legend(self, raw_cfg.get("legend", {}))
             self.preserve_user_date_order = cast(bool, cfg.get("preserve_user_date_order", False))
 
         def applies_to(self, count: int) -> bool:
@@ -488,17 +505,11 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             """
             return self.style.transform_single_date_data(data)
 
-        # pylint: disable=attribute-defined-outside-init
-        def parse_legend_cfg(self, cfg: CFG_DICT) -> None:
-            self.show_legend = cast(bool, cfg.get("show_legend", self.auto_legend))
-            self.legend_url_override = cast(Optional[str], cfg.get('url', None))
-            self.legend_cfg = cfg
-
-        def legend(self, bytesio: io.BytesIO) -> None:
+        class Legend(LegendBase):
             """
-            Write a legend as a png to a bytesio buffer.
-            
-            :param bytesio: 
+            MultiDateHandler Legend class.
+
+            May be overridden by MDH subclasses to support autolegend generation
             """
 
 
