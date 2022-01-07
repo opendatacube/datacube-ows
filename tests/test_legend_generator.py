@@ -76,18 +76,4 @@ def test_parse_colorramp_legend_beginend():
         "end": "2.0"
     })
     assert legend.begin == Decimal("0.0")
-    assert legend.end == Decimal("2.0")
-
-
-def test_parse_colorramp_legend_ticksevery():
-    ramp = ColorRampDef.Legend(MagicMock(), {
-        "legend": {
-            "begin": "0.0",
-            "end": "2.0",
-            "ticks_every": "0.4"
-        }
-    })
-    ramp.register_ramp(MagicMock())
-    assert ramp.ticks == [Decimal("0.0"), Decimal("0.4"), Decimal("0.8"),
-                          Decimal("1.2"), Decimal("1.6"), Decimal("2.0")]
-    assert ramp.tick_labels == ["0.0", "0.4", "0.8", "1.2", "1.6", "2.0"]
+    assert legend.end == Decimal("2.0")...
