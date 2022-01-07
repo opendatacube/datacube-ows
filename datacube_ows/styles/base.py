@@ -32,7 +32,7 @@ class LegendBase(OWSConfigEntry):
     """
     Legend base class.
     """
-    def __init__(self, style_or_mdh: Union["StyleDefBase","StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
+    def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
         super().__init__(cfg)
         raw_cfg = cast(CFG_DICT, self._raw_cfg)
         self.style_or_mdh = style_or_mdh
@@ -429,6 +429,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                     return sub
         return None
 
+    # pylint: disable=abstract-method
     class Legend(LegendBase):
         """
         Style Legend class.
@@ -505,6 +506,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             """
             return self.style.transform_single_date_data(data)
 
+        # pylint: disable=abstract-method
         class Legend(LegendBase):
             """
             MultiDateHandler Legend class.

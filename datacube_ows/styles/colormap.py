@@ -277,10 +277,10 @@ class ColorMapLegendBase(StyleDefBase.Legend):
         self.ncols = int(raw_cfg.get("ncols", 1))
         if self.ncols < 1:
             raise ConfigException("ncols must be a positive integer")
+        self.patches: List[PatchTemplate] = []
 
     def register_value_map(self, value_map: MutableMapping[str, List["AbstractValueMapRule"]]) -> None:
-        self.patches = []
-        for band in value_map.keys():
+        for band in value_map.keys()flak:
             for idx, rule in reversed(list(enumerate(value_map[band]))):
                 # only include values that are not transparent (and that have a non-blank title or abstract)
                 if rule.alpha > 0.001 and rule.label:
