@@ -363,14 +363,14 @@ class RampLegendBase(StyleDefBase.Legend):
                     self.begin = Decimal(col_def["value"])
                     break
             if self.begin.is_nan():
-                self.begin = Decimal(self.ramp[0]["value"])
+                self.begin = Decimal(ramp.ramp[0]["value"])
         if self.end.is_nan():
             for col_def in reversed(ramp.ramp):
                 if isclose(col_def.get("alpha", 1.0), 1.0, abs_tol=1e-9):
                     self.end = Decimal(col_def["value"])
                     break
             if self.end.is_nan():
-                self.end = Decimal(self.ramp[-1]["value"])
+                self.end = Decimal(ramp.ramp[-1]["value"])
         if self.ticks_every is not None:
             tickval = self.begin
             while tickval < self.end:
