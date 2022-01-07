@@ -3,8 +3,9 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from datacube_ows.ogc_utils import ConfigException
 
