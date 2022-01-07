@@ -76,4 +76,4 @@ def test_parse_colorramp_legend_beginend():
         "end": "2.0"
     })
     assert legend.begin == Decimal("0.0")
-    assert legend.end == Decimal("2.0")...
+    assert legend.end == Decimal("2.0")
