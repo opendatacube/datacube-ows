@@ -280,7 +280,7 @@ class ColorMapLegendBase(StyleDefBase.Legend):
         self.patches: List[PatchTemplate] = []
 
     def register_value_map(self, value_map: MutableMapping[str, List["AbstractValueMapRule"]]) -> None:
-        for band in value_map.keys()flak:
+        for band in value_map.keys():
             for idx, rule in reversed(list(enumerate(value_map[band]))):
                 # only include values that are not transparent (and that have a non-blank title or abstract)
                 if rule.alpha > 0.001 and rule.label:
