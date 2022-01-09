@@ -320,6 +320,8 @@ class RampLegendBase(StyleDefBase.Legend):
             if "ticks" in raw_cfg:
                 raise ConfigException("Cannot use ticks and ticks_every in the same legend")
             self.ticks_every = Decimal(cast(Union[int, float, str], raw_cfg["ticks_every"]))
+            if self.ticks_every.is_zero() or self.ticks_every.is_signed():
+                raise ConfigException("ticks_every must be greater than zero")
             ticks_handled = True
         if "ticks" in raw_cfg:
             if "tick_count" in raw_cfg:
@@ -371,6 +373,9 @@ class RampLegendBase(StyleDefBase.Legend):
                     break
             if self.end.is_nan():
                 self.end = Decimal(ramp.ramp[-1]["value"])
+        for t in self.ticks:
+            if t < self.begin or t > self.end:
+                raise ConfigException("Explicit ticks must all be within legend begin/end range")
         if self.ticks_every is not None:
             tickval = self.begin
             while tickval < self.end:
