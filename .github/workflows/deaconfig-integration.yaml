@@ -36,7 +36,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout this pr
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
           path: datacube-ows
@@ -44,9 +45,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          repo: GeoscienceAustralia/dea-config
+          repository: GeoscienceAustralia/dea-config
           path: dea-config
-          # submodule: true
 
       # We build the stage 1 image, then run test on it
       # These tests require extra files we don't want in
