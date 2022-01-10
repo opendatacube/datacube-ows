@@ -263,29 +263,51 @@ def apply_value_map(value_map: MutableMapping[str, List[ValueMapRule]],
     return imgdata.astype('uint8')
 
 
-def value_map_legend(value_map: MutableMapping[str, List[ValueMapRule]],
-                     legend_cfg: CFG_DICT,
-                     bytesio: io.BytesIO) -> None:
-    patches = []
-    for band in value_map.keys():
-        for rule in reversed(value_map[band]):
-            # only include values that are not transparent (and that have a non-blank title or abstract)
-            if rule.alpha > 0.001 and rule.label:
-                try:
-                    patch = mpatches.Patch(color=rule.rgb.hex_l, label=rule.label)
-                # pylint: disable=broad-except
-                except Exception as e:
-                    print("Error creating patch?", e)
-                patches.append(patch)
-    cfg = legend_cfg
-    plt.rcdefaults()
-    if cfg.get("rcParams", None) is not None:
-        plt.rcParams.update(cfg.get("rcParams"))
-    figure = plt.figure(figsize=(cfg.get("width", 3),
-                                 cfg.get("height", 1.25)))
-    plt.axis('off')
-    legend = plt.legend(handles=patches, loc='center', frameon=False)
-    plt.savefig(bytesio, format='png')
+class PatchTemplate:
+    def __init__(self, idx: int, rule: AbstractValueMapRule) -> None:
+        self.idx = idx
+        self.colour = rule.rgb.hex_l
+        self.label = rule.label
+
+
+class ColorMapLegendBase(StyleDefBase.Legend):
+    def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
+        super().__init__(style_or_mdh, cfg)
+        raw_cfg = cast(CFG_DICT, self._raw_cfg)
+        self.ncols = int(raw_cfg.get("ncols", 1))
+        if self.ncols < 1:
+            raise ConfigException("ncols must be a positive integer")
+        self.patches: List[PatchTemplate] = []
+
+    def register_value_map(self, value_map: MutableMapping[str, List["AbstractValueMapRule"]]) -> None:
+        for band in value_map.keys():
+            for idx, rule in reversed(list(enumerate(value_map[band]))):
+                # only include values that are not transparent (and that have a non-blank title or abstract)
+                if rule.alpha > 0.001 and rule.label:
+                    self.patches.append(PatchTemplate(idx, rule))
+
+    def render(self, bytesio: io.BytesIO) -> None:
+        patches = [
+            mpatches.Patch(color=pt.colour, label=pt.label)
+            for pt in self.patches
+        ]
+        plt.rcdefaults()
+        if self.mpl_rcparams:
+            plt.rcParams.update(self.mpl_rcparams)
+        plt.figure(figsize=(self.width, self.height))
+        plt.axis('off')
+        if self.title:
+            plt.legend(handles=patches,
+                       loc='center',
+                       ncol=self.ncols,
+                       frameon=False,
+                       title=self.title)
+        else:
+            plt.legend(handles=patches,
+                       loc='center',
+                       ncol=self.ncols,
+                       frameon=False)
+        plt.savefig(bytesio, format='png')
 
 
 class ColorMapStyleDef(StyleDefBase):
@@ -305,6 +327,9 @@ class ColorMapStyleDef(StyleDefBase):
         super().__init__(product, style_cfg, stand_alone=stand_alone, user_defined=user_defined)
         style_cfg = cast(CFG_DICT, self._raw_cfg)
         self.value_map = AbstractValueMapRule.value_map_from_config(self, cast(CFG_DICT, style_cfg["value_map"]))
+        self.legend_cfg.register_value_map(self.value_map)
+        for mdh in self.multi_date_handlers:
+            mdh.legend_cfg.register_value_map(mdh.value_map)
         for band in self.value_map.keys():
             self.raw_needed_bands.add(band)
 
@@ -353,13 +378,8 @@ class ColorMapStyleDef(StyleDefBase):
         #            data[band] = data[band].where(extent_mask)
         return apply_value_map(self.value_map, data, self.product.band_idx.band)
 
-    def single_date_legend(self, bytesio: io.BytesIO) -> None:
-        """
-        Write a legend into a bytes buffer as a PNG image.
-
-        :param bytesio:  io.BytesIO byte buffer.
-        """
-        value_map_legend(self.value_map, self.legend_cfg, bytesio)
+    class Legend(ColorMapLegendBase):
+        pass
 
     class MultiDateHandler(StyleDefBase.MultiDateHandler):
         auto_legend = True
@@ -400,13 +420,8 @@ class ColorMapStyleDef(StyleDefBase):
                 agg = self.aggregator(data)
                 return apply_value_map(self.value_map, agg, self.style.product.band_idx.band)
 
-        def legend(self, bytesio: io.BytesIO) -> None:
-            """
-            Write a legend into a bytes buffer as a PNG image.
-
-            :param bytesio:  io.BytesIO byte buffer.
-            """
-            value_map_legend(self.value_map, self.legend_cfg, bytesio)
+        class Legend(ColorMapLegendBase):
+            pass
 
 # Register ColorMapStyleDef as a style subclass.
 StyleDefBase.register_subclass(ColorMapStyleDef, "value_map")

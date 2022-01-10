@@ -58,7 +58,8 @@ def test_multidate_handler():
 
     mdh = StyleDefBase.MultiDateHandler(FakeMdhStyle(), fake_cfg)
     assert mdh is not None
-    assert not mdh.legend(None)
+    with pytest.raises(NotImplementedError):
+        mdh.legend_cfg.render(None)
     assert isinstance(mdh.range_str(), str)
     assert mdh.applies_to(2)
     assert not mdh.applies_to(11)

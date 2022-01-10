@@ -151,7 +151,7 @@
                 <Name>{{ style.name }}</Name>
                 <Title>{{ style.title }}</Title>
                 <Abstract>{{ style.abstract }}</Abstract>
-                {% if style.show_legend %}
+                {% if style.legend_cfg.show_legend %}
                     <LegendURL>
                         <Format>image/png</Format>
                         <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"

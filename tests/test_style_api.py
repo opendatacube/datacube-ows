@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from decimal import Decimal
+
 import pytest
 
 from datacube_ows.ogc_utils import ConfigException
@@ -185,6 +187,224 @@ def test_ramp_legend_standalone(simple_ramp_style_cfg):
     img = generate_ows_legend_style(style, 1)
     assert img.mode == "RGBA"
     assert img.size == (400, 125)
+
+
+def test_ramp_legend_ranges(simple_ramp_style_cfg):
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.2",
+        "end": "0.8"
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.begin == Decimal("0.2")
+    assert style.legend_cfg.end == Decimal("0.8")
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.3",
+        "end": "0.7"
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.begin == Decimal("0.3")
+    assert style.legend_cfg.end == Decimal("0.7")
+
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "-0.3",
+        "end": "1.7"
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.begin == Decimal("-0.3")
+    assert style.legend_cfg.end == Decimal("1.7")
+
+
+def test_ramp_legend_parse_errs(simple_ramp_style_cfg):
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.15",
+        "begin": "0.95",
+        "decimal_places": -1
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_ramp_style_cfg)
+    assert "decimal_places cannot be negative" in str(e.value)
+
+
+def test_ramp_ticks_multimethod(simple_ramp_style_cfg):
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.2",
+        "tick_count": 5
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_ramp_style_cfg)
+    assert "Cannot use tick count and ticks_every in the same legend" in str(e.value)
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.2",
+        "ticks": ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_ramp_style_cfg)
+    assert "Cannot use ticks and ticks_every in the same legend" in str(e.value)
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks": ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"],
+        "tick_count": 5
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_ramp_style_cfg)
+    assert "Cannot use tick count and ticks in the same legend" in str(e.value)
+
+
+def test_ramp_ticks_every(simple_ramp_style_cfg):
+    # ticks_every
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "1.0",
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.5",
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("0.5"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.7",
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("0.7"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "0.2",
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("0.2"),
+        Decimal("0.4"),
+        Decimal("0.6"),
+        Decimal("0.8"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks_every": "-0.2",
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_ramp_style_cfg)
+    assert "ticks_every must be greater than zero" in str(e.value)
+
+
+
+def test_ramp_tick_count(simple_ramp_style_cfg):
+    # default
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "tick_count": 1
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "tick_count": 0
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "tick_count": 5
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("0.2"),
+        Decimal("0.4"),
+        Decimal("0.6"),
+        Decimal("0.8"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "tick_count": -4
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_ramp_style_cfg)
+    assert "tick_count cannot be negative" in str(e.value)
+
+
+def test_explicit_ticks(simple_ramp_style_cfg):
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks": []
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == []
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks": ["0.0", "0.7", "1.0"]
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.0"),
+        Decimal("0.7"),
+        Decimal("1.0"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks": ["0.2", "0.9"]
+    }
+    style = StandaloneStyle(simple_ramp_style_cfg)
+    assert style.legend_cfg.ticks == [
+        Decimal("0.2"),
+        Decimal("0.9"),
+    ]
+    simple_ramp_style_cfg["legend"] = {
+        "begin": "0.0",
+        "end": "1.0",
+        "ticks": ["0.2", "1.9"]
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_ramp_style_cfg)
+    assert "Explicit ticks must all be within legend begin/end range" in str(e.value)
 
 
 @pytest.fixture
@@ -731,11 +951,11 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
     assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
 
 
-def test_ramp_legend(simple_colormap_style_cfg):
+def test_map_legend(simple_colormap_style_cfg):
     img = generate_ows_legend_style_cfg(simple_colormap_style_cfg, 1)
 
     assert img.mode == "RGBA"
-    assert img.size == (300, 125)
+    assert img.size == (400, 125)
 
 
 def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):

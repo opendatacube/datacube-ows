@@ -135,6 +135,33 @@ A patch and label is added to the legend for each value rule in the
 configuration.  See `title and abstract <#title-and-abstract>`_ for
 customising the label of each rule.
 
+Legend Title
+============
+
+A title can be added to the top of the legend.  The default is no title.
+
+E.g.::
+
+        "legend": {
+            # Legend title will be display as "This is a nice legend"
+            "title": "This is a nice legend"
+        }
+
+Number of columns (ncols)
+=========================
+
+By default, the patches and labels are laid out in the legend in a single column.  You can specify
+as multi-column format with the ``ncols`` legend entry to the number of desired columns.
+
+Note: You may need to adjust the width of your legend to fit the number of columns (see below).
+
+E.g.::
+
+    "legend": {
+        # Use a two column legend layout.
+        "ncols": 2,
+    }
+
 Values passed to MatPlotLib
 ===========================
 
@@ -149,8 +176,8 @@ Image Size
 The ``width`` and ``height`` values are passed to matplotlib to specify the size
 of the generated image.
 
-The image size defaults to 3 inches wide by 1.25 inches tall.  The default
-dpi for MatPlotLib is 100, so this corresponds to 300x125 pixels unless you
+The image size defaults to 4 inches wide by 1.25 inches tall.  The default
+dpi for MatPlotLib is 100, so this corresponds to 400x125 pixels unless you
 have over-ridden the default dpi.
 
 E.g.::
