@@ -177,7 +177,7 @@ The ``width`` and ``height`` values are passed to matplotlib to specify the size
 of the generated image.
 
 The image size defaults to 4 inches wide by 1.25 inches tall.  The default
-dpi for MatPlotLib is 100, so this corresponds to 300x125 pixels unless you
+dpi for MatPlotLib is 100, so this corresponds to 400x125 pixels unless you
 have over-ridden the default dpi.
 
 E.g.::
