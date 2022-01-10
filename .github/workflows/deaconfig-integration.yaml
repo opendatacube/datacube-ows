@@ -44,7 +44,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repo: GeoscienceAustralia/dea-config
-          path: ~/
+          path: dea-config
 
       # We build the stage 1 image, then run test on it
       # These tests require extra files we don't want in
@@ -62,7 +62,8 @@ jobs:
         run: |
           export $(grep -v '^#' .env_ows_root | xargs)
           pwd
-          ls ~
-          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
-          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl -K https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /env/config/ows_refactored/inventory.json; datacube-ows-cfg check -i /env/config/ows_refactored/inventory.json"
-          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
+          ls /home/runner/work/datacube-ows/
+          ls /home/runner/work/datacube-ows/datacube-ows
+          # docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
+          # docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl -K https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /env/config/ows_refactored/inventory.json; datacube-ows-cfg check -i /env/config/ows_refactored/inventory.json"
+          # docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
