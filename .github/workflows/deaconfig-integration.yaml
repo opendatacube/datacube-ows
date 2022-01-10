@@ -63,6 +63,7 @@ jobs:
       - name: Config parser check
         run: |
           export $(grep -v '^#' .env_ows_root | xargs)
+          cd ./datacube-ows
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code; ./compare-cfg.sh"
