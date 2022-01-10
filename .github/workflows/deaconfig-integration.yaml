@@ -54,20 +54,16 @@ jobs:
       # We build the stage 1 image, then run test on it
       # These tests require extra files we don't want in
       # the production image
-      # - name: Build dev OWS image
-      #   run: |
-      #     docker build \
-      #       --tag    ${ORG}/${IMAGE}:_builder \
-      #       .
+      - name: Build dev OWS image
+        run: |
+          docker build \
+            --tag    ${ORG}/${IMAGE}:_builder \
+            .
 
       - name: Config parser check
         run: |
-          pwd
-          ls
-          ls -la /home/runner/work/datacube-ows/datacube-ows/dea-config
-          ls -la /home/runner/work/datacube-ows/datacube-ows/dea-config/dev
-          # export $(grep -v '^#' .env_ows_root | xargs)
-          # docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
-          # docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
-          # docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code; ./compare-cfg.sh"
-          # docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
+          export $(grep -v '^#' .env_ows_root | xargs)
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code; ./compare-cfg.sh"
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
