@@ -32,7 +32,7 @@ env:
   DB_USERNAME: opendatacubeusername
 
 jobs:
-  unit-integration-performance-tests:
+  dea-config:
     runs-on: ubuntu-latest
 
     steps:
@@ -52,13 +52,13 @@ jobs:
       # We build the stage 1 image, then run test on it
       # These tests require extra files we don't want in
       # the production image
-      - name: Build dev OWS image (stage 1 - unit test builder)
+      - name: Build dev OWS image
         run: |
           docker build \
             --tag    ${ORG}/${IMAGE}:_builder \
             .
 
-      - name: Dockerized Integration Pytest (stage 1 - integration test)
+      - name: Config parser check
         run: |
           export $(grep -v '^#' .env_ows_root | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
