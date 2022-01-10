@@ -62,6 +62,6 @@ jobs:
         run: |
           export $(grep -v '^#' .env_ows_root | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
-          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /env/config/ows_refactored/inventory.json"
-          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "datacube-ows-cfg check -i /env/config/ows_refactored/inventory.json"
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "datacube-ows-cfg check -i /tmp/inventory.json"
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
