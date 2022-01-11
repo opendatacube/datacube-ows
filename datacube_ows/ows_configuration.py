@@ -18,6 +18,7 @@ import math
 import os
 from collections.abc import Mapping
 from importlib import import_module
+from typing import Optional
 
 import numpy
 from babel.messages.catalog import Catalog
@@ -1071,7 +1072,9 @@ class OWSConfig(OWSMetadataConfig):
     METADATA_ACCESS_CONSTRAINTS = True
     METADATA_CONTACT_INFO = True
 
-    default_abstract = ""
+    @property
+    def default_abstract(self) -> Optional[str]:
+        return ""
 
     def __init__(self, refresh=False, cfg=None, ignore_msgfile=False, called_from_update_ranges=False):
         self.called_from_update_ranges = called_from_update_ranges

@@ -224,7 +224,7 @@ def translation(languages, msg_file, new, domain, translations_dir, cfg):
             sys.exit(1)
         else:
             click.echo(f"Using message file location '{cfg.msg_file_name}' from configuration")
-            msg_file_name = cfg.msg_file_name
+            msg_file = cfg.msg_file_name
         all_langs = cfg.locales
     else:
         all_langs = []

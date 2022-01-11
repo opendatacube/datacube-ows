@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 from xarray import DataArray, Dataset, merge
 
 from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
-                                       ConfigException)
+                                       ConfigException, OWSMetadataConfig)
 from datacube_ows.styles.base import StyleDefBase
 
 _LOG = logging.getLogger(__name__)
@@ -270,10 +270,13 @@ class PatchTemplate:
         self.label = rule.label
 
 
-class ColorMapLegendBase(StyleDefBase.Legend):
+class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
+    METADATA_ABSTRACT: bool = False
+
     def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast(CFG_DICT, self._raw_cfg)
+        self.parse_metadata(raw_cfg)
         self.ncols = int(raw_cfg.get("ncols", 1))
         if self.ncols < 1:
             raise ConfigException("ncols must be a positive integer")
@@ -308,6 +311,12 @@ class ColorMapLegendBase(StyleDefBase.Legend):
                        ncol=self.ncols,
                        frameon=False)
         plt.savefig(bytesio, format='png')
+
+    # For MetadataConfig
+    @property
+    def default_title(self) -> Optional[str]:
+        return ""
+
 
 
 class ColorMapStyleDef(StyleDefBase):

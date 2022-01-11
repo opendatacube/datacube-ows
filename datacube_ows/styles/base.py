@@ -43,7 +43,6 @@ class LegendBase(OWSConfigEntry):
         self.show_legend = cast(bool, raw_cfg.get("show_legend", self.style_or_mdh.auto_legend))
         self.legend_url_override = cast(Optional[str], raw_cfg.get('url', None))
 
-        self.title: Optional[str] = None
         self.width: float = 0.0
         self.height: float = 0.0
         self.mpl_rcparams: MutableMapping[str, str] = {}
@@ -51,13 +50,25 @@ class LegendBase(OWSConfigEntry):
             self.parse_common_auto_elements(raw_cfg)
 
     def parse_common_auto_elements(self, cfg: CFG_DICT):
-        self.title = cast(Optional[str], cfg.get("title"))
         self.width = cast(float, cfg.get("width", 4.0))
         self.height = cast(float, cfg.get("height", 1.25))
         self.mpl_rcparams = cast(MutableMapping[str, str], cfg.get("rcParams", {}))
 
     def render(self, bytesio: io.BytesIO) -> None:
         raise NotImplementedError()
+
+    # For MetadataConfig (for subclasses that extend it)
+    def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
+        return self.style.global_config()
+
+    def get_obj_label(self) -> str:
+        """Return the metadata path prefix for this object."""
+        style_label: str = self.style.get_obj_label()
+        if self.style == self.style_or_mdh:
+            min_count: int = 1
+        else:
+            min_count = self.style_or_mdh.min_count
+        return f"{style_label}.legend.{min_count}"
 
 
 class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
@@ -73,8 +84,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     INDEX_KEYS = ["layer", "style"]
 
     # For OWSMetaDataConfig
-    default_title = "Stand-Alone Style"
-    default_abstract = "Stand-Alone Style"
+    @property
+    def default_title(self) -> Optional[str]:
+        return "Stand-Alone Style"
+
+    @property
+    def default_abstract(self) -> Optional[str]:
+        return "Stand-Alone Style"
 
     # Over-ridden by subclasses that support auto-legends
     auto_legend: bool = False

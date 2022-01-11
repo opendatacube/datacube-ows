@@ -287,8 +287,13 @@ class OWSMetadataConfig(OWSConfigEntry):
         return None
 
     # Holders for managing inheritance.
-    default_title: Optional[str] = None
-    default_abstract: Optional[str] = None
+    @property
+    def default_title(self) -> Optional[str]:
+        return None
+
+    @property
+    def default_abstract(self) -> Optional[str]:
+        return None
 
     _keywords: Set[str] = set()
 
@@ -304,10 +309,10 @@ class OWSMetadataConfig(OWSConfigEntry):
         inherit_from = self.can_inherit_from()
         if self.METADATA_TITLE:
             if self.default_title:
-                self.register_metadata(self.get_obj_label(), FLD_TITLE, cast(str, cfg.get("title", self.default_title)))
+                self.register_metadata(self.get_obj_label(), FLD_TITLE, cast(str, cfg.get(FLD_TITLE, self.default_title)))
             else:
                 try:
-                    self.register_metadata(self.get_obj_label(), FLD_TITLE, cast(str, cfg["title"]))
+                    self.register_metadata(self.get_obj_label(), FLD_TITLE, cast(str, cfg[FLD_TITLE]))
                 except KeyError:
                     raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
         if self.METADATA_ABSTRACT:

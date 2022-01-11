@@ -24,7 +24,7 @@ except ImportError:
 
 from xarray import Dataset
 
-from datacube_ows.config_utils import CFG_DICT
+from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
@@ -277,10 +277,13 @@ class ColorRamp:
         return color, alpha
 
 
-class RampLegendBase(StyleDefBase.Legend):
+class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
+    METADATA_ABSTRACT: bool = False
+
     def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast(CFG_DICT, self._raw_cfg)
+        self.parse_metadata(raw_cfg)
         # Basic text
         self.units = cast(Optional[str], raw_cfg.get("units"))
         # Range - defaults deferred until we have parsed the associated ramp
@@ -343,11 +346,6 @@ class RampLegendBase(StyleDefBase.Legend):
                                    raw_cfg.get("strip_location", [0.05, 0.5, 0.9, 0.15]))
         # throw error on legacy syntax
         self.fail_legacy()
-
-    def parse_common_auto_elements(self, cfg: CFG_DICT):
-        super().parse_common_auto_elements(cfg)
-        if self.title is None:
-            self.title = self.style.title
 
     def fail_legacy(self) -> None:
         if any(
@@ -476,6 +474,12 @@ class RampLegendBase(StyleDefBase.Legend):
         color_bar.set_ticklabels(list(ticks.values()))
         color_bar.set_label(self.display_title())
         plt.savefig(bytesio, format='png')
+
+    # For MetadataConfig
+    @property
+    def default_title(self) -> Optional[str]:
+        return self.style.title
+
 
 
 class ColorRampDef(StyleDefBase):
