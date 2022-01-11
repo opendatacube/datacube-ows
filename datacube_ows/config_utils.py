@@ -261,6 +261,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     METADATA_ACCESS_CONSTRAINTS: bool = False
     METADATA_ATTRIBUTION: bool = False
     METADATA_DEFAULT_BANDS: bool = False
+    METADATA_VALUE_RULES: bool = False
 
     # Class registries, mapping metadata paths to their default value and whether the metadata value is
     # unique to that path, or has been inherited from a parent metadata path.
@@ -370,6 +371,9 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.register_metadata(self.get_obj_label(), k, v[0])
                 else:
                     self.register_metadata(self.get_obj_label(), k, k)
+        if self.METADATA_VALUE_RULES:
+            for patch in self.patches:
+                self.register_metadata(self.get_obj_label(), f"rule_{patch.idx}", patch.label)
 
     @property
     def keywords(self) -> Set[str]:

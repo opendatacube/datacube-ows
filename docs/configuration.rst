@@ -395,17 +395,21 @@ To separate your metadata from config (either as an end in itself, or as prepara
 The msgid's in the message file are symbolic. E.g.
 
 * ``global.title``: The title for the whole service.
-* ``folder.<label>.title``: The title for a folder, identified by label.
+* ``layer.<label>.title``: The title for a folder, identified by label.
 * ``layer.<name>.title``: The title for a named layer, identified by name.
+* ``layer.<name>.bands.<band_name>``: The default name for a band.
 * ``style.<layer_name>.<style_name>.title``: The title for a style, identified by layer name and style name.
+* ``style.<layer_name>.<style_name>.legend.1.title``: The title for a style legend (single date form),
+  identified by layer name, style name, and the lowest date count the legend supports.
 
 The msgstr's in the message file are the text used by OWS for global/layer/style metadata, in preference
 to the values in the config file.
 
 Fields that can be included in the message file are:
 
-*    Titles (global, folder, layer, style)
+*    Titles (global, folder, layer, style, colour-ramp legends, colour-map legends)
 *    Abstracts (global, folder, layer, style)
+*    Default band names (layer only)
 *    Keywords (global, folder, layer)
 *    Attribution titles (global, folder, layer)
 *    Fees (global only)

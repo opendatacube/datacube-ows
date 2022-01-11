@@ -272,11 +272,11 @@ class PatchTemplate:
 
 class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     METADATA_ABSTRACT: bool = False
+    METADATA_VALUE_RULES: bool = True
 
     def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast(CFG_DICT, self._raw_cfg)
-        self.parse_metadata(raw_cfg)
         self.ncols = int(raw_cfg.get("ncols", 1))
         if self.ncols < 1:
             raise ConfigException("ncols must be a positive integer")
@@ -288,10 +288,11 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                 # only include values that are not transparent (and that have a non-blank title or abstract)
                 if rule.alpha > 0.001 and rule.label:
                     self.patches.append(PatchTemplate(idx, rule))
+        self.parse_metadata(self._raw_cfg)
 
     def render(self, bytesio: io.BytesIO) -> None:
         patches = [
-            mpatches.Patch(color=pt.colour, label=pt.label)
+            mpatches.Patch(color=pt.colour, label=self.patch_label(pt.idx))
             for pt in self.patches
         ]
         plt.rcdefaults()
@@ -311,6 +312,9 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                        ncol=self.ncols,
                        frameon=False)
         plt.savefig(bytesio, format='png')
+
+    def patch_label(self, idx: int):
+        return self.read_local_metadata(f"rule_{idx}")
 
     # For MetadataConfig
     @property
