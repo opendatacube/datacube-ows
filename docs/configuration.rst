@@ -409,6 +409,8 @@ Fields that can be included in the message file are:
 
 *    Titles (global, folder, layer, style, colour-ramp legends, colour-map legends)
 *    Abstracts (global, folder, layer, style)
+*    Units (colour-ramp legends only)
+*    Tick labels (colour-ramp legends only) [#tlt]_
 *    Default band names (layer only)
 *    Keywords (global, folder, layer)
 *    Attribution titles (global, folder, layer)
@@ -416,6 +418,11 @@ Fields that can be included in the message file are:
 *    Access Constraints (global only)
 *    Contact Info Organisation (global only)
 *    Contact Info Position (global only)
+
+.. [#tlt] Prefixes, suffixes and labels are pre-combined for translation purposes, and only combined tick_labels
+   that contain at least one alphabetic character are recognised by the translation engine.  E.g. a label of "0.0"
+   with a prefix of "<" will not be picked up by the translation engine, but if the prefix is changed to "less than ",
+   then the resulting combined value "less than 0.0" WILL be picked up the translation engine.
 
 Internationalisation/Translation of Metadata
 ++++++++++++++++++++++++++++++++++++++++++++
