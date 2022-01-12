@@ -7,7 +7,7 @@ on:
         - 'master'
     paths:
       - '**'
-      - '.github/workflows/deaconfig-integration.yaml'
+      - '.github/workflows/complementary-config-test.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
@@ -19,7 +19,7 @@ on:
       - 'master'
     paths:
       - '**'
-      - '.github/workflows/deaconfig-integration.yaml'
+      - '.github/workflows/complementary-config-test.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
@@ -48,12 +48,6 @@ jobs:
           repository: GeoscienceAustralia/dea-config
           path: dea-config
 
-      # We build the stage 1 image, then run test on it
-      # These tests require extra files we don't want in
-      # the production image
-      # We build the stage 1 image, then run test on it
-      # These tests require extra files we don't want in
-      # the production image
       - name: Build dev OWS image
         run: |
           cd ./datacube-ows
@@ -64,7 +58,7 @@ jobs:
       - name: Config parser check
         run: |
           cd ./datacube-ows
-          export $(grep -v '^#' .env_ows_root | xargs)
+          export $(grep -v '^#' ./complementary_config_test/.env_complementary_config_dea_dev | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code; ./compare-cfg.sh"
