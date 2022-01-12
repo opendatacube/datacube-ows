@@ -264,6 +264,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     METADATA_DEFAULT_BANDS: bool = False
     METADATA_VALUE_RULES: bool = False
     METADATA_LEGEND_UNITS: bool = False
+    METADATA_TICK_LABELS: bool = False
 
     # Class registries, mapping metadata paths to their default value and whether the metadata value is
     # unique to that path, or has been inherited from a parent metadata path.
@@ -374,13 +375,18 @@ class OWSMetadataConfig(OWSConfigEntry):
                 else:
                     self.register_metadata(self.get_obj_label(), k, k)
         if self.METADATA_VALUE_RULES:
-            # Note that parse_metadata must be called after everything else is parsed.
+            # Note that parse_metadata must be called after the value map is parsed.
             for patch in self.patches:
                 self.register_metadata(self.get_obj_label(), f"rule_{patch.idx}", patch.label)
         if self.METADATA_LEGEND_UNITS:
             units = cast(str, cfg.get(FLD_UNITS))
             if units is not None:
                 self.register_metadata(self.get_obj_label(), FLD_UNITS, units)
+        if self.METADATA_TICK_LABELS:
+            # Note that parse_metadata must be called after legend ticks are parsed.
+            for tick, lbl in zip(self.ticks, self.tick_labels):
+                if any(c.isalpha() for c in lbl):
+                    self.register_metadata(self.get_obj_label(), f"lbl_{tick}", lbl)
 
     @property
     def keywords(self) -> Set[str]:
