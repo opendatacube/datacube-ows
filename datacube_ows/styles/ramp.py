@@ -279,13 +279,12 @@ class ColorRamp:
 
 class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     METADATA_ABSTRACT: bool = False
+    METADATA_LEGEND_UNITS: bool = True
 
     def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast(CFG_DICT, self._raw_cfg)
         self.parse_metadata(raw_cfg)
-        # Basic text
-        self.units = cast(Optional[str], raw_cfg.get("units"))
         # Range - defaults deferred until we have parsed the associated ramp
         if "begin" not in raw_cfg:
             self.begin = Decimal("nan")

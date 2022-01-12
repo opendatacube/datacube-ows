@@ -236,6 +236,7 @@ class OWSConfigEntry:
 # Label names for metadata separation and translation
 
 FLD_TITLE = "title"
+FLD_UNITS = "units"
 FLD_ABSTRACT = "abstract"
 FLD_KEYWORDS = "local_keywords"
 FLD_FEES = "fees"
@@ -262,6 +263,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     METADATA_ATTRIBUTION: bool = False
     METADATA_DEFAULT_BANDS: bool = False
     METADATA_VALUE_RULES: bool = False
+    METADATA_LEGEND_UNITS: bool = False
 
     # Class registries, mapping metadata paths to their default value and whether the metadata value is
     # unique to that path, or has been inherited from a parent metadata path.
@@ -347,7 +349,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if attrib_title:
                 self.register_metadata(self.get_obj_label(), FLD_ATTRIBUTION, attrib_title, inheriting)
         if self.METADATA_FEES:
-            fees = cast(str, cfg.get("fees"))
+            fees = cast(str, cfg.get(FLD_FEES))
             if not fees:
                 fees = "none"
             self.register_metadata(self.get_obj_label(), FLD_FEES, fees)
@@ -372,8 +374,13 @@ class OWSMetadataConfig(OWSConfigEntry):
                 else:
                     self.register_metadata(self.get_obj_label(), k, k)
         if self.METADATA_VALUE_RULES:
+            # Note that parse_metadata must be called after everything else is parsed.
             for patch in self.patches:
                 self.register_metadata(self.get_obj_label(), f"rule_{patch.idx}", patch.label)
+        if self.METADATA_LEGEND_UNITS:
+            units = cast(str, cfg.get(FLD_UNITS))
+            if units is not None:
+                self.register_metadata(self.get_obj_label(), FLD_UNITS, units)
 
     @property
     def keywords(self) -> Set[str]:
@@ -477,7 +484,9 @@ class OWSMetadataConfig(OWSConfigEntry):
         """"
         Expose separated or internationalised metadata as attributes
         """
-        if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES, FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION):
+        if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES,
+                    FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION,
+                    FLD_UNITS):
             return self.read_local_metadata(name)
         elif name == FLD_KEYWORDS:
             kw = self.read_local_metadata(FLD_KEYWORDS)
