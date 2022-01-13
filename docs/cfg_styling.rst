@@ -255,6 +255,8 @@ An external url pointing to an image file containing the legend. This
 url will not be exposed directly to users, the image file will be
 proxied behind an internal url.
 
+The external image file MUST be in png format.
+
 A url is required if `show_legend` is True and the style type does NOT
 support auto-legend generation.
 
@@ -267,6 +269,40 @@ E.g.::
          "show_legend": True,
          "url": "https://somedomain.com/path/to/legend_image.png",
      }
+
+If your instance of OWS
+`supports multiple languages<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_
+then you may supply separate urls pointing to different versions of the legend image for each of the configured
+``supported_languages``.  In this case you MUST supply a legend image url for the default language
+(the first language listed in the global ``supported_languages`` entry), and this url will be used for
+any other supported languages for which you did not supply a specific url.
+
+E.g. given supported languages (in the global section)::
+
+    "supported_languages": [
+        "en",      # The first language listed will be the default language.
+        "fr",
+        "de",
+        "ar"
+    ]
+
+You can specify language specific legend urls with::
+
+    "url": {
+        "en": "http://myimages.com/this_product/this_style/default_english_legend.png",   # default legend image
+        "fr": "http://myimages.com/this_product/this_style/french_legend.png",
+        "ar": "http://myimages.com/this_product/this_style/arabic_legend.png",
+        "it": "http://myimages.com/this_product/this_style/italian_legend.png",
+    }
+
+In the above example:
+
+* the default english legend is used for English and German requests, as well as any language not in the
+  supported_language list.
+* French and Arabic requests will get their specific language legends.
+* Italian is not a supported language, so the Italian url will be ignored.  Italian requests will get the default
+  (English) legend.
+* Removing the English url from the `urls` dictionary will result in an error as English is the default language.
 
 multi_date
 ++++++++++

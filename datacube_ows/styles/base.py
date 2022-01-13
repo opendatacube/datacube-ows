@@ -12,6 +12,7 @@ import datacube.model
 import numpy as np
 import xarray as xr
 from PIL import Image
+from flask_babel import get_locale
 
 import datacube_ows.band_utils
 from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule, FlagBand,
@@ -20,7 +21,7 @@ from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule, FlagBand,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
                                        OWSIndexedConfigEntry,
-                                       OWSMetadataConfig)
+                                       OWSMetadataConfig, RAW_CFG)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
@@ -41,13 +42,33 @@ class LegendBase(OWSConfigEntry):
         else:
             self.style = self.style_or_mdh.style
         self.show_legend = cast(bool, raw_cfg.get("show_legend", self.style_or_mdh.auto_legend))
-        self.legend_url_override = cast(Optional[str], raw_cfg.get('url', None))
+        self.legend_urls: MutableMapping[str, str] = self.parse_urls(raw_cfg.get("url"))
 
         self.width: float = 0.0
         self.height: float = 0.0
         self.mpl_rcparams: MutableMapping[str, str] = {}
-        if self.show_legend and not self.legend_url_override and self.style.auto_legend:
+        if self.show_legend and not self.legend_urls and self.style.auto_legend:
             self.parse_common_auto_elements(raw_cfg)
+
+    def parse_urls(self, cfg: RAW_CFG) -> MutableMapping[str, str]:
+        if not cfg:
+            return {}
+        def_loc = self.global_config().default_locale
+        if isinstance(cfg, str):
+            cfg = {
+                def_loc: cfg
+            }
+        if def_loc not in cfg:
+            raise ConfigException(
+                f"No legend url for {self.get_obj_label()} supplied for default language {def_loc}"
+            )
+        urls = {}
+        for locale in self.global_config().locales:
+            if locale in cfg:
+                urls[locale] = cfg[locale]
+            else:
+                urls[locale] = cfg[def_loc]
+        return urls
 
     def parse_common_auto_elements(self, cfg: CFG_DICT):
         self.width = cast(float, cfg.get("width", 4.0))
@@ -371,8 +392,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         legend = self.get_legend_cfg(dates)
         if not legend.show_legend:
             return None
-        if legend.legend_url_override:
-            return get_image_from_url(legend.legend_url_override)
+        if legend.legend_urls:
+            locale = get_locale().language
+            locales = self.global_config().locales
+            if locale not in self.global_config().locales:
+                locale = self.global_config().default_locale
+            url = legend.legend_urls[locale]
+            return get_image_from_url(url)
         if not legend.style_or_mdh.auto_legend:
             return None
         bytesio = io.BytesIO()
