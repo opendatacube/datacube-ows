@@ -222,7 +222,7 @@ def translation(languages, msg_file, new, domain, translations_dir, cfg):
         if msg_file is None and cfg.msg_file_name is None:
             click.echo("No message file name was supplied or is configured")
             sys.exit(1)
-        else:
+        elif msg_file is None:
             click.echo(f"Using message file location '{cfg.msg_file_name}' from configuration")
             msg_file = cfg.msg_file_name
         all_langs = cfg.locales
