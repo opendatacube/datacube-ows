@@ -15,9 +15,9 @@ from flask_babel import get_locale
 from PIL import Image
 
 import datacube_ows.band_utils
-from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, AbstractMaskRule, FlagBand,
-                                       FlagProductBands, OWSConfigEntry,
-                                       OWSEntryNotFound,
+from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, AbstractMaskRule,
+                                       FlagBand, FlagProductBands,
+                                       OWSConfigEntry, OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
                                        OWSIndexedConfigEntry,
