@@ -312,7 +312,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         # pylint: disable=assignment-from-none
         inherit_from = self.can_inherit_from()
         if self.METADATA_TITLE:
-            if self.default_title:
+            if self.default_title is not None:
                 self.register_metadata(self.get_obj_label(), FLD_TITLE, cast(str, cfg.get(FLD_TITLE, self.default_title)))
             else:
                 try:
