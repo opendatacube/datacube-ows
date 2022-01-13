@@ -11,17 +11,17 @@ from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
 import datacube.model
 import numpy as np
 import xarray as xr
-from PIL import Image
 from flask_babel import get_locale
+from PIL import Image
 
 import datacube_ows.band_utils
-from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule, FlagBand,
+from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, AbstractMaskRule, FlagBand,
                                        FlagProductBands, OWSConfigEntry,
                                        OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
                                        OWSIndexedConfigEntry,
-                                       OWSMetadataConfig, RAW_CFG)
+                                       OWSMetadataConfig)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
