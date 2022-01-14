@@ -162,8 +162,12 @@ style_ndvi = {
     "legend": {
         "units": "dimensionless",
         "tick_labels": {
-            "0.0": "low",
-            "1.0": "high"
+            "0.0": {
+                "label": "low",
+            },
+            "1.0": {
+                "label": "high",
+            }
         }
     }
 }
