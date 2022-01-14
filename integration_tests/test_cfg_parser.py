@@ -157,6 +157,7 @@ def test_cfg_write_new_translation_directory_no_msg_file(runner):
     result = runner.invoke(main, ["translation", "-n",
                                   "-d", f"{this_dir}/cfg/test_translations",
                                   "-D", "ows_cfg",
+                                  "-c", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
                                   "all"])
     assert result.exit_code == 1
 
