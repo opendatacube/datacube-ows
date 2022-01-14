@@ -5,6 +5,13 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+
+if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
+    trans_dir = "."
+else:
+    trans_dir = "/code"
+
 
 # THIS IS A TESTING FILE
 # Please refer to datacube_ows/ows_cfg_example.py for EXAMPLE CONFIG
@@ -152,6 +159,13 @@ style_ndvi = {
     # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
     # Defaults to True.
     "include_in_feature_info": True,
+    "legend": {
+        "units": "dimensionless",
+        "tick_labels": {
+            "0.0": "low",
+            "1.0": "high"
+        }
+    }
 }
 
 style_ndvi_expr = {
@@ -488,7 +502,8 @@ ows_cfg = {
             "https://localhost/odc_ows",
             "https://alternateurl.domain.org/odc_ows",
         ],
-        "translations_directory": "/code/integration_tests/cfg/translations",
+        "message_file": f"{trans_dir}/integration_tests/cfg/message.po",
+        "translations_directory": f"{trans_dir}/integration_tests/cfg/translations",
         "supported_languages": ["en", "de"],
 
         # URL that humans can visit to learn more about the service(s) or organization

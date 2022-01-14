@@ -267,6 +267,7 @@ def test_ramp_ticks_every(simple_ramp_style_cfg):
         Decimal("0.0"),
         Decimal("1.0"),
     ]
+    assert style.default_abstract is None
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
