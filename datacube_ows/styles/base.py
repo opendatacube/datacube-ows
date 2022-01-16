@@ -628,6 +628,8 @@ class BandIdxProxy:
 
 class GlobalCfgProxy:
     internationalised = False
+    default_locale = "en"
+    locales = ["en"]
 
 
 class StandaloneProductProxy:

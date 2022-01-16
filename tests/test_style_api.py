@@ -74,6 +74,22 @@ def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_s
         assert channel in result.data_vars.keys()
 
 
+def test_external_legends(simple_rgb_style_cfg):
+    simple_rgb_style_cfg["legend"] = {
+        "url": "http://fake.com/not/a/real/image_url.png"
+    }
+    style = StandaloneStyle(simple_rgb_style_cfg)
+    for l in style.legend_cfg.legend_urls:
+        assert style.legend_cfg.legend_urls[l] == "http://fake.com/not/a/real/image_url.png"
+    simple_rgb_style_cfg["legend"] = {
+        "url": {
+           "de": "http://fake.com/not/a/real/image_url.png"
+        }
+    }
+    with pytest.raises(ConfigException) as e:
+        style = StandaloneStyle(simple_rgb_style_cfg)
+    assert "supplied for default language" in str(e.value)
+
 @pytest.fixture
 def simple_ramp_style_cfg():
     return {
