@@ -72,7 +72,13 @@ style_rgb = {
             "band": "quality",
             "flags": {"cloud": False}
         }
-    ]
+    ],
+    "legend": {
+        "show_legend": True,
+        "url": {
+            "en": "https://static.wixstatic.com/media/8959d6_98a1d74703d946ecab030b32f53db883~mv2.png/v1/fill/w_268,h_68,al_c,q_85,usm_0.66_1.00_0.01/f9d4ea_7a2d1d0c69ad4da0a2f48b69bc481612_.webp"
+        }
+    }
 }
 
 style_rgb_clone = {

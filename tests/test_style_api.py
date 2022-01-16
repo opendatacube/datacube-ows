@@ -90,6 +90,7 @@ def test_external_legends(simple_rgb_style_cfg):
         style = StandaloneStyle(simple_rgb_style_cfg)
     assert "supplied for default language" in str(e.value)
 
+
 @pytest.fixture
 def simple_ramp_style_cfg():
     return {
