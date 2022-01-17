@@ -337,7 +337,17 @@ def test_wms_getlegend(ows_server):
         # check if this layer has a legend
         legend_url = test_layer_styles[style].get("legend")
         if legend_url:
-            resp = requests.head(legend_url, allow_redirects=False)
+            resp = requests.head(legend_url, headers={
+                                "Accept-Language": "en-US,en,q=0.7"
+                            },
+                            allow_redirects=False
+            )
+            assert resp.headers.get("content-type") == "image/png"
+            resp = requests.head(legend_url, headers={
+                                "Accept-Language": "sw,sw,q=0.7"
+                            },
+                        allow_redirects=False
+            )
             assert resp.headers.get("content-type") == "image/png"
 
 

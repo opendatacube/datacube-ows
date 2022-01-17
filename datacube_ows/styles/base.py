@@ -11,12 +11,13 @@ from typing import (Any, Iterable, List, Mapping, MutableMapping, Optional,
 import datacube.model
 import numpy as np
 import xarray as xr
+from flask_babel import get_locale
 from PIL import Image
 
 import datacube_ows.band_utils
-from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule, FlagBand,
-                                       FlagProductBands, OWSConfigEntry,
-                                       OWSEntryNotFound,
+from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, AbstractMaskRule,
+                                       FlagBand, FlagProductBands,
+                                       OWSConfigEntry, OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
                                        OWSIndexedConfigEntry,
@@ -41,23 +42,54 @@ class LegendBase(OWSConfigEntry):
         else:
             self.style = self.style_or_mdh.style
         self.show_legend = cast(bool, raw_cfg.get("show_legend", self.style_or_mdh.auto_legend))
-        self.legend_url_override = cast(Optional[str], raw_cfg.get('url', None))
+        self.legend_urls: MutableMapping[str, str] = self.parse_urls(raw_cfg.get("url"))
 
-        self.title: Optional[str] = None
         self.width: float = 0.0
         self.height: float = 0.0
         self.mpl_rcparams: MutableMapping[str, str] = {}
-        if self.show_legend and not self.legend_url_override and self.style.auto_legend:
+        if self.show_legend and not self.legend_urls and self.style.auto_legend:
             self.parse_common_auto_elements(raw_cfg)
 
+    def parse_urls(self, cfg: RAW_CFG) -> MutableMapping[str, str]:
+        if not cfg:
+            return {}
+        def_loc = self.global_config().default_locale
+        if isinstance(cfg, str):
+            cfg = {
+                def_loc: cfg
+            }
+        if def_loc not in cfg:
+            raise ConfigException(
+                f"No legend url for {self.get_obj_label()} supplied for default language {def_loc}"
+            )
+        urls = {}
+        for locale in self.global_config().locales:
+            if locale in cfg:
+                urls[locale] = cfg[locale]
+            else:
+                urls[locale] = cfg[def_loc]
+        return urls
+
     def parse_common_auto_elements(self, cfg: CFG_DICT):
-        self.title = cast(Optional[str], cfg.get("title"))
         self.width = cast(float, cfg.get("width", 4.0))
         self.height = cast(float, cfg.get("height", 1.25))
         self.mpl_rcparams = cast(MutableMapping[str, str], cfg.get("rcParams", {}))
 
     def render(self, bytesio: io.BytesIO) -> None:
         raise NotImplementedError()
+
+    # For MetadataConfig (for subclasses that extend it)
+    def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
+        return self.style.global_config()
+
+    def get_obj_label(self) -> str:
+        """Return the metadata path prefix for this object."""
+        style_label: str = self.style.get_obj_label()
+        if self.style == self.style_or_mdh:
+            min_count: int = 1
+        else:
+            min_count = self.style_or_mdh.min_count
+        return f"{style_label}.legend.{min_count}"
 
 
 class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
@@ -73,8 +105,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     INDEX_KEYS = ["layer", "style"]
 
     # For OWSMetaDataConfig
-    default_title = "Stand-Alone Style"
-    default_abstract = "Stand-Alone Style"
+    @property
+    def default_title(self) -> Optional[str]:
+        return "Stand-Alone Style"
+
+    @property
+    def default_abstract(self) -> Optional[str]:
+        return "Stand-Alone Style"
 
     # Over-ridden by subclasses that support auto-legends
     auto_legend: bool = False
@@ -355,8 +392,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         legend = self.get_legend_cfg(dates)
         if not legend.show_legend:
             return None
-        if legend.legend_url_override:
-            return get_image_from_url(legend.legend_url_override)
+        if legend.legend_urls:
+            locale = get_locale().language
+            locales = self.global_config().locales
+            if locale not in self.global_config().locales:
+                locale = self.global_config().default_locale
+            url = legend.legend_urls[locale]
+            return get_image_from_url(url)
         if not legend.style_or_mdh.auto_legend:
             return None
         bytesio = io.BytesIO()
@@ -586,6 +628,8 @@ class BandIdxProxy:
 
 class GlobalCfgProxy:
     internationalised = False
+    default_locale = "en"
+    locales = ["en"]
 
 
 class StandaloneProductProxy:

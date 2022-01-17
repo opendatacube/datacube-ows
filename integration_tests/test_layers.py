@@ -28,11 +28,20 @@ def test_metadata_export():
 
 def test_missing_metadata_file(monkeypatch):
     cached_cfg = OWSConfig._instance
+    cached_reg = OWSConfig._metadata_registry
+    cached_inh_reg = OWSConfig._inheritance_registry
+    cached_catalog = OWSConfig._msg_src
+
     monkeypatch.chdir(src_dir)
     try:
         OWSConfig._instance = None
+        OWSConfig._metadata_registry = {}
+        OWSConfig._inheritance_registry = {}
+        OWSConfig._msg_src = None
         raw_cfg = read_config()
         raw_cfg["global"]["message_file"] = "integration_tests/cfg/non-existent.po"
+        raw_cfg["global"]["translations_directory"] = None
+        raw_cfg["global"]["languages"] = ["en"]
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
         with cube() as dc:
             cfg.make_ready(dc)
@@ -41,13 +50,22 @@ def test_missing_metadata_file(monkeypatch):
         assert "aardvark" not in cfg.title
     finally:
         OWSConfig._instance = cached_cfg
+        OWSConfig._metadata_registry = cached_reg
+        OWSConfig._inheritance_registry = cached_inh_reg
+        OWSConfig._msg_src = cached_catalog
 
 
 def test_metadata_file_ignore(monkeypatch):
     cached_cfg = OWSConfig._instance
+    cached_reg = OWSConfig._metadata_registry
+    cached_inh_reg = OWSConfig._inheritance_registry
+    cached_catalog = OWSConfig._msg_src
     monkeypatch.chdir(src_dir)
     try:
         OWSConfig._instance = None
+        OWSConfig._metadata_registry = {}
+        OWSConfig._inheritance_registry = {}
+        OWSConfig._msg_src = None
         raw_cfg = read_config()
         raw_cfg["global"]["message_file"] = "integration_tests/cfg/message.po"
         cfg = OWSConfig(refresh=True, cfg=raw_cfg, ignore_msgfile=True)
@@ -58,6 +76,9 @@ def test_metadata_file_ignore(monkeypatch):
         assert "aardvark" not in cfg.title
     finally:
         OWSConfig._instance = cached_cfg
+        OWSConfig._metadata_registry = cached_reg
+        OWSConfig._inheritance_registry = cached_inh_reg
+        OWSConfig._msg_src = cached_catalog
 
 
 def test_metadata_read(monkeypatch):

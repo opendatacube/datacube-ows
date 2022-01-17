@@ -5,6 +5,13 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+
+if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
+    trans_dir = "."
+else:
+    trans_dir = "/code"
+
 
 # THIS IS A TESTING FILE
 # Please refer to datacube_ows/ows_cfg_example.py for EXAMPLE CONFIG
@@ -65,7 +72,13 @@ style_rgb = {
             "band": "quality",
             "flags": {"cloud": False}
         }
-    ]
+    ],
+    "legend": {
+        "show_legend": True,
+        "url": {
+            "en": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png"
+        }
+    }
 }
 
 style_rgb_clone = {
@@ -152,6 +165,17 @@ style_ndvi = {
     # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
     # Defaults to True.
     "include_in_feature_info": True,
+    "legend": {
+        "units": "dimensionless",
+        "tick_labels": {
+            "0.0": {
+                "label": "low",
+            },
+            "1.0": {
+                "label": "high",
+            }
+        }
+    }
 }
 
 style_ndvi_expr = {
@@ -488,7 +512,8 @@ ows_cfg = {
             "https://localhost/odc_ows",
             "https://alternateurl.domain.org/odc_ows",
         ],
-        "translations_directory": "/code/integration_tests/cfg/translations",
+        "message_file": f"{trans_dir}/integration_tests/cfg/message.po",
+        "translations_directory": f"{trans_dir}/integration_tests/cfg/translations",
         "supported_languages": ["en", "de"],
 
         # URL that humans can visit to learn more about the service(s) or organization
@@ -662,7 +687,7 @@ ows_cfg = {
                     # Image height in pixels (optional)
                     "height": 68,
                     # URL for the logo image. (required if logo specified)
-                    "url": "https://static.wixstatic.com/media/8959d6_98a1d74703d946ecab030b32f53db883~mv2.png/v1/fill/w_268,h_68,al_c,q_85,usm_0.66_1.00_0.01/f9d4ea_7a2d1d0c69ad4da0a2f48b69bc481612_.webp",
+                    "url": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png",
                     # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
                     "format": "image/png",
                 },

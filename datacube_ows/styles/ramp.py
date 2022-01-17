@@ -24,7 +24,7 @@ except ImportError:
 
 from xarray import Dataset
 
-from datacube_ows.config_utils import CFG_DICT
+from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig
 from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
@@ -277,12 +277,14 @@ class ColorRamp:
         return color, alpha
 
 
-class RampLegendBase(StyleDefBase.Legend):
+class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
+    METADATA_ABSTRACT: bool = False
+    METADATA_LEGEND_UNITS: bool = True
+    METADATA_TICK_LABELS: bool = True
+
     def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast(CFG_DICT, self._raw_cfg)
-        # Basic text
-        self.units = cast(Optional[str], raw_cfg.get("units"))
         # Range - defaults deferred until we have parsed the associated ramp
         if "begin" not in raw_cfg:
             self.begin = Decimal("nan")
@@ -344,11 +346,6 @@ class RampLegendBase(StyleDefBase.Legend):
         # throw error on legacy syntax
         self.fail_legacy()
 
-    def parse_common_auto_elements(self, cfg: CFG_DICT):
-        super().parse_common_auto_elements(cfg)
-        if self.title is None:
-            self.title = self.style.title
-
     def fail_legacy(self) -> None:
         if any(
                 legent in self._raw_cfg
@@ -404,6 +401,7 @@ class RampLegendBase(StyleDefBase.Legend):
                 self.tick_labels.append(
                     self.lbl_default_prefix + str(tick) + self.lbl_default_suffix
                 )
+        self.parse_metadata(self._raw_cfg)
 
         # Check for legacy legend tips in ramp:
         for r in ramp.ramp:
@@ -411,6 +409,18 @@ class RampLegendBase(StyleDefBase.Legend):
                 raise ConfigException(
                     f"Style {self.style.name} uses a no-longer supported format for legend configuration.  " +
                     "Please refer to the documentation and update your config")
+
+    def tick_label(self, tick):
+        try:
+            tick_idx = self.ticks.index(tick)
+            metaval = self.read_local_metadata(f"lbl_{tick}")
+            if metaval:
+                return metaval
+            else:
+                return self.tick_labels[tick_idx]
+        except ValueError:
+            _LOG.error("'%s' is a not a valid tick", tick)
+            return None
 
     def create_cdict_ticks(self) -> Tuple[
         MutableMapping[str, List[Tuple[float, float, float]]],
@@ -444,10 +454,10 @@ class RampLegendBase(StyleDefBase.Legend):
             cdict[band] = blist
 
         ticks = cast(MutableMapping[float, str], dict())
-        for tick, tick_lbl in zip(self.ticks, self.tick_labels):
+        for tick in self.ticks:
             value = float(tick)
             normalized = (value - float(self.begin)) / float(normalize_factor)
-            ticks[normalized] = tick_lbl  # REVISIT: map on float???
+            ticks[normalized] = self.tick_label(tick)
 
         return cdict, ticks
 
@@ -476,6 +486,12 @@ class RampLegendBase(StyleDefBase.Legend):
         color_bar.set_ticklabels(list(ticks.values()))
         color_bar.set_label(self.display_title())
         plt.savefig(bytesio, format='png')
+
+    # For MetadataConfig
+    @property
+    def default_title(self) -> Optional[str]:
+        return self.style.title
+
 
 
 class ColorRampDef(StyleDefBase):
