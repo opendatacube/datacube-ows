@@ -76,7 +76,7 @@ style_rgb = {
     "legend": {
         "show_legend": True,
         "url": {
-            "en": "https://static.wixstatic.com/media/8959d6_98a1d74703d946ecab030b32f53db883~mv2.png/v1/fill/w_268,h_68,al_c,q_85,usm_0.66_1.00_0.01/f9d4ea_7a2d1d0c69ad4da0a2f48b69bc481612_.webp"
+            "en": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png"
         }
     }
 }
@@ -687,7 +687,7 @@ ows_cfg = {
                     # Image height in pixels (optional)
                     "height": 68,
                     # URL for the logo image. (required if logo specified)
-                    "url": "https://static.wixstatic.com/media/8959d6_98a1d74703d946ecab030b32f53db883~mv2.png/v1/fill/w_268,h_68,al_c,q_85,usm_0.66_1.00_0.01/f9d4ea_7a2d1d0c69ad4da0a2f48b69bc481612_.webp",
+                    "url": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png",
                     # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
                     "format": "image/png",
                 },
