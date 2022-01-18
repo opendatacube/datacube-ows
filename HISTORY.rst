@@ -7,6 +7,29 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.24 (2022-01-18)
+-------------------
+
+Introduces support for internationalisation (translation) of style legends - see the documentation for details:
+
+https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation
+https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#url
+
+This is the first formal release since the 9th December, although there were several interim releases in
+mid-December when we were testing the Prometheus metric changes (see below).
+
+Due to an oversight in deprecation warnings several releases ago, some configurations that worked in 1.8.23
+will now raise errors.  Affected configurations have legacy "legend" hints embedded inside the colour ramp
+definitions.  Such hints have not been read by OWS for quite some time, having been replaced by the "tick_labels" entry in the "legend" section.  Digital Earth Australia and Digital Earth Africa configurations have already been updated.
+
+Changes since 1.8.23:
+
+* Prometheus metric enhancements and release notes for interim releases (#777, #778, #779, #780, #781, #782)
+* Github integration tests against a large real world OWS configuration (DEA) (#784)
+* Internationalisation of style legends. (#783, #786)
+* Fix WCS1 DescribeCoverage regression (missing SRS/CRS) (#787)
+* Update History.RST and increment default version number (#788)
+
 1.8.23.3 (2021-12-16)
 ---------------------
 
