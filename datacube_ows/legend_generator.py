@@ -14,6 +14,7 @@ from flask import make_response
 from PIL import Image
 
 from datacube_ows.ogc_exceptions import WMSException
+from datacube_ows.ogc_utils import resp_headers
 from datacube_ows.wms_utils import GetLegendGraphicParameters
 
 # Do not use X Server backend
@@ -54,9 +55,7 @@ def create_legends_from_styles(styles, ndates=0):
     imgs_comb = Image.fromarray(imgs_comb)
     b = io.BytesIO()
     imgs_comb.save(b, 'png')
-    legend = make_response(b.getvalue())
-    legend.mimetype = 'image/png'
-    b.close()
-    return legend
-
-
+    # legend = make_response(b.getvalue())
+    # legend.mimetype = 'image/png'
+    # b.close()
+    return (b.getvalue(), 200, resp_headers({"Content-Type": "image/png"}))
