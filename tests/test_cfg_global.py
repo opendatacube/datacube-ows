@@ -16,6 +16,7 @@ def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
     assert cfg.ready
     assert cfg.initialised
     assert not cfg.wcs_tiff_statistics
+    assert cfg.default_geographic_CRS == "" # No WCS
 
 
 def test_global_no_title(minimal_global_raw_cfg):
@@ -41,6 +42,42 @@ def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     assert not cfg.wms
     assert not cfg.wmts
     assert cfg.wcs_tiff_statistics
+    assert cfg.default_geographic_CRS == "urn:ogc:def:crs:OGC:1.3:CRS84"
+
+def test_geog_crs(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
+    OWSConfig._instance = None
+    minimal_global_raw_cfg["global"]["services"] = {
+        "wcs": True,
+        "wms": False,
+        "wmts": False,
+    }
+    minimal_global_raw_cfg["wcs"] = wcs_global_cfg
+    minimal_global_raw_cfg["global"]["published_CRSs"] = {
+        "EPSG:3857": {  # Web Mercator
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+        },
+    }
+    with pytest.raises(ConfigException) as e:
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "At least one geographic CRS must be supplied" in str(e.value)
+    OWSConfig._instance = None
+    minimal_global_raw_cfg["global"]["published_CRSs"] = {
+        "EPSG:3857": {  # Web Mercator
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+        },
+        "EPSG:99899": {  # Made up
+            "geographic": True,
+            "horizontal_coord": "longitude",
+            "vertical_coord": "latitude",
+        },
+    }
+    cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    cfg.make_ready(minimal_dc)
+    assert cfg.default_geographic_CRS == "EPSG:99899"
 
 
 def test_contact_details_parse(minimal_global_cfg):

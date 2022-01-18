@@ -1199,6 +1199,7 @@ class OWSConfig(OWSMetadataConfig):
         self.published_CRSs = {}
         self.internal_CRSs = {}
         CRS_aliases = {}
+        geographic_CRSs = []
         for crs_str, crsdef in cfg["published_CRSs"].items():
             if "alias" in crsdef:
                 CRS_aliases[crs_str] = crsdef
@@ -1211,6 +1212,8 @@ class OWSConfig(OWSMetadataConfig):
                 "gml_name": make_gml_name(crs_str),
                 "alias_of": None
             }
+            if crsdef["geographic"]:
+                geographic_CRSs.append(crs_str)
             self.published_CRSs[crs_str] = self.internal_CRSs[crs_str]
             if self.published_CRSs[crs_str]["geographic"]:
                 if self.published_CRSs[crs_str]["horizontal_coord"] != "longitude":
@@ -1219,6 +1222,16 @@ class OWSConfig(OWSMetadataConfig):
                 if self.published_CRSs[crs_str]["vertical_coord"] != "latitude":
                     raise ConfigException(f"Published CRS {crs_str} is geographic"
                                     "but has a vertical coordinate that is not 'latitude'")
+        # default_geographic_CRS is used by WCS1
+        if not self.wcs:
+            self.default_geographic_CRS = ""
+        elif not geographic_CRSs:
+            raise ConfigException(f"At least one geographic CRS must be supplied")
+        elif "EPSG:4326" in geographic_CRSs or "WGS-84" in geographic_CRSs:
+            self.default_geographic_CRS = "urn:ogc:def:crs:OGC:1.3:CRS84"
+        else:
+            self.default_geographic_CRS = geographic_CRSs[0]
+
         for alias, alias_def in CRS_aliases.items():
             target_crs = alias_def["alias"]
             if target_crs not in self.published_CRSs:
