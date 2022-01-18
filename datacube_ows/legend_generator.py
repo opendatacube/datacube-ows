@@ -10,7 +10,7 @@ import logging
 
 import matplotlib
 import numpy as np
-from flask import make_response
+# from flask import make_response
 from PIL import Image
 
 from datacube_ows.ogc_exceptions import WMSException
