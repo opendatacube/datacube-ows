@@ -16,6 +16,7 @@ def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
     assert cfg.ready
     assert cfg.initialised
     assert not cfg.wcs_tiff_statistics
+    assert cfg.default_geographic_CRS == "" # No WCS
 
 
 def test_global_no_title(minimal_global_raw_cfg):
@@ -41,6 +42,7 @@ def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     assert not cfg.wms
     assert not cfg.wmts
     assert cfg.wcs_tiff_statistics
+    assert cfg.default_geographic_CRS == "urn:ogc:def:crs:OGC:1.3:CRS84"
 
 
 def test_contact_details_parse(minimal_global_cfg):
