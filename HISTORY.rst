@@ -7,6 +7,15 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.25 (2022-01-19)
+-------------------
+Bug fix release.
+
+The legend internationalisation code in 1.8.24 caused errors in manual legends for deployments that do not have internationalisation enabled.  This release fixes that issue.
+
+* Legend internationalisation bug fix (#789, #790)
+* Update default version number and HISTORY.rst (#791)
+
 1.8.24 (2022-01-18)
 -------------------
 
