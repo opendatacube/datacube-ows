@@ -393,8 +393,9 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if not legend.show_legend:
             return None
         if legend.legend_urls:
-            locale = get_locale().language
-            locales = self.global_config().locales
+            locale: Optional[str] = None
+            if self.global_config().internationalised:
+                locale = get_locale().language
             if locale not in self.global_config().locales:
                 locale = self.global_config().default_locale
             url = legend.legend_urls[locale]
