@@ -1,0 +1,101 @@
+---
+name: Prod dockercompose test
+
+on:
+  pull_request:
+    branches:
+        - 'master'
+    paths:
+      - '**'
+      - '.github/workflows/test-prod.yaml'
+      - '!docs/**'
+      - '!*.rst'
+      - '!*.md'
+      - '!datacube_ows/__init__.py'
+      - '!.github/**'
+
+  push:
+    branches:
+      - 'master'
+    paths:
+      - '**'
+      - '.github/workflows/test-prod.yaml'
+      - '!docs/**'
+      - '!*.rst'
+      - '!*.md'
+      - '!datacube_ows/__init__.py'
+      - '!.github/**'
+
+env:
+  ORG: opendatacube
+  IMAGE: ows
+  DB_USERNAME: opendatacubeusername
+
+jobs:
+  prod-docker-compose-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # We build the stage 1 image, then run test on it
+      # These tests require extra files we don't want in
+      # the production image
+      # We build the stage 1 image, then run test on it
+      # These tests require extra files we don't want in
+      # the production image
+      - name: Build dev OWS image (stage 1 - unit test builder)
+        run: |
+          docker build \
+            --tag    ${ORG}/${IMAGE}:_builder \
+            .
+
+      # Build prod image and tag as latest, connect to pre-indexed database
+      - name: Build and run prod OWS images (stage 2)
+        run: |
+          docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up -d
+
+      - name: Sleep for 10 seconds
+        uses: whatnick/wait-action@master
+        with:
+          time: '10s'
+
+      # Run some tests on the images
+      # These tests require a working database
+      - name: Test ping
+        run: |
+          curl --show-error --fail \
+          --connect-timeout 5 \
+          --max-time 10 \
+          --retry 5 \
+          --retry-delay 0 \
+          --retry-max-time 40 \
+          "localhost:8000/ping" \
+          > /dev/null
+
+      - name: Test WMS GetCapabilities
+        run: |
+          curl --silent --show-error --fail \
+          "localhost:8000/?service=WMS&version=1.3.0&request=GetCapabilities" \
+      - name: Test WMTS GetCapabilities
+        run: |
+          curl --silent --show-error --fail \
+          "localhost:8000/?service=WMS&version=1.0.0&request=GetCapabilities" \
+          > /dev/null
+      - name: Test WCS1 GetCapabilities
+        run: |
+          curl --silent --show-error --fail \
+          "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities"
+          > /dev/null
+      - name: Test WCS2 GetCapabilities
+        run: |
+          curl --silent --show-error --fail \
+          "localhost:8000/?service=WCS&version=2.0.1&request=GetCapabilities"
+          > /dev/null
+      - name: Test Prometheus Metrics
+        run: |
+          curl --silent --show-error --fail \
+          "localhost:8000/metrics"
+          > /dev/null
