@@ -7,7 +7,7 @@ on:
         - 'master'
     paths:
       - '**'
-      - '.github/workflows/test-prod.yml'
+      - '.github/workflows/test-prod.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
@@ -19,7 +19,7 @@ on:
       - 'master'
     paths:
       - '**'
-      - '.github/workflows/test-prod.yml'
+      - '.github/workflows/test-prod.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
