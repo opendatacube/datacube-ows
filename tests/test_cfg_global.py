@@ -222,7 +222,7 @@ def test_two_langs(minimal_global_raw_cfg, minimal_dc):
 
     assert cfg.global_config().default_locale == 'fr'
     assert len(cfg.global_config().locales) == 2
-    assert cfg.global_config().internationalised is None
+    assert not cfg.global_config().internationalised
 
 def test_internationalised(minimal_global_raw_cfg, minimal_dc):
     OWSConfig._instance = None
@@ -230,4 +230,4 @@ def test_internationalised(minimal_global_raw_cfg, minimal_dc):
     minimal_global_raw_cfg["global"]["supported_languages"] = ["fr", "en"]
     minimal_global_raw_cfg["global"]["translations_directory"] = "/integration_tests/cfg/translations" # no need to be valid
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
-    assert cfg.global_config().internationalised is True
+    assert cfg.global_config().internationalised
