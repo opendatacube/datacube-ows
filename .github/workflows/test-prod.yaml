@@ -55,6 +55,7 @@ jobs:
       # Build prod image and tag as latest, connect to pre-indexed database
       - name: Build and run prod OWS images (stage 2)
         run: |
+          export $(grep -v '^#' .env_simple | xargs)
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up -d
 
       - name: Sleep for 10 seconds

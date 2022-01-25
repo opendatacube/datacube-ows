@@ -213,3 +213,21 @@ def test_no_langs(minimal_global_raw_cfg, minimal_dc):
     with pytest.raises(ConfigException) as excinfo:
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "at least one language" in str(excinfo.value)
+
+
+def test_two_langs(minimal_global_raw_cfg, minimal_dc):
+    OWSConfig._instance = None
+    minimal_global_raw_cfg["global"]["supported_languages"] = ["fr", "en"]
+    cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+
+    assert cfg.global_config().default_locale == 'fr'
+    assert len(cfg.global_config().locales) == 2
+    assert not cfg.global_config().internationalised
+
+def test_internationalised(minimal_global_raw_cfg, minimal_dc):
+    OWSConfig._instance = None
+
+    minimal_global_raw_cfg["global"]["supported_languages"] = ["fr", "en"]
+    minimal_global_raw_cfg["global"]["translations_directory"] = "/integration_tests/cfg/translations" # no need to be valid
+    cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert cfg.global_config().internationalised
