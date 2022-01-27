@@ -9,11 +9,12 @@ from datetime import datetime
 from typing import Callable, List, MutableMapping, Optional, Union, cast
 
 import numpy
+import xarray
 from colour import Color
 from datacube.utils.masking import make_mask
 from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
-from xarray import DataArray, Dataset, merge
+from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
                                        ConfigException, OWSMetadataConfig)
@@ -220,47 +221,37 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         return mask
 
 
-def apply_multidate_value_map(value_map: MutableMapping[str, List[MultiDateValueMapRule]],
+def convert_to_uint8(fval):
+    scaled = int(fval * 255.0 + 0.5)
+    clipped = min(max(scaled, 0), 255)
+    return clipped
+
+
+def apply_value_map(value_map: MutableMapping[str, List[AbstractValueMapRule]],
                     data: Dataset,
                     band_mapper: Callable[[str], str]) -> Dataset:
     imgdata = Dataset(coords={k: v for k, v in data.coords.items() if k != "time"})
+    shape = list(imgdata.dims.values())
+    for channel in ("red", "green", "blue", "alpha"):
+        c = numpy.full(shape, 0, dtype="uint8")
+        imgdata[channel] = DataArray(c, coords=imgdata.coords)
     for cfg_band, rules in value_map.items():
         # Run through each item
         band = band_mapper(cfg_band)
         bdata = cast(DataArray, data[band])
-        band_data = Dataset()
         if bdata.dtype.kind == 'f':
             # Convert back to int for bitmasking
             bdata = ColorMapStyleDef.reint(bdata)
-        for rule in rules:
+        for rule in reversed(rules):
             mask = rule.create_mask(bdata)
-            masked = ColorMapStyleDef.create_colordata(mask, rule.rgb, rule.alpha, mask)
-            band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
-        imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
-    imgdata = (imgdata * 255 + 0.5).clip(min=0, max=255)
-    return imgdata.astype('uint8')
-
-
-def apply_value_map(value_map: MutableMapping[str, List[ValueMapRule]],
-                    data: Dataset,
-                    band_mapper: Callable[[str], str]) -> Dataset:
-    imgdata = Dataset(coords={k: v for k, v in data.coords.items() if k != "time"})
-    for cfg_band, rules in value_map.items():
-        # Run through each item
-        band = band_mapper(cfg_band)
-        bdata = cast(DataArray, data[band])
-        band_data = Dataset()
-        if bdata.dtype.kind == 'f':
-            # Convert back to int for bitmasking
-            bdata = ColorMapStyleDef.reint(bdata)
-        for rule in rules:
-            mask = rule.create_mask(bdata)
-            masked = ColorMapStyleDef.create_colordata(bdata, rule.rgb, rule.alpha, mask)
-            band_data = masked if len(band_data.data_vars) == 0 else band_data.combine_first(masked)
-
-        imgdata = band_data if len(imgdata.data_vars) == 0 else merge([imgdata, band_data])
-    imgdata = (imgdata * 255 + 0.5).clip(min=0, max=255)
-    return imgdata.astype('uint8')
+            if mask.data.any():
+                for channel in ("red", "green", "blue", "alpha"):
+                    if channel == "alpha":
+                        val = convert_to_uint8(rule.alpha)
+                    else:
+                        val = convert_to_uint8(getattr(rule.rgb, channel))
+                    imgdata[channel] = xarray.where(mask, val, imgdata[channel])
+    return imgdata
 
 
 class PatchTemplate:
@@ -428,7 +419,7 @@ class ColorMapStyleDef(StyleDefBase):
             :return: RGBA image xarray.  May have a time dimension
             """
             if self.aggregator is None:
-                return apply_multidate_value_map(self.value_map, data, self.style.product.band_idx.band)
+                return apply_value_map(self.value_map, data, self.style.product.band_idx.band)
             else:
                 agg = self.aggregator(data)
                 return apply_value_map(self.value_map, agg, self.style.product.band_idx.band)
