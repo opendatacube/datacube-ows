@@ -7,6 +7,17 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.26 (2022-01-31)
+-------------------
+
+Optimisation release.  Performance improvements to colour-map style rendering algorithm.
+For large, complex value_map rule sets the improvement is dramatic (e.g. DEA LCCS level4 style,
+which contains over 100 rules, rendering speed is increased by 70-80%).
+
+* Minor improvements to unit and docker testing (#792, #793)
+* Optimisation of colour-map style rendering algorithm (#795)
+* Increment default version number and update HISTORY.rst (#797)
+
 1.8.25 (2022-01-19)
 -------------------
 Bug fix release.
