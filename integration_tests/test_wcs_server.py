@@ -1360,8 +1360,42 @@ def test_wcs2_getcov_trim_time(ows_server):
             "scalesize": "x(400),y(400)",
             "subset": subsets,
         },
-    )
+        )
     assert r.status_code == 200
+
+def test_wcs2_getcov_badtrim_time(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide:
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(
+        ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
+    )
+    subsets = [
+        subsets[0],
+        subsets[1],
+        'time("2019-01-05","2019-01-09","2019-01-15")'
+    ]
+
+    check_wcs_error(
+        ows_server.url + "/wcs",
+        params={
+            "request": "GetCoverage",
+            "coverageid": layer.name,
+            "version": "2.1.0",
+            "service": "WCS",
+            "format": "application/x-netcdf",
+            "subsettingcrs": "EPSG:4326",
+            "scalesize": "x(400),y(400)",
+            "subset": subsets,
+        },
+        expected_error_message="Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
+        expected_status_code=400,
+        )
 
 
 def test_wcs2_getcov_slice_space(ows_server):
