@@ -147,7 +147,7 @@ class WCS1GetCoverageRequest():
                     locator="TIME parameter",
                     valid_keys = [d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
                 )
-            elif len(self.times) > 1 and not self.format["multi-time"]:
+            elif len(self.times) > 1 and not self.format.multi_time:
                 raise WCS1Exception(
                     "Cannot select more than one time slice with the %s format" % self.format["name"],
                     WCS1Exception.INVALID_PARAMETER_VALUE,

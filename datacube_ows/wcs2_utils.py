@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 import collections
 import logging
 
-import datacube
 from datacube.utils import geometry
 from dateutil.parser import parse
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
@@ -112,6 +111,11 @@ def get_coverage_data(request, qprof):
             dimension = subset.dimension.lower()
             if dimension == 'time':
                 if isinstance(subset, Trim):
+                    if "," in subset.high:
+                        raise WCS2Exception(
+                            "Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
+                            WCS2Exception.INVALID_SUBSETTING,
+                            locator="time")
                     low = parse(subset.low).date() if subset.low is not None else None
                     high = parse(subset.high).date() if subset.high is not None else None
                     if low is not None:
@@ -127,7 +131,6 @@ def get_coverage_data(request, qprof):
                 elif isinstance(subset, Slice):
                     point = parse(subset.point).date()
                     times = [point]
-
             else:
                 try:
                     if isinstance(subset, Trim):
@@ -274,10 +277,6 @@ def get_coverage_data(request, qprof):
         qprof.end_event("fetch-datasets")
         if qprof.active:
             qprof["datasets"] = {str(q): ids for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()}
-        if fmt.multi_time and len(times) > 1:
-            # Group by solar day
-            group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
-            datasets = dc.group_datasets(datasets, group_by)
 
         qprof.start_event("load-data")
         output = stacker.data(datasets, skip_corrections=True)
