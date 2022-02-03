@@ -112,6 +112,11 @@ def get_coverage_data(request, qprof):
             dimension = subset.dimension.lower()
             if dimension == 'time':
                 if isinstance(subset, Trim):
+                    if "," in subset.high:
+                        raise WCS2Exception(
+                            "Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
+                            WCS2Exception.INVALID_SUBSETTING,
+                            locator="time")
                     low = parse(subset.low).date() if subset.low is not None else None
                     high = parse(subset.high).date() if subset.high is not None else None
                     if low is not None:
@@ -127,7 +132,6 @@ def get_coverage_data(request, qprof):
                 elif isinstance(subset, Slice):
                     point = parse(subset.point).date()
                     times = [point]
-
             else:
                 try:
                     if isinstance(subset, Trim):
