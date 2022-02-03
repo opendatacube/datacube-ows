@@ -282,7 +282,7 @@ def test_wcs1_multi_time_exceptions(ows_server):
             "crs": "EPSG:4326",
             "format": "GeoTIFF",
             "bbox": extents["bbox"],
-            "time": ",".join(extents["times"]),
+            "time": extents['times'],
             "resx": 0.01,
             "resy": 0.01,
         },
@@ -1138,7 +1138,6 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server):
         scalesize="x(400),y(300)",
     )
 
-
 def test_wcs21_server(ows_server):
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
     r = requests.get(
@@ -1342,6 +1341,12 @@ def test_wcs2_getcov_trim_time(ows_server):
     subsets = extent.raw_wcs2_subsets(
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
+    if len(subsets[2].split(",")) == 2:
+        subsets = [
+            subsets[0],
+            subsets[1],
+            'time("2019-01-05","2019-01-09")'
+        ]
 
     r = requests.get(
         ows_server.url + "/wcs",
