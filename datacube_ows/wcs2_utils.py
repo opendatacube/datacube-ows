@@ -277,10 +277,6 @@ def get_coverage_data(request, qprof):
         qprof.end_event("fetch-datasets")
         if qprof.active:
             qprof["datasets"] = {str(q): ids for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()}
-        # if fmt.multi_time and len(times) > 1:
-            # Group by solar day
-         #    group_by = datacube.api.query.query_group_by(time=times, group_by='solar_day')
-          #   datasets = dc.group_datasets(datasets, group_by)
 
         qprof.start_event("load-data")
         output = stacker.data(datasets, skip_corrections=True)
