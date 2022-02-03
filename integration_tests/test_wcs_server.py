@@ -1341,7 +1341,7 @@ def test_wcs2_getcov_trim_time(ows_server):
     subsets = extent.raw_wcs2_subsets(
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
-    if len(subsets[2].split(",")) == 2:
+    if len(subsets[2].split(",")) == 1:
         subsets = [
             subsets[0],
             subsets[1],
