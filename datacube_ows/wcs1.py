@@ -113,10 +113,6 @@ def desc_coverages(args):
 def get_coverage(args):
     cfg = get_config()
     req = WCS1GetCoverageRequest(args)
-    if req.format.multi_time and len(req.times) > 1:
-        raise WCS1Exception("Multi-time requests are not currently supported for WCS1",
-                            WCS1Exception.INVALID_PARAMETER_VALUE,
-                            locator="Time parameter")
     qprof = QueryProfiler(req.ows_stats)
     n_datasets, data = get_coverage_data(req, qprof)
     if req.ows_stats:
