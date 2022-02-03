@@ -1360,7 +1360,7 @@ def test_wcs2_getcov_trim_time(ows_server):
             "scalesize": "x(400),y(400)",
             "subset": subsets,
         },
-        )
+    )
     assert r.status_code == 200
 
 def test_wcs2_getcov_badtrim_time(ows_server):
@@ -1395,7 +1395,7 @@ def test_wcs2_getcov_badtrim_time(ows_server):
         },
         expected_error_message="Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
         expected_status_code=400,
-        )
+    )
 
 
 def test_wcs2_getcov_slice_space(ows_server):
