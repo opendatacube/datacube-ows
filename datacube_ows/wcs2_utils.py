@@ -308,18 +308,19 @@ def get_coverage_data(request, qprof):
 
 def get_tiff(request, data, crs, product, width, height, affine):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
-    # Copied from CEOS.  Does not seem to support multi-time dimension data - is this even possible in GeoTiff?
+    # Does not support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {
         'uint8': 1,
-        'uint16': 2,
-        'int16': 3,
-        'uint32': 4,
-        'int32': 5,
-        'float32': 6,
-        'float64': 7,
-        'complex': 9,
-        'complex64': 10,
-        'complex128': 11,
+        'int8': 2,
+        'uint16': 3,
+        'int16': 4,
+        'uint32': 5,
+        'int32': 6,
+        'float32': 7,
+        'float64': 8,
+        'complex': 10,
+        'complex64': 11,
+        'complex128': 12,
     }
 
     dtype_list = [data[array].dtype for array in data.data_vars]
