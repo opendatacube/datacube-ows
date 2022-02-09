@@ -255,7 +255,7 @@ def assert_approx_tuple(a, b):
         if aa is None:
             assert bb is None
         else:
-            assert aa == pytest.approx(bb)
+            assert aa == pytest.approx(bb, rel=1e-4)
 
 def test_transform_unsubsetted(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
