@@ -249,12 +249,20 @@ def test_scalar_slice(layer_crs_nongeom):
     assert not scaler.is_slice("x")
 
 
+def assert_approx_tuple(a, b):
+    assert len(a) == len(b)
+    for aa, bb in zip(a,b):
+        if aa is None:
+            assert bb is None
+        else:
+            assert aa == pytest.approx(bb)
+
 def test_transform_unsubsetted(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
     assert scaler.crs == "EPSG:3577"
-    assert scaler.dim("x") == pytest.approx((None, -2407984.8524648934, 2834259.110253384))
-    assert scaler.dim("y") == pytest.approx((None, -5195512.771063174, -936185.3115191332))
+    assert_approx_tuple(scaler.dim("x"), (None, -2407984.8524648934, 2834259.110253384))
+    assert_approx_tuple(scaler.dim("y"), (None, -5195512.771063174, -936185.3115191332))
 
 
 def test_transform_one_slice(layer_crs_geom):
@@ -262,16 +270,16 @@ def test_transform_one_slice(layer_crs_geom):
     scaler.slice("x", 120.0)
     scaler.to_crs("EPSG:3577")
     assert scaler.crs == "EPSG:3577"
-    assert scaler.dim("x") == pytest.approx((None, -1361473.6681777071, -980861.0939271128))
-    assert scaler.dim("y") == pytest.approx((None, -5195512.771063174, -936185.3115191332))
+    assert_approx_tuple(scaler.dim("x"), (None, -1361473.6681777071, -980861.0939271128))
+    assert_approx_tuple(scaler.dim("y"), (None, -5195512.771063174, -936185.3115191332))
 
 
 def test_transform_one_trim(layer_crs_geom):
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.trim("x", 120.0, 130.0)
     scaler.to_crs("EPSG:3577")
-    assert scaler.dim("x") == pytest.approx((None, -1361473.6681777071, -163710.79405154017))
-    assert scaler.dim("y") == pytest.approx((None, -5195512.771063174, -936185.3115191332))
+    assert_approx_tuple(scaler.dim("x"), (None, -1361473.6681777071, -163710.79405154017))
+    assert_approx_tuple(scaler.dim("y"), (None, -5195512.771063174, -936185.3115191332))
 
 
 def test_transform_two_trims(layer_crs_geom):
@@ -279,8 +287,8 @@ def test_transform_two_trims(layer_crs_geom):
     scaler.trim("x", 120.0, 130.0)
     scaler.trim("y", -30.0, -20.0)
     scaler.to_crs("EPSG:3577")
-    assert scaler.dim("x") == pytest.approx((None, -1248178.532656371, -190806.89815343948))
-    assert scaler.dim("y") == pytest.approx((None, -3317050.4161210703, -2145729.370620175))
+    assert_approx_tuple(scaler.dim("x"), (None, -1248178.532656371, -190806.89815343948))
+    assert_approx_tuple(scaler.dim("y"), (None, -3317050.4161210703, -2145729.370620175))
 
 
 def test_transform_slice_trim(layer_crs_geom):
@@ -288,8 +296,8 @@ def test_transform_slice_trim(layer_crs_geom):
     scaler.trim("x", 120.0, 130.0)
     scaler.slice("y", -20.0)
     scaler.to_crs("EPSG:3577")
-    assert scaler.dim("x") == pytest.approx((None, -1248178.532656371, -208327.4583571618))
-    assert scaler.dim("y") == pytest.approx((None, -2202762.0236987285, -2145729.370620175))
+    assert_approx_tuple(scaler.dim("x"), (None, -1248178.532656371, -208327.4583571618))
+    assert_approx_tuple(scaler.dim("y"), (None, -2202762.0236987285, -2145729.370620175))
 
 
 def test_transform_two_slices(layer_crs_geom):
@@ -297,8 +305,8 @@ def test_transform_two_slices(layer_crs_geom):
     scaler.slice("x", 120.0)
     scaler.slice("y", -20.0)
     scaler.to_crs("EPSG:3577")
-    assert scaler.dim("x") == pytest.approx((1, -1248178.532656371, -1248153.532656371))
-    assert scaler.dim("y") == pytest.approx((1, -2202762.0236987285, -2202787.0236987285))
+    assert_approx_tuple(scaler.dim("x"), (1, -1248178.532656371, -1248153.532656371))
+    assert_approx_tuple(scaler.dim("y"), (1, -2202762.0236987285, -2202787.0236987285))
 
 
 def test_scale_axis(layer_crs_geom):
@@ -306,8 +314,8 @@ def test_scale_axis(layer_crs_geom):
     scaler.to_crs("EPSG:3577")
     scaler.scale_axis("x", 2.0)
     scaler.scale_axis("y", 0.5)
-    assert scaler.dim("x") == pytest.approx((419380, -2407984.8524648934, 2834259.110253384))
-    assert scaler.dim("y") == pytest.approx((85187, -5195512.771063174, -936185.3115191332))
+    assert_approx_tuple(scaler.dim("x"), (419380, -2407984.8524648934, 2834259.110253384))
+    assert_approx_tuple(scaler.dim("y"), (85187, -5195512.771063174, -936185.3115191332))
 
 
 def test_scale_size(layer_crs_geom):
@@ -315,8 +323,8 @@ def test_scale_size(layer_crs_geom):
     scaler.to_crs("EPSG:3577")
     scaler.scale_size("x", 512)
     scaler.scale_size("y", 512)
-    assert scaler.dim("x") == pytest.approx(scaler.dim("x"), (512, -2407984.8524648934, 2834259.110253384))
-    assert scaler.dim("y") == pytest.approx((512, -5195512.771063174, -936185.3115191332))
+    assert_approx_tuple(scaler.dim("x"), (512, -2407984.8524648934, 2834259.110253384))
+    assert_approx_tuple(scaler.dim("y"), (512, -5195512.771063174, -936185.3115191332))
 
 
 def test_scale_extent(layer_crs_geom):
@@ -325,8 +333,8 @@ def test_scale_extent(layer_crs_geom):
     scaler.to_crs("EPSG:3577")
     scaler.scale_extent("x", 150, 450)
     scaler.scale_extent("y", 0, 300)
-    assert scaler.dim("x") == pytest.approx((300, -2407984.8524648934, 2834259.110253384))
-    assert scaler.dim("y") == pytest.approx((300, -5195512.771063174, -936185.3115191332))
+    assert_approx_tuple(scaler.dim("x"), (300, -2407984.8524648934, 2834259.110253384))
+    assert_approx_tuple(scaler.dim("y"), (300, -5195512.771063174, -936185.3115191332))
 
 
 def test_scaler_default(layer_crs_geom):
