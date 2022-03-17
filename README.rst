@@ -123,11 +123,6 @@ To run the standard Docker image, create a docker volume containing your ows con
 
   docker build --tag=name_of_built_container .
 
-  docker run \
-      --rm \
-      opendatacube/ows \
-      gunicorn -b '0.0.0.0:8000' -w 5 --timeout 300 datacube_ows:ogc
-
   docker run --rm \
         -e DATACUBE_OWS_CFG=datacube_ows.config.test_cfg.ows_cfg   # Location of config object
         -e AWS_NO_SIGN_REQUEST=yes                                 # Allowing access to AWS S3 buckets

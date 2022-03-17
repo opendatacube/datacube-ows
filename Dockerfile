@@ -7,6 +7,7 @@ RUN apt-get update -y \
             git \
             # For Psycopg2
             libpq-dev python3-dev \
+            python3-distutils \
             gcc \
             python3-pip \
             postgresql-client-12 \
@@ -27,6 +28,8 @@ ARG PYDEV_DEBUG="no"
 RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
     pip install --no-cache-dir .[dev] \
 ;fi
+
+RUN pip install pip-tools
 
 RUN pip freeze
 
@@ -53,6 +56,7 @@ COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows
 COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
 # gunicorn cli
 COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
+COPY --from=builder  /usr/local/bin/pip-compile /usr/local/bin/pip-compile
 
 # make folders for testing and keep code in image
 RUN mkdir -p /code
