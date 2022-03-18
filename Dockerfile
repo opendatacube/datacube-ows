@@ -7,7 +7,6 @@ RUN apt-get update -y \
             git \
             # For Psycopg2
             libpq-dev python3-dev \
-            python3-distutils \
             gcc \
             python3-pip \
             postgresql-client-12 \
