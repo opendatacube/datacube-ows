@@ -29,8 +29,6 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
     pip install --no-cache-dir .[dev] \
 ;fi
 
-RUN pip install pip-tools
-
 RUN pip freeze
 
 FROM osgeo/gdal:ubuntu-small-latest
