@@ -54,7 +54,6 @@ COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows
 COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
 # gunicorn cli
 COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
-COPY --from=builder  /usr/local/bin/pip-compile /usr/local/bin/pip-compile
 
 # make folders for testing and keep code in image
 RUN mkdir -p /code
