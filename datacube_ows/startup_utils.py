@@ -36,20 +36,9 @@ __all__ = [
     'CredentialManager',
 ]
 
-class RequestFormatter(logging.Formatter):
-    def format(self, record):
-        if has_request_context():
-            record.url = request.url
-            record.remote_addr = request.remote_addr
-        else:
-            record.url = None
-            record.remote_addr = None
-
-        return super().format(record)
-
 def initialise_logger(name=None):
     handler = logging.StreamHandler()
-    handler.setFormatter(RequestFormatter('[%(asctime)s] %(remote_addr)s [%(levelname)s] %(message)s'))
+    handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s'))
     handler.addFilter(RequestIDLogFilter())
     _LOG = logging.getLogger(name)
     _LOG.addHandler(handler)

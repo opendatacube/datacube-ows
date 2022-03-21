@@ -240,6 +240,6 @@ def start_timer():
 @app.after_request
 def log_time_and_request_response(response):
     time_taken = int((monotonic() - g.ogc_start_time) * 1000)
-    _LOG.info("request: %s returned status: %d and took: %d ms", request.url, response.status_code, time_taken)
+    _LOG.info("ip: %s request: %s returned status: %d and took: %d ms", request.environ.get('HTTP_X_REAL_IP'), request.url, response.status_code, time_taken)
     return response
 
