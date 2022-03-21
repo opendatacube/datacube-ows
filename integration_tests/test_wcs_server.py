@@ -749,13 +749,13 @@ def test_wcs1_getcoverage_bigimage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
 
-    test_layer = wcs.contents["ls8_usgs_level1_scene_layer_clone"]
+    test_layer = wcs.contents["s2_l2a"]
 
     bbox = test_layer.boundingBoxWGS84
 
     with pytest.raises(ServiceException) as e:
         output = wcs.getCoverage(
-            identifier="ls8_usgs_level1_scene_layer_clone",
+            identifier="s2_l2a",
             format="GeoTIFF",
             bbox=pytest.helpers.representative_bbox(bbox),
             crs="EPSG:4326",

@@ -91,7 +91,7 @@ def representative_bbox(bbox):
 
 @pytest.fixture
 def product_name():
-    return "ls8_usgs_level1_scene_layer"
+    return "s2_l2a"
 
 
 @pytest.fixture

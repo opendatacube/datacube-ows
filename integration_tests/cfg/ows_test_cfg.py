@@ -32,6 +32,25 @@ ls8_usgs_level1_bands = {
     "quality": ["QUALITY"],
 }
 
+bands_sentinel = {
+    "B01": ["coastal_aerosol"],
+    "B02": ["blue"],
+    "B03": ["green"],
+    "B04": ["red"],
+    "B05": ["red_edge_1"],
+    "B06": ["red_edge_2"],
+    "B07": ["red_edge_3"],
+    "B08": ["nir", "nir_1"],
+    "B8A": ["nir_narrow", "nir_2"],
+    "B09": ["water_vapour"],
+    "B11": ["swir_1", "swir_16"],
+    "B12": ["swir_2", "swir_22"],
+    "AOT": ["aerosol_optical_thickness"],
+    "WVP": ["scene_average_water_vapour"],
+    "SCL": ["mask", "qa"],
+}
+
+
 bands_fc = {
     "BS": ["bare_soil"],
     "PV": ["photosynthetic_vegetation", "green_vegetation"],
@@ -458,9 +477,37 @@ style_wofs_obs_wet_only = {
     },
 }
 
+style_ls_simple_rgb = {
+    "name": "simple_rgb",
+    "title": "Simple RGB",
+    "abstract": "Simple true-colour image, using the red, green and blue bands",
+    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
+    "scale_range": [0.0, 3000.0],
+}
+styles_s2_list = [
+    style_ls_simple_rgb,
+]
 # Describes a style which uses several bitflags to create a style
 
 # REUSABLE CONFIG FRAGMENTS - resource limit declarations
+dataset_cache_rules = [
+    {
+        "min_datasets": 5,
+        "max_age": 60 * 60 * 24,
+    },
+    {
+        "min_datasets": 9,
+        "max_age": 60 * 60 * 24 * 7,
+    },
+    {
+        "min_datasets": 17,
+        "max_age": 60 * 60 * 24 * 30,
+    },
+    {
+        "min_datasets": 65,
+        "max_age": 60 * 60 * 24 * 120,
+    },
+]
 
 standard_resource_limits = {
     "wms": {
@@ -482,6 +529,18 @@ reslim_aster = {
     },
     "wcs": {
         # "max_datasets": 16, # Defaults to no dataset limit
+    },
+}
+
+reslim_continental = {
+    "wms": {
+        "zoomed_out_fill_colour": [150, 180, 200, 160],
+        "min_zoom_factor": 10.0,
+        # "max_datasets": 16, # Defaults to no dataset limit
+        "dataset_cache_rules": dataset_cache_rules,
+    },
+    "wcs": {
+        "max_datasets": 32,  # Defaults to no dataset limit
     },
 }
 
@@ -671,9 +730,9 @@ ows_cfg = {
     #    is also a coverage, that may be requested in WCS DescribeCoverage or WCS GetCoverage requests.
     "layers": [
         {
-            "title": "Landsat",
-            "abstract": "Images from the Landsat satellite",
-            "keywords": ["landsat", "landsat8", "landsat7"],
+            "title": "s2",
+            "abstract": "Images from the sentinel 2 satellite",
+            "keywords": ["sentinel2"],
             "attribution": {
                 # Attribution must contain at least one of ("title", "url" and "logo")
                 # A human readable title for the attribution - e.g. the name of the attributed organisation
@@ -692,86 +751,31 @@ ows_cfg = {
                     "format": "image/png",
                 },
             },
-            "label": "landsat",
-            "layers": [
-                {
-                    # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
-                    "title": "Level 1 USGS Landsat-8 Public Data Set",
-                    "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set",
-                    "name": "ls8_usgs_level1_scene_layer",
-                    "product_name": "ls8_usgs_level1_scene",
-                    "user_band_math": True,
-                    "bands": ls8_usgs_level1_bands,
-                    "resource_limits": standard_resource_limits,
-                    "native_crs": "EPSG:4326",
-                    "native_resolution": [0.000225, 0.000225],
-                    "flags": [
-                        {
-                            "band": "quality",
-                            "product": "ls8_usgs_level1_scene",
-                            "ignore_time": False,
-                            "ignore_info_flags": [],
-                            "manual_merge": True,
-                        },
-                    ],
-                    "image_processing": {
-                        # Extent mask function
-                        #
-                        # See documentation above.  This is an example of multiple extent_mask_functions.
-                        "extent_mask_func": [
-                            "datacube_ows.ogc_utils.mask_by_quality",
-                            "datacube_ows.ogc_utils.mask_by_val",
-                        ],
-                        # Bands to always fetch from the Datacube, even if it is not used by the active style.
-                        # Useful for when a particular band is always needed for the extent_mask_func, as
-                        # is the case here.
-                        "always_fetch_bands": ["quality"],
-                        "fuse_func": None,
-                        "manual_merge": True,
-                        # Apply corrections for solar angle, for "Level 1" products.
-                        # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
-                        "apply_solar_corrections": True,
-                    },
-                    "wcs": {
-                    },
-                    "styling": {
-                        "default_style": "simple_rgb",
-                        "styles": [
-                            style_rgb,
-                            style_rgb_clone,
-                            style_infrared_false_colour,
-                            style_pure_ls8_blue,
-                            style_ndvi,
-                            style_ndvi_expr,
-                            style_ndvi_delta,
-                            style_rgb_ndvi,
-                        ],
-                    },
-                },  ##### End of ls8_level1_pds product definition.
-                {
-                    "inherits": {
-                        "layer": "ls8_usgs_level1_scene_layer",
-                    },
-                    "title": "Level 1 USGS Landsat-8 Public Data Set Clone",
-                    "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
-                    "name": "ls8_usgs_level1_scene_layer_clone",
-                    "low_res_product_name": "ls8_usgs_level1_scene",
-                    "image_processing": {
-                        "extent_mask_func": [],
-                        "manual_merge": False,
-                        "apply_solar_corrections": False,
-                    },
-                    "resource_limits": {
-                        "wcs": {
-                            "max_image_size": 2000 * 2000 * 3 * 2,
-                        }
-                    },
-                    "time_axis": {
-                        "time_interval": 1
-                    }
+            "label": "sentinel2",
+        "layers": [
+            {
+                "title": "Surface reflectance (Sentinel-2)",
+                "name": "s2_l2a",
+                "abstract": """layer s2_l2a            """,
+                "product_name": "s2_l2a",
+                "bands": bands_sentinel,
+                "dynamic": True,
+                "resource_limits": reslim_continental,
+                "image_processing": {
+                    "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                    "always_fetch_bands": [],
+                    "manual_merge": False,  # True
+                    "apply_solar_corrections": False,
                 },
-            ],
-        },  ### End of Landsat folder.
+                "native_crs": "EPSG:3857",
+                "native_resolution": [30.0, -30.0],
+                "styling": {
+                    "default_style": "simple_rgb",
+                    "styles": styles_s2_list,
+                    },
+                }
+            ]
+        },
         {
             "title": "Fractional Cover",
             "abstract": """
