@@ -2,11 +2,11 @@
 msgid "global.title"
 msgstr "Over-ridden: aardvark"
 
-msgid "folder.landsat.abstract"
+msgid "folder.sentinel2.abstract"
 msgstr "Over-ridden: bunny-rabbit"
 
-msgid "layer.ls8_usgs_level1_scene_layer.title"
+msgid "layer.s2_l2a.title"
 msgstr "Over-ridden: chook"
 
-msgid "style.ls8_usgs_level1_scene_layer.simple_rgb.title"
+msgid "style.s2_k2a.simple_rgb.title"
 msgstr "Over-ridden: donkey"

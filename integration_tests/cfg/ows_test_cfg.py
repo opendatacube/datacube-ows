@@ -752,11 +752,11 @@ ows_cfg = {
                 },
             },
             "label": "sentinel2",
-        "layers": [
+            "layers": [
             {
                 "title": "Surface reflectance (Sentinel-2)",
                 "name": "s2_l2a",
-                "abstract": """layer s2_l2a            """,
+                "abstract": """layer s2_l2a""",
                 "product_name": "s2_l2a",
                 "bands": bands_sentinel,
                 "dynamic": True,
@@ -773,7 +773,29 @@ ows_cfg = {
                     "default_style": "simple_rgb",
                     "styles": styles_s2_list,
                     },
-                }
+                },
+                {
+                    "inherits": {
+                        "layer": "s2_l2a",
+                    },
+                    "title": "s2_l2a Clone",
+                    "abstract": "Imagery from the s2_l2a Clone",
+                    "name": "s2_l2a_clone",
+                    "low_res_product_name": "s2_l2a",
+                    "image_processing": {
+                        "extent_mask_func": [],
+                        "manual_merge": False,
+                        "apply_solar_corrections": False,
+                    },
+                    "resource_limits": {
+                        "wcs": {
+                            "max_image_size": 2000 * 2000 * 3 * 2,
+                        }
+                    },
+                    "time_axis": {
+                        "time_interval": 1
+                    }
+                },
             ]
         },
         {

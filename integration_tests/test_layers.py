@@ -15,7 +15,7 @@ def test_metadata_export():
 
     export = cfg.export_metadata()
     assert "folder.0.title" not in export
-    assert "folder.landsat.title" in export
+    assert "folder.sentinel2.title" in export
 
     # assert layers.platforms
     # for p in layers:
@@ -95,12 +95,12 @@ def test_metadata_read(monkeypatch):
         assert "Over-ridden" in cfg.title
         assert "aardvark" in cfg.title
 
-        folder = cfg.folder_index["folder.landsat"]
+        folder = cfg.folder_index["folder.sentinel2"]
         assert "Over-ridden" not in folder.title
         assert "Over-ridden" in folder.abstract
         assert "bunny-rabbit" in folder.abstract
 
-        lyr = cfg.product_index["ls8_usgs_level1_scene_layer"]
+        lyr = cfg.product_index["s2_l2a"]
         assert "Over-ridden" in lyr.title
         assert "chook" in lyr.title
 

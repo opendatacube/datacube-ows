@@ -216,7 +216,7 @@ Prepare an empty database
 ```
 datacube system init
 datacube product add https://raw.githubusercontent.com/digitalearthafrica/config/master/products/esa_s2_l2a.odc-product.yaml
-stac-to-dc --bbox='16202204,-5479006,1628045,-5400734' --collections='sentinel-s2-l2a-cogs' --datetime='2021-12-30'
+stac-to-dc --bbox='16202204,-5479006,1628045,-5400734' --collections='sentinel-s2-l2a-cogs' --datetime='2021-12-30/2022-01-01'
 datacube-ows-update --schema --role <db_read_role>
 datacube-ows-update --views
 datacube-ows-update

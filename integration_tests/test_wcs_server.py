@@ -749,13 +749,13 @@ def test_wcs1_getcoverage_bigimage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
 
-    test_layer = wcs.contents["s2_l2a"]
+    test_layer = wcs.contents["s2_l2a_clone"]
 
     bbox = test_layer.boundingBoxWGS84
 
     with pytest.raises(ServiceException) as e:
         output = wcs.getCoverage(
-            identifier="s2_l2a",
+            identifier="s2_l2a_clone",
             format="GeoTIFF",
             bbox=pytest.helpers.representative_bbox(bbox),
             crs="EPSG:4326",
@@ -1055,9 +1055,11 @@ def test_wcs20_getcoverage_netcdf(ows_server):
     contents = list(wcs.contents)
     layer = cfg.product_index[contents[0]]
     extent = ODCExtent(layer)
-    subsets = extent.wcs2_subsets(
-        ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326"
-    )
+    subsets = extent.wcs2_subsets()
+    # subsets = extent.wcs2_subsets(
+    #     ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326"
+    # )
+
     output = wcs.getCoverage(
         identifier=[layer.name],
         format="application/x-netcdf",
@@ -1605,7 +1607,7 @@ def test_wcs2_getcov_bad_band(ows_server):
             "rangesubset": "nir,green,band_6",
             "subset": subsets,
         },
-        expected_error_message="No such field green",
+        expected_error_message="No such field band_6",
         expected_status_code=400,
     )
 
@@ -1636,7 +1638,7 @@ def test_wcs2_getcov_bad_band_range(ows_server):
             "rangesubset": "green:band_6",
             "subset": subsets,
         },
-        expected_error_message="No such field green",
+        expected_error_message="No such field band_6",
         expected_status_code=400,
     )
 
@@ -1653,7 +1655,7 @@ def test_wcs2_getcov_bad_band_range(ows_server):
             "rangesubset": "band_3:green",
             "subset": subsets,
         },
-        expected_error_message="No such field green",
+        expected_error_message="No such field band_3",
         expected_status_code=400,
     )
 

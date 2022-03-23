@@ -126,6 +126,7 @@ def test_wms_getmap(ows_server):
     test_layer_name = contents[0]
     test_layer = wms.contents[test_layer_name]
 
+    assert test_layer == ''
     bbox = test_layer.boundingBoxWGS84
 
     img = wms.getmap(
@@ -160,7 +161,7 @@ def test_wms_getmap_requests(ows_server):
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
-        "layers": "ls8_usgs_level1_scene_layer",
+        "layers": "s2_l2a",
         "width": "150",
         "height": "150",
         "crs": "EPSG:4326",
@@ -177,7 +178,7 @@ def test_wms_getmap_bad_requests(ows_server):
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
-        "layers": "ls8_usgs_level1_scene_layer,some_other_layer",
+        "layers": "s2_l2a,some_other_layer",
         "width": "150",
         "height": "150",
         "crs": "EPSG:4326",
@@ -212,7 +213,7 @@ def test_wms_getmap_qprof(ows_server):
                             "service": "WMS",
                             "version": "1.3.0",
                             "request": "GetMap",
-                            "layers": "ls8_usgs_level1_scene_layer",
+                            "layers": "s2_l2a",
                             "width": "150",
                             "height": "150",
                             "crs": "EPSG:4326",
@@ -256,7 +257,7 @@ def test_wms_multidate_getmap(ows_server):
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
 
     img = wms.getmap(
-        layers=["ls8_usgs_level1_scene_layer"],
+        layers=["s2_l2a"],
         styles=["ndvi_delta"],
         srs="EPSG:4326",
         bbox=(145.75, -44.2,
@@ -275,7 +276,7 @@ def test_wms_style_looping_getmap(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
-    test_layer_names = ["ls8_usgs_level1_scene_layer", "ls8_usgs_level1_scene_layer_clone"]
+    test_layer_names = ["s2_l2a", "ls8_usgs_level1_scene_layer_clone"]
     for test_layer_name in test_layer_names:
         test_layer = wms.contents[test_layer_name]
 
