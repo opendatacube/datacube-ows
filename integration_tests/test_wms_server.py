@@ -126,7 +126,6 @@ def test_wms_getmap(ows_server):
     test_layer_name = contents[0]
     test_layer = wms.contents[test_layer_name]
 
-    assert test_layer == ''
     bbox = test_layer.boundingBoxWGS84
 
     img = wms.getmap(
@@ -168,7 +167,7 @@ def test_wms_getmap_requests(ows_server):
         "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
         "format": "image/png",
         "exceptions": "XML",
-        "time": "2019-07-09"
+        "time": "2021-12-31"
     })
     # Confirm success
     assert resp.status_code == 200
@@ -220,7 +219,7 @@ def test_wms_getmap_qprof(ows_server):
                             "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
                             "format": "image/png",
                             "exceptions": "XML",
-                            "time": "2019-07-09",
+                            "time": "2021-12-31",
                             "ows_stats": "yes"
     })
     # Confirm success
@@ -265,7 +264,7 @@ def test_wms_multidate_getmap(ows_server):
         size=(150, 150),
         format="image/png",
         transparent=True,
-        time="2019-01-30,2019-03-03",
+        time="2021-12-30,2022-01-01",
     )
     assert img.info()["Content-Type"] == "image/png"
 
@@ -276,7 +275,7 @@ def test_wms_style_looping_getmap(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
-    test_layer_names = ["s2_l2a", "ls8_usgs_level1_scene_layer_clone"]
+    test_layer_names = ["s2_l2a", "s2_l2a_clone"]
     for test_layer_name in test_layer_names:
         test_layer = wms.contents[test_layer_name]
 

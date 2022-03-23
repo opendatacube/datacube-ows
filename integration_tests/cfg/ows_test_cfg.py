@@ -476,6 +476,13 @@ style_wofs_obs_wet_only = {
         ]
     },
 }
+style_sentinel_pure_blue = {
+    "name": "blue",
+    "title": "Blue - 490",
+    "abstract": "Blue band, centered on 490nm",
+    "components": {"red": {"blue": 1.0}, "green": {"blue": 1.0}, "blue": {"blue": 1.0}},
+    "scale_range": [0.0, 3000.0],
+}
 
 style_ls_simple_rgb = {
     "name": "simple_rgb",
@@ -484,8 +491,60 @@ style_ls_simple_rgb = {
     "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
     "scale_range": [0.0, 3000.0],
 }
+
+style_ls_ndvi = {
+    "name": "ndvi_delta",
+    "title": "NDVI - Red, NIR",
+    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {"band1": "nir", "band2": "red"},
+    },
+    "needed_bands": ["red", "nir"],
+    "color_ramp": [
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+        {"value": 0.1, "color": "#A35F18"},
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
+        {"value": 1.0, "color": "#114D04"},
+    ],
+    "multi_date": [
+        {
+            "allowed_count_range": [2, 2],
+            "animate": False,
+            "preserve_user_date_order": True,
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_delta",
+            },
+            "mpl_ramp": "RdYlBu",
+            "range": [-1.0, 1.0],
+            "legend": {
+                "begin": "-1.0",
+                "end": "1.0",
+                "ticks": [
+                    "-1.0",
+                    "0.0",
+                    "1.0",
+                ]
+            },
+            "feature_info_label": "ndvi_delta",
+        },
+        {"allowed_count_range": [3, 4], "animate": True},
+    ],
+}
+
 styles_s2_list = [
     style_ls_simple_rgb,
+    style_sentinel_pure_blue,
+    style_ls_ndvi,
 ]
 # Describes a style which uses several bitflags to create a style
 

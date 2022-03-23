@@ -1029,7 +1029,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
-    layer = cfg.product_index.get("ls8_usgs_level1_scene_layer_clone")
+    layer = cfg.product_index.get("s2_l2a_clone")
     assert layer.ready and not layer.hide
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
@@ -1055,10 +1055,9 @@ def test_wcs20_getcoverage_netcdf(ows_server):
     contents = list(wcs.contents)
     layer = cfg.product_index[contents[0]]
     extent = ODCExtent(layer)
-    subsets = extent.wcs2_subsets()
-    # subsets = extent.wcs2_subsets(
-    #     ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326"
-    # )
+    subsets = extent.wcs2_subsets(
+        ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326"
+    )
 
     output = wcs.getCoverage(
         identifier=[layer.name],
@@ -1087,7 +1086,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
     output = wcs.getCoverage(
         identifier=[layer.name],
         format="application/x-netcdf",
-        subsets=[("x", 144, 144.3), ("y", -42.4, -42), ("time", "2019-11-05")],
+        subsets=[("x", 144, 144.3), ("y", -42.4, -42), ("time", "2021-12-31")],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         scalesize="x(400),y(300)",
     )
@@ -1347,7 +1346,7 @@ def test_wcs2_getcov_trim_time(ows_server):
         subsets = [
             subsets[0],
             subsets[1],
-            'time("2019-01-05","2019-01-09")'
+            'time("2021-12-30","2022-01-01")'
         ]
 
     r = requests.get(
@@ -1380,7 +1379,7 @@ def test_wcs2_getcov_badtrim_time(ows_server):
     subsets = [
         subsets[0],
         subsets[1],
-        'time("2019-01-05","2019-01-09","2019-01-15")'
+        'time("2021-12-30","2021-12-31","2022-01-01")'
     ]
 
     check_wcs_error(
@@ -1544,7 +1543,7 @@ def test_wcs2_getcov_bands(ows_server):
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "nir,band_3,band_6",
+            "rangesubset": "green,swir_1",
             "subset": subsets,
         },
     )
@@ -1574,7 +1573,7 @@ def test_wcs2_getcov_band_range(ows_server):
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "band_3:band_6",
+            "rangesubset": "green:swir_1",
             "subset": subsets,
         },
     )
@@ -1604,10 +1603,10 @@ def test_wcs2_getcov_bad_band(ows_server):
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(240),y(400)",
-            "rangesubset": "nir,green,band_6",
+            "rangesubset": "B08,B03,B11",
             "subset": subsets,
         },
-        expected_error_message="No such field band_6",
+        expected_error_message="No such field B08",
         expected_status_code=400,
     )
 
@@ -1635,10 +1634,10 @@ def test_wcs2_getcov_bad_band_range(ows_server):
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "green:band_6",
+            "rangesubset": "B03:B11",
             "subset": subsets,
         },
-        expected_error_message="No such field band_6",
+        expected_error_message="No such field B03",
         expected_status_code=400,
     )
 
@@ -1652,10 +1651,10 @@ def test_wcs2_getcov_bad_band_range(ows_server):
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "band_3:green",
+            "rangesubset": "green:B03",
             "subset": subsets,
         },
-        expected_error_message="No such field band_3",
+        expected_error_message="No such field B03",
         expected_status_code=400,
     )
 
@@ -1727,10 +1726,10 @@ def test_wcs2_getcov_bad_format(ows_server):
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "band_3:green",
+            "rangesubset": "green:B03",
             "subset": subsets,
         },
-        expected_error_message="No such field green",
+        expected_error_message="No such field B03",
         expected_status_code=400,
     )
 

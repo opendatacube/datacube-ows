@@ -7,7 +7,7 @@ def test_wms_i18n(ows_server):
         timeout=10,
         headers={"Accept-Language": "de"}
     )
-    # Confirm success
+    # Confirm successf
     assert "German translation" in resp.text
 
 def test_wcs1_i18n(ows_server):
