@@ -208,10 +208,10 @@ Flask Dev Server
 
         flask run --host=0.0.0.0
 
-Test data
-----------------------
+Integration test data and cfg update
+------------------------------------
 
-Prepare an empty database
+Prepare an empty database and index test product and sample datasets
 
 ```
 datacube system init
@@ -221,6 +221,21 @@ datacube-ows-update --schema --role <db_read_role>
 datacube-ows-update --views
 datacube-ows-update
 ```
+
+create a sql dump
+
+```
+pg_dump odc > dump.sql
+```
+
+Update integration test translation
+
+```
+datacube-ows-cfg extract
+datacube-ows-cfg translate
+```
+
+modify translation for `de` for `assert` test
 
 
 
