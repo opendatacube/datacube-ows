@@ -1,14 +1,13 @@
 # Translations for datacube-ows metadata instance:
-# Open web-services for the Open Data Cube
+# Over-ridden: aardvark
 #
-# Acme Corporation 2021-06-02T15:25:24.869477
+# Acme Corporation 2022-03-24T23:29:57.407805
 msgid ""
 msgstr ""
-"Project-Id-Version: Open web-services for the Open Data Cube "
-"2021-06-02T15:25:24.869477\n"
+"Project-Id-Version: Over-ridden: aardvark 2022-03-24T23:29:57.407805\n"
 "Report-Msgid-Bugs-To: test@example.com\n"
-"POT-Creation-Date: 2021-07-07 09:57+1005\n"
-"PO-Revision-Date: 2021-06-02 15:30+1000\n"
+"POT-Creation-Date: 2022-03-24 23:29+0000\n"
+"PO-Revision-Date: 2022-03-24 23:33+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
 "Language-Team: en <LL@li.org>\n"
@@ -29,7 +28,7 @@ msgstr ""
 "This web-service serves georectified raster data from our very own "
 "special Open Datacube instance."
 
-#. satellite,time-series,australia
+#. time-series,satellite,australia
 msgid "global.local_keywords"
 msgstr "time-series,satellite,australia"
 
@@ -49,285 +48,233 @@ msgstr "Acme Corporation"
 msgid "global.contact_position"
 msgstr "CIO (Chief Imaginary Officer)"
 
-#. Landsat
-msgid "folder.landsat.title"
-msgstr "Landsat"
+#. s2
+msgid "folder.sentinel2.title"
+msgstr "s2"
 
-#. Images from the Landsat satellite
-msgid "folder.landsat.abstract"
-msgstr "Images from the Landsat satellite"
+#. Images from the sentinel 2 satellite
+msgid "folder.sentinel2.abstract"
+msgstr "Images from the sentinel 2 satellite"
 
-#. landsat,landsat7,landsat8
-msgid "folder.landsat.local_keywords"
-msgstr "landsat,landsat8,landsat7"
+#. sentinel2
+msgid "folder.sentinel2.local_keywords"
+msgstr "sentinel2"
 
 #. Open Data Cube - OWS
-msgid "folder.landsat.attribution_title"
+msgid "folder.sentinel2.attribution_title"
 msgstr "Open Data Cube - OWS"
 
-#. Level 1 USGS Landsat-8 Public Data Set
-msgid "layer.ls8_usgs_level1_scene_layer.title"
-msgstr "Level 1 USGS Landsat-8 Public Data Set"
+#. Surface reflectance (Sentinel-2)
+msgid "layer.s2_l2a.title"
+msgstr "Surface reflectance (Sentinel-2)"
 
-#. Imagery from the Level 1 Landsat-8 USGS Public Data Set
-msgid "layer.ls8_usgs_level1_scene_layer.abstract"
-msgstr "Imagery from the Level 1 Landsat-8 USGS Public Data Set"
+#. layer s2_l2a
+msgid "layer.s2_l2a.abstract"
+msgstr "layer s2_l2a"
 
-msgid "layer.ls8_usgs_level1_scene_layer.local_keywords"
+msgid "layer.s2_l2a.local_keywords"
 msgstr ""
 
-#. band_1
-msgid "layer.ls8_usgs_level1_scene_layer.bands.coastal_aerosol"
-msgstr "band_1"
+#. coastal_aerosol
+msgid "layer.s2_l2a.bands.B01"
+msgstr "coastal_aerosol"
 
-#. band_2
-msgid "layer.ls8_usgs_level1_scene_layer.bands.blue"
-msgstr "band_2"
+#. blue
+msgid "layer.s2_l2a.bands.B02"
+msgstr "blue"
 
-#. band_3
-msgid "layer.ls8_usgs_level1_scene_layer.bands.green"
-msgstr "band_3"
+#. green
+msgid "layer.s2_l2a.bands.B03"
+msgstr "green"
 
-#. band_4
-msgid "layer.ls8_usgs_level1_scene_layer.bands.red"
-msgstr "band_4"
+#. red
+msgid "layer.s2_l2a.bands.B04"
+msgstr "red"
+
+#. red_edge_1
+msgid "layer.s2_l2a.bands.B05"
+msgstr "red_edge_1"
+
+#. red_edge_2
+msgid "layer.s2_l2a.bands.B06"
+msgstr "red_edge_2"
+
+#. red_edge_3
+msgid "layer.s2_l2a.bands.B07"
+msgstr "red_edge_3"
 
 #. nir
-msgid "layer.ls8_usgs_level1_scene_layer.bands.nir"
+msgid "layer.s2_l2a.bands.B08"
 msgstr "nir"
 
-#. band_6
-msgid "layer.ls8_usgs_level1_scene_layer.bands.swir1"
-msgstr "band_6"
+#. nir_narrow
+msgid "layer.s2_l2a.bands.B8A"
+msgstr "nir_narrow"
 
-#. band_7
-msgid "layer.ls8_usgs_level1_scene_layer.bands.swir2"
-msgstr "band_7"
+#. water_vapour
+msgid "layer.s2_l2a.bands.B09"
+msgstr "water_vapour"
 
-#. band_8
-msgid "layer.ls8_usgs_level1_scene_layer.bands.panchromatic"
-msgstr "band_8"
+#. swir_1
+msgid "layer.s2_l2a.bands.B11"
+msgstr "swir_1"
 
-#. band_9
-msgid "layer.ls8_usgs_level1_scene_layer.bands.cirrus"
-msgstr "band_9"
+#. swir_2
+msgid "layer.s2_l2a.bands.B12"
+msgstr "swir_2"
 
-#. band_10
-msgid "layer.ls8_usgs_level1_scene_layer.bands.lwir1"
-msgstr "band_10"
+#. aerosol_optical_thickness
+msgid "layer.s2_l2a.bands.AOT"
+msgstr "aerosol_optical_thickness"
 
-#. band_11
-msgid "layer.ls8_usgs_level1_scene_layer.bands.lwir2"
-msgstr "band_11"
+#. scene_average_water_vapour
+msgid "layer.s2_l2a.bands.WVP"
+msgstr "scene_average_water_vapour"
 
-#. QUALITY
-msgid "layer.ls8_usgs_level1_scene_layer.bands.quality"
-msgstr "QUALITY"
+#. mask
+msgid "layer.s2_l2a.bands.SCL"
+msgstr "mask"
 
 #. Simple RGB
-msgid "style.ls8_usgs_level1_scene_layer.simple_rgb.title"
+msgid "style.s2_l2a.simple_rgb.title"
 msgstr "Simple RGB"
 
 #. Simple true-colour image, using the red, green and blue bands
-msgid "style.ls8_usgs_level1_scene_layer.simple_rgb.abstract"
+msgid "style.s2_l2a.simple_rgb.abstract"
 msgstr "Simple true-colour image, using the red, green and blue bands"
 
-#. Simple RGB Clone
-msgid "style.ls8_usgs_level1_scene_layer.simple_rgb_clone.title"
-msgstr "Simple RGB Clone"
+#. Blue - 490
+msgid "style.s2_l2a.blue.title"
+msgstr "Blue - 490"
 
-#. Simple true-colour image, using the red, green and blue bands
-msgid "style.ls8_usgs_level1_scene_layer.simple_rgb_clone.abstract"
-msgstr "Simple true-colour image, using the red, green and blue bands"
+#. Blue band, centered on 490nm
+msgid "style.s2_l2a.blue.abstract"
+msgstr "Blue band, centered on 490nm"
 
-#. False colour multi-band infra-red
-msgid "style.ls8_usgs_level1_scene_layer.infra_red.title"
-msgstr "False colour multi-band infra-red"
-
-#. Simple false-colour image, using the near and short-wave infra-red bands
-msgid "style.ls8_usgs_level1_scene_layer.infra_red.abstract"
-msgstr "Simple false-colour image, using the near and short-wave infra-red bands"
-
-#. Spectral band 2 - Blue
-msgid "style.ls8_usgs_level1_scene_layer.blue.title"
-msgstr "Spectral band 2 - Blue"
-
-#. Blue band, approximately 453nm to 511nm
-msgid "style.ls8_usgs_level1_scene_layer.blue.abstract"
-msgstr "Blue band, approximately 453nm to 511nm"
-
-#. NDVI
-msgid "style.ls8_usgs_level1_scene_layer.ndvi.title"
-msgstr "NDVI"
+#. NDVI - Red, NIR
+msgid "style.s2_l2a.ndvi_delta.title"
+msgstr "NDVI - Red, NIR"
 
 #. Normalised Difference Vegetation Index - a derived index that correlates
 #. well with the existence of vegetation
-msgid "style.ls8_usgs_level1_scene_layer.ndvi.abstract"
+msgid "style.s2_l2a.ndvi_delta.abstract"
 msgstr ""
 "Normalised Difference Vegetation Index - a derived index that correlates "
 "well with the existence of vegetation"
 
-#. NDVI
-msgid "style.ls8_usgs_level1_scene_layer.ndvi_expr.title"
-msgstr "NDVI"
+#. NDVI - Red, NIR
+msgid "style.s2_l2a.ndvi_delta.legend.1.title"
+msgstr "NDVI - Red, NIR"
 
-#. Normalised Difference Vegetation Index - a derived index that correlates
-#. well with the existence of vegetation
-msgid "style.ls8_usgs_level1_scene_layer.ndvi_expr.abstract"
-msgstr ""
-"Normalised Difference Vegetation Index - a derived index that correlates "
-"well with the existence of vegetation"
+#. NDVI - Red, NIR
+msgid "style.s2_l2a.ndvi_delta.legend.2.title"
+msgstr "NDVI - Red, NIR"
 
-#. NDVI Delta
-msgid "style.ls8_usgs_level1_scene_layer.ndvi_delta.title"
-msgstr "NDVI Delta"
+#. s2_l2a Clone
+msgid "layer.s2_l2a_clone.title"
+msgstr "s2_l2a Clone"
 
-#. Normalised Difference Vegetation Index - with delta support
-msgid "style.ls8_usgs_level1_scene_layer.ndvi_delta.abstract"
-msgstr "Normalised Difference Vegetation Index - with delta support"
+#. Imagery from the s2_l2a Clone
+msgid "layer.s2_l2a_clone.abstract"
+msgstr "Imagery from the s2_l2a Clone"
 
-#. NDVI plus RGB
-msgid "style.ls8_usgs_level1_scene_layer.rgb_ndvi.title"
-msgstr "NDVI plus RGB"
-
-#. Normalised Difference Vegetation Index (blended with RGB) - a derived index
-#. that correlates well with the existence of vegetation
-msgid "style.ls8_usgs_level1_scene_layer.rgb_ndvi.abstract"
-msgstr ""
-"Normalised Difference Vegetation Index (blended with RGB) - a derived "
-"index that correlates well with the existence of vegetation"
-
-#. Level 1 USGS Landsat-8 Public Data Set Clone
-msgid "layer.ls8_usgs_level1_scene_layer_clone.title"
-msgstr "Level 1 USGS Landsat-8 Public Data Set Clone"
-
-#. Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone
-msgid "layer.ls8_usgs_level1_scene_layer_clone.abstract"
-msgstr "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone"
-
-msgid "layer.ls8_usgs_level1_scene_layer_clone.local_keywords"
+msgid "layer.s2_l2a_clone.local_keywords"
 msgstr ""
 
-#. band_1
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.coastal_aerosol"
-msgstr "band_1"
+#. coastal_aerosol
+msgid "layer.s2_l2a_clone.bands.B01"
+msgstr "coastal_aerosol"
 
-#. band_2
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.blue"
-msgstr "band_2"
+#. blue
+msgid "layer.s2_l2a_clone.bands.B02"
+msgstr "blue"
 
-#. band_3
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.green"
-msgstr "band_3"
+#. green
+msgid "layer.s2_l2a_clone.bands.B03"
+msgstr "green"
 
-#. band_4
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.red"
-msgstr "band_4"
+#. red
+msgid "layer.s2_l2a_clone.bands.B04"
+msgstr "red"
+
+#. red_edge_1
+msgid "layer.s2_l2a_clone.bands.B05"
+msgstr "red_edge_1"
+
+#. red_edge_2
+msgid "layer.s2_l2a_clone.bands.B06"
+msgstr "red_edge_2"
+
+#. red_edge_3
+msgid "layer.s2_l2a_clone.bands.B07"
+msgstr "red_edge_3"
 
 #. nir
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.nir"
+msgid "layer.s2_l2a_clone.bands.B08"
 msgstr "nir"
 
-#. band_6
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.swir1"
-msgstr "band_6"
+#. nir_narrow
+msgid "layer.s2_l2a_clone.bands.B8A"
+msgstr "nir_narrow"
 
-#. band_7
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.swir2"
-msgstr "band_7"
+#. water_vapour
+msgid "layer.s2_l2a_clone.bands.B09"
+msgstr "water_vapour"
 
-#. band_8
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.panchromatic"
-msgstr "band_8"
+#. swir_1
+msgid "layer.s2_l2a_clone.bands.B11"
+msgstr "swir_1"
 
-#. band_9
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.cirrus"
-msgstr "band_9"
+#. swir_2
+msgid "layer.s2_l2a_clone.bands.B12"
+msgstr "swir_2"
 
-#. band_10
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.lwir1"
-msgstr "band_10"
+#. aerosol_optical_thickness
+msgid "layer.s2_l2a_clone.bands.AOT"
+msgstr "aerosol_optical_thickness"
 
-#. band_11
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.lwir2"
-msgstr "band_11"
+#. scene_average_water_vapour
+msgid "layer.s2_l2a_clone.bands.WVP"
+msgstr "scene_average_water_vapour"
 
-#. QUALITY
-msgid "layer.ls8_usgs_level1_scene_layer_clone.bands.quality"
-msgstr "QUALITY"
+#. mask
+msgid "layer.s2_l2a_clone.bands.SCL"
+msgstr "mask"
 
 #. Simple RGB
-msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb.title"
+msgid "style.s2_l2a_clone.simple_rgb.title"
 msgstr "Simple RGB"
 
 #. Simple true-colour image, using the red, green and blue bands
-msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb.abstract"
+msgid "style.s2_l2a_clone.simple_rgb.abstract"
 msgstr "Simple true-colour image, using the red, green and blue bands"
 
-#. Simple RGB Clone
-msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb_clone.title"
-msgstr "Simple RGB Clone"
+#. Blue - 490
+msgid "style.s2_l2a_clone.blue.title"
+msgstr "Blue - 490"
 
-#. Simple true-colour image, using the red, green and blue bands
-msgid "style.ls8_usgs_level1_scene_layer_clone.simple_rgb_clone.abstract"
-msgstr "Simple true-colour image, using the red, green and blue bands"
+#. Blue band, centered on 490nm
+msgid "style.s2_l2a_clone.blue.abstract"
+msgstr "Blue band, centered on 490nm"
 
-#. False colour multi-band infra-red
-msgid "style.ls8_usgs_level1_scene_layer_clone.infra_red.title"
-msgstr "False colour multi-band infra-red"
-
-#. Simple false-colour image, using the near and short-wave infra-red bands
-msgid "style.ls8_usgs_level1_scene_layer_clone.infra_red.abstract"
-msgstr "Simple false-colour image, using the near and short-wave infra-red bands"
-
-#. Spectral band 2 - Blue
-msgid "style.ls8_usgs_level1_scene_layer_clone.blue.title"
-msgstr "Spectral band 2 - Blue"
-
-#. Blue band, approximately 453nm to 511nm
-msgid "style.ls8_usgs_level1_scene_layer_clone.blue.abstract"
-msgstr "Blue band, approximately 453nm to 511nm"
-
-#. NDVI
-msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi.title"
-msgstr "NDVI"
+#. NDVI - Red, NIR
+msgid "style.s2_l2a_clone.ndvi_delta.title"
+msgstr "NDVI - Red, NIR"
 
 #. Normalised Difference Vegetation Index - a derived index that correlates
 #. well with the existence of vegetation
-msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi.abstract"
+msgid "style.s2_l2a_clone.ndvi_delta.abstract"
 msgstr ""
 "Normalised Difference Vegetation Index - a derived index that correlates "
 "well with the existence of vegetation"
 
-#. NDVI
-msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_expr.title"
-msgstr "NDVI"
+#. NDVI - Red, NIR
+msgid "style.s2_l2a_clone.ndvi_delta.legend.1.title"
+msgstr "NDVI - Red, NIR"
 
-#. Normalised Difference Vegetation Index - a derived index that correlates
-#. well with the existence of vegetation
-msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_expr.abstract"
-msgstr ""
-"Normalised Difference Vegetation Index - a derived index that correlates "
-"well with the existence of vegetation"
-
-#. NDVI Delta
-msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_delta.title"
-msgstr "NDVI Delta"
-
-#. Normalised Difference Vegetation Index - with delta support
-msgid "style.ls8_usgs_level1_scene_layer_clone.ndvi_delta.abstract"
-msgstr "Normalised Difference Vegetation Index - with delta support"
-
-#. NDVI plus RGB
-msgid "style.ls8_usgs_level1_scene_layer_clone.rgb_ndvi.title"
-msgstr "NDVI plus RGB"
-
-#. Normalised Difference Vegetation Index (blended with RGB) - a derived index
-#. that correlates well with the existence of vegetation
-msgid "style.ls8_usgs_level1_scene_layer_clone.rgb_ndvi.abstract"
-msgstr ""
-"Normalised Difference Vegetation Index (blended with RGB) - a derived "
-"index that correlates well with the existence of vegetation"
+#. NDVI - Red, NIR
+msgid "style.s2_l2a_clone.ndvi_delta.legend.2.title"
+msgstr "NDVI - Red, NIR"
 
 #. Fractional Cover
 msgid "folder.fc.title"
@@ -490,6 +437,45 @@ msgstr "Observations"
 msgid "style.wofs_albers.observations.abstract"
 msgstr "Observations"
 
+msgid "style.wofs_albers.observations.legend.1.title"
+msgstr ""
+
+#. Dry
+msgid "style.wofs_albers.observations.legend.1.rule_10"
+msgstr "Dry"
+
+#. Water
+msgid "style.wofs_albers.observations.legend.1.rule_9"
+msgstr "Water"
+
+#. Steep Terrain
+msgid "style.wofs_albers.observations.legend.1.rule_8"
+msgstr "Steep Terrain"
+
+#. Terrain Shadow or Low Sun Angle
+msgid "style.wofs_albers.observations.legend.1.rule_7"
+msgstr "Terrain Shadow or Low Sun Angle"
+
+#. Cloud Shadow
+msgid "style.wofs_albers.observations.legend.1.rule_6"
+msgstr "Cloud Shadow"
+
+#. Cloud
+msgid "style.wofs_albers.observations.legend.1.rule_5"
+msgstr "Cloud"
+
+#. Shaded Water
+msgid "style.wofs_albers.observations.legend.1.rule_4"
+msgstr "Shaded Water"
+
+#. Cloudy Water
+msgid "style.wofs_albers.observations.legend.1.rule_3"
+msgstr "Cloudy Water"
+
+#. Cloudy Steep Terrain
+msgid "style.wofs_albers.observations.legend.1.rule_2"
+msgstr "Cloudy Steep Terrain"
+
 #. Wet Only
 msgid "style.wofs_albers.wet.title"
 msgstr "Wet Only"
@@ -497,6 +483,13 @@ msgstr "Wet Only"
 #. Wet Only
 msgid "style.wofs_albers.wet.abstract"
 msgstr "Wet Only"
+
+msgid "style.wofs_albers.wet.legend.1.title"
+msgstr ""
+
+#. Wet - Wet or Sea
+msgid "style.wofs_albers.wet.legend.1.rule_3"
+msgstr "Wet - Wet or Sea"
 
 #. Fractional Cover 25m 100km tile (Fractional Cover Landsat 7)
 msgid "layer.ls7_fc_albers.title"

@@ -1083,10 +1083,13 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, "EPSG:4326"
     )
+    # assert subsets == ''
     output = wcs.getCoverage(
         identifier=[layer.name],
         format="application/x-netcdf",
-        subsets=[("x", 144, 144.3), ("y", -42.4, -42), ("time", "2021-12-31")],
+        # 13149614.84995544%2C-1878516.4071364924%2C13462700.917811524%2C-1565430.3392804079
+        subsets=subsets,
+        # subsets=[("x", -14.5612479929242, 88.48139852092), ("y", 43.1437521655304, 45.874209971104), ("time", "2021-12-31")],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         scalesize="x(400),y(300)",
     )
