@@ -5,6 +5,8 @@ USER root
 RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
             git \
+            # For pybabel
+            python3-distutils \
             # For Psycopg2
             libpq-dev python3-dev \
             gcc \
@@ -35,6 +37,7 @@ FROM osgeo/gdal:ubuntu-small-latest
 # all the python pip installed libraries
 COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
 COPY --from=builder  /usr/lib/python3/dist-packages /usr/lib/python3/dist-packages
+COPY --from=builder  /usr/lib/python3.8/distutils/* /usr/lib/python3.8/distutils/
 # postgres client
 COPY --from=builder  /usr/lib/postgresql /usr/lib/postgresql
 COPY --from=builder  /usr/share/postgresql /usr/share/postgresql
@@ -53,7 +56,8 @@ COPY --from=builder  /usr/local/bin/datacube-ows-cfg /usr/local/bin/datacube-ows
 COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
 # gunicorn cli
 COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
-
+# pybabel cli
+COPY --from=builder  /usr/local/bin/pybabel /usr/local/bin/pybabel 
 # make folders for testing and keep code in image
 RUN mkdir -p /code
 # Copy source code and install it
