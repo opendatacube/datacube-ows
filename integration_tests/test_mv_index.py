@@ -111,6 +111,7 @@ def test_extent_and_spatial():
     small_geom = box(
         small_bbox[0], small_bbox[1], small_bbox[2], small_bbox[3], "EPSG:4326"
     )
+    
     with cube() as dc:
         all_ext = mv_search(
             dc.index, MVSelectOpts.EXTENT, geom=layer_ext_geom, products=lyr.products
