@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 {% macro render_layer(lyr, depth=0) -%}
     {% if lyr.named %}
-        {{ render_named_layer(lyr) }}
+        {{ render_named_layer(lyr, depth=depth) }}
     {% else %}
         {{ render_folder_layer(lyr, depth=depth) }}
     {% endif %}
@@ -34,7 +34,7 @@
     </Layer>
     {%  endif %}
 {%- endmacro %}
-{% macro render_named_layer(lyr) -%}
+{% macro render_named_layer(lyr, depth=0) -%}
     {% if not lyr.hide %}
     {% set lyr_ranges = lyr.ranges %}
     <Layer queryable="1">
