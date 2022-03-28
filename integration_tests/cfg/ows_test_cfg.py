@@ -484,14 +484,6 @@ style_sentinel_pure_blue = {
     "scale_range": [0.0, 3000.0],
 }
 
-style_ls_simple_rgb = {
-    "name": "simple_rgb",
-    "title": "Simple RGB",
-    "abstract": "Simple true-colour image, using the red, green and blue bands",
-    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
-    "scale_range": [0.0, 3000.0],
-}
-
 style_ls_ndvi = {
     "name": "ndvi_delta",
     "title": "NDVI - Red, NIR",

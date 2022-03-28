@@ -1,10 +1,11 @@
 # Translations for datacube-ows metadata instance:
-# Over-ridden: aardvark
+# Open web-services for the Open Data Cube
 #
 # Acme Corporation 2022-03-24T23:29:57.407805
 msgid ""
 msgstr ""
-"Project-Id-Version: Over-ridden: aardvark 2022-03-24T23:29:57.407805\n"
+"Project-Id-Version: Open web-services for the Open Data Cube "
+"2022-03-24T23:29:57.407805\n"
 "Report-Msgid-Bugs-To: test@example.com\n"
 "POT-Creation-Date: 2022-03-24 23:29+0000\n"
 "PO-Revision-Date: 2022-03-24 23:33+0000\n"
@@ -24,7 +25,7 @@ msgstr "This is the German translation of the title"
 #. This web-service serves georectified raster data from our very own special
 #. Open Datacube instance.
 msgid "global.abstract"
-msgstr ""	
+msgstr ""
 "This is the German translation of the abstract of this very special Open "	
 "Datacube instance."
 
@@ -81,15 +82,15 @@ msgstr "coastal_aerosol"
 
 #. blue
 msgid "layer.s2_l2a.bands.B02"
-msgstr "blue"
+msgstr "blau"
 
 #. green
 msgid "layer.s2_l2a.bands.B03"
-msgstr "green"
+msgstr "gruen"
 
 #. red
 msgid "layer.s2_l2a.bands.B04"
-msgstr "red"
+msgstr "rot"
 
 #. red_edge_1
 msgid "layer.s2_l2a.bands.B05"
