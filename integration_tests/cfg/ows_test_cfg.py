@@ -72,6 +72,13 @@ style_ls_simple_rgb = {
     # The raw band value range to be compressed to an 8 bit range for the output image tiles.
     # Band values outside this range are clipped to 0 or 255 as appropriate.
     "scale_range": [0.0, 3000.0],
+    "pq_masks": [
+        {
+            "band": "SCL",
+            "invert": True,
+            "values": [0],
+        }
+    ],
     "legend": {
         "show_legend": True,
         "url": {
@@ -725,6 +732,15 @@ ows_cfg = {
                         "manual_merge": False,  # True
                         "apply_solar_corrections": False,
                     },
+                    "flags": [
+                        {
+                            "band": "SCL",
+                            "product": "s2_l2a",
+                            "ignore_time": False,
+                            "ignore_info_flags": [],
+                            "manual_merge": True,
+                        },
+                    ],
                     "native_crs": "EPSG:3857",
                     "native_resolution": [30.0, -30.0],
                     "styling": {
