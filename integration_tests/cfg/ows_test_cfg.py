@@ -122,6 +122,26 @@ style_sentinel_pure_blue = {
     "scale_range": [0.0, 3000.0],
 }
 
+# Hybrid style - blends a linear mapping and an colour-ramped index style
+# There is no scientific justification for these styles, I just think they look cool.  :)
+style_rgb_ndvi = {
+    "name": "rgb_ndvi",
+    "title": "NDVI plus RGB",
+    "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
+    # Mixing ration between linear components and colour ramped index. 1.0 is fully linear components, 0.0 is fully colour ramp.
+    "component_ratio": 0.6,
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {"band1": "nir", "band2": "red"},
+    },
+    "needed_bands": ["red", "nir"],
+    "range": [0.0, 1.0],
+    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
+    "scale_range": [0.0, 65535.0],
+    # N.B. The "pq_mask" section works the same as for the style types above.
+}
+
 style_ls_ndvi_delta = {
     "name": "ndvi_delta",
     "title": "NDVI - Red, NIR",
@@ -176,6 +196,7 @@ styles_s2_list = [
     style_ls_simple_rgb_clone,
     style_infrared_false_colour,
     style_sentinel_pure_blue,
+    style_rgb_ndvi,
     style_ls_ndvi_delta,
 ]
 
