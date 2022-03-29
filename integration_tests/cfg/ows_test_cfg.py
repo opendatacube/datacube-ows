@@ -17,20 +17,24 @@ else:
 # Please refer to datacube_ows/ows_cfg_example.py for EXAMPLE CONFIG
 
 # REUSABLE CONFIG FRAGMENTS - Band alias maps
-ls8_usgs_level1_bands = {
-    "coastal_aerosol": ["band_1"],
-    "blue": ["band_2"],
-    "green": ["band_3", "green"],
-    "red": ["band_4", "pink"],
-    "nir": ["nir", "band_5"],
-    "swir1": ["band_6"],
-    "swir2": ["band_7"],
-    "panchromatic": ["band_8"],
-    "cirrus": ["band_9"],
-    "lwir1": ["band_10"],
-    "lwir2": ["band_11"],
-    "quality": ["QUALITY"],
+bands_sentinel = {
+    "B01": ["coastal_aerosol"],
+    "B02": ["blue"],
+    "B03": ["green"],
+    "B04": ["red"],
+    "B05": ["red_edge_1"],
+    "B06": ["red_edge_2"],
+    "B07": ["red_edge_3"],
+    "B08": ["nir", "nir_1"],
+    "B8A": ["nir_narrow", "nir_2"],
+    "B09": ["water_vapour"],
+    "B11": ["swir_1", "swir_16"],
+    "B12": ["swir_2", "swir_22"],
+    "AOT": ["aerosol_optical_thickness"],
+    "WVP": ["scene_average_water_vapour"],
+    "SCL": ["mask", "qa"],
 }
+
 
 bands_fc = {
     "BS": ["bare_soil"],
@@ -44,8 +48,9 @@ bands_wofs_obs = {
 
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions
-# Examples of styles which are linear combinations of the available spectral bands.
-style_rgb = {
+
+
+style_ls_simple_rgb = {
     # Machine readable style name. (required.  Must be unique within a layer.)
     "name": "simple_rgb",
     # Human readable style title (required.  Must be unique within a layer.)
@@ -59,18 +64,19 @@ style_rgb = {
             # Band aliases may be used here.
             # Values are multipliers.  The should add to 1.0 for each component to preserve overall brightness levels,
             # but this is not enforced.
-            "pink": 1.0
+            "red": 1.0
         },
         "green": {"green": 1.0},
         "blue": {"blue": 1.0},
     },
     # The raw band value range to be compressed to an 8 bit range for the output image tiles.
     # Band values outside this range are clipped to 0 or 255 as appropriate.
-    "scale_range": [0.0, 65535.0],
+    "scale_range": [0.0, 3000.0],
     "pq_masks": [
         {
-            "band": "quality",
-            "flags": {"cloud": False}
+            "band": "SCL",
+            "invert": True,
+            "values": [0],
         }
     ],
     "legend": {
@@ -79,13 +85,14 @@ style_rgb = {
             "en": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png"
         }
     }
+
 }
 
-style_rgb_clone = {
-    "inherits": {"layer": "ls8_usgs_level1_scene_layer", "style": "simple_rgb"},
-    "name": "simple_rgb_clone",
+style_ls_simple_rgb_clone = {
+    "inherits": {"layer": "s2_l2a", "style": "simple_rgb"},
+    "name": "style_ls_simple_rgb_clone",
     "title": "Simple RGB Clone",
-    "scale_range": [0.0, 20000.0],
+    "scale_range": [0.0, 3000.0],
 }
 
 style_infrared_false_colour = {
@@ -94,7 +101,7 @@ style_infrared_false_colour = {
     "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
     "components": {
         "red": {
-            "swir1": 1.0,
+            "B11": 1.0,
             # The special dictionary value 'scale_range' can be used to provide a component-specific
             # scale_range that overrides the style scale_range below.
             # (N.B. if you are unlucky enough to have a native band called "scale_range", you can access it
@@ -102,11 +109,11 @@ style_infrared_false_colour = {
             "scale_range": [5.0, 4000.0],
         },
         "green": {
-            "swir2": 1.0,
+            "B12": 1.0,
             "scale_range": [25.0, 4000.0],
         },
         "blue": {
-            "nir": 1.0,
+            "B08": 1.0,
             "scale_range": [0.0, 3000.0],
         },
     },
@@ -114,15 +121,13 @@ style_infrared_false_colour = {
     # "scale_range": [0.0, 3000.0]
 }
 
-
-style_pure_ls8_blue = {
+style_sentinel_pure_blue = {
     "name": "blue",
-    "title": "Spectral band 2 - Blue",
-    "abstract": "Blue band, approximately 453nm to 511nm",
+    "title": "Blue - 490",
+    "abstract": "Blue band, centered on 490nm",
     "components": {"red": {"blue": 1.0}, "green": {"blue": 1.0}, "blue": {"blue": 1.0}},
-    "scale_range": [0.0, 65535.0],
+    "scale_range": [0.0, 3000.0],
 }
-
 # Examples of non-linear colour-ramped styles.
 style_ndvi = {
     "name": "ndvi",
@@ -213,69 +218,6 @@ style_ndvi_expr = {
     # Defaults to True.
     "include_in_feature_info": True,
 }
-
-# Examples of non-linear colour-ramped style with multi-date support.
-style_ndvi_delta = {
-    "name": "ndvi_delta",
-    "title": "NDVI Delta",
-    "abstract": "Normalised Difference Vegetation Index - with delta support",
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "mapped_bands": True,
-        "kwargs": {"band1": "nir", "band2": "red"},
-    },
-    "needed_bands": ["red", "nir"],
-    # The color ramp for single-date requests - same as ndvi style example above
-    "color_ramp": [
-        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
-        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
-        {"value": 0.1, "color": "#A35F18"},
-        {"value": 0.2, "color": "#B88512"},
-        {"value": 0.3, "color": "#CEAC0E"},
-        {"value": 0.4, "color": "#E5D609"},
-        {"value": 0.5, "color": "#FFFF0C"},
-        {"value": 0.6, "color": "#C3DE09"},
-        {"value": 0.7, "color": "#88B808"},
-        {"value": 0.8, "color": "#529400"},
-        {"value": 0.9, "color": "#237100"},
-        {"value": 1.0, "color": "#114D04"},
-    ],
-    "include_in_feature_info": True,
-    "legend": {
-        "show_legend": True,
-    },
-    # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
-    "multi_date": [
-        # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
-        {
-            # The count range for which this handler is to be used - a tuple of two ints, the smallest and
-            # largest date counts for which this handler will be used.  Required.
-            "allowed_count_range": [2, 2],
-            # A function, expressed in the standard format as described elsewhere in this example file.
-            # The function is assumed to take one arguments, an xarray Dataset.
-            # The function returns an xarray Dataset with a single band, which is the input to the
-            # colour ramp defined below.
-            "aggregator_function": {
-                "function": "datacube_ows.band_utils.multi_date_delta"
-            },
-            # The multi-date color ramp.  May be defined as an explicit colour ramp, as shown above for the single
-            # date case; or may be defined with a range and unscaled color ramp as shown here.
-            #
-            # The range specifies the min and max values for the color ramp.  Required if an explicit color
-            # ramp is not defined.
-            "range": [-1.0, 1.0],
-            # The name of a named matplotlib color ramp.
-            # Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
-            # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
-            # kind of ugly) blue-to-red rainbow ramp.
-            "mpl_ramp": "RdBu",
-            # The feature info label for the multi-date index value.
-            "feature_info_label": "ndvi_delta",
-        }
-    ],
-}
-
-
 # Hybrid style - blends a linear mapping and an colour-ramped index style
 # There is no scientific justification for these styles, I just think they look cool.  :)
 style_rgb_ndvi = {
@@ -295,14 +237,66 @@ style_rgb_ndvi = {
     "scale_range": [0.0, 65535.0],
     # N.B. The "pq_mask" section works the same as for the style types above.
 }
-style_ls_simple_rgb = {
-    "name": "simple_rgb",
-    "title": "Simple RGB",
-    "abstract": "Simple true-colour image, using the red, green and blue bands",
-    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
-    "scale_range": [0.0, 3000.0],
 
+style_ls_ndvi_delta = {
+    "name": "ndvi_delta",
+    "title": "NDVI - Red, NIR",
+    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {"band1": "nir", "band2": "red"},
+    },
+    "needed_bands": ["red", "nir"],
+    "color_ramp": [
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+        {"value": 0.1, "color": "#A35F18"},
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
+        {"value": 1.0, "color": "#114D04"},
+    ],
+    "multi_date": [
+        {
+            "allowed_count_range": [2, 2],
+            "animate": False,
+            "preserve_user_date_order": True,
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_delta",
+            },
+            "mpl_ramp": "RdYlBu",
+            "range": [-1.0, 1.0],
+            "legend": {
+                "begin": "-1.0",
+                "end": "1.0",
+                "ticks": [
+                    "-1.0",
+                    "0.0",
+                    "1.0",
+                ]
+            },
+            "feature_info_label": "ndvi_delta",
+        },
+        {"allowed_count_range": [3, 4], "animate": True},
+    ],
 }
+
+styles_s2_list = [
+    style_ls_simple_rgb,
+    style_ls_simple_rgb_clone,
+    style_infrared_false_colour,
+    style_sentinel_pure_blue,
+    style_ndvi,
+    style_ndvi_expr,
+    style_rgb_ndvi,
+    style_ls_ndvi_delta,
+]
 
 style_fc_simple = {
     "name": "simple_fc",
@@ -461,6 +455,24 @@ style_wofs_obs_wet_only = {
 # Describes a style which uses several bitflags to create a style
 
 # REUSABLE CONFIG FRAGMENTS - resource limit declarations
+dataset_cache_rules = [
+    {
+        "min_datasets": 5,
+        "max_age": 60 * 60 * 24,
+    },
+    {
+        "min_datasets": 9,
+        "max_age": 60 * 60 * 24 * 7,
+    },
+    {
+        "min_datasets": 17,
+        "max_age": 60 * 60 * 24 * 30,
+    },
+    {
+        "min_datasets": 65,
+        "max_age": 60 * 60 * 24 * 120,
+    },
+]
 
 standard_resource_limits = {
     "wms": {
@@ -482,6 +494,18 @@ reslim_aster = {
     },
     "wcs": {
         # "max_datasets": 16, # Defaults to no dataset limit
+    },
+}
+
+reslim_continental = {
+    "wms": {
+        "zoomed_out_fill_colour": [150, 180, 200, 160],
+        "min_zoom_factor": 10.0,
+        # "max_datasets": 16, # Defaults to no dataset limit
+        "dataset_cache_rules": dataset_cache_rules,
+    },
+    "wcs": {
+        "max_datasets": 32,  # Defaults to no dataset limit
     },
 }
 
@@ -671,9 +695,9 @@ ows_cfg = {
     #    is also a coverage, that may be requested in WCS DescribeCoverage or WCS GetCoverage requests.
     "layers": [
         {
-            "title": "Landsat",
-            "abstract": "Images from the Landsat satellite",
-            "keywords": ["landsat", "landsat8", "landsat7"],
+            "title": "s2",
+            "abstract": "Images from the sentinel 2 satellite",
+            "keywords": ["sentinel2"],
             "attribution": {
                 # Attribution must contain at least one of ("title", "url" and "logo")
                 # A human readable title for the attribution - e.g. the name of the attributed organisation
@@ -692,70 +716,46 @@ ows_cfg = {
                     "format": "image/png",
                 },
             },
-            "label": "landsat",
+            "label": "sentinel2",
             "layers": [
                 {
-                    # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
-                    "title": "Level 1 USGS Landsat-8 Public Data Set",
-                    "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set",
-                    "name": "ls8_usgs_level1_scene_layer",
-                    "product_name": "ls8_usgs_level1_scene",
-                    "user_band_math": True,
-                    "bands": ls8_usgs_level1_bands,
-                    "resource_limits": standard_resource_limits,
-                    "native_crs": "EPSG:4326",
-                    "native_resolution": [0.000225, 0.000225],
+                    "title": "Surface reflectance (Sentinel-2)",
+                    "name": "s2_l2a",
+                    "abstract": """layer s2_l2a""",
+                    "product_name": "s2_l2a",
+                    "bands": bands_sentinel,
+                    "dynamic": True,
+                    "resource_limits": reslim_continental,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": False,  # True
+                        "apply_solar_corrections": False,
+                    },
                     "flags": [
                         {
-                            "band": "quality",
-                            "product": "ls8_usgs_level1_scene",
+                            "band": "SCL",
+                            "product": "s2_l2a",
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "manual_merge": True,
                         },
                     ],
-                    "image_processing": {
-                        # Extent mask function
-                        #
-                        # See documentation above.  This is an example of multiple extent_mask_functions.
-                        "extent_mask_func": [
-                            "datacube_ows.ogc_utils.mask_by_quality",
-                            "datacube_ows.ogc_utils.mask_by_val",
-                        ],
-                        # Bands to always fetch from the Datacube, even if it is not used by the active style.
-                        # Useful for when a particular band is always needed for the extent_mask_func, as
-                        # is the case here.
-                        "always_fetch_bands": ["quality"],
-                        "fuse_func": None,
-                        "manual_merge": True,
-                        # Apply corrections for solar angle, for "Level 1" products.
-                        # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
-                        "apply_solar_corrections": True,
-                    },
-                    "wcs": {
-                    },
+                    "native_crs": "EPSG:3857",
+                    "native_resolution": [30.0, -30.0],
                     "styling": {
                         "default_style": "simple_rgb",
-                        "styles": [
-                            style_rgb,
-                            style_rgb_clone,
-                            style_infrared_false_colour,
-                            style_pure_ls8_blue,
-                            style_ndvi,
-                            style_ndvi_expr,
-                            style_ndvi_delta,
-                            style_rgb_ndvi,
-                        ],
+                        "styles": styles_s2_list,
                     },
-                },  ##### End of ls8_level1_pds product definition.
+                },
                 {
                     "inherits": {
-                        "layer": "ls8_usgs_level1_scene_layer",
+                        "layer": "s2_l2a",
                     },
-                    "title": "Level 1 USGS Landsat-8 Public Data Set Clone",
-                    "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
-                    "name": "ls8_usgs_level1_scene_layer_clone",
-                    "low_res_product_name": "ls8_usgs_level1_scene",
+                    "title": "s2_l2a Clone",
+                    "abstract": "Imagery from the s2_l2a Clone",
+                    "name": "s2_l2a_clone",
+                    "low_res_product_name": "s2_l2a",
                     "image_processing": {
                         "extent_mask_func": [],
                         "manual_merge": False,
@@ -770,8 +770,8 @@ ows_cfg = {
                         "time_interval": 1
                     }
                 },
-            ],
-        },  ### End of Landsat folder.
+            ]
+        },
         {
             "title": "Fractional Cover",
             "abstract": """
