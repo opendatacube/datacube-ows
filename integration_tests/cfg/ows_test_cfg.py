@@ -51,11 +51,33 @@ bands_wofs_obs = {
 
 
 style_ls_simple_rgb = {
+    # Machine readable style name. (required.  Must be unique within a layer.)
     "name": "simple_rgb",
+    # Human readable style title (required.  Must be unique within a layer.)
     "title": "Simple RGB",
+    # Abstract - a longer human readable style description. (required. Must be unique within a layer.)
     "abstract": "Simple true-colour image, using the red, green and blue bands",
-    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
+    # Components section is required for linear combination styles.
+    # The component keys MUST be "red", "green" and "blue" (and optionally "alpha")
+    "components": {
+        "red": {
+            # Band aliases may be used here.
+            # Values are multipliers.  The should add to 1.0 for each component to preserve overall brightness levels,
+            # but this is not enforced.
+            "red": 1.0
+        },
+        "green": {"green": 1.0},
+        "blue": {"blue": 1.0},
+    },
+    # The raw band value range to be compressed to an 8 bit range for the output image tiles.
+    # Band values outside this range are clipped to 0 or 255 as appropriate.
     "scale_range": [0.0, 3000.0],
+    "legend": {
+        "show_legend": True,
+        "url": {
+            "en": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png"
+        }
+    }
 
 }
 
@@ -65,6 +87,97 @@ style_ls_simple_rgb_clone = {
     "title": "Simple RGB Clone",
     "scale_range": [0.0, 3000.0],
 }
+
+style_infrared_false_colour = {
+    "name": "infra_red",
+    "title": "False colour multi-band infra-red",
+    "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
+    "components": {
+        "red": {
+            "B11": 1.0,
+            # The special dictionary value 'scale_range' can be used to provide a component-specific
+            # scale_range that overrides the style scale_range below.
+            # (N.B. if you are unlucky enough to have a native band called "scale_range", you can access it
+            # by defining a band alias.)
+            "scale_range": [5.0, 4000.0],
+        },
+        "green": {
+            "B12": 1.0,
+            "scale_range": [25.0, 4000.0],
+        },
+        "blue": {
+            "B08": 1.0,
+            "scale_range": [0.0, 3000.0],
+        },
+    },
+    # The style scale_range can be omitted if all components have a component-specific scale_range defined.
+    # "scale_range": [0.0, 3000.0]
+}
+
+style_sentinel_pure_blue = {
+    "name": "blue",
+    "title": "Blue - 490",
+    "abstract": "Blue band, centered on 490nm",
+    "components": {"red": {"blue": 1.0}, "green": {"blue": 1.0}, "blue": {"blue": 1.0}},
+    "scale_range": [0.0, 3000.0],
+}
+
+style_ls_ndvi_delta = {
+    "name": "ndvi_delta",
+    "title": "NDVI - Red, NIR",
+    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {"band1": "nir", "band2": "red"},
+    },
+    "needed_bands": ["red", "nir"],
+    "color_ramp": [
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+        {"value": 0.1, "color": "#A35F18"},
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
+        {"value": 1.0, "color": "#114D04"},
+    ],
+    "multi_date": [
+        {
+            "allowed_count_range": [2, 2],
+            "animate": False,
+            "preserve_user_date_order": True,
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_delta",
+            },
+            "mpl_ramp": "RdYlBu",
+            "range": [-1.0, 1.0],
+            "legend": {
+                "begin": "-1.0",
+                "end": "1.0",
+                "ticks": [
+                    "-1.0",
+                    "0.0",
+                    "1.0",
+                ]
+            },
+            "feature_info_label": "ndvi_delta",
+        },
+        {"allowed_count_range": [3, 4], "animate": True},
+    ],
+}
+
+styles_s2_list = [
+    style_ls_simple_rgb,
+    style_ls_simple_rgb_clone,
+    style_infrared_false_colour,
+    style_sentinel_pure_blue,
+    style_ls_ndvi_delta,
+]
 
 style_fc_simple = {
     "name": "simple_fc",
@@ -219,69 +332,7 @@ style_wofs_obs_wet_only = {
         ]
     },
 }
-style_sentinel_pure_blue = {
-    "name": "blue",
-    "title": "Blue - 490",
-    "abstract": "Blue band, centered on 490nm",
-    "components": {"red": {"blue": 1.0}, "green": {"blue": 1.0}, "blue": {"blue": 1.0}},
-    "scale_range": [0.0, 3000.0],
-}
 
-style_ls_ndvi = {
-    "name": "ndvi_delta",
-    "title": "NDVI - Red, NIR",
-    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "mapped_bands": True,
-        "kwargs": {"band1": "nir", "band2": "red"},
-    },
-    "needed_bands": ["red", "nir"],
-    "color_ramp": [
-        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
-        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
-        {"value": 0.1, "color": "#A35F18"},
-        {"value": 0.2, "color": "#B88512"},
-        {"value": 0.3, "color": "#CEAC0E"},
-        {"value": 0.4, "color": "#E5D609"},
-        {"value": 0.5, "color": "#FFFF0C"},
-        {"value": 0.6, "color": "#C3DE09"},
-        {"value": 0.7, "color": "#88B808"},
-        {"value": 0.8, "color": "#529400"},
-        {"value": 0.9, "color": "#237100"},
-        {"value": 1.0, "color": "#114D04"},
-    ],
-    "multi_date": [
-        {
-            "allowed_count_range": [2, 2],
-            "animate": False,
-            "preserve_user_date_order": True,
-            "aggregator_function": {
-                "function": "datacube_ows.band_utils.multi_date_delta",
-            },
-            "mpl_ramp": "RdYlBu",
-            "range": [-1.0, 1.0],
-            "legend": {
-                "begin": "-1.0",
-                "end": "1.0",
-                "ticks": [
-                    "-1.0",
-                    "0.0",
-                    "1.0",
-                ]
-            },
-            "feature_info_label": "ndvi_delta",
-        },
-        {"allowed_count_range": [3, 4], "animate": True},
-    ],
-}
-
-styles_s2_list = [
-    style_ls_simple_rgb,
-    style_ls_simple_rgb_clone,
-    style_sentinel_pure_blue,
-    style_ls_ndvi,
-]
 # Describes a style which uses several bitflags to create a style
 
 # REUSABLE CONFIG FRAGMENTS - resource limit declarations
