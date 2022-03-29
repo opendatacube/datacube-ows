@@ -804,25 +804,25 @@ ows_cfg = {
             },
             "label": "sentinel2",
             "layers": [
-            {
-                "title": "Surface reflectance (Sentinel-2)",
-                "name": "s2_l2a",
-                "abstract": """layer s2_l2a""",
-                "product_name": "s2_l2a",
-                "bands": bands_sentinel,
-                "dynamic": True,
-                "resource_limits": reslim_continental,
-                "image_processing": {
-                    "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                    "always_fetch_bands": [],
-                    "manual_merge": False,  # True
-                    "apply_solar_corrections": False,
-                },
-                "native_crs": "EPSG:3857",
-                "native_resolution": [30.0, -30.0],
-                "styling": {
-                    "default_style": "simple_rgb",
-                    "styles": styles_s2_list,
+                {
+                    "title": "Surface reflectance (Sentinel-2)",
+                    "name": "s2_l2a",
+                    "abstract": """layer s2_l2a""",
+                    "product_name": "s2_l2a",
+                    "bands": bands_sentinel,
+                    "dynamic": True,
+                    "resource_limits": reslim_continental,
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": False,  # True
+                        "apply_solar_corrections": False,
+                    },
+                    "native_crs": "EPSG:3857",
+                    "native_resolution": [30.0, -30.0],
+                    "styling": {
+                        "default_style": "simple_rgb",
+                        "styles": styles_s2_list,
                     },
                 },
                 {
