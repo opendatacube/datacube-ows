@@ -17,21 +17,6 @@ else:
 # Please refer to datacube_ows/ows_cfg_example.py for EXAMPLE CONFIG
 
 # REUSABLE CONFIG FRAGMENTS - Band alias maps
-ls8_usgs_level1_bands = {
-    "coastal_aerosol": ["band_1"],
-    "blue": ["band_2"],
-    "green": ["band_3", "green"],
-    "red": ["band_4", "pink"],
-    "nir": ["nir", "band_5"],
-    "swir1": ["band_6"],
-    "swir2": ["band_7"],
-    "panchromatic": ["band_8"],
-    "cirrus": ["band_9"],
-    "lwir1": ["band_10"],
-    "lwir2": ["band_11"],
-    "quality": ["QUALITY"],
-}
-
 bands_sentinel = {
     "B01": ["coastal_aerosol"],
     "B02": ["blue"],
@@ -63,257 +48,8 @@ bands_wofs_obs = {
 
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions
-# Examples of styles which are linear combinations of the available spectral bands.
-style_rgb = {
-    # Machine readable style name. (required.  Must be unique within a layer.)
-    "name": "simple_rgb",
-    # Human readable style title (required.  Must be unique within a layer.)
-    "title": "Simple RGB",
-    # Abstract - a longer human readable style description. (required. Must be unique within a layer.)
-    "abstract": "Simple true-colour image, using the red, green and blue bands",
-    # Components section is required for linear combination styles.
-    # The component keys MUST be "red", "green" and "blue" (and optionally "alpha")
-    "components": {
-        "red": {
-            # Band aliases may be used here.
-            # Values are multipliers.  The should add to 1.0 for each component to preserve overall brightness levels,
-            # but this is not enforced.
-            "pink": 1.0
-        },
-        "green": {"green": 1.0},
-        "blue": {"blue": 1.0},
-    },
-    # The raw band value range to be compressed to an 8 bit range for the output image tiles.
-    # Band values outside this range are clipped to 0 or 255 as appropriate.
-    "scale_range": [0.0, 65535.0],
-    "pq_masks": [
-        {
-            "band": "quality",
-            "flags": {"cloud": False}
-        }
-    ],
-    "legend": {
-        "show_legend": True,
-        "url": {
-            "en": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png"
-        }
-    }
-}
-
-style_rgb_clone = {
-    "inherits": {"layer": "ls8_usgs_level1_scene_layer", "style": "simple_rgb"},
-    "name": "simple_rgb_clone",
-    "title": "Simple RGB Clone",
-    "scale_range": [0.0, 20000.0],
-}
-
-style_infrared_false_colour = {
-    "name": "infra_red",
-    "title": "False colour multi-band infra-red",
-    "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
-    "components": {
-        "red": {
-            "swir1": 1.0,
-            # The special dictionary value 'scale_range' can be used to provide a component-specific
-            # scale_range that overrides the style scale_range below.
-            # (N.B. if you are unlucky enough to have a native band called "scale_range", you can access it
-            # by defining a band alias.)
-            "scale_range": [5.0, 4000.0],
-        },
-        "green": {
-            "swir2": 1.0,
-            "scale_range": [25.0, 4000.0],
-        },
-        "blue": {
-            "nir": 1.0,
-            "scale_range": [0.0, 3000.0],
-        },
-    },
-    # The style scale_range can be omitted if all components have a component-specific scale_range defined.
-    # "scale_range": [0.0, 3000.0]
-}
 
 
-style_pure_ls8_blue = {
-    "name": "blue",
-    "title": "Spectral band 2 - Blue",
-    "abstract": "Blue band, approximately 453nm to 511nm",
-    "components": {"red": {"blue": 1.0}, "green": {"blue": 1.0}, "blue": {"blue": 1.0}},
-    "scale_range": [0.0, 65535.0],
-}
-
-# Examples of non-linear colour-ramped styles.
-style_ndvi = {
-    "name": "ndvi",
-    "title": "NDVI",
-    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "mapped_bands": True,
-        "kwargs": {"band1": "nir", "band2": "red"},
-    },
-    # List of bands used by this style. The band may not be passed to the index function if it is not declared
-    # here, resulting in an error.  Band aliases can be used here.
-    "needed_bands": ["red", "nir"],
-    # The color ramp. Values between specified entries have both their alphas and colours
-    # interpolated.
-    "color_ramp": [
-        # Any value less than the first entry will have colour and alpha of the first entry.
-        # (i.e. in this example all negative values will be fully transparent (alpha=0.0).)
-        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
-        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
-        {
-            # do not have to defined alpha value
-            # if no alpha is specified, alpha will default to 1.0 (fully opaque)
-            "value": 0.1,
-            "color": "#A35F18",
-        },
-        {"value": 0.2, "color": "#B88512"},
-        {"value": 0.3, "color": "#CEAC0E"},
-        {"value": 0.4, "color": "#E5D609"},
-        {"value": 0.5, "color": "#FFFF0C"},
-        {"value": 0.6, "color": "#C3DE09"},
-        {"value": 0.7, "color": "#88B808"},
-        {"value": 0.8, "color": "#529400"},
-        {"value": 0.9, "color": "#237100"},
-        # Values greater than the last entry will use the colour and alpha of the last entry.
-        # (N.B. This will not happen for this example because it is normalised so that 1.0 is
-        # maximum possible value.)
-        {"value": 1.0, "color": "#114D04"},
-    ],
-    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
-    # Defaults to True.
-    "include_in_feature_info": True,
-    "legend": {
-        "units": "dimensionless",
-        "tick_labels": {
-            "0.0": {
-                "label": "low",
-            },
-            "1.0": {
-                "label": "high",
-            }
-        }
-    }
-}
-
-style_ndvi_expr = {
-    "name": "ndvi_expr",
-    "title": "NDVI",
-    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
-    "index_expression": "(nir-red)/(nir+red)",
-    # The color ramp. Values between specified entries have both their alphas and colours
-    # interpolated.
-    "color_ramp": [
-        # Any value less than the first entry will have colour and alpha of the first entry.
-        # (i.e. in this example all negative values will be fully transparent (alpha=0.0).)
-        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
-        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
-        {
-            # do not have to defined alpha value
-            # if no alpha is specified, alpha will default to 1.0 (fully opaque)
-            "value": 0.1,
-            "color": "#A35F18",
-        },
-        {"value": 0.2, "color": "#B88512"},
-        {"value": 0.3, "color": "#CEAC0E"},
-        {"value": 0.4, "color": "#E5D609"},
-        {"value": 0.5, "color": "#FFFF0C"},
-        {"value": 0.6, "color": "#C3DE09"},
-        {"value": 0.7, "color": "#88B808"},
-        {"value": 0.8, "color": "#529400"},
-        {"value": 0.9, "color": "#237100"},
-        # Values greater than the last entry will use the colour and alpha of the last entry.
-        # (N.B. This will not happen for this example because it is normalised so that 1.0 is
-        # maximum possible value.)
-        {"value": 1.0, "color": "#114D04"},
-    ],
-    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
-    # Defaults to True.
-    "include_in_feature_info": True,
-}
-
-# Examples of non-linear colour-ramped style with multi-date support.
-style_ndvi_delta = {
-    "name": "ndvi_delta",
-    "title": "NDVI Delta",
-    "abstract": "Normalised Difference Vegetation Index - with delta support",
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "mapped_bands": True,
-        "kwargs": {"band1": "nir", "band2": "red"},
-    },
-    "needed_bands": ["red", "nir"],
-    # The color ramp for single-date requests - same as ndvi style example above
-    "color_ramp": [
-        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
-        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
-        {"value": 0.1, "color": "#A35F18"},
-        {"value": 0.2, "color": "#B88512"},
-        {"value": 0.3, "color": "#CEAC0E"},
-        {"value": 0.4, "color": "#E5D609"},
-        {"value": 0.5, "color": "#FFFF0C"},
-        {"value": 0.6, "color": "#C3DE09"},
-        {"value": 0.7, "color": "#88B808"},
-        {"value": 0.8, "color": "#529400"},
-        {"value": 0.9, "color": "#237100"},
-        {"value": 1.0, "color": "#114D04"},
-    ],
-    "include_in_feature_info": True,
-    "legend": {
-        "show_legend": True,
-    },
-    # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
-    "multi_date": [
-        # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
-        {
-            # The count range for which this handler is to be used - a tuple of two ints, the smallest and
-            # largest date counts for which this handler will be used.  Required.
-            "allowed_count_range": [2, 2],
-            # A function, expressed in the standard format as described elsewhere in this example file.
-            # The function is assumed to take one arguments, an xarray Dataset.
-            # The function returns an xarray Dataset with a single band, which is the input to the
-            # colour ramp defined below.
-            "aggregator_function": {
-                "function": "datacube_ows.band_utils.multi_date_delta"
-            },
-            # The multi-date color ramp.  May be defined as an explicit colour ramp, as shown above for the single
-            # date case; or may be defined with a range and unscaled color ramp as shown here.
-            #
-            # The range specifies the min and max values for the color ramp.  Required if an explicit color
-            # ramp is not defined.
-            "range": [-1.0, 1.0],
-            # The name of a named matplotlib color ramp.
-            # Reference here: https://matplotlib.org/examples/color/colormaps_reference.html
-            # Only used if an explicit colour ramp is not defined.  Optional - defaults to a simple (but
-            # kind of ugly) blue-to-red rainbow ramp.
-            "mpl_ramp": "RdBu",
-            # The feature info label for the multi-date index value.
-            "feature_info_label": "ndvi_delta",
-        }
-    ],
-}
-
-
-# Hybrid style - blends a linear mapping and an colour-ramped index style
-# There is no scientific justification for these styles, I just think they look cool.  :)
-style_rgb_ndvi = {
-    "name": "rgb_ndvi",
-    "title": "NDVI plus RGB",
-    "abstract": "Normalised Difference Vegetation Index (blended with RGB) - a derived index that correlates well with the existence of vegetation",
-    # Mixing ration between linear components and colour ramped index. 1.0 is fully linear components, 0.0 is fully colour ramp.
-    "component_ratio": 0.6,
-    "index_function": {
-        "function": "datacube_ows.band_utils.norm_diff",
-        "mapped_bands": True,
-        "kwargs": {"band1": "nir", "band2": "red"},
-    },
-    "needed_bands": ["red", "nir"],
-    "range": [0.0, 1.0],
-    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
-    "scale_range": [0.0, 65535.0],
-    # N.B. The "pq_mask" section works the same as for the style types above.
-}
 style_ls_simple_rgb = {
     "name": "simple_rgb",
     "title": "Simple RGB",
@@ -321,6 +57,13 @@ style_ls_simple_rgb = {
     "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
     "scale_range": [0.0, 3000.0],
 
+}
+
+style_ls_simple_rgb_clone = {
+    "inherits": {"layer": "s2_l2a", "style": "simple_rgb"},
+    "name": "style_ls_simple_rgb_clone",
+    "title": "Simple RGB Clone",
+    "scale_range": [0.0, 3000.0],
 }
 
 style_fc_simple = {
@@ -535,6 +278,7 @@ style_ls_ndvi = {
 
 styles_s2_list = [
     style_ls_simple_rgb,
+    style_ls_simple_rgb_clone,
     style_sentinel_pure_blue,
     style_ls_ndvi,
 ]

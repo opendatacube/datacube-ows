@@ -1412,9 +1412,9 @@ def test_wcs2_getcov_slice_space(ows_server):
     assert layer
     extent = ODCExtent(layer)
     subsets = list(
-        extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST)
+        extent.raw_wcs2_subsets(ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND)
     )
-    subsets[0] = subsets[0].split(",")[1] + ")"
+    subsets[0] = subsets[0].split(",")[0] + ")"
 
     r = requests.get(
         ows_server.url + "/wcs",
