@@ -136,7 +136,7 @@ def test_wmts_gettile(ows_server):
 
 def test_wmts_getfeatinfo(ows_server):
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
     resp = requests.get(url)
@@ -148,7 +148,7 @@ def test_wmts_getfeatinfo(ows_server):
 
 def test_wmts_gettile_errwrap(ows_server):
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=5171&TILECOL=7458FORMAT=image%2Fjpg")
     resp = requests.get(url)
@@ -157,7 +157,7 @@ def test_wmts_gettile_errwrap(ows_server):
 
 def test_wmts_getfeatinfo_errwrap(ows_server):
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fpdf")
     resp = requests.get(url)
@@ -166,7 +166,7 @@ def test_wmts_getfeatinfo_errwrap(ows_server):
 
 def test_wmts_arg_errors(ows_server):
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=foo&" +
                             "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
     resp = requests.get(url)
@@ -175,7 +175,7 @@ def test_wmts_arg_errors(ows_server):
     assert "foo" in resp.text
 
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=666&" +
                             "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
     resp = requests.get(url)
@@ -184,7 +184,7 @@ def test_wmts_arg_errors(ows_server):
     assert "666" in resp.text
 
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=foo&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
     resp = requests.get(url)
@@ -193,7 +193,7 @@ def test_wmts_arg_errors(ows_server):
     assert "foo" in resp.text
 
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=5171&TILECOL=foo&I=102&J=204&INFOFORMAT=application%2Fjson")
     resp = requests.get(url)
@@ -204,7 +204,7 @@ def test_wmts_arg_errors(ows_server):
 
 def test_wmts_ows_stats(ows_server):
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&" +
-                            "LAYER=ls8_usgs_level1_scene_layer&STYLE=simple_rgb&" +
+                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=5171&TILECOL=7458&I=102&J=204&FORMAT=image/png&ows_stats=y")
     resp = requests.get(url)
