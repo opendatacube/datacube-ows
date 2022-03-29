@@ -155,12 +155,12 @@ def test_wms_getmap(ows_server):
     assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_getmap_requests(ows_server):
+def test_wms_getmap_requests(ows_server, product_name):
     resp = requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
-        "layers": "s2_l2a",
+        "layers": product_name,
         "width": "150",
         "height": "150",
         "crs": "EPSG:4326",
@@ -207,12 +207,12 @@ def test_wms_getmap_bad_requests(ows_server):
     assert "Layer not_a_real_layer is not defined" in resp.text
 
 
-def test_wms_getmap_qprof(ows_server):
+def test_wms_getmap_qprof(ows_server, product_name):
     resp = requests.get(ows_server.url + '/wms', params={
                             "service": "WMS",
                             "version": "1.3.0",
                             "request": "GetMap",
-                            "layers": "s2_l2a",
+                            "layers": product_name,
                             "width": "150",
                             "height": "150",
                             "crs": "EPSG:4326",
