@@ -121,7 +121,96 @@ style_sentinel_pure_blue = {
     "components": {"red": {"blue": 1.0}, "green": {"blue": 1.0}, "blue": {"blue": 1.0}},
     "scale_range": [0.0, 3000.0],
 }
+# Examples of non-linear colour-ramped styles.
+style_ndvi = {
+    "name": "ndvi",
+    "title": "NDVI",
+    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {"band1": "nir", "band2": "red"},
+    },
+    # List of bands used by this style. The band may not be passed to the index function if it is not declared
+    # here, resulting in an error.  Band aliases can be used here.
+    "needed_bands": ["red", "nir"],
+    # The color ramp. Values between specified entries have both their alphas and colours
+    # interpolated.
+    "color_ramp": [
+        # Any value less than the first entry will have colour and alpha of the first entry.
+        # (i.e. in this example all negative values will be fully transparent (alpha=0.0).)
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+        {
+            # do not have to defined alpha value
+            # if no alpha is specified, alpha will default to 1.0 (fully opaque)
+            "value": 0.1,
+            "color": "#A35F18",
+        },
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
+        # Values greater than the last entry will use the colour and alpha of the last entry.
+        # (N.B. This will not happen for this example because it is normalised so that 1.0 is
+        # maximum possible value.)
+        {"value": 1.0, "color": "#114D04"},
+    ],
+    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
+    # Defaults to True.
+    "include_in_feature_info": True,
+    "legend": {
+        "units": "dimensionless",
+        "tick_labels": {
+            "0.0": {
+                "label": "low",
+            },
+            "1.0": {
+                "label": "high",
+            }
+        }
+    }
+}
 
+style_ndvi_expr = {
+    "name": "ndvi_expr",
+    "title": "NDVI",
+    "abstract": "Normalised Difference Vegetation Index - a derived index that correlates well with the existence of vegetation",
+    "index_expression": "(nir-red)/(nir+red)",
+    # The color ramp. Values between specified entries have both their alphas and colours
+    # interpolated.
+    "color_ramp": [
+        # Any value less than the first entry will have colour and alpha of the first entry.
+        # (i.e. in this example all negative values will be fully transparent (alpha=0.0).)
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+        {
+            # do not have to defined alpha value
+            # if no alpha is specified, alpha will default to 1.0 (fully opaque)
+            "value": 0.1,
+            "color": "#A35F18",
+        },
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
+        # Values greater than the last entry will use the colour and alpha of the last entry.
+        # (N.B. This will not happen for this example because it is normalised so that 1.0 is
+        # maximum possible value.)
+        {"value": 1.0, "color": "#114D04"},
+    ],
+    # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
+    # Defaults to True.
+    "include_in_feature_info": True,
+}
 # Hybrid style - blends a linear mapping and an colour-ramped index style
 # There is no scientific justification for these styles, I just think they look cool.  :)
 style_rgb_ndvi = {
@@ -196,6 +285,8 @@ styles_s2_list = [
     style_ls_simple_rgb_clone,
     style_infrared_false_colour,
     style_sentinel_pure_blue,
+    style_ndvi,
+    style_ndvi_expr,
     style_rgb_ndvi,
     style_ls_ndvi_delta,
 ]
