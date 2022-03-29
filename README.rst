@@ -208,6 +208,37 @@ Flask Dev Server
 
         flask run --host=0.0.0.0
 
+Integration test data and cfg update
+------------------------------------
+
+Prepare an empty database and index test product and sample datasets
+
+```
+datacube system init
+datacube product add https://raw.githubusercontent.com/digitalearthafrica/config/master/products/esa_s2_l2a.odc-product.yaml
+stac-to-dc --bbox='123.92427299922684,-14.559406653491095,124.94716787178676,-13.560932176423318' --collections='sentinel-s2-l2a-cogs' --datetime='2021-12-20/2022-01-10'
+datacube-ows-update --schema --role <db_read_role>
+datacube-ows-update --views
+datacube-ows-update
+```
+
+create a sql dump
+
+```
+pg_dump odc > dump.sql
+```
+
+Update integration test translation
+
+```
+datacube-ows-cfg extract
+datacube-ows-cfg translate
+```
+
+modify translation for `de` for `assert` test
+
+
+
 Local Postgres database
 -----------------------
 1. create an empty database and db_user

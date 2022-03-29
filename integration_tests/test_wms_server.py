@@ -155,19 +155,19 @@ def test_wms_getmap(ows_server):
     assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_getmap_requests(ows_server):
+def test_wms_getmap_requests(ows_server, product_name):
     resp = requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
-        "layers": "ls8_usgs_level1_scene_layer",
+        "layers": product_name,
         "width": "150",
         "height": "150",
         "crs": "EPSG:4326",
         "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
         "format": "image/png",
         "exceptions": "XML",
-        "time": "2019-07-09"
+        "time": "2021-12-31"
     })
     # Confirm success
     assert resp.status_code == 200
@@ -177,7 +177,7 @@ def test_wms_getmap_bad_requests(ows_server):
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
-        "layers": "ls8_usgs_level1_scene_layer,some_other_layer",
+        "layers": "s2_l2a,some_other_layer",
         "width": "150",
         "height": "150",
         "crs": "EPSG:4326",
@@ -207,19 +207,19 @@ def test_wms_getmap_bad_requests(ows_server):
     assert "Layer not_a_real_layer is not defined" in resp.text
 
 
-def test_wms_getmap_qprof(ows_server):
+def test_wms_getmap_qprof(ows_server, product_name):
     resp = requests.get(ows_server.url + '/wms', params={
                             "service": "WMS",
                             "version": "1.3.0",
                             "request": "GetMap",
-                            "layers": "ls8_usgs_level1_scene_layer",
+                            "layers": product_name,
                             "width": "150",
                             "height": "150",
                             "crs": "EPSG:4326",
                             "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
                             "format": "image/png",
                             "exceptions": "XML",
-                            "time": "2019-07-09",
+                            "time": "2021-12-31",
                             "ows_stats": "yes"
     })
     # Confirm success
@@ -256,7 +256,7 @@ def test_wms_multidate_getmap(ows_server):
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
 
     img = wms.getmap(
-        layers=["ls8_usgs_level1_scene_layer"],
+        layers=["s2_l2a"],
         styles=["ndvi_delta"],
         srs="EPSG:4326",
         bbox=(145.75, -44.2,
@@ -264,7 +264,7 @@ def test_wms_multidate_getmap(ows_server):
         size=(150, 150),
         format="image/png",
         transparent=True,
-        time="2019-01-30,2019-03-03",
+        time="2021-12-31,2022-01-03",
     )
     assert img.info()["Content-Type"] == "image/png"
 
@@ -275,7 +275,7 @@ def test_wms_style_looping_getmap(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
-    test_layer_names = ["ls8_usgs_level1_scene_layer", "ls8_usgs_level1_scene_layer_clone"]
+    test_layer_names = ["s2_l2a", "s2_l2a_clone"]
     for test_layer_name in test_layer_names:
         test_layer = wms.contents[test_layer_name]
 

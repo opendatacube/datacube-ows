@@ -7,7 +7,7 @@ def test_wms_i18n(ows_server):
         timeout=10,
         headers={"Accept-Language": "de"}
     )
-    # Confirm success
+    # Confirm successf
     assert "German translation" in resp.text
 
 def test_wcs1_i18n(ows_server):
@@ -20,9 +20,9 @@ def test_wcs1_i18n(ows_server):
     assert "German translation" in resp.text
 
 
-def test_wcs1_bands_i18n(ows_server):
+def test_wcs1_bands_i18n(ows_server, product_name):
     resp = requests.get(
-        ows_server.url + "/wcs?request=DescribeCoverage&service=WCS&version=1.0.0&coverageid=ls8_usgs_level1_scene_layer",
+        ows_server.url + "/wcs?request=DescribeCoverage&service=WCS&version=1.0.0&coverageid=" + product_name,
         timeout=10,
         headers={"Accept-Language": "de"}
     )
@@ -40,9 +40,9 @@ def test_wcs2_i18n(ows_server):
     assert "German translation" in resp.text
 
 
-def test_wcs2_bands_i18n(ows_server):
+def test_wcs2_bands_i18n(ows_server, product_name):
     resp = requests.get(
-        ows_server.url + "/wcs?request=DescribeCoverage&service=WCS&version=2.0.1&coverageid=ls8_usgs_level1_scene_layer",
+        ows_server.url + "/wcs?request=DescribeCoverage&service=WCS&version=2.0.1&coverageid=" + product_name,
         timeout=10,
         headers={"Accept-Language": "de"}
     )
