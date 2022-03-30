@@ -103,6 +103,9 @@ Before you submit a pull request, check that it meets these guidelines:
 Integration test data and cfg update
 ------------------------------------
 
+setting a NEW db dump
+~~~~~~~~~~~~~~~~~~~~~~
+
 Prepare an empty database, with the following yaml file run `docker-compose up`
 
 .. code-block:: yaml
@@ -113,7 +116,7 @@ Prepare an empty database, with the following yaml file run `docker-compose up`
           volumes:
               - db-data:/var/lib/postgresql/data
           ports:
-              - 5433:5432
+              - 5432:5432
           environment:
               - POSTGRES_PASSWORD=mysecretpassword
               - POSTGRES_USER=localuser
@@ -144,7 +147,7 @@ create a file in `datacube-docker/index` named `docker-compose.standalone.yaml`
             - DB_USERNAME=localuser
             - DB_PASSWORD=mysecretpassword
             - DB_DATABASE=odc
-            - DB_PORT=5433
+            - DB_PORT=5432
             - AWS_DEFAULT_REGION=ap-southeast-2
             - STAC_API_URL=https://earth-search.aws.element84.com/v0/
             - PRODUCT_CATALOG=https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/a4f39b485b33608a016032d9987251881fec4b6f/workspaces/sandbox-products.csv
@@ -158,21 +161,35 @@ link datacube-ows to the empty database by configure `.env` file with the follow
 .. code-block::
   
   DB_HOSTNAME=localhost
-  DB_PORT=5433
+  DB_PORT=5432
   DB_USERNAME=localuser
   DB_PASSWORD=mysecretpassword
   DB_DATABASE=odc
 
+building on top of existing db dump
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: console
+
+  docker-compose -f docker-compose.yaml -f docker-compose.index.yaml -f docker-compose.db.yaml up
+
+checkpoint
+~~~~~~~~~~
 by this point, there should be `3` docker container running:
 - 1 for database
 - 1 for indexing
 - 1 for ows
 
+to check the containers that are running use `docker ps`
+
+indexing and create db dump
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. code-block:: console
   
   # start by going to index container
-  docker exec -it index_index_1 bash
-  datacube system init
+  docker exec -it index_index_1 bash # if using chained docker-compose the container name is datacube-ows_index_1
+  datacube system init # no need to run this command if building off existing db
   datacube product add https://raw.githubusercontent.com/digitalearthafrica/config/master/products/esa_s2_l2a.odc-product.yaml
   stac-to-dc --bbox='123.92427299922684,-14.559406653491095,124.94716787178676,-13.560932176423318' --collections='sentinel-s2-l2a-cogs' --datetime='2021-12-20/2022-01-10'
   exit
@@ -183,26 +200,26 @@ by this point, there should be `3` docker container running:
   datacube-ows-update
   exit
   # return to index container
-  docker exec -it index_index_1 bash
-  pg_dump -U localhost -p 5433 -h localhost odc > dump.sql
-  # enter password on prompt: mysecretpassword
+  docker exec -it index_index_1 bash # if using chained docker-compose the container name is datacube-ows_index_1
+  pg_dump -U localhost -p 5432 -h localhost odc > dump.sql
+  # enter password on prompt: mysecretpassword or check .env file
   exit
   # copy the new dump to datacube-ows/docker/database folder
   docker cp datacube-ows_ows_1:/dump.sql datacube-ows/docker/database
 
 If the integration test is based on a new product and require new config translation, continue the following.
 
-..code-block::console
+.. code-block:: console
 
   # enter ows container
-  docker exec -it datacube-ows_ows_1 bash
+  docker exec -it datacube-ows_ows_1 bash 
   datacube-ows-cfg extract -m /tmp/messages.po
   datacube-ows-cfg translation -n -D ows_cfg -d /tmp/translations -m /tmp/messages.po en de
 
 
 manually modify translation for `de` for `assert` test to pass, then create `ows_cfg.mo`
 
-..code-block::console
+.. code-block:: console
 
   datacube-ows-cfg compile -D ows_cfg -d /tmp/translations en de
   exit 
