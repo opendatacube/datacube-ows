@@ -240,6 +240,14 @@ def start_timer():
 @app.after_request
 def log_time_and_request_response(response):
     time_taken = int((monotonic() - g.ogc_start_time) * 1000)
-    _LOG.info("ip: %s request: %s returned status: %d and took: %d ms", request.environ.get('HTTP_X_REAL_IP'), request.url, response.status_code, time_taken)
+    if request.environ.get('HTTP_X_REAL_IP'):
+        ip = request.environ.get('HTTP_X_REAL_IP')
+    elif request.environ.get('HTTP_X_FORWARDED_FOR'):
+        ip = request.environ.get('HTTP_X_FORWARDED_FOR')
+    elif request.environ.get('REMOTE_ADDR'):
+        ip = request.environ.get('REMOTE_ADDR')
+    else:
+        ip = 'Not found'
+    _LOG.info("ip: %s request: %s returned status: %d and took: %d ms", ip, request.url, response.status_code, time_taken)
     return response
 
