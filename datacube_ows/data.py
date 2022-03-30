@@ -301,9 +301,9 @@ class DataStacker:
             tds = datasets.sel(time=dt)
             merged = None
             for ds in tds.values.item():
-                dm = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
+                d = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
                 # Squeeze upconverts uints to int32
-                dm = dm.squeeze(["time"], drop=True)
+                dm = d.squeeze(["time"], drop=True)
                 extent_mask = None
                 for band in non_flag_bands:
                     for f in self._product.extent_mask_func:
