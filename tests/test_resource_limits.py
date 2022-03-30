@@ -32,3 +32,12 @@ def test_request_scale():
     assert pytest.approx(rs3.zoom_lvl_offset, 1e-8) == 3.0
     assert pytest.approx(rs3.base_zoom_level, 0.1) == 0.0
     assert pytest.approx(rs3.load_adjusted_zoom_level, 0.1) == -3.0
+
+
+def test_degree_to_metres():
+    xres, yres = datacube_ows.resource_limits.RequestScale._metre_resolution(None,
+                                                                geom.CRS("EPSG:4326"),
+                                                                (0.005, 0.005)
+                                                                )
+    assert xres > 1.0
+    assert yres > 1.0
