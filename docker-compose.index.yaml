@@ -1,0 +1,18 @@
+version: '3.4'
+
+services:
+  index:
+    image: opendatacube/datacube-index:latest
+    environment:
+      DB_HOSTNAME: ${DB_HOSTNAME}
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+    restart: always
+    depends_on:
+      - postgres
+    command: tail -f /dev/null
+    network_mode: bridge
+    links:
+      - postgres:postgres
