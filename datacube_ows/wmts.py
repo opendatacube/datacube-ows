@@ -11,7 +11,7 @@ from flask import render_template
 
 from datacube_ows.data import feature_info, get_map
 from datacube_ows.ogc_exceptions import WMSException, WMTSException
-from datacube_ows.ogc_utils import get_service_base_url
+from datacube_ows.ogc_utils import get_service_base_url, cache_control_headers
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import log_call
 
@@ -85,6 +85,8 @@ def get_capabilities(args):
                 raise WMTSException("Invalid section: %s" % section,
                                 WMTSException.INVALID_PARAMETER_VALUE,
                                 locator="Section parameter")
+    headers = cache_control_headers(cfg.wms_cap_cache_age)
+    headers["Content-Type"] = "application/xml"
     return (
         render_template(
             "wmts_capabilities.xml",
@@ -96,9 +98,7 @@ def get_capabilities(args):
             show_contents=show_contents,
             show_themes=show_themes),
         200,
-        cfg.response_headers(
-            {"Content-Type": "application/xml", "Cache-Control": "max-age=10"}
-        )
+        cfg.response_headers(headers)
     )
 
 

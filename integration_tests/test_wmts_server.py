@@ -68,6 +68,7 @@ def test_wmts_getcap(ows_server):
 
     # Confirm success
     assert resp.code == 200
+    assert resp.headers["cache-control"] == "max-age=5"
 
     # Validate XML Schema
     resp_xml = etree.parse(resp.fp)
