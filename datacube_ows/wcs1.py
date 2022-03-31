@@ -72,7 +72,7 @@ def get_capabilities(args):
                         base_url=base_url),
         200,
         cfg.response_headers(headers)
-        )
+    )
 
 
 @log_call
