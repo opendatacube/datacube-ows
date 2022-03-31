@@ -6,7 +6,8 @@ import numpy as np
 from datacube.utils.geometry import CRS, GeoBox, polygon
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
-from datacube_ows.ogc_utils import ConfigException, cache_control_headers, create_geobox
+from datacube_ows.ogc_utils import (ConfigException, cache_control_headers,
+                                    create_geobox)
 
 
 # pyre-ignore[13]
