@@ -371,6 +371,13 @@ class FunctionWrapper:
         return self._func(*calling_args, **calling_kwargs)
 
 
+def cache_control_headers(max_age: int) -> str:
+    if max_age <= 0:
+        return {"cache-control": "no-cache"}
+    else:
+        return {"cache-control": f"max-age={max_age}"}
+
+
 # Extent Mask Functions
 
 def mask_by_val(data: "xarray.Dataset", band: str, val: Optional[Any] = None) -> "xarray.DataArray":

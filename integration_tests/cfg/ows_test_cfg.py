@@ -637,6 +637,7 @@ ows_cfg = {
         "max_width": 512,
         "max_height": 512,
 
+        "caps_cache_maxage": 5,
         # These define the AuthorityURLs.
         # They represent the authorities that define the "Identifiers" defined layer by layer below.
         # The spec allows AuthorityURLs to be defined anywhere on the Layer heirarchy, but datacube_ows treats them

@@ -85,7 +85,7 @@ def test_getcap_xsd(ows_server):
     assert result
 
 
-def test_getcap_coord_order(ows_server):
+def test_getcap_response(ows_server):
     resp = request.urlopen(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
         timeout=10,
@@ -93,6 +93,9 @@ def test_getcap_coord_order(ows_server):
 
     # Confirm success
     assert resp.code == 200
+
+    # Check cache header
+    assert resp.headers["cache-control"] == "max-age=5"
 
     # Validate XML Schema
     resp_xml = etree.parse(resp.fp)

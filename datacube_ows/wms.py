@@ -10,7 +10,7 @@ from flask import render_template
 from datacube_ows.data import feature_info, get_map
 from datacube_ows.legend_generator import legend_graphic
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import get_service_base_url
+from datacube_ows.ogc_utils import cache_control_headers, get_service_base_url
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import log_call
 
@@ -44,13 +44,13 @@ def get_capabilities(args):
     cfg = get_config()
     url = args.get('Host', args['url_root'])
     base_url = get_service_base_url(cfg.allowed_urls, url)
+    headers = cache_control_headers(cfg.wms_cap_cache_age)
+    headers["Content-Type"] = "application/xml"
     return (
         render_template(
             "wms_capabilities.xml",
             cfg=cfg,
             base_url=base_url),
         200,
-        cfg.response_headers(
-            {"Content-Type": "application/xml", "Cache-Control": "no-cache,max-age=0"}
-        )
+        cfg.response_headers(headers)
     )

@@ -84,3 +84,28 @@ E.g.
             "auth": "https://authoritative-authority.com",
             "idsrus": "https://www.identifiers-r-us.com",
         },
+
+GetCapabilities Cache Control Headers (caps_cache_maxage)
+=========================================================
+
+The ``caps_cache_maxage`` entry in the ``wms`` section controls the value of the
+``Cache-control`` HTTP header returned with WMS/WMTS GetCapabilities responses.
+
+``caps_cache_maxage`` is an optional integer value that defaults to 0, and represents
+the maximum age in seconds that the Capabilities document should be cached.
+
+Note that OWS does not manage any caching itself, this entry controls a standard HTTP
+header that instructs upstream cache layers (e.g. AWS Cloudfront) how to behave.
+
+A value of zero means that OWS will recommend that the Capabilities document not be
+cached at all, and is the default.  Note that setting this entry to a non-zero value
+will introduce additional delays between new data being added to the datacube index
+and that data being advertised as available through the service. This value should therefore
+be kept fairly short (e.g. a few hours at most).
+
+E.g.
+
+    "wms": {
+        "caps_cache_maxage": 3600,   # 3600 seconds = 1 hour
+        ...
+    }

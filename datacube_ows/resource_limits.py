@@ -6,7 +6,8 @@ import numpy as np
 from datacube.utils.geometry import CRS, GeoBox, polygon
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
-from datacube_ows.ogc_utils import ConfigException, create_geobox
+from datacube_ows.ogc_utils import (ConfigException, cache_control_headers,
+                                    create_geobox)
 
 
 # pyre-ignore[13]
@@ -163,16 +164,16 @@ class CacheControlRules(OWSConfigEntry):
             return {}
         assert n_datasets >= 0
         if n_datasets == 0 or n_datasets > self.max_datasets:
-            return {"cache-control": "no-cache"}
+            return cache_control_headers(0)
         rule = None
         for r in self.rules:
             if n_datasets < r["min_datasets"]:
                 break
             rule = r
         if rule:
-            return {"cache-control": f"max-age={rule['max_age']}"}
+            return cache_control_headers(rule['max_age'])
         else:
-            return {"cache-control": "no-cache"}
+            return cache_control_headers(0)
 
 
 class ResourceLimited(Exception):
