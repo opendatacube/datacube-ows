@@ -18,8 +18,8 @@ from ows.wcs.v21 import encoders as encoders_v21
 
 from datacube_ows.data import json_response
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ogc_utils import (cache_control_headers, get_service_base_url,
-                                    resp_headers)
+from datacube_ows.ogc_utils import (cache_control_headers,
+                                    get_service_base_url, resp_headers)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
