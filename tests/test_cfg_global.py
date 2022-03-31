@@ -224,6 +224,7 @@ def test_two_langs(minimal_global_raw_cfg, minimal_dc):
     assert len(cfg.global_config().locales) == 2
     assert not cfg.global_config().internationalised
 
+
 def test_internationalised(minimal_global_raw_cfg, minimal_dc):
     OWSConfig._instance = None
 
@@ -231,3 +232,33 @@ def test_internationalised(minimal_global_raw_cfg, minimal_dc):
     minimal_global_raw_cfg["global"]["translations_directory"] = "/integration_tests/cfg/translations" # no need to be valid
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert cfg.global_config().internationalised
+
+
+def test_bad_integers_in_wms_section(minimal_global_raw_cfg, minimal_dc):
+    minimal_global_raw_cfg["wms"] = {}
+    minimal_global_raw_cfg["wms"]["max_width"] = "very big"
+    with pytest.raises(ConfigException) as e:
+        OWSConfig._instance = None
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "max_width and max_height in wms section must be integers" in str(e.value)
+    assert "very big" in str(e.value)
+    minimal_global_raw_cfg["wms"]["max_width"] = 0
+    with pytest.raises(ConfigException) as e:
+        OWSConfig._instance = None
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "max_width and max_height in wms section must be positive integers" in str(e.value)
+    assert "0" in str(e.value)
+    minimal_global_raw_cfg["wms"]["max_width"] = 256
+    minimal_global_raw_cfg["wms"]["caps_cache_maxage"] = "forever"
+    with pytest.raises(ConfigException) as e:
+        OWSConfig._instance = None
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "caps_cache_maxage in wms section must be an integer" in str(e.value)
+    assert "forever" in str(e.value)
+    minimal_global_raw_cfg["wms"]["caps_cache_maxage"] = -100
+    with pytest.raises(ConfigException) as e:
+        OWSConfig._instance = None
+        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "caps_cache_maxage in wms section cannot be negative" in str(e.value)
+    assert "-100" in str(e.value)
+

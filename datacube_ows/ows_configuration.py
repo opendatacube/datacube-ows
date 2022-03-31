@@ -1249,10 +1249,29 @@ class OWSConfig(OWSMetadataConfig):
         self.s3_bucket = cfg.get("s3_bucket", "")
         self.s3_url = cfg.get("s3_url", "")
         self.s3_aws_zone = cfg.get("s3_aws_zone", "")
-        self.wms_max_width = cfg.get("max_width", 256)
-        self.wms_max_height = cfg.get("max_height", 256)
+        try:
+            self.wms_max_width = int(cfg.get("max_width", 256))
+            self.wms_max_height = int(cfg.get("max_height", 256))
+        except ValueError:
+            raise ConfigException(
+                f"max_width and max_height in wms section must be integers: {cfg.get('max_width', 256)},{cfg.get('max_height', 256)}"
+            )
+        if self.wms_max_width < 1 or self.wms_max_height < 1:
+            raise ConfigException(
+                f"max_width and max_height in wms section must be positive integers: {cfg.get('max_width', 256)},{cfg.get('max_height', 256)}"
+            )
         self.authorities = cfg.get("authorities", {})
         self.user_band_math_extension = cfg.get("user_band_math_extension", False)
+        try:
+            self.wms_cap_cache_age = int(cfg.get("caps_cache_maxage", 0))
+        except ValueError:
+            raise ConfigException(
+                f"caps_cache_maxage in wms section must be an integer: {cfg['caps_cache_maxage']}"
+            )
+        if self.wms_cap_cache_age < 0:
+            raise ConfigException(
+                f"caps_cache_maxage in wms section cannot be negative: {cfg['caps_cache_maxage']}"
+            )
         if "attribution" in cfg:
             _LOG.warning("Attribution entry in top level 'wms' section will be ignored. Attribution should be moved to the 'global' section")
 
