@@ -305,23 +305,23 @@ def test_wms_getfeatureinfo(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
-    test_layer_name = contents[0]
-    test_layer = wms.contents[test_layer_name]
+    for test_layer_name in contents:
+        test_layer = wms.contents[test_layer_name]
 
-    bbox = test_layer.boundingBoxWGS84
-    response = wms.getfeatureinfo(
-        layers=[test_layer_name],
-        srs="EPSG:4326",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
-        size=(256, 256),
-        format="image/png",
-        query_layers=[test_layer_name],
-        info_format="application/json",
-        xy=(250, 250),
-    )
+        bbox = test_layer.boundingBoxWGS84
+        response = wms.getfeatureinfo(
+            layers=[test_layer_name],
+            srs="EPSG:4326",
+            bbox=pytest.helpers.enclosed_bbox(bbox),
+            size=(256, 256),
+            format="image/png",
+            query_layers=[test_layer_name],
+            info_format="application/json",
+            xy=(250, 250),
+        )
 
-    assert response
-    assert response.info()["Content-Type"] == "application/json"
+        assert response
+        assert response.info()["Content-Type"] == "application/json"
 
 
 def test_wms_getlegend(ows_server):

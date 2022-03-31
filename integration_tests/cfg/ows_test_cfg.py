@@ -758,8 +758,8 @@ ows_cfg = {
                     "low_res_product_name": "s2_l2a",
                     "image_processing": {
                         "extent_mask_func": [],
-                        "manual_merge": False,
-                        "apply_solar_corrections": False,
+                        "manual_merge": True,
+                        "apply_solar_corrections": True,
                     },
                     "resource_limits": {
                         "wcs": {
