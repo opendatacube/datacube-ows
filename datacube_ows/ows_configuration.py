@@ -1243,6 +1243,19 @@ class OWSConfig(OWSMetadataConfig):
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
 
+    def _parse_cap_cache_age(self, cfg, entry, section, default=0):
+        try:
+            val = int(cfg.get(entry, default))
+        except ValueError:
+            raise ConfigException(
+                f"{entry} in {section} section must be an integer: {cfg[entry]}"
+            )
+        if val < 0:
+            raise ConfigException(
+                f"{entry} in {section} section cannot be negative: {cfg[entry]}"
+            )
+        return val
+
     def parse_wms(self, cfg):
         if not self.wms and not self.wmts:
             cfg = {}
@@ -1262,16 +1275,7 @@ class OWSConfig(OWSMetadataConfig):
             )
         self.authorities = cfg.get("authorities", {})
         self.user_band_math_extension = cfg.get("user_band_math_extension", False)
-        try:
-            self.wms_cap_cache_age = int(cfg.get("caps_cache_maxage", 0))
-        except ValueError:
-            raise ConfigException(
-                f"caps_cache_maxage in wms section must be an integer: {cfg['caps_cache_maxage']}"
-            )
-        if self.wms_cap_cache_age < 0:
-            raise ConfigException(
-                f"caps_cache_maxage in wms section cannot be negative: {cfg['caps_cache_maxage']}"
-            )
+        self.wms_cap_cache_age = self._parse_cap_cache_age(cfg, "caps_cache_maxage", "wms")
         if "attribution" in cfg:
             _LOG.warning("Attribution entry in top level 'wms' section will be ignored. Attribution should be moved to the 'global' section")
 
@@ -1295,12 +1299,15 @@ class OWSConfig(OWSMetadataConfig):
             if self.native_wcs_format not in self.wcs_formats_by_name:
                 raise ConfigException(f"Configured native WCS format ({self.native_wcs_format}) not a supported format.")
             self.wcs_tiff_statistics = cfg.get("calculate_tiff_statistics", True)
+            self.wcs_cap_cache_age = self._parse_cap_cache_age(cfg, "caps_cache_maxage", "wcs")
         else:
             self.wcs_formats = []
             self.wcs_formats_by_name = {}
             self.wcs_formats_by_mime = {}
             self.native_wcs_format = None
             self.wcs_tiff_statistics = False
+            self.wcs_cap_cache_age = 0
+
 
     def parse_wmts(self, cfg):
         tms_cfgs = TileMatrixSet.default_tm_sets.copy()

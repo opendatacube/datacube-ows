@@ -98,3 +98,14 @@ support very large coverage files.
 
     # Suppress tiff statistics to support very large geotiff responses
     "calculate_tiff_statistics": False,
+
+GetCapabilities Cache Control Headers (caps_cache_maxage)
+=========================================================
+
+The ``caps_cache_maxage`` entry in the ``wcs`` section controls the value of the
+``Cache-control`` HTTP header returned with WCS GetCapabilities responses.
+
+Refer to the documentation for
+`WMS GetCapabilities Caching <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#GetCapabilities-Cache-Control-Headers-caps_cache_maxage>`_
+for further information (the WCS behaviour is identical, except it applies to
+the WCS Capabilities document instead of WMS and WMTS).
