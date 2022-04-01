@@ -38,7 +38,8 @@ from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
                                     local_solar_date_range, month_date_range,
                                     year_date_range)
-from datacube_ows.resource_limits import OWSResourceManagementRules, parse_cache_age
+from datacube_ows.resource_limits import (OWSResourceManagementRules,
+                                          parse_cache_age)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.utils import group_by_statistical
