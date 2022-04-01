@@ -1077,6 +1077,14 @@ class OWSConfig(OWSMetadataConfig):
     def default_abstract(self) -> Optional[str]:
         return ""
 
+    @property
+    def active_products(self):
+        return filter(lambda x: not x.hide, self.product_index.values())
+
+    @property
+    def active_product_index(self):
+        return {prod.name: prod for prod in self.active_products}
+
     def __init__(self, refresh=False, cfg=None, ignore_msgfile=False, called_from_update_ranges=False):
         self.called_from_update_ranges = called_from_update_ranges
         if not self.initialised or refresh:

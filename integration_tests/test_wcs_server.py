@@ -950,9 +950,10 @@ def test_wcs1_getcoverage_exceptions(ows_server):
 def test_wcs1_describecoverage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
-
+    cfg = get_config(refresh=True)
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    assert len(contents) == len(list(cfg.active_products))
     test_layer_name = contents[0]
 
     resp = wcs.getDescribeCoverage(test_layer_name)
@@ -984,6 +985,25 @@ def test_wcs1_describecov_all(ows_server):
         },
     )
     assert r.status_code == 200
+
+
+def test_wcs1_describecov_multi(ows_server):
+    cfg = get_config(refresh=True)
+    prods = list(cfg.active_products)
+    prod_names = sorted(p.name for p in prods)
+    prod_names = prod_names[0:-2]
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "DescribeCoverage",
+            "coverageid": ",".join(list(p.name for p in cfg.active_products)[0:2]),
+            "version": "1.0.0",
+        },
+    )
+    assert "max-age=" in r.headers["Cache-Control"]
+    assert r.status_code == 200
+    for p in prods:
+        assert p.name in r.text
 
 
 def test_wcs20_server(ows_server):
@@ -1160,12 +1180,8 @@ def test_wcs21_server(ows_server):
 
 def test_wcs21_describecoverage(ows_server):
     cfg = get_config(refresh=True)
-    layer = None
-    for lyr in cfg.product_index.values():
-        if lyr.ready and not lyr.hide:
-            layer = lyr
-            break
-    assert layer
+    layers = list(cfg.active_product_index.values())
+    layer = layers[0]
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
     r = requests.get(
         ows_server.url + "/wcs",
@@ -1175,13 +1191,24 @@ def test_wcs21_describecoverage(ows_server):
             "version": "2.1.0",
             "service": "WCS",
         },
+        )
+    assert r.status_code == 200
+    assert "max-age" in r.headers["Cache-Control"]
+    assert layer.name in r.text
+
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "DescribeCoverage",
+            "coverageid": ",".join(l.name for l in layers[0:-2]),
+            "version": "2.1.0",
+            "service": "WCS",
+        },
     )
     assert r.status_code == 200
-    # ETree hangs parsing schema!
-
-
-#   gc_xds = get_xsd("2.1/gml/wcsDescribeCoverage.xsd")
-#   assert gc_xds.validate(r.text)
+    assert "max-age" in r.headers["Cache-Control"]
+    for l in layers[0:-2]:
+        assert l.name in r.text
 
 
 def test_wcs21_getcoverage(ows_server):
