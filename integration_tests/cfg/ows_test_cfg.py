@@ -509,7 +509,12 @@ reslim_continental = {
     },
 }
 
-reslim_wofs_obs = standard_resource_limits
+reslim_wofs_obs = {
+    "inherits": standard_resource_limits,
+    "wcs": {
+        "describe_cache_maxage": 0,
+    }
+}
 
 # MAIN CONFIGURATION OBJECT
 
@@ -687,6 +692,7 @@ ows_cfg = {
         },
         # The wcs:native_format must be declared in wcs:formats dict above.
         "native_format": "GeoTIFF",
+        "default_desc_cache_maxage": 300, # 5 minutes
     },  ###### End of "wcs" section
     # Products published by this datacube_ows instance.
     # The layers section is a list of layer definitions.  Each layer may be either:

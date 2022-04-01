@@ -18,7 +18,8 @@ from ows.wcs.v21 import encoders as encoders_v21
 
 from datacube_ows.data import json_response
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ogc_utils import get_service_base_url, resp_headers
+from datacube_ows.ogc_utils import (cache_control_headers,
+                                    get_service_base_url, resp_headers)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
@@ -139,13 +140,12 @@ def get_capabilities(args):
         include_coverage_summary=include_coverage_summary
     )
 
+    headers = cache_control_headers(cfg.wms_cap_cache_age)
+    headers["Content-Type"] = result.content_type
     return (
         result.value,
         200,
-        resp_headers({
-            "Content-Type": result.content_type,
-            "Cache-Control": "no-cache, max-age=0"
-        })
+        cfg.response_headers(headers)
     )
 
 
@@ -273,14 +273,13 @@ def desc_coverages(args):
         raise WCS2Exception("Unsupported version: %s" % version,
                             WCS2Exception.INVALID_PARAMETER_VALUE,
                             locator="version")
-
+    min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)
+    headers = cache_control_headers(min_cache_age)
+    headers["Content-Type"] = result.content_type
     return (
         result.value,
         200,
-        resp_headers({
-            "Content-Type": result.content_type,
-            "Cache-Control": "no-cache, max-age=0"
-        })
+        resp_headers(headers)
     )
 
 

@@ -9,7 +9,7 @@ from flask import render_template
 
 from datacube_ows.data import json_response
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import get_service_base_url
+from datacube_ows.ogc_utils import cache_control_headers, get_service_base_url
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
@@ -61,6 +61,8 @@ def get_capabilities(args):
     cfg = get_config()
     url = args.get('Host', args['url_root'])
     base_url = get_service_base_url(cfg.allowed_urls, url)
+    headers = cache_control_headers(cfg.wms_cap_cache_age)
+    headers["Content-Type"] = "application/xml"
     return (
         render_template("wcs_capabilities.xml",
                         show_service=show_service,
@@ -69,10 +71,8 @@ def get_capabilities(args):
                         cfg=cfg,
                         base_url=base_url),
         200,
-        cfg.response_headers({
-            "Content-Type": "application/xml",
-            "Cache-Control": "no-cache, max-age=0"
-        }))
+        cfg.response_headers(headers)
+    )
 
 
 @log_call
@@ -96,16 +96,15 @@ def desc_coverages(args):
         for p in cfg.product_index.values():
             if p.ready and p.wcs:
                 products.append(p)
-
+    min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)
+    headers = cache_control_headers(min_cache_age)
+    headers["Content-Type"] = "application/xml"
     return (
         render_template("wcs_desc_coverage.xml",
                         cfg=cfg,
                         products=products),
         200,
-        cfg.response_headers({
-            "Content-Type": "application/xml",
-            "Cache-Control": "max-age=10"
-        })
+        cfg.response_headers(headers)
     )
 
 
