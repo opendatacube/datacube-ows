@@ -1191,7 +1191,7 @@ def test_wcs21_describecoverage(ows_server):
             "version": "2.1.0",
             "service": "WCS",
         },
-        )
+    )
     assert r.status_code == 200
     assert "max-age" in r.headers["Cache-Control"]
     assert layer.name in r.text
