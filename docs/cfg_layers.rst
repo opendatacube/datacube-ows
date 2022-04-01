@@ -489,6 +489,7 @@ E.g.
         "wcs": {
             "max_datasets": 18,
             "max_image_size": 2000 * 2000 * 3 * 2,
+            "describe_cache_maxage": 60 * 5,
             "dataset_cache_rules": [
                 {
                     "min_datasets": 5,
@@ -715,9 +716,19 @@ request is satisfied from the
 depending on which limit(s) have been exceeded, and whether a low-resolution
 summary product has been defined. See the documentation for each limit below for details.
 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Cache Control (dataset-cache-rules and describe_cache_maxage)
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 The `dataset_cache_rules <#dataset-cache-rules>`_ element is also
 supported for WCS.  It behaves for WCS GetCoverage requests as
 documented above for WMS GetMap and WMTS GetTile requests.
+
+An additional element, ``describe_cache_maxage`` is also provided,
+which controls the cache control headers for WCS DescribeCoverage requests
+for the coverage/layer.  This element is optional, and defaults
+to the value set in the
+`top-level WCS section<https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html#describeconverage-default-cache-control-headers-default-desc-cache-maxage>`_
 
 ++++++++++++
 max_datasets
