@@ -24,7 +24,7 @@ Full list of changes since 1.8.26:
 * Replace USGS Landsat data with Sentinel-2 data for CI integration testing. (#812, #817)
 * Bug fix: Manual merge where no extent mask function was broken (#817)
 * Cache-control hints for XML requests (GetCapabilities/DescribeCoverage) (#821, #822)
-* Update HISTORY.rst and default version number (#???)
+* Update HISTORY.rst and default version number (#823)
 
 1.8.26 (2022-01-31)
 -------------------
