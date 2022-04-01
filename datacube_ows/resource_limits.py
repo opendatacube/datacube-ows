@@ -10,6 +10,20 @@ from datacube_ows.ogc_utils import (ConfigException, cache_control_headers,
                                     create_geobox)
 
 
+def parse_cache_age(cfg, entry, section, default=0):
+    try:
+        val = int(cfg.get(entry, default))
+    except ValueError:
+        raise ConfigException(
+            f"{entry} in {section} section must be an integer: {cfg[entry]}"
+        )
+    if val < 0:
+        raise ConfigException(
+            f"{entry} in {section} section cannot be negative: {cfg[entry]}"
+        )
+    return val
+
+
 # pyre-ignore[13]
 class RequestScale:
     standard_scale: "RequestScale"
@@ -185,7 +199,11 @@ class ResourceLimited(Exception):
 
 class OWSResourceManagementRules(OWSConfigEntry):
     # pylint: disable=attribute-defined-outside-init
-    def __init__(self, cfg: CFG_DICT, context: str) -> None:
+    def __init__(self,
+                 global_cfg: "datacube_ows.ows_configuration.OWSConfig",
+                 cfg: CFG_DICT,
+                 context: str
+                 ) -> None:
         """
         Class constructor.
 
@@ -208,6 +226,12 @@ class OWSResourceManagementRules(OWSConfigEntry):
         self.max_image_size_wcs = cast(int, wcs_cfg.get("max_image_size", 0))
         self.wms_cache_rules = CacheControlRules(wms_cfg.get("dataset_cache_rules"), context, self.max_datasets_wms)
         self.wcs_cache_rules = CacheControlRules(wcs_cfg.get("dataset_cache_rules"), context, self.max_datasets_wcs)
+        self.wcs_desc_cache_rule = parse_cache_age(
+            cfg,
+            "describe_cache_max_age",
+            f"resource_limits for {context}",
+            default=global_cfg.wcs_default_descov_age
+        )
 
     def check_wms(self, n_datasets: int, zoom_factor: float, request_scale: RequestScale) -> None:
         """

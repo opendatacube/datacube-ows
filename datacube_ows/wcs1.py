@@ -96,16 +96,15 @@ def desc_coverages(args):
         for p in cfg.product_index.values():
             if p.ready and p.wcs:
                 products.append(p)
-
+    min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)
+    headers = cache_control_headers(min_cache_age)
+    headers["Content-Type"] = "application/xml"
     return (
         render_template("wcs_desc_coverage.xml",
                         cfg=cfg,
                         products=products),
         200,
-        cfg.response_headers({
-            "Content-Type": "application/xml",
-            "Cache-Control": "max-age=10"
-        })
+        cfg.response_headers(headers)
     )
 
 

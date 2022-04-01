@@ -38,7 +38,7 @@ from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
                                     create_geobox, day_summary_date_range,
                                     local_solar_date_range, month_date_range,
                                     year_date_range)
-from datacube_ows.resource_limits import OWSResourceManagementRules
+from datacube_ows.resource_limits import OWSResourceManagementRules, parse_cache_age
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.utils import group_by_statistical
@@ -395,7 +395,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.cfg_native_crs = cfg.get("native_crs")
         self.declare_unready("resolution_x")
         self.declare_unready("resolution_y")
-        self.resource_limits = OWSResourceManagementRules(cfg.get("resource_limits", {}), f"Layer {self.name}")
+        self.resource_limits = OWSResourceManagementRules(self.global_cfg, cfg.get("resource_limits", {}), f"Layer {self.name}")
         try:
             self.parse_flags(cfg.get("flags", {}))
             self.declare_unready("all_flag_band_names")
@@ -1243,19 +1243,6 @@ class OWSConfig(OWSMetadataConfig):
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
 
-    def _parse_cap_cache_age(self, cfg, entry, section, default=0):
-        try:
-            val = int(cfg.get(entry, default))
-        except ValueError:
-            raise ConfigException(
-                f"{entry} in {section} section must be an integer: {cfg[entry]}"
-            )
-        if val < 0:
-            raise ConfigException(
-                f"{entry} in {section} section cannot be negative: {cfg[entry]}"
-            )
-        return val
-
     def parse_wms(self, cfg):
         if not self.wms and not self.wmts:
             cfg = {}
@@ -1275,7 +1262,7 @@ class OWSConfig(OWSMetadataConfig):
             )
         self.authorities = cfg.get("authorities", {})
         self.user_band_math_extension = cfg.get("user_band_math_extension", False)
-        self.wms_cap_cache_age = self._parse_cap_cache_age(cfg, "caps_cache_maxage", "wms")
+        self.wms_cap_cache_age = parse_cache_age(cfg, "caps_cache_maxage", "wms")
         if "attribution" in cfg:
             _LOG.warning("Attribution entry in top level 'wms' section will be ignored. Attribution should be moved to the 'global' section")
 
@@ -1299,7 +1286,8 @@ class OWSConfig(OWSMetadataConfig):
             if self.native_wcs_format not in self.wcs_formats_by_name:
                 raise ConfigException(f"Configured native WCS format ({self.native_wcs_format}) not a supported format.")
             self.wcs_tiff_statistics = cfg.get("calculate_tiff_statistics", True)
-            self.wcs_cap_cache_age = self._parse_cap_cache_age(cfg, "caps_cache_maxage", "wcs")
+            self.wcs_cap_cache_age = parse_cache_age(cfg, "caps_cache_maxage", "wcs")
+            self.wcs_default_descov_age = parse_cache_age(cfg, "default_desc_cache_maxage", "wcs")
         else:
             self.wcs_formats = []
             self.wcs_formats_by_name = {}
@@ -1307,7 +1295,7 @@ class OWSConfig(OWSMetadataConfig):
             self.native_wcs_format = None
             self.wcs_tiff_statistics = False
             self.wcs_cap_cache_age = 0
-
+            self.wcs_default_descov_age = 0
 
     def parse_wmts(self, cfg):
         tms_cfgs = TileMatrixSet.default_tm_sets.copy()

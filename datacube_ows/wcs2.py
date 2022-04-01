@@ -273,14 +273,13 @@ def desc_coverages(args):
         raise WCS2Exception("Unsupported version: %s" % version,
                             WCS2Exception.INVALID_PARAMETER_VALUE,
                             locator="version")
-
+    min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)
+    headers = cache_control_headers(min_cache_age)
+    headers["Content-Type"] = result.content_type
     return (
         result.value,
         200,
-        resp_headers({
-            "Content-Type": result.content_type,
-            "Cache-Control": "no-cache, max-age=0"
-        })
+        resp_headers(headers)
     )
 
 
