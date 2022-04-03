@@ -7,6 +7,25 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.27 (2022-04-04)
+-------------------
+
+Several bugfixes, and documentation updates and we had to change our CI test data because the old USGS Landsat PDS went user-pays.
+
+Cache-control hints can now be configured for the XML requests (GetCapabilities, DescribeCoverage).  WMS and WCS GetCapabilities can be configured separately.  WCS DescribeCoverage can be configured globally and optionally over-ridden per layer/coverage.   Refer to the documentation for details.
+
+Full list of changes since 1.8.26:
+++++++++++++++++++++++++++++++++++
+
+* Bug fix: Multidate NetCDF requests were broken in both WCS1 and WCS2- now fixed (#799)
+* int8 added as a supported dtype (#801, #802)
+* Logging updated to include remote IP (#808,#811,#818)
+* Documentation updates (#810, #819, #820)
+* Replace USGS Landsat data with Sentinel-2 data for CI integration testing. (#812, #817)
+* Bug fix: Manual merge where no extent mask function was broken (#817)
+* Cache-control hints for XML requests (GetCapabilities/DescribeCoverage) (#821, #822)
+* Update HISTORY.rst and default version number (#823)
+
 1.8.26 (2022-01-31)
 -------------------
 
