@@ -40,7 +40,7 @@ class MVSelectOpts(Enum):
     IDS: return list of database_ids only.
     DATASETS: return list of ODC dataset objects
     COUNT: return a count of matching datasets
-    EXTENT: return full extent of query as a Geometry
+    EXTENT: return full extent of query result as a Geometry
     """
     ALL = 0
     IDS = 1
@@ -124,6 +124,8 @@ def mv_search(index: "datacube.index.Index",
                 uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
                 if geom:
                     intersect = uniongeom.intersection(geom)
+                    if intersect.wkt == 'POLYGON EMPTY':
+                        return None
                     if orig_crs and orig_crs != "EPSG:4326":
                         intersect = intersect.to_crs(orig_crs)
                 else:
