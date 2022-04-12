@@ -285,47 +285,38 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
 
 def bbox_projections(starting_box, crses):
-   globalbox = datacube.utils.geometry.box(-180, -90, 180, 90,
-                                           crs=datacube.utils.geometry.CRS("EPSG:4326"))
-   global_data = (starting_box == globalbox)
    result = {}
    for crsid, crs in crses.items():
        if crs.valid_region is not None:
-           global_crs_bbox = crs.valid_region.to_crs(crs).boundingbox
+           clipped_crs_bbox = (starting_box & crs.valid_region).to_crs(crs).boundingbox
        else:
-           global_crs_bbox is None
-       if global_data and global_crs_bbox is not None:
+           clipped_crs_bbox = None
+       if clipped_crs_bbox is not None:
            result[crsid] = {
-               "top": global_crs_bbox.top,
-               "bottom": global_crs_bbox.bottom,
-               "left": global_crs_bbox.left,
-               "right": global_crs_bbox.right
+               "top": clipped_crs_bbox.top,
+               "bottom": clipped_crs_bbox.bottom,
+               "left": clipped_crs_bbox.left,
+               "right": clipped_crs_bbox.right
            }
        else:
            projbbox = starting_box.to_crs(crs).boundingbox
-           result[crsid] = sanitise_bbox(projbbox, global_crs_bbox)
+           result[crsid] = sanitise_bbox(projbbox)
    return result
 
 
-def sanitise_bbox(bbox, global_bbox=None):
-    def santise_coordinate(coord, global_coord=None):
+def sanitise_bbox(bbox):
+    def sanitise_coordinate(coord):
         if coord in (float("-Inf"), float("-Nan")):
-            if global_coord is not None:
-                return global_coord
-            else:
-                return float("-9.999999999e99")
-        elif coord in (float("Inf"), float("Nan")):
-            if global_coord is not None:
-                return global_coord
-            else:
-                return float("9.999999999e99")
+            return float("-9.999999999e99")
+        elif coord in (float("Inf"), float("Nan"), float("+Nan")):
+            return float("9.999999999e99")
         else:
             return coord
     return {
-        "top": santise_coordinate(bbox.top, getattr(global_bbox, "top", None)),
-        "bottom": santise_coordinate(bbox.bottom, getattr(global_bbox, "bottom", None)),
-        "left": santise_coordinate(bbox.left, getattr(global_bbox, "left", None)),
-        "right": santise_coordinate(bbox.right, getattr(global_bbox, "right", None)),
+        "top": sanitise_coordinate(bbox.top),
+        "bottom": sanitise_coordinate(bbox.bottom),
+        "left": sanitise_coordinate(bbox.left),
+        "right": sanitise_coordinate(bbox.right),
     }
 
 
