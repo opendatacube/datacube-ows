@@ -7,10 +7,11 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
-1.8.28 (2022-04-11)
+1.8.28 (2022-04-12)
 -------------------
 
-This release enhances to dataset extent handling in OWS materialised views.
+This release enhances to dataset extent handling in OWS materialised views, and product extent
+handling in OWS summary tables.
 
 OWS maintains materialised views storing dataset extent geometries.  These are used
 in database search queries for both GetMap and GetFeatureInfo queries (including the
@@ -24,26 +25,33 @@ locations these geometries may be able to be extracted from, depending on both t
 type used by a particular product, and upon the packaging process used to generate
 the original metadata documents.
 
+Product-level extents are calculated from the materialised views by the ``datacube-ows-update``
+utility and cached in the OWS range tables.
+
+This release introduces changes to both the materialised view definitions and the ``datacube-ows-update``
+utility to improve the accuracy and reliability of these extents.
+
 This release includes:
 
-* enhancements to the materialised view definitions to support extracting extent polygons
-  from various optional metadata locations in both EO and EO3 based products. (#826)
 * A bug fix to the OWS code which reads from the materialised views, preventing runtime errors
   from occurring in scenarios where accurate extent information is not available (#825)
-* Update HISTORY.rst and default version number (#827??)
+* Enhancements to the materialised view definitions to support extracting extent polygons
+  from various optional metadata locations in both EO and EO3 based products. (#826)
+* Sanity-check and sanitise bounding box ranges for global datasets (#828)
+* Update HISTORY.rst and default version number (#829??)
 
 Upgrade notes:
 
-To enjoy the advantages of the materialised view enhancements you will need to run the
-following utility, using a database role capable of altering the schema:
+To enjoy all the advantages of these extent handling enhancements you will need to
+run the following command, using a database role capable of altering the schema::
 
      datacube-ows-update --schema --role role_to_grant_access_to
 
-After regenerating the schema, the range tables should also be updated:
+After regenerating the schema, the range tables should also be updated::
 
      datacube-ows-update
 
-(Note there is no need to run datacube-ows-update with the --views option in between these
+(Note that there is no need to run ``datacube-ows-update`` with the ``--views`` option in between these
 two steps.)
 
 1.8.27 (2022-04-04)
