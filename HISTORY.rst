@@ -38,7 +38,9 @@ This release includes:
 * Enhancements to the materialised view definitions to support extracting extent polygons
   from various optional metadata locations in both EO and EO3 based products. (#826)
 * Sanity-check and sanitise bounding box ranges for global datasets (#828)
-* Update HISTORY.rst and default version number (#829??)
+* Usability improvements for external legends. Clearer reporting of read errors on external
+  urls, and raise warning instead of failing if external image format is not PNG. (#829)
+* Update HISTORY.rst and default version number (#830??)
 
 Upgrade notes:
 
