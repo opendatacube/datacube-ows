@@ -6,16 +6,14 @@
 
 #pylint: skip-file
 
-from __future__ import absolute_import, division, print_function
-
+import math
 from datetime import datetime, timedelta, timezone
 
 import datacube
 from psycopg2.extras import Json
 
 from datacube_ows.ogc_utils import NoTimezoneException, tz_for_coord
-from datacube_ows.ows_configuration import \
-    get_config  # , get_layers, ProductLayerDef
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import get_sqlconn
 
 
@@ -270,23 +268,44 @@ def create_range_entry(dc, product, crses, summary_product=False):
     float(r[1]),
     epsg4326)
 
+  all_bboxes = bbox_projections(box, crses)
+
   conn.execute("""
     UPDATE wms.product_ranges
     SET bboxes = %(bbox)s::jsonb
     WHERE id=%(p_id)s
     """, {
-    "bbox": Json(
-      {crsid: {"top": box.to_crs(crs).boundingbox.top,
-               "bottom": box.to_crs(crs).boundingbox.bottom,
-               "left": box.to_crs(crs).boundingbox.left,
-               "right": box.to_crs(crs).boundingbox.right}
-        for crsid, crs in crses.items()
-       }
-    ),
+    "bbox": Json(all_bboxes),
     "p_id": product.id})
 
   txn.commit()
   conn.close()
+
+
+def bbox_projections(starting_box, crses):
+   result = {}
+   for crsid, crs in crses.items():
+       if crs.valid_region is not None:
+           clipped_crs_bbox = (starting_box & crs.valid_region).to_crs(crs).boundingbox
+       else:
+           clipped_crs_bbox = None
+       if clipped_crs_bbox is not None:
+           result[crsid] = jsonise_bbox(clipped_crs_bbox)
+       else:
+           projbbox = starting_box.to_crs(crs).boundingbox
+           result[crsid] = sanitise_bbox(projbbox)
+   return result
+
+
+def sanitise_bbox(bbox):
+    def sanitise_coordinate(coord, fallback):
+        return coord if math.isfinite(coord) else fallback
+    return {
+        "top": sanitise_coordinate(bbox.top, float("9.999999999e99")),
+        "bottom": sanitise_coordinate(bbox.bottom, float("-9.999999999e99")),
+        "left": sanitise_coordinate(bbox.left, float("-9.999999999e99")),
+        "right": sanitise_coordinate(bbox.right, float("9.999999999e99")),
+    }
 
 
 def datasets_exist(dc, product_name):
