@@ -26,7 +26,7 @@ This release includes:
   ``(-179.9999, -89.9999, 179.999, 89.999, crs=EPSG:4326)`` (#828)
 * Usability improvements for external legends. Clearer reporting of read errors on external
   urls, and raise warning instead of failing if external image format is not PNG. (#829)
-* Update HISTORY.rst and default version number (#830??)
+* Update HISTORY.rst and default version number (#830)
 
 Upgrade notes:
 ++++++++++++++
