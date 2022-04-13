@@ -5,9 +5,9 @@
 # SPDX-License-Identifier: Apache-2.0
 import io
 import logging
-import requests
 from typing import Optional
 
+import requests
 from PIL import Image
 
 from datacube_ows.ogc_exceptions import WMSException
