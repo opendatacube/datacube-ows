@@ -6,16 +6,15 @@
 
 #pylint: skip-file
 
-from __future__ import absolute_import, division, print_function
+import math
 
 from datetime import datetime, timedelta, timezone
 
 import datacube
 from psycopg2.extras import Json
 
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.ogc_utils import NoTimezoneException, tz_for_coord
-from datacube_ows.ows_configuration import \
-    get_config  # , get_layers, ProductLayerDef
 from datacube_ows.utils import get_sqlconn
 
 
@@ -292,12 +291,7 @@ def bbox_projections(starting_box, crses):
        else:
            clipped_crs_bbox = None
        if clipped_crs_bbox is not None:
-           result[crsid] = {
-               "top": clipped_crs_bbox.top,
-               "bottom": clipped_crs_bbox.bottom,
-               "left": clipped_crs_bbox.left,
-               "right": clipped_crs_bbox.right
-           }
+           result[crsid] = jsonise_bbox(clipped_crs_bbox)
        else:
            projbbox = starting_box.to_crs(crs).boundingbox
            result[crsid] = sanitise_bbox(projbbox)
@@ -305,18 +299,13 @@ def bbox_projections(starting_box, crses):
 
 
 def sanitise_bbox(bbox):
-    def sanitise_coordinate(coord):
-        if coord in (float("-Inf"), float("-Nan")):
-            return float("-9.999999999e99")
-        elif coord in (float("Inf"), float("Nan"), float("+Nan")):
-            return float("9.999999999e99")
-        else:
-            return coord
+    def sanitise_coordinate(coord, fallback):
+        return coord if math.isfinite(coord) else fallback
     return {
-        "top": sanitise_coordinate(bbox.top),
-        "bottom": sanitise_coordinate(bbox.bottom),
-        "left": sanitise_coordinate(bbox.left),
-        "right": sanitise_coordinate(bbox.right),
+        "top": sanitise_coordinate(bbox.top, float("9.999999999e99")),
+        "bottom": sanitise_coordinate(bbox.bottom, float("-9.999999999e99")),
+        "left": sanitise_coordinate(bbox.left, float("-9.999999999e99")),
+        "right": sanitise_coordinate(bbox.right, float("9.999999999e99")),
     }
 
 
