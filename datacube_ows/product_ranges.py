@@ -7,14 +7,13 @@
 #pylint: skip-file
 
 import math
-
 from datetime import datetime, timedelta, timezone
 
 import datacube
 from psycopg2.extras import Json
 
-from datacube_ows.ows_configuration import get_config
 from datacube_ows.ogc_utils import NoTimezoneException, tz_for_coord
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import get_sqlconn
 
 
