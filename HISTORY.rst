@@ -10,26 +10,9 @@ Datacube-ows version 1.8.x indicates that it is designed work with datacube-core
 1.8.28 (2022-04-12)
 -------------------
 
-This release enhances to dataset extent handling in OWS materialised views, and product extent
-handling in OWS summary tables.
-
-OWS maintains materialised views storing dataset extent geometries.  These are used
-in database search queries for both GetMap and GetFeatureInfo queries (including the
-available times feature in GetFeatureInfo, as used by the Terria "Filter by Location"
-feature) and to generate the semi-transparent extent polygons displayed when the
-configured resource limits are exceeded.
-
-These extent geometries must be extracted from the ODC metadata for the dataset, and
-because of the dynamic metadata-driven data model used by the ODC, there are many different
-locations these geometries may be able to be extracted from, depending on both the ODC metadata
-type used by a particular product, and upon the packaging process used to generate
-the original metadata documents.
-
-Product-level extents are calculated from the materialised views by the ``datacube-ows-update``
-utility and cached in the OWS range tables.
-
 This release introduces changes to both the materialised view definitions and the ``datacube-ows-update``
-utility to improve the accuracy and reliability of these extents.
+utility to improve the accuracy and reliability of these extents, as well as bug fixes for
+externally-hosted legend images.
 
 This release includes:
 
@@ -37,12 +20,16 @@ This release includes:
   from occurring in scenarios where accurate extent information is not available (#825)
 * Enhancements to the materialised view definitions to support extracting extent polygons
   from various optional metadata locations in both EO and EO3 based products. (#826)
-* Sanity-check and sanitise bounding box ranges for global datasets (#828)
+* Sanity-check and sanitise bounding box ranges for global datasets.  It should now be
+  possible to use datasets with bounding box ``(-180, -90, 180, 90, crs=EPSG:4326)`` in
+  OWS.  Previously this required hacking the metadata to result in e.g.
+  ``(-179.9999, -89.9999, 179.999, 89.999, crs=EPSG:4326)`` (#828)
 * Usability improvements for external legends. Clearer reporting of read errors on external
   urls, and raise warning instead of failing if external image format is not PNG. (#829)
 * Update HISTORY.rst and default version number (#830??)
 
 Upgrade notes:
+++++++++++++++
 
 To enjoy all the advantages of these extent handling enhancements you will need to
 run the following command, using a database role capable of altering the schema::
