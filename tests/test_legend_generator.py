@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from datacube_ows.legend_utils import get_image_from_url
+from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
 from tests.test_band_utils import dummy_layer  # noqa: F401,F811
@@ -50,8 +51,8 @@ def test_image_from_url(image_url):
 
 
 def test_image_from_bad_image_url(bad_image_url):
-    img = get_image_from_url(bad_image_url)
-    assert img is None
+    with pytest.raises(WMSException) as e:
+        img = get_image_from_url(bad_image_url)
 
 def test_parse_colorramp_defaults():
     legend = ColorRampDef.Legend(MagicMock(), {})
