@@ -7,6 +7,42 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.28 (2022-04-12)
+-------------------
+
+This release introduces changes to both the materialised view definitions and the ``datacube-ows-update``
+utility to improve the accuracy and reliability of these extents, as well as bug fixes for
+externally-hosted legend images.
+
+This release includes:
+
+* A bug fix to the OWS code which reads from the materialised views, preventing runtime errors
+  from occurring in scenarios where accurate extent information is not available (#825)
+* Enhancements to the materialised view definitions to support extracting extent polygons
+  from various optional metadata locations in both EO and EO3 based products. (#826)
+* Sanity-check and sanitise bounding box ranges for global datasets.  It should now be
+  possible to use datasets with bounding box ``(-180, -90, 180, 90, crs=EPSG:4326)`` in
+  OWS.  Previously this required hacking the metadata to result in e.g.
+  ``(-179.9999, -89.9999, 179.999, 89.999, crs=EPSG:4326)`` (#828)
+* Usability improvements for external legends. Clearer reporting of read errors on external
+  urls, and raise warning instead of failing if external image format is not PNG. (#829)
+* Update HISTORY.rst and default version number (#830)
+
+Upgrade notes:
+++++++++++++++
+
+To enjoy all the advantages of these extent handling enhancements you will need to
+run the following command, using a database role capable of altering the schema::
+
+     datacube-ows-update --schema --role role_to_grant_access_to
+
+After regenerating the schema, the range tables should also be updated::
+
+     datacube-ows-update
+
+(Note that there is no need to run ``datacube-ows-update`` with the ``--views`` option in between these
+two steps.)
+
 1.8.27 (2022-04-04)
 -------------------
 
