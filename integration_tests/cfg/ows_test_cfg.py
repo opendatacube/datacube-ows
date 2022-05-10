@@ -36,6 +36,12 @@ bands_sentinel = {
 }
 
 
+bands_fc_3 = {
+    "bs": ["bare_soil"],
+    "pv": ["photosynthetic_vegetation", "green_vegetation"],
+    "npv": ["non_photosynthetic_vegetation", "brown_vegetation"],
+    "ue": [],
+}
 
 bands_sentinel2_ard_nbart = {
     "nbart_coastal_aerosol": [
@@ -62,6 +68,64 @@ bands_sentinel2_ard_nbart = {
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions
 
+s2_nrt_fmask = [
+    {
+        "band": "fmask",
+        "values": [0, 2, 3],
+        "invert": True,
+    },
+    {
+        "band": "land",
+        "invert": True,
+        "values": [1],
+    },
+]
+
+
+style_s2_mndwi = {
+    # Cannot reuse landsat as we need swir_2 to landsat's swir_1
+    "name": "mndwi",
+    "title": "Modified Normalised Difference Water Index - Green, SWIR",
+    "abstract": "Modified Normalised Difference Water Index - a derived index that correlates well with the existence of water (Xu 2006)",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {"band1": "nbart_green", "band2": "nbart_swir_2"},
+    },
+    "needed_bands": ["nbart_green", "nbart_swir_2"],
+    "color_ramp": [
+        {"value": -0.1, "color": "#f7fbff", "alpha": 0.0},
+        {"value": 0.0, "color": "#d8e7f5"},
+        {"value": 0.2, "color": "#b0d2e8"},
+        {"value": 0.4, "color": "#73b3d8"},
+        {"value": 0.6, "color": "#3e8ec4"},
+        {"value": 0.8, "color": "#1563aa"},
+        {"value": 1.0, "color": "#08306b"},
+    ],
+    "pq_masks": s2_nrt_fmask,
+    "multi_date": [
+        {
+            "allowed_count_range": [2, 2],
+            "preserve_user_date_order": True,
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_delta"
+            },
+            "mpl_ramp": "RdYlBu",
+            "range": [-1.0, 1.0],
+            "pq_masks": s2_nrt_fmask,
+            "legend": {
+                "begin": "-1.0",
+                "end": "1.0",
+                "ticks": [
+                    "-1.0",
+                    "0.0",
+                    "1.0",
+                ],
+            },
+            "feature_info_label": "mndwi_delta",
+        }
+    ],
+}
 
 style_ls_simple_rgb = {
     # Machine readable style name. (required.  Must be unique within a layer.)
@@ -99,6 +163,22 @@ style_ls_simple_rgb = {
         }
     }
 
+}
+
+style_fc_c3_rgb_unmasked = {
+    "name": "fc_rgb_unmasked",
+    "title": "Three-band Fractional Cover Unmasked (Warning: includes invalid data)",
+    "abstract": "Fractional cover medians - red is bare soil, green is green vegetation and blue is non-green vegetation",
+    "components": {
+        "red": {"bs": 1.0},
+        "green": {"pv": 1.0},
+        "blue": {"npv": 1.0},
+    },
+    "scale_range": [0.0, 100.0],
+    "legend": {
+        "show_legend": True,
+        "url": "https://data.dea.ga.gov.au/fractional-cover/FC_legend.png",
+    },
 }
 
 style_ls_simple_rgb_clone = {
@@ -311,6 +391,63 @@ styles_s2_list = [
     style_ls_ndvi_delta,
 ]
 
+style_s2_ndci = {
+    "name": "ndci",
+    "title": "Normalised Difference Chlorophyll Index - Red Edge, Red",
+    "abstract": "Normalised Difference Chlorophyll Index - a derived index that correlates well with the existence of chlorophyll",
+    "index_function": {
+        "function": "datacube_ows.band_utils.sentinel2_ndci",
+        "mapped_bands": True,
+        "kwargs": {
+            "b_red_edge": "nbart_red_edge_1",
+            "b_red": "nbart_red",
+            "b_green": "nbart_green",
+            "b_swir": "nbart_swir_2",
+        },
+    },
+    "needed_bands": ["nbart_red_edge_1", "nbart_red", "nbart_green", "nbart_swir_2"],
+    "color_ramp": [
+        {
+            "value": -0.1,
+            "color": "#1696FF",
+        },
+        {"value": -0.1, "color": "#1696FF"},
+        {
+            "value": 0.0,
+            "color": "#00FFDF",
+        },
+        {
+            "value": 0.1,
+            "color": "#FFF50E",
+        },
+        {
+            "value": 0.2,
+            "color": "#FFB50A",
+        },
+        {
+            "value": 0.4,
+            "color": "#FF530D",
+        },
+        {
+            "value": 0.5,
+            "color": "#FF0000",
+        },
+    ],
+    "legend": {
+        "begin": "-0.1",
+        "end": "0.5",
+        "ticks_every": "0.1",
+        "units": "unitless",
+        "tick_labels": {"-0.1": {"prefix": "<"}, "0.5": {"prefix": ">"}},
+    },
+}
+
+
+styles_s2_ga_list = [
+    style_s2_ndci,
+    style_s2_mndwi,
+]
+
 # Describes a style which uses several bitflags to create a style
 
 # REUSABLE CONFIG FRAGMENTS - resource limit declarations
@@ -351,7 +488,9 @@ reslim_for_sentinel2 = {
         "min_zoom_factor": 5.9,
         "dataset_cache_rules": dataset_cache_rules,
     },
-    "wcs": common_wcs_limits,
+    "wcs": {
+        "max_datasets": 32,  # Defaults to no dataset limit
+    },
 }
 
 reslim_continental = {
@@ -630,7 +769,7 @@ ows_cfg = {
             ]
         },
         {
-            "title": "Baseline satellite data",
+            "title": "DEA Config Samples",
             "abstract": "",
             "layers": [
                 {
@@ -654,9 +793,9 @@ For service status information, see https://status.dea.ga.gov.au
                 """,
                     "multi_product": True,
                     "product_names": ["s2a_ard_granule", "s2b_ard_granule"],
+                    "low_res_product_names": ["s2a_ard_granule", "s2b_ard_granule"],
                     "bands": bands_sentinel2_ard_nbart,
                     "resource_limits": reslim_for_sentinel2,
-                    "dynamic": True,
                     "native_crs": "EPSG:3577",
                     "native_resolution": [10.0, 10.0],
                     "image_processing": {
@@ -678,7 +817,50 @@ For service status information, see https://status.dea.ga.gov.au
                             "ignore_info_flags": []
                         },
                     ],
-                    "styling": {"default_style": "simple_rgb", "styles": styles_s2_list},
+                    "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
+                },
+                {
+                    "title": "DEA Fractional Cover (Landsat)",
+                    "name": "ga_ls_fc_3",
+                    "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
+                Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
+                green (leaves, grass, and growing crops)
+                brown (branches, dry grass or hay, and dead leaf litter)
+                bare ground (soil or rock)
+                DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
+                https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
+                For service status information, see https://status.dea.ga.gov.au""",
+                    "product_name": "ga_ls_fc_3",
+                    "bands": bands_fc_3,
+                    "resource_limits": reslim_for_sentinel2,
+                    "dynamic": True,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [25, -25],
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": False,
+                    },
+                    "flags": [
+                        # flags is now a list of flag band definitions - NOT a dictionary with identifiers
+                        {
+                            "band": "land",
+                            "product": "geodata_coast_100k",
+                            "ignore_time": True,
+                            "ignore_info_flags": [],
+                        },
+                        {
+                            "band": "water",
+                            "product": "ga_ls_wo_3",
+                            "ignore_time": False,
+                            "ignore_info_flags": [],
+                            "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                        },
+                    ],
+                    "styling": {
+                        "default_style": "fc_rgb_unmasked",
+                        "styles": [style_fc_c3_rgb_unmasked],
+                    },
                 }
             ]
         }
