@@ -101,4 +101,4 @@ def role_name():
 
 @pytest.fixture
 def multiproduct_name():
-    return "fc_albers_combined"
+    return "s2_ard_granule_nbar_t"

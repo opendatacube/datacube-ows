@@ -36,19 +36,96 @@ bands_sentinel = {
 }
 
 
-bands_fc = {
-    "BS": ["bare_soil"],
-    "PV": ["photosynthetic_vegetation", "green_vegetation"],
-    "NPV": ["non_photosynthetic_vegetation", "brown_vegetation"],
+bands_fc_3 = {
+    "bs": ["bare_soil"],
+    "pv": ["photosynthetic_vegetation", "green_vegetation"],
+    "npv": ["non_photosynthetic_vegetation", "brown_vegetation"],
+    "ue": [],
 }
 
-bands_wofs_obs = {
-    "water": [],
+bands_sentinel2_ard_nbart = {
+    "nbart_coastal_aerosol": [
+        "nbar_coastal_aerosol",
+        "coastal_aerosol",
+        "nbart_coastal_aerosol",
+        "nbart_narrow_blue",
+        "nbar_narrow_blue",
+        "narrow_blue",
+    ],
+    "nbart_blue": ["nbar_blue", "blue", "nbart_blue"],
+    "nbart_green": ["nbar_green", "green", "nbart_green"],
+    "nbart_red": ["nbar_red", "red", "nbart_red"],
+    "nbart_red_edge_1": ["nbar_red_edge_1", "red_edge_1", "nbart_red_edge_1"],
+    "nbart_red_edge_2": ["nbar_red_edge_2", "red_edge_2", "nbart_red_edge_2"],
+    "nbart_red_edge_3": ["nbar_red_edge_3", "red_edge_3", "nbart_red_edge_3"],
+    "nbart_nir_1": ["nbar_nir_1", "nir", "nir_1", "nbart_nir_1"],
+    "nbart_nir_2": ["nbar_nir_2", "nir2", "nbart_nir_2"],
+    "nbart_swir_2": ["nbar_swir_2", "swir_2", "nbart_swir_2"],
+    "nbart_swir_3": ["nbar_swir_3", "swir_3", "nbart_swir_3"],
+    "fmask": ["fmask"],
 }
 
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions
 
+s2_nrt_fmask = [
+    {
+        "band": "fmask",
+        "values": [0, 2, 3],
+        "invert": True,
+    },
+    {
+        "band": "land",
+        "invert": True,
+        "values": [1],
+    },
+]
+
+
+style_s2_mndwi = {
+    # Cannot reuse landsat as we need swir_2 to landsat's swir_1
+    "name": "mndwi",
+    "title": "Modified Normalised Difference Water Index - Green, SWIR",
+    "abstract": "Modified Normalised Difference Water Index - a derived index that correlates well with the existence of water (Xu 2006)",
+    "index_function": {
+        "function": "datacube_ows.band_utils.norm_diff",
+        "mapped_bands": True,
+        "kwargs": {"band1": "nbart_green", "band2": "nbart_swir_2"},
+    },
+    "needed_bands": ["nbart_green", "nbart_swir_2"],
+    "color_ramp": [
+        {"value": -0.1, "color": "#f7fbff", "alpha": 0.0},
+        {"value": 0.0, "color": "#d8e7f5"},
+        {"value": 0.2, "color": "#b0d2e8"},
+        {"value": 0.4, "color": "#73b3d8"},
+        {"value": 0.6, "color": "#3e8ec4"},
+        {"value": 0.8, "color": "#1563aa"},
+        {"value": 1.0, "color": "#08306b"},
+    ],
+    "pq_masks": s2_nrt_fmask,
+    "multi_date": [
+        {
+            "allowed_count_range": [2, 2],
+            "preserve_user_date_order": True,
+            "aggregator_function": {
+                "function": "datacube_ows.band_utils.multi_date_delta"
+            },
+            "mpl_ramp": "RdYlBu",
+            "range": [-1.0, 1.0],
+            "pq_masks": s2_nrt_fmask,
+            "legend": {
+                "begin": "-1.0",
+                "end": "1.0",
+                "ticks": [
+                    "-1.0",
+                    "0.0",
+                    "1.0",
+                ],
+            },
+            "feature_info_label": "mndwi_delta",
+        }
+    ],
+}
 
 style_ls_simple_rgb = {
     # Machine readable style name. (required.  Must be unique within a layer.)
@@ -86,6 +163,22 @@ style_ls_simple_rgb = {
         }
     }
 
+}
+
+style_fc_c3_rgb_unmasked = {
+    "name": "fc_rgb_unmasked",
+    "title": "Three-band Fractional Cover Unmasked (Warning: includes invalid data)",
+    "abstract": "Fractional cover medians - red is bare soil, green is green vegetation and blue is non-green vegetation",
+    "components": {
+        "red": {"bs": 1.0},
+        "green": {"pv": 1.0},
+        "blue": {"npv": 1.0},
+    },
+    "scale_range": [0.0, 100.0],
+    "legend": {
+        "show_legend": True,
+        "url": "https://data.dea.ga.gov.au/fractional-cover/FC_legend.png",
+    },
 }
 
 style_ls_simple_rgb_clone = {
@@ -298,159 +391,62 @@ styles_s2_list = [
     style_ls_ndvi_delta,
 ]
 
-style_fc_simple = {
-    "name": "simple_fc",
-    "title": "Fractional Cover",
-    "abstract": "Fractional cover representation, with green vegetation in green, dead vegetation in blue, and bare soil in red",
-    "components": {"red": {"BS": 1.0}, "green": {"PV": 1.0}, "blue": {"NPV": 1.0}},
-    "scale_range": [0.0, 100.0],
-    "pq_masks": [
+style_s2_ndci = {
+    "name": "ndci",
+    "title": "Normalised Difference Chlorophyll Index - Red Edge, Red",
+    "abstract": "Normalised Difference Chlorophyll Index - a derived index that correlates well with the existence of chlorophyll",
+    "index_function": {
+        "function": "datacube_ows.band_utils.sentinel2_ndci",
+        "mapped_bands": True,
+        "kwargs": {
+            "b_red_edge": "nbart_red_edge_1",
+            "b_red": "nbart_red",
+            "b_green": "nbart_green",
+            "b_swir": "nbart_swir_2",
+        },
+    },
+    "needed_bands": ["nbart_red_edge_1", "nbart_red", "nbart_green", "nbart_swir_2"],
+    "color_ramp": [
         {
-            "band": "water",
-            "flags": {"dry": True},
+            "value": -0.1,
+            "color": "#1696FF",
+        },
+        {"value": -0.1, "color": "#1696FF"},
+        {
+            "value": 0.0,
+            "color": "#00FFDF",
         },
         {
-            "band": "water",
-            "flags": {
-                "terrain_or_low_angle": False,
-                "high_slope": False,
-                "cloud_shadow": False,
-                "cloud": False,
-                "sea": False,
-            },
+            "value": 0.1,
+            "color": "#FFF50E",
+        },
+        {
+            "value": 0.2,
+            "color": "#FFB50A",
+        },
+        {
+            "value": 0.4,
+            "color": "#FF530D",
+        },
+        {
+            "value": 0.5,
+            "color": "#FF0000",
         },
     ],
-}
-
-style_wofs_obs = {
-    "name": "observations",
-    "title": "Observations",
-    "abstract": "Observations",
-    "value_map": {
-        "water": [
-            {
-                # Make noncontiguous data transparent
-                "title": "",
-                "abstract": "",
-                "flags": {"noncontiguous": True},
-                "alpha": 0.0,
-                "color": "#ffffff",
-            },
-            {
-                # Make sea and sea glint transparent
-                "title": "",
-                "abstract": "",
-                "flags": {"sea": True},
-                "alpha": 0.0,
-                "color": "#4f81bd",
-            },
-            {
-                "title": "Cloudy Steep Terrain",
-                "abstract": "",
-                "flags": {"and": {"high_slope": True, "cloud": True}},
-                "color": "#f2dcb4",
-            },
-            {
-                "title": "Cloudy Water",
-                "abstract": "",
-                "flags": {"and": {"wet": True, "cloud": True}},
-                "color": "#bad4f2",
-            },
-            {
-                "title": "Shaded Water",
-                "abstract": "",
-                "flags": {"and": {"wet": True, "cloud_shadow": True}},
-                "color": "#335277",
-            },
-            {
-                "title": "Cloud",
-                "abstract": "",
-                "flags": {"cloud": True},
-                "color": "#c2c1c0",
-            },
-            {
-                "title": "Cloud Shadow",
-                "abstract": "",
-                "flags": {"cloud_shadow": True},
-                "color": "#4b4b37",
-            },
-            {
-                "title": "Terrain Shadow or Low Sun Angle",
-                "abstract": "",
-                "flags": {"terrain_or_low_angle": True},
-                "color": "#2f2922",
-            },
-            {
-                "title": "Steep Terrain",
-                "abstract": "",
-                "flags": {"high_slope": True},
-                "color": "#776857",
-            },
-            {
-                "title": "Water",
-                "abstract": "",
-                "flags": {"and": {"wet": True, "sea": False}},
-                "color": "#4f81bd",
-            },
-            {
-                "title": "Dry",
-                "abstract": "",
-                "flags": {"and": {"dry": True, "sea": False}},
-                "color": "#96966e",
-            },
-        ]
-    },
-    "legend": {"width": 3.0, "height": 2.1},
-}
-
-style_wofs_obs_wet_only = {
-    "name": "wet",
-    "title": "Wet Only",
-    "abstract": "Wet Only",
-    "value_map": {
-        "water": [
-            {
-                "title": "Invalid",
-                "abstract": "Slope or Cloud",
-                "flags": {
-                    "or": {
-                        "terrain_or_low_angle": True,
-                        "cloud_shadow": True,
-                        "cloud": True,
-                        "high_slope": True,
-                        "noncontiguous": True,
-                    }
-                },
-                "color": "#707070",
-                "alpha": 0.0,
-            },
-            {
-                # Possible Sea Glint, also mark as invalid
-                "title": "",
-                "abstract": "",
-                "flags": {"dry": True, "sea": True},
-                "color": "#707070",
-                "alpha": 0.0,
-            },
-            {
-                "title": "Dry",
-                "abstract": "Dry",
-                "flags": {
-                    "dry": True,
-                    "sea": False,
-                },
-                "color": "#D99694",
-                "alpha": 0.0,
-            },
-            {
-                "title": "Wet",
-                "abstract": "Wet or Sea",
-                "flags": {"or": {"wet": True, "sea": True}},
-                "color": "#4F81BD",
-            },
-        ]
+    "legend": {
+        "begin": "-0.1",
+        "end": "0.5",
+        "ticks_every": "0.1",
+        "units": "unitless",
+        "tick_labels": {"-0.1": {"prefix": "<"}, "0.5": {"prefix": ">"}},
     },
 }
+
+
+styles_s2_ga_list = [
+    style_s2_ndci,
+    style_s2_mndwi,
+]
 
 # Describes a style which uses several bitflags to create a style
 
@@ -486,14 +482,14 @@ standard_resource_limits = {
 }
 
 
-reslim_aster = {
+reslim_for_sentinel2 = {
     "wms": {
         "zoomed_out_fill_colour": [150, 180, 200, 160],
-        "min_zoom_factor": 10.0,
-        # "max_datasets": 16, # Defaults to no dataset limit
+        "min_zoom_factor": 5.9,
+        "dataset_cache_rules": dataset_cache_rules,
     },
     "wcs": {
-        # "max_datasets": 16, # Defaults to no dataset limit
+        "max_datasets": 32,  # Defaults to no dataset limit
     },
 }
 
@@ -507,13 +503,6 @@ reslim_continental = {
     "wcs": {
         "max_datasets": 32,  # Defaults to no dataset limit
     },
-}
-
-reslim_wofs_obs = {
-    "inherits": standard_resource_limits,
-    "wcs": {
-        "describe_cache_maxage": 0,
-    }
 }
 
 # MAIN CONFIGURATION OBJECT
@@ -780,173 +769,70 @@ ows_cfg = {
             ]
         },
         {
-            "title": "Fractional Cover",
-            "abstract": """
-Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
-Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
-Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena. To be considered in the FCP product a pixel must have had at least 10 clear observations over the year.
-For service status information, see https://status.dea.ga.gov.au
-""",
-            "label": "fc",
+            "title": "DEA Config Samples",
+            "abstract": "",
             "layers": [
                 {
-                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Landsat 5)",
-                    "name": "ls5_fc_albers",
-                    "abstract": """
-Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
-Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
-Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena.
-This product contains Fractional Cover dervied from the Landsat 5 satellite
+                    "title": "DEA Surface Reflectance (Sentinel-2)",
+                    "name": "s2_ard_granule_nbar_t",
+                    "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
+This product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture.
+These corrections have been applied to all satellite imagery in the Sentinel-2 archive. This is undertaken to allow comparison of imagery acquired at different times, in different seasons and in different geographic locations.
+These products also indicate where the imagery has been affected by cloud or cloud shadow, contains missing data or has been affected in other ways. The Surface Reflectance products are useful as a fundamental starting point for any further analysis, and underpin all other optical derived Digital Earth Australia products.
+This is a definitive archive of daily Sentinel-2 data. This is processed using correct ancillary data to provide a more accurate product than the Near Real Time.
+The Surface Reflectance product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture. These corrections have been applied to all satellite imagery in the Sentinel-2 archive.
+The Normalised Difference Chlorophyll Index (NDCI) is based on the method of Mishra & Mishra 2012, and adapted to bands on the Sentinel-2A & B sensors.
+The index indicates levels of chlorophyll-a (chl-a) concentrations in complex turbid productive waters such as those encountered in many inland water bodies. The index has not been validated in Australian waters, and there are a range of environmental conditions that may have an effect on the accuracy of the derived index values in this test implementation, including:
+- Influence on the remote sensing signal from nearby land and/or atmospheric effects
+- Optically shallow water
+- Cloud cover
+Mishra, S., Mishra, D.R., 2012. Normalized difference chlorophyll index: A novel model for remote estimation of chlorophyll-a concentration in turbid productive waters. Remote Sensing of Environment, Remote Sensing of Urban Environments 117, 394–406. https://doi.org/10.1016/j.rse.2011.10.016
+For more information see http://pid.geoscience.gov.au/dataset/ga/129684
+https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentinel-2-msi
 For service status information, see https://status.dea.ga.gov.au
-""",
-                    "product_name": "ls5_fc_albers",
-                    "bands": bands_fc,
-                    "resource_limits": reslim_aster,
-                    "native_crs": "EPSG:3577",
-                    "native_resolution": [25, -25],
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": False,
-                    },
-                    "flags": [
-                        {
-                            "band": "water",
-                            "product": "wofs_albers",
-                            "ignore_time": False,
-                            "ignore_info_flags": [],
-                            "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
-                    ],
-                    "wcs": {
-                    },
-                    "styling": {
-                        "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
-                    },
-                },
-                {
-                    "title": "Water Observations from Space 25m albers (WOfS Daily Observations)",
-                    "name": "wofs_albers",
-                    "abstract": """
-Water Observations from Space (WOfS) provides surface water observations derived from satellite imagery for all of Australia. The current product (Version 2.1.5) includes observations taken from 1986 to the present, from the Landsat 5, 7 and 8 satellites. WOfS covers all of mainland Australia and Tasmania but excludes off-shore Territories.
-The WOfS product allows users to get a better understanding of where water is normally present in a landscape, where water is seldom observed, and where inundation has occurred occasionally.
-Data is provided as Water Observation Feature Layers (WOFLs), in a 1 to 1 relationship with the input satellite data. Hence there is one WOFL for each satellite dataset processed for the occurrence of water. The details of the WOfS algorithm and derived statistics are available at http://dx.doi.org/10.1016/j.rse.2015.11.003.
-For service status information, see https://status.dea.ga.gov.au
-""",
-                    "product_name": "wofs_albers",
-                    "bands": bands_wofs_obs,
-                    "resource_limits": reslim_wofs_obs,
-                    "dynamic": True,
-                    "native_crs": "EPSG:3577",
-                    "native_resolution": [25, -25],
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_bitflag",
-                        "always_fetch_bands": [],
-                        "manual_merge": False,
-                        "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                    },
-                    "wcs": {
-                    },
-                    "styling": {
-                        "default_style": "observations",
-                        "styles": [style_wofs_obs, style_wofs_obs_wet_only],
-                    },
-                },
-                {
-                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Landsat 7)",
-                    "name": "ls7_fc_albers",
-                    "abstract": """
-Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
-Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
-Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena.
-This product contains Fractional Cover dervied from the Landsat 7 satellite
-For service status information, see https://status.dea.ga.gov.au
-""",
-                    "product_name": "ls7_fc_albers",
-                    "bands": bands_fc,
-                    "resource_limits": reslim_aster,
-                    "dynamic": True,
-                    "native_crs": "EPSG:3577",
-                    "native_resolution": [25, -25],
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": False,
-                    },
-                    "flags": [
-                        {
-                            "band": "water",
-                            "product": "wofs_albers",
-                            "ignore_time": False,
-                            "ignore_info_flags": [],
-                            "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
-                    ],
-                    "wcs": {
-                    },
-                    "styling": {
-                        "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
-                    },
-                },
-                {
-                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Landsat 8)",
-                    "name": "ls8_fc_albers",
-                    "abstract": """
-Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region.
-Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover
-Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena.
-This product contains Fractional Cover dervied from the Landsat 8 satellite
-For service status information, see https://status.dea.ga.gov.au
-""",
-                    "product_name": "ls8_fc_albers",
-                    "bands": bands_fc,
-                    "resource_limits": reslim_aster,
-                    "dynamic": True,
-                    "native_crs": "EPSG:3577",
-                    "native_resolution": [25, -25],
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": False,
-                    },
-                    "flags": [
-                        {
-                            "band": "water",
-                            "product": "wofs_albers",
-                            "ignore_time": False,
-                            "ignore_info_flags": [],
-                            "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
-                    ],
-                    "wcs": {
-                    },
-                    "styling": {
-                        "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
-                    },
-                },
-                {
-                    "title": "Fractional Cover 25m 100km tile (Fractional Cover Combined)",
-                    "name": "fc_albers_combined",
-                    "abstract": """
-Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577). Data is only visible at higher resolutions; when zoomed-out the available area will be displayed as a shaded region. Fractional cover provides information about the the proportions of green vegetation, non-green vegetation (including deciduous trees during autumn, dry grass, etc.), and bare areas for every 25m x 25m ground footprint. Fractional cover provides insight into how areas of dry vegetation and/or bare soil and green vegetation are changing over time. The fractional cover algorithm was developed by the Joint Remote Sensing Research Program, for more information please see data.auscover.org.au/xwiki/bin/view/Product+pages/Landsat+Fractional+Cover Fractional Cover products use Water Observations from Space (WOfS) to mask out areas of water, cloud and other phenomena. This product contains Fractional Cover dervied from the Landsat 5, 7 and 8 satellites For service status information, see https://status.dea.ga.gov.au
-""",
+                """,
                     "multi_product": True,
-                    "product_names": [
-                        "ls5_fc_albers",
-                        "ls7_fc_albers",
-                        "ls8_fc_albers",
+                    "product_names": ["s2a_ard_granule", "s2b_ard_granule"],
+                    "low_res_product_names": ["s2a_ard_granule", "s2b_ard_granule"],
+                    "bands": bands_sentinel2_ard_nbart,
+                    "resource_limits": reslim_for_sentinel2,
+                    "native_crs": "EPSG:3577",
+                    "native_resolution": [10.0, 10.0],
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": False,
+                    },
+                    "flags": [
+                        {
+                            "band": "fmask",
+                            "products": ["s2a_ard_granule", "s2b_ard_granule"],
+                            "ignore_time": False,
+                            "ignore_info_flags": []
+                        },
+                        {
+                            "band": "land",
+                            "products": ["geodata_coast_100k", "geodata_coast_100k"],
+                            "ignore_time": True,
+                            "ignore_info_flags": []
+                        },
                     ],
-                    "bands": bands_fc,
-                    "resource_limits": reslim_aster,
+                    "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
+                },
+                {
+                    "title": "DEA Fractional Cover (Landsat)",
+                    "name": "ga_ls_fc_3",
+                    "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
+                Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
+                green (leaves, grass, and growing crops)
+                brown (branches, dry grass or hay, and dead leaf litter)
+                bare ground (soil or rock)
+                DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
+                https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
+                For service status information, see https://status.dea.ga.gov.au""",
+                    "product_name": "ga_ls_fc_3",
+                    "bands": bands_fc_3,
+                    "resource_limits": reslim_for_sentinel2,
                     "dynamic": True,
                     "native_crs": "EPSG:3577",
                     "native_resolution": [25, -25],
@@ -956,24 +842,27 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                         "manual_merge": False,
                     },
                     "flags": [
+                        # flags is now a list of flag band definitions - NOT a dictionary with identifiers
+                        {
+                            "band": "land",
+                            "product": "geodata_coast_100k",
+                            "ignore_time": True,
+                            "ignore_info_flags": [],
+                        },
                         {
                             "band": "water",
-                            "products": ["wofs_albers", "wofs_albers", "wofs_albers"],
+                            "product": "ga_ls_wo_3",
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
                         },
                     ],
-                    "wcs": {
-                    },
                     "styling": {
-                        "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
+                        "default_style": "fc_rgb_unmasked",
+                        "styles": [style_fc_c3_rgb_unmasked],
                     },
-                },
-            ],
-        },
+                }
+            ]
+        }
     ],  ##### End of "layers" list.
 }  #### End of test configuration object
