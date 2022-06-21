@@ -4,9 +4,9 @@
 # Copyright (c) 2017-2022 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import datetime
-import pytest
-
 from unittest.mock import MagicMock
+
+import pytest
 
 
 def mock_ds_for_sort(id_: str, st: datetime, ct: datetime, lon: float, prod_name):
