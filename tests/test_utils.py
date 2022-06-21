@@ -43,8 +43,9 @@ def datasets_for_sorting():
 
 
 def test_group_by_stat(datasets_for_sorting):
-    from datacube_ows.utils import group_by_statistical
     from datacube import Datacube
+
+    from datacube_ows.utils import group_by_statistical
 
     gby = group_by_statistical()
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
@@ -63,8 +64,9 @@ def test_group_by_stat(datasets_for_sorting):
 
 
 def test_group_by_solar(datasets_for_sorting):
-    from datacube_ows.utils import group_by_solar
     from datacube import Datacube
+
+    from datacube_ows.utils import group_by_solar
 
     gby = group_by_solar()
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
