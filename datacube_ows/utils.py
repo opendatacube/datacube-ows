@@ -66,7 +66,7 @@ def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.qu
         sort_key=sort_key
     )
 
-def group_by_solar(pnames: Optional[List[str]]) -> "datacube.api.query.GroupBy":
+def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
     from datacube.api.query import GroupBy, solar_day
     base_sort_key = lambda ds: ds.time.begin
     if pnames:
