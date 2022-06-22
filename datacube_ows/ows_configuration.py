@@ -565,7 +565,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.wcs = False
             return
         else:
-            self.wcs = True
+            self.wcs = not cfg.get("disable", False)
 
         if "native_resolution" in cfg:
             if not self.cfg_native_resolution:
