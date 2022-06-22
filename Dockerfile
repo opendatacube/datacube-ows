@@ -32,7 +32,7 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
 
 RUN pip freeze
 
-FROM osgeo/gdal:ubuntu-small-latest
+FROM osgeo/gdal:ubuntu-small-3.5.0
 
 # all the python pip installed libraries
 COPY --from=builder  /usr/local/lib/python3.8/dist-packages /usr/local/lib/python3.8/dist-packages
