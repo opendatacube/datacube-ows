@@ -42,7 +42,7 @@ from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
-from datacube_ows.utils import group_by_statistical
+from datacube_ows.utils import group_by_solar, group_by_statistical
 
 _LOG = logging.getLogger(__name__)
 
@@ -565,7 +565,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.wcs = False
             return
         else:
-            self.wcs = True
+            self.wcs = not cfg.get("disable", False)
 
         if "native_resolution" in cfg:
             if not self.cfg_native_resolution:
@@ -948,6 +948,12 @@ class OWSMultiProductLayer(OWSNamedLayer):
             "pq_names": pq_names,
             "pq_low_res_names": pq_low_res_names,
         }
+
+    def dataset_groupby(self):
+        if self.is_raw_time_res:
+            return group_by_solar(self.product_names)
+        else:
+            return group_by_statistical(self.product_names)
 
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None, sibling=0):

@@ -6,7 +6,7 @@
 import logging
 from functools import wraps
 from time import monotonic
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, List, Optional, TypeVar
 
 F = TypeVar('F', bound=Callable[..., Any])
 
@@ -45,18 +45,45 @@ def time_call(func: F) -> F:
     return timing_wrapper
 
 
-def group_by_statistical() -> "datacube.api.query.GroupBy":
+def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
     """
     Returns an ODC GroupBy object, suitable for daily statistical/summary data.
     """
     from datacube.api.query import GroupBy
-
+    base_sort_key = lambda ds: ds.time.begin
+    if pnames:
+        index = {
+            pn: i
+            for i, pn in enumerate(pnames)
+        }
+        sort_key = lambda ds: (index[ds.type.name], base_sort_key(ds))
+    else:
+        sort_key = base_sort_key
     return GroupBy(
         dimension='time',
         group_by_func=lambda ds: ds.time.begin,
         units='seconds since 1970-01-01 00:00:00',
-        sort_key=lambda ds: ds.time.begin
+        sort_key=sort_key
     )
+
+def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
+    from datacube.api.query import GroupBy, solar_day
+    base_sort_key = lambda ds: ds.time.begin
+    if pnames:
+        index = {
+            pn: i
+            for i, pn in enumerate(pnames)
+        }
+        sort_key = lambda ds: (index[ds.type.name], base_sort_key(ds))
+    else:
+        sort_key = base_sort_key
+    return GroupBy(
+        dimension='time',
+        group_by_func=solar_day,
+        units='seconds since 1970-01-01 00:00:00',
+        sort_key=sort_key
+    )
+
 
 
 def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
