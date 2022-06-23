@@ -128,7 +128,7 @@ class BandIndex(OWSMetadataConfig):
                 if first_product:
                     self.measurements = prod_measurements
                     self._nodata_vals = {name: floatify_nans(model.nodata) for name, model in self.measurements.items()}
-                    self._dtypes = {name: model.dtype for name, model in self.measurements.items()}
+                    self._dtypes = {name: numpy.dtype(model.dtype) for name, model in self.measurements.items()}
                 else:
                     for k in prod_measurements:
                         nodata = self._nodata_vals[k]
