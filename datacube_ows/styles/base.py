@@ -264,7 +264,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     def odc_needed_bands(self) -> Iterable[datacube.model.Measurement]:
         # pyre-ignore[16]
-        return [self.product.band_idx.native_bands.loc[b] for b in self.needed_bands]
+        return [self.product.band_idx.measurements[b] for b in self.needed_bands]
 
     def local_band(self, band: str) -> str:
         """

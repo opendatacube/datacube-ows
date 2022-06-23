@@ -135,7 +135,7 @@ class DataStacker:
         elif bands:
             self._needed_bands = [self._product.band_idx.locale_band(b) for b in bands]
         else:
-            self._needed_bands = list(self._product.band_idx.native_bands.index)
+            self._needed_bands = list(self._product.band_idx.measurements.keys())
 
         for band in self._product.always_fetch_bands:
             if band not in self._needed_bands:

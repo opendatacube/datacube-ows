@@ -85,8 +85,9 @@ class BandIndex(OWSMetadataConfig):
         self.parse_metadata(band_cfg)
         self._idx = {}
         self.add_aliases(self.band_cfg)
-        self.declare_unready("native_bands")
         self.declare_unready("_nodata_vals")
+        self.declare_unready("measurements")
+        self.declare_unready("_dtypes")
 
     def global_config(self):
         return self.product.global_config()
@@ -105,22 +106,42 @@ class BandIndex(OWSMetadataConfig):
                 self._idx[a] = b
 
     def make_ready(self, dc, *args, **kwargs):
+        def floatify_nans(inp):
+            if isinstance(inp, str) and inp == "nan":
+                return float(inp)
+            else:
+                return inp
+        default_to_all = not bool(self._raw_cfg)
         # pylint: disable=attribute-defined-outside-init
-        self.native_bands = dc.list_measurements().loc[self.product.product_name]
-        if not self._raw_cfg:
-            for b in self.native_bands.index:
-                self.band_cfg[b] = []
-            self.add_aliases(self.band_cfg)
-        # pylint: disable=attribute-defined-outside-init
+        self.measurements = {}
         self._nodata_vals = {}
         self._dtypes = {}
-        for b, aliases in self.band_cfg.items():
-            if b not in self.native_bands.index:
-                raise ConfigException(f"Unknown band: {b} in layer {self.product.name}")
-            self._nodata_vals[b] = self.native_bands['nodata'][b]
-            self._dtypes[b] = numpy.dtype(self.native_bands.dtype[b])
-            if isinstance(self._nodata_vals[b], str) and self._nodata_vals[b].lower() == "nan":
-                self._nodata_vals[b] = float("nan")
+        first_product = True
+        for product in self.product.products:
+            if first_product and default_to_all:
+                native_bands = dc.list_measurements().loc[product.name]
+                for b in native_bands.index:
+                    self.band_cfg[b] = [b]
+                self.add_aliases(self.band_cfg)
+            try:
+                if first_product:
+                    self.measurements = product.lookup_measurements(self.band_cfg.keys())
+                    self._nodata_vals = {name: floatify_nans(model.nodata) for name, model in self.measurements.items()}
+                    self._dtypes = {name: model.dtype for name, model in self.measurements.items()}
+                else:
+                    prod_measurements = product.lookup_measurements(self.band_cfg.keys())
+                    for k in prod_measurements:
+                        nodata = self._nodata_vals[k]
+                        if ((numpy.isnan(nodata) and not numpy.isnan(floatify_nans(prod_measurements[k].nodata)))
+                                or (not numpy.isnan(nodata) and prod_measurements[k].nodata != nodata)):
+                            raise ConfigException(
+                                f"Nodata value mismatch between products for band {k} in multiproduct layer {self.product.name}")
+                        if prod_measurements[k].dtype != self._dtypes[k]:
+                            raise ConfigException(
+                                f"Data type mismatch between products for band {k} in multiproduct layer {self.product.name}")
+            except KeyError as e:
+                raise ConfigException(f"Product {product.name} in layer {self.product.name} is missing band {e}")
+            first_product = False
         super().make_ready(dc, *args, **kwargs)
 
     def band(self, name_alias):

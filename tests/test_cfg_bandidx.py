@@ -21,6 +21,24 @@ def minimal_prod():
     product.product_name = "foo"
     product.get_obj_label.return_value = "layer.foo"
     product.global_config.return_value = glob
+    product.product_names = ["foo"]
+    odc_prod = MagicMock()
+    odc_prod.name = "foo"
+    product.products = [odc_prod]
+
+    def lookup_measurements(ls):
+        if isinstance(ls, str):
+            ls = [ls]
+        out = {}
+        for s in ls:
+            if s == "bandx":
+                raise KeyError("bandx")
+            out[s] = MagicMock()
+            out[s].nodata = "nan"
+            out[s].dtype = "float32"
+        return out
+
+    odc_prod.lookup_measurements = lookup_measurements
     return product
 
 
@@ -37,11 +55,14 @@ def test_bidx_p_unready(minimal_prod):
         "foo": ["foo"]
     })
     with pytest.raises(OWSConfigNotReady) as excinfo:
-        x = bidx.native_bands
-    assert "native_bands" in str(excinfo.value)
+        x = bidx.measurements
+    assert "measurements" in str(excinfo.value)
     with pytest.raises(OWSConfigNotReady) as excinfo:
         x = bidx.nodata_val("foo")
     assert "_nodata_vals" in str(excinfo.value)
+    with pytest.raises(OWSConfigNotReady) as excinfo:
+        x = bidx.dtype_val("foo")
+    assert "dtypes" in str(excinfo.value)
 
 
 def test_bidx_p_duplicates(minimal_prod):
@@ -116,15 +137,20 @@ def test_bidx_makeready(minimal_prod, minimal_dc):
 
 
 def test_bidx_makeready_default(minimal_prod, minimal_dc):
+    import numpy as np
     bidx = BandIndex(minimal_prod, {})
     bidx.make_ready(minimal_dc)
     assert bidx.ready
+    assert "band1" in bidx.band_cfg
+    assert "band1" in bidx.measurements
+    assert "band1" in bidx._idx
+    assert "band1" in bidx._dtypes
+    assert "band1" in bidx._nodata_vals
     assert bidx.band("band1") == "band1"
     assert bidx.band("band2") == "band2"
     assert bidx.band("band3") == "band3"
     assert bidx.band("band4") == "band4"
-    assert bidx.nodata_val("band1") == -999
-    assert isinstance(bidx.nodata_val("band4"), float)
+    assert np.isnan(bidx.nodata_val("band1"))
 
 
 def test_bidx_makeready_invalid_band(minimal_prod, minimal_dc):
@@ -136,5 +162,5 @@ def test_bidx_makeready_invalid_band(minimal_prod, minimal_dc):
     assert bidx.band("invalid") == "bandx"
     with pytest.raises(ConfigException) as excinfo:
         bidx.make_ready(minimal_dc)
-    assert "Unknown band" in str(excinfo.value)
+    assert "is missing band" in str(excinfo.value)
     assert "bandx" in str(excinfo.value)
