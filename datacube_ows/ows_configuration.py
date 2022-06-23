@@ -124,12 +124,13 @@ class BandIndex(OWSMetadataConfig):
                     self.band_cfg[b] = [b]
                 self.add_aliases(self.band_cfg)
             try:
+                prod_measurements = product.lookup_measurements(list(self.band_cfg.keys()))
                 if first_product:
-                    self.measurements = product.lookup_measurements(self.band_cfg.keys())
+                    self.measurements = prod_measurements
                     self._nodata_vals = {name: floatify_nans(model.nodata) for name, model in self.measurements.items()}
                     self._dtypes = {name: model.dtype for name, model in self.measurements.items()}
                 else:
-                    prod_measurements = product.lookup_measurements(self.band_cfg.keys())
+                    prod_measurements = prod_measurements
                     for k in prod_measurements:
                         nodata = self._nodata_vals[k]
                         if ((numpy.isnan(nodata) and not numpy.isnan(floatify_nans(prod_measurements[k].nodata)))
