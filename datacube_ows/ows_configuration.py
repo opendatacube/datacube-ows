@@ -130,7 +130,6 @@ class BandIndex(OWSMetadataConfig):
                     self._nodata_vals = {name: floatify_nans(model.nodata) for name, model in self.measurements.items()}
                     self._dtypes = {name: model.dtype for name, model in self.measurements.items()}
                 else:
-                    prod_measurements = prod_measurements
                     for k in prod_measurements:
                         nodata = self._nodata_vals[k]
                         if ((numpy.isnan(nodata) and not numpy.isnan(floatify_nans(prod_measurements[k].nodata)))
