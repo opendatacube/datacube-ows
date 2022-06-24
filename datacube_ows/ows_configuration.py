@@ -520,8 +520,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.data_manual_merge = cfg.get("manual_merge", False)
         if self.solar_correction and not self.data_manual_merge:
             raise ConfigException("Solar correction requires manual_merge.")
-        if self.data_manual_merge and not self.solar_correction:
-            _LOG.warning("Manual merge is only recommended where solar correction is required.")
+        if self.data_manual_merge and not self.solar_correction and not self.multi_product:
+            _LOG.warning("Manual merge is only recommended where solar correction is required and for multi-product layers.")
 
         if cfg.get("fuse_func"):
             self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
@@ -582,11 +582,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def parse_wcs(self, cfg):
-        if not self.global_cfg.wcs:
+        if cfg == False:
             self.wcs = False
-            return
+        elif not self.global_cfg.wcs:
+            self.wcs = False
         else:
             self.wcs = not cfg.get("disable", False)
+        if not self.wcs:
+            return
 
         if "native_resolution" in cfg:
             if not self.cfg_native_resolution:
