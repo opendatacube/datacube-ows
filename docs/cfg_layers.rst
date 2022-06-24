@@ -188,6 +188,12 @@ bands, but only bands common to both products can be accessed.
 coastal_aerosol band which is only available on Landsat-8 could
 not be used.)
 
+Combining products from different platforms or product families is possible
+as long as the following rules are obeyed for all supported bands:
+
+1) Each band must have at least one ODC alias in common across all included products
+2) Each band must have the same datatype (``numpy.dtype``) and nodata value across all included products.
+
 ------------------------------------------
 Product Layer Configuration (product_name)
 ------------------------------------------
@@ -226,6 +232,33 @@ E.g.
         "name": "s2_daily",
         "multi_product": True,
         "product_names": ["s2a_ard", "s2b_ard"],
+        ...
+    }
+
+If the
+`manual merge option in the
+image_processing section discussed below<#manual-merge-manual-merge>`_
+is set to ``True``, then overlapping products are layered according to the priority
+order specified in ``product_names``
+
+E.g. the following config offers a combined landsat/sentinel-2 layer, with Sentinel-2 data used in
+preference to Landsat where both are available:
+
+::
+
+    {
+        "title": "Sentinel 2/Landsat Combined Daily Images",
+        "abstract": "...",
+        "name": "ls_s2_daily",
+        "multi_product": True,
+        "product_names": [
+            "s2a_ard", "s2b_ard",
+            "ls5_ard", "ls7_ard", "ls8_ard", "ls9_ard",
+        ],
+        "image_processing": {
+            "manual_merge": True,
+            ...
+        },
         ...
     }
 
@@ -362,6 +395,27 @@ False.  If True then range values for the layer are not cached,
 meaning calls to update_ranges.py for the layer take effect
 immediately.
 
+----------------------
+Hiding layers from WCS
+----------------------
+
+If WCS is activated globally, by default all named layers are automatically included as WCS coverages.
+
+If you want to support WCS for some layers only, you can disable individual layers from WCS using either of
+the following methods:
+
+::
+
+    "wcs": False,
+
+or
+
+::
+
+    "wcs": {
+        "disable": True
+    },
+
 ------------------------
 Bands Dictionary (bands)
 ------------------------
@@ -388,9 +442,9 @@ within the config for this layer "red", "crimson" and "scarlet" all
 refer to the band with native name "red".)
 
 Band names must be unique within a layer, and must exist in the underlying
-Open Data Cube instance for all the ODC products configured for the layer.
-Band aliases must be unique within a layer, and must not match any of the
-native band names in the dictionary.
+Open Data Cube instance (as either canonical band names or ODC band aliases)
+for all the ODC products configured for the layer.  Band aliases must refer
+to a unique band within a layer.
 
 Band aliases are useful:
 
@@ -854,8 +908,12 @@ Manual Merge (manual_merge)
 +++++++++++++++++++++++++++
 
 "manual_merge" is an optional boolean flag (defaults to False).  If True,
-data for each dataset is fused in OWS outside of ODC.  This is rarely what
-you want, but is required for solar angle corrections.
+data for each dataset is fused in OWS outside of ODC.
+
+Manual_merging is always slower than native ODC fusing, but is required
+for solar angle corrections, and also for multi-product layers that combine
+products from multiple product families and require e.g. one product family
+to always be rendered over the top of the other.
 
 Apply Solar Corrections (apply_solar_corrections)
 +++++++++++++++++++++++++++++++++++++++++++++++++

@@ -54,19 +54,8 @@ def minimal_dc():
         if 'lookupfail' in s:
             return None
         mprod  = MagicMock()
-        flag_def = {
-            "moo": {"bits": 0},
-            "floop": {"bits": 1},
-            "blat": {"bits": 2},
-            "pow": {"bits": 3},
-            "zap": {"bits": 4},
-            "dang": {"bits": 5},
-        }
-        mprod.lookup_measurements.return_value = {
-            "band4": {
-                "flags_definition": flag_def
-            }
-        }
+        mprod.name = s
+
         mprod.definition = {"storage": {}}
         if 'nonativecrs' in s:
             pass
@@ -88,6 +77,33 @@ def minimal_dc():
                 "latitude": 0.001,
                 "longitude": 0.001,
             }
+
+        def lookup_measurements(ls):
+            from datacube.model import Measurement
+            if isinstance(ls, str):
+                ls = [ls]
+            out = {}
+            for s in ls:
+                if s == "bandx":
+                    raise KeyError("bandx")
+                m = {}
+                m["name"] = s
+                m["nodata"] = "nan"
+                m["dtype"] = "float32"
+                m["units"] = 1
+                if s == "band4":
+                    m["flags_definition"] = {
+                        "moo": {"bits": 0},
+                        "floop": {"bits": 1},
+                        "blat": {"bits": 2},
+                        "pow": {"bits": 3},
+                        "zap": {"bits": 4},
+                        "dang": {"bits": 5},
+                    }
+                out[s] = Measurement(s, **m)
+            return out
+
+        mprod.lookup_measurements = lookup_measurements
         return mprod
     dc.index.products.get_by_name = product_by_name
     return dc
