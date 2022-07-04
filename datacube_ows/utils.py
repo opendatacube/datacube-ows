@@ -56,7 +56,7 @@ def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.qu
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (index[ds.type.name], base_sort_key(ds))
+        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
     else:
         sort_key = base_sort_key
     return GroupBy(
@@ -74,7 +74,7 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (index[ds.type.name], base_sort_key(ds))
+        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
     else:
         sort_key = base_sort_key
     return GroupBy(
