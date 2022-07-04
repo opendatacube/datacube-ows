@@ -9,7 +9,7 @@
 from setuptools import find_packages, setup
 
 install_requirements = [
-    'datacube[performance,s3]>=1.8.5',
+    'datacube[performance,s3]>=1.8.7',
     'flask',
     'flask_log_request_id',
     'requests',
@@ -49,7 +49,7 @@ test_requirements = [
 ]
 
 dev_requirements = [
-    'pydevd-pycharm~=212.5080.64', # For Pycharm 2021.2
+    'pydevd-pycharm~=221.5921.27', # For Pycharm 2022.1.3
     'pylint==2.4.4',
     'sphinx_click',
     'pre-commit==2.13.0',
