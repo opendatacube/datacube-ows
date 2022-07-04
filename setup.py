@@ -49,7 +49,7 @@ test_requirements = [
 ]
 
 dev_requirements = [
-    'pydevd-pycharm~=212.5080.2121', # For Pycharm 2022.2
+    'pydevd-pycharm~=221.5921.27', # For Pycharm 2022.1.3
     'pylint==2.4.4',
     'sphinx_click',
     'pre-commit==2.13.0',
