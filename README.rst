@@ -145,20 +145,20 @@ Installation with Conda
 
 The following instructions are for installing on a clean Linux system.
 
-* Create a conda python 3.8 and activate conda environment
+* Create a conda python 3.8 and activate conda environment::
 
     conda create -n ows -c conda-forge python=3.8 datacube pre_commit postgis
     conda activate ows
 
-* install the latest release using pip install:
+* install the latest release using pip install::
 
     pip install datacube-ows[all]
 
-* install database
+* install database::
 
     sudo apt-get -y install postgresql-14-postgis-3
 
-* setup a database
+* setup a database::
 
     pgdata=$(pwd)/.dbdata
     initdb -D ${pgdata} --auth-host=md5 --encoding=UTF8 --username=ubuntu
@@ -166,17 +166,15 @@ The following instructions are for installing on a clean Linux system.
 
     createdb ows -U ubuntu
 
-* enable postgis extension
+* enable postgis extension::
 
     psql -d ows
     create extension postgis;
 
-* init datacube and ows schema
+* init datacube and ows schema::
 
     export DATACUBE_DB_URL=postgresql:///ows
     datacube system init
-
-* Run ::
 
     # to create schema, tables and materialised views used by datacube-ows.
 
