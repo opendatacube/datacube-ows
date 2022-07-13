@@ -7,8 +7,9 @@
 import re
 from typing import Callable, Iterable, List, Mapping, Optional, Sequence, Tuple
 
-from datacube_ows.ogc_exceptions import (OGCException, WCS1Exception, WCS2Exception,
-                                         WMSException, WMTSException)
+from datacube_ows.ogc_exceptions import (OGCException, WCS1Exception,
+                                         WCS2Exception, WMSException,
+                                         WMTSException)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wcs1 import handle_wcs1
 from datacube_ows.wcs2 import handle_wcs2
