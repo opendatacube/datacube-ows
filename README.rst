@@ -140,23 +140,49 @@ To run the standard Docker image, create a docker volume containing your ows con
 
 The image is based on the standard ODC container.
 
-Installation
+Installation with Conda
 ------------
 
-The following instructions are for installing on a clean Linux system with established ODC environment.
+The following instructions are for installing on a clean Linux system.
 
-Refer to the ODC documentation for installing the Open Datacube and dependent libraries, and
-initialising an ODC database.
+* Create a conda python 3.8 and activate conda environment
 
-* Create a
-  new python 3.8 or 3.9 virtualenv and install the latest release using pip install:
+    conda create -n ows -c conda-forge python=3.8 datacube pre_commit postgis
+    conda activate ows
 
-    pip install datacube-ows
+* install the latest release using pip install:
+
+    pip install -e .[all]
+
+* install database
+
+    sudo apt-get -y install postgresql-14-postgis-3
+
+* setup a database
+
+    pgdata=$(pwd)/.dbdata
+    initdb -D ${pgdata} --auth-host=md5 --encoding=UTF8 --username=ubuntu
+    pg_ctl -D ${pgdata} -l "${pgdata}/pg.log" start # if this step fails, check log in ${pgdata}/pg.log
+
+    createdb ows -U ubuntu
+
+* enable postgis extension
+
+    psql -d ows
+    create extension postgis;
+
+* init datacube and ows schema
+
+    export DATACUBE_DB_URL=postgresql:///ows
+    datacube system init
 
 * Run ::
-    datacube-ows-update --role *ows_runner_role* --schema
 
-  to create schema, tables and materialised views used by datacube-ows.
+    # to create schema, tables and materialised views used by datacube-ows.
+
+    export DATACUBE_OWS_CFG=datacube_ows.ows_cfg_example.ows_cfg
+    datacube-ows-update --role ubuntu --schema
+
 
 * Create a configuration file for your service, and all data products you wish to publish in
   it.
