@@ -152,7 +152,7 @@ The following instructions are for installing on a clean Linux system.
 
 * install the latest release using pip install:
 
-    pip install -e .[all]
+    pip install datacube-ows[all]
 
 * install database
 
