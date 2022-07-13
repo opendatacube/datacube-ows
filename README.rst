@@ -154,10 +154,6 @@ The following instructions are for installing on a clean Linux system.
 
     pip install datacube-ows[all]
 
-* install database::
-
-    sudo apt-get -y install postgresql-14-postgis-3
-
 * setup a database::
 
     pgdata=$(pwd)/.dbdata
@@ -170,6 +166,7 @@ The following instructions are for installing on a clean Linux system.
 
     psql -d ows
     create extension postgis;
+    \q
 
 * init datacube and ows schema::
 
