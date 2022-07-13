@@ -3,17 +3,25 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from datacube_ows.ogc_exceptions import (WCS1Exception, WCS2Exception,
-                                         WMSException, WMTSException)
+
+import re
+from typing import Callable, Iterable, List, Mapping, Optional, Sequence, Tuple
+
+from datacube_ows.ogc_exceptions import (OGCException, WCS1Exception,
+                                         WCS2Exception, WMSException,
+                                         WMTSException)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.wcs1 import handle_wcs1
 from datacube_ows.wcs2 import handle_wcs2
 from datacube_ows.wms import handle_wms
 from datacube_ows.wmts import handle_wmts
 
+FlaskResponse = Tuple
+FlaskHandler = Callable[[Mapping[str, str]], FlaskResponse]
 
-class SupportedSvcVersion(object):
-    def __init__(self, service, version, router, exception_class):
+
+class SupportedSvcVersion:
+    def __init__(self, service: str, version: str, router, exception_class: OGCException) -> None:
         self.service = service.lower()
         self.service_upper = service.upper()
         self.version = version
@@ -23,8 +31,8 @@ class SupportedSvcVersion(object):
         self.exception_class = exception_class
 
 
-class SupportedSvc(object):
-    def __init__(self, versions, default_exception_class=None):
+class SupportedSvc:
+    def __init__(self, versions: Sequence[SupportedSvcVersion], default_exception_class: Optional[OGCException] = None):
         self.versions = sorted(versions, key=lambda x: x.version_parts)
         assert len(self.versions) > 0
         self.service = self.versions[0].service
@@ -39,10 +47,26 @@ class SupportedSvc(object):
         else:
             self.default_exception_class = self.versions[0].exception_class
 
-    def negotiated_version(self, request_version):
+    def _clean_version_parts(self, unclean: Iterable[str]) -> Sequence[int]:
+        clean = []
+        for part in unclean:
+            try:
+                clean.append(int(part))
+                continue
+            except ValueError as e:
+                pass
+            try:
+                clean.append(int(re.split(r"[^\d]", part)[0]))
+            except ValueError as e:
+                pass
+            break
+        return clean
+
+    def negotiated_version(self, request_version: str) -> SupportedSvcVersion:
         if not request_version:
             return self.versions[-1]
-        rv_parts = [int(i) for i in request_version.split(".")]
+        parts: List[str] = list(request_version.split("."))
+        rv_parts: List[int] = self._clean_version_parts(parts)
         while len(rv_parts) < 3:
             rv_parts.append(0)
         for v in reversed(self.versions):
@@ -52,9 +76,9 @@ class SupportedSvc(object):
         #pylint: disable=undefined-loop-variable
         return v
 
-    def activated(self):
+    def activated(self) -> bool:
         cfg = get_config()
-        return getattr(cfg, self.service)
+        return bool(getattr(cfg, self.service))
 
 
 OWS_SUPPORTED = {
