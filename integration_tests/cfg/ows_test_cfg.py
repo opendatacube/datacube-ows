@@ -734,7 +734,8 @@ ows_cfg = {
                             "product": "s2_l2a",
                             "ignore_time": False,
                             "ignore_info_flags": [],
-                            "manual_merge": True,
+                            # This band comes from main product, so cannot set flags manual_merge independently
+                            # "manual_merge": True,
                         },
                     ],
                     "native_crs": "EPSG:3857",

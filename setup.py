@@ -29,7 +29,7 @@ install_requirements = [
     'psycopg2',
     'python_dateutil',
     'pytz',
-    'rasterio>=1.0.9',
+    'rasterio>=1.0.9,!=1.3.0',
     'regex',
     'timezonefinderL',
     'python_slugify',
