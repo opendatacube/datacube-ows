@@ -34,8 +34,8 @@ install_requirements = [
     'timezonefinderL',
     'python_slugify',
     'geoalchemy2',
-    'lark-parser',
-    'xarray',
+    'lark',
+    'xarray!=2022.6.0',
     'pyows',
     'prometheus_flask_exporter',
     'setuptools_scm'
@@ -43,9 +43,9 @@ install_requirements = [
 
 test_requirements = [
     'pytest', 'pytest_cov', 'pytest_localserver',
-    'owslib==0.21.0', 'pytest_mock', 'pep8',
+    'owslib', 'pytest_mock', 'pep8',
     'pytest-helpers-namespace', 'flask-cors',
-    'fsspec==2021.11.0',
+    'fsspec',
 ]
 
 dev_requirements = [
