@@ -9,16 +9,11 @@ import logging
 import os
 import warnings
 
-import sentry_sdk
 from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
 from flask import Flask, request
-from flask_babel import Babel
 from flask_log_request_id import RequestID, RequestIDLogFilter
-from prometheus_flask_exporter.multiprocess import \
-    GunicornInternalPrometheusMetrics
 from rasterio.errors import NotGeoreferencedWarning
-from sentry_sdk.integrations.flask import FlaskIntegration
 
 from datacube_ows.ows_configuration import get_config
 
@@ -66,6 +61,8 @@ def initialise_debugging(log=None):
 
 def initialise_sentry(log=None):
     if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
         SENTRY_ENV_TAG = os.environ.get("SENTRY_ENV_TAG") if os.environ.get("SENTRY_ENV_TAG") else "dev"
         sentry_sdk.init(
             dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
@@ -202,6 +199,8 @@ class FakeMetrics:
 def initialise_prometheus(app, log=None):
     # Prometheus
     if os.environ.get("prometheus_multiproc_dir", False):
+        from prometheus_flask_exporter.multiprocess import \
+            GunicornInternalPrometheusMetrics
         metrics = GunicornInternalPrometheusMetrics(app)
         if log:
             log.info("Prometheus metrics enabled")
@@ -219,6 +218,7 @@ def generate_locale_selector(locales):
 
 def initialise_babel(cfg, app):
     if cfg and cfg.internationalised:
+        from flask_babel import Babel
         app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
         babel = Babel(app,
                       default_locale=cfg.locales[0],
