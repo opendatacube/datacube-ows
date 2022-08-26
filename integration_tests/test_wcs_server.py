@@ -578,7 +578,7 @@ def test_wcs1_style(ows_server):
             "resx": "0.01",
             "resy": "0.01",
         },
-        )
+    )
     assert r.status_code == 200
     r = requests.get(
         ows_server.url + "/wcs",
