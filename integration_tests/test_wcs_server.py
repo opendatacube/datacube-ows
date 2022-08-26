@@ -578,6 +578,24 @@ def test_wcs1_style(ows_server):
             "resx": "0.01",
             "resy": "0.01",
         },
+        )
+    assert r.status_code == 200
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "GetCoverage",
+            "service": "WCS",
+            "version": "1.0.0",
+            "coverage": test_layer_name,
+            "crs": "EPSG:4326",
+            "format": "GeoTIFF",
+            "bbox": extents["bbox"],
+            "time": extents["times"],
+            "styles": "invalid_style_returns_default_bands",
+            "responsecrs": "EPSG:3577",
+            "resx": "300",
+            "resy": "300",
+        },
     )
     assert r.status_code == 200
 
