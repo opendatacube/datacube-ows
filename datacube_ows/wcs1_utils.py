@@ -12,7 +12,6 @@ from datacube.utils import geometry
 from dateutil.parser import parse
 from ows.util import Version
 from rasterio import MemoryFile
-from datacube.utils.geometry import BoundingBox
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.data import DataStacker
