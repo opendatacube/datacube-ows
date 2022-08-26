@@ -580,6 +580,24 @@ def test_wcs1_style(ows_server):
         },
     )
     assert r.status_code == 200
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "GetCoverage",
+            "service": "WCS",
+            "version": "1.0.0",
+            "coverage": test_layer_name,
+            "crs": "EPSG:4326",
+            "format": "GeoTIFF",
+            "bbox": extents["bbox"],
+            "time": extents["times"],
+            "styles": "invalid_style_returns_default_bands",
+            "response_crs": "EPSG:3577",
+            "resx": "30",
+            "resy": "30",
+        },
+    )
+    assert r.status_code == 200
 
 def test_wcs1_ows_stats(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)

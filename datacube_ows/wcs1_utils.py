@@ -29,7 +29,7 @@ class WCS1GetCoverageRequest():
         self.args = args
         cfg = get_config()
 
-        # Argument: Coverage (required)
+        # Argument: Coverage (required)  -> product/layer
         if "coverage" not in args:
             raise WCS1Exception("No coverage specified",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
@@ -43,7 +43,7 @@ class WCS1GetCoverageRequest():
                                 locator="COVERAGE parameter",
                                 valid_keys=list(cfg.product_index))
 
-        # Argument: FORMAT (required)
+        # Argument: FORMAT (required) -> a supported format
         if "format" not in args:
             raise WCS1Exception("No FORMAT parameter supplied",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
@@ -78,7 +78,6 @@ class WCS1GetCoverageRequest():
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESPONSE_CRS parameter",
                                     valid_keys=list(cfg.published_CRSs))
-            self.response_crs = geometry.CRS(self.response_crsid)
             self.response_crs = cfg.crs(self.response_crsid)
         else:
             self.response_crsid = self.request_crsid
@@ -104,6 +103,32 @@ class WCS1GetCoverageRequest():
             raise WCS1Exception("Invalid BBOX parameter",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="BBOX parameter")
+
+        self.specified_search_extent = geometry.polygon([(self.minx, self.miny),
+                                        (self.minx, self.maxy),
+                                        (self.maxx, self.maxy),
+                                        (self.maxx, self.miny),
+                                        (self.minx, self.miny)
+                                       ],
+                                       crs=self.request_crs
+                                      )
+        if self.request_crs == self.response_crs:
+            self.extent = self.specified_search_extent
+        else:
+            # Convert to response_crs and rectify bounding box
+            bbox = self.specified_search_extent.to_crs(self.response_crs).boundingbox
+            self.minx = bbox.left
+            self.maxx = bbox.right
+            self.miny = bbox.bottom
+            self.maxy = bbox.top
+            self.extent = geometry.polygon(
+                [
+                    (self.minx, self.miny), (self.minx, self.maxy),
+                    (self.maxx, self.maxy), (self.maxx, self.miny),
+                    (self.minx, self.miny)
+               ],
+               crs=self.response_crs
+            )
 
         # Argument: TIME
         # if self.product.wcs_sole_time:
@@ -233,6 +258,7 @@ class WCS1GetCoverageRequest():
                 raise WCS1Exception("WIDTH parameter must be a positive integer",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="WIDTH parameter")
+
             self.resx = (self.maxx - self.minx) / self.width
             self.resy = (self.maxy - self.miny) / self.height
         elif "resx" in args:
@@ -277,21 +303,12 @@ class WCS1GetCoverageRequest():
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="RESX/RESY/WIDTH/HEIGHT parameters")
 
-        self.extent = geometry.polygon([(self.minx, self.miny),
-                                        (self.minx, self.maxy),
-                                        (self.maxx, self.maxy),
-                                        (self.maxx, self.miny),
-                                        (self.minx, self.miny)
-                                       ],
-                                       self.request_crs
-                                      )
-
         xscale = (self.maxx - self.minx) / self.width
         yscale = (self.miny - self.maxy) / self.height
         trans_aff = Affine.translation(self.minx, self.maxy)
         scale_aff = Affine.scale(xscale, yscale)
         self.affine = trans_aff * scale_aff
-        self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.request_crs)
+        self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.response_crs)
         self.ows_stats = bool(args.get("ows_stats"))
 
 
@@ -327,8 +344,8 @@ def get_coverage_data(req, qprof):
             cfg = get_config()
             x_range = (req.minx, req.maxx)
             y_range = (req.miny, req.maxy)
-            xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
-            yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
+            xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
+            yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
             xvals = numpy.linspace(
                 x_range[0],
                 x_range[1],
@@ -409,8 +426,8 @@ def get_tiff(req, data):
     data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     cfg = get_config()
-    xname = cfg.published_CRSs[req.request_crsid]["horizontal_coord"]
-    yname = cfg.published_CRSs[req.request_crsid]["vertical_coord"]
+    xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
+    yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
     nodata = 0
     for band in data.data_vars:
         nodata = req.product.band_idx.nodata_val(band)
