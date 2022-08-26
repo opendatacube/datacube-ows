@@ -592,9 +592,9 @@ def test_wcs1_style(ows_server):
             "bbox": extents["bbox"],
             "time": extents["times"],
             "styles": "invalid_style_returns_default_bands",
-            "responsecrs": "EPSG:3577",
-            "resx": "300",
-            "resy": "300",
+            "response_crs": "EPSG:3577",
+            "resx": "30",
+            "resy": "30",
         },
     )
     assert r.status_code == 200
