@@ -27,7 +27,7 @@ Full list of changes:
 * Bug Fix: Invalid version parameters in otherwise valid requests were failing with unhandled 500 errors. OWS now
   makes a best-effort guess in this case, tending towards the lowest supported version (#850)
 * Bug Fix: response_crs parameter was not being handled correctly by WCS1 (#858)
-* Updates to HISTORY.rst and default version string for release (#8??)
+* Updates to HISTORY.rst and default version string for release (#860)
 
 This release includes contributions from @SpacemanPaul, and @pindge.
 
