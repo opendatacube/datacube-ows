@@ -7,6 +7,30 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.29 (2022-08-30)
+-------------------
+
+This release includes support for heterogenous multi-product layers (single layers that combine data
+from satellite platforms with different bands and native resolutions - e.g. Sentinel-2 plus Landsat),
+an upgrade to the docker container (now based on Ubuntu 22.04, with Python 3.10), plus documentation updates
+and bug fixes.
+
+Full list of changes:
+
+* Enhancements to support heterogenous multi-product layers (#837, #841, #844)
+* Refactor data for integration test fixtures (#835)
+* Docker image migrated to Python3.10/Ubuntu-22.040-based osgeo/gdal base image, and updates to
+  dependencies (#838, #843, #852, #854, #856, #859)
+* Isolate ops imports to minimise dependencies for appliations only using the styling API (#855)
+* Documentation updates and improvements (#846, #847, #848, #849)
+* Bug Fix: Skip cached bounding boxes when layer extent is entirely outside the valid region for the CRS (#832)
+* Bug Fix: Invalid version parameters in otherwise valid requests were failing with unhandled 500 errors. OWS now
+  makes a best-effort guess in this case, tending towards the lowest supported version (#850)
+* Bug Fix: response_crs parameter was not being handled correctly by WCS1 (#858)
+* Updates to HISTORY.rst and default version string for release (#8??)
+
+This release includes contributions from @SpacemanPaul, and @pindge.
+
 1.8.28 (2022-04-12)
 -------------------
 
