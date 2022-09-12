@@ -13,6 +13,5 @@ services:
     depends_on:
       - postgres
     command: tail -f /dev/null
-    network_mode: bridge
     links:
       - postgres:postgres
