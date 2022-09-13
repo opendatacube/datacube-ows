@@ -111,11 +111,6 @@ setting a NEW db dump
     # bring up indexing and db container
     docker-compose -f docker-compose.index.yaml -f docker-compose.cleandb.yaml up
 
-    # index in index container
-    docker exec -ti datacube-ows-index-1 bash
-    datacube system init
-    ...
-
 
 building on top of existing db dump
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
