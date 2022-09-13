@@ -106,65 +106,16 @@ Integration test data and cfg update
 setting a NEW db dump
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Prepare an empty database, with the following yaml file run `docker-compose up`
+.. code-block:: console
 
-.. code-block:: yaml
-  version: "3"
-  services:
-      postgis:
-          image: postgis/postgis:12-3.1
-          volumes:
-              - db-data:/var/lib/postgresql/data
-          ports:
-              - 5432:5432
-          environment:
-              - POSTGRES_PASSWORD=mysecretpassword
-              - POSTGRES_USER=localuser
-              - POSTGRES_DB=odc
-  volumes:
-      db-data:
-          driver: local
+    # bring up indexing and db container
+    docker-compose -f docker-compose.index.yaml -f docker-compose.cleandb.yaml up
 
-setup a Indexer container and connect to the empty database.
+    # index in index container
+    docker exec -ti datacube-ows-index-1 bash
+    datacube system init
+    ...
 
-.. code-block::
-  
-  git clone https://github.com/opendatacube/datacube-docker
-  cd datacube-docker/index
-
-create a file in `datacube-docker/index` named `docker-compose.standalone.yaml`
-
-.. code-block::yaml
-
-  version: "3.7"
-
-  services:
-    # Start docker container for Datacube-Index
-    index:
-        build: .
-        environment:
-            - DB_HOSTNAME=localhost
-            - DB_USERNAME=localuser
-            - DB_PASSWORD=mysecretpassword
-            - DB_DATABASE=odc
-            - DB_PORT=5432
-            - AWS_DEFAULT_REGION=ap-southeast-2
-            - STAC_API_URL=https://earth-search.aws.element84.com/v0/
-            - PRODUCT_CATALOG=https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/a4f39b485b33608a016032d9987251881fec4b6f/workspaces/sandbox-products.csv
-            - METADATA_CATALOG=https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/a4f39b485b33608a016032d9987251881fec4b6f/workspaces/sandbox-metadata.yaml
-        command: tail -f /dev/null
-        network_mode: host
-
-
-link datacube-ows to the empty database by configure `.env` file with the following and run `docker-compose up`
-
-.. code-block::
-  
-  DB_HOSTNAME=localhost
-  DB_PORT=5432
-  DB_USERNAME=localuser
-  DB_PASSWORD=mysecretpassword
-  DB_DATABASE=odc
 
 building on top of existing db dump
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,24 +137,29 @@ indexing and create db dump
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: console
-  
+
   # start by going to index container
-  docker exec -it index_index_1 bash # if using chained docker-compose the container name is datacube-ows_index_1
-  datacube system init # no need to run this command if building off existing db
+  docker exec -ti datacube-ows-index-1 bash
+  datacube system init # OPTIONAL: no need to run this command if building off existing db
   datacube product add https://raw.githubusercontent.com/digitalearthafrica/config/master/products/esa_s2_l2a.odc-product.yaml
   stac-to-dc --bbox='123.92427299922684,-14.559406653491095,124.94716787178676,-13.560932176423318' --collections='sentinel-s2-l2a-cogs' --datetime='2021-12-20/2022-01-10'
-  exit
+  ... # anything extra to index
+  exit # after indexing is complete, exit
+
   # now go to ows container
   docker exec -it datacube-ows_ows_1 bash
   datacube-ows-update --schema --role <db_read_role>
   datacube-ows-update --views
   datacube-ows-update
   exit
+
   # return to index container
   docker exec -it index_index_1 bash # if using chained docker-compose the container name is datacube-ows_index_1
   pg_dump -U localhost -p 5432 -h localhost odc > dump.sql
   # enter password on prompt: mysecretpassword or check .env file
   exit
+
+
   # copy the new dump to datacube-ows/docker/database folder
   docker cp datacube-ows_ows_1:/dump.sql datacube-ows/docker/database
 
@@ -212,7 +168,7 @@ If the integration test is based on a new product and require new config transla
 .. code-block:: console
 
   # enter ows container
-  docker exec -it datacube-ows_ows_1 bash 
+  docker exec -it datacube-ows_ows_1 bash
   datacube-ows-cfg extract -m /tmp/messages.po
   datacube-ows-cfg translation -n -D ows_cfg -d /tmp/translations -m /tmp/messages.po en de
 
@@ -222,7 +178,7 @@ manually modify translation for `de` for `assert` test to pass, then create `ows
 .. code-block:: console
 
   datacube-ows-cfg compile -D ows_cfg -d /tmp/translations en de
-  exit 
+  exit
   # from outside of the container, cp all the translation files to local.
   docker cp datacube-ows_ows_1:/tmp/translations datacube-ows/integrations/cfg/
 
