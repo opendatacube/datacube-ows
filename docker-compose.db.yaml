@@ -19,4 +19,3 @@ services:
       - postgres:postgres
     environment:
       DB_PORT: 5432
-    privileged: true
