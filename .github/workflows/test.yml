@@ -69,5 +69,5 @@ jobs:
       - name: Upload All coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./artifacts/*.xml
+          directory: ./artifacts/
           fail_ci_if_error: false
