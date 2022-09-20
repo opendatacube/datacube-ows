@@ -91,12 +91,10 @@ def test_initialise_debugging(monkeypatch):
 
 
 def test_initialise_sentry(monkeypatch):
-    monkeypatch.setenv("SENTRY_KEY", "")
-    monkeypatch.setenv("SENTRY_PROJECT", "")
+    monkeypatch.setenv("SENTRY_DSN", "")
     from datacube_ows.startup_utils import initialise_sentry
     initialise_sentry()
-    monkeypatch.setenv("SENTRY_KEY", "dummy_key")
-    monkeypatch.setenv("SENTRY_PROJECT", "dummy_project")
+    monkeypatch.setenv("SENTRY_DSN", "https://key@sentry.local/projid")
     log = MagicMock()
     try:
         initialise_sentry(log)
@@ -158,4 +156,3 @@ def test_init_babel_off(babel_cfg, flask_app):
     babel_cfg.internationalised = False
     bab = initialise_babel(babel_cfg, flask_app)
     assert bab is None
-
