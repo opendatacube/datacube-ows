@@ -1166,13 +1166,13 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.product_index[contents[0]]
+    layer = cfg.product_index[contents[2]]
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326"
     )
     resp = wcs.getCoverage(
-        identifier=[contents[0]],
+        identifier=[contents[2]],
         format="application/x-netcdf",
         subsets=subsets,
         subsettingcrs="EPSG:4326",
