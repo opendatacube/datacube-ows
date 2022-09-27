@@ -8,7 +8,6 @@ services:
       - POSTGRES_DB=${DB_DATABASE}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_USER=${DB_USERNAME}
-    network_mode: bridge
     ports:
       - "${DB_PORT}:5432"
     restart: always
@@ -16,8 +15,5 @@ services:
   ows:
     ports:
       - 8000:8000
-    network_mode: bridge
-    links:
-      - postgres:postgres
     environment:
       DB_PORT: 5432
