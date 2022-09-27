@@ -15,7 +15,5 @@ services:
   ows:
     ports:
       - 8000:8000
-    links:
-      - postgres:postgres
     environment:
       DB_PORT: 5432
