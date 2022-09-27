@@ -13,5 +13,3 @@ services:
     depends_on:
       - postgres
     command: tail -f /dev/null
-    links:
-      - postgres:postgres
