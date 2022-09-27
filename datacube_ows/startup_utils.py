@@ -58,16 +58,23 @@ def initialise_debugging(log=None):
         if log:
             log.info("PyCharm Debugging enabled")
 
+def before_send(event, hint):
+    if 'exc_info' in hint:
+        exc_type, exc_value, tb = hint['exc_info']
+        if tb == 'Failed to delete GEOS geom':
+            return None
+    return event
 
 def initialise_sentry(log=None):
-    if os.environ.get("SENTRY_KEY") and os.environ.get("SENTRY_PROJECT"):
+    if os.environ.get("SENTRY_DSN"):
         import sentry_sdk
         from sentry_sdk.integrations.flask import FlaskIntegration
         SENTRY_ENV_TAG = os.environ.get("SENTRY_ENV_TAG") if os.environ.get("SENTRY_ENV_TAG") else "dev"
         sentry_sdk.init(
-            dsn="https://%s@sentry.io/%s" % (os.environ["SENTRY_KEY"], os.environ["SENTRY_PROJECT"]),
+            dsn=os.environ["SENTRY_DSN"],
             environment=SENTRY_ENV_TAG,
-            integrations = [FlaskIntegration()]
+            integrations = [FlaskIntegration()],
+            before_send=before_send,
         )
         if log:
             log.info("Sentry initialised")
