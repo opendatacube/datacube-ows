@@ -1166,18 +1166,20 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.product_index[contents[2]]
+    assert len(contents) == 4
+    layer = cfg.product_index[contents[0]]
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326"
     )
     resp = wcs.getCoverage(
-        identifier=[contents[2]],
+        identifier=[contents[0]],
         format="application/x-netcdf",
         subsets=subsets,
         subsettingcrs="EPSG:4326",
         scalesize="x(400),y(300)",
     )
+    assert resp
 
 def test_wcs21_server(ows_server):
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
