@@ -29,7 +29,6 @@ on:
 env:
   ORG: opendatacube
   IMAGE: ows
-  DB_USERNAME: opendatacubeusername
 
 jobs:
   unit-integration-performance-tests:

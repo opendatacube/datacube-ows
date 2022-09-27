@@ -7,42 +7,41 @@ on:
         - 'master'
     paths:
       - '**'
-      - '.github/workflows/complementary-config-test.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
       - '!.github/**'
+      - '.github/workflows/complementary-config-test.yaml'
 
   push:
     branches:
       - 'master'
     paths:
       - '**'
-      - '.github/workflows/complementary-config-test.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
       - '!.github/**'
+      - '.github/workflows/complementary-config-test.yaml'
 
 env:
   ORG: opendatacube
   IMAGE: ows
-  DB_USERNAME: opendatacubeusername
 
 jobs:
   dea-config:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout this pr
+      - name: git checkout ows
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
           path: datacube-ows
 
-      - name: Checkout
+      - name: git checkout dea-config
         uses: actions/checkout@v2
         with:
           repository: GeoscienceAustralia/dea-config

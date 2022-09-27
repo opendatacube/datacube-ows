@@ -26,11 +26,6 @@ on:
       - '!datacube_ows/__init__.py'
       - '!.github/**'
 
-env:
-  ORG: opendatacube
-  IMAGE: ows
-  DB_USERNAME: opendatacubeusername
-
 jobs:
   pylint:
     runs-on: ubuntu-latest
