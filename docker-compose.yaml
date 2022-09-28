@@ -10,7 +10,6 @@ services:
       cache_from:
         - opendatacube/ows:_builder
     image: opendatacube/ows:latest
-    network_mode: host
     environment:
       # Defaults are defined in .env file
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}

@@ -58,6 +58,12 @@ def initialise_debugging(log=None):
         if log:
             log.info("PyCharm Debugging enabled")
 
+def before_send(event, hint):
+    if 'exc_info' in hint:
+        exc_type, exc_value, tb = hint['exc_info']
+        if tb == 'Failed to delete GEOS geom':
+            return None
+    return event
 
 def initialise_sentry(log=None):
     if os.environ.get("SENTRY_DSN"):
@@ -67,7 +73,8 @@ def initialise_sentry(log=None):
         sentry_sdk.init(
             dsn=os.environ["SENTRY_DSN"],
             environment=SENTRY_ENV_TAG,
-            integrations = [FlaskIntegration()]
+            integrations = [FlaskIntegration()],
+            before_send=before_send,
         )
         if log:
             log.info("Sentry initialised")
