@@ -11,3 +11,9 @@ services:
     ports:
       - "${DB_PORT}:5432"
     restart: always
+  # Overwrite ows so it can talk to docker db
+  ows:
+    ports:
+      - 8000:8000
+    environment:
+      DB_PORT: 5432
