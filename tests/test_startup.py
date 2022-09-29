@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import os
+import os, sys
 from unittest.mock import MagicMock, patch
 
 import flask
@@ -156,3 +156,17 @@ def test_init_babel_off(babel_cfg, flask_app):
     babel_cfg.internationalised = False
     bab = initialise_babel(babel_cfg, flask_app)
     assert bab is None
+
+
+def test_sentry_before_send():
+    from datacube_ows.startup_utils import before_send
+
+    class LGEOS380:
+        x = 5
+
+    try:
+        string = LGEOS380.GEOSGeom_destroy()
+    except Exception:
+        hint = {'exc_info': sys.exc_info()}
+        assert 'exc_info' in hint
+        assert before_send("event", hint) is None
