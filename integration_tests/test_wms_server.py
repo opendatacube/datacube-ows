@@ -304,7 +304,7 @@ def test_wms_style_looping_getmap(ows_server):
 
 def test_wms_getfeatureinfo(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
-    wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0")
+    wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
 
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
