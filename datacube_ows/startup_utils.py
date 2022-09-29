@@ -61,7 +61,7 @@ def initialise_debugging(log=None):
 def before_send(event, hint):
     if 'exc_info' in hint:
         exc_type, exc_value, tb = hint['exc_info']
-        if tb == 'Failed to delete GEOS geom':
+        if isinstance(exc_value, AttributeError) and str(exc_value) in "'LGEOS380' object has no attribute 'GEOSGeom_destroy'":
             return None
     return event
 
