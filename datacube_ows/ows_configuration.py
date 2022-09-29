@@ -292,7 +292,9 @@ class OWSFolder(OWSLayer):
                     lyr = parse_ows_layer(lyr_cfg, global_cfg=global_cfg, parent_layer=self, sibling=child)
                     self.unready_layers.append(lyr)
                 except ConfigException as e:
-                    _LOG.error("Could not parse layer: %s", str(e))
+                    _LOG.error("Could not parse layer (%s): %s",
+                               lyr_cfg.get("name", lyr_cfg.get("title", "??")),
+                               str(e))
                 child += 1
             else:
                 _LOG.error("Non-dictionary where dictionary expected - check for trailing comma? %s...", repr(lyr_cfg)[0:50])
