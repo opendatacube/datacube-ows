@@ -21,7 +21,7 @@ Full list of changes:
 * Change interpretation of Sentry environment variables to allow Sentry reporting to any hosted Sentry service (#868, #877)
 * Prevent mysterious Shapely warning message from clogging up Sentry logs (#873)
 * Minor tweaks to aid trouble-shooting and better support local deployments (#878)
-* Updates to HISTORY.rst, README.rst and default version string for release (#???)
+* Updates to HISTORY.rst, README.rst and default version string for release (#879)
 
 Contributions from @pindge and @SpacemanPaul.
 
