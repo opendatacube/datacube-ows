@@ -7,6 +7,24 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.30 (2022-10-11)
+-------------------
+
+Minor release, consisting of better Sentry reporting for production deployments, and routine repository
+maintainance.
+
+Full list of changes:
+
+* Update code-of-conduct.md to refer to current ODC Steering Council chair (#862)
+* Fixes to docker-compose files and github workflows (#864, #866, )
+* Simplify and cleanup scripts and config to create database for integration tests (#865, #871)
+* Change interpretation of Sentry environment variables to allow Sentry reporting to any hosted Sentry service (#868, #877)
+* Prevent mysterious Shapely warning message from clogging up Sentry logs (#873)
+* Minor tweaks to aid trouble-shooting and better support local deployments (#878)
+* Updates to HISTORY.rst, README.rst and default version string for release (#879)
+
+Contributions from @pindge and @SpacemanPaul.
+
 1.8.29 (2022-08-30)
 -------------------
 

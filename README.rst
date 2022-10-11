@@ -18,7 +18,10 @@ datacube-ows
         :target: https://codecov.io/gh/opendatacube/datacube-ows
 
 Datacube Open Web Services
+--------------------------
 
+Datacube-OWS provides a way to serve data indexed in an Open Data Cube as visualisations, through
+open web services (OGC WMS, WMTS and WCS).
 
 * Free software: Apache Software License 2.0
 * Documentation: https://datacube-ows.readthedocs.io.
