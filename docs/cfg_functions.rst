@@ -112,13 +112,37 @@ True.
     Sums two bands, passed as keyword arguments "band1" and "band2".
 
 #. datacube_ows.band_utils.delta_bands
-    Sums two bands, passed as keyword arguments "band1" and "band2".
+    Subtracts a band from another, passed as keyword arguments "band1" and "band2".
 
     (band2 is subtracted from band1.  i.e. band1 - band2)
 
 #. datacube_ows.band_utils.norm_diff
     Calculates the normalised difference of two bands, passed
     as keyword arguments "band1" and "band2".
+
+    `Scalable <#scaleable-band-utilities>`_.
+
+#. datacube_ows.band_utils.pre_scaled_band
+    Pre-scale a band with a scale factor and offset.
+    
+    (The scaling function is ``data[band] * scale + offset``)
+
+#. datacube_ows.band_utils.pre_scaled_sum_bands
+    Sums two bands after pre-scaling them, each with a scale factor and offset. The
+    keyword arguments are "band1" and "band2", along with the corresponding "scale1",
+    "offset1" and "scale2", "offset2".
+
+#. datacube_ows.band_utils.delta_bands
+    Subtracts a band from another, after pre-scaling them, each with a scale factor and
+    offset. The keyword arguments are "band1" and "band2", along with the corresponding
+    "scale1", "offset1" and "scale2", "offset2".
+
+    (band2 is subtracted from band1.  i.e. band1 - band2)
+
+#. datacube_ows.band_utils.pre_scaled_norm_diff
+    Calculates the normalised difference of two bands, after pre-scaling them, each with
+    a scale factor and offset. The keyword arguments are "band1" and "band2", along with
+    the corresponding "scale1", "offset1" and "scale2", "offset2".
 
     `Scalable <#scaleable-band-utilities>`_.
 
@@ -178,6 +202,23 @@ in the band dictionary:
         "kwargs": {
             "band1": "nir",
             "band2": "red"
+        }
+    }
+
+This can also be computed for bands that need scaling, e.g., for Landsat 8 C2 L2 SR:
+
+::
+
+    "index_function": {
+        "function": "datacube_ows.band_utils.pre_scaled_norm_diff",
+        "mapped_bands": True,
+        "kwargs": {
+            "band1": "nir08",
+            "band2": "red",
+            "scale1": 0.0000275,
+            "offset1": -0.2,
+            "scale2": 0.0000275,
+            "offset2": -0.2,
         }
     }
 

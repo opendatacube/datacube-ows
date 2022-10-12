@@ -10,7 +10,10 @@ import pytest
 import xarray as xr
 
 from datacube_ows.band_utils import (band_quotient, band_quotient_sum,
-                                     constant, multi_date_delta, norm_diff,
+                                     constant, delta_bands, multi_date_delta,
+                                     norm_diff, pre_scaled_delta_bands,
+                                     pre_scaled_norm_diff,
+                                     pre_scaled_sum_bands,
                                      radar_vegetation_index, scale_data,
                                      sentinel2_ndci, single_band,
                                      single_band_arcsec, single_band_log,
@@ -37,7 +40,9 @@ class MockArray(xr.DataArray):
 
 TEST_ARR_1 = MockArray(np.ones((100, 100), dtype=np.uint32), attrs={"nodata": 0})
 TEST_ARR_2 = MockArray(np.ones((100, 100), dtype=np.uint32), attrs={"nodata": 0})
+TEST_ARR_3 = MockArray(np.full((100, 100), 3, dtype=np.uint32), attrs={"nodata": 0})
 TEST_XARR = {"b1": TEST_ARR_1, "b2": TEST_ARR_2}
+TEST_XARR2 = {"b3": TEST_ARR_3, "b2": TEST_ARR_2}
 
 TEST_XARR_T = xr.Dataset({"b1": (["x", "y", "time"], np.ones((100, 100, 2)))})
 
@@ -71,9 +76,53 @@ def test_sum_bands():
     assert not sum_bands(TEST_XARR, "b1", "b2") is None
 
 
+def test_pre_scaled_sum_bands():
+    assert not pre_scaled_sum_bands(TEST_XARR, "b1", "b2", 1.0, 0.0, 1.0, 0.0) is None
+    unscaled = sum_bands(TEST_XARR, "b1", "b2")
+    assert pre_scaled_sum_bands(TEST_XARR, "b1", "b2").equals(unscaled)
+    assert pre_scaled_sum_bands(TEST_XARR, "b1", "b2", 1.0, 0.0, 1.0, 0.0).equals(
+        unscaled
+    )
+    assert pre_scaled_sum_bands(TEST_XARR, "b1", "b2", 2.0, 10.0, 2.0, 10.0).equals(
+        2.0 * unscaled + 2 * 10.0
+    )
+
+
+def test_pre_scaled_delta_bands():
+    assert (
+        not pre_scaled_delta_bands(TEST_XARR2, "b3", "b2", 1.0, 0.0, 1.0, 0.0) is None
+    )
+    unscaled = delta_bands(TEST_XARR2, "b3", "b2")
+    assert pre_scaled_delta_bands(TEST_XARR2, "b3", "b2").equals(unscaled)
+    assert pre_scaled_delta_bands(TEST_XARR2, "b3", "b2", 1.0, 0.0, 1.0, 0.0).equals(
+        unscaled
+    )
+    assert pre_scaled_delta_bands(TEST_XARR2, "b3", "b2", 2.0, 10.0, 2.0, 10.0).equals(
+        2.0 * unscaled + 0.0
+    )
+
+
 def test_norm_diff(band_mapper):
     assert not norm_diff(TEST_XARR, "b1", "b2") is None
     assert not norm_diff(TEST_XARR, "b1a", "b2", band_mapper, scale_from=[0, 1]) is None
+
+
+def test_pre_scaled_norm_diff(band_mapper):
+    assert not pre_scaled_norm_diff(TEST_XARR, "b1", "b2") is None
+    assert (
+        not pre_scaled_norm_diff(
+            TEST_XARR, "b1a", "b2", band_mapper=band_mapper, scale_from=[0, 1]
+        )
+        is None
+    )
+    assert np.array_equal(
+        pre_scaled_norm_diff(TEST_XARR2, "b3", "b2", 2.0, 0.0, 6.0, 0.0).values,
+        np.zeros_like(TEST_ARR_1),
+    )
+    assert np.array_equal(
+        pre_scaled_norm_diff(TEST_XARR2, "b3", "b2", 2.0, 10.0, 6.0, 10.0).values,
+        np.zeros_like(TEST_ARR_1),
+    )
 
 
 def test_constant(band_mapper):
