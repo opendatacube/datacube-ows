@@ -387,3 +387,7 @@ class ODCExtent:
             extent = space.subset(time_extent, self.full_extent)
 
         return extent, ext_times
+
+
+def trivial_identity(x):
+    return x

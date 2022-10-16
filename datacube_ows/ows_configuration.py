@@ -436,6 +436,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.parse_urls(cfg.get("urls", {}))
         self.parse_feature_info(cfg.get("feature_info", {}))
         self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
+        if "url_patcher" in cfg:
+            self.url_patcher = FunctionWrapper(self, cfg["url_patcher"])
+        else:
+            self.url_patcher = None
         try:
             self.parse_styling(cfg["styling"])
         except KeyError as e:
