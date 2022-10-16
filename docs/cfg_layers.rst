@@ -454,7 +454,7 @@ Band aliases are useful:
   bands between layers but the native band names do not match.
 
 --------------------------
-URL patching (url_patcher)
+URL patching (patch_url_function)
 --------------------------
 
 An arbitrary function can be supplied to patch data urls for the layer.  URLs from the
@@ -464,12 +464,12 @@ of data urls for authentication (e.g. Microsoft Planetary Computer).  They may a
 to handle various network proxying or data-migration scenarios where the URLs visible to the
 OWS server are different to the URLs at indexing time.
 
-The "url_patcher" config element is set using OWS's `function configuration format
+The "patch_url_function" config element is set using OWS's `function configuration format
 <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 The function is expected to take a string containing an unpatched url and return a
 string containing the patched url.
 
-"url_patcher" is optional, the default is None, meaning use ODC urls unpatched.
+"patch_url_function" is optional, the default is None, meaning use ODC urls unpatched.
 
 Note that the same function is applied to all products for the layer.  Multi-product
 (or separate masking product) scenarios that require a different patching paradigm
