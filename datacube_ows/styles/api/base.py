@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+import matplotlib
 import xarray
 
 from datacube_ows.startup_utils import initialise_ignorable_warnings
