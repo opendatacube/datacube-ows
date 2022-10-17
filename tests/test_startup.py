@@ -161,6 +161,7 @@ def test_init_babel_off(babel_cfg, flask_app):
 
 def test_sentry_before_send():
     from datacube_ows.startup_utils import before_send
+
     class LGEOS380():
         def __init__(self, a=5):
             self.a = a
