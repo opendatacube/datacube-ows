@@ -61,7 +61,7 @@ def initialise_debugging(log=None):
 def before_send(event, hint):
     if 'exc_info' in hint:
         exc_type, exc_value, tb = hint['exc_info']
-        if isinstance(exc_value, AttributeError) and "'LGEOS380' has no attribute 'GEOSGeom_destroy'" in str(exc_value):
+        if isinstance(exc_value, AttributeError) and "'LGEOS380'" in str(exc_value) and "'GEOSGeom_destroy'" in str(exc_value):
             return None
     return event
 
