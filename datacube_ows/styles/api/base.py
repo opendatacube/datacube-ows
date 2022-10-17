@@ -146,6 +146,8 @@ def plot_image(xr_image, x="x", y="y", size=10, aspect=None):
     rgb = xr_image.to_array(dim="color")
     rgb = rgb.transpose(*(rgb.dims[1:] + rgb.dims[:1]))
     rgb = rgb / 255
+    # Use notebook backend
+    matplotlib.use("nbAgg")
     rgb.plot.imshow(x=x, y=y, size=size, aspect=aspect)
 
 
