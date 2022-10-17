@@ -37,6 +37,7 @@ services:
       FLASK_APP: /code/datacube_ows/ogc.py
       FLASK_ENV: ${FLASK_ENV}
       PYDEV_DEBUG: "${PYDEV_DEBUG}"
+      SENTRY_DSN: "${SENTRY_DSN}"
     volumes:
       - ${OWS_CFG_FOLDER}:${OWS_CFG_CONTAINER_FOLDER}
       - ./docker/ows/wait-for-db:/usr/local/bin/wait-for-db
