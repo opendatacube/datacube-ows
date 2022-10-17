@@ -453,6 +453,29 @@ Band aliases are useful:
 * when you wish to share configuration chunks that reference
   bands between layers but the native band names do not match.
 
+--------------------------
+URL patching (patch_url_function)
+--------------------------
+
+An arbitrary function can be supplied to patch data urls for the layer.  URLs from the
+ODC database are passed through the patching function before loading.  This can be
+used to access data held by commercial data providers that require cryptographic signing
+of data urls for authentication (e.g. Microsoft Planetary Computer).  They may also be used
+to handle various network proxying or data-migration scenarios where the URLs visible to the
+OWS server are different to the URLs at indexing time.
+
+The "patch_url_function" config element is set using OWS's `function configuration format
+<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+The function is expected to take a string containing an unpatched url and return a
+string containing the patched url.
+
+"patch_url_function" is optional, the default is None, meaning use ODC urls unpatched.
+
+Note that the same function is applied to all products for the layer.  Multi-product
+(or separate masking product) scenarios that require a different patching paradigm
+per product must depend on the patching function to identify from the unpatched url
+which paradigm to apply.
+
 ------------------------------------------------------------------------------------
 Native Coordinate Reference System and resolution (native_crs and native_resolution)
 ------------------------------------------------------------------------------------

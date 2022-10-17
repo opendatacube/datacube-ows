@@ -338,7 +338,8 @@ class DataStacker:
                     datasets,
                     geobox,
                     measurements=measurements,
-                    fuse_func=fuse_func)
+                    fuse_func=fuse_func,
+                    patch_url=self._product.patch_url)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise
@@ -356,7 +357,8 @@ class DataStacker:
                 dc_datasets,
                 geobox,
                 measurements=measurements,
-                fuse_func=fuse_func)
+                fuse_func=fuse_func,
+                patch_url=self._product.patch_url)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise
