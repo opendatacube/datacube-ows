@@ -649,7 +649,8 @@ class OWSFlagBand(OWSConfigEntry):
         pq_names = self.product.parse_pq_names(cfg)
         self.pq_names = pq_names["pq_names"]
         self.pq_low_res_names = pq_names["pq_low_res_names"]
-        self.pq_band = cfg["band"]
+        self.main_products = pq_names["main_products"]
+        self.pq_band = cfg["band"]  # N.B. May be an alias if on main_products
         if "fuse_func" in cfg:
             self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
         else:
@@ -684,6 +685,12 @@ class OWSFlagBand(OWSConfigEntry):
                 if pq_product is None:
                     raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
                 self.pq_low_res_products.append(pq_product)
+
+        # Resolve band alias if necessary.
+        if self.main_products:
+            canonical_band = self.product.band_idx.band(self.pq_band)
+            if canonical_band and canonical_band != self.pq_band:
+                self.pq_band = canonical_band
 
         # pyre-ignore[16]
         self.info_mask: int = ~0
