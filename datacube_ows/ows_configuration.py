@@ -972,7 +972,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
             pq_names = tuple(cfg["products"])
             main_products = pq_names == self.product_names
         else:
-            main_products =True
+            main_products = True
             pq_names = self.product_names
 
         if "low_res_products" in cfg:
