@@ -650,7 +650,8 @@ class OWSFlagBand(OWSConfigEntry):
         self.pq_names = pq_names["pq_names"]
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.main_products = pq_names["main_products"]
-        self.pq_band = cfg["band"]  # N.B. May be an alias if on main_products
+        self.pq_band = cfg["band"]
+        self.canonical_band_name = self.pq_band # Update for aliasing on make_ready
         if "fuse_func" in cfg:
             self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
         else:
@@ -688,11 +689,12 @@ class OWSFlagBand(OWSConfigEntry):
 
         # Resolve band alias if necessary.
         if self.main_products:
-            canonical_band = self.product.band_idx.band(self.pq_band)
-            if canonical_band and canonical_band != self.pq_band:
-                self.pq_band = canonical_band
+            try:
+                self.canonical_band_name = self.product.band_idx.band(self.pq_band)
+            except ConfigException:
+                pass
 
-        # pyre-ignore[16]
+    # pyre-ignore[16]
         self.info_mask: int = ~0
         # A (hopefully) representative product
         product = self.pq_products[0]
@@ -730,7 +732,7 @@ class FlagProductBands(OWSConfigEntry):
         super().__init__({})
         self.layer = layer
         self.bands: Set[str] = set()
-        self.bands.add(flag_band.pq_band)
+        self.bands.add(flag_band.canonical_band_name)
         self.flag_bands = {flag_band.pq_band: flag_band}
         self.product_names = tuple(flag_band.pq_names)
         self.ignore_time = flag_band.pq_ignore_time

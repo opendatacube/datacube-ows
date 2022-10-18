@@ -44,6 +44,7 @@ def product_layer():
             self.pq_products = [FakeODCProduct(pq_name)]
             self.pq_low_res_products = None
             self.pq_band = band
+            self.canonical_band_name = band
             self.pq_names = [pq_name]
             self.pq_ignore_time = False
             self.pq_manual_merge = False
