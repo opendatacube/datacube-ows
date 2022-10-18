@@ -26,7 +26,6 @@ install_requirements = [
     'Pillow',
     'Babel',
     'Flask-Babel',
-    'Jinja2>=3.2.0',    # Python 3.10 compatibility
     'psycopg2',
     'python_dateutil',
     'pytz',
