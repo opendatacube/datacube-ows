@@ -625,6 +625,7 @@ class OWSFlagBandStandalone:
     """
     def __init__(self, band: str) -> None:
         self.pq_band = band
+        self.canonical_band_name = band
         self.pq_names: List["datacube.model.DatasetType"] = []
         self.pq_ignore_time = False
         self.pq_manual_merge = False
