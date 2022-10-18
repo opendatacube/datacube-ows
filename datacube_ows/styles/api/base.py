@@ -3,11 +3,12 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-import matplotlib
 import xarray
 
 from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
+from datacube_ows.styles.ramp import ColorRamp
+
 
 initialise_ignorable_warnings()
 
@@ -147,8 +148,6 @@ def plot_image(xr_image, x="x", y="y", size=10, aspect=None):
     rgb = xr_image.to_array(dim="color")
     rgb = rgb.transpose(*(rgb.dims[1:] + rgb.dims[:1]))
     rgb = rgb / 255
-    # Use notebook backend
-    matplotlib.use("nbAgg")
     rgb.plot.imshow(x=x, y=y, size=size, aspect=aspect)
 
 

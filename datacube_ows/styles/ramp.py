@@ -30,7 +30,6 @@ from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 
 _LOG = logging.getLogger(__name__)
-matplotlib.use('Agg')
 
 RAMP_SPEC = List[CFG_DICT]
 
