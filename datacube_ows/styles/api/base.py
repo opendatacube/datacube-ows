@@ -8,7 +8,6 @@ import xarray
 from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
 
-
 initialise_ignorable_warnings()
 
 
