@@ -699,7 +699,7 @@ class OWSFlagBand(OWSConfigEntry):
         # A (hopefully) representative product
         product = self.pq_products[0]
         try:
-            meas = product.lookup_measurements([self.pq_band])[self.pq_band]
+            meas = product.lookup_measurements([self.canonical_band_name])[self.canonical_band_name]
         except KeyError:
             raise ConfigException(
                 f"Band {self.pq_band} does not exist in product {product.name} - cannot be used as a flag band for layer {self.product.name}.")
