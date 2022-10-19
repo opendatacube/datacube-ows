@@ -921,17 +921,22 @@ class OWSProductLayer(OWSNamedLayer):
             raise ConfigException(f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only")
 
     def parse_pq_names(self, cfg):
+        main_product = False
         if "dataset" in cfg:
             raise ConfigException(f"The 'dataset' entry in the flags section is no longer supported.  Please refer to the documentation for the correct format (layer {self.name})")
         if "product" in cfg:
             pq_names = (cfg["product"],)
         else:
             pq_names = (self.product_name,)
+            main_product = (pq_names[0] == self.product_name)
 
         if "low_res_product" in cfg:
             pq_low_res_names = (cfg.get("low_res_product"),)
-        else:
+        elif main_product:
             pq_low_res_names = self.low_res_product_names
+        else:
+            pq_low_res_names = pq_names
+
         if "products" in cfg:
             raise ConfigException(f"'products' entry in flags section of non-multi-product layer {self.name} - use 'product' only")
         if "low_res_products" in cfg:
@@ -939,6 +944,7 @@ class OWSProductLayer(OWSNamedLayer):
         return {
             "pq_names": pq_names,
             "pq_low_res_names": pq_low_res_names,
+            "main_products": main_product
         }
 
 
@@ -959,11 +965,14 @@ class OWSMultiProductLayer(OWSNamedLayer):
             raise ConfigException(f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only")
 
     def parse_pq_names(self, cfg):
+        main_products = False
         if "datasets" in cfg:
             raise ConfigException(f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})")
         if "products" in cfg:
             pq_names = tuple(cfg["products"])
+            main_products = pq_names == self.product_names
         else:
+            main_products = True
             pq_names = self.product_names
 
         if "low_res_products" in cfg:
@@ -977,6 +986,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
         return {
             "pq_names": pq_names,
             "pq_low_res_names": pq_low_res_names,
+            "main_products": main_products,
         }
 
     def dataset_groupby(self):

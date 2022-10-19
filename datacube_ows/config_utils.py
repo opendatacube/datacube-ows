@@ -625,6 +625,7 @@ class OWSFlagBandStandalone:
     """
     def __init__(self, band: str) -> None:
         self.pq_band = band
+        self.canonical_band_name = band
         self.pq_names: List["datacube.model.DatasetType"] = []
         self.pq_ignore_time = False
         self.pq_manual_merge = False
@@ -649,7 +650,9 @@ class OWSFlagBand(OWSConfigEntry):
         pq_names = self.product.parse_pq_names(cfg)
         self.pq_names = pq_names["pq_names"]
         self.pq_low_res_names = pq_names["pq_low_res_names"]
+        self.main_products = pq_names["main_products"]
         self.pq_band = cfg["band"]
+        self.canonical_band_name = self.pq_band # Update for aliasing on make_ready
         if "fuse_func" in cfg:
             self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
         else:
@@ -685,12 +688,19 @@ class OWSFlagBand(OWSConfigEntry):
                     raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
                 self.pq_low_res_products.append(pq_product)
 
-        # pyre-ignore[16]
+        # Resolve band alias if necessary.
+        if self.main_products:
+            try:
+                self.canonical_band_name = self.product.band_idx.band(self.pq_band)
+            except ConfigException:
+                pass
+
+    # pyre-ignore[16]
         self.info_mask: int = ~0
         # A (hopefully) representative product
         product = self.pq_products[0]
         try:
-            meas = product.lookup_measurements([self.pq_band])[self.pq_band]
+            meas = product.lookup_measurements([self.canonical_band_name])[self.canonical_band_name]
         except KeyError:
             raise ConfigException(
                 f"Band {self.pq_band} does not exist in product {product.name} - cannot be used as a flag band for layer {self.product.name}.")
@@ -723,7 +733,7 @@ class FlagProductBands(OWSConfigEntry):
         super().__init__({})
         self.layer = layer
         self.bands: Set[str] = set()
-        self.bands.add(flag_band.pq_band)
+        self.bands.add(flag_band.canonical_band_name)
         self.flag_bands = {flag_band.pq_band: flag_band}
         self.product_names = tuple(flag_band.pq_names)
         self.ignore_time = flag_band.pq_ignore_time

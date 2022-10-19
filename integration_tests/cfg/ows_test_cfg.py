@@ -62,7 +62,7 @@ bands_sentinel2_ard_nbart = {
     "nbart_nir_2": ["nbar_nir_2", "nir2", "nbart_nir_2"],
     "nbart_swir_2": ["nbar_swir_2", "swir_2", "nbart_swir_2"],
     "nbart_swir_3": ["nbar_swir_3", "swir_3", "nbart_swir_3"],
-    "fmask": ["fmask"],
+    "fmask": ["fmask", "fmask_alias"],
 }
 
 
@@ -70,7 +70,7 @@ bands_sentinel2_ard_nbart = {
 
 s2_nrt_fmask = [
     {
-        "band": "fmask",
+        "band": "fmask_alias",
         "values": [0, 2, 3],
         "invert": True,
     },
@@ -807,7 +807,7 @@ For service status information, see https://status.dea.ga.gov.au
                     },
                     "flags": [
                         {
-                            "band": "fmask",
+                            "band": "fmask_alias",
                             "products": ["s2a_ard_granule", "s2b_ard_granule"],
                             "ignore_time": False,
                             "ignore_info_flags": []

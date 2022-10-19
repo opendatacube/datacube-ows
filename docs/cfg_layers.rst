@@ -1003,8 +1003,12 @@ The name of the measurement band to be used for style-based masking.
 Pixel-quality bitmask bands or enumeration flag bands can be used, although
 bitmask bands are better supported and are recommended where possible.
 
+If the flag product(s) is/are the same as the main data product(s), then
+an alias from the `bands dictionary <#bands-dictionary-bands>`_ may be used.
+
 Note that it is not possible to combine flag bands from separate products
-if they have the same band name.
+if they have the same band name (unless one of the products is the main product
+and a band alias is used.)
 
 Required.
 
