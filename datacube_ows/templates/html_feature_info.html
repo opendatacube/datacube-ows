@@ -36,12 +36,14 @@
                                 </tr>
                             {% endif %}
                     {% endfor %}
-                    {% for band_name, band_val in pixel["band_derived"].items() %}
-                        <tr>
-                            <td><b>{{ band_name }} (derived):</b></td>
-                            <td>{{ band_val }}</td>
-                        </tr>
-                    {% endfor %}
+                    {% if "band_derived" in pixel %}
+                        {% for band_name, band_val in pixel["band_derived"].items() %}
+                            <tr>
+                                <td><b>{{ band_name }} (derived):</b></td>
+                                <td>{{ band_val }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
                 </table>
             {% endfor %}
         <h4>Data Available For Dates</h4>
