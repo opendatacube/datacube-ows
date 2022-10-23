@@ -7,6 +7,25 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.31 (2022-10-24)
+-------------------
+
+Full list of changes:
+
+* Added pre_scaled_norm_diff to band_utils.py, allowing calculation of normalised difference calculations on
+  data that is scaled with an offset. (#881)
+* Add support for url patching - allowing OWS to serve data from commercial data repositories that use
+  uri signing for authentication (e.g. Microsoft Planetary Computer) (#883)
+* Further refinements to Sentry logging. (#884)
+* Improve interoperability with Jupyter Notebooks. (#886)
+* Allow band alises for Flag Bands taken from main product(s). (#887)
+* Add new metadata type to MV definitions, to support DEA Sentinel-2 Collection 3. (#888)
+* Add support for html info_format for GetFeatureInfo queries in WMS and WMTS - may improve ArcGIS
+  compatibility. (#889)
+* Updates to HISTORY.rst, README.rst and default version string for release (#???)
+
+Contributions from @pindge, @rtaib and @SpacemanPaul.
+
 1.8.30 (2022-10-11)
 -------------------
 
