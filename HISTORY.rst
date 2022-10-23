@@ -22,7 +22,7 @@ Full list of changes:
 * Add new metadata type to MV definitions, to support DEA Sentinel-2 Collection 3. (#888)
 * Add support for html info_format for GetFeatureInfo queries in WMS and WMTS - may improve ArcGIS
   compatibility. (#889)
-* Updates to HISTORY.rst, README.rst and default version string for release (#???)
+* Updates to HISTORY.rst, README.rst and default version string for release (#890)
 
 Contributions from @pindge, @rtaib and @SpacemanPaul.
 
