@@ -18,6 +18,7 @@ import numpy.ma
 import xarray
 from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
+from flask import render_template
 from pandas import Timestamp
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
@@ -897,10 +898,18 @@ def feature_info(args):
             }
         ]
     }
-    return json_response(result, cfg)
+    if params.format == "text/html":
+        return html_json_response(result, cfg)
+    else:
+        return json_response(result, cfg)
 
 
 def json_response(result, cfg=None):
     if not cfg:
         cfg = get_config()
     return json.dumps(result), 200, cfg.response_headers({"Content-Type": "application/json"})
+
+
+def html_json_response(result, cfg):
+    html_content = render_template("html_feature_info.html", result=result)
+    return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})

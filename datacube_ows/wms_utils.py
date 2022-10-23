@@ -425,7 +425,7 @@ class GetFeatureInfoParameters(GetParameters):
         # Validate Formata parameter
         self.format = get_arg(args, "info_format", "info format", lower=True,
                               errcode=WMSException.INVALID_FORMAT,
-                              permitted_values=["application/json"])
+                              permitted_values=["application/json", "text/html"])
         # Point coords
         if self.version == "1.1.1":
             coords = ["x", "y"]

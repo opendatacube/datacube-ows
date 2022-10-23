@@ -326,6 +326,20 @@ def test_wms_getfeatureinfo(ows_server):
         assert response
         assert response.info()["Content-Type"] == "application/json"
 
+        response = wms.getfeatureinfo(
+            layers=[test_layer_name],
+            srs="EPSG:4326",
+            bbox=pytest.helpers.enclosed_bbox(bbox),
+            size=(256, 256),
+            format="image/png",
+            query_layers=[test_layer_name],
+            info_format="text/html",
+            xy=(250, 250),
+        )
+
+        assert response
+        assert response.info()["Content-Type"] == "text/html"
+
 
 def test_wms_getlegend(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service

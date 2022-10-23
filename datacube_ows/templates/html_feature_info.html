@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OWS Feature Info</title>
+</head>
+<body>
+    {% set props = result["features"][0]["properties"] %}
+    {% if props %}
+        <h3>Location</h3>
+        <ul>
+            <li><b>Latitude:</b> {{ props["lat"] }}</li>
+            <li><b>Longitude:</b> {{ props["lon"] }}</li>
+        </ul>
+        <h4>Pixel Data</h4>
+            {%  for pixel in props["data"] %}
+                <table>
+                    <tr>
+                        <td><b>Date/Time:</b></td>
+                        <td>{{ pixel["time"] }}</td>
+                    </tr>
+                    {% for band_name, band_val in pixel["bands"].items() %}
+                        <tr>
+                            <td><b>{{ band_name }}:</b></td>
+                            {% if band_val is mapping %}
+                                <td></td>
+                                </tr>
+                                {% for flag, flag_val in band_val.items() %}
+                                    <tr>
+                                        <td style="padding-left: 3em;"><b>{{ flag }}:</b></td>
+                                        <td>{{ flag_val }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                    <td>{{ band_val }}</td>
+                                </tr>
+                            {% endif %}
+                    {% endfor %}
+                    {% if "band_derived" in pixel %}
+                        {% for band_name, band_val in pixel["band_derived"].items() %}
+                            <tr>
+                                <td><b>{{ band_name }} (derived):</b></td>
+                                <td>{{ band_val }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </table>
+            {% endfor %}
+        <h4>Data Available For Dates</h4>
+            <p>
+                {% for d in props["data_available_for_dates"] %}
+                    {{ d }}
+                {% endfor %}
+            </p>
+        <h4>Data Sources</h4>
+        {% for d in props["data_links"] %}
+            <a href="{{ d }}">{{ d }}</a><br/>
+        {% endfor %}
+    {% else %}
+        <p>No Data</p>
+    {% endif %}
+</body>
+</html>
