@@ -17,6 +17,9 @@ datacube-ows
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/opendatacube/datacube-ows
 
+.. image:: https://badge.fury.io/py/datacube.svg
+    :target: https://badge.fury.io/py/datacube
+
 Datacube Open Web Services
 --------------------------
 
