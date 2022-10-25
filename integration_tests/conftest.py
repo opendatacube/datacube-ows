@@ -102,3 +102,12 @@ def role_name():
 @pytest.fixture
 def multiproduct_name():
     return "s2_ard_granule_nbar_t"
+
+@pytest.fixture
+def featurecollection():
+    import urllib.request, json
+    with urllib.request.urlopen(
+        "https://geojson.org/schema/FeatureCollection.json"
+        ) as url:
+        data = json.load(url)
+        return data

@@ -45,7 +45,7 @@ test_requirements = [
     'pytest', 'pytest_cov', 'pytest_localserver',
     'owslib', 'pytest_mock', 'pep8',
     'pytest-helpers-namespace', 'flask-cors',
-    'fsspec',
+    'fsspec', 'jsonschema',
 ]
 
 dev_requirements = [

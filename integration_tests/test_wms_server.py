@@ -5,6 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from urllib import request
 
+import json
+from jsonschema import validate
 import pytest
 import requests
 from lxml import etree
@@ -302,7 +304,7 @@ def test_wms_style_looping_getmap(ows_server):
             assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_getfeatureinfo(ows_server):
+def test_wms_getfeatureinfo(ows_server, featurecollection):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
 
@@ -323,7 +325,9 @@ def test_wms_getfeatureinfo(ows_server):
             xy=(250, 250),
         )
 
-        assert response
+        assert validate(json.loads(
+            response.read().decode('utf8').replace("'", '"')
+        ), featurecollection)
         assert response.info()["Content-Type"] == "application/json"
 
         response = wms.getfeatureinfo(
