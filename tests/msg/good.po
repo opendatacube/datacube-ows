@@ -10,4 +10,3 @@ msgstr ""
 "\n"
 "A multi-line string that continues\n"
 "Across line-breaks.\n"
-

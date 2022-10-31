@@ -21,5 +21,5 @@ Change the sections on `python` files, to remove the `headerStartLine` and
 Run the tool:
 
 ```bash
-python3 ./licenseheaders.py --tmpl license-template.txt --years 2017-2020 --ext py 
+python3 ./licenseheaders.py --tmpl license-template.txt --years 2017-2020 --ext py
 ```

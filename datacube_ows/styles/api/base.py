@@ -195,4 +195,3 @@ def plot_image_with_style_cfg(cfg, data, x="x", y="y", size=10, aspect=None, val
     :param valid_data_mask: (optional) An xarray DataArray mask, with dimensions and coordinates matching data.
     """
     plot_image(apply_ows_style_cfg(cfg, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size, aspect=aspect)
-

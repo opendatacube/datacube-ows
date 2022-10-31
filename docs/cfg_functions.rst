@@ -124,7 +124,7 @@ True.
 
 #. datacube_ows.band_utils.pre_scaled_band
     Pre-scale a band with a scale factor and offset.
-    
+
     (The scaling function is ``data[band] * scale + offset``)
 
 #. datacube_ows.band_utils.pre_scaled_sum_bands

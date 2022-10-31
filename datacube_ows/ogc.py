@@ -253,4 +253,3 @@ def log_time_and_request_response(response):
         ip = 'Not found'
     _LOG.info("ip: %s request: %s returned status: %d and took: %d ms", ip, request.url, response.status_code, time_taken)
     return response
-

@@ -554,7 +554,7 @@ def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=
             for coord in img_data.coords[loop_over].values
         ]
         images = []
-        
+
         for t_slice in time_slices_array:
             im = Image.fromarray(t_slice, "RGBA")
             images.append(im)
@@ -568,7 +568,7 @@ def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=
     pillow_data = render_frame(img_data.transpose(xcoord, ycoord), width, height)
     if not loop_over and animate:
         return pillow_data
-   
+
     # Change PNG rendering to Pillow
     im_final = Image.fromarray(pillow_data, "RGBA")
     im_final.save(img_io, "PNG")

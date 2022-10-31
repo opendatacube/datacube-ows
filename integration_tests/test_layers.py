@@ -112,4 +112,3 @@ def test_metadata_read(monkeypatch, product_name):
         assert "Over-ridden" not in styl.title
     finally:
         OWSConfig._instance = cached_cfg
-

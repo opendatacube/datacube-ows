@@ -124,4 +124,3 @@ class Expression:
     def __call__(self, data: "xarray.Dataset") -> Any:
         evaluator: ExpressionEvaluator = self.eval_cls(data)
         return evaluator.transform(self.tree)
-

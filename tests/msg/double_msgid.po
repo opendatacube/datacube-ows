@@ -14,4 +14,3 @@ msgstr ""
 #.  Error: msgid where msgstr expected.
 msgid "bang.whirl.splat"
 msgid "ding.dang.dong"
-

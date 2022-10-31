@@ -525,4 +525,3 @@ msgid "style.fc_albers_combined.simple_fc.abstract"
 msgstr ""
 "Fractional cover representation, with green vegetation in green, dead "
 "vegetation in blue, and bare soil in red"
-

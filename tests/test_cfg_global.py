@@ -261,4 +261,3 @@ def test_bad_integers_in_wms_section(minimal_global_raw_cfg, minimal_dc):
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "caps_cache_maxage in wms section cannot be negative" in str(e.value)
     assert "-100" in str(e.value)
-

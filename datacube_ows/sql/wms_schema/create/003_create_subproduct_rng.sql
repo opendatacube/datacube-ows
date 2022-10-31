@@ -14,4 +14,3 @@ create table if not exists wms.sub_product_ranges (
     bboxes jsonb not null,
     constraint pk_sub_product_ranges primary key (product_id, sub_product_id)
 );
-

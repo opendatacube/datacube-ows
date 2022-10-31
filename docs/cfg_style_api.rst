@@ -244,4 +244,3 @@ PIL Image object will display the image in JupyterHub, Notebooks, etc.
     # Write out as PNG:
     with open("filename.png", "wb") as fp:
         image.save(fp)
-

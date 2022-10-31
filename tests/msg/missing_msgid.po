@@ -13,4 +13,3 @@ msgstr ""
 
 #.  Error: msgstr with no msgid.
 msgstr "Single line msgstr"
-

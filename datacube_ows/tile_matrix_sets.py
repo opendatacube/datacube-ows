@@ -125,4 +125,3 @@ class TileMatrixSet(OWSConfigEntry):
             return (
                 mins[0], maxs[1], maxs[0], mins[1]
             )
-

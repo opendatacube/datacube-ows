@@ -89,4 +89,3 @@ def dim1_da_time(name, vals, dates, coords, attrs=None):
         name=name,
     )
     return output
-
