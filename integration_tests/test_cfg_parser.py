@@ -244,4 +244,3 @@ def test_cfg_parser_compile_bad_cfg(runner):
                                   "-d", f"{this_dir}/cfg/test_translations",
                                   "en"])
     assert result.exit_code == 1
-

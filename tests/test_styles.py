@@ -529,7 +529,7 @@ def test_alpha_style_map(
 
     with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask) as fmm:
         style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
-        
+
         result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()

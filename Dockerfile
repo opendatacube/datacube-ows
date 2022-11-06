@@ -61,7 +61,7 @@ COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
 # gunicorn cli
 COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 # pybabel cli
-COPY --from=builder  /usr/local/bin/pybabel /usr/local/bin/pybabel 
+COPY --from=builder  /usr/local/bin/pybabel /usr/local/bin/pybabel
 # make folders for testing and keep code in image
 RUN mkdir -p /code
 # Copy source code and install it

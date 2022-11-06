@@ -367,4 +367,3 @@ def test_log_call(monkeypatch):
     assert "timed_func" in FakeLogger._instance.slot
     assert "args" in FakeLogger._instance.slot
     assert "7" in FakeLogger._instance.slot
-

@@ -177,5 +177,3 @@ def run_sql(dc, path, **params):
         else:
             conn.execute(sql)
     conn.close()
-
-

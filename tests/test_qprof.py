@@ -34,4 +34,3 @@ def test_qpf_info():
     qp["foo"] = "splunge"
     prof = qp.profile()
     assert prof["info"]["foo"] == "splunge"
-

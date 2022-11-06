@@ -15,4 +15,3 @@ msgstr ""
 msgid "bang.whirl.splat"
 msgstr "Single line msgstr"
 msgstr "Another single line msgstr"
-

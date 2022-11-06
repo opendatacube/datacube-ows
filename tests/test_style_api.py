@@ -1039,4 +1039,3 @@ def test_plot_image_with_style_cfg(dummy_raw_data, simple_rgb_style_cfg):
 def test_style_count_dates(simple_rgb_style_cfg):
     style = StandaloneStyle(simple_rgb_style_cfg)
     assert style.count_dates([None, None, None, None]) == 4
-

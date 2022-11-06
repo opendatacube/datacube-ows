@@ -1198,7 +1198,7 @@ class OWSConfig(OWSMetadataConfig):
                                    header_comment=f"""# Translations for datacube-ows metadata instance:
 #      {self.title}
 #
-# {self.contact_info.organisation} {now.isoformat()} 
+# {self.contact_info.organisation} {now.isoformat()}
 #""",
                                    project=self.title,
                                    version=f"{now.isoformat()}",
@@ -1417,4 +1417,3 @@ def get_config(refresh=False, called_from_update_ranges=False):
         except ODCInitException:
             pass
     return cfg
-

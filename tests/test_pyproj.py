@@ -24,4 +24,3 @@ def test_pyproj_crs():
          assert crs is not None
       except:
          assert False
-

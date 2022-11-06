@@ -15,4 +15,3 @@ msgstr ""
 msgid ""
 "To tic-tac-toe, or not to tic-tac-toe,\n"
 msgstr "That is the question."
-

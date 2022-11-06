@@ -9,4 +9,3 @@ def test_basic_cube_pool():
     assert dc_1 == dc_2
     dc_unalloc = Datacube(app="test")
     assert dc_1 != dc_unalloc
-

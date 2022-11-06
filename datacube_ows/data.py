@@ -646,7 +646,7 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
     def convert(uri):
         uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
         uri_format_prod = str(s3url) + "/?prefix={prefix}"
-        result = regex.match(uri) 
+        result = regex.match(uri)
         if result is not None:
             if result.group("bucket") == str(s3bucket):
                 new_uri = uri_format_prod.format(prefix=result.group("prefix"))

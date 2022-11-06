@@ -49,5 +49,3 @@ def deepupdate(target: MutableMapping[str, Any], src: MutableMapping[str, Any]) 
             except TypeError:
                 # Non-iterable - Use child's version
                 target[k] = src[k]
-
-
