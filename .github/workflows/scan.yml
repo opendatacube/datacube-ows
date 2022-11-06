@@ -9,6 +9,13 @@ on:
       - ".github/workflows/scan.yml"
       - "Dockerfile"
 
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/scan.yml"
+      - "Dockerfile"
+
   schedule:
     - cron: '0 0 * * *'
 
