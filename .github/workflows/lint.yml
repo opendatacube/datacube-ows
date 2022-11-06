@@ -39,7 +39,7 @@ jobs:
         run: |
           pip install .[test,dev]
           pip install pylint
-          pylint -j 2 --reports no datacube_ows --disable=C,R,E1136
+          pylint -j 2 --reports no datacube_ows --disable=C,R,W,E1136
 
   flake8:
     name: flake8
