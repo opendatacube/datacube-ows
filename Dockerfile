@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as builder
+FROM ubuntu:22.10 as builder
 
 # Setup build env for postgresql-client-14
 USER root

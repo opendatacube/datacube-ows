@@ -2,6 +2,20 @@
 name: Scan
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/scan.yml"
+      - "Dockerfile"
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/scan.yml"
+      - "Dockerfile"
+
   schedule:
     - cron: '0 0 * * *'
 
@@ -35,21 +49,27 @@ jobs:
 
       - name: Run vulnerability scanner
         if: github.event_name != 'release'
-        uses: aquasecurity/trivy-action@0.0.6
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: "${{ env.IMAGE_NAME }}:${{ env.UNSTABLE_TAG }}"
-          format: "table"
-          exit-code: "1"
+          format: "sarif"
+          output: 'trivy-results.sarif'
+          # exit-code: "1"
           severity: "CRITICAL,HIGH"
 
-      - name: Notify Slack for Failures
-        uses: rtCamp/action-slack-notify@v2.1.0
-        if: failure()
-        env:
-          SLACK_CHANNEL: ga-wms-ops
-          SLACK_ICON: "https://github.com/docker.png?size=48"
-          SLACK_COLOR: "#482de1"
-          SLACK_MESSAGE: ""
-          SLACK_TITLE: CVE Scan alert
-          SLACK_USERNAME: OWS Scanner
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      # - name: Notify Slack for Failures
+      #   uses: rtCamp/action-slack-notify@v2.1.0
+      #   if: failure()
+      #   env:
+      #     SLACK_CHANNEL: ga-wms-ops
+      #     SLACK_ICON: "https://github.com/docker.png?size=48"
+      #     SLACK_COLOR: "#482de1"
+      #     SLACK_MESSAGE: ""
+      #     SLACK_TITLE: CVE Scan alert
+      #     SLACK_USERNAME: OWS Scanner
+      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
