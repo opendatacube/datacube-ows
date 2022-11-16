@@ -8,6 +8,7 @@ Contents:
 
    readme
    installation
+   deployment
    database
    configuration
    styling_howto
