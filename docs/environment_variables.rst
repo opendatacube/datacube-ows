@@ -118,14 +118,10 @@ for further details.
 
 environment variables exclusive for docker-compose
 --------------------------------------------------
-OWS_CFG_FILE:
-    for multiple files ows config structure, the root level ows config file path inside docker container
-    for single file ows config structure, the ows config file path inside docker container
-
-OWS_CFG_FOLDER:
+OWS_CFG_DIR:
     path to a folder containing ows config files anywhere on the local machine
 
-OWS_CFG_COUNTAINER_FOLDER:
+OWS_CFG_MOUNT_DIR:
     path the OWS_CFG_FOLDER will mount to inside docker container
 
 PYTHONPATH:
