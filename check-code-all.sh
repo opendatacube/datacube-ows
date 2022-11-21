@@ -15,7 +15,7 @@ datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-c
 datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/land_and_vegetation/c3_fc/ga_ls_fc_3.odc-product.yaml
 
 # add flag masking products
-datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/sea_ocean_coast/geodata_coast_100k/geodata_coast_100k.yaml
+datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/sea_ocean_coast/geodata_coast_100k/geodata_coast_100k.odc-product.yaml
 datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/inland_water/c3_wo/ga_ls_wo_3.odc-product.yaml
 
 datacube dataset add https://data.dea.ga.gov.au/baseline/s2b_ard_granule/2017-07-19/S2B_OPER_MSI_ARD_TL_SGS__20170719T030622_A001916_T52LGM_N02.05/eo3-ARD-METADATA.odc-metadata.yaml --confirm-ignore-lineage
