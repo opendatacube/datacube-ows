@@ -743,15 +743,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         self.resolution_y
 
                     ))
-            self.grid_high_x = int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x)
-            self.grid_high_y = int((
-                                           native_bounding_box["top"] - native_bounding_box["bottom"]) / self.resolution_y)
+            self.grid_high_x = abs(int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x))
+            self.grid_high_y = int((native_bounding_box["bottom"] - native_bounding_box["top"]) / self.resolution_y)
 
-            if self.grid_high_x == 0:
-                err_str = f"Grid High x is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
+            if self.grid_high_x <= 0:
+                err_str = f"Grid High x is non-positive on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
                 raise ConfigException(err_str)
-            if self.grid_high_y == 0:
-                err_str = f"Grid High y is zero on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: x_res={self.resolution_y}"
+            if self.grid_high_y <= 0:
+                err_str = f"Grid High y is non-positive on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: y_res={self.resolution_y}"
                 raise ConfigException(err_str)
             self.grids = {}
             for crs, crs_def in self.global_cfg.published_CRSs.items():

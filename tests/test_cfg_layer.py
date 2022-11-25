@@ -889,7 +889,7 @@ def test_no_native_resolution_badlen(minimal_global_cfg, minimal_layer_cfg, mini
 
 def test_native_resolution_mismatch(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
     minimal_layer_cfg["native_crs"] = "EPSG:4326"
-    minimal_layer_cfg["native_resolution"] = [0.1, 0.1]
+    minimal_layer_cfg["native_resolution"] = [0.1, -0.1]
     minimal_layer_cfg["product_name"] = "foo_nativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
@@ -899,4 +899,4 @@ def test_native_resolution_mismatch(minimal_global_cfg, minimal_layer_cfg, minim
     assert not lyr.hide
     assert lyr.ready
     assert math.isclose(lyr.resolution_x, 0.001, rel_tol=1e-8)
-    assert math.isclose(lyr.resolution_y, 0.001, rel_tol=1e-8)
+    assert math.isclose(lyr.resolution_y, -0.001, rel_tol=1e-8)
