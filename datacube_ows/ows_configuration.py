@@ -750,7 +750,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 err_str = f"Grid High x is non-positive on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['left']},{native_bounding_box['right']}: x_res={self.resolution_x}"
                 raise ConfigException(err_str)
             if self.grid_high_y <= 0:
-                err_str = f"Grid High y is non-positive on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: x_res={self.resolution_y}"
+                err_str = f"Grid High y is non-positive on layer {self.name}: native ({self.native_CRS}) extent: {native_bounding_box['bottom']},{native_bounding_box['top']}: y_res={self.resolution_y}"
                 raise ConfigException(err_str)
             self.grids = {}
             for crs, crs_def in self.global_cfg.published_CRSs.items():
