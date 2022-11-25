@@ -69,12 +69,12 @@ def minimal_dc():
             pass
         elif 'nativeres' in s:
             mprod.definition["storage"]["resolution"] = {
-                "latitude": 0.001,
+                "latitude": -0.001,
                 "longitude": 0.001,
             }
         else:
             mprod.definition["storage"]["resolution"] = {
-                "latitude": 0.001,
+                "latitude": -0.001,
                 "longitude": 0.001,
             }
 

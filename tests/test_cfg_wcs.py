@@ -26,7 +26,7 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
     assert not lyr.ready
-    assert "Grid High y is zero" in str(excinfo.value)
+    assert "Grid High y is non-positive" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "EPSG:4326" in str(excinfo.value)
     minimal_global_cfg.product_index = {}
@@ -40,7 +40,7 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
-    assert "Grid High x is zero" in str(excinfo.value)
+    assert "Grid High x is non-positive" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "EPSG:4326" in str(excinfo.value)
 
