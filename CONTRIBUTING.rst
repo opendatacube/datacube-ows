@@ -183,7 +183,7 @@ Generating database relationship diagram
 
 .. code-block:: console
 
-    docker run -it --rm -v "$PWD:/output" --network="host" schemaspy/schemaspy:snapshot -u $DB_USERNAME -host localhost -port $DB_PORT -db $DB_DATABASE -t pgsql11 -schemas agdc -norows -noviews -pfp -imageformat svg
+    docker run -it --rm -v "$PWD:/output" --network="host" schemaspy/schemaspy:snapshot -u $DB_USERNAME -host localhost -port $DB_PORT -db $DB_DATABASE -t pgsql11 -schemas wms -norows -noviews -pfp -imageformat svg
 
 Merge relationship diagram and orphan diagram
 
