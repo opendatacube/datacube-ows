@@ -178,6 +178,21 @@ manually modify translation for `de` for `assert` test to pass, then create `ows
   docker cp datacube-ows_ows_1:/tmp/translations datacube-ows/integrations/cfg/
 
 
+Generating database relationship diagram
+----------------------------------------
+
+.. code-block:: console
+
+    docker run -it --rm -v "$PWD:/output" --network="host" schemaspy/schemaspy:snapshot -u $DB_USERNAME -host localhost -port $DB_PORT -db $DB_DATABASE -t pgsql11 -schemas agdc -norows -noviews -pfp -imageformat svg
+
+Merge relationship diagram and orphan diagram
+
+.. code-block:: console
+
+    python3 svg_stack.py --direction=h --margin=100 ../wms/diagrams/summary/relationships.real.large.svg ../wms/diagrams/orphans/orphans.svg > ows.merged.large.svg
+
+    cp svg_stack/ows.merged.large.svg ../datacube-ows/docs/diagrams/db-relationship-diagram.svg
+
 
 Links
 -----

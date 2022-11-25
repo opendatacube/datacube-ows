@@ -10,6 +10,14 @@ entities:
 2. Public `materialised views over ODC indexes <#materialised-views-over-odc-indexes>`_
 3. `OWS range tables <#range-tables-layer-extent-cache>`_.
 
+Database relationship diagram
+------------------------------
+
+.. figure:: ./diagrams/db-relationship-diagram.svg
+    :target: /_images/db-relationship-diagram.svg
+
+    Current database relationship diagram
+
 Open Data Cube Native Entities
 ------------------------------
 
