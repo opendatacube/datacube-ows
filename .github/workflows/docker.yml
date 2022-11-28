@@ -18,7 +18,6 @@ on:
 env:
   ORG: opendatacube
   IMAGE: ows
-  DB_USERNAME: opendatacubeusername
 
 jobs:
   docker:
@@ -41,11 +40,13 @@ jobs:
       - name: Push to DockerHub (master branch or tagged release only)
         if: github.ref == 'refs/heads/master' || github.event_name == 'release'
         run: |
-          # figure out extra tag
-          git fetch --prune --unshallow 2> /dev/null || true
-          tag=$(git describe --tags)
+
           # build local docker image
           docker build -t ${ORG}/${IMAGE}:latest .
+
+          # get version tag
+          tag="$(docker run ${ORG}/${IMAGE}:latest datacube-ows-update --version | grep 'version' | sed 's/Open Data Cube Open Web Services (datacube-ows) version //')"
+
           # tag and push images
           docker tag ${ORG}/${IMAGE}:latest ${ORG}/${IMAGE}:${tag}
           docker push ${ORG}/${IMAGE}:latest
