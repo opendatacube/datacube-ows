@@ -45,7 +45,7 @@ jobs:
           docker build -t ${ORG}/${IMAGE}:latest .
 
           # get version tag
-          tag="$(docker run ows-now datacube-ows-update --version | grep 'version' | sed 's/Open Data Cube Open Web Services (datacube-ows) version //' | sed 's/+/\_/g')"
+          tag="$(docker run ${ORG}/${IMAGE}:latest datacube-ows-update --version | grep 'version' | sed 's/Open Data Cube Open Web Services (datacube-ows) version //' | sed 's/+/\_/g')"
 
           # tag and push images
           docker tag ${ORG}/${IMAGE}:latest ${ORG}/${IMAGE}:${tag}
