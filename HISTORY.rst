@@ -7,6 +7,22 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.32 (2022-11-30)
+-------------------
+
+Full list of changes:
+
+* Add datacube pypi badge (#891)
+* Pre-commit auto-updates (#894, #899, #906)
+* Github action update (#896)
+* Documentation updates (#898, #903, #904)
+* WCS grid counts and add checks for sign errors in native resolution (#902)
+* Match docker image version numbers to github SCM version numbers (#907, #908, #909)
+* Update default version number and HISTORY.rst (#910)
+
+Contributions from @pindge and @SpacemanPaul (and of course, the pre-commit-ci bot).
+
+
 1.8.31 (2022-10-24)
 -------------------
 
