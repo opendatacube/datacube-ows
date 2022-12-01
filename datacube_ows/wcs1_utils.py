@@ -20,6 +20,7 @@ from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
+from datacube_ows.wcs_utils import get_bands_from_styles
 
 
 class WCS1GetCoverageRequest():
@@ -206,16 +207,8 @@ class WCS1GetCoverageRequest():
             #
             # As we have correlated WCS and WMS service implementations,
             # we can accept a style from WMS, and return the bands used for it.
-            styles = args["styles"].split(",")
-            if len(styles) != 1:
-                raise WCS1Exception("Multiple style parameters not supported")
-            style = self.product.style_index.get(styles[0])
-            if style:
-                self.bands = set()
-                for b in style.needed_bands:
-                    if b not in style.flag_bands:
-                        self.bands.add(b)
-            else:
+            self.bands = get_bands_from_styles(args["styles"], self.product)
+            if not self.bands:
                 self.bands = self.product.band_idx.band_labels()
         else:
             self.bands = self.product.band_idx.band_labels()

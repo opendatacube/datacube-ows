@@ -20,6 +20,7 @@ from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
+from datacube_ows.wcs_utils import get_bands_from_styles
 
 _LOG = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def uniform_crs(cfg, crs):
     return crs
 
 
-def get_coverage_data(request, qprof):
+def get_coverage_data(request, styles, qprof):
     # pylint: disable=too-many-locals, protected-access
 
     cfg = get_config()
@@ -214,6 +215,10 @@ def get_coverage_data(request, qprof):
                     start = band_labels.index(range_subset.start)
                     end = band_labels.index(range_subset.end)
                     bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
+        elif styles:
+            bands = get_bands_from_styles(styles, layer, version=2)
+            if not bands:
+                bands = band_labels
         else:
             bands = band_labels
 
