@@ -55,14 +55,21 @@ definition.
     from datacube import Datacube
     dc = Datacube()
     data = dc.load(
-        product='ls8_nbart_geomedian_annual',
+        product='ga_ls8c_nbart_gm_cyear_3',
         measurements=['red', 'green', 'blue'],
         latitude=(-16.1144, -13.4938),
         longitude=(140.7184, 145.6924),
         time=('2019-01', '2019-01'),
+        group_by='time',
         output_crs="EPSG:3577",
         resolution=(-300,300)
     )
+
+.. note::
+
+    If `apply_ows_style_cfg` returns `WMSException: Style stand_alone does not support requests with 2 dates`
+    set `group_by='solar_day'`
+
 
 This query results in an xarray dataset, and therefore a final image, with a
 pixel resolution of 1128x668.
