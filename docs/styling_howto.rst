@@ -67,8 +67,11 @@ definition.
 
 .. note::
 
-    If `apply_ows_style_cfg` returns `WMSException: Style stand_alone does not support requests with 2 dates`
-    set `group_by='solar_day'`
+    If ``apply_ows_style_cfg()`` returns
+    ::
+        WMSException: Style stand_alone does not support requests with 2 dates
+
+    set ``group_by='solar_day'``
 
 
 This query results in an xarray dataset, and therefore a final image, with a
