@@ -1595,7 +1595,7 @@ def test_wcs2_getcov_styles(ows_server):
             "styles": "simple_rgb",
             "subset": subsets,
         },
-        )
+    )
     assert r.status_code == 200
     r = requests.get(
         ows_server.url + "/wcs",
@@ -1610,7 +1610,7 @@ def test_wcs2_getcov_styles(ows_server):
             "styles": "",
             "subset": subsets,
         },
-        )
+    )
     assert r.status_code == 200
     r = requests.get(
         ows_server.url + "/wcs",
