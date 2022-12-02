@@ -355,6 +355,10 @@ def get_tiff(request, data, crs, product, width, height, affine):
                 kwargs['predictor'] = 2
             elif predictor == 'floatingpoint':
                 kwargs['predictor'] = 3
+        elif dtype == "float64":
+                kwargs["predictor"] = 3
+        else:
+            kwargs["predictor"] = 2
 
         with memfile.open(
             driver="GTiff",
@@ -366,7 +370,6 @@ def get_tiff(request, data, crs, product, width, height, affine):
             nodata=nodata,
             tiled=gtiff.tiling if gtiff.tiling is not None else True,
             compress=gtiff.compression.lower() if gtiff.compression else "lzw",
-            predictor=2,
             interleave=gtiff.interleave or "band",
             dtype=dtype, **kwargs) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
