@@ -301,7 +301,10 @@ def wcs_global_cfg():
         "formats": {
             # Key is the format name, as used in DescribeCoverage XML
             "GeoTIFF": {
-                "renderer": "datacube_ows.wcs_utils.get_tiff",
+                "renderers": {
+                    "1": "datacube_ows.wcs1_utils.get_tiff",
+                    "2": "datacube_ows.wcs2_utils.get_tiff",
+                },
                 # The MIME type of the image, as used in the Http Response.
                 "mime": "image/geotiff",
                 # The file extension to add to the filename.
@@ -310,7 +313,10 @@ def wcs_global_cfg():
                 "multi-time": False
             },
             "netCDF": {
-                "renderer": "datacube_ows.wcs_utils.get_netcdf",
+                "renderers": {
+                    "1": "datacube_ows.wcs1_utils.get_netcdf",
+                    "2": "datacube_ows.wcs2_utils.get_netcdf",
+                },
                 "mime": "application/x-netcdf",
                 "extension": "nc",
                 "multi-time": True,

@@ -40,7 +40,7 @@ def handle_wcs2(nocase_args):
     elif operation == "DESCRIBECOVERAGE":
         return desc_coverages(nocase_args)
     elif operation == "GETCOVERAGE":
-        return get_coverage(request.args.lists(), bool(nocase_args.get("ows_stats")))
+        return get_coverage(request.args.lists(), bool(nocase_args.get("ows_stats")), nocase_args.get("styles"))
     else:
         raise WCS2Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
 
@@ -284,10 +284,10 @@ def desc_coverages(args):
 
 
 @log_call
-def get_coverage(args, ows_stats=False):
+def get_coverage(args, ows_stats=False, styles=None):
     request_obj = kvp_decode_get_coverage(args)
     qprof = QueryProfiler(ows_stats)
-    output, headers = get_coverage_data(request_obj, qprof)
+    output, headers = get_coverage_data(request_obj, styles, qprof)
     if ows_stats:
         return json_response(qprof.profile())
     return (

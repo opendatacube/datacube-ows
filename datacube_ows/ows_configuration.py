@@ -1020,20 +1020,6 @@ class WCSFormat:
                         fmt.get("multi-time", False)
                     )
                 )
-            elif "renderer" in fmt:
-                _LOG.warning("'renderer' in WCS format declarations is "
-                      "deprecated. Please review the latest example config "
-                      "file and update your config file accordingly. Format %s "
-                      "will be WCS 1 only.", name)
-                renderers.append(
-                    WCSFormat(
-                        name,
-                        fmt["mime"],
-                        fmt["extension"],
-                        {"1": fmt["renderer"]},
-                        fmt.get("multi-time", False)
-                    )
-                )
         return renderers
 
     def __init__(self, name, mime, extension, renderers,

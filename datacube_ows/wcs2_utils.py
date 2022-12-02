@@ -20,6 +20,7 @@ from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
+from datacube_ows.wcs_utils import get_bands_from_styles
 
 _LOG = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def uniform_crs(cfg, crs):
     return crs
 
 
-def get_coverage_data(request, qprof):
+def get_coverage_data(request, styles, qprof):
     # pylint: disable=too-many-locals, protected-access
 
     cfg = get_config()
@@ -214,6 +215,10 @@ def get_coverage_data(request, qprof):
                     start = band_labels.index(range_subset.start)
                     end = band_labels.index(range_subset.end)
                     bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
+        elif styles:
+            bands = get_bands_from_styles(styles, layer, version=2)
+            if not bands:
+                bands = band_labels
         else:
             bands = band_labels
 
@@ -350,6 +355,10 @@ def get_tiff(request, data, crs, product, width, height, affine):
                 kwargs['predictor'] = 2
             elif predictor == 'floatingpoint':
                 kwargs['predictor'] = 3
+        elif dtype == "float64":
+                kwargs["predictor"] = 3
+        else:
+            kwargs["predictor"] = 2
 
         with memfile.open(
             driver="GTiff",
@@ -361,7 +370,6 @@ def get_tiff(request, data, crs, product, width, height, affine):
             nodata=nodata,
             tiled=gtiff.tiling if gtiff.tiling is not None else True,
             compress=gtiff.compression.lower() if gtiff.compression else "lzw",
-            predictor=2,
             interleave=gtiff.interleave or "band",
             dtype=dtype, **kwargs) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
