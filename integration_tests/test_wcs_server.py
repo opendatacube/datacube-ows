@@ -1610,6 +1610,21 @@ def test_wcs2_getcov_styles(ows_server):
             "styles": "",
             "subset": subsets,
         },
+        )
+    assert r.status_code == 200
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "GetCoverage",
+            "coverageid": layer.name,
+            "version": "2.1.0",
+            "service": "WCS",
+            "format": "image/geotiff",
+            "subsettingcrs": "EPSG:4326",
+            "scalesize": "x(400),y(400)",
+            "styles": "notastyle",
+            "subset": subsets,
+        },
     )
     assert r.status_code == 200
     r = requests.get(
