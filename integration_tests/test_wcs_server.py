@@ -1627,21 +1627,22 @@ def test_wcs2_getcov_styles(ows_server):
         },
     )
     assert r.status_code == 200
-    r = requests.get(
-        ows_server.url + "/wcs",
-        params={
-            "request": "GetCoverage",
-            "coverageid": layer.name,
-            "version": "2.1.0",
-            "service": "WCS",
-            "format": "image/geotiff",
-            "subsettingcrs": "EPSG:4326",
-            "scalesize": "x(400),y(400)",
-            "styles": "simple_rgb,pure_red",
-            "subset": subsets,
-        },
-    )
-    assert r.status_code == 400
+# WCS2 style parameter disabled.
+#    r = requests.get(
+#       ows_server.url + "/wcs",
+#        params={
+#            "request": "GetCoverage",
+#            "coverageid": layer.name,
+#            "version": "2.1.0",
+#            "service": "WCS",
+#            "format": "image/geotiff",
+#            "subsettingcrs": "EPSG:4326",
+#            "scalesize": "x(400),y(400)",
+#            "styles": "simple_rgb,pure_red",
+#            "subset": subsets,
+#        },
+#    )
+#    assert r.status_code == 400
 
 
 def test_wcs2_getcov_bands(ows_server):
