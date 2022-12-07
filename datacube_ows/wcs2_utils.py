@@ -215,10 +215,12 @@ def get_coverage_data(request, styles, qprof):
                     start = band_labels.index(range_subset.start)
                     end = band_labels.index(range_subset.end)
                     bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
-        elif styles:
-            bands = get_bands_from_styles(styles, layer, version=2)
-            if not bands:
-                bands = band_labels
+        # Uncomment to restore original styles parameter hack.
+        #
+        # elif styles:
+        #     bands = get_bands_from_styles(styles, layer, version=2)
+        #     if not bands:
+        #         bands = band_labels
         else:
             bands = band_labels
 
