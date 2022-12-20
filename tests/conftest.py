@@ -340,7 +340,7 @@ def dummy_raw_data():
 
 @pytest.fixture
 def null_mask():
-    return dummy_da(True, "mask", coords, dtype=np.bool)
+    return dummy_da(True, "mask", coords, dtype=bool)
 
 
 @pytest.fixture
