@@ -7,6 +7,18 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.33 (2022-12-20)
+-------------------
+
+Full list of changes:
+
+* Update to examples in documentation (#912)
+* Bug-fixes to WCS2 (#913, #915)
+* Pre-commit auto-updates (#914, #917)
+* Make compatible with numpy 1.24.0+ (#918)
+* Update default version number and HISTORY.rst (#919)
+
+
 1.8.32 (2022-11-30)
 -------------------
 
