@@ -21,6 +21,9 @@ class QueryProfiler:
     def __setitem__(self, name, val):
         self._stats[name] = val
 
+    def __getitem__(self, name):
+        return self._stats[name]
+
     def end_event(self, name):
         if self.active:
             if name in self._events:
