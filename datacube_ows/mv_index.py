@@ -108,29 +108,29 @@ def mv_search(index: "datacube.index.Index",
         geom_js = json.dumps(geom.json)
         s = s.where(stv.c.spatial_extent.intersects(geom_js))
     # print(s) # Print SQL Statement
-    conn = engine.connect()
-    if sel == MVSelectOpts.ALL:
-        return conn.execute(s)
-    if sel == MVSelectOpts.IDS:
-        return [r[0] for r in conn.execute(s)]
-    if sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
-        for r in conn.execute(s):
-            if sel == MVSelectOpts.COUNT:
-                return r[0]
-            if sel == MVSelectOpts.EXTENT:
-                geojson = r[0]
-                if geojson is None:
-                    return None
-                uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
-                if geom:
-                    intersect = uniongeom.intersection(geom)
-                    if intersect.wkt == 'POLYGON EMPTY':
+    with engine.connect() as conn:
+        if sel == MVSelectOpts.ALL:
+            return conn.execute(s)
+        if sel == MVSelectOpts.IDS:
+            return [r[0] for r in conn.execute(s)]
+        if sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
+            for r in conn.execute(s):
+                if sel == MVSelectOpts.COUNT:
+                    return r[0]
+                if sel == MVSelectOpts.EXTENT:
+                    geojson = r[0]
+                    if geojson is None:
                         return None
-                    if orig_crs and orig_crs != "EPSG:4326":
-                        intersect = intersect.to_crs(orig_crs)
-                else:
-                    intersect = uniongeom
-                return intersect
-    if sel == MVSelectOpts.DATASETS:
-        ids = [r[0] for r in conn.execute(s)]
-        return index.datasets.bulk_get(ids)
+                    uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
+                    if geom:
+                        intersect = uniongeom.intersection(geom)
+                        if intersect.wkt == 'POLYGON EMPTY':
+                            return None
+                        if orig_crs and orig_crs != "EPSG:4326":
+                            intersect = intersect.to_crs(orig_crs)
+                    else:
+                        intersect = uniongeom
+                    return intersect
+        if sel == MVSelectOpts.DATASETS:
+            ids = [r[0] for r in conn.execute(s)]
+            return index.datasets.bulk_get(ids)
