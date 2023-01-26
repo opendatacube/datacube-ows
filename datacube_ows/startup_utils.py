@@ -230,9 +230,9 @@ def initialise_babel(cfg, app):
         babel = Babel(app,
                       default_locale=cfg.locales[0],
                       default_domain=cfg.message_domain,
-                      configure_jinja=False
+                      configure_jinja=False,
+                      locale_selector=generate_locale_selector(cfg.locales)
                       )
-        babel.localeselector(generate_locale_selector(cfg.locales))
         return babel
     else:
         return None
