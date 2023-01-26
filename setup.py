@@ -25,7 +25,7 @@ install_requirements = [
     'scipy',
     'Pillow',
     'Babel',
-    'Flask-Babel>=3.0.0',
+    'Flask-Babel<3.0.0',
     'psycopg2',
     'python_dateutil',
     'pytz',
