@@ -147,9 +147,10 @@ def flask_app():
 
 def test_init_babel_on(babel_cfg, flask_app):
     from datacube_ows.startup_utils import initialise_babel
-    bab = initialise_babel(babel_cfg, flask_app)
-    assert bab is not None
-    assert bab.default_locale.language == "en"
+    with flask_app.app_context():
+        bab = initialise_babel(babel_cfg, flask_app)
+        assert bab is not None
+        assert bab.default_locale.language == "en"
 
 
 def test_init_babel_off(babel_cfg, flask_app):

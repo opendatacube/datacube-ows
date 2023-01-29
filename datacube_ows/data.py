@@ -174,10 +174,7 @@ class DataStacker:
             ]
         elif self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(
-                self.style,
-                self.resource_limited
-            )
+            queries = ProductBandQuery.style_queries(self.style)
         elif all_flag_bands:
             queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
         else:
@@ -431,7 +428,19 @@ def get_map(args):
                 stacker.resource_limited = True
                 qprof["resource_limited"] = str(e)
             if qprof.active:
-                qprof["datasets"] = {str(q): ids for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()}
+                q_ds_dict = stacker.datasets(dc.index, mode=MVSelectOpts.DATASETS)
+                qprof["datasets"] = []
+                for q, dss in q_ds_dict.items():
+                    query_res = {}
+                    query_res["query"] = str(q)
+                    query_res["datasets"] = [
+                        [
+                            f"{ds.id} ({ds.type.name})"
+                            for ds in tdss
+                        ]
+                        for tdss in dss.values
+                    ]
+                    qprof["datasets"].append(query_res)
             if stacker.resource_limited and not params.product.low_res_product_names:
                 qprof.start_event("extent-in-query")
                 extent = stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT)
