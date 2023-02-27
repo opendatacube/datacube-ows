@@ -794,8 +794,8 @@ https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentin
 For service status information, see https://status.dea.ga.gov.au
                 """,
                     "multi_product": True,
-                    "product_names": ["s2a_ard_granule", "s2b_ard_granule"],
-                    "low_res_product_names": ["s2a_ard_granule", "s2b_ard_granule"],
+                    "product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                    "low_res_product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
                     "bands": bands_sentinel2_ard_nbart,
                     "resource_limits": reslim_for_sentinel2,
                     "native_crs": "EPSG:3577",
@@ -808,7 +808,7 @@ For service status information, see https://status.dea.ga.gov.au
                     "flags": [
                         {
                             "band": "fmask_alias",
-                            "products": ["s2a_ard_granule", "s2b_ard_granule"],
+                            "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
                             "ignore_time": False,
                             "ignore_info_flags": []
                         },
