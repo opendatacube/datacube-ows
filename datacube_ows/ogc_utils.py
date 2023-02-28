@@ -308,6 +308,7 @@ class FunctionWrapper:
         :param stand_alone: Optional boolean.
                 If False (the default) then only configuration dictionaries will be accepted.
         """
+        self.style_or_layer_cfg = product_or_style_cfg
         if callable(func_cfg):
             if not stand_alone:
                 raise ConfigException(
@@ -316,11 +317,13 @@ class FunctionWrapper:
             self._args = []
             self._kwargs = {}
             self.band_mapper = None
+            self.pass_layer_cfg = False
         elif isinstance(func_cfg, str):
             self._func = get_function(func_cfg)
             self._args = []
             self._kwargs = {}
             self.band_mapper = None
+            self.pass_layer_cfg = False
         else:
             if stand_alone and callable(func_cfg["function"]):
                 self._func = func_cfg["function"]
@@ -331,6 +334,7 @@ class FunctionWrapper:
                 self._func = get_function(func_cfg["function"])
             self._args = func_cfg.get("args", [])
             self._kwargs = func_cfg.get("kwargs", {}).copy()
+            self.pass_layer_cfg = func_cfg.get("pass_layer_cfg", False)
             if "pass_product_cfg" in func_cfg:
                 _LOG.warning("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
                              "'mapped_bands'.  Please update your config accordingly")
@@ -367,6 +371,9 @@ class FunctionWrapper:
 
         if self.band_mapper:
             calling_kwargs["band_mapper"] = self.band_mapper
+
+        if self.pass_layer_cfg:
+            calling_kwargs['layer_cfg'] = self.style_or_layer_cfg
 
         return self._func(*calling_args, **calling_kwargs)
 

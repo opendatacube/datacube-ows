@@ -142,11 +142,14 @@ class DataStacker:
             if band not in self._needed_bands:
                 self._needed_bands.append(band)
         self.raw_times = times
-        self._times = [
-                self._product.search_times(
-                        t, self._geobox)
-                for t in times
-        ]
+        if product.mosaic_date_func:
+            self._times = [product.mosaic_date_func(product.ranges["times"])]
+        else:
+            self._times = [
+                    self._product.search_times(
+                            t, self._geobox)
+                    for t in times
+            ]
         self.group_by = self._product.dataset_groupby()
         self.resource_limited = False
 

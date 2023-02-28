@@ -84,7 +84,9 @@
                 {% endif %}
             />
         {% endfor %}
-        {% if lyr.regular_time_axis %}
+        {% if lyr.mosaic_date_func %}
+        <!-- No time dimension -->
+        {% elif lyr.regular_time_axis %}
         <Dimension name="time" units="ISO8601" default="{{ lyr.default_time.isoformat() }}">{{ lyr.time_axis_representation() }}</Dimension>
         {% elif lyr_ranges.times|length > 1 %}
         <Dimension name="time" units="ISO8601" default="{{ lyr.default_time.isoformat() }}">

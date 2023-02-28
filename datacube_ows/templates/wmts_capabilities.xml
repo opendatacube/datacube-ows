@@ -149,15 +149,22 @@
                 {% endif %}
             </Style>
             {% endfor %}
+
             <Format>image/png</Format>
             <InfoFormat>application/json</InfoFormat>
-            <Dimension>
-                <ows:Identifier>Time</ows:Identifier>
-                <ows:Title>Date</ows:Title>
-                {% for t in product_ranges.times %}
-                <Value>{{ t }}</Value>
-                {% endfor %}
-            </Dimension>
+
+            {% if lyr.mosaic_date_func %}
+                <!-- No time dimension -->
+            {% else %}
+                <Dimension>
+                    <ows:Identifier>Time</ows:Identifier>
+                    <ows:Title>Date</ows:Title>
+                    {% for t in product_ranges.times %}
+                        <Value>{{ t }}</Value>
+                    {% endfor %}
+                </Dimension>
+            {% endif %}
+
             {% for tms in cfg.tile_matrix_sets.keys() %}
             <TileMatrixSetLink>
                 <TileMatrixSet>{{ tms }}</TileMatrixSet>
