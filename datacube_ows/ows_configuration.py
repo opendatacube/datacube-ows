@@ -42,7 +42,8 @@ from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
-from datacube_ows.utils import group_by_solar, group_by_statistical, group_by_mosaic
+from datacube_ows.utils import (group_by_mosaic, group_by_solar,
+                                group_by_statistical)
 
 _LOG = logging.getLogger(__name__)
 

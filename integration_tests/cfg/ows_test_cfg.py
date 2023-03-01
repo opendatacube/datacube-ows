@@ -828,7 +828,7 @@ ows_cfg = {
                     "title": "DEA Surface Reflectance Mosaic (Sentinel-2)",
                     "name": "s2_ard_latest_mosaic",
                     "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
-                    
+
 Latest imagery mosaic with no time dimension.
                     """,
                     "mosaic_date_func": {
