@@ -88,16 +88,16 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
 
 
 def group_by_mosaic(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
-    from datacube.api.query import GroupBy
+    from datacube.api.query import GroupBy, solar_day
     base_sort_key = lambda ds: ds.time.begin
     if pnames:
         index = {
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
+        sort_key = lambda ds: (solar_day(ds), index.get(ds.type.name), base_sort_key(ds))
     else:
-        sort_key = base_sort_key
+        sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))
     return GroupBy(
         dimension='time',
         group_by_func=lambda n: datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),

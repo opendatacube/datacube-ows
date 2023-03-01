@@ -389,5 +389,3 @@ class ODCExtent:
         return extent, ext_times
 
 
-def trivial_identity(x):
-    return x

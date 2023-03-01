@@ -8,8 +8,10 @@
 import os
 
 if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
+    cfgbase = ""
     trans_dir = "."
 else:
+    cfgbase = "config."
     trans_dir = "/code"
 
 
@@ -766,7 +768,7 @@ ows_cfg = {
                     "time_axis": {
                         "time_interval": 1
                     },
-                    "patch_url_function": "integration_tests.utils.trivial_identity",
+                    "patch_url_function": f"{cfg_base}integration_tests.cfg.utils.trivial_identity",
                 },
             ]
         },
