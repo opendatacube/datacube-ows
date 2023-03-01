@@ -353,8 +353,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
         except IndexError:
             raise ConfigException(f"No products declared in layer {self.name}")
-        except KeyError:
-            raise ConfigException("Required product names entry missing in named layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException("Required product names entry (%s) missing in named layer %s" % (
+                str(e),
+                self.name
+            ))
         self.declare_unready("products")
         self.declare_unready("low_res_products")
         self.declare_unready("product")

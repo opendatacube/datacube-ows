@@ -8,7 +8,7 @@
 import os
 
 if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
-    cfgbase = ""
+    cfgbase = "integration_tests.cfg."
     trans_dir = "."
 else:
     cfgbase = "config."
