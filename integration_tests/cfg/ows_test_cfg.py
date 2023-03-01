@@ -768,7 +768,7 @@ ows_cfg = {
                     "time_axis": {
                         "time_interval": 1
                     },
-                    "patch_url_function": f"{cfgbase}integration_tests.cfg.utils.trivial_identity",
+                    "patch_url_function": f"{cfgbase}utils.trivial_identity",
                 },
             ]
         },
