@@ -249,6 +249,7 @@ def test_mask_by_nan():
 
 def test_rolling_window():
     from datacube_ows.ogc_utils import rolling_window_ndays
+
     class DummyLayer:
         def search_times(self, d):
             return (d, d)
