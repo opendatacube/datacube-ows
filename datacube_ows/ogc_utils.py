@@ -463,6 +463,18 @@ def mask_by_nan(data: "xarray.Dataset", band: str) -> "numpy.NDArray":
     return ~numpy.isnan(cast(numpy.generic, data[band]))
 
 
+# Example mosaic date function
+def rolling_window_ndays(
+        available_dates: Sequence[datetime.datetime],
+        layer_cfg: "datacube_ows.ows_configuration.OWSNamedLayer",
+        ndays: int = 6) -> Tuple[datetime.datetime, datetime.datetime]:
+    idx = -ndays
+    days = available_dates[idx:]
+    start, _ = layer_cfg.search_times(days[idx])
+    _, end = layer_cfg.search_times(days[-1])
+    return (start, end)
+
+
 # Sub-product extractors - Subproducts are currently unsupported
 #
 # ls8_s3_path_pattern = re.compile('L8/(?P<path>[0-9]*)')
