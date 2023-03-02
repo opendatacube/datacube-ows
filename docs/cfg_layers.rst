@@ -322,7 +322,7 @@ ndays available dates.  E.g.::
          }
     },
 
-In this example, the most recent avaible 6 days worth of data are used to construct the mosaic.
+In this example, the most recent available 6 days worth of data are used to construct the mosaic.
 
 Where more than one dataset is available for a pixel, the dataset from the most recent day (according to the
 ``time_resolution`` rules) takes precedence. If multiple dataset are available for a pixel for the most recent day,
