@@ -75,6 +75,13 @@ The "args" and "kwargs" entries allow the configuration files
 to pass constant values to additional positional and keyword
 arguments of the function in the standard python manner.
 
+pass_layer_cfg
+++++++++++++++
+
+If the ``pass_layer_cfg`` option is provided and is ``True``,  the ``OWSNamedLayer`` config object is passed
+to the function in the ``layer_cfg`` named parameter.  This feature should not be used with the standalone
+style API.
+
 mapped_bands
 ++++++++++++
 

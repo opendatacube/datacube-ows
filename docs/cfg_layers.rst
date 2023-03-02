@@ -296,6 +296,38 @@ The conditions under which to switch to the low-resolution product(s)
 are defined in the `resource_limits <#resource-limits-resource-limits>`_
 section, discussed below.
 
+-----------------------------------------
+Timeless Mosaic Layers (mosaic_date_func)
+-----------------------------------------
+
+A date-aware product can be presented as a single-date mosaic layer with no published time
+dimension with the optional `mosaic_date_func` element.
+
+If supplied, the ``mosaic_date_func`` must be a function, declared
+using OWS's `function configuration format
+<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+
+The Mosaic Date Function should take a list of available dates and return a tuple of two datetimes
+to be used in the dataset search operation.
+
+An example mosaic date function ``datacube_ows.ogc_utils.rolling_window_ndays`` is provided that
+takes an additional keyword argument ``ndays`` and returns a search tuple taking in the most recent
+ndays available dates.  E.g.::
+
+    "mosaic_date_fun": {
+         "function": "datacube_ows.ogc_utils.rolling_window_ndays",
+         "pass_layer_cfg": True,    # rolling_window_ndays requires the layer config object to be passed in.
+         "kwargs": {
+             "ndays": 6,     # Rolling window size, in days
+         }
+    },
+
+In this example, the most recent avaible 6 days worth of data are used to construct the mosaic.
+
+Where more than one dataset is available for a pixel, the dataset from the most recent day (according to the
+``time_resolution`` rules) takes precedence. If multiple dataset are available for a pixel for the most recent day,
+and the layer is a multiproduct layer, the normal multiproduct precedence rules apply.
+
 ---------------------------------
 Time Resolution (time_resolution)
 ---------------------------------
@@ -453,9 +485,9 @@ Band aliases are useful:
 * when you wish to share configuration chunks that reference
   bands between layers but the native band names do not match.
 
---------------------------
+---------------------------------
 URL patching (patch_url_function)
---------------------------
+---------------------------------
 
 An arbitrary function can be supplied to patch data urls for the layer.  URLs from the
 ODC database are passed through the patching function before loading.  This can be
@@ -1240,6 +1272,13 @@ To lookup a layer by name use the "layer" element in the inherits section:
         "product_name": "product2"
     }
 
-Note that a layer can only inherit by name from a parent layer that has already been parsed
-by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
-can be avoided using direct inheritance.
+Restrictions on inheritance
++++++++++++++++++++++++++++
+
+1. Note that a layer can only inherit by name from a parent layer that has already been parsed
+   by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
+   can be avoided using direct inheritance.
+
+2. When inheriting from a multi-product layer, you must explicitly specify that it is a multi-product
+   layer.  i.e. the ``"multi_product": True,`` layer entry cannot be inherited and must always
+   be manually specified.  This restriction may be lifted in a future release.
