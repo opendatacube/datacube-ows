@@ -21,7 +21,7 @@ Database relationship diagram
 Open Data Cube Native Entities
 ------------------------------
 
-The core of the Daatacube-OWS application database is the ``agdc`` schema see:
+The core of the Datacube-OWS application database is the ``agdc`` schema see:
 `Open Data Cube <https://datacube-core.readthedocs.io/en/latest/>`_.
 This schema is created and maintained with the ``datacube`` command.
 OWS only needs read access to this schema.
