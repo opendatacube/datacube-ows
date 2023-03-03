@@ -67,7 +67,7 @@ manually refreshed, with the ``--view`` flag.
 A lot of the speed of OWS comes from pushing
 expensive database calculations down into these materialised
 views, and refreshing them is slow and computationally expensive.
-Large, constantly updating databases will inavoidably have
+Large, constantly updating databases will unavoidably have
 some delay in the availability of the latest data.
 
 Note that the last step of the view refresh (joining the time
