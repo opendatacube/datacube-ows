@@ -246,6 +246,33 @@ def test_mask_by_nan():
     mask = datacube_ows.ogc_utils.mask_by_nan(data, "dont_match")
     assert mask.values[0]
 
+
+def test_rolling_window():
+    from datacube_ows.ogc_utils import rolling_window_ndays
+
+    class DummyLayer:
+        def search_times(self, d):
+            return (d, d)
+    lyr = DummyLayer()
+
+    start, end = rolling_window_ndays(
+        [
+            datetime.datetime(2020, 6, 7),
+            datetime.datetime(2020, 6, 8),
+            datetime.datetime(2020, 6, 9),
+            datetime.datetime(2020, 6, 12),
+            datetime.datetime(2020, 6, 13),
+            datetime.datetime(2020, 6, 14),
+            datetime.datetime(2020, 6, 17),
+            datetime.datetime(2020, 6, 18),
+        ],
+        layer_cfg = lyr,
+        ndays = 6
+    )
+    assert start == datetime.datetime(2020, 6, 9)
+    assert end == datetime.datetime(2020, 6, 18)
+
+
 def test_day_summary_date_range():
     start, end = datacube_ows.ogc_utils.day_summary_date_range(datetime.date(2015, 5, 12))
     assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=utc)

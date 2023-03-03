@@ -181,6 +181,7 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, 
     assert lyr.default_time == mock_range["times"][-1]
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
+    assert lyr.mosaic_date_func is None
 
 
 def test_duplicate_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):

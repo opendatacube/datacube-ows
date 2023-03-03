@@ -42,7 +42,8 @@ from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
-from datacube_ows.utils import group_by_solar, group_by_statistical
+from datacube_ows.utils import (group_by_mosaic, group_by_solar,
+                                group_by_statistical)
 
 _LOG = logging.getLogger(__name__)
 
@@ -352,8 +353,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
         except IndexError:
             raise ConfigException(f"No products declared in layer {self.name}")
-        except KeyError:
-            raise ConfigException("Required product names entry missing in named layer %s" % self.name)
+        except KeyError as e:
+            raise ConfigException("Required product names entry (%s) missing in named layer %s" % (
+                str(e),
+                self.name
+            ))
         self.declare_unready("products")
         self.declare_unready("low_res_products")
         self.declare_unready("product")
@@ -363,6 +367,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.user_band_math = cfg.get("user_band_math", False)
         else:
             self.user_band_math = False
+
+        self.mosaic_date_func: Optional[FunctionWrapper] = None
+        if "mosaic_date_func" in cfg:
+            self.mosaic_date_func = FunctionWrapper(self, cfg["mosaic_date_func"])
 
         self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
         if self.time_resolution not in TIMERES_VALS:
@@ -989,6 +997,8 @@ class OWSMultiProductLayer(OWSNamedLayer):
         }
 
     def dataset_groupby(self):
+        if self.mosaic_date_func:
+            return group_by_mosaic(self.product_names)
         if self.is_raw_time_res:
             return group_by_solar(self.product_names)
         else:

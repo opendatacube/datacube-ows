@@ -82,3 +82,22 @@ def test_group_by_solar(datasets_for_sorting):
     arrays = date_only.values
     assert [ds.id for ds in arrays[0]] == ['I', 'J', 'K', 'E', 'F', 'G', 'A', 'B', 'C', 'D']
     assert [ds.id for ds in arrays[1]] == ['L', 'H']
+
+
+def test_group_by_mosaic(datasets_for_sorting):
+    from datacube import Datacube
+
+    from datacube_ows.utils import group_by_mosaic
+
+    gby = group_by_mosaic()
+    date_only = Datacube.group_datasets(datasets_for_sorting, gby)
+    assert len(date_only) == 1
+    arrays = date_only.values
+    assert [ds.id for ds in arrays[0]] == ['A', 'B', 'E', 'F', 'I', 'J', 'C', 'D', 'G', 'K', 'H', 'L']
+
+
+    gby = group_by_mosaic(["prod_c", "prod_b", "prod_a"])
+    date_only = Datacube.group_datasets(datasets_for_sorting, gby)
+    assert len(date_only) == 1
+    arrays = date_only.values
+    assert [ds.id for ds in arrays[0]] == ['I', 'J', 'K', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'L', 'H']

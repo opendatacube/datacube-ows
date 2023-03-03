@@ -8,8 +8,10 @@
 import os
 
 if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
+    cfgbase = "integration_tests.cfg."
     trans_dir = "."
 else:
+    cfgbase = "config."
     trans_dir = "/code"
 
 
@@ -766,7 +768,7 @@ ows_cfg = {
                     "time_axis": {
                         "time_interval": 1
                     },
-                    "patch_url_function": "integration_tests.utils.trivial_identity",
+                    "patch_url_function": f"{cfgbase}utils.trivial_identity",
                 },
             ]
         },
@@ -778,21 +780,21 @@ ows_cfg = {
                     "title": "DEA Surface Reflectance (Sentinel-2)",
                     "name": "s2_ard_granule_nbar_t",
                     "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
-This product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture.
-These corrections have been applied to all satellite imagery in the Sentinel-2 archive. This is undertaken to allow comparison of imagery acquired at different times, in different seasons and in different geographic locations.
-These products also indicate where the imagery has been affected by cloud or cloud shadow, contains missing data or has been affected in other ways. The Surface Reflectance products are useful as a fundamental starting point for any further analysis, and underpin all other optical derived Digital Earth Australia products.
-This is a definitive archive of daily Sentinel-2 data. This is processed using correct ancillary data to provide a more accurate product than the Near Real Time.
-The Surface Reflectance product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture. These corrections have been applied to all satellite imagery in the Sentinel-2 archive.
-The Normalised Difference Chlorophyll Index (NDCI) is based on the method of Mishra & Mishra 2012, and adapted to bands on the Sentinel-2A & B sensors.
-The index indicates levels of chlorophyll-a (chl-a) concentrations in complex turbid productive waters such as those encountered in many inland water bodies. The index has not been validated in Australian waters, and there are a range of environmental conditions that may have an effect on the accuracy of the derived index values in this test implementation, including:
-- Influence on the remote sensing signal from nearby land and/or atmospheric effects
-- Optically shallow water
-- Cloud cover
-Mishra, S., Mishra, D.R., 2012. Normalized difference chlorophyll index: A novel model for remote estimation of chlorophyll-a concentration in turbid productive waters. Remote Sensing of Environment, Remote Sensing of Urban Environments 117, 394–406. https://doi.org/10.1016/j.rse.2011.10.016
-For more information see http://pid.geoscience.gov.au/dataset/ga/129684
-https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentinel-2-msi
-For service status information, see https://status.dea.ga.gov.au
-                """,
+                This product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture.
+                These corrections have been applied to all satellite imagery in the Sentinel-2 archive. This is undertaken to allow comparison of imagery acquired at different times, in different seasons and in different geographic locations.
+                These products also indicate where the imagery has been affected by cloud or cloud shadow, contains missing data or has been affected in other ways. The Surface Reflectance products are useful as a fundamental starting point for any further analysis, and underpin all other optical derived Digital Earth Australia products.
+                This is a definitive archive of daily Sentinel-2 data. This is processed using correct ancillary data to provide a more accurate product than the Near Real Time.
+                The Surface Reflectance product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture. These corrections have been applied to all satellite imagery in the Sentinel-2 archive.
+                The Normalised Difference Chlorophyll Index (NDCI) is based on the method of Mishra & Mishra 2012, and adapted to bands on the Sentinel-2A & B sensors.
+                The index indicates levels of chlorophyll-a (chl-a) concentrations in complex turbid productive waters such as those encountered in many inland water bodies. The index has not been validated in Australian waters, and there are a range of environmental conditions that may have an effect on the accuracy of the derived index values in this test implementation, including:
+                - Influence on the remote sensing signal from nearby land and/or atmospheric effects
+                - Optically shallow water
+                - Cloud cover
+                Mishra, S., Mishra, D.R., 2012. Normalized difference chlorophyll index: A novel model for remote estimation of chlorophyll-a concentration in turbid productive waters. Remote Sensing of Environment, Remote Sensing of Urban Environments 117, 394–406. https://doi.org/10.1016/j.rse.2011.10.016
+                For more information see http://pid.geoscience.gov.au/dataset/ga/129684
+                https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentinel-2-msi
+                For service status information, see https://status.dea.ga.gov.au
+                                """,
                     "multi_product": True,
                     "product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
                     "low_res_product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
@@ -820,6 +822,25 @@ For service status information, see https://status.dea.ga.gov.au
                         },
                     ],
                     "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
+                },
+                {
+                    "inherits": {
+                        "layer": "s2_ard_granule_nbar_t",
+                    },
+                    "title": "DEA Surface Reflectance Mosaic (Sentinel-2)",
+                    "name": "s2_ard_latest_mosaic",
+                    "multi_product": True,
+                    "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
+
+Latest imagery mosaic with no time dimension.
+                    """,
+                    "mosaic_date_func": {
+                        "function": "datacube_ows.ogc_utils.rolling_window_ndays",
+                        "pass_layer_cfg": True,
+                        "kwargs": {
+                            "ndays": 6,
+                        }
+                    }
                 },
                 {
                     "title": "DEA Fractional Cover (Landsat)",

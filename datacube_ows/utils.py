@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+import datetime
 import logging
 from functools import wraps
 from time import monotonic
@@ -66,6 +67,7 @@ def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.qu
         sort_key=sort_key
     )
 
+
 def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
     from datacube.api.query import GroupBy, solar_day
     base_sort_key = lambda ds: ds.time.begin
@@ -84,6 +86,24 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
         sort_key=sort_key
     )
 
+
+def group_by_mosaic(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
+    from datacube.api.query import GroupBy, solar_day
+    base_sort_key = lambda ds: ds.time.begin
+    if pnames:
+        index = {
+            pn: i
+            for i, pn in enumerate(pnames)
+        }
+        sort_key = lambda ds: (solar_day(ds), index.get(ds.type.name), base_sort_key(ds))
+    else:
+        sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))
+    return GroupBy(
+        dimension='time',
+        group_by_func=lambda n: datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
+        units='seconds since 1970-01-01 00:00:00',
+        sort_key=sort_key
+    )
 
 
 def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
