@@ -389,7 +389,7 @@ Regular Time Axis (time_axis)
 The time axis is how OWS publishes the dates for which data is available.  The default
 behaviour (``time_axis`` not specified or ``None``) is to use an irregular time axis, where the available dates
 (as cached in `the OWS range tables <datacube-ows-update <https://datacube-ows.readthedocs.io/en/latest/database.html>`_)
-are listed individually.  These long lists of dates lead to unncessarily large capabilities documents
+are listed individually.  These long lists of dates lead to unnecessarily large capabilities documents
 for all supported protocols.
 
 A regular time axis is where the available dates are published as a start date, an end date and an interval size. This

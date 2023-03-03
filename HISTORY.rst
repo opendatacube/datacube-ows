@@ -58,7 +58,7 @@ Contributions from @pindge, @rtaib and @SpacemanPaul.
 -------------------
 
 Minor release, consisting of better Sentry reporting for production deployments, and routine repository
-maintainance.
+maintenance.
 
 Full list of changes:
 
@@ -460,7 +460,7 @@ not suitable for production deployment with time-series animations. I hope to ad
 * Extent polygon rendering now uses rasterio rasterize, removing the dependency on scikit-image (#655)
 * Calculating GeoTIFF statistics in WCS is now (globally) configurable (#654)
 * Return an empty response if data for any requested dates is not available (#652)
-* Bug fix - summary products (time_resolition not raw) were broken in areas close to 0 longitude. (e.g. Africa) (#657)
+* Bug fix - summary products (time_resolution not raw) were broken in areas close to 0 longitude. (e.g. Africa) (#657)
 * Increment default version number (#658)
 
 1.8.13 (2021-06-29)

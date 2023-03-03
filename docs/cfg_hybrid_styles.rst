@@ -17,7 +17,7 @@ client side.
 Hybrid styles support most [*]_ elements supported by either
 `component styles <https://datacube-ows.readthedocs.io/en/latest/cfg_component_styles.html>`_ or
 `colour ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html>`_ and
-define two indepenent styles (one of each type) that
+define two independent styles (one of each type) that
 are then blended according to the required `component_ratio` entry.
 
 If `component_ratio` should be a float between 0.0 and 1.0.  A value

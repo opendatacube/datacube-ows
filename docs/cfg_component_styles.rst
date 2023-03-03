@@ -284,7 +284,7 @@ The bands needed for a linear combination component can be trivially
 determined from the component definition.  This is not the case for callback
 function components, so if any component in the style is a callback
 function component, (and if any bands needed by the callback function
-component(s) are not already being used by any lineat combination
+component(s) are not already being used by any linear combination
 components), then these additional required bands must be declared
 with the `additional_bands` list.
 
