@@ -21,7 +21,7 @@ Database relationship diagram
 Open Data Cube Native Entities
 ------------------------------
 
-The core of the OWS database is the ``agdc`` schema used by the
+The core of the Datacube-OWS application database is the ``agdc`` schema see:
 `Open Data Cube <https://datacube-core.readthedocs.io/en/latest/>`_.
 This schema is created and maintained with the ``datacube`` command.
 OWS only needs read access to this schema.
@@ -67,7 +67,7 @@ manually refreshed, with the ``--view`` flag.
 A lot of the speed of OWS comes from pushing
 expensive database calculations down into these materialised
 views, and refreshing them is slow and computationally expensive.
-Large, constantly updating databases will inavoidably have
+Large, constantly updating databases will unavoidably have
 some delay in the availability of the latest data.
 
 Note that the last step of the view refresh (joining the time

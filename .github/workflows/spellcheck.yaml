@@ -1,16 +1,26 @@
 ---
-name: Pyspellcheck
+name: Spell check
 
 on:
   pull_request:
     branches:
-      - 'master'
+        - 'master'
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - '.github/workflows/spellcheck.yaml'
+
 
   push:
     branches:
       - 'master'
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - '.github/workflows/spellcheck.yaml'
 
 jobs:
+
   pyspellcheck:
     runs-on: ubuntu-latest
     steps:

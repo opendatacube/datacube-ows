@@ -58,7 +58,7 @@ Contributions from @pindge, @rtaib and @SpacemanPaul.
 -------------------
 
 Minor release, consisting of better Sentry reporting for production deployments, and routine repository
-maintainance.
+maintenance.
 
 Full list of changes:
 
@@ -86,7 +86,7 @@ Full list of changes:
 * Refactor data for integration test fixtures (#835)
 * Docker image migrated to Python3.10/Ubuntu-22.040-based osgeo/gdal base image, and updates to
   dependencies (#838, #843, #852, #854, #856, #859)
-* Isolate ops imports to minimise dependencies for appliations only using the styling API (#855)
+* Isolate ops imports to minimise dependencies for applications only using the styling API (#855)
 * Documentation updates and improvements (#846, #847, #848, #849)
 * Bug Fix: Skip cached bounding boxes when layer extent is entirely outside the valid region for the CRS (#832)
 * Bug Fix: Invalid version parameters in otherwise valid requests were failing with unhandled 500 errors. OWS now
@@ -460,7 +460,7 @@ not suitable for production deployment with time-series animations. I hope to ad
 * Extent polygon rendering now uses rasterio rasterize, removing the dependency on scikit-image (#655)
 * Calculating GeoTIFF statistics in WCS is now (globally) configurable (#654)
 * Return an empty response if data for any requested dates is not available (#652)
-* Bug fix - summary products (time_resolition not raw) were broken in areas close to 0 longitude. (e.g. Africa) (#657)
+* Bug fix - summary products (time_resolution not raw) were broken in areas close to 0 longitude. (e.g. Africa) (#657)
 * Increment default version number (#658)
 
 1.8.13 (2021-06-29)

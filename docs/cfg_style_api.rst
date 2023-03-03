@@ -50,7 +50,7 @@ The differences between stand-alone styles and true OWS styles are:
 
 4. Function objects/callables can be used directly in stand-alone style definitions.
 
-    Full OWS Configurations must be serialisable, so fuctions can only be embedded as
+    Full OWS Configurations must be serialisable, so functions can only be embedded as
     fully qualified python names.  For stand-alone styles, raw callable functions can be
     used.  Some examples are shown below.
 

@@ -83,7 +83,7 @@ Build a docker image in the local registry:
     $ docker build -t ows-dev .
 
 Run docker image to start gunicorn with ows. Here the DB
-parameters noted previously are forwared to the docker image entrypoint.
+parameters noted previously are forwarded to the docker image entrypoint.
 Note: the default ``PYTHONPATH`` is pointed to ``/env``, place ``ows_cfg.py`` here.
 
 .. code-block:: console
@@ -110,7 +110,7 @@ purposes. Take note of the credentials of the database for
 use as parameters to run OWS.
 
 Run docker compose to start gunicorn with ows. Here the DB
-parameters noted previously are forwared to the docker image entrypoint.
+parameters noted previously are forwarded to the docker image entrypoint.
 
 .. code-block:: console
 

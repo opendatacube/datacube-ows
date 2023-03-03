@@ -67,7 +67,7 @@ getting darkening blues with close to 1.0 being dark green.
 This configuration also demonstrates another method for defining the index - with
 a simple expression language instead of referencing an explicit python function.
 The expression language includes band names and literal numbers, as well as simple
-arthimetic operators like `+ - / *` and parentheses for precedence.
+arithmetic operators like `+ - / *` and parentheses for precedence.
 
 ::
 
