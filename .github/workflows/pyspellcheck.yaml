@@ -1,6 +1,21 @@
 ---
 name: Pyspellcheck
 
+on:
+  pull_request:
+    branches:
+        - 'master'
+    paths:
+      - 'docs/**'
+      - '*.md'
+
+  push:
+    branches:
+      - 'master'
+    paths:
+      - 'docs/**'
+      - '*.md'
+
 jobs:
 
   pyspellcheck:
