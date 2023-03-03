@@ -1,16 +1,8 @@
 ---
 name: Pyspellcheck
 
-on:
-  pull_request:
-    branches:
-      - 'master'
-
-  push:
-    branches:
-      - 'master'
-
 jobs:
+
   pyspellcheck:
     runs-on: ubuntu-latest
     steps:
