@@ -1,5 +1,5 @@
 ---
-name: Pyspellcheck
+name: Spell check
 
 on:
   pull_request:
