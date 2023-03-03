@@ -86,7 +86,7 @@ Full list of changes:
 * Refactor data for integration test fixtures (#835)
 * Docker image migrated to Python3.10/Ubuntu-22.040-based osgeo/gdal base image, and updates to
   dependencies (#838, #843, #852, #854, #856, #859)
-* Isolate ops imports to minimise dependencies for appliations only using the styling API (#855)
+* Isolate ops imports to minimise dependencies for applications only using the styling API (#855)
 * Documentation updates and improvements (#846, #847, #848, #849)
 * Bug Fix: Skip cached bounding boxes when layer extent is entirely outside the valid region for the CRS (#832)
 * Bug Fix: Invalid version parameters in otherwise valid requests were failing with unhandled 500 errors. OWS now
