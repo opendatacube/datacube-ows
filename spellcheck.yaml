@@ -11,6 +11,7 @@ matrix:
     - wordlist.txt
     encoding: utf-8
   pipeline:
+  - pyspelling.filters.text:
   - pyspelling.filters.markdown:
   - pyspelling.filters.html:
       comments: false
