@@ -8,6 +8,8 @@ on:
     paths:
       - 'docs/**'
       - '*.md'
+      - '.github/workflows/pyspellcheck.yaml'
+
 
   push:
     branches:
@@ -15,6 +17,7 @@ on:
     paths:
       - 'docs/**'
       - '*.md'
+      - '.github/workflows/pyspellcheck.yaml'
 
 jobs:
 
