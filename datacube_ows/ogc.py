@@ -53,12 +53,13 @@ prometheus_ows_ogc_metric = metrics.histogram(
     labels={
         'query_request': lambda: request.args.get('request', "NONE").upper(),
         'query_service': lambda: request.args.get('service', "NONE").upper(),
-        'query_version': lambda: request.args.get('version'),
+        'query_version': lambda: request.args.get('version', "NONE"),
         'query_layer': lambda: (request.args.get('query_layers') # WMS GetFeatureInfo
                                 or request.args.get('layers')  # WMS
                                 or request.args.get('layer')  # WMTS
                                 or request.args.get('coverage')  # WCS 1.x
                                 or request.args.get('coverageid')  # WCS 2.x
+                                or "NONE"
                                 ),
         'status': lambda r: r.status_code,
     }
