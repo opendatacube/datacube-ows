@@ -144,7 +144,7 @@ def create_multiprod_range_entry(dc, product, crses):
     return
 
 
-def create_range_entry(dc, product, crses, summary_product=False):
+def create_range_entry(dc, product, crses, time_resolution):
   print("Updating range for ODC product %s..." % product.name)
   # NB. product is an ODC product
   conn = get_sqlconn(dc)
@@ -184,11 +184,26 @@ def create_range_entry(dc, product, crses, summary_product=False):
     set timezone to 'Etc/UTC'
   """)
 
+  # Loop over dates
+  dates = set()
+  if time_resolution.is_solar():
+      results = conn.execute(
+          """
+          select
+                lower(temporal_extent), upper(temporal_extent),
+                ST_X(ST_Centroid(spatial_extent))
+          from public.space_time_view
+          WHERE dataset_type_ref = %(p_id)s
+          """ %
+          {"p_id": prodid}
+      )
+      for result in results:
+          dt1, dt2, lon = result
+          dt = dt1 + (dt2 - dt1)/2
 
-  if summary_product:
-      # Loop over dates
-      dates = set()
-
+          solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
+          dates.add(solar_day)
+  else:
       results = conn.execute(
           """
           select
@@ -202,53 +217,22 @@ def create_range_entry(dc, product, crses, summary_product=False):
           for dat_ran in result[0]:
               dates.add(dat_ran.lower)
 
-      dates = sorted(dates)
-
-      conn.execute("""
-           UPDATE wms.product_ranges
-           SET dates = %(dates)s
-           WHERE id= %(p_id)s
-      """,
-                   {
-                       "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
-                       "p_id": prodid
-                   }
-      )
+  if time_resolution.is_subday:
+      date_formatter = lambda d: d.isoformat()
   else:
-      # Loop over dates
-      dates = set()
+      date_formatter = lambda d: d.strftime("%Y-%m-%d")
 
-      results = conn.execute(
-          """
-          select
-                lower(temporal_extent), upper(temporal_extent),
-                ST_X(ST_Centroid(spatial_extent)),
-                ST_Y(ST_Centroid(spatial_extent))
-          from public.space_time_view
-          WHERE dataset_type_ref = %(p_id)s
-          """ %
-          {"p_id": prodid}
-      )
-      for result in results:
-          dt1, dt2, lon, lat = result
-          try:
-              tz = tz_for_coord(lon, lat)
-          except NoTimezoneException:
-              offset = round(lon / 15.0)
-              tz = timezone(timedelta(hours=offset))
-          dates.add(dt1.astimezone(tz).date())
-      dates = sorted(dates)
-
-      conn.execute("""
-           UPDATE wms.product_ranges
-           SET dates = %(dates)s
-           WHERE id= %(p_id)s
-      """,
-                   {
-                       "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
-                       "p_id": prodid
-                   }
-                   )
+  dates = sorted(dates)
+  conn.execute("""
+       UPDATE wms.product_ranges
+       SET dates = %(dates)s
+       WHERE id= %(p_id)s
+  """,
+               {
+                   "dates": Json(map(date_formatter, dates)),
+                   "p_id": prodid
+               }
+  )
 
   # calculate bounding boxes
   results = list(conn.execute("""
@@ -375,7 +359,7 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                     if ows_prod:
                         prod_summary = not ows_prod.is_raw_time_res
                         break
-                create_range_entry(dc, dc_product, get_crses(), prod_summary)
+                create_range_entry(dc, dc_product, get_crses(), dc_product.time_resolution)
             else:
                 print("Could not find any datasets for: ", pname)
     for mp in ows_multiproducts:
@@ -417,7 +401,11 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
                                   )
     for result in results:
         conn.close()
-        times = [datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"] if d is not None]
+        if product.time_resolution.is_subday():
+            dt_parser = lambda dts: datetime.fromisoformat(dts)
+        else:
+            dt_parser = lambda dts: datetime.strptime(d, "%Y-%m-%d").date()
+        times = [dt_parser(d) for d in result["dates"] if d is not None]
         if not times:
             return None
         return {

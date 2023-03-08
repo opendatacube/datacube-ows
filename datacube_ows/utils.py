@@ -7,7 +7,7 @@ import datetime
 import logging
 from functools import wraps
 from time import monotonic
-from typing import Any, Callable, List, Optional, TypeVar
+from typing import Any, Callable, List, Mapping, Optional, TypeVar, Union
 
 F = TypeVar('F', bound=Callable[..., Any])
 
@@ -46,7 +46,8 @@ def time_call(func: F) -> F:
     return timing_wrapper
 
 
-def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
+def group_by_begin_datetime(pnames: Optional[List[str]] = None,
+                        offset: Optional[Mapping[str, Union[int, float]]] = None) -> "datacube.api.query.GroupBy":
     """
     Returns an ODC GroupBy object, suitable for daily statistical/summary data.
     """
@@ -60,13 +61,24 @@ def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.qu
         sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
     else:
         sort_key = base_sort_key
+    if offset:
+        grp_by = lambda ds: ds.time.begin + datetime.timedelta(**offset)
+    else:
+        grp_by = lambda ds: ds.time.begin
     return GroupBy(
         dimension='time',
-        group_by_func=lambda ds: ds.time.begin,
+        group_by_func=grp_by,
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )
 
+
+def group_by_subday() -> "datacube.api.query.GroupBy":
+    """
+    Returns an ODC GroupBy object, suitable for sub-day level data
+
+    :return:
+    """
 
 def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
     from datacube.api.query import GroupBy, solar_day

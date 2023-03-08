@@ -184,6 +184,7 @@ def parse_time_item(item, product):
 
     # If all times are equal we can proceed
     if len(times) > 1:
+        # TODO WMS Time range selections (/ notation) are poorly and incompletely implemented.
         start, end = parse_wms_time_strings(times)
         start, end = start.date(), end.date()
         matching_times = [t for t in product.ranges['times'] if start <= t <= end]
@@ -205,7 +206,9 @@ def parse_time_item(item, product):
         product_times = get_times_for_product(product)
         return product_times[-1]
     try:
-        time = parse(times[0]).date()
+        time = parse(times[0])
+        if not product.time_resolution.is_subday():
+            time = time.date()
     except ValueError:
         raise WMSException(
             "Time dimension value '%s' not valid for this layer" % times[0],

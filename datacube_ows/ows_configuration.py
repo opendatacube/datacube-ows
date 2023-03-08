@@ -12,6 +12,7 @@
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
 import datetime
+from enum import Enum
 import json
 import logging
 import math
@@ -320,12 +321,86 @@ class OWSFolder(OWSLayer):
         super().make_ready(dc, *args, **kwargs)
 
 
-TIMERES_RAW = "raw"
-TIMERES_DAY = "day"
-TIMERES_MON = "month"
-TIMERES_YR  = "year"
+class TimeRes(Enum):
+    SUBDAY = "subday"
 
-TIMERES_VALS = [TIMERES_RAW, TIMERES_DAY, TIMERES_MON, TIMERES_YR]
+    SOLAR = "solar"
+    DAY = "day"
+    MON = "month"
+    YR  = "year"
+
+    EXCL_DAY = "day exclusive"
+    EXCL_YR = "year exclusive"
+    EXCL_MO = "month exclusive"
+
+    def is_exclusive() -> bool:
+        return self in (EXCL_DAY, EXCL_MON, EXCL_DAY)
+
+    def is_subday(self) -> bool:
+        return self == SUBDAY
+
+    def is_solar(self) -> bool:
+        return self  == SOLAR
+
+    def is_summary_day(self) -> bool:
+        return self in (EXCL_DAY, DAY)
+
+    def is_summary_month(self) -> bool:
+        return self in (EXCL_MON, MON)
+
+    def is_summary_year(self) -> bool:
+        return self in (EXCL_MON, MON)
+
+    def is_summary(self) -> bool:
+        return not self.is_solar() and not self.is_subday()
+
+    def allow_mosaic(self) -> bool:
+        return not (self.is_exclusive() or self.is_subday())
+
+    @classmethod
+    def parse(cls, cfg: Optional[str]) -> Optional["TimeRes"]:
+        if cfg == "raw" or cfg is None:
+            cfg = "solar"
+        try:
+            return cls(cfg)
+        except ValueError:
+            return None
+
+    def search_times(self, t, geobox=None):
+        if self.is_solar():
+            if not geobox:
+                bbox = self.ranges["bboxes"][self.native_CRS]
+                geobox = create_geobox(
+                    self.native_CRS,
+                    bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],
+                    1, 1
+                )
+            times = local_solar_date_range(geobox, t)
+        elif self.is_summary_month():
+            times = month_date_range(t)
+        elif self.is_summary_year():
+            times = year_date_range(t)
+        elif self.is_summary_day():
+            times = day_summary_date_range(t)
+        else:
+            raise TypeError(f"TimeRes enum option {self} not supported by search_times()")
+
+        if self.is_exclusive():
+            times = (times[0] + datetime.timedelta(seconds=1), times[1])
+
+        return times
+
+    def dataset_groupby(self, product_names: Optional[Sequence[str]] = None):
+        if self.is_subday():
+            return group_by_begin_datetime(pnames=pnames)
+        elif self.mosaic_date_func:
+            return group_by_mosaic(self.product_names)
+        elif self.is_solar():
+            return group_by_solar(self.product_names)
+        elif self.is_exclusive():
+            return group_by_statistical(self.product_names, {"seconds": 1})
+        else:
+            return group_by_statistical(self.product_names)
 
 DEF_TIME_LATEST = "latest"
 DEF_TIME_EARLIEST = "earliest"
@@ -367,15 +442,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.user_band_math = cfg.get("user_band_math", False)
         else:
             self.user_band_math = False
-
+        self.time_resolution = TimeRes(cfg.get("time_resolution"))
+        if not self.time_resolution:
+            raise ConfigException(f"Invalid time resolution value {time_resolution} in named layer {self.name}")
         self.mosaic_date_func: Optional[FunctionWrapper] = None
         if "mosaic_date_func" in cfg:
             self.mosaic_date_func = FunctionWrapper(self, cfg["mosaic_date_func"])
-
-        self.time_resolution = cfg.get("time_resolution", TIMERES_RAW)
-        if self.time_resolution not in TIMERES_VALS:
-            raise ConfigException(
-                "Invalid time resolution value %s in named layer %s" % (self.time_resolution, self.name))
+        if self.mosaic_date_func and not self.time_resolution.allow_mosaic():
+            raise ConfigException(f"Mosaic date function not supported for {self.time_resolution} time resolution.")
         self.default_time_rule = cfg.get("default_time", DEF_TIME_LATEST)
         if self.default_time_rule not in (DEF_TIME_LATEST, DEF_TIME_EARLIEST):
             try:
@@ -860,44 +934,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def layer_count(self):
         return 1
 
-    @property
-    def is_raw_time_res(self):
-        return self.time_resolution == TIMERES_RAW
-
-    @property
-    def is_day_time_res(self):
-        return self.time_resolution == TIMERES_DAY
-
-    @property
-    def is_month_time_res(self):
-        return self.time_resolution == TIMERES_MON
-
-    @property
-    def is_year_time_res(self):
-        return self.time_resolution == TIMERES_YR
-
     def search_times(self, t, geobox=None):
-        if self.is_month_time_res:
-            return month_date_range(t)
-        elif self.is_year_time_res:
-            return year_date_range(t)
-        elif self.is_day_time_res:
-            return day_summary_date_range(t)
-        else:
-            if not geobox:
-                bbox = self.ranges["bboxes"][self.native_CRS]
-                geobox = create_geobox(
-                    self.native_CRS,
-                    bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],
-                    1, 1
-                )
-            return local_solar_date_range(geobox, t)
+        return self.time_resolution.search_times(t, geobox)
 
     def dataset_groupby(self):
-        if self.is_raw_time_res:
-            return "solar_day"
-        else:
-            return group_by_statistical()
+        return self.time_resolution.dataset_groupby()
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
@@ -997,12 +1038,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
         }
 
     def dataset_groupby(self):
-        if self.mosaic_date_func:
-            return group_by_mosaic(self.product_names)
-        if self.is_raw_time_res:
-            return group_by_solar(self.product_names)
-        else:
-            return group_by_statistical(self.product_names)
+        return self.time_resolution.dataset_groupby(self.product_names)
 
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None, sibling=0):
