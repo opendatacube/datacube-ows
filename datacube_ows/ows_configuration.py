@@ -12,12 +12,12 @@
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
 import datetime
-from enum import Enum
 import json
 import logging
 import math
 import os
 from collections.abc import Mapping
+from enum import Enum
 from importlib import import_module
 from typing import Optional, Sequence
 
@@ -43,8 +43,8 @@ from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
-from datacube_ows.utils import (group_by_mosaic, group_by_solar,
-                                group_by_begin_datetime)
+from datacube_ows.utils import (group_by_begin_datetime, group_by_mosaic,
+                                group_by_solar)
 
 _LOG = logging.getLogger(__name__)
 
