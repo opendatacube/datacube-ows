@@ -10,8 +10,8 @@ import pytest
 from datacube.utils import geometry
 
 import datacube_ows.wms_utils
-from datacube_ows.ows_configuration import TimeRes
 from datacube_ows.ogc_exceptions import WMSException
+from datacube_ows.ows_configuration import TimeRes
 
 
 def test_parse_time_delta():
