@@ -349,6 +349,7 @@ ssl
 stac
 stddev
 stylings
+subday
 subdirectories
 subtypes
 svg
