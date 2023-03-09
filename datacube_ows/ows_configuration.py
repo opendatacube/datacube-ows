@@ -19,7 +19,7 @@ import math
 import os
 from collections.abc import Mapping
 from importlib import import_module
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy
 from babel.messages.catalog import Catalog
@@ -44,7 +44,7 @@ from datacube_ows.resource_limits import (OWSResourceManagementRules,
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.utils import (group_by_mosaic, group_by_solar,
-                                group_by_statistical)
+                                group_by_begin_datetime)
 
 _LOG = logging.getLogger(__name__)
 
@@ -323,44 +323,31 @@ class OWSFolder(OWSLayer):
 
 class TimeRes(Enum):
     SUBDAY = "subday"
-
     SOLAR = "solar"
-    DAY = "day"
-    MON = "month"
-    YR  = "year"
-
-    EXCL_DAY = "day exclusive"
-    EXCL_YR = "year exclusive"
-    EXCL_MO = "month exclusive"
-
-    def is_exclusive() -> bool:
-        return self in (EXCL_DAY, EXCL_MON, EXCL_DAY)
+    SUMMARY = "summary"
 
     def is_subday(self) -> bool:
-        return self == SUBDAY
+        return self == self.SUBDAY
 
     def is_solar(self) -> bool:
-        return self  == SOLAR
-
-    def is_summary_day(self) -> bool:
-        return self in (EXCL_DAY, DAY)
-
-    def is_summary_month(self) -> bool:
-        return self in (EXCL_MON, MON)
-
-    def is_summary_year(self) -> bool:
-        return self in (EXCL_MON, MON)
+        return self  == self.SOLAR
 
     def is_summary(self) -> bool:
         return not self.is_solar() and not self.is_subday()
 
     def allow_mosaic(self) -> bool:
-        return not (self.is_exclusive() or self.is_subday())
+        return not self.is_subday()
 
     @classmethod
     def parse(cls, cfg: Optional[str]) -> Optional["TimeRes"]:
-        if cfg == "raw" or cfg is None:
+        if cfg is None:
             cfg = "solar"
+        elif cfg == "raw":
+            _LOG.warning("The 'raw' time resolution type is deprecated.  Please use 'solar'.")
+            cfg = "solar"
+        elif cfg in ("day", "month", "year"):
+            _LOG.warning("The '%s' time resolution type is deprecated.  Please use 'summary'.", cfg)
+            cfg = "summary"
         try:
             return cls(cfg)
         except ValueError:
@@ -368,39 +355,27 @@ class TimeRes(Enum):
 
     def search_times(self, t, geobox=None):
         if self.is_solar():
-            if not geobox:
-                bbox = self.ranges["bboxes"][self.native_CRS]
-                geobox = create_geobox(
-                    self.native_CRS,
-                    bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],
-                    1, 1
-                )
+            if geobox is None:
+                raise ValueError("Solar time resolution search_times require a geobox.")
             times = local_solar_date_range(geobox, t)
-        elif self.is_summary_month():
-            times = month_date_range(t)
-        elif self.is_summary_year():
-            times = year_date_range(t)
-        elif self.is_summary_day():
-            times = day_summary_date_range(t)
+        elif self.is_subday():
+            times = (t, t + datetime.timedelta(microseconds=1))
         else:
-            raise TypeError(f"TimeRes enum option {self} not supported by search_times()")
-
-        if self.is_exclusive():
-            times = (times[0] + datetime.timedelta(seconds=1), times[1])
+            # For summary products, return a single start date instead of a range.
+            # This allows data with overlapping time periods to be resolved by start date.
+            times = t
 
         return times
 
-    def dataset_groupby(self, product_names: Optional[Sequence[str]] = None):
+    def dataset_groupby(self, product_names: Optional[Sequence[str]] = None, is_mosaic=False):
         if self.is_subday():
-            return group_by_begin_datetime(pnames=pnames)
-        elif self.mosaic_date_func:
-            return group_by_mosaic(self.product_names)
+            return group_by_begin_datetime(product_names, truncate_dates=False)
+        elif is_mosaic:
+            return group_by_mosaic(product_names)
         elif self.is_solar():
-            return group_by_solar(self.product_names)
-        elif self.is_exclusive():
-            return group_by_statistical(self.product_names, {"seconds": 1})
+            return group_by_solar(product_names)
         else:
-            return group_by_statistical(self.product_names)
+            return group_by_begin_datetime(product_names)
 
 DEF_TIME_LATEST = "latest"
 DEF_TIME_EARLIEST = "earliest"
@@ -442,9 +417,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.user_band_math = cfg.get("user_band_math", False)
         else:
             self.user_band_math = False
-        self.time_resolution = TimeRes(cfg.get("time_resolution"))
+        self.time_resolution = TimeRes.parse(cfg.get("time_resolution"))
         if not self.time_resolution:
-            raise ConfigException(f"Invalid time resolution value {time_resolution} in named layer {self.name}")
+            raise ConfigException(f"Invalid time resolution value {cfg['time_resolution']} in named layer {self.name}")
         self.mosaic_date_func: Optional[FunctionWrapper] = None
         if "mosaic_date_func" in cfg:
             self.mosaic_date_func = FunctionWrapper(self, cfg["mosaic_date_func"])
@@ -935,10 +910,17 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return 1
 
     def search_times(self, t, geobox=None):
+        if not geobox:
+            bbox = self.ranges["bboxes"][self.native_CRS]
+            geobox = create_geobox(
+                self.native_CRS,
+                bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],
+                1, 1
+            )
         return self.time_resolution.search_times(t, geobox)
 
     def dataset_groupby(self):
-        return self.time_resolution.dataset_groupby()
+        return self.time_resolution.dataset_groupby(is_mosaic=self.mosaic_date_func is not None)
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
@@ -1038,7 +1020,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
         }
 
     def dataset_groupby(self):
-        return self.time_resolution.dataset_groupby(self.product_names)
+        return self.time_resolution.dataset_groupby(self.product_names, is_mosaic=self.mosaic_date_func is not None)
 
 
 def parse_ows_layer(cfg, global_cfg, parent_layer=None, sibling=0):

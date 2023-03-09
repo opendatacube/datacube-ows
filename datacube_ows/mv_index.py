@@ -60,10 +60,14 @@ class MVSelectOpts(Enum):
             return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
         assert False
 
+TimeSearchTerm = Union[
+    Tuple[datetime.datetime, datetime.datetime],
+    datetime.datetime,
+]
 
 def mv_search(index: "datacube.index.Index",
               sel: MVSelectOpts = MVSelectOpts.IDS,
-              times: Optional[Iterable[Tuple[datetime.datetime, datetime.datetime]]] = None,
+              times: Optional[Iterable[TimeSearchTerm]] = None,
               geom: Optional[ODCGeom] = None,
               products: Optional[Iterable["datacube.model.DatasetType"]] = None) -> Union[
         Iterable[Iterable[Any]],
@@ -95,7 +99,9 @@ def mv_search(index: "datacube.index.Index",
         s = s.where(
             or_(
                 *[
-                    stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
+                    stv.c.temporal_extent.op("@>")(t)
+                    if isinstance(t, datetime.datetime)
+                    else stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
                     for t in times
                 ]
             )

@@ -348,10 +348,7 @@ class DataStacker:
     @log_call
     def read_data_for_single_dataset(self, dataset, measurements, geobox, resampling=Resampling.nearest, fuse_func=None):
         datasets = [dataset]
-        if self._product.is_raw_time_res:
-            dc_datasets = datacube.Datacube.group_datasets(datasets, 'solar_day')
-        else:
-            dc_datasets = datacube.Datacube.group_datasets(datasets, 'time')
+        dc_datasets = datacube.Datacube.group_datasets(datasets, self._product.time_resolution.dataset_groupby())
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
@@ -813,10 +810,10 @@ def feature_info(args):
                 pixel_ds = td.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
-                if params.product.is_raw_time_res:
-                    date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
-                else:
+                if params.product.time_resolution.is_summary():
                     date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
+                else:
+                    date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
                 # Collect raw band values for pixel and derived bands from styles
                 date_info["bands"] = _make_band_dict(params.product, pixel_ds)
                 derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
@@ -875,7 +872,7 @@ def feature_info(args):
             for d in all_time_datasets.coords["time"].values:
                 dt_datasets = all_time_datasets.sel(time=d)
                 dt = datetime.utcfromtimestamp(d.astype(int) * 1e-9)
-                if params.product.is_raw_time_res:
+                if params.product.time_resolution.is_solar():
                     dt = solar_date(dt, tz)
                 for ds in dt_datasets.values.item():
                     if pt_native is None:
@@ -893,8 +890,10 @@ def feature_info(args):
                 unsorted_dates = []
                 for tds in all_time_datasets:
                     for ds in tds.values.item():
-                        if params.product.time_resolution.is_raw_time_res:
+                        if params.product.time_resolution.is_solar():
                             unsorted_dates.append(ds.center_time.strftime("%Y-%m-%d"))
+                        elif params.product.time_resolution.is_subday():
+                            unsorted_dates.append(ds.time.begin.isoformat())
                         else:
                             unsorted_dates.append(ds.time.begin.strftime("%Y-%m-%d"))
                 feature_json["data_available_for_utc_dates"] = sorted(

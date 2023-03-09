@@ -45,17 +45,16 @@ def datasets_for_sorting():
 def test_group_by_stat(datasets_for_sorting):
     from datacube import Datacube
 
-    from datacube_ows.utils import group_by_statistical
+    from datacube_ows.utils import group_by_begin_datetime
 
-    gby = group_by_statistical()
+    gby = group_by_begin_datetime()
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
-    assert len(date_only) == 2
+    assert len(date_only) == 1
     arrays = date_only.values
-    assert [ds.id for ds in arrays[0]] == ['A', 'B', 'E', 'F', 'I', 'J']
-    assert [ds.id for ds in arrays[1]] == ['C', 'D', 'G', 'H', 'K', 'L']
+    assert [ds.id for ds in arrays[0]] == ['A', 'B', 'E', 'F', 'I', 'J', 'C', 'D', 'G', 'H', 'K', 'L']
 
 
-    gby = group_by_statistical(["prod_c", "prod_b", "prod_a"])
+    gby = group_by_begin_datetime(["prod_c", "prod_b", "prod_a"], truncate_dates=False)
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 2
     arrays = date_only.values

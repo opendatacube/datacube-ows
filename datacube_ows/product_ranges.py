@@ -229,7 +229,7 @@ def create_range_entry(dc, product, crses, time_resolution):
        WHERE id= %(p_id)s
   """,
                {
-                   "dates": Json(map(date_formatter, dates)),
+                   "dates": Json(list(map(date_formatter, dates))),
                    "p_id": prodid
                }
   )
@@ -311,7 +311,7 @@ def datasets_exist(dc, product_name):
   return list(results)[0][0] > 0
 
 
-def add_ranges(dc, product_names, summary=False, merge_only=False):
+def add_ranges(dc, product_names, merge_only=False):
     odc_products = {}
     ows_multiproducts = []
     errors = False
@@ -354,12 +354,20 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                 print("Could not find ODC product:", pname)
                 errors = True
             elif datasets_exist(dc, dc_product.name):
-                prod_summary = summary
+                time_resolution = None
                 for ows_prod in ows_prods["ows"]:
                     if ows_prod:
-                        prod_summary = not ows_prod.is_raw_time_res
-                        break
-                create_range_entry(dc, dc_product, get_crses(), dc_product.time_resolution)
+                        new_tr = ows_prod.time_resolution
+                        if time_resolution is not None and new_tr != time_resolution:
+                            time_resolution = None
+                            errors = True
+                            print("Inconsistent time resolution for ODC product:", pname)
+                            break
+                        time_resolution = new_tr
+                if time_resolution is not None:
+                    create_range_entry(dc, dc_product, get_crses(), time_resolution)
+                else:
+                    print("Could not determine time_resolution for product: ", pname)
             else:
                 print("Could not find any datasets for: ", pname)
     for mp in ows_multiproducts:
@@ -404,7 +412,7 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
         if product.time_resolution.is_subday():
             dt_parser = lambda dts: datetime.fromisoformat(dts)
         else:
-            dt_parser = lambda dts: datetime.strptime(d, "%Y-%m-%d").date()
+            dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()
         times = [dt_parser(d) for d in result["dates"] if d is not None]
         if not times:
             return None

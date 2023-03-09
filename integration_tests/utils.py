@@ -109,7 +109,7 @@ def geom_from_bbox(bbox, crs="EPSG:4326"):
 def simplify_geom(geom_in, crs="EPSG:4326"):
     geom = geom_in
     # Pick biggest polygon from multipolygon
-    if geom.type == "MultiPolygon":
+    if geom.geom_type == "MultiPolygon":
         geom = max(geom, key=lambda x: x.area)
     # Triangulate
     rawtriangles = list(triangulate(geom.geom))
@@ -121,7 +121,7 @@ def simplify_geom(geom_in, crs="EPSG:4326"):
         )
     )
     geom = unary_union(triangles)
-    if geom.type == "MultiPolygon":
+    if geom.geom_type == "MultiPolygon":
         geom = max(geom, key=lambda x: x.area)
     return Geometry(geom, crs=crs)
 

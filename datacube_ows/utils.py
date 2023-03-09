@@ -47,9 +47,10 @@ def time_call(func: F) -> F:
 
 
 def group_by_begin_datetime(pnames: Optional[List[str]] = None,
-                        offset: Optional[Mapping[str, Union[int, float]]] = None) -> "datacube.api.query.GroupBy":
+                            truncate_dates: bool = True) -> "datacube.api.query.GroupBy":
     """
-    Returns an ODC GroupBy object, suitable for daily statistical/summary data.
+    Returns an ODC GroupBy object, suitable for daily/monthly/yearly/etc statistical/summary data.
+    (Or for sub-day time resolution data)
     """
     from datacube.api.query import GroupBy
     base_sort_key = lambda ds: ds.time.begin
@@ -61,8 +62,8 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
         sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
     else:
         sort_key = base_sort_key
-    if offset:
-        grp_by = lambda ds: ds.time.begin + datetime.timedelta(**offset)
+    if truncate_dates:
+        grp_by = lambda ds: ds.time.begin.date()
     else:
         grp_by = lambda ds: ds.time.begin
     return GroupBy(

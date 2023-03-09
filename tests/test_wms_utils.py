@@ -10,6 +10,7 @@ import pytest
 from datacube.utils import geometry
 
 import datacube_ows.wms_utils
+from datacube_ows.ows_configuration import TimeRes
 from datacube_ows.ogc_exceptions import WMSException
 
 
@@ -51,6 +52,7 @@ def test_parse_wms_time_strings_with_present():
 @pytest.fixture
 def dummy_product():
     dummy = MagicMock()
+    dummy.time_resolution = TimeRes.parse("solar")
     return dummy
 
 
