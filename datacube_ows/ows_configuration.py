@@ -36,9 +36,7 @@ from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
                                        load_json_obj)
 from datacube_ows.cube_pool import ODCInitException, cube, get_cube
 from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
-                                    create_geobox, day_summary_date_range,
-                                    local_solar_date_range, month_date_range,
-                                    year_date_range)
+                                    create_geobox, local_solar_date_range)
 from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef

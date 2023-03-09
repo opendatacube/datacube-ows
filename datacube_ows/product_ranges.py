@@ -7,7 +7,7 @@
 #pylint: skip-file
 
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 import datacube
 from psycopg2.extras import Json
@@ -198,7 +198,7 @@ def create_range_entry(dc, product, crses, time_resolution):
           {"p_id": prodid})
       for result in results:
           dt1, dt2, lon = result
-          dt = dt1 + (dt2 - dt1)/2
+          dt = dt1 + (dt2 - dt1) / 2
 
           solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
           dates.add(solar_day)

@@ -7,7 +7,7 @@ import datetime
 import logging
 from functools import wraps
 from time import monotonic
-from typing import Any, Callable, List, Mapping, Optional, TypeVar, Union
+from typing import Any, Callable, List, Optional, TypeVar
 
 F = TypeVar('F', bound=Callable[..., Any])
 
