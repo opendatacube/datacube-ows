@@ -15,6 +15,7 @@ import psycopg2
 import sqlalchemy
 from datacube import Datacube
 from psycopg2.sql import SQL
+from sqlalchemy import text
 
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import get_config
@@ -96,7 +97,7 @@ def main(layers,
     try:
         errors = add_ranges(dc, layers, merge_only)
     except (psycopg2.errors.UndefinedColumn,
-            sqlalchemy.exc.ProgrammingError):
+            sqlalchemy.exc.ProgrammingError) as e:
         print("ERROR: OWS schema or extent materialised views appear to be missing",
               "\n",
               "       Try running with the --schema options first."
@@ -174,5 +175,5 @@ def run_sql(dc, path, **params):
             with conn.connection.cursor() as psycopg2connection:
                 psycopg2connection.execute(q)
         else:
-            conn.execute(sql)
+            conn.execute(text(sql))
     conn.close()

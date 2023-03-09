@@ -13,7 +13,7 @@ from geoalchemy2 import Geometry
 from psycopg2.extras import DateTimeTZRange
 from sqlalchemy import SMALLINT, Column, MetaData, Table, or_, select, text
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
-from sqlalchemy.sql.functions import count
+from sqlalchemy.sql.functions import count, func
 
 
 def get_sqlalc_engine(index: "datacube.index.Index") -> "sqlalchemy.engine.base.Engine":
@@ -99,7 +99,7 @@ def mv_search(index: "datacube.index.Index",
         s = s.where(
             or_(
                 *[
-                    stv.c.temporal_extent.op("@>")(t)
+                    DateTimeTZRange(t, t + datetime.timedelta(seconds=1)).op("@>")(func.lower(stv.c.temporal_extent))
                     if isinstance(t, datetime.datetime)
                     else stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
                     for t in times
