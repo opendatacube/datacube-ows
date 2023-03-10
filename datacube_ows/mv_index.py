@@ -12,7 +12,7 @@ import pytz
 from datacube.utils.geometry import Geometry as ODCGeom
 from geoalchemy2 import Geometry
 from psycopg2.extras import DateTimeTZRange
-from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, literal, or_,
+from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, or_,
                         select, text)
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.sql.functions import count, func
@@ -115,12 +115,12 @@ def mv_search(index: "datacube.index.Index",
                     and_(
                         func.lower(stv.c.temporal_extent) >= t,
                         func.lower(stv.c.temporal_extent) < tmax,
-                        )
+                    )
                 )
             else:
                 # WORKS range_col.op()()
                 or_clauses.append(
-                    stv.c.temporal_extent.op("&&")(DateTimeTZRange( * t))
+                    stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
                 )
         s = s.where(or_(*or_clauses))
     orig_crs = None
