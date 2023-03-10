@@ -67,6 +67,18 @@ bands_sentinel2_ard_nbart = {
     "fmask": ["fmask", "fmask_alias"],
 }
 
+bands_c3_ls = {
+    "red": ["red"],
+    "green": ["green"],
+    "blue": ["blue"],
+    "nir": ["nir", "near_infrared"],
+    "swir1": ["swir1", "shortwave_infrared_1", "near_shortwave_infrared"],
+    "swir2": ["swir2", "shortwave_infrared_2", "far_shortwave_infrared"],
+    "sdev": [],
+    "edev": [],
+    "bcdev": [],
+    "count": [],
+}
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions
 
@@ -381,6 +393,12 @@ style_ls_ndvi_delta = {
         {"allowed_count_range": [3, 4], "animate": True},
     ],
 }
+
+styles_ls_list = [
+    style_ls_simple_rgb,
+    style_infrared_false_colour,
+    style_ndvi,
+]
 
 styles_s2_list = [
     style_ls_simple_rgb,
@@ -886,6 +904,27 @@ Latest imagery mosaic with no time dimension.
                     },
                 }
             ]
+        },
+        {
+            "title": "Landsat-8 Geomedian",
+            "name": "ls8_geomedian",
+            "abstract": """DEA Landsat-8 Geomedian""",
+            "product_name": "ga_ls8c_nbart_gm_cyear_3",
+            "bands": bands_c3_ls,
+            "resource_limits": reslim_for_sentinel2,
+            "dynamic": False,
+            "native_crs": "EPSG:3577",
+            "time_resolution": "summary",
+            "native_resolution": [25, -25],
+            "image_processing": {
+                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                "always_fetch_bands": [],
+                "manual_merge": False,
+            },
+            "styling": {
+                "default_style": "simple_rgb",
+                "styles": [styles_ls_list],
+            },
         }
     ],  ##### End of "layers" list.
 }  #### End of test configuration object
