@@ -216,7 +216,7 @@ def create_range_entry(dc, product, crses, time_resolution):
           for dat_ran in result[0]:
               dates.add(dat_ran.lower)
 
-  if time_resolution.is_subday:
+  if time_resolution.is_subday():
       date_formatter = lambda d: d.isoformat()
   else:
       date_formatter = lambda d: d.strftime("%Y-%m-%d")

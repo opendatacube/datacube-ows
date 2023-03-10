@@ -45,6 +45,10 @@ def test_solar(simple_geobox):
     assert res.is_solar()
     assert not res.is_summary()
 
+    with pytest.raises(ValueError) as e:
+        res.search_times(datetime(2020, 6, 7, 20, 20, 0, tzinfo=pytz.utc))
+    assert "Solar time resolution search_times requires a geobox" in str(e.value)
+
     assert res.search_times(
         datetime(2020, 6, 7, 20, 20, 0, tzinfo=pytz.utc),
         simple_geobox,
@@ -62,3 +66,10 @@ def test_summary():
     assert res.search_times(
         datetime(2020, 6, 7, 0, 0, 0, tzinfo=pytz.utc)
     ) == datetime(2020, 6, 7, 0, 0, 0, tzinfo=pytz.utc)
+
+
+def test_legacy_aliases():
+    assert TimeRes.parse("raw") == TimeRes.SOLAR
+    assert TimeRes.parse("day") == TimeRes.SUMMARY
+    assert TimeRes.parse("month") == TimeRes.SUMMARY
+    assert TimeRes.parse("year") == TimeRes.SUMMARY

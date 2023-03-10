@@ -163,13 +163,6 @@ style_ls_simple_rgb = {
     # The raw band value range to be compressed to an 8 bit range for the output image tiles.
     # Band values outside this range are clipped to 0 or 255 as appropriate.
     "scale_range": [0.0, 3000.0],
-    "pq_masks": [
-        {
-            "band": "SCL",
-            "invert": True,
-            "values": [0],
-        }
-    ],
     "legend": {
         "show_legend": True,
         "url": {
