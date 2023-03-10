@@ -12,7 +12,8 @@ import pytz
 from datacube.utils.geometry import Geometry as ODCGeom
 from geoalchemy2 import Geometry
 from psycopg2.extras import DateTimeTZRange
-from sqlalchemy import SMALLINT, Column, MetaData, Table, and_, or_, select, text, literal
+from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, literal, or_,
+                        select, text)
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.sql.functions import count, func
 
