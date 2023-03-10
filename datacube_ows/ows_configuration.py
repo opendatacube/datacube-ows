@@ -354,7 +354,7 @@ class TimeRes(Enum):
     def search_times(self, t, geobox=None):
         if self.is_solar():
             if geobox is None:
-                raise ValueError("Solar time resolution search_times require a geobox.")
+                raise ValueError("Solar time resolution search_times requires a geobox.")
             times = local_solar_date_range(geobox, t)
         elif self.is_subday():
             times = (t, t + datetime.timedelta(microseconds=1))
