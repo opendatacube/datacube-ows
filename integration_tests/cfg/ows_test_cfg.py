@@ -221,6 +221,32 @@ style_infrared_false_colour = {
     # "scale_range": [0.0, 3000.0]
 }
 
+style_ls_infrared_false_colour = {
+    "name": "infra_red",
+    "title": "False colour multi-band infra-red",
+    "abstract": "Simple false-colour image, using the near and short-wave infra-red bands",
+    "components": {
+        "red": {
+            "green": 1.0,
+            # The special dictionary value 'scale_range' can be used to provide a component-specific
+            # scale_range that overrides the style scale_range below.
+            # (N.B. if you are unlucky enough to have a native band called "scale_range", you can access it
+            # by defining a band alias.)
+            "scale_range": [5.0, 4000.0],
+        },
+        "green": {
+            "nir": 1.0,
+            "scale_range": [25.0, 4000.0],
+        },
+        "blue": {
+            "swir1": 1.0,
+            "scale_range": [0.0, 3000.0],
+        },
+    },
+    # The style scale_range can be omitted if all components have a component-specific scale_range defined.
+    # "scale_range": [0.0, 3000.0]
+}
+
 style_sentinel_pure_blue = {
     "name": "blue",
     "title": "Blue - 490",
@@ -389,7 +415,7 @@ style_ls_ndvi_delta = {
 
 styles_ls_list = [
     style_ls_simple_rgb,
-    style_infrared_false_colour,
+    style_ls_infrared_false_colour,
     style_ndvi,
 ]
 
@@ -916,7 +942,7 @@ Latest imagery mosaic with no time dimension.
             },
             "styling": {
                 "default_style": "simple_rgb",
-                "styles": [styles_ls_list],
+                "styles": styles_ls_list,
             },
         }
     ],  ##### End of "layers" list.
