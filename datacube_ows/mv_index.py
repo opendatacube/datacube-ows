@@ -8,10 +8,11 @@ import json
 from enum import Enum
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
+import pytz
 from datacube.utils.geometry import Geometry as ODCGeom
 from geoalchemy2 import Geometry
 from psycopg2.extras import DateTimeTZRange
-from sqlalchemy import SMALLINT, Column, MetaData, Table, or_, select, text
+from sqlalchemy import SMALLINT, Column, MetaData, Table, and_, or_, select, text, literal
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.sql.functions import count, func
 
@@ -96,16 +97,31 @@ def mv_search(index: "datacube.index.Index",
 
     s = select(sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
     if times is not None:
-        s = s.where(
-            or_(
-                *[
-                    DateTimeTZRange(t, t + datetime.timedelta(seconds=1)).op("@>")(func.lower(stv.c.temporal_extent))
-                    if isinstance(t, datetime.datetime)
-                    else stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
-                    for t in times
-                ]
-            )
-        )
+        or_clauses = []
+        for t in times:
+            if isinstance(t, datetime.datetime):
+                tmax = t + datetime.timedelta(seconds=1)
+                or_clauses.append(
+                    and_(
+                        func.lower(stv.c.temporal_extent) >= t,
+                        func.lower(stv.c.temporal_extent) < tmax,
+                    )
+                )
+            elif isinstance(t, datetime.date):
+                t = datetime.datetime(t.year, t.month, t.day, tzinfo=pytz.utc)
+                tmax = t + datetime.timedelta(seconds=1)
+                or_clauses.append(
+                    and_(
+                        func.lower(stv.c.temporal_extent) >= t,
+                        func.lower(stv.c.temporal_extent) < tmax,
+                        )
+                )
+            else:
+                # WORKS range_col.op()()
+                or_clauses.append(
+                    stv.c.temporal_extent.op("&&")(DateTimeTZRange( * t))
+                )
+        s = s.where(or_(*or_clauses))
     orig_crs = None
     if geom is not None:
         orig_crs = geom.crs

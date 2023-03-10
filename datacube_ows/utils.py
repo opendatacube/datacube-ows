@@ -9,6 +9,8 @@ from functools import wraps
 from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
 
+import pytz
+
 F = TypeVar('F', bound=Callable[..., Any])
 
 def log_call(func: F) -> F:
@@ -63,7 +65,11 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
     else:
         sort_key = base_sort_key
     if truncate_dates:
-        grp_by = lambda ds: ds.time.begin.date()
+        grp_by = lambda ds: datetime.datetime(
+            ds.time.begin.year,
+            ds.time.begin.month,
+            ds.time.begin.day,
+            tzinfo=pytz.UTC)
     else:
         grp_by = lambda ds: ds.time.begin
     return GroupBy(

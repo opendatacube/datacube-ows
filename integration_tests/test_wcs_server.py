@@ -1166,7 +1166,7 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    assert len(contents) == 5
+    assert len(contents) == 6
     layer = cfg.product_index[contents[0]]
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
