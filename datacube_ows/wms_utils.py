@@ -187,8 +187,11 @@ def parse_time_item(item, product):
     if len(times) > 1:
         # TODO WMS Time range selections (/ notation) are poorly and incompletely implemented.
         start, end = parse_wms_time_strings(times)
-        start, end = start.date(), end.date()
-        matching_times = [t for t in product.ranges['times'] if start <= t <= end]
+        if product.time_resolution.is_subday():
+            matching_times = [t for t in product.ranges['times'] if start <= t <= end]
+        else:
+            start, end = start.date(), end.date()
+            matching_times = [t for t in product.ranges['times'] if start <= t <= end]
         if matching_times:
             # default to the first matching time
             return matching_times[0]

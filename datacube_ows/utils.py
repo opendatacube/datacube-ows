@@ -69,9 +69,16 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
             ds.time.begin.year,
             ds.time.begin.month,
             ds.time.begin.day,
-            tzinfo=pytz.UTC)
+            tzinfo=pytz.utc)
     else:
-        grp_by = lambda ds: ds.time.begin
+        grp_by = lambda ds: datetime.datetime(
+            ds.time.begin.year,
+            ds.time.begin.month,
+            ds.time.begin.day,
+            ds.time.begin.hour,
+            ds.time.begin.minute,
+            ds.time.begin.second,
+            tzinfo=ds.time.begin.tzinfo)
     return GroupBy(
         dimension='time',
         group_by_func=grp_by,
@@ -148,6 +155,9 @@ def find_matching_date(dt, dates) -> bool:
         start = datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo)
         end = start + datetime.timedelta(seconds=1)
         return start, end
+
+    if not dt.tzinfo:
+        dt = dt.replace(tzinfo=pytz.utc)
 
     region = dates
     while region:

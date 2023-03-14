@@ -167,10 +167,10 @@ def test_wms_getmap_requests(ows_server, product_name):
         "width": "150",
         "height": "150",
         "crs": "EPSG:4326",
-        "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+        "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
         "format": "image/png",
         "exceptions": "XML",
-        "time": "2021-12-31"
+        "time": "2021-12-31 02:01:38"
     })
     # Confirm success
     assert resp.status_code == 200
@@ -219,10 +219,10 @@ def test_wms_getmap_qprof(ows_server, product_name):
                             "width": "150",
                             "height": "150",
                             "crs": "EPSG:4326",
-                            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+                            "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
                             "format": "image/png",
                             "exceptions": "XML",
-                            "time": "2021-12-31",
+                            "time": "2021-12-31 02:01:38",
                             "ows_stats": "yes"
     })
     # Confirm success
@@ -262,12 +262,12 @@ def test_wms_multidate_getmap(ows_server):
         layers=["s2_l2a"],
         styles=["ndvi_delta"],
         srs="EPSG:4326",
-        bbox=(145.75, -44.2,
-              148.69, -42.11),
+        bbox=(122.32, -15.25,
+              124.64, -12.66),
         size=(150, 150),
         format="image/png",
         transparent=True,
-        time="2021-12-31,2022-01-03",
+        time="2021-12-31 02:01:38,2022-01-03 02:11:03",
     )
     assert img.info()["Content-Type"] == "image/png"
 

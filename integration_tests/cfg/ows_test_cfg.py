@@ -761,6 +761,7 @@ ows_cfg = {
                     "bands": bands_sentinel,
                     "dynamic": True,
                     "resource_limits": reslim_continental,
+                    "time_resolution": "subday",
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [],
