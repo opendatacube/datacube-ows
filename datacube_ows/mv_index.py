@@ -101,6 +101,9 @@ def mv_search(index: "datacube.index.Index",
         or_clauses = []
         for t in times:
             if isinstance(t, datetime.datetime):
+                t = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
+                if not t.tzinfo:
+                    t = t.replace(tzinfo=pytz.utc)
                 tmax = t + datetime.timedelta(seconds=1)
                 or_clauses.append(
                     and_(
@@ -110,7 +113,7 @@ def mv_search(index: "datacube.index.Index",
                 )
             elif isinstance(t, datetime.date):
                 t = datetime.datetime(t.year, t.month, t.day, tzinfo=pytz.utc)
-                tmax = t + datetime.timedelta(seconds=1)
+                tmax = t + datetime.timedelta(days=1)
                 or_clauses.append(
                     and_(
                         func.lower(stv.c.temporal_extent) >= t,
@@ -118,7 +121,6 @@ def mv_search(index: "datacube.index.Index",
                     )
                 )
             else:
-                # WORKS range_col.op()()
                 or_clauses.append(
                     stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
                 )

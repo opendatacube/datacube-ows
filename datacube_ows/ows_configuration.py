@@ -357,9 +357,13 @@ class TimeRes(Enum):
                 raise ValueError("Solar time resolution search_times requires a geobox.")
             times = local_solar_date_range(geobox, t)
         elif self.is_subday():
-            times = (t, t + datetime.timedelta(microseconds=1))
+            # For subday products, return a single start datetime instead of a range.
+            # mv_index will expand this to a one-second search range.
+            # This prevents users from having to always use the full ISO timestamp in queries.
+            times = t
         else:
             # For summary products, return a single start date instead of a range.
+            # mv_index will expand this to a one-day search range
             # This allows data with overlapping time periods to be resolved by start date.
             times = t
 

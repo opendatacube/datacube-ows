@@ -134,3 +134,29 @@ def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
     """
     # pylint: disable=protected-access
     return dc.index._db._engine.connect()
+
+
+def find_matching_date(dt, dates) -> bool:
+    """
+    Check for a matching datetime in sorted list, using subday time resolution second-rounding rules.
+
+    :param dt: The date to dun
+    :param dates: List of sorted date-times
+    :return: True if match found
+    """
+    def range_of(dt):
+        start = datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo)
+        end = start + datetime.timedelta(seconds=1)
+        return start, end
+
+    dtlen = len(dates)
+    if dtlen == 0:
+        return False
+    splitter = dtlen // 2
+    start, end = range_of(dates[splitter])
+    if dt >= start and dt < end:
+        return True
+    elif dt < start:
+        return find_matching_date(dt, dates[0:splitter])
+    else:
+        return find_matching_date(dt, dates[splitter + 1:])

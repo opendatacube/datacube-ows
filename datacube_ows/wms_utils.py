@@ -24,6 +24,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
+from datacube_ows.utils import find_matching_date
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,
@@ -229,6 +230,12 @@ def parse_time_item(item, product):
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
         if (time - start).days % product.time_axis_interval != 0:
+            raise WMSException(
+                "Time dimension value '%s' not valid for this layer" % times[0],
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter")
+    elif product.time_resolution.is_subday():
+        if not find_matching_date(time, product.ranges["times"]):
             raise WMSException(
                 "Time dimension value '%s' not valid for this layer" % times[0],
                 WMSException.INVALID_DIMENSION_VALUE,
