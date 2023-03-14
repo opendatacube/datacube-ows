@@ -7,6 +7,7 @@ import datetime
 from unittest.mock import MagicMock
 
 import pytest
+import pytz
 
 
 def mock_ds_for_sort(id_: str, st: datetime, ct: datetime, lon: float, prod_name):
@@ -100,3 +101,27 @@ def test_group_by_mosaic(datasets_for_sorting):
     assert len(date_only) == 1
     arrays = date_only.values
     assert [ds.id for ds in arrays[0]] == ['I', 'J', 'K', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'L', 'H']
+
+
+def test_find_in_dates():
+    from datacube_ows.utils import find_matching_date
+    dates = [
+        datetime.datetime(1991, 8, 3, 22, 15, 24, 122234, tzinfo=pytz.utc),
+        datetime.datetime(1991, 8, 5, 14, 6, 12, 156238, tzinfo=pytz.utc),
+        datetime.datetime(1992, 2, 5, 15, 45, 11, 832438, tzinfo=pytz.utc),
+        datetime.datetime(1995, 2, 13, 21, 9, 55, 722242, tzinfo=pytz.utc),
+        datetime.datetime(1996, 1, 23, 12, 15, 25, 723411, tzinfo=pytz.utc),
+        datetime.datetime(1996, 1, 23, 12, 15, 27, 523410, tzinfo=pytz.utc),
+        datetime.datetime(1996, 1, 23, 12, 15, 28, 0, tzinfo=pytz.utc),
+        datetime.datetime(1999, 12, 31, 22, 22, 22, 222222, tzinfo=pytz.utc),
+        datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=pytz.utc),
+    ]
+    assert find_matching_date(datetime.datetime(1991, 8, 3, 22, 15, 24, 122234, tzinfo=pytz.utc), dates)
+    assert find_matching_date(datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=pytz.utc), dates)
+    assert find_matching_date(datetime.datetime(1992, 2, 5, 15, 45, 11, 234110, tzinfo=pytz.utc), dates)
+    assert find_matching_date(datetime.datetime(1996, 1, 23, 12, 15, 25, 723411, tzinfo=pytz.utc), dates)
+    assert not find_matching_date(datetime.datetime(1996, 1, 23, 12, 15, 26, 723411, tzinfo=pytz.utc), dates)
+    assert find_matching_date(datetime.datetime(1996, 1, 23, 12, 15, 27, 723411, tzinfo=pytz.utc), dates)
+    assert not find_matching_date(datetime.datetime(1896, 1, 23, 12, 15, 26, 723411, tzinfo=pytz.utc), dates)
+    assert not find_matching_date(datetime.datetime(2016, 1, 23, 12, 15, 26, 723411, tzinfo=pytz.utc), dates)
+    assert not find_matching_date(datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=pytz.utc), [])
