@@ -149,14 +149,16 @@ def find_matching_date(dt, dates) -> bool:
         end = start + datetime.timedelta(seconds=1)
         return start, end
 
-    dtlen = len(dates)
-    if dtlen == 0:
-        return False
-    splitter = dtlen // 2
-    start, end = range_of(dates[splitter])
-    if dt >= start and dt < end:
-        return True
-    elif dt < start:
-        return find_matching_date(dt, dates[0:splitter])
-    else:
-        return find_matching_date(dt, dates[splitter + 1:])
+    region = dates
+    while region:
+        dtlen = len(region)
+        splitter = dtlen // 2
+        start, end = range_of(region[splitter])
+        if dt >= start and dt < end:
+            return True
+        elif dt < start:
+            region = region[0:splitter]
+        else:
+            region = region[splitter + 1:]
+
+    return False
