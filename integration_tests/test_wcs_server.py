@@ -294,7 +294,9 @@ def test_wcs1_multi_time_exceptions(ows_server):
 def test_wcs1_getcov_no_meas(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
@@ -321,7 +323,9 @@ def test_wcs1_getcov_no_meas(ows_server):
 def test_wcs1_getcov_multi_style(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
@@ -348,7 +352,9 @@ def test_wcs1_getcov_multi_style(ows_server):
 def test_wcs1_width_height_res_exceptions(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
@@ -540,7 +546,9 @@ def test_wcs1_width_height_res_exceptions(ows_server):
 def test_wcs1_style(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
@@ -602,7 +610,9 @@ def test_wcs1_style(ows_server):
 def test_wcs1_ows_stats(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
@@ -632,7 +642,9 @@ def test_wcs1_ows_stats(ows_server):
 def test_wcs1_getcov_bad_meas(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
@@ -659,7 +671,9 @@ def test_wcs1_getcov_bad_meas(ows_server):
 def test_wcs1_getcov_badexception(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
@@ -687,7 +701,9 @@ def test_wcs1_getcov_badexception(ows_server):
 def test_wcs1_getcov_interp(ows_server):
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
-    test_layer_name = contents[0]
+    for test_layer_name in contents:
+        if not test_layer_name.startswith("s2_l"):
+            break
     cfg = get_config(refresh=True)
     layer = cfg.product_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
