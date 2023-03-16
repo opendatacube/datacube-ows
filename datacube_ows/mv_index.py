@@ -96,7 +96,7 @@ def mv_search(index: "datacube.index.Index",
         raise Exception("Must filter by product/layer")
     prod_ids = [p.id for p in products]
 
-    s = select(sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
+    s = select(*sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
     if times is not None:
         or_clauses = []
         for t in times:

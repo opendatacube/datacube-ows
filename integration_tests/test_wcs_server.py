@@ -1145,7 +1145,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
         format="application/x-netcdf",
         # to select the subset, find one valid coordination and replace the
         # number and keep the .3 and .4
-        subsets=[("x", 131.0, 131.3), ("y", -12.4, -11.9), ("time", "2017-08-03", "2017-08-08")],
+        subsets=[("x", 131.0, 131.2), ("y", -12.1, -11.9), ("time", "2017-08-03", "2017-08-08")],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         scalesize="x(400),y(300)",
     )
