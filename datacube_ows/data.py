@@ -378,16 +378,6 @@ def bbox_to_geom(bbox, crs):
 
 
 def user_date_sorter(layer, odc_dates, geom, user_dates):
-    result = []
-    for npdt in odc_dates:
-        ts = Timestamp(npdt).tz_localize("UTC")
-        effective_date = layer.time_resolution.dataset_groupby(
-            product_names=layer.product_names,
-            is_mosaic=layer.mosaic_date_func is None
-        )
-
-
-def user_date_sorter(layer, odc_dates, geom, user_dates):
     # TODO: Make more elegant.  Just a little bit elegant would do.
     result = []
     if layer.time_resolution.is_solar():

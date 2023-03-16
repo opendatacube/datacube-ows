@@ -1687,7 +1687,7 @@ def test_wcs2_tiff_multidate(ows_server):
             "rangesubset": "green,swir_1",
             "subset": subsets,
         },
-        )
+    )
     assert r.status_code == 400
     assert "Multiple time slices not supported by GeoTIFF format" in r.text
 
