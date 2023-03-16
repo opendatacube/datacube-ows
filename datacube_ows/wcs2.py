@@ -202,7 +202,7 @@ def create_coverage_description(cfg, product):
                 size=size,
             )
         )
-    elif product.is_subday():
+    elif product.time_resolution.is_subday():
         axes.append(
             IrregularAxis(
                 label='time',
