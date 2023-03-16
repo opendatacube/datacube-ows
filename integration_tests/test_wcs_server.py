@@ -1132,7 +1132,10 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.product_index[contents[0]]
+    for lyr_name in contents:
+        if not lyr_name.startswith('s2_l'):
+            layer = cfg.product_index[lyr_name]
+            break
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, "EPSG:4326"
@@ -1142,7 +1145,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
         format="application/x-netcdf",
         # to select the subset, find one valid coordination and replace the
         # number and keep the .3 and .4
-        subsets=[("x", 124, 124.3), ("y", -14.4, -14), ("time", "2021-12-26")],
+        subsets=[("x", 131.0, 131.3), ("y", -12.4, -11.9), ("time", "2017-08-03", "2017-08-08")],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         scalesize="x(400),y(300)",
     )

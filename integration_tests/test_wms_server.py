@@ -131,31 +131,19 @@ def test_wms_getmap(ows_server):
 
     bbox = test_layer.boundingBoxWGS84
 
-    img = wms.getmap(
-        layers=[test_layer_name],
-        styles=[],
-        srs="EPSG:4326",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
-        size=(150, 150),
-        format="image/png",
-        transparent=True,
-        time=test_layer.timepositions[-1].strip(),
-    )
-    assert img
-    assert img.info()["Content-Type"] == "image/png"
-
-    img = wms.getmap(
-        layers=[test_layer_name],
-        styles=[],
-        srs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
-        size=(150, 150),
-        format="image/png",
-        transparent=True,
-        time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
-    )
-    assert img
-    assert img.info()["Content-Type"] == "image/png"
+    for time in test_layer.timepositions:
+        img = wms.getmap(
+            layers=[test_layer_name],
+            styles=[],
+            srs="EPSG:4326",
+            bbox=pytest.helpers.enclosed_bbox(bbox),
+            size=(150, 150),
+            format="image/png",
+            transparent=True,
+            time=time.strip(),
+        )
+        assert img
+        assert img.info()["Content-Type"] == "image/png"
 
 
 def test_wms_getmap_requests(ows_server, product_name):
