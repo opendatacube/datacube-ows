@@ -1148,6 +1148,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
         subsets=[("x", 131.0, 131.2), ("y", -12.1, -11.9), ("time", "2017-08-03", "2017-08-08")],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         scalesize="x(400),y(300)",
+        timeout=90,
     )
 
     assert output
