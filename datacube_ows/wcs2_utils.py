@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 import collections
 import logging
 
+import pytz
 from datacube.utils import geometry
 from dateutil.parser import parse
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
@@ -118,8 +119,16 @@ def get_coverage_data(request, styles, qprof):
                             "Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
                             WCS2Exception.INVALID_SUBSETTING,
                             locator="time")
-                    low = parse(subset.low).date() if subset.low is not None else None
-                    high = parse(subset.high).date() if subset.high is not None else None
+                    if layer.time_resolution.is_subday():
+                        low = parse(subset.low) if subset.low is not None else None
+                        if not low.tzinfo:
+                            low = low.replace(tzinfo=pytz.utc)
+                        high = parse(subset.high) if subset.high is not None else None
+                        if not high.tzinfo:
+                            high = high.replace(tzinfo=pytz.utc)
+                    else:
+                        low = parse(subset.low).date() if subset.low is not None else None
+                        high = parse(subset.high).date() if subset.high is not None else None
                     if low is not None:
                         times = [
                             time for time in times
@@ -338,6 +347,8 @@ def get_tiff(request, data, crs, product, width, height, affine):
     gtiff = request.geotiff_encoding_parameters
     cfg = get_config()
 
+    if len(data.time) > 1:
+        raise WCS2Exception("Multiple time slices not supported by GeoTIFF format")
     data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     nodata = 0

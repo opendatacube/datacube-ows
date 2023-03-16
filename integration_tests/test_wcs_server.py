@@ -1251,7 +1251,7 @@ def test_wcs21_getcoverage(ows_server):
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
     assert layer
@@ -1279,7 +1279,7 @@ def test_wcs21_ows_stats(ows_server):
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
     assert layer
@@ -1468,7 +1468,7 @@ def test_wcs2_getcov_slice_space(ows_server):
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
     assert layer
@@ -1589,7 +1589,7 @@ def test_wcs2_getcov_styles(ows_server):
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
     assert layer
@@ -1661,7 +1661,7 @@ def test_wcs2_getcov_styles(ows_server):
 #    assert r.status_code == 400
 
 
-def test_wcs2_getcov_bands(ows_server):
+def test_wcs2_tiff_multidate(ows_server):
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
@@ -1687,6 +1687,37 @@ def test_wcs2_getcov_bands(ows_server):
             "rangesubset": "green,swir_1",
             "subset": subsets,
         },
+        )
+    assert r.status_code == 400
+    assert "Multiple time slices not supported by GeoTIFF format" in r.text
+
+
+def test_wcs2_getcov_bands(ows_server):
+    cfg = get_config(refresh=True)
+    layer = None
+    for lyr in cfg.product_index.values():
+        if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
+            layer = lyr
+            break
+    assert layer
+    extent = ODCExtent(layer)
+    subsets = extent.raw_wcs2_subsets(
+        ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND
+    )
+
+    r = requests.get(
+        ows_server.url + "/wcs",
+        params={
+            "request": "GetCoverage",
+            "coverageid": layer.name,
+            "version": "2.1.0",
+            "service": "WCS",
+            "format": "image/geotiff",
+            "subsettingcrs": "EPSG:4326",
+            "scalesize": "x(400),y(400)",
+            "rangesubset": "nbar_green,nbar_swir_2",
+            "subset": subsets,
+        },
     )
     assert r.status_code == 200
 
@@ -1695,7 +1726,7 @@ def test_wcs2_getcov_band_range(ows_server):
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
     assert layer
@@ -1714,7 +1745,7 @@ def test_wcs2_getcov_band_range(ows_server):
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "green:swir_1",
+            "rangesubset": "nbar_green:nbar_swir_2",
             "subset": subsets,
         },
     )
@@ -1804,7 +1835,7 @@ def test_wcs2_getcov_native_format(ows_server):
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.product_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and not lyr.name.startswith('s2_l'):
             layer = lyr
             break
     assert layer
