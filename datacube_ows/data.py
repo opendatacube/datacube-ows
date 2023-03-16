@@ -9,7 +9,7 @@ import json
 import logging
 import re
 from collections import OrderedDict
-from datetime import datetime, timedelta, date
+from datetime import date, datetime, timedelta
 from itertools import chain
 
 import datacube
