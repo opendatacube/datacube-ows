@@ -20,8 +20,8 @@ from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
-from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 from datacube_ows.utils import default_to_utc
+from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
 # from datacube_ows.wcs_utils import get_bands_from_styles
 

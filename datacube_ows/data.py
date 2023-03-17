@@ -35,10 +35,9 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.startup_utils import CredentialManager
-from datacube_ows.utils import log_call
+from datacube_ows.utils import default_to_utc, log_call
 from datacube_ows.wms_utils import (GetFeatureInfoParameters, GetMapParameters,
                                     img_coords_to_geopoint, solar_correct_data)
-from datacube_ows.utils import default_to_utc
 
 _LOG = logging.getLogger(__name__)
 

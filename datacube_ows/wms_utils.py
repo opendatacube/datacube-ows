@@ -24,7 +24,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
-from datacube_ows.utils import find_matching_date, default_to_utc
+from datacube_ows.utils import default_to_utc, find_matching_date
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,
