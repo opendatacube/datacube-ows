@@ -131,31 +131,19 @@ def test_wms_getmap(ows_server):
 
     bbox = test_layer.boundingBoxWGS84
 
-    img = wms.getmap(
-        layers=[test_layer_name],
-        styles=[],
-        srs="EPSG:4326",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
-        size=(150, 150),
-        format="image/png",
-        transparent=True,
-        time=test_layer.timepositions[-1].strip(),
-    )
-    assert img
-    assert img.info()["Content-Type"] == "image/png"
-
-    img = wms.getmap(
-        layers=[test_layer_name],
-        styles=[],
-        srs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
-        size=(150, 150),
-        format="image/png",
-        transparent=True,
-        time=test_layer.timepositions[len(test_layer.timepositions) // 2].strip(),
-    )
-    assert img
-    assert img.info()["Content-Type"] == "image/png"
+    for time in test_layer.timepositions:
+        img = wms.getmap(
+            layers=[test_layer_name],
+            styles=[],
+            srs="EPSG:4326",
+            bbox=pytest.helpers.enclosed_bbox(bbox),
+            size=(150, 150),
+            format="image/png",
+            transparent=True,
+            time=time.strip(),
+        )
+        assert img
+        assert img.info()["Content-Type"] == "image/png"
 
 
 def test_wms_getmap_requests(ows_server, product_name):
@@ -167,10 +155,10 @@ def test_wms_getmap_requests(ows_server, product_name):
         "width": "150",
         "height": "150",
         "crs": "EPSG:4326",
-        "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+        "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
         "format": "image/png",
         "exceptions": "XML",
-        "time": "2021-12-31"
+        "time": "2021-12-31 02:01:38"
     })
     # Confirm success
     assert resp.status_code == 200
@@ -219,10 +207,10 @@ def test_wms_getmap_qprof(ows_server, product_name):
                             "width": "150",
                             "height": "150",
                             "crs": "EPSG:4326",
-                            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+                            "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
                             "format": "image/png",
                             "exceptions": "XML",
-                            "time": "2021-12-31",
+                            "time": "2021-12-31 02:01:38",
                             "ows_stats": "yes"
     })
     # Confirm success
@@ -262,12 +250,12 @@ def test_wms_multidate_getmap(ows_server):
         layers=["s2_l2a"],
         styles=["ndvi_delta"],
         srs="EPSG:4326",
-        bbox=(145.75, -44.2,
-              148.69, -42.11),
+        bbox=(122.32, -15.25,
+              124.64, -12.66),
         size=(150, 150),
         format="image/png",
         transparent=True,
-        time="2021-12-31,2022-01-03",
+        time="2021-12-31 02:01:38,2022-01-03 02:11:03",
     )
     assert img.info()["Content-Type"] == "image/png"
 
@@ -279,6 +267,7 @@ def test_wms_style_looping_getmap(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wms.contents)
     test_layer_names = ["s2_l2a", "s2_l2a_clone"]
+    test_time = '2021-12-21T02:01:19'
     for test_layer_name in test_layer_names:
         test_layer = wms.contents[test_layer_name]
 
@@ -286,7 +275,6 @@ def test_wms_style_looping_getmap(ows_server):
 
         bbox = test_layer.boundingBoxWGS84
         layer_bbox = pytest.helpers.enclosed_bbox(bbox)
-        layer_time = test_layer.timepositions[0].strip()
 
         for style in test_layer_styles:
             img = wms.getmap(
@@ -297,7 +285,7 @@ def test_wms_style_looping_getmap(ows_server):
                 size=(150, 150),
                 format="image/png",
                 transparent=True,
-                time=layer_time,
+                time=test_time,
             )
             assert img.info()["Content-Type"] == "image/png"
 

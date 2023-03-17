@@ -15,6 +15,7 @@ import psycopg2
 import sqlalchemy
 from datacube import Datacube
 from psycopg2.sql import SQL
+from sqlalchemy import text
 
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import get_config
@@ -26,12 +27,11 @@ from datacube_ows.startup_utils import initialise_debugging
 @click.option("--views", is_flag=True, default=False, help="Refresh the ODC spatio-temporal materialised views.")
 @click.option("--schema", is_flag=True, default=False, help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
 @click.option("--role", default=None, help="Role to grant database permissions to")
-@click.option("--summary", is_flag=True, default=False, help="Treat any named ODC products with no corresponding configured OWS Layer as summary products")
 @click.option("--merge-only/--no-merge-only", default=False, help="When used with a multiproduct layer, the ranges for underlying datacube products are not updated.")
 @click.option("--version", is_flag=True, default=False, help="Print version string and exit")
 @click.argument("layers", nargs=-1)
 def main(layers,
-         merge_only, summary,
+         merge_only,
          schema, views, role, version):
     """Manage datacube-ows range tables.
 
@@ -95,9 +95,9 @@ def main(layers,
     if not layers:
         layers = list(cfg.product_index.keys())
     try:
-        errors = add_ranges(dc, layers, summary, merge_only)
+        errors = add_ranges(dc, layers, merge_only)
     except (psycopg2.errors.UndefinedColumn,
-            sqlalchemy.exc.ProgrammingError):
+            sqlalchemy.exc.ProgrammingError) as e:
         print("ERROR: OWS schema or extent materialised views appear to be missing",
               "\n",
               "       Try running with the --schema options first."
@@ -175,5 +175,5 @@ def run_sql(dc, path, **params):
             with conn.connection.cursor() as psycopg2connection:
                 psycopg2connection.execute(q)
         else:
-            conn.execute(sql)
+            conn.execute(text(sql))
     conn.close()

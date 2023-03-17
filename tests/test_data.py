@@ -274,6 +274,8 @@ def test_pbq_ctor_full(product_layer): # noqa: F811
 
 
 def test_user_date_sorter():
+    layer = MagicMock()
+    layer.time_resolution.is_subday.return_value = False
     minx, maxx = 140, 141
     miny, maxy = -35, -34
     crs = "EPSG:4326"
@@ -291,7 +293,7 @@ def test_user_date_sorter():
         datetime.date(2020, 1, 1),
     ]
 
-    sorter = datacube_ows.data.user_date_sorter(odc_dates, geom, user_dates)
+    sorter = datacube_ows.data.user_date_sorter(layer, odc_dates, geom, user_dates)
     assert sorter.values[0] == 1
     assert sorter.values[1] == 2
     assert sorter.values[2] == 0

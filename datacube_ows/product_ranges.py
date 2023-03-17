@@ -7,12 +7,12 @@
 #pylint: skip-file
 
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 import datacube
 from psycopg2.extras import Json
+from sqlalchemy import text
 
-from datacube_ows.ogc_utils import NoTimezoneException, tz_for_coord
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import get_sqlconn
 
@@ -59,17 +59,17 @@ def create_multiprod_range_entry(dc, product, crses):
 
     txn = conn.begin()
     # Attempt to insert row
-    conn.execute("""
+    conn.execute(text("""
         INSERT INTO wms.multiproduct_ranges
         (wms_product_name,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
         VALUES
-        (%(p_id)s, 0, 0, 0, 0, %(empty)s, %(empty)s)
+        (:p_id, 0, 0, 0, 0, :empty, :empty)
         ON CONFLICT (wms_product_name) DO NOTHING
-        """,
-                 {"p_id": wms_name, "empty": Json("")})
+        """),
+             {"p_id": wms_name, "empty": Json("")})
 
     # Update extents
-    conn.execute("""
+    conn.execute(text("""
         UPDATE wms.multiproduct_ranges
         SET lat_min = subq.lat_min,
             lat_max = subq.lat_max,
@@ -81,42 +81,42 @@ def create_multiprod_range_entry(dc, product, crses):
                    min(lon_min) as lon_min,
                    max(lon_max) as lon_max
             from wms.product_ranges
-            where id = ANY (%(p_prodids)s)
+            where id = ANY (:p_prodids)
         ) as subq
-        WHERE wms_product_name = %(p_id)s
-        """,
-                 {"p_id": wms_name, "p_prodids": prodids})
+        WHERE wms_product_name = :p_id
+        """),
+             {"p_id": wms_name, "p_prodids": prodids})
 
     # Create sorted list of dates
-    results = conn.execute(
+    results = conn.execute(text(
         """
         SELECT dates
         FROM   wms.product_ranges
-        WHERE  id  = ANY (%(p_prodids)s)
-        """, {"p_prodids": prodids}
+        WHERE  id  = ANY (:p_prodids)
+        """), {"p_prodids": prodids}
     )
     dates = set()
     for r in results:
         for d in r[0]:
             dates.add(d)
     dates = sorted(dates)
-    conn.execute("""
+    conn.execute(text("""
            UPDATE wms.multiproduct_ranges
-           SET dates = %(dates)s
-           WHERE wms_product_name= %(p_id)s
-      """,
-                 {
-                     "dates": Json(dates),
-                     "p_id": wms_name
-                 }
+           SET dates = :dates
+           WHERE wms_product_name= :p_id
+      """),
+         {
+             "dates": Json(dates),
+             "p_id": wms_name
+         }
     )
 
     # calculate bounding boxes
-    results = list(conn.execute("""
+    results = list(conn.execute(text("""
         SELECT lat_min,lat_max,lon_min,lon_max
         FROM wms.multiproduct_ranges
-        WHERE wms_product_name=%(p_id)s
-        """,
+        WHERE wms_product_name=:p_id
+        """),
         {"p_id": wms_name}))
 
     r = results[0]
@@ -130,13 +130,15 @@ def create_multiprod_range_entry(dc, product, crses):
         epsg4326)
 
     cfg = get_config()
-    conn.execute("""
+    conn.execute(text("""
         UPDATE wms.multiproduct_ranges
-        SET bboxes = %s::jsonb
-        WHERE wms_product_name=%s
-        """,
-                 Json({crsid: jsonise_bbox(box.to_crs(crs).boundingbox) for crsid, crs in get_crses(cfg).items()}),
-                 wms_name
+        SET bboxes = :bbox
+        WHERE wms_product_name=:pname
+        """),
+                 {
+                 "bbox": Json({crsid: jsonise_bbox(box.to_crs(crs).boundingbox) for crsid, crs in get_crses(cfg).items()}),
+                 "pname": wms_name
+                 }
     )
 
     txn.commit()
@@ -144,7 +146,7 @@ def create_multiprod_range_entry(dc, product, crses):
     return
 
 
-def create_range_entry(dc, product, crses, summary_product=False):
+def create_range_entry(dc, product, crses, time_resolution):
   print("Updating range for ODC product %s..." % product.name)
   # NB. product is an ODC product
   conn = get_sqlconn(dc)
@@ -152,18 +154,18 @@ def create_range_entry(dc, product, crses, summary_product=False):
   prodid = product.id
 
   # insert empty row if one does not already exist
-  conn.execute("""
+  conn.execute(text("""
     INSERT INTO wms.product_ranges
     (id,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
     VALUES
-    (%(p_id)s, 0, 0, 0, 0, %(empty)s, %(empty)s)
+    (:p_id, 0, 0, 0, 0, :empty, :empty)
     ON CONFLICT (id) DO NOTHING
-    """,
+    """),
     {"p_id": prodid, "empty": Json("")})
 
 
   # Update min/max lat/longs
-  conn.execute(
+  conn.execute(text(
       """
       UPDATE wms.product_ranges pr
       SET lat_min = st_ymin(subq.bbox),
@@ -173,89 +175,70 @@ def create_range_entry(dc, product, crses, summary_product=False):
       FROM (
         SELECT st_extent(stv.spatial_extent) as bbox
         FROM public.space_time_view stv
-        WHERE stv.dataset_type_ref = %(p_id)s
+        WHERE stv.dataset_type_ref = :p_id
       ) as subq
-      WHERE pr.id = %(p_id)s
-      """,
+      WHERE pr.id = :p_id
+      """),
       {"p_id": prodid})
 
   # Set default timezone
-  conn.execute("""
-    set timezone to 'Etc/UTC'
-  """)
+  conn.execute(text("""set timezone to 'Etc/UTC'"""))
 
+  # Loop over dates
+  dates = set()
+  if time_resolution.is_solar():
+      results = conn.execute(text(
+          """
+          select
+                lower(temporal_extent), upper(temporal_extent),
+                ST_X(ST_Centroid(spatial_extent))
+          from public.space_time_view
+          WHERE dataset_type_ref = :p_id
+          """),
+          {"p_id": prodid})
+      for result in results:
+          dt1, dt2, lon = result
+          dt = dt1 + (dt2 - dt1) / 2
 
-  if summary_product:
-      # Loop over dates
-      dates = set()
-
-      results = conn.execute(
+          solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
+          dates.add(solar_day)
+  else:
+      results = conn.execute(text(
           """
           select
                 array_agg(temporal_extent)
           from public.space_time_view
-          WHERE dataset_type_ref = %(p_id)s
-          """,
+          WHERE dataset_type_ref = :p_id
+          """),
           {"p_id": prodid}
       )
       for result in results:
           for dat_ran in result[0]:
               dates.add(dat_ran.lower)
 
-      dates = sorted(dates)
-
-      conn.execute("""
-           UPDATE wms.product_ranges
-           SET dates = %(dates)s
-           WHERE id= %(p_id)s
-      """,
-                   {
-                       "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
-                       "p_id": prodid
-                   }
-      )
+  if time_resolution.is_subday():
+      date_formatter = lambda d: d.isoformat()
   else:
-      # Loop over dates
-      dates = set()
+      date_formatter = lambda d: d.strftime("%Y-%m-%d")
 
-      results = conn.execute(
-          """
-          select
-                lower(temporal_extent), upper(temporal_extent),
-                ST_X(ST_Centroid(spatial_extent)),
-                ST_Y(ST_Centroid(spatial_extent))
-          from public.space_time_view
-          WHERE dataset_type_ref = %(p_id)s
-          """ %
-          {"p_id": prodid}
-      )
-      for result in results:
-          dt1, dt2, lon, lat = result
-          try:
-              tz = tz_for_coord(lon, lat)
-          except NoTimezoneException:
-              offset = round(lon / 15.0)
-              tz = timezone(timedelta(hours=offset))
-          dates.add(dt1.astimezone(tz).date())
-      dates = sorted(dates)
-
-      conn.execute("""
-           UPDATE wms.product_ranges
-           SET dates = %(dates)s
-           WHERE id= %(p_id)s
-      """,
-                   {
-                       "dates": Json([t.strftime("%Y-%m-%d") for t in dates]),
-                       "p_id": prodid
-                   }
-                   )
+  dates = sorted(dates)
+  conn.execute(text("""
+       UPDATE wms.product_ranges
+       SET dates = :dates
+       WHERE id= :p_id
+  """),
+               {
+                   "dates": Json(list(map(date_formatter, dates))),
+                   "p_id": prodid
+               }
+  )
 
   # calculate bounding boxes
-  results = list(conn.execute("""
+  results = list(conn.execute(text("""
     SELECT lat_min,lat_max,lon_min,lon_max
     FROM wms.product_ranges
-    WHERE id=%(p_id)s
-    """,
+    WHERE id=:p_id
+    """),
       {"p_id": prodid}))
 
   r = results[0]
@@ -270,11 +253,11 @@ def create_range_entry(dc, product, crses, summary_product=False):
 
   all_bboxes = bbox_projections(box, crses)
 
-  conn.execute("""
+  conn.execute(text("""
     UPDATE wms.product_ranges
-    SET bboxes = %(bbox)s::jsonb
-    WHERE id=%(p_id)s
-    """, {
+    SET bboxes = :bbox
+    WHERE id=:p_id
+    """), {
     "bbox": Json(all_bboxes),
     "p_id": product.id})
 
@@ -314,20 +297,20 @@ def sanitise_bbox(bbox):
 def datasets_exist(dc, product_name):
   conn = get_sqlconn(dc)
 
-  results = conn.execute("""
+  results = conn.execute(text("""
     SELECT COUNT(*)
     FROM agdc.dataset ds, agdc.dataset_type p
     WHERE ds.archived IS NULL
     AND ds.dataset_type_ref = p.id
-    AND p.name = %s""",
-    product_name)
+    AND p.name = :pname"""),
+                         {"pname": product_name})
 
   conn.close()
 
   return list(results)[0][0] > 0
 
 
-def add_ranges(dc, product_names, summary=False, merge_only=False):
+def add_ranges(dc, product_names, merge_only=False):
     odc_products = {}
     ows_multiproducts = []
     errors = False
@@ -370,12 +353,20 @@ def add_ranges(dc, product_names, summary=False, merge_only=False):
                 print("Could not find ODC product:", pname)
                 errors = True
             elif datasets_exist(dc, dc_product.name):
-                prod_summary = summary
+                time_resolution = None
                 for ows_prod in ows_prods["ows"]:
                     if ows_prod:
-                        prod_summary = not ows_prod.is_raw_time_res
-                        break
-                create_range_entry(dc, dc_product, get_crses(), prod_summary)
+                        new_tr = ows_prod.time_resolution
+                        if time_resolution is not None and new_tr != time_resolution:
+                            time_resolution = None
+                            errors = True
+                            print("Inconsistent time resolution for ODC product:", pname)
+                            break
+                        time_resolution = new_tr
+                if time_resolution is not None:
+                    create_range_entry(dc, dc_product, get_crses(), time_resolution)
+                else:
+                    print("Could not determine time_resolution for product: ", pname)
             else:
                 print("Could not find any datasets for: ", pname)
     for mp in ows_multiproducts:
@@ -390,11 +381,11 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
     if not is_dc_product and product.multi_product:
         if path is not None:
             raise Exception("Combining subproducts and multiproducts is not yet supported")
-        results = conn.execute("""
+        results = conn.execute(text("""
             SELECT *
             FROM wms.multiproduct_ranges
-            WHERE wms_product_name=%s""",
-                               product.name
+            WHERE wms_product_name=:pname"""),
+                               {"pname": product.name}
                               )
     else:
         if is_dc_product:
@@ -402,22 +393,29 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
         else:
             prod_id = product.product.id
         if path is not None:
-            results = conn.execute("""
+            results = conn.execute(text("""
                 SELECT *
                 FROM wms.sub_product_ranges
-                WHERE product_id=%s and sub_product_id=%s""",
-                                   prod_id, path
-                                  )
+                WHERE product_id=:pid and sub_product_id=:path"""),
+                                   {
+                                       "pid": prod_id,
+                                       "path": path
+                                   }
+                  )
         else:
-            results = conn.execute("""
+            results = conn.execute(text("""
                 SELECT *
                 FROM wms.product_ranges
-                WHERE id=%s""",
-                                   prod_id
+                WHERE id=:pid"""),
+                                   {"pid": prod_id}
                                   )
     for result in results:
         conn.close()
-        times = [datetime.strptime(d, "%Y-%m-%d").date() for d in result["dates"] if d is not None]
+        if product.time_resolution.is_subday():
+            dt_parser = lambda dts: datetime.fromisoformat(dts)
+        else:
+            dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()
+        times = [dt_parser(d) for d in result["dates"] if d is not None]
         if not times:
             return None
         return {

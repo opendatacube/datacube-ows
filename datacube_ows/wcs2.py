@@ -202,6 +202,19 @@ def create_coverage_description(cfg, product):
                 size=size,
             )
         )
+    elif product.time_resolution.is_subday():
+        axes.append(
+            IrregularAxis(
+                label='time',
+                index_label='k',
+                positions=[
+                    f'{t.isoformat()}'
+                    for t in product.ranges['times']
+                ],
+                uom='ISO-8601',
+                type=SpatioTemporalType.TEMPORAL,
+            )
+        )
     else:
         axes.append(
             IrregularAxis(

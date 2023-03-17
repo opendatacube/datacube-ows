@@ -8,12 +8,16 @@ import json
 from enum import Enum
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
+import pytz
 from datacube.utils.geometry import Geometry as ODCGeom
 from geoalchemy2 import Geometry
 from psycopg2.extras import DateTimeTZRange
-from sqlalchemy import SMALLINT, Column, MetaData, Table, or_, select, text
+from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, or_, select,
+                        text)
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
-from sqlalchemy.sql.functions import count
+from sqlalchemy.sql.functions import count, func
+
+from datacube_ows.utils import default_to_utc
 
 
 def get_sqlalc_engine(index: "datacube.index.Index") -> "sqlalchemy.engine.base.Engine":
@@ -60,10 +64,14 @@ class MVSelectOpts(Enum):
             return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
         assert False
 
+TimeSearchTerm = Union[
+    Tuple[datetime.datetime, datetime.datetime],
+    datetime.datetime,
+]
 
 def mv_search(index: "datacube.index.Index",
               sel: MVSelectOpts = MVSelectOpts.IDS,
-              times: Optional[Iterable[Tuple[datetime.datetime, datetime.datetime]]] = None,
+              times: Optional[Iterable[TimeSearchTerm]] = None,
               geom: Optional[ODCGeom] = None,
               products: Optional[Iterable["datacube.model.DatasetType"]] = None) -> Union[
         Iterable[Iterable[Any]],
@@ -90,16 +98,36 @@ def mv_search(index: "datacube.index.Index",
         raise Exception("Must filter by product/layer")
     prod_ids = [p.id for p in products]
 
-    s = select(sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
+    s = select(*sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))
     if times is not None:
-        s = s.where(
-            or_(
-                *[
+        or_clauses = []
+        for t in times:
+            if isinstance(t, datetime.datetime):
+                t = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
+                t = default_to_utc(t)
+                if not t.tzinfo:
+                    t = t.replace(tzinfo=pytz.utc)
+                tmax = t + datetime.timedelta(seconds=1)
+                or_clauses.append(
+                    and_(
+                        func.lower(stv.c.temporal_extent) >= t,
+                        func.lower(stv.c.temporal_extent) < tmax,
+                    )
+                )
+            elif isinstance(t, datetime.date):
+                t = datetime.datetime(t.year, t.month, t.day, tzinfo=pytz.utc)
+                tmax = t + datetime.timedelta(days=1)
+                or_clauses.append(
+                    and_(
+                        func.lower(stv.c.temporal_extent) >= t,
+                        func.lower(stv.c.temporal_extent) < tmax,
+                    )
+                )
+            else:
+                or_clauses.append(
                     stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
-                    for t in times
-                ]
-            )
-        )
+                )
+        s = s.where(or_(*or_clauses))
     orig_crs = None
     if geom is not None:
         orig_crs = geom.crs

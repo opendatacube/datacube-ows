@@ -3,11 +3,15 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import absolute_import, division, print_function
+
 import datetime
 import logging
 from functools import wraps
 from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
+
+import pytz
 
 F = TypeVar('F', bound=Callable[..., Any])
 
@@ -46,9 +50,11 @@ def time_call(func: F) -> F:
     return timing_wrapper
 
 
-def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
+def group_by_begin_datetime(pnames: Optional[List[str]] = None,
+                            truncate_dates: bool = True) -> "datacube.api.query.GroupBy":
     """
-    Returns an ODC GroupBy object, suitable for daily statistical/summary data.
+    Returns an ODC GroupBy object, suitable for daily/monthly/yearly/etc statistical/summary data.
+    (Or for sub-day time resolution data)
     """
     from datacube.api.query import GroupBy
     base_sort_key = lambda ds: ds.time.begin
@@ -60,13 +66,35 @@ def group_by_statistical(pnames: Optional[List[str]] = None) -> "datacube.api.qu
         sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
     else:
         sort_key = base_sort_key
+    if truncate_dates:
+        grp_by = lambda ds: datetime.datetime(
+            ds.time.begin.year,
+            ds.time.begin.month,
+            ds.time.begin.day,
+            tzinfo=pytz.utc)
+    else:
+        grp_by = lambda ds: datetime.datetime(
+            ds.time.begin.year,
+            ds.time.begin.month,
+            ds.time.begin.day,
+            ds.time.begin.hour,
+            ds.time.begin.minute,
+            ds.time.begin.second,
+            tzinfo=ds.time.begin.tzinfo)
     return GroupBy(
         dimension='time',
-        group_by_func=lambda ds: ds.time.begin,
+        group_by_func=grp_by,
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )
 
+
+def group_by_subday() -> "datacube.api.query.GroupBy":
+    """
+    Returns an ODC GroupBy object, suitable for sub-day level data
+
+    :return:
+    """
 
 def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
     from datacube.api.query import GroupBy, solar_day
@@ -115,3 +143,38 @@ def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
     """
     # pylint: disable=protected-access
     return dc.index._db._engine.connect()
+
+
+def find_matching_date(dt, dates) -> bool:
+    """
+    Check for a matching datetime in sorted list, using subday time resolution second-rounding rules.
+
+    :param dt: The date to dun
+    :param dates: List of sorted date-times
+    :return: True if match found
+    """
+    def range_of(dt):
+        start = datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo)
+        end = start + datetime.timedelta(seconds=1)
+        return start, end
+
+    dt = default_to_utc(dt)
+    region = dates
+    while region:
+        dtlen = len(region)
+        splitter = dtlen // 2
+        start, end = range_of(region[splitter])
+        if dt >= start and dt < end:
+            return True
+        elif dt < start:
+            region = region[0:splitter]
+        else:
+            region = region[splitter + 1:]
+
+    return False
+
+
+def default_to_utc(dt):
+    if not dt.tzinfo:
+        dt = dt.replace(tzinfo=pytz.utc)
+    return dt

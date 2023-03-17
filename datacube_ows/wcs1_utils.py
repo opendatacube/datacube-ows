@@ -6,6 +6,7 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy
+import pytz
 import xarray
 from affine import Affine
 from datacube.utils import geometry
@@ -349,6 +350,13 @@ def get_coverage_data(req, qprof):
                 y_range[1],
                 num=req.height
             )
+            if req.product.time_resolution.is_subday():
+                timevals = [
+                    numpy.datetime64(dt.astimezone(pytz.utc).isoformat())
+                    for dt in req.times
+                ]
+            else:
+                timevals = req.times
             if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
                 nparrays = {
                     band: (("time", yname, xname),
@@ -368,7 +376,7 @@ def get_coverage_data(req, qprof):
             data = xarray.Dataset(
                 nparrays,
                 coords={
-                    "time": req.times,
+                    "time": timevals,
                     xname: xvals,
                     yname: yvals,
                 }

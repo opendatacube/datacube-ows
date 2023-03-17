@@ -19,6 +19,7 @@ from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
+from datacube_ows.utils import default_to_utc
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
 # from datacube_ows.wcs_utils import get_bands_from_styles
@@ -118,8 +119,14 @@ def get_coverage_data(request, styles, qprof):
                             "Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
                             WCS2Exception.INVALID_SUBSETTING,
                             locator="time")
-                    low = parse(subset.low).date() if subset.low is not None else None
-                    high = parse(subset.high).date() if subset.high is not None else None
+                    if layer.time_resolution.is_subday():
+                        low = parse(subset.low) if subset.low is not None else None
+                        low = default_to_utc(low)
+                        high = parse(subset.high) if subset.high is not None else None
+                        high = default_to_utc(high)
+                    else:
+                        low = parse(subset.low).date() if subset.low is not None else None
+                        high = parse(subset.high).date() if subset.high is not None else None
                     if low is not None:
                         times = [
                             time for time in times
@@ -338,6 +345,8 @@ def get_tiff(request, data, crs, product, width, height, affine):
     gtiff = request.geotiff_encoding_parameters
     cfg = get_config()
 
+    if len(data.time) > 1:
+        raise WCS2Exception("Multiple time slices not supported by GeoTIFF format")
     data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     nodata = 0

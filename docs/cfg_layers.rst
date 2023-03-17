@@ -335,29 +335,49 @@ Time Resolution (time_resolution)
 The "time_resolution" specifies how data timestamps on the data
 are mapped to user-accessible dates. The acceptable values are:
 
-* "raw" (default)
+* "solar" (default)
   Data is expected to have a center-time reflecting when
   the data was captured.  This is mapped to a local solar day.
   (i.e. the date below the satellite at the time, not relative
   to a single fixed timezone.)
 
-* "day"
-  Data has time dimension with absolute (non-local) day resolution.
+  In previous releases, this options was called "raw".  "Raw" is still
+  supported for backwards compatibility, but will raise a deprecation
+  warning advising to use "solar" instead.
 
-* "month"
-  Data is expected to be monthly summary data, with a begin-time
-  corresponding to the start of the month (UTC).
+* "subday"
+  The raw start datetime of datasets are used with the time portion intact.
 
-* "year"
-  Data is expected to be annual summary data, with a begin-time
-  corresponding to the start of the year (UTC).
+  Used for hourly, minutely or other sub-day-resolution data.
 
-(All datacube_ows services currently only accept requests by
-date.  Any time component in the request will be ignored.)
+* "summary"
+  Data has time dimension based on the start date of start datetime of datasets,
+  which are expected to have a `00:00:00.0000+00" time portion.
+
+  Used for daily, weekly, monthly, quarterly or annual summary data.
+
+  Note that because only the start date is used, overlapping date ranges like:
+
+  `2020-01-01 -> 2021-01-01`
+  `2021-01-01 -> 2022-01-01`
+
+  or:
+
+  `2019-01-01 -> 2021-12-31 23:59:59`
+  `2020-01-01 -> 2022-12-31 23:59:59`
+
+  are now both supported.
+
+  In previous releases, separate time resolution options "day", "month" and "year"
+  were supported with similar but slightly more restrictive semantics.  These
+  value are now treated as deprecated synonyms for "summary".
+
+Any time component in the request will be ignored, except for layers that explicitly
+have "subday" time resolution.
 
 Note that it will usually be necessary to rerun `datacube-ows-update
 <https://datacube-ows.readthedocs.io/en/latest/database.html#updating-range-tables-for-individual-layers>`_
-for the layer after changing the time resolution.
+for a layer after changing the time resolution.
 
 -------------------------------------
 WMS Default Time Value (default_time)

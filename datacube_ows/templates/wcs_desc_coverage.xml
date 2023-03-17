@@ -16,8 +16,13 @@
         <lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
             <gml:pos>{{ product_ranges.lon.min }} {{ product_ranges.lat.min }}</gml:pos>
             <gml:pos>{{ product_ranges.lon.max }} {{ product_ranges.lat.max }}</gml:pos>
+            {% if product.time_resolution.is_subday() %}
+            <gml:timePosition>{{ product_ranges.start_time.isoformat() }}</gml:timePosition>
+            <gml:timePosition>{{ product_ranges.end_time.isoformat() }}</gml:timePosition>
+            {% else %}
             <gml:timePosition>{{ product_ranges.start_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
             <gml:timePosition>{{ product_ranges.end_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
+            {% endif %}
         </lonLatEnvelope>
 
         <domainSet>
@@ -25,8 +30,13 @@
                 <gml:EnvelopeWithTimePeriod srsName="{{ cfg.default_geographic_CRS }}">
                     <gml:pos>{{ product_ranges.lon.min }} {{ product_ranges.lat.min }}</gml:pos>
                     <gml:pos>{{ product_ranges.lon.max }} {{ product_ranges.lat.max }}</gml:pos>
+                    {% if product.time_resolution.is_subday() %}
+                    <gml:timePosition>{{ product_ranges.start_time.isoformat() }}</gml:timePosition>
+                    <gml:timePosition>{{ product_ranges.end_time.isoformat() }}</gml:timePosition>
+                    {% else %}
                     <gml:timePosition>{{ product_ranges.start_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
                     <gml:timePosition>{{ product_ranges.end_time.isoformat() }}T00:00:00.000Z</gml:timePosition>
+                    {% endif %}
                 </gml:EnvelopeWithTimePeriod>
                 {% if product.grid_high_x %}
                 <!-- Real RectifiedGrid section -->
@@ -70,7 +80,11 @@
             </spatialDomain>
             <temporalDomain>
                 {% for t in product_ranges.times %}
+                    {% if product.time_resolution.is_subday() %}
+                    <gml:timePosition>{{ t.isoformat() }}</gml:timePosition>
+                    {% else %}
                     <gml:timePosition>{{ t.isoformat() }}T00:00:00.000Z</gml:timePosition>
+                    {% endif %}
                 {%  endfor %}
             </temporalDomain>
         </domainSet>

@@ -109,10 +109,12 @@ def geom_from_bbox(bbox, crs="EPSG:4326"):
 def simplify_geom(geom_in, crs="EPSG:4326"):
     geom = geom_in
     # Pick biggest polygon from multipolygon
-    if geom.type == "MultiPolygon":
-        geom = max(geom, key=lambda x: x.area)
+    if geom.geom_type == "MultiPolygon":
+        geom = max(geom.geom.geoms, key=lambda x: x.area)
+    else:
+        geom = geom.geom
     # Triangulate
-    rawtriangles = list(triangulate(geom.geom))
+    rawtriangles = list(triangulate(geom))
     triangles = list(
         filter(
             lambda x: geom_in.geom.contains(x.representative_point())
@@ -121,8 +123,8 @@ def simplify_geom(geom_in, crs="EPSG:4326"):
         )
     )
     geom = unary_union(triangles)
-    if geom.type == "MultiPolygon":
-        geom = max(geom, key=lambda x: x.area)
+    if geom.geom_type == "MultiPolygon":
+        geom = max(geom.geoms, key=lambda x: x.area)
     return Geometry(geom, crs=crs)
 
 

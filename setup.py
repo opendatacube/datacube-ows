@@ -9,7 +9,7 @@
 from setuptools import find_packages, setup
 
 install_requirements = [
-    'datacube[performance,s3]>=1.8.11',
+    'datacube[performance,s3]>=1.8.12',
     'flask',
     'flask_log_request_id',
     'requests',
@@ -25,7 +25,7 @@ install_requirements = [
     'scipy',
     'Pillow',
     'Babel',
-    'Flask-Babel<3.0.0',
+    'Flask-Babel<3.0.0',   # API change in 3.0
     'psycopg2',
     'python_dateutil',
     'pytz',
