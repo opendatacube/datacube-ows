@@ -803,9 +803,6 @@ ows_cfg = {
                             "max_image_size": 2000 * 2000 * 3 * 2,
                         }
                     },
-                    "time_axis": {
-                        "time_interval": 1
-                    },
                     "patch_url_function": f"{cfgbase}utils.trivial_identity",
                 },
             ]
@@ -859,6 +856,9 @@ ows_cfg = {
                             "ignore_info_flags": []
                         },
                     ],
+                    "time_axis": {
+                        "time_interval": 1
+                    },
                     "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
                 },
                 {
