@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 import collections
 import logging
 
-import pytz
 from datacube.utils import geometry
 from dateutil.parser import parse
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
