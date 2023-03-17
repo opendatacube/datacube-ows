@@ -304,24 +304,22 @@ class DataStacker:
             merged = None
             for ds in tds.values.item():
                 d = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
-                # Squeeze upconverts uints to int32
-                dm = d.squeeze(["time"], drop=True)
                 extent_mask = None
                 for band in non_flag_bands:
                     for f in self._product.extent_mask_func:
                         if extent_mask is None:
-                            extent_mask = f(dm, band)
+                            extent_mask = f(d, band)
                         else:
-                            extent_mask &= f(dm, band)
+                            extent_mask &= f(d, band)
                 if extent_mask is not None:
-                    dm = dm.where(extent_mask)
+                    d = d.where(extent_mask)
                 if self._product.solar_correction and not skip_corrections:
                     for band in non_flag_bands:
-                        dm[band] = solar_correct_data(dm[band], ds)
+                        d[band] = solar_correct_data(d[band], ds)
                 if merged is None:
-                    merged = dm
+                    merged = d
                 else:
-                    merged = merged.combine_first(dm)
+                    merged = merged.combine_first(d)
             if merged is None:
                 continue
             for band in flag_bands:
