@@ -21,6 +21,7 @@ from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
+from datacube_ows.utils import default_to_utc
 
 # from datacube_ows.wcs_utils import get_bands_from_styles
 
@@ -121,11 +122,9 @@ def get_coverage_data(request, styles, qprof):
                             locator="time")
                     if layer.time_resolution.is_subday():
                         low = parse(subset.low) if subset.low is not None else None
-                        if not low.tzinfo:
-                            low = low.replace(tzinfo=pytz.utc)
+                        low = default_to_utc(low)
                         high = parse(subset.high) if subset.high is not None else None
-                        if not high.tzinfo:
-                            high = high.replace(tzinfo=pytz.utc)
+                        high = default_to_utc(high)
                     else:
                         low = parse(subset.low).date() if subset.low is not None else None
                         high = parse(subset.high).date() if subset.high is not None else None

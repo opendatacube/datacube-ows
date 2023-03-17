@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import division, absolute_import, print_function
+
 import datetime
 import logging
 from functools import wraps
@@ -156,9 +158,7 @@ def find_matching_date(dt, dates) -> bool:
         end = start + datetime.timedelta(seconds=1)
         return start, end
 
-    if not dt.tzinfo:
-        dt = dt.replace(tzinfo=pytz.utc)
-
+    dt = default_to_utc(dt)
     region = dates
     while region:
         dtlen = len(region)
@@ -172,3 +172,9 @@ def find_matching_date(dt, dates) -> bool:
             region = region[splitter + 1:]
 
     return False
+
+
+def default_to_utc(dt):
+    if not dt.tzinfo:
+        dt = dt.replace(tzinfo=pytz.utc)
+    return dt

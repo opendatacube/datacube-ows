@@ -38,6 +38,7 @@ from datacube_ows.startup_utils import CredentialManager
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import (GetFeatureInfoParameters, GetMapParameters,
                                     img_coords_to_geopoint, solar_correct_data)
+from datacube_ows.utils import default_to_utc
 
 _LOG = logging.getLogger(__name__)
 
@@ -404,8 +405,7 @@ def user_date_sorter(layer, odc_dates, geom, user_dates):
                                  ts.minute,
                                  ts.second,
                                  tzinfo=ts.tzinfo)
-            if not user_date.tzinfo:
-                user_date = user_date.replace(tzinfo=pytz.utc)
+            user_date = default_to_utc(user_date)
             return user_date >= norm_date and user_date < norm_date + timedelta(hours=23, minutes=59, seconds=59)
 
     for odc_date in odc_dates:

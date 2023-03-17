@@ -24,7 +24,7 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
-from datacube_ows.utils import find_matching_date
+from datacube_ows.utils import find_matching_date, default_to_utc
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,
@@ -186,7 +186,7 @@ def parse_time_item(item, product):
     # If all times are equal we can proceed
     if len(times) > 1:
         # TODO WMS Time range selections (/ notation) are poorly and incompletely implemented.
-        start, end = parse_wms_time_strings(times)
+        start, end = parse_wms_time_strings(times, with_tz=product.time_resolution.is_subday())
         if product.time_resolution.is_subday():
             matching_times = [t for t in product.ranges['times'] if start <= t <= end]
         else:
@@ -269,7 +269,7 @@ def parse_wms_time_string(t, start=True):
         return parse(t, default=default)
 
 
-def parse_wms_time_strings(parts):
+def parse_wms_time_strings(parts, with_tz=False):
     start = parse_wms_time_string(parts[0])
     end = parse_wms_time_string(parts[-1], start=False)
 
@@ -285,7 +285,10 @@ def parse_wms_time_strings(parts):
         fuzzy_end = parse_wms_time_string(parts[-1], start=True)
         return fuzzy_end - start + a_tiny_bit, end
     if isinstance(end, relativedelta):
-        return start, start + end - a_tiny_bit
+        end = start + end - a_tiny_bit
+    if with_tz:
+        start = default_to_utc(start)
+        end = default_to_utc(end)
     return start, end
 
 

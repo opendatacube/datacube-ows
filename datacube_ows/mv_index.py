@@ -17,6 +17,8 @@ from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, or_, select,
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.sql.functions import count, func
 
+from datacube_ows.utils import default_to_utc
+
 
 def get_sqlalc_engine(index: "datacube.index.Index") -> "sqlalchemy.engine.base.Engine":
     # pylint: disable=protected-access
@@ -102,6 +104,7 @@ def mv_search(index: "datacube.index.Index",
         for t in times:
             if isinstance(t, datetime.datetime):
                 t = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
+                t = default_to_utc(t)
                 if not t.tzinfo:
                     t = t.replace(tzinfo=pytz.utc)
                 tmax = t + datetime.timedelta(seconds=1)
