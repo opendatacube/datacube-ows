@@ -44,8 +44,8 @@ This OWS release includes two significant new features:
 
 Full list of changes:
 
-* Increment default version number and update version history (#934)
-* Enhanced time resolution handling (subday and overlapping summary periods) (#933)
+* Increment default version number and update version history (#937)
+* Enhanced time resolution handling (subday and overlapping summary periods) (#933, #936)
 * Add spellcheck to RST documentation (#929, #930)
 * Implement timeless mosaic layers (#928)
 * Refactor integration tests to use new collection DEA data (#927)
