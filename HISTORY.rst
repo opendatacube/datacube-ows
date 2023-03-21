@@ -7,6 +7,52 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.34 (2023-03-21)
+-------------------
+
+This OWS release includes two significant new features:
+
+1. Timeless mosaic layers.
+
+   The new `mosaic_date_func` configuration option allows the creation of timeless (i.e. single time-slice)
+   layers.  The user-provided function returns the start/end date to use for dataset date searches, and a
+   mosaic layer is generated, with the most recent available date for any given pixel returned.
+
+2. Enhanced time resolution handling (subday and overlapping summary periods).
+
+   Major refactor of time resolution handling.
+
+   There are now only 3 time resolution options:
+
+   *solar:* Replaces the old "raw" option. Local-solar-day time model, used for imagery captured in daily swathes
+   by satellites in heliosynchronous orbits.
+
+   *summary:* Replaces the old "day", "month", and "year" options. Only looks at the "start" datetime, and
+   so neatly supports products with overlapping or non-exclusive dataset date-ranges. Expects the time portion
+   of the start date to always be "midnight UTC". Used for summary/calculated products.
+
+   *subday:* New option. Used for for products with multiple time values per day (e.g. hourly/minutely data). Uses
+   the "start" datetime of the dataset.
+
+   Note that the *solar* and *summary* options explicitly ignore the **time** component of the *time* query parameter
+   passed by the user. If you need the time component to be significant, you must use subday.
+
+   The old "raw", "day", "month", "year" time_resolution options are still supported as aliases for the new
+   values above.  A deprecation warning will be issued advising you to update your configuration to the new
+   values, but the old values will continue to work.  You should not actually move your configuration to
+   the new values until after all of your deployment environments have been upgraded v1.8.34.
+
+Full list of changes:
+
+* Increment default version number and update version history (#937)
+* Enhanced time resolution handling (subday and overlapping summary periods) (#933, #936)
+* Add spellcheck to RST documentation (#929, #930)
+* Implement timeless mosaic layers (#928)
+* Refactor integration tests to use new collection DEA data (#927)
+* Bump datacube-core version (#923, #927, #933)
+* Miscellaneous cleanup and code-maintenance (#922)
+* Pre-commit auto-updates (#920, #926, #932, #934)
+
 1.8.33 (2022-12-20)
 -------------------
 
