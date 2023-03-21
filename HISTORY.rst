@@ -34,7 +34,7 @@ This OWS release includes two significant new features:
    *subday:* New option. Used for for products with multiple time values per day (e.g. hourly/minutely data). Uses
    the "start" datetime of the dataset.
 
-   Note that the solar and summary options explicitly ignore the time component of the time parameter
+   Note that the *solar* and *summary* options explicitly ignore the **time** component of the *time* query parameter
    passed by the user. If you need the time component to be significant, you must use subday.
 
    The old "raw", "day", "month", "year" time_resolution options are still supported as aliases for the new
