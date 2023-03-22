@@ -1,2 +1,3 @@
 click
 sphinx_click
+docutils=0.16
