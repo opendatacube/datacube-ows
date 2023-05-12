@@ -354,7 +354,11 @@ def add_ranges(dc, product_names, merge_only=False):
                 print("Could not find ODC product:", pname)
                 errors = True
             elif datasets_exist(dc, dc_product.name):
-                print("Datasets exist for ODC product", dc_product.name, "(OWS layers", ",".join(ows_prods["ows"].name), ")")
+                print("Datasets exist for ODC product",
+                      dc_product.name,
+                      "(OWS layers",
+                      ",".join(p.name for p in ows_prods["ows"]),
+                      ")")
                 time_resolution = None
                 for ows_prod in ows_prods["ows"]:
                     if ows_prod:
