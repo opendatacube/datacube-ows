@@ -332,6 +332,7 @@ def add_ranges(dc, product_names, merge_only=False):
             if ows_product.multi_product:
                 ows_multiproducts.append(ows_product)
         if not ows_product:
+            print("Could not find product", pname, "in OWS config")
             dc_product = dc.index.products.get_by_name(pname)
             if dc_product:
                 print("ODC Layer: %s" % pname)
@@ -353,6 +354,7 @@ def add_ranges(dc, product_names, merge_only=False):
                 print("Could not find ODC product:", pname)
                 errors = True
             elif datasets_exist(dc, dc_product.name):
+                print("Datasets exist for ODC product", dc_product.name, "(OWS layers", ",".join(ows_prods["ows"]), ")")
                 time_resolution = None
                 for ows_prod in ows_prods["ows"]:
                     if ows_prod:
