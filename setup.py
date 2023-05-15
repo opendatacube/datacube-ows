@@ -43,7 +43,8 @@ install_requirements = [
 
 test_requirements = [
     'pytest', 'pytest_cov', 'pytest_localserver',
-    'owslib', 'pytest_mock', 'pep8',
+    'owslib<0.28.1',  # OWSLib is broken from here to at least 0.29.1 - should be fixed in 0.29.2
+    'pytest_mock', 'pep8',
     'pytest-helpers-namespace', 'flask-cors',
     'fsspec',
 ]
