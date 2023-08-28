@@ -31,7 +31,7 @@ install_requirements = [
     'pytz',
     'rasterio>=1.3.2',
     'regex',
-    'timezonefinderL',
+    'timezonefinder',
     'python_slugify',
     'geoalchemy2',
     'lark',

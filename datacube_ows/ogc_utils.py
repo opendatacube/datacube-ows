@@ -19,7 +19,7 @@ from dateutil.parser import parse
 from flask import request
 from PIL import Image
 from pytz import timezone, utc
-from timezonefinderL import TimezoneFinder
+from timezonefinder import TimezoneFinder
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 tf = TimezoneFinder(in_memory=True)
