@@ -7,6 +7,7 @@ import sys
 import traceback
 from time import monotonic
 
+from sqlalchemy import text
 from flask import g, render_template, request
 from flask_log_request_id import current_request_id
 
@@ -183,10 +184,10 @@ def ping():
         if dc:
             # pylint: disable=protected-access
             with dc.index._db.give_me_a_connection() as conn:
-                results = conn.execute("""
+                results = conn.execute(text("""
                         SELECT *
                         FROM wms.product_ranges
-                        LIMIT 1"""
+                        LIMIT 1""")
                 )
                 for r in results:
                     db_ok = True
