@@ -11,7 +11,7 @@ import warnings
 
 from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
-from flask import g, Flask, request
+from flask import Flask, g, request
 from flask_log_request_id import RequestID, RequestIDLogFilter
 from rasterio.errors import NotGeoreferencedWarning
 
