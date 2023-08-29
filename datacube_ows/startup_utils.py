@@ -11,7 +11,7 @@ import warnings
 
 from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
-from flask import Flask, g, request
+from flask import Flask, request
 from flask_log_request_id import RequestID, RequestIDLogFilter
 from rasterio.errors import NotGeoreferencedWarning
 
@@ -221,8 +221,10 @@ def initialise_babel(cfg, app):
     if cfg and cfg.internationalised:
         from flask_babel import Babel
         app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
+
         def get_locale():
             return request.accept_languages.best_match(cfg.locales, default=cfg.locales[0])
+
         babel = Babel(app,
                       locale_selector=get_locale,
                       default_domain=cfg.message_domain,
