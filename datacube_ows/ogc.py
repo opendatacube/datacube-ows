@@ -7,9 +7,9 @@ import sys
 import traceback
 from time import monotonic
 
-from sqlalchemy import text
 from flask import g, render_template, request
 from flask_log_request_id import current_request_id
+from sqlalchemy import text
 
 from datacube_ows import __version__
 from datacube_ows.cube_pool import cube
