@@ -123,14 +123,6 @@ def test_supported_version():
     assert supported["wms"].versions[0].service == "wms"
 
 
-def test_generate_locale_sel():
-    app = flask.Flask("test_generate_locale_selector")
-    from datacube_ows.startup_utils import generate_locale_selector
-    with app.test_request_context(headers={"Accept-Language": "sw, fr;q=0.7, de;q=0.2"}):
-        selector = generate_locale_selector(["en", "de", "sw"])
-        assert selector() == "sw"
-
-
 @pytest.fixture
 def babel_cfg():
     cfg = MagicMock()

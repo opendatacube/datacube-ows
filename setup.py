@@ -20,12 +20,12 @@ install_requirements = [
     'lxml',
     'deepdiff',
     'matplotlib',
-    'pyparsing>=2.2.1,<3',  # resolving dependency conflict between matplotlib and packaging
+    'pyparsing',
     'numpy',
     'scipy',
     'Pillow',
     'Babel',
-    'Flask-Babel<3.0.0',   # API change in 3.0
+    'Flask-Babel>3.0.0',   # New API in 3.x, bug in 3.0.0
     'psycopg2',
     'python_dateutil',
     'pytz',
@@ -35,7 +35,7 @@ install_requirements = [
     'python_slugify',
     'geoalchemy2',
     'lark',
-    'xarray!=2022.6.0',
+    'xarray',
     'pyows',
     'prometheus_flask_exporter',
     'setuptools_scm'

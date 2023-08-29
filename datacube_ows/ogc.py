@@ -9,6 +9,7 @@ from time import monotonic
 
 from flask import g, render_template, request
 from flask_log_request_id import current_request_id
+from sqlalchemy import text
 
 from datacube_ows import __version__
 from datacube_ows.cube_pool import cube
@@ -183,10 +184,10 @@ def ping():
         if dc:
             # pylint: disable=protected-access
             with dc.index._db.give_me_a_connection() as conn:
-                results = conn.execute("""
+                results = conn.execute(text("""
                         SELECT *
                         FROM wms.product_ranges
-                        LIMIT 1"""
+                        LIMIT 1""")
                 )
                 for r in results:
                     db_ok = True

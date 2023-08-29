@@ -27,7 +27,6 @@ __all__ = [
     'parse_config_file',
     'initialise_flask',
     'initialise_prometheus',
-    'generate_locale_selector',
     'CredentialManager',
 ]
 
@@ -218,21 +217,19 @@ def request_extractor():
     qreq = request.args.get('request')
     return qreq
 
-def generate_locale_selector(locales):
-    def selector_template():
-        return request.accept_languages.best_match(locales)
-    return selector_template
-
 def initialise_babel(cfg, app):
     if cfg and cfg.internationalised:
         from flask_babel import Babel
         app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
+
+        def get_locale():
+            return request.accept_languages.best_match(cfg.locales, default=cfg.locales[0])
+
         babel = Babel(app,
-                      default_locale=cfg.locales[0],
+                      locale_selector=get_locale,
                       default_domain=cfg.message_domain,
                       configure_jinja=False
                       )
-        babel.localeselector(generate_locale_selector(cfg.locales))
         return babel
     else:
         return None
