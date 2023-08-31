@@ -7,6 +7,15 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.35 (2023-09-01)
+-------------------
+
+Maintenance release.
+
+* Changes to depenency version pins (#983, #942, #948, #949)
+
+Includes contributions from @pindge, @emmaai and @SpacemanPaul.
+
 1.8.34 (2023-03-21)
 -------------------
 
