@@ -50,10 +50,11 @@ def initialise_ignorable_warnings():
 def initialise_debugging(log=None):
     # PYCHARM Debugging
     if os.environ.get("PYDEV_DEBUG"):
-        import pydevd_pycharm
-        pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
-        if log:
-            log.info("PyCharm Debugging enabled")
+        if os.environ["PYDEV_DEBUG"].lower() not in ("no", "false", "f", "n"):
+            import pydevd_pycharm
+            pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+            if log:
+                log.info("PyCharm Debugging enabled")
 
 def before_send(event, hint):
     if 'exc_info' in hint:
