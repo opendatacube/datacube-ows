@@ -7,6 +7,13 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.36 (2023-10-24)
+-------------------
+
+* Fix Docker image and CI pipeline (#954)
+* Make PYDEV_DEBUG behaviour less counter-intuitive (#955)
+* Update HISTORY.rst and increment default version for release (#956??)
+
 1.8.35 (2023-09-01)
 -------------------
 
