@@ -12,7 +12,6 @@ import warnings
 from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
 from flask import Flask, request
-from flask_log_request_id import RequestID, RequestIDLogFilter
 from rasterio.errors import NotGeoreferencedWarning
 
 from datacube_ows.ows_configuration import get_config
@@ -33,7 +32,6 @@ __all__ = [
 def initialise_logger(name=None):
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s'))
-    handler.addFilter(RequestIDLogFilter())
     _LOG = logging.getLogger(name)
     _LOG.addHandler(handler)
     # If invoked using Gunicorn, link our root logger to the gunicorn logger
@@ -181,7 +179,6 @@ def parse_config_file(log=None):
 
 def initialise_flask(name):
     app = Flask(name.split('.')[0])
-    RequestID(app)
     return app
 
 def pass_through(undecorated):

@@ -8,7 +8,6 @@ import traceback
 from time import monotonic
 
 from flask import g, render_template, request
-from flask_log_request_id import current_request_id
 from sqlalchemy import text
 
 from datacube_ows import __version__
@@ -224,13 +223,6 @@ def legend(layer, style, dates=None):
     return img
 
 # Flask middleware
-
-
-@app.after_request
-def append_request_id(response):
-    response.headers.add("X-REQUEST-ID", current_request_id())
-    return response
-
 
 @app.before_request
 def start_timer():
