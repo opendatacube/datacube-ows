@@ -138,6 +138,7 @@ ee
 ef
 efd
 eg
+emmaai
 english
 entrypoint
 enum
