@@ -82,6 +82,12 @@ def test_initialise_nodebugging(monkeypatch):
     initialise_debugging()
 
 
+def test_initialise_explicit_nodebugging(monkeypatch):
+    monkeypatch.setenv("PYDEV_DEBUG", "no")
+    from datacube_ows.startup_utils import initialise_debugging
+    initialise_debugging()
+
+
 def test_initialise_debugging(monkeypatch):
     monkeypatch.setenv("PYDEV_DEBUG", "YES")
     from datacube_ows.startup_utils import initialise_debugging

@@ -103,7 +103,7 @@ Dev Tools
 ---------
 
 PYDEV_DEBUG:
-    If set, activates PyDev remote debugging.
+    If set to anything other than "n", "f", "no" or "false" (case insensitive), activates PyDev remote debugging.
 
 DEFER_CFG_PARSE:
     If set, the configuration file is not read and parsed at startup.  This
