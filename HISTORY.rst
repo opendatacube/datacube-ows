@@ -12,7 +12,7 @@ Datacube-ows version 1.8.x indicates that it is designed work with datacube-core
 
 Maintenance release.
 
-* Changes to depenency version pins (#983, #942, #948, #949)
+* Changes to dependency version pins (#983, #942, #948, #949)
 
 Includes contributions from @pindge, @emmaai and @SpacemanPaul.
 
