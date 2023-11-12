@@ -843,7 +843,7 @@ def feature_info(args):
                     if params.product.time_resolution.is_summary():
                         date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
                     else:
-                        date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S UTC")
+                        date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S %Z")
                     # Collect raw band values for pixel and derived bands from styles
                     date_info["bands"] = _make_band_dict(params.product, pixel_ds)
                     derived_band_dict = _make_derived_band_dict(pixel_ds, params.product.style_index)
