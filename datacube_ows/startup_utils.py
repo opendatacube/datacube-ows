@@ -3,8 +3,6 @@
 #
 # Copyright (c) 2017-2021 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from __future__ import absolute_import, division, print_function
-
 import logging
 import os
 import warnings
