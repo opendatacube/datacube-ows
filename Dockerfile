@@ -19,8 +19,6 @@ RUN apt-get update -y \
 
 ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"
 
-# make folders
-RUN mkdir -p /code
 # Copy source code and install it
 WORKDIR /code
 COPY . /code
@@ -62,8 +60,6 @@ COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
 COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 # pybabel cli
 COPY --from=builder  /usr/local/bin/pybabel /usr/local/bin/pybabel
-# make folders for testing and keep code in image
-RUN mkdir -p /code
 # Copy source code and install it
 WORKDIR /code
 COPY . /code
