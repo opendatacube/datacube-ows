@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.0 as builder
 
 # Setup build env for postgresql-client-14
 USER root
@@ -36,7 +36,7 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
 
 RUN pip freeze
 
-FROM osgeo/gdal:ubuntu-small-latest
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.0
 
 # all the python pip installed libraries
 COPY --from=builder  /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
