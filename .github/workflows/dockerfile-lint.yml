@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
 
       - name: lint Dockerfile
-        uses: hadolint/hadolint-action@v1.5.0
+        uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
           ignore: DL3008 DL3002 DL3013 DL3059 SC2102
