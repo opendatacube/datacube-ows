@@ -1,4 +1,5 @@
-FROM ubuntu:22.04 as builder
+# Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.0 as builder
 
 # Setup build env for postgresql-client-14
 USER root
@@ -19,8 +20,6 @@ RUN apt-get update -y \
 
 ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"
 
-# make folders
-RUN mkdir -p /code
 # Copy source code and install it
 WORKDIR /code
 COPY . /code
@@ -36,7 +35,8 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
 
 RUN pip freeze
 
-FROM osgeo/gdal:ubuntu-small-latest
+# Should match builder base.
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.0
 
 # all the python pip installed libraries
 COPY --from=builder  /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
@@ -62,8 +62,7 @@ COPY --from=builder  /usr/local/bin/flask /usr/local/bin/flask
 COPY --from=builder  /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 # pybabel cli
 COPY --from=builder  /usr/local/bin/pybabel /usr/local/bin/pybabel
-# make folders for testing and keep code in image
-RUN mkdir -p /code
+
 # Copy source code and install it
 WORKDIR /code
 COPY . /code
