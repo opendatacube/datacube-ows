@@ -12,7 +12,7 @@ jobs:
     if: github.event_name == 'release'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Fetch all history for all tags and branches
         run: git fetch --prune --unshallow
       - name: Set up Python 3.7
