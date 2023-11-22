@@ -24,6 +24,6 @@ jobs:
   pyspellcheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: igsekor/pyspelling-any@v0.0.2
         name: Spellcheck
