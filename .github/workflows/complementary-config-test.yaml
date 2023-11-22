@@ -36,13 +36,13 @@ jobs:
 
     steps:
       - name: git checkout ows
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           path: datacube-ows
 
       - name: git checkout dea-config
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: GeoscienceAustralia/dea-config
           path: dea-config
