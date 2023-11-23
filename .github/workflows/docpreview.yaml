@@ -12,6 +12,9 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  pull-requests: write
+
 jobs:
 
   documentation-preview:
