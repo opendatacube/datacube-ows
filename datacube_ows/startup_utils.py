@@ -203,7 +203,7 @@ def initialise_prometheus(app, log=None):
     if os.environ.get("prometheus_multiproc_dir", False):
         from prometheus_flask_exporter.multiprocess import \
             GunicornInternalPrometheusMetrics
-        metrics = GunicornInternalPrometheusMetrics(app)
+        metrics = GunicornInternalPrometheusMetrics(app, group_by="endpoint")
         if log:
             log.info("Prometheus metrics enabled")
         return metrics
