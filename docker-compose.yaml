@@ -26,6 +26,7 @@ services:
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
       PYTHONPATH: ${PYTHONPATH}
       DATACUBE_OWS_CFG: ${DATACUBE_OWS_CFG}
+      OWS_CONFIG_PATH: /env/config
       AWS_DEFAULT_REGION: ${AWS_REGION}
       # Talk to AWS without using credentials
       AWS_NO_SIGN_REQUEST: "${AWS_NO_SIGN_REQUEST}"

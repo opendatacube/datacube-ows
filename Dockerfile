@@ -79,4 +79,4 @@ ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
 RUN chown 1000:100 /dev/shm
 
 USER ows
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers=3", "--threads=2", "-k", "gevent", "--timeout", "121", "--pid", "/home/ows/gunicorn.pid", "--log-level", "info", "--worker-tmp-dir", "/dev/shm", "--config", "python:datacube_ows.gunicorn_config", "datacube_ows.wsgi"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers=3", "--threads=3", "--timeout", "121", "--pid", "/home/ows/gunicorn.pid", "--log-level", "info", "--worker-tmp-dir", "/dev/shm", "--config", "python:datacube_ows.gunicorn_config", "datacube_ows.wsgi"]
