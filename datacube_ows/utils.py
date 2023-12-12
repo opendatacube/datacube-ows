@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import datetime
 import logging
+import numpy as np
 from functools import wraps
 from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
@@ -100,10 +101,7 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
         sort_key = base_sort_key
     # Wrap solar_day so we consistently get a datetime.
     # (Don't know why I have to disable pylint for GHA check - passes fine locally.)
-    solar_day_py = lambda x: datetime.datetime.fromtimestamp(
-        (solar_day(x).astype(int) * 1e-9),  # pylint: disable=too-many-function-args
-        tz=datetime.timezone.utc
-    )
+    solar_day_py = lambda x: solar_day(x).tolist()
     return GroupBy(
         dimension='time',
         group_by_func=solar_day_py,
