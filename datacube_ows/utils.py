@@ -99,8 +99,9 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
     else:
         sort_key = base_sort_key
     # Wrap solar_day so we consistently get a datetime.
+    # (Don't know why I have to disable pylint for GHA check - passes fine locally.)
     solar_day_py = lambda x: datetime.datetime.fromtimestamp(
-        solar_day(x).astype(int) * 1e-9,
+        (solar_day(x).astype(int) * 1e-9),  # pylint: disable=too-many-function-args
         tz=datetime.timezone.utc
     )
     return GroupBy(
