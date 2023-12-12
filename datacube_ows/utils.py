@@ -5,11 +5,11 @@
 # SPDX-License-Identifier: Apache-2.0
 import datetime
 import logging
-import numpy as np
 from functools import wraps
 from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
 
+import numpy as np
 import pytz
 
 F = TypeVar('F', bound=Callable[..., Any])
