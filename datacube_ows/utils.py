@@ -8,8 +8,6 @@ import logging
 from functools import wraps
 from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
-
-import numpy as np
 import pytz
 
 F = TypeVar('F', bound=Callable[..., Any])
