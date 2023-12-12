@@ -87,13 +87,6 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
     )
 
 
-def group_by_subday() -> "datacube.api.query.GroupBy":
-    """
-    Returns an ODC GroupBy object, suitable for sub-day level data
-
-    :return:
-    """
-
 def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
     from datacube.api.query import GroupBy, solar_day
     base_sort_key = lambda ds: ds.time.begin
@@ -105,9 +98,12 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
         sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
     else:
         sort_key = base_sort_key
+    # Wrap solar_day so we consistently get a datetime.
+    solar_day_py = lambda x: datetime.utcfromtimestamp(solar_day(x).astype(int) * 1e-9)
+    # dt = datetime.utcfromtimestamp(d.astype(int) * 1e-9)
     return GroupBy(
         dimension='time',
-        group_by_func=solar_day,
+        group_by_func=solar_day_py,
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )
