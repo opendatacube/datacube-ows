@@ -99,7 +99,10 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
     else:
         sort_key = base_sort_key
     # Wrap solar_day so we consistently get a datetime.
-    solar_day_py = lambda x: datetime.datetime.fromtimestamp(solar_day(x).astype(int) * 1e-9, tz=datetime.timezone.utc)
+    solar_day_py = lambda x: datetime.datetime.fromtimestamp(
+        solar_day(x).astype(int) * 1e-9,
+        tz=datetime.timezone.utc
+    )
     return GroupBy(
         dimension='time',
         group_by_func=solar_day_py,
