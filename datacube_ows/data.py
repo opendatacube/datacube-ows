@@ -865,7 +865,7 @@ def feature_info(args):
                     elif pt_native.crs != ds.crs:
                         pt_native = geo_point.to_crs(ds.crs)
                     if ds.extent and ds.extent.contains(pt_native):
-                        dt = stacker.group_by.group_by_func(ds)
+                        dt = stacker.group_by.group_by_func(ds).tolist()
                         if params.product.time_resolution.is_subday():
                             feature_json["data_available_for_dates"].append(dt.isoformat())
                         else:
