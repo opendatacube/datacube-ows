@@ -66,7 +66,7 @@ jobs:
           docker-compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
       - name: Upload All coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           directory: ./artifacts/
           fail_ci_if_error: false
