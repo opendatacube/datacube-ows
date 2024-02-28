@@ -7,6 +7,20 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.37 (2024-02-28)
+-------------------
+
+Maintenance release.  Security updates and bug fixes around timezone handling.
+
+* Fixes to timezone handling (#958, #982)
+* Various Github CI improvements (#959, #972, #974)
+* Automatic dependency updates (#966, #970, #971, #975, #976, #977, #980, #981, #984, #986, #988, #991, #992)
+* Update dependencies to block upstream security issues (#973)
+* Label Prometheus metrics by endpoint, not path (#978)
+* Update base docker image and remove docker efficiency analysis GHA (#990)
+
+Contributions from @benjimin, @pjonsson, @SpacemanPaul and @dependabot.
+
 1.8.36 (2023-10-24)
 -------------------
 
