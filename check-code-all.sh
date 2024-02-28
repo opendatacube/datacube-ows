@@ -21,7 +21,7 @@ datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-c
 
 # Geomedian for summary product testing
 
-datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/geomedian-au/ga_ls8c_nbart_gm_cyear_3.odc-product.yaml
+datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/geomedian-au/ga_ls8cls9c_gm_cyear_3.odc-product.yaml
 
 # S2 multiproduct datasets
 datacube dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/baseline/ga_s2bm_ard_3/52/LGM/2017/07/19/20170719T030622/ga_s2bm_ard_3-2-1_52LGM_2017-07-19_final.odc-metadata.yaml --ignore-lineage
