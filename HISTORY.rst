@@ -18,6 +18,7 @@ Maintenance release.  Security updates and bug fixes around timezone handling.
 * Update dependencies to block upstream security issues (#973)
 * Label Prometheus metrics by endpoint, not path (#978)
 * Update base docker image and remove docker efficiency analysis GHA (#990)
+* Update HISTORY.rst and increment default version for release (#993)
 
 Contributions from @benjimin, @pjonsson, @SpacemanPaul and @dependabot.
 
