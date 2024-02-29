@@ -898,7 +898,7 @@ def feature_info(args):
                 "properties": feature_json,
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [feature_json["lon"], feature_json["lat"]]
+                    "coordinates": geo_point.coords[0]
                 }
             }
         ]
