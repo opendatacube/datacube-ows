@@ -770,7 +770,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 native_bounding_box = self.bboxes[self.native_CRS]
             except KeyError:
                 if not self.global_cfg.called_from_update_ranges:
-                    _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun update_ranges.py",
+                    _LOG.warning("Layer: %s No bounding box in ranges for native CRS %s - rerun datacube-ows-update",
                                  self.name,
                                  self.native_CRS)
                 self.hide = True
