@@ -23,7 +23,6 @@ eo3_ranges as
         substr(
           metadata #>> '{crs}',6)::integer
         ),
-
         4326
       ) as valid_geom
    from agdc.dataset where
