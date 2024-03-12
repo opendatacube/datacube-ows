@@ -96,5 +96,5 @@ select id,
         4326
       ) as spatial_extent
  from agdc.dataset where
-        metadata_type_ref in (select id from metadata_lookup where name in ('eo3_landsat_ard', 'eo3_sentinel_ard'))
+        metadata_type_ref in (select id from metadata_lookup where name like 'eo3_%')
         and archived is null

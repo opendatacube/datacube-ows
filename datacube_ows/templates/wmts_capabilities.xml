@@ -162,6 +162,7 @@
                     {% for t in product_ranges.times %}
                         <Value>{{ t }}</Value>
                     {% endfor %}
+                    <Default>{{ product_ranges.times[-1] }}</Default>
                 </Dimension>
             {% endif %}
 
