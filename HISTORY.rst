@@ -7,6 +7,23 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.38 (2024-03-12)
+-------------------
+
+Previously the spatial materialised view recognised metadata types by individual name and required manual tweaking
+for every new metadata type.  From 1.8.38, all metadata types with a name starting with `eo3_` will be treated as
+eo3 compatible.
+
+Run `datacube-ows-update --schema --role <ows_db_username>` to activate the new definitions.
+
+Also includes miscellaneous bug fixes and maintenance.
+
+* Upgrade pypi publish github action from unsupported version (#994)
+* Tweak FeatureInfo JSON documents to be compliant geojson (#995)
+* Tweak materialised view definition to handle all eo3 compatible metadata types (#996)
+* Fix Dimension sections of WMTS Capabilities documents to comply with standard (#996)
+* Update HISTORY.rst and increment default version for release (#997)
+
 1.8.37 (2024-02-28)
 -------------------
 
