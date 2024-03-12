@@ -14,6 +14,8 @@ Previously the spatial materialised view recognised metadata types by individual
 for every new metadata type.  From 1.8.38, all metadata types with a name starting with `eo3_` will be treated as
 eo3 compatible.
 
+Run `datacube-ows-update --schema --role <ows_db_username>` to activate the new definitions.
+
 Also includes miscellaneous bug fixes and maintenance.
 
 * Upgrade pypi publish github action from unsupported version (#994)
