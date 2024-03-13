@@ -7,6 +7,20 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.39 (2024-03-13)
+-------------------
+
+Emergency release to complete half-implemented new feature.
+
+The changes to the spatial materialised view introduced in the previous release are now also implemented
+in the time materialised view.
+
+Please run `datacube-ows-update --schema --role <ows_db_username>` again with this new release
+to access the new behaviour.
+
+* Fix materialised view definition to handle all eo3 compatible metadata types (#998)
+* Update HISTORY.rst and increment default version for release (#998)
+
 1.8.38 (2024-03-12)
 -------------------
 
