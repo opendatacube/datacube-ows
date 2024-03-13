@@ -42,5 +42,5 @@ select
     '[]'
    ) as temporal_extent
 from agdc.dataset where
-    metadata_type_ref in (select id from metadata_lookup where name like 'eo3_%')
+    metadata_type_ref in (select id from metadata_lookup where name like 'eo3%')
     and archived is null
