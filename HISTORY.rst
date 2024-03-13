@@ -18,6 +18,7 @@ in the time materialised view.
 Please run `datacube-ows-update --schema --role <ows_db_username>` again with this new release
 to access the new behaviour.
 
+* Automatic CI action update (#998)
 * Fix materialised view definition to handle all eo3 compatible metadata types (#999)
 * Update HISTORY.rst and increment default version for release (#999)
 
