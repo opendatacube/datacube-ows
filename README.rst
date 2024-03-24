@@ -78,7 +78,7 @@ And example configuration file `datacube_ows/ows_cfg_example.py` is also provide
 may not be as up-to-date as the formal documentation.
 
 Environment variables that directly or indirectly affect the running of OWS
-are `documented here<https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
+are `documented here <https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
 
 Docker-Compose
 --------------
@@ -146,7 +146,7 @@ To run the standard Docker image, create a docker volume containing your ows con
 The image is based on the standard ODC container.
 
 Installation with Conda
-------------
+-----------------------
 
 The following instructions are for installing on a clean Linux system.
 
@@ -186,11 +186,11 @@ The following instructions are for installing on a clean Linux system.
 
 * Create a configuration file for your service, and all data products you wish to publish in
   it.
-  `Detailed documentation of the configuration format can be found here.<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+  `Detailed documentation of the configuration format can be found here <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 
 * Set environment variables as required.
   Environment variables that directly or indirectly affect the running of OWS
-  are `documented here<https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
+  are `documented here <https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
 
 
 * Run ``datacube-ows-update`` (in the Datacube virtual environment).

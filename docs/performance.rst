@@ -1,6 +1,9 @@
-=====
+
+.. _performance:
+
+=====================
 Performance deep dive
-=====
+=====================
 
 ows_stats
 =========

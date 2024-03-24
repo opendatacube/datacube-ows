@@ -1,3 +1,8 @@
+
+.. _ows_configuration:
+
+.. highlight:: json
+
 =================
 OWS Configuration
 =================
@@ -51,13 +56,13 @@ Where is Configuration Read From?
 ---------------------------------
 
 Configuration is read by default from the ``ows_cfg object`` in ``datacube_ows/ows_cfg.py``
-but this can be overridden by setting the ``$DATACUBE_OWS_CFG`` environment variable.
+but this can be overridden by setting the :envvar:`DATACUBE_OWS_CFG` environment variable.
 
 Configuration can be read from a python file, a json file, or a collection of python
 and/or json files.
 
 A json file can optionally also be fetched from AWS S3 if access to S3 is configured correctly for datacube_ows
-and the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3`` is set to ``YES``. Please note that this is not
+and the environment variable :envvar:`DATACUBE_OWS_CFG_ALLOW_S3` is set to ``YES``. Please note that this is not
 possible for configurations as python file.
 
 .. _DATACUBE_OWS_CFG:
@@ -65,35 +70,35 @@ possible for configurations as python file.
 The DATACUBE_OWS_CFG Environment Variable
 =========================================
 
-The environment variable ``$DATACUBE_OWS_CFG`` is interpreted as follows (first matching
+The environment variable :envvar:`DATACUBE_OWS_CFG` is interpreted as follows (first matching
 alternative applies):
 
 1. Has a leading slash, e.g. ``/opt/odc_ows_cfg/odc_ows_cfg_prod.json``
 
-   Config loaded as **json** from absolute file path.
+   Config loaded as JSON from absolute file path.
 
 2. Contains a slash, e.g. ``configs/prod.json``
 
-   Config loaded as **json** from relative file path.
+   Config loaded as JSON from relative file path.
 
 3. Begins with an open brace "{", e.g. ``{...}``
 
-   Config loaded directly from the environment variable as **json** (not recommended)
+   Config loaded directly from the environment variable as JSON *(not recommended)*
 
-4. Ends in ".json", e.g. ``cfg_prod.json``
+4. Ends in ``.json``, e.g. ``cfg_prod.json``
 
-   Config loaded from **json** file in working directory.
+   Config loaded from JSON file in working directory.
 
-5. Has a valid ``s3://`` URL and a ``.json`` extension
+5. Begins with ``s3://``, ends with ``.json`` and is a valid URL.
 
-   The configuration is fetched from AWS S3 in json format.
+   The configuration is fetched from AWS S3 in JSON format.
 
-   N.B. Configuration can only be loaded from S3 if the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3``
+   N.B. Configuration can only be loaded from S3 if the environment variable :envvar:`DATACUBE_OWS_CFG_ALLOW_S3`
    is set to ``yes``, otherwise a ``ConfigurationException`` will be raised.
 
 6. Contains a dot (.), e.g. ``package.sub_package.module.cfg_object_name``
 
-   Imported as python object (expected to be a dictionary).
+   Imported as Python object (expected to be a dictionary).
 
    N.B. It is up to you to ensure that the Python file in question is in your Python path and
    that all package directories have a ``__init__.py`` file, etc.

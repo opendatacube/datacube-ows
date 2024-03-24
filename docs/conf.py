@@ -33,7 +33,12 @@ import datacube_ows  # isort:skip
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx_click']
+extensions = [
+  'sphinx.ext.autodoc',
+  'sphinx.ext.viewcode',
+  'sphinx_click',
+  'sphinx.ext.intersphinx',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -50,6 +55,11 @@ master_doc = 'index'
 # General information about the project.
 project = u'datacube-ows'
 copyright = u"2020, Geoscience Australia"
+
+intersphinx_mapping = {
+  'python': ('https://docs.python.org/3', None),
+  'odc': ('https://datacube-core.readthedocs.io/en/latest', None),
+}
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -72,7 +82,7 @@ release = datacube_ows.__version__
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', '.pixi']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

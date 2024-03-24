@@ -333,7 +333,7 @@ In addition to the standard animated handlers previously supported by all style 
 introduces two additional approaches to produce an non-animated image from a multi-date request for
 colour-map (aka value_map) type styles:
 
-* Using a variant of the value_map_ entry used for the single-date case. This is a much simpler way of achieving most use cases.
+* Using a variant of the ``value_map`` entry used for the single-date case. This is a much simpler way of achieving most use cases.
 * Using an aggregator function, which allows for fully customisable behaviour but requires writing Python code.
 
 The new behaviour is fully documented here: https://datacube-ows.readthedocs.io/en/latest/cfg_colourmap_styles.html#multi-date-requests

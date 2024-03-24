@@ -42,6 +42,7 @@ babel = initialise_babel(cfg, app)
 # Initialisation of external libraries that depend on Flask
 # (controlled by environment variables)
 metrics = initialise_prometheus(app, _LOG)
+metrics.info(name='datacube_ows_info', description='Datacube OWS Version', version=__version__)
 
 # Protocol/Version lookup table
 OWS_SUPPORTED = supported_versions()

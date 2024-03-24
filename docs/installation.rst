@@ -16,7 +16,7 @@ Stable release
 
 datacube-ows is released to PyPI and the latest release can be found on https://pypi.org/project/datacube-ows/.
 
-Install Postgis
+Install PostGIS
 ----------------
 In addition to the database installed for `Datacube Core`, `datacube-ows` also require `postgis` installed.
 
@@ -25,7 +25,8 @@ In addition to the database installed for `Datacube Core`, `datacube-ows` also r
     $ sudo apt-get install postgis
 
 Download datacube-ows source
---------------------------
+----------------------------
+
 The sources for datacube-ows can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:

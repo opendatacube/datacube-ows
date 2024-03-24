@@ -7,7 +7,7 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every
 little bit helps, and credit will always be given.
 
-We have a `code of conduct<code-of-conduct.md>`_, so please follow it in all your interactions with the project.
+We have a `code of conduct <code-of-conduct.md>`_, so please follow it in all your interactions with the project.
 
 You can contribute in many ways:
 
@@ -64,7 +64,7 @@ Get Started!
 
     $ git clone git@github.com:your_name_here/datacube-ows.git
 
-3. Follow the instructions in `README.rst<https://datacube-ows.readthedocs.io/en/latest/readme.html>`_  to build a working python environment.
+3. Follow the instructions in `README.rst <https://datacube-ows.readthedocs.io/en/latest/readme.html>`_  to build a working python environment.
 
 4. Create a branch for local development::
 

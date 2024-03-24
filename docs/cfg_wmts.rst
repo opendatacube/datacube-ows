@@ -21,7 +21,7 @@ Tile Matrix Sets (tile_matrix_sets)
 
 A Tile Matrix Set is a way of breaking down a map into a standardised set
 of tiles at a number of different zoom levels.  For further details, refer
-to the `WMTS specification <http://portal.opengeospatial.org/files/?artifact_id=35326>`_.
+to the `WMTS specification <https://portal.ogc.org/files/?artifact_id=35326>`_.
 
 Datacube_ows always supports the de-facto standard Google-Maps compatible
 EPSG:3857-based tile matrix - you do not need to explicitly define it

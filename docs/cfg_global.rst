@@ -233,7 +233,7 @@ E.g.:
 
    },
 
-If unsure of an `EPSG` code, search in http://epsg.io/
+If unsure of an `EPSG` code, search in https://epsg.io/
 
 
 Default Attribution (attribution)
