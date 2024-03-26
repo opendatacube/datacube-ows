@@ -1,7 +1,7 @@
 
 .. _ows_configuration:
 
-.. highlight:: json
+.. highlight:: Python
 
 =================
 OWS Configuration
@@ -9,10 +9,7 @@ OWS Configuration
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
-   :glob:
 
-   configuration
    cfg_global
    cfg_wms
    cfg_wmts
@@ -26,7 +23,6 @@ OWS Configuration
    cfg_colourmap_styles
    cfg_hybrid_styles
    cfg_style_api
-   cfg_style_api_examples
 
 .. contents:: Table of Contents
 
@@ -70,6 +66,8 @@ possible for configurations as python file.
 The DATACUBE_OWS_CFG Environment Variable
 =========================================
 
+.. envvar:: DATACUBE_OWS_CFG
+
 The environment variable :envvar:`DATACUBE_OWS_CFG` is interpreted as follows (first matching
 alternative applies):
 
@@ -93,8 +91,12 @@ alternative applies):
 
    The configuration is fetched from AWS S3 in JSON format.
 
-   N.B. Configuration can only be loaded from S3 if the environment variable :envvar:`DATACUBE_OWS_CFG_ALLOW_S3`
-   is set to ``yes``, otherwise a ``ConfigurationException`` will be raised.
+   .. note::
+      Configuration can only be loaded from S3 if the environment variable 
+      :envvar:`DATACUBE_OWS_CFG_ALLOW_S3` is set to ``yes``, otherwise a ``ConfigurationException`` 
+      will be raised.
+
+
 
 6. Contains a dot (.), e.g. ``package.sub_package.module.cfg_object_name``
 
@@ -121,30 +123,28 @@ allowing cleaner organisation of configuration and facilitating reuse of common 
 elements across different layers within the one configuration and between different
 configurations or deployment environments.
 
-N.B. The examples here illustrate the inclusion directives only, and are not valid Datacube OWS configuration!
+.. warning:: The examples here illustrate the inclusion directives only, and are not valid Datacube OWS configuration!
 
 If you are simply loading config as a Python object, this can be directly achieved by normal programmatic techniques,
-e.g.:
+e.g.::
 
-::
-
-  handy_config = {
-     "desc": "This is a piece of config that might want to use in multiple places",
-     "handy": True,
-     "reusable": True,
-     "difficulty": 3
-  }
-
-  "layers": [
-    {
-       "name": "first_layer",
-       "handyness": handy_config,
-    },
-    {
-       "name": "second_layer",
-       "handyness": handy_config,
-    }
-  ]
+   handy_config = {
+      "desc": "This is a piece of config that might want to use in multiple places",
+      "handy": True,
+      "reusable": True,
+      "difficulty": 3
+   }
+ 
+   "layers": [
+     {
+        "name": "first_layer",
+        "handyness": handy_config,
+     },
+     {
+        "name": "second_layer",
+        "handyness": handy_config,
+     }
+   ]
 
 
 If you want to reuse chunks of config in json, or wish to combine json with and python in your configuration,
@@ -155,16 +155,14 @@ can be supplied in any of the following ways:
 
 1. Directly embed the config content.
 
-   Don't use inclusion at all, simply provide the config:
-
-   ::
+   Don't use inclusion at all, simply provide the config::
 
        {
            "a_cfg_entry": 1,
            "another_entry": "llama"
        }
 
-2. Include a python object (by FQN - fully qualified name):
+2. Include a Python object (by FQN - fully qualified name).
 
    ::
 
@@ -177,8 +175,8 @@ can be supplied in any of the following ways:
 
    The path must be fully qualified.  Relative Python imports are not supported.
 
-   N.B. It is up to you to ensure that the Python file in question is in your Python path and
-   that all package directories have a ``__init__.py`` file, etc.
+   .. note:: It is up to you to ensure that the Python file in question is in your Python path and
+      that all package directories have a ``__init__.py`` file, etc.
 
 
 3. Include a JSON file (by absolute or relative file path):
@@ -190,14 +188,14 @@ can be supplied in any of the following ways:
            "type": "json"
        }
 
-   N.B. Resolution of relative file paths is done in the following order:
+   .. note:: Resolution of relative file paths is done in the following order:
 
-   a) Relative to the working directory of the web app.
+      a) Relative to the working directory of the web app.
 
-   b) If a JSON file is being included from another JSON file, relative to
-      directory in which the including file resides.
+      b) If a JSON file is being included from another JSON file, relative to
+         directory in which the including file resides.
 
-Note that this does not just apply when the included python or json entity is a dictionary/object.
+Note that this does not just apply when the included Python or JSON entity is a dictionary/object.
 Any of the above include directives could expand to an array, or even to single integer or string.
 
 Configuration Inheritance
@@ -207,9 +205,7 @@ Sometimes you want to *almost* reuse a piece of configuration - e.g. you want a 
 that is almost the same as an existing layer but with a handful of minor differences.
 Configuration inheritance addresses this use-case.
 
-Given a fully defined named configuration object that supports inheritance:
-
-::
+Given a fully defined named configuration object that supports inheritance::
 
     parent_obj = {
         "name": "obj1",
@@ -218,9 +214,7 @@ Given a fully defined named configuration object that supports inheritance:
     }
 
 You can easily define a new almost identical named object by inheriting from parent_obj,
-either directly:
-
-::
+either directly::
 
     direct_child_obj = {
         "inherits": parent_obj,
@@ -228,9 +222,7 @@ either directly:
         "foo": "pow",
     }
 
-Or by name:
-
-::
+Or by name::
 
     byname_child_obj = {
         "inherits": {
@@ -241,9 +233,7 @@ Or by name:
     }
 
 Direct inheritance can also be achieved via inclusion, as described above.
-Note that this is the only way to achieve direct inheritance in json. E.g.:
-
-::
+Note that this is the only way to achieve direct inheritance in json. E.g.::
 
     include_direct_child_obj = {
         "inherits": {
@@ -264,8 +254,10 @@ The child objects can also be used in turn as the parents of subsequent layers,
 as long as cyclic dependencies are avoided.
 
 There are two types of named configuration object that support inheritance:
-named `Layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ and
-`styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_.
+
+1. Named :doc:`Layers <cfg_layers>` 
+2. or :doc:`styles <cfg_styling>`
+
 The exact way to inherit by name differs depending on the object type so
 `see <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#inheritance>`_
 the
@@ -337,9 +329,7 @@ a common abstract base style that has an empty list for the color ramp.  Eg.
         "color_ramp": [ ... ], # All New Color Ramp
     }
 
-Or:
-
-::
+Or::
 
     abstract_base_style = {
         "abstract": """
@@ -434,17 +424,13 @@ Internationalisation/Translation of Metadata
 
 Once you have extracted your metadata into a single file, separate from the main body of configuration,
 as described `above <#metadata-separation>`_, generate a translation catalog for every language you want
-translations for - including the "native" language that your messages file is already in:
-
-::
+translations for - including the "native" language that your messages file is already in::
 
     # Create new translation catalogs for English (en), German (de), French (Fr) and Swahili (Sw).
 
     datacube-ows-cfg translation -n -D my_ows_project -d /config/translations -m /config/messages.po en de fr sw
 
-This will create the following files:
-
-::
+This will create the following files::
 
    /config/translations/en/LC_MESSAGES/my_ows_project.po
    /config/translations/de/LC_MESSAGES/my_ows_project.po
@@ -458,15 +444,11 @@ the ``msg_str`` sections with the translated text in their language and return t
 file to you.  Then you keep then save them into the directory structure above, replacing the untranslated
 templates.
 
-Once the translations have been placed in translations directory, they must be compiled:
-
-::
+Once the translations have been placed in translations directory, they must be compiled::
 
     datacube-ows-cfg compile -D my_ows_project -d /config/translations en de fr sw
 
-This creates the following machine-readable message (.mo) files:
-
-::
+This creates the following machine-readable message (.mo) files::
 
    /config/translations/en/LC_MESSAGES/my_ows_project.mo
    /config/translations/de/LC_MESSAGES/my_ows_project.mo
@@ -474,16 +456,16 @@ This creates the following machine-readable message (.mo) files:
    /config/translations/sw/LC_MESSAGES/my_ows_project.mo
 
 You can now update the
-`global section of your OWS Configuration <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#metadata-separation-and-internationalisation>`_
+:doc:`global section of your OWS Configuration <cfg_global>`
 section and restart the web service and
 you are serving multi-lingually!  (Adjust your client's "Accept-Language" header to test.)
+
+.. _root-configuration-object:
 
 General Config Structure
 ------------------------
 
-At the top level, the Datacube OWS configuration is a single dictionary with the following elements:
-
-::
+At the top level, the Datacube OWS configuration is a single dictionary with the following elements::
 
   ows_cfg = {
      "global": {
@@ -503,28 +485,28 @@ At the top level, the Datacube OWS configuration is a single dictionary with the
      ]
   }
 
-The `global <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html>`_ section contains configuration that
+The :doc:`global <cfg_global>` section contains configuration that
 applies to the whole server across all services and layers.
-The `global <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html>`_ section is always required.
+The :doc:`global <cfg_global>` section is always required.
 
-The `wms <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html>`_ section contains configuration that applies to the WMS/WMTS
+The :doc:`wms <cfg_wms>` section contains configuration that applies to the WMS/WMTS
 services aross all layers.
-The `wmts <https://datacube-ows.readthedocs.io/en/latest/cfg_wmts.html>`_ section contains configuration that applies to the WMTS
+The :doc:`wmts <cfg_wmts>` section contains configuration that applies to the WMTS
 services aross all layers.
-The `wms <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html>`_ section can be omitted if only the WCS service is
+The :doc:`wms <cfg_wms>` section can be omitted if only the WCS service is
 activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section), or if the default values for all entries are acceptable.
 
-The `wmts <https://datacube-ows.readthedocs.io/en/latest/cfg_wmts.html>`_ section is optional.
+The :doc:`wmts <cfg_wmts>` section is optional.
 
-The `wcs <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html>`_ section must be supplied if the WCS service is
+The :doc:`wcs <cfg_wcs>` section must be supplied if the WCS service is
 activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section).
 
 WMTS is implemented as a thin wrapper around the WMS implementation. Therefore configuration in the
 WMS section generally applies equally to WMTS.
 
-The `layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ section
+The :doc:`layers <cfg_layers>` section
 contains a list of layer configurations.  The configured layers define the
 layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour. The layers section
 is always required.

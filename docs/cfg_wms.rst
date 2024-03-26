@@ -1,11 +1,9 @@
-===============================
-OWS Configuration - WMS Section
-===============================
+===========
+WMS Section
+===========
 
 .. contents:: Table of Contents
 
-WMS Section
---------------
 
 The "wms" section of the `root configuration object
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
@@ -104,6 +102,8 @@ and that data being advertised as available through the service. This value shou
 be kept fairly short (e.g. a few hours at most).
 
 E.g.
+
+::
 
     "wms": {
         "caps_cache_maxage": 3600,   # 3600 seconds = 1 hour

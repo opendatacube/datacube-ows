@@ -1,14 +1,12 @@
-=======================================
-OWS Configuration - Colour-Ramp Styles
-=======================================
+==================
+Colour-Ramp Styles
+==================
 
 .. contents:: Table of Contents
 
 
-Colour-Ramp Styles
-------------------
 
-Colour-ramp Styles are `styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ where
+Colour-ramp Styles are :doc:`styles <cfg_styling>` where
 a single continuous index value is calculated from the raw data for
 each pixel, and that index value is mapped to a graduated colour ramp
 for display.
@@ -19,10 +17,12 @@ Colour-ramp styles support the
 Colour-ramp styles support automatic legend generation. Specialised
 legend configuration is described `below <#legend-configuration>`__.
 
-Note on spelling: I am Australian and spell it "colour".  Most software
-packages use the US spelling "color".  Within the configuration file
-format we use the software conventional spelling, but within the text
-of this documentation, I use the UK/Australian spelling.
+.. note:: Spelling
+   
+   I am Australian and spell it "colour".  Most software
+   packages use the US spelling "color".  Within the configuration file
+   format we use the software conventional spelling, but within the text
+   of this documentation, I use the UK/Australian spelling.
 
 
 ---------------------------
@@ -67,11 +67,11 @@ index_function
 
 The `index_function` allows the user to declare a callback function
 to calculate the index value using OWS's
-`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+:doc:`function configuration format <cfg_functions>`.
 The function is expected to take an xarray Dataset containing all the
 bands in the `needed_bands list <#needed-bands-list>`__ (plus any additional
 arguments handled by the
-`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_); and returns
+:doc:`function configuration format <cfg_functions>`); and returns
 an xarray Dataset containing the index value.
 
 A `small library <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html#band-utils-functions>`_
@@ -542,7 +542,7 @@ aggregator_function
 
 The `aggregator_function` entry is required for colour ramp style
 multi-date handlers.  It is a function defined using OWS's
-`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+:doc:`function configuration format <cfg_functions>`.
 
 The function is assumed to take a single xarray Dataset with a time dimension.
 The value at each time slice is the output of the `index function <#index-function>`__

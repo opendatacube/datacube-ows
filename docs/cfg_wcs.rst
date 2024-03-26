@@ -1,14 +1,13 @@
-===============================
-OWS Configuration - WCS Section
-===============================
+===========
+WCS Section
+===========
 
 .. contents:: Table of Contents
 
 WCS Section
 --------------
 
-The ``wcs`` section of the `root configuration object
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+The ``wcs`` section of the :doc:`root configuration object <configuration>`
 contains config entries that apply
 to the WCS services for all coverages.
 
@@ -59,7 +58,7 @@ NetCDF formats and look something like this:
             }
         },
 
-Renderer is set using OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+Renderer is set using OWS's :doc:`function configuration format <cfg_functions>`.
 
 For WCS1, The function is expected to take the following arguments:
   * A WCSRequest object
@@ -121,5 +120,5 @@ Behaviour is identical to the ``caps_cache_maxage`` entry discussed above and
 
 Note however, that the default DescribeCoverage cache rule for can
 be over-ridden at the layer/coverage level using the
-`describe_cache_maxage entry<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#cache-control-dataset-cache-rules-and-describe-cache-maxage>`_
+`describe_cache_maxage entry <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#cache-control-dataset-cache-rules-and-describe-cache-maxage>`_
 in the ``resource_limits`` section for the layer.

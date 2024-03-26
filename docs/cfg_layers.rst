@@ -1,14 +1,14 @@
-==========================
-OWS Configuration - Layers
-==========================
+======
+Layers
+======
 
 .. contents:: Table of Contents
 
 Layers Section
 ==============
 
-The "layers" section of the `root configuration object
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+The "layers" section of the :doc:`root configuration object
+<configuration>`
 contains definitions of the various layers (WMS/WMTS)
 and coverages (WCS) that installation serves.
 
@@ -19,10 +19,10 @@ The "layers" section is a list of Layer configurations.
 
 A layer may be either:
 
-* A `named layer <#named-layers>`_ which represents a queryable
+* A :ref:`named-layer` which represents a queryable
   WMS layer and a corresponding WCS coverage
 
-* A `folder layer <#folder-layers>`_ which represents
+* A :ref:`folder-layer` which represents
   a folder in WMS, allowing layers to be organised in a
   hierarchical way. Folder layers are not themselves queryable but
   themselves contain a list of further child layers, which in
@@ -34,11 +34,13 @@ hierarchy of coverages, and so simply uses a flattened
 list of all declared named layers for it's list of
 coverages.
 
+.. _layer_common-elements:
+
 Common Elements
 ===============
 
 The following configuration entries and sections apply to both
-`named layer <#named-layers>`_ and `folder layer <#folder-layers>`_.
+:ref:`Named Layers <named-layer>` and :ref:`Folder Layers <folder-layer>`.
 
 ------------------
 Title and Abstract
@@ -77,9 +79,7 @@ and cumulative.  A layer will advertise all of:
 
 * The keywords defined in the `global keywords <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#optional-metadata>`_ section.
 
-E.g.:
-
-::
+E.g.::
 
     "keywords": [
         "landsat",
@@ -101,13 +101,14 @@ reported.
 The structure of the attribution section is the same as described in
 `the wms section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#default-attribution-attribution>`_.
 
-Folder Layers
-=============
+.. _folder-layer:
 
-In addition to the `common elements <#common-elements>`_ described
-above, folder layers have a "layers" element which is a list of child
-layers (which may be named layers, folder layers with their own
-child layers).
+Folder Layer
+============
+
+In addition to the :ref:`layer_common-elements` , folder layers have a "layers"
+element which is a list of child layers (which may be named layers, folder
+layers with their own child layers).
 
 A folder layer may also have a ``label`` element which is used only
 for
@@ -141,14 +142,16 @@ E.g.
         }
     ]
 
-Named Layers
-============
+.. _named-layer:
+
+Named Layer
+===========
 
 A named layer describes a queryable layer (WMS/WMTS) and the corresponding
 coverage (WCS).
 
-In addition to the `common elements <#common-elements>`_ described
-above, named layers have the following configuration elements:
+In addition to the :ref:`layer_common-elements`, named layers have 
+the following configuration elements:
 
 ----
 Name
@@ -237,11 +240,11 @@ E.g.
 
 If the
 `manual merge option in the
-image_processing section discussed below<#manual-merge-manual-merge>`_
+image_processing section discussed below <#manual-merge-manual-merge>`_
 is set to ``True``, then overlapping products are layered according to the priority
 order specified in ``product_names``
 
-E.g. the following config offers a combined landsat/sentinel-2 layer, with Sentinel-2 data used in
+E.g. the following config offers a combined Landsat/Sentinel-2 layer, with Sentinel-2 data used in
 preference to Landsat where both are available:
 
 ::
@@ -304,8 +307,7 @@ A date-aware product can be presented as a single-date mosaic layer with no publ
 dimension with the optional `mosaic_date_func` element.
 
 If supplied, the ``mosaic_date_func`` must be a function, declared
-using OWS's `function configuration format
-<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+using OWS's :doc:`function configuration format <cfg_functions>`.
 
 The Mosaic Date Function should take a list of available dates and return a tuple of two datetimes
 to be used in the dataset search operation.
@@ -408,7 +410,7 @@ Regular Time Axis (time_axis)
 
 The time axis is how OWS publishes the dates for which data is available.  The default
 behaviour (``time_axis`` not specified or ``None``) is to use an irregular time axis, where the available dates
-(as cached in `the OWS range tables <datacube-ows-update <https://datacube-ows.readthedocs.io/en/latest/database.html>`_)
+(as cached in :doc:`the OWS range tables <database`)
 are listed individually.  These long lists of dates lead to unnecessarily large capabilities documents
 for all supported protocols.
 
@@ -416,9 +418,7 @@ A regular time axis is where the available dates are published as a start date, 
 can result in a dramatic reduction in capabilities document sizes and can be useful for certain types of composite
 products.
 
-Specify a regular time axis by declaring a ``time_interval``, which is a positive integer, measured in days:
-
-::
+Specify a regular time axis by declaring a ``time_interval``, which is a positive integer, measured in days::
 
     "time_axis": {
         "time_interval": 14,  # data every 14 days.
@@ -516,8 +516,7 @@ of data urls for authentication (e.g. Microsoft Planetary Computer).  They may a
 to handle various network proxying or data-migration scenarios where the URLs visible to the
 OWS server are different to the URLs at indexing time.
 
-The "patch_url_function" config element is set using OWS's `function configuration format
-<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+The "patch_url_function" config element is set using OWS's :doc:`function configuration format <cfg_functions>`.
 The function is expected to take a string containing an unpatched url and return a
 string containing the patched url.
 
@@ -550,7 +549,7 @@ are used for calculating request resource limits.
 
 The native_crs can be any CRS
 declared in the `global published_CRSs section
-<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_
+<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#coordinate-reference-systems-published-crss>`_
 and need not be related to the CRSs that the data is actually
 stored in.
 
@@ -857,7 +856,7 @@ An additional element, ``describe_cache_maxage`` is also provided,
 which controls the cache control headers for WCS DescribeCoverage requests
 for the coverage/layer.  This element is optional, and defaults
 to the value set in the
-`top-level WCS section<https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html#describeconverage-default-cache-control-headers-default-desc-cache-maxage>`_
+`top-level WCS section <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html#describeconverage-default-cache-control-headers-default-desc-cache-maxage>`_
 
 ++++++++++++
 max_datasets
@@ -924,8 +923,8 @@ use:
     "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
 
 If this is not appropriate or possible for your data, you can
-set an alternative function using OWS's `function configuration format
-<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.  Some sample functions are included in ``datacube_ows.ogc_utils``.
+set an alternative function using OWS's :doc:`function configuration format
+<cfg_functions>`.  Some sample functions are included in ``datacube_ows.ogc_utils``.
 
 The function is assumed to take two arguments, data (an xarray Dataset) and
 band (a band name).  (Plus any additional arguments you may be passing in
@@ -970,8 +969,8 @@ Fuse Function (fuse_func)
 +++++++++++++++++++++++++
 
 Determines how multiple dataset arrays are compressed into a
-single time array. Specified using OWS's `function configuration
-format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+single time array. Specified using OWS's :doc:`function configuration
+format <cfg_functions>`.
 
 The fuse function is passed through to directly to the datacube
 load_data() function - refer to the Open Data Cube documentation
@@ -1229,8 +1228,8 @@ Include Custom Info (include_custom)
 ++++++++++++++++++++++++++++++++++++
 
 Determines how multiple dataset arrays are compressed into a
-single time array. Specified using OWS's `function configuration
-format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+single time array. Specified using OWS's :doc:`function configuration
+format <cfg_functions>`.
 
 "include_custom" allows custom data to be included in GetFeatureInfo responses. It
 is optional and defaults to an empty dictionary (i.e. no custom data.)
@@ -1241,7 +1240,7 @@ default (e.g. "data", "data_available_for_dates", "data_links") - if you use one
 these keys, the defined custom data will REPLACE the default data for these keys.
 
 The values for the dictionary entries are Python functions specified using
-OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+OWS's :doc:`function configuration format <cfg_functions>`.
 
 The specified function(s) are expected to be passed a dictionary of band values
 (as parameter "data") and can return any data that can be serialised to JSON.
@@ -1266,7 +1265,7 @@ E.g.
 Styling Section (styling)
 -----------------------------------
 
-The `"styling" section <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ describes the WMS and WMTS styles for
+The :doc:`"styling" section <cfg_styling>` describes the WMS and WMTS styles for
 the layer.
 
 

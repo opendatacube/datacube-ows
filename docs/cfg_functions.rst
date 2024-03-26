@@ -1,6 +1,6 @@
-=============================
-OWS Configuration - Functions
-=============================
+=========
+Functions
+=========
 
 .. contents:: Table of Contents
 
@@ -283,6 +283,7 @@ E.g. Using arcsec of the sdev band as a local brightness control for an rgb imag
 The raw red,green,blue bands go to 3000.
 
 ::
+
     "components": {
         "red": {
             "function": "datacube_ows.band_utils.single_band_arcsec",

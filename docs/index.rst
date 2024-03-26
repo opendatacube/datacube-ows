@@ -14,7 +14,7 @@ Contents:
    styling_howto
    usage
    environment_variables
-   pyspy
+   performance
    contributing
    history
 

@@ -2,9 +2,10 @@
 OWS Styling HOW-TO Guide
 ========================
 
+.. contents:: Table of Contents
+
 .. toctree::
    :maxdepth: 2
-   :hidden:
 
    style_howto_components
    style_howto_components_nonlinear
@@ -12,8 +13,8 @@ OWS Styling HOW-TO Guide
    style_howto_color_map
    style_howto_transparency
    style_howto_legends
+   styling_howto_jupyter
 
-.. contents:: Table of Contents
 
 Introduction
 ============
@@ -67,8 +68,8 @@ definition.
 
 .. note::
 
-    If ``apply_ows_style_cfg()`` returns
-    ::
+    If ``apply_ows_style_cfg()`` returns::
+
         WMSException: Style stand_alone does not support requests with 2 dates
 
     set ``group_by='solar_day'``

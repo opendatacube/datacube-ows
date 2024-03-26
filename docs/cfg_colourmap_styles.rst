@@ -1,23 +1,21 @@
-====================================
-OWS Configuration - Colourmap Styles
-====================================
+================
+Colourmap Styles
+================
 
 .. contents:: Table of Contents
 
-Colour-Map Styles
------------------
 
-Colour-map Styles are `styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ where
+Colourmap Styles are :doc:`styles <cfg_styling>` where
 each pixel is mapped to one particular colour from a fixed pallet
 by applying a logical decision tree to the flag data for that pixel.
 
-Colour-map styles support the
+Colourmap styles support the
 `elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
 
-Colour-map styles also have `value_map <#value-map>`_ entry that describes
+Colourmap styles also have `value_map <#value-map>`_ entry that describes
 how the colour of individual pixels is determined.
 
-Colour-map styles support `automatic legend generation <#legend>`_.
+Colourmap styles support `automatic legend generation <#legend>`_.
 
 ---------
 value_map
@@ -118,7 +116,7 @@ Rules
 Each Value Rule must also specify the rule to evaluate when it applies.
 
 For details, refer to the
-`OWS Masking Syntax <https://datacube-ows.readthedocs.io/en/latest/cfg_masks.html>`_.
+:doc:`OWS Masking Syntax <cfg_masks>`.
 
 ------
 Legend
@@ -129,7 +127,7 @@ Colour map styles support automatic legend configuration.
 Automatic legend generation can be deactivated using the
 ``show_legend`` and ``url`` legend elements
 `common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#legend>`_.
-(``show_legend`` is ``True`` by default for colour-map styles.)
+(``show_legend`` is ``True`` by default for colourmap styles.)
 
 A patch and label is added to the legend for each value rule in the
 configuration.  See `title and abstract <#title-and-abstract>`_ for
@@ -195,7 +193,7 @@ can be specified with the optional ``rcParams`` element, defaulting to {}, meani
 the MatPlotLib defaults for all options.
 
 For a full list of possible options refer to
-`the MatPlotLib documentation <https://matplotlib.org/3.2.2/tutorials/introductory/customizing.html>`__
+:external:std:doc:`users/explain/customizing`
 
 E.g.::
 
@@ -339,7 +337,7 @@ Aggregator function
 ===================
 
 Alternately, you can define an aggregator function using OWS's
-`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+:doc:`function configuration format <cfg_functions>`.
 
 The function is passed a multi-date Xarray Dataset and is expected to return a timeless Dataset,
 which can then be rendered using either the single-date value-map, or a separate single-date value-map
@@ -348,9 +346,7 @@ defined for the handler.
 This approach is infinitely flexible, and may be more efficient for some use cases than
 using the multidate value map approach.
 
-As a simple example, given the following callback function:
-
-::
+As a simple example, given the following callback function::
 
     def detect_equals(data: xr.Dataset) -> xr.Dataset:
         # Split data in two date slices
@@ -363,9 +359,7 @@ As a simple example, given the following callback function:
         data1["level4"] = data2["level4"].where(equality_mask, other=255)
         return data1
 
-You can access this with:
-
-::
+You can access this with::
 
     "multi_date": [
         {

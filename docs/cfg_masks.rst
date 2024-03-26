@@ -1,6 +1,6 @@
-===========================
-OWS Configuration - Masking
-===========================
+=======
+Masking
+=======
 
 .. contents:: Table of Contents
 

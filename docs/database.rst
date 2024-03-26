@@ -47,9 +47,9 @@ Creating Materialised Views
 ===========================
 
 The materialised views are created (along with the range tables,
-as described below) with the ``--schema`` flag:
+as described below) with the ``--schema`` flag::
 
-    ``datacube-ows-update --schema --role rolename``
+    datacube-ows-update --schema --role rolename
 
 where ``rolename`` is the name of the database role that the OWS server
 instance will use.
@@ -60,9 +60,9 @@ Refreshing Materialised Views
 
 As datasets are added into or archived out of the ODC database,
 the materialised views become stale, and need to be periodically
-manually refreshed, with the ``--view`` flag.
+manually refreshed, with the ``--view`` flag::
 
-    ``datacube-ows-update --view``
+    datacube-ows-update --view
 
 A lot of the speed of OWS comes from pushing
 expensive database calculations down into these materialised
@@ -98,7 +98,7 @@ views using the ``--schema`` flag,
 Updating range tables
 =====================
 
-The range tables are updated from the materialised views by simply calling:
+The range tables are updated from the materialised views by simply calling::
 
     datacube-ows-update
 
@@ -109,7 +109,7 @@ compared to refreshing the materialised views.
 Updating range tables for individual layers
 -------------------------------------------
 
-Specific layers can be updated using:
+Specific layers can be updated using::
 
     datacube-ows-update layer1 layer2 layer3
 

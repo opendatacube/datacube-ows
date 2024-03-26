@@ -71,7 +71,7 @@ To install datacube-ows, run:
 Update_range natively
 ---------------------
 
-Refer to the `database documentation <https://datacube-ows.readthedocs.io/en/latest/database.html>`_ documentation
+Refer to the :doc:`database documentation <database>` documentation
 for information on how to setup and maintain a Datacube OWS database.
 
 From sources ( within Docker )
@@ -103,7 +103,7 @@ of the config file, and edit it to reflect your requirements.
     $ vi .env
 
 Create an external PostgreSQL Database for OWS use. (See
-the `database documentation <https://datacube-ows.readthedocs.io/en/latest/database.html>`__ for
+the :doc:`database documentation <database>` for
 more information.)  jUse this as a
 sidecar docker or natively on the host system. The following
 steps assume the database is on the host system for networking
@@ -121,7 +121,7 @@ Update_range via docker
 -----------------------
 
 Connect to the running docker to run datacube-ows-update/update_range.py
-commands (see the `database documentation <https://datacube-ows.readthedocs.io/en/latest/database.html>`__ for more
+commands (see the :doc:`database documentation <database>` for more
 information).
 
 E.g. to set up a new database:

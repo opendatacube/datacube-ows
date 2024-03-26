@@ -2,6 +2,8 @@
 OWS Styling HOW-TO Guide: Legends
 =================================
 
+.. highlight:: Python
+
 .. contents:: Table of Contents
 
 Legends
@@ -16,11 +18,9 @@ Auto-legend-generation for Colour Ramp Styles
 +++++++++++++++++++++++++++++++++++++++++++++
 
 The first type of style that supports automatic legend-generation is
-`colour ramp styles <https://datacube-ows.readthedocs.io/en/latest/style_howto_color_ramp.html>`_.
+:doc:`colour ramp styles <style_howto_color_ramp>`.
 
-For these examples, we will use a simple colour ramp style using a Matplotlib named colour ramp:
-
-::
+For these examples, we will use a simple colour ramp style using a Matplotlib named colour ramp::
 
     # Create a style definition with a legend section:
 
@@ -102,9 +102,7 @@ You can also set a title for the legend separate to the style title.  E.g.
 .. image:: https://user-images.githubusercontent.com/4548530/135553920-c30b61b8-7061-4411-9fdb-b7a3fa6006f3.png
     :width: 400
 
-You can also specify units, which are added in parentheses after the title:
-
-::
+You can also specify units, which are added in parentheses after the title::
 
     "legend": {
         "title": "Geomagnetic Anomaly",
@@ -122,7 +120,7 @@ Setting legend range
 The start and end of the legend strip can be over-ridden with the "begin" and "end" elements. These elements can
 be integers, floats or numeric strings - however floats are strongly discouraged as they can result in unexpected
 behaviour.  For more information refer to
-`Floating Point Arithmetic: Issues and Limitations<https://docs.python.org/3/tutorial/floatingpoint.html>`_
+:external+python:doc:`tutorial/floatingpoint`
 in the official Python tutorial.
 
 E.g.
@@ -150,9 +148,7 @@ Additional ticks can be added in three ways:
 Regularly spaced ticks by spacing (ticks_every)
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-This example has ticks every 0.5, from -1.0 to 1.0.  (Again, avoid using raw floats)
-
-::
+This example has ticks every 0.5, from -1.0 to 1.0.  (Again, avoid using raw floats)::
 
     "legend": {
         "title": "Regular Ticks By Spacing",
@@ -198,9 +194,7 @@ Tick locations can also be specified explicitly by setting ``ticks`` to a list o
 use numeric strings rather than floats.
 
 The following examples cover some interesting cases that are not possible using
-either ``tick_count`` or ``ticks_every``:
-
-::
+either ``tick_count`` or ``ticks_every``::
 
     "legend": {
         "title": "No Ticks At All",
@@ -236,9 +230,7 @@ either ``tick_count`` or ``ticks_every``:
 .. image:: https://user-images.githubusercontent.com/4548530/135563314-ed63594a-19b5-4cf4-8b5a-8a66f493b14e.png
     :width: 400
 
-You can cannot combine ``ticks``, ``ticks_every``, or ``tick_count``.  Not using any is equivalent to:
-
-::
+You can cannot combine ``ticks``, ``ticks_every``, or ``tick_count``.  Not using any is equivalent to::
 
         "tick_count": 1,
 
@@ -458,9 +450,7 @@ The values are interpreted as follows: [left, bottom, width, height].
 
 The default value is ``[0.05, 0.5, 0.9, 0.15]``
 
-For example to move the bar towards the top of the image, raise the bottom:
-
-::
+For example to move the bar towards the top of the image, raise the bottom::
 
     "legend": {
         "title": "Ramp bar to top of image",
@@ -478,11 +468,9 @@ Auto-legend-generation for Colour Map Styles
 ++++++++++++++++++++++++++++++++++++++++++++
 
 Auto-generated legends are also available for
-`colour map styles<https://datacube-ows.readthedocs.io/en/latest/style_howto_color_map.html>`_.
+:doc:`colour map styles <style_howto_color_map>`.
 
-For these examples, we will be extending the following style example:
-
-::
+For these examples, we will be extending the following style example::
 
     transparency_map_cfg = {
         "value_map": {

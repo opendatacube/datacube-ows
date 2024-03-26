@@ -1,14 +1,14 @@
-=================================
-OWS Configuration - Layer Styles
-=================================
+============
+Layer Styles
+============
 
 .. contents:: Table of Contents
 
 Styling Section
 ---------------
 
-The "styling" sub-section of a `layer configuration section
-<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_
+The "styling" sub-section of a :doc:`layer configuration section
+<cfg_layers>`
 contains definitions of the various styles
 that layer supports.
 
@@ -55,23 +55,23 @@ Style Types
 
 There are four distinct possible types of style.
 
-1. `Component Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_component_styles.html>`_
+1. :doc:`Component Styles <cfg_component_styles>`
 
    Each component channel of the image (red, green, blue and optionally
    alpha) is calculated independently from the data for that pixel.
 
-2. `Colour Map Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourmap_styles.html>`_
+2. :doc:`Colour Map Styles <cfg_colourmap_styles>`
 
    Each pixel is mapped to one particular colour from a fixed pallet
    by applying a logical decision tree to the date for that pixel.
 
-3. `Colour Ramp Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html>`_
+3. :doc:`Colour Ramp Styles <cfg_colourramp_styles>`
 
    A single continuous index value is calculated from the data for
    each pixel, and that index value mapped to a graduated colour ramp
    for display.
 
-4. `Hybrid Styles <https://datacube-ows.readthedocs.io/en/latest/cfg_hybrid_styles.html>`_
+4. :doc:`Hybrid Styles <cfg_hybrid_styles>`
 
    A linear combination of a component style and a colour ramp style.
 
@@ -175,7 +175,7 @@ The pq_masks entry is a list of mask definitions.  Each mask definition contains
    `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
    for the layer.
 2. A mask rule, using the
-   `OWS Masking Syntax <https://datacube-ows.readthedocs.io/en/latest/cfg_masks.html>`_
+   :doc:`OWS Masking Syntax <cfg_masks>`
 
 The mask rules in the pq_masks list are AND'd together.
 i.e. A pixel must match all of the mask rules in the list to remain visible.
@@ -271,7 +271,7 @@ E.g.::
      }
 
 If your instance of OWS
-`supports multiple languages<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_
+`supports multiple languages <https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_
 then you may supply separate urls pointing to different versions of the legend image for each of the configured
 ``supported_languages``.  In this case you MUST supply a legend image url for the default language
 (the first language listed in the global ``supported_languages`` entry), and this url will be used for

@@ -1,14 +1,16 @@
-==================================
-OWS Configuration - Global Section
-==================================
+
+.. _config-global:
+
+====================
+Global Configuration
+====================
 
 .. contents:: Table of Contents
 
 Global Section
 --------------
 
-The "global" section of the `root configuration object
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+The **global** section of the :ref:`root-configuration-object`
 contains config entries that apply
 to all services and all layers/coverages.
 
@@ -34,14 +36,16 @@ when either extracting metadata from config or creating or updating translation 
 
 The default is None/null, meaning no message file is used.
 
-Note: the `message_file` configuration entry is not required (except as an intermediate step)
-if `translations_directory` is set.  The order of metadata resolution is:
+Note: the ``message_file`` configuration entry is not required (except as an intermediate step)
+if ``translations_directory`` is set.  The order of metadata resolution is:
 
-1) If Internationalisation is active via the `translations_directory` config entry, take the
-   value from the *.mo file corresponding to the best available language match for the request
+1) If Internationalisation is active via the ``translations_directory`` config entry, take the
+   value from the ``*.mo`` file corresponding to the best available language match for the request
    headers.
+
 2) If a translation for the metadata entry is not available, or if internationalisation is not
    active, get the value from the `message_file` if it is configured.
+
 3) Otherwise, fallback to the value in the main body of the config.
 
 Message Domain (message_domain)
@@ -177,22 +181,22 @@ E.g.:
        "https://secure.domain.com/ows",
    ]
 
-Co-ordinate Reference Systems (published_CRSs)
+Coordinate Reference Systems (published_CRSs)
 ==============================================
 
-The "published_CRSs" entry in the global sections declares the list of Co-ordinate
+The "published_CRSs" entry in the global sections declares the list of Coordinate
 Reference Systems supported by the server instance.
 
 It should be a dictionary of dictionaries, with the labels being recognised by Proj4
 (ideally EPSG codes, as in the example).  Other CRS formats (i.e. ESRI style WKID)
 can be supported by adding them as aliases in your proj4 configuration.
 
-The configuration for each Co-ordinate Reference System
+The configuration for each Coordinate Reference System
 contains the following entries:
 
 geographic
    Boolean indicating whether the projection is geographic, i.e. uses degrees latitude and longitude
-   as it's co-ordinates. Required.  Note that at least one geographic CRS must be published.
+   as it's coordinates. Required.  Note that at least one geographic CRS must be published.
 
 horizontal_coord
    The label of the horizontal coordinate.  Defaults to "longitude".

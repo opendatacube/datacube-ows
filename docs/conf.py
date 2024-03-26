@@ -59,6 +59,7 @@ copyright = u"2020, Geoscience Australia"
 intersphinx_mapping = {
   'python': ('https://docs.python.org/3', None),
   'odc': ('https://datacube-core.readthedocs.io/en/latest', None),
+  'matplotlib': ('https://matplotlib.org/stable/', None),
 }
 
 # The version info for the project you're documenting, acts as replacement
@@ -145,7 +146,8 @@ html_theme = 'default'
 # here, relative to this directory. They are copied after the builtin
 # static files, so a file named "default.css" will overwrite the builtin
 # "default.css".
-html_static_path = ['_static']
+
+#html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page
 # bottom, using the given strftime format.
@@ -276,3 +278,12 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+def setup(app):
+    # From the Sphinx Documentation itself
+    app.add_object_type(
+        'confval',
+        'confval',
+        objname='configuration value',
+        indextemplate='pair: %s; configuration value',
+    )
