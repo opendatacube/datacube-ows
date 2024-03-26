@@ -7,8 +7,6 @@ Global Configuration
 
 .. contents:: Table of Contents
 
-Global Section
---------------
 
 The **global** section of the :ref:`root-configuration-object`
 contains config entries that apply
@@ -24,7 +22,7 @@ The following global configuration items are relevant to
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
 
 Message File (message_file)
-+++++++++++++++++++++++++++
+---------------------------
 
 The "message_file" entry gives the path to the message file.
 
@@ -49,13 +47,13 @@ if ``translations_directory`` is set.  The order of metadata resolution is:
 3) Otherwise, fallback to the value in the main body of the config.
 
 Message Domain (message_domain)
-+++++++++++++++++++++++++++++++
+-------------------------------
 
 The message domain used by internationalisation.  Defaults to "ows_cfg".
 
 
 Translations Directory (translations_directory)
-+++++++++++++++++++++++++++++++++++++++++++++++
+-----------------------------------------------
 
 The path to the directory containing translation subdirectories.  Traditionally known as "locales".
 Defaults to None, meaning no translation support.
@@ -65,7 +63,7 @@ Required for internationalisation.
 
 
 Supported Languages (supported_languages)
-+++++++++++++++++++++++++++++++++++++++++
+-----------------------------------------
 
 A list of supported languages for internationalisation.  Defaults to English only (``['en']``).
 The first language listed is treated as the default language, and it is assumed that all metadata
@@ -167,9 +165,7 @@ It should be a list of strings containing base URLs, and is required.
 
 Requests received which do not match a Base URL in this list will return an error.
 
-E.g.:
-
-::
+E.g.::
 
    "allowed_urls": [
        # Common local dev URLs
@@ -213,9 +209,7 @@ aka WGS-84 is strongly recommended, but any geographical coordinate system will 
 non-geographic Web Mercator CRS (EPSG:3857) is also strongly recommended, and is required
 if WMTS is activated.
 
-E.g.:
-
-::
+E.g.::
 
    "published_CRSs": {
        "EPSG:3857": {  # Web Mercator
@@ -268,7 +262,6 @@ logo
 All of the above elements are optional, but at least one must be
 provided if the attribution section exists.
 
-----------------
 Attribution Logo
 ----------------
 
@@ -311,9 +304,7 @@ applies to both WMS/WMTS and WCS.  Some further WMS/WMTS-specific server-wide me
 can be configured in the "wms" section.
 
 All entries listed here are optional and default to blank, or similar, as documented
-in the comments to this example:
-
-::
+in the comments to this example::
 
         # Abstract - longer description of the service (Note this text is used for both WM(T)S and WCS)
         # Optional - defaults to empty string.

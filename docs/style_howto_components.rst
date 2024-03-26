@@ -70,18 +70,14 @@ output image.
         "scale_range": (50, 3000),
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
+.. image:: images/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`_
 
 Example: Greyscale single band
 ++++++++++++++++++++++++++++++
 
-If we wanted a greyscale image of a single band (say red), you could do this:
-
-::
+If we wanted a greyscale image of a single band (say red), you could do this:::
 
     pure_red_cfg = {
         "components": {
@@ -99,7 +95,7 @@ If we wanted a greyscale image of a single band (say red), you could do this:
     }
 
 
-.. image:: https://user-images.githubusercontent.com/4548530/112124234-3ddd1400-8c16-11eb-9d01-37b895010221.png
+.. image:: images/112124234-3ddd1400-8c16-11eb-9d01-37b895010221.webp
     :width: 1128
 
 Example: Mixing bands
@@ -112,9 +108,7 @@ but this is not enforced.
 
 Here we average all three visible bands
 into the red channel, put near infra-red in the green channel and average the two shortwave infrared
-bands to make the blue channel:
-
-::
+bands to make the blue channel::
 
     all_bands_cfg = {
         "components": {
@@ -140,19 +134,15 @@ bands to make the blue channel:
         "scale_range": (50, 3000),
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png
+.. image:: images/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png>`_
 
 Example: Unused channels
 ++++++++++++++++++++++++
 
 If you don't want to write any data to one or more of the image channels (red, green or blue)
-just leave it empty:
-
-::
+just leave it empty::
 
     only_red_cfg = {
         "components": {
@@ -166,11 +156,9 @@ just leave it empty:
     }
 
 
-.. image:: https://user-images.githubusercontent.com/4548530/112239767-357aec80-8c9b-11eb-9827-6696a1d03a17.png
+.. image:: images/112239767-357aec80-8c9b-11eb-9827-6696a1d03a17.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112239767-357aec80-8c9b-11eb-9827-6696a1d03a17.png>`_
 
 Scale Ranges: Controlling dynamic range
 ---------------------------------------
@@ -192,11 +180,9 @@ Firstly, let's remind ourselves of our original RGB configuration and image:
         "scale_range": (50, 3000),
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png
+.. image:: images/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
 
 In this image, band values between 50 and 3000 get scaled to the image values 0 to 255.  (Values less than zero
 are clipped to 0 and values greater than 3000 are clipped to 255.)
@@ -218,11 +204,9 @@ Let's start by pulling the scale_range down a bit:
     }
 
 
-.. image:: https://user-images.githubusercontent.com/4548530/112252356-15562800-8cb1-11eb-961a-8c10c38167d7.png
+.. image:: images/112252356-15562800-8cb1-11eb-961a-8c10c38167d7.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112252356-15562800-8cb1-11eb-961a-8c10c38167d7.png>`_
 
 As you can see, the resulting image looks saturated, washed out and overly bright.  So if your first
 guess at scale_range values produced an image like this, you probably want to increase your
@@ -242,11 +226,9 @@ Example: High Scale Range
         "scale_range": (1000, 8000),
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png
+.. image:: images/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png>`_
 
 Whoops too far!  Now it's almost pure black!  If your image looks like this, you
 need to pull your scale_range down:
@@ -265,11 +247,9 @@ Example: Narrow Scale Range
         "scale_range": (1000, 3000),
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png
+.. image:: images/112252764-c230a500-8cb1-11eb-873a-68527e786f69.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png>`_
 
 This is getting better, the brightest parts are nice and bright, but the lower end of the scale range is too high,
 leaving too much image clipped to black. If you keep adjusting back and forth,
@@ -284,11 +264,9 @@ For example, the image in the `false colour example above
 <#example-infrared-green-false-colour>`_, looks a bit
 saturated, especially in the red and green channels (red+green makes yellow).
 
-.. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
+.. image:: images/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`_
 
 Let's see what we can do with some judicious tweaking of the scale_ranges
 on a per-band basis:
@@ -317,11 +295,9 @@ The red and green channel have custom scale ranges.
 The "blue" channel does not have a custom scale_range, so it takes the default scale_range ``(200,1900)``.
 (The default scale_range may be omitted where it is not needed.)
 
-.. image:: https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png
+.. image:: images/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png>`_
 
 Wow! That looks much better!
 

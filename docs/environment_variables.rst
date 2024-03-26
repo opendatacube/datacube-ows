@@ -90,12 +90,14 @@ Dev-ops Tools
 
 The following deployment tools are configured via environment variables:
 
-SENTRY_DSN:
-    The `Sentry application monitoring and error tracking system`_
+.. envvar:: SENTRY_DSN
+
+    The `Sentry application monitoring and error tracking system <https://sentry.io/>`_
     system is activated and configured with the :envvar:`SENTRY_DSN`
     environment variables.
 
-prometheus_multiproc_dir:
+.. envvar:: prometheus_multiproc_dir
+
     The `Prometheus event monitoring system <https://prometheus.io>`_ is activated by
     setting this lower case environment variable.
 

@@ -9,14 +9,12 @@ Non-Linear Components: Functions
 --------------------------------
 
 All the examples in the
-`previous section <https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html>`_
+:doc:`previous section <style_howto_components>`
 involved using linearly scaled, linear combinations of bands to calculate channel values.
 If we want to evaluate components using more sophisticated calculations, we need to use
-python functions.
+Python functions.
 
-Again we will start from the base of a simple rgb image:
-
-::
+Again we will start from the base of a simple rgb image::
 
     rgb_cfg = {
         "components": {
@@ -40,9 +38,7 @@ as the input argument.
 
 The returned array is converted to `uint8` in the xarray image returned by
 the API.  This means it is up to your function to handle scaling to the (0,255) range.
-For example, given this function, containing a simple unscaled implementation of NDVI:
-
-::
+For example, given this function, containing a simple unscaled implementation of NDVI::
 
     def ndvi(data):
         # Returns data in range (-1, 1)
@@ -51,9 +47,7 @@ For example, given this function, containing a simple unscaled implementation of
 
 Using ``"green": ndvi,`` in the components dictionary would sort of work, but would
 return 0 for every pixel after conversion from floating point - which is probably
-not what we want. We can add scaling like this:
-
-::
+not what we want. We can add scaling like this::
 
     def ndvi(data):
         # Calculate NDVI (-1.0 to 1.0)
@@ -79,11 +73,9 @@ is responsible for scaling of the green channel.
 Note that this example is for illustrative purposes only - there is a much easier way to implement
 scaling, discussed later in this chapter.
 
-.. image:: https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png
+.. image:: images/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png>`_
 
 Meh, it's *very* green, and kind of saturated.  This is because we are
 scaling (-1, +1) to (0, 255) and negative values of NDVI
@@ -97,7 +89,7 @@ Non-Linear Components: OWS Function Syntax and Scalable
 -------------------------------------------------------
 
 You can use the ``@scalable`` decorator provided by the API, and OWS's
-`extended function syntax <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_
+:doc:`extended function syntax <cfg_functions>`
 for a more streamlined solution to scaling:
 
 Example: red-ndvi-blue (half scale)
@@ -134,11 +126,9 @@ The ``@scalable`` decorator adds ``scale_from`` and ``scale_to`` arguments to th
 and applies the relevant scaling to the output. Values outside the "scale_from" range are
 clipped to the minimum or maximum "scale_to" value.
 
-.. image:: https://user-images.githubusercontent.com/4548530/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.png
+.. image:: images/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.png>`_
 
 Non-Linear Components: OWS Function Syntax and Scalable
 -------------------------------------------------------
@@ -153,10 +143,7 @@ A list of available band utility functions can be found
 Example: red-ndvi-blue (half scale)
 +++++++++++++++++++++++++++++++++++
 
-Here's an extended example that replaces Green with NDVI and Blue with NDWI:
-
-
-::
+Here's an extended example that replaces Green with NDVI and Blue with NDWI::
 
     r_ndvi_ndwi_halfrange_cfg = {
         "components": {
@@ -185,11 +172,9 @@ Here's an extended example that replaces Green with NDVI and Blue with NDWI:
 
 Note that utility functions are referenced by name, rather than importing the name and inserting directly.
 
-.. image:: https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png
+.. image:: images/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png>`_
 
 `Next up
 <https://datacube-ows.readthedocs.io/en/latest/style_howto_colour_ramp.html>`_

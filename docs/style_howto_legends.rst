@@ -57,7 +57,7 @@ Let's start with default legend, with the "legend" section left empty or missing
 
     "legend": {}
 
-.. image:: https://user-images.githubusercontent.com/4548530/135552385-8a719936-299e-4c1b-b875-be6a3e421397.png
+.. image:: images/135552385-8a719936-299e-4c1b-b875-be6a3e421397.webp
     :width: 400
 
 By default, the legend strip runs across the full value range of the ramp, and only has "ticks" for minimum
@@ -88,7 +88,7 @@ must have a unique title that would normally go here.  E.g.
         }
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135553917-f0add568-bc1d-4379-a661-aff62d226218.png
+.. image:: images/135553917-f0add568-bc1d-4379-a661-aff62d226218.webp
     :width: 400
 
 You can also set a title for the legend separate to the style title.  E.g.
@@ -99,7 +99,7 @@ You can also set a title for the legend separate to the style title.  E.g.
         "title": "Bi-directional NDVI",
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135553920-c30b61b8-7061-4411-9fdb-b7a3fa6006f3.png
+.. image:: images/135553920-c30b61b8-7061-4411-9fdb-b7a3fa6006f3.webp
     :width: 400
 
 You can also specify units, which are added in parentheses after the title::
@@ -109,7 +109,7 @@ You can also specify units, which are added in parentheses after the title::
         "units": "uT",
     }
 
-.. image::  https://user-images.githubusercontent.com/4548530/135938028-c293beb0-0b9a-4a76-af12-5176ac490265.png
+.. image::  images/135938028-c293beb0-0b9a-4a76-af12-5176ac490265.webp
     :width: 400
 
 
@@ -132,7 +132,7 @@ E.g.
         "end": "1.0",
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135554887-92610cd2-6f7d-429a-9450-d6804809ee35.png
+.. image:: images/135554887-92610cd2-6f7d-429a-9450-d6804809ee35.webp
     :width: 400
 
 ++++++++++++
@@ -157,7 +157,7 @@ This example has ticks every 0.5, from -1.0 to 1.0.  (Again, avoid using raw flo
         "ticks_every": "0.5",
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135556160-fdba434f-f72e-42fb-b62d-ba624fc4613f.png
+.. image:: images/135556160-fdba434f-f72e-42fb-b62d-ba624fc4613f.webp
     :width: 400
 
 
@@ -175,16 +175,16 @@ This example has 5 regular spaced ticks, from 0.0 to 1.0.
         "ticks_count": 5,  # integers are ok
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135556158-c3208cf6-a881-499d-9d90-c5cd2548807e.png
+.. image:: images/135556158-c3208cf6-a881-499d-9d90-c5cd2548807e.webp
     :width: 400
 
 Note that first tick is not counted in the tick count: setting ``tick_count`` to zero results in a single
 tick at the start of the legend bar and setting ``tick_count`` to 1 is the same as the default.
 
-.. image:: https://user-images.githubusercontent.com/4548530/135556926-ca5f7bba-584d-4554-9d52-c733db9d65e8.png
+.. image:: images/135556926-ca5f7bba-584d-4554-9d52-c733db9d65e8.webp
     :width: 400
 
-.. image:: https://user-images.githubusercontent.com/4548530/135556929-944add9d-b5e4-49d5-a9e4-00c1bafdcc14.png
+.. image:: images/135556929-944add9d-b5e4-49d5-a9e4-00c1bafdcc14.webp
     :width: 400
 
 Explicit ticks
@@ -203,7 +203,7 @@ either ``tick_count`` or ``ticks_every``::
         "ticks": []
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135563403-49d1a3b9-aa4c-4cc6-ba75-8f0f9b6a6381.png
+.. image:: images/135563403-49d1a3b9-aa4c-4cc6-ba75-8f0f9b6a6381.webp
     :width: 400
 
 ::
@@ -215,7 +215,7 @@ either ``tick_count`` or ``ticks_every``::
             "ticks": ["-0.5", "0.0", "0.5"],
         }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135563316-3cc625a2-7687-4430-888f-fb5122fb6125.png
+.. image:: images/135563316-3cc625a2-7687-4430-888f-fb5122fb6125.webp
     :width: 400
 
 ::
@@ -227,7 +227,7 @@ either ``tick_count`` or ``ticks_every``::
         "ticks": ["-1.0", "0.0", "0.5", "0.7", "0.9", "1.0"],
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135563314-ed63594a-19b5-4cf4-8b5a-8a66f493b14e.png
+.. image:: images/135563314-ed63594a-19b5-4cf4-8b5a-8a66f493b14e.webp
     :width: 400
 
 You can cannot combine ``ticks``, ``ticks_every``, or ``tick_count``.  Not using any is equivalent to::
@@ -246,7 +246,7 @@ manually.
         "ticks": ["0.0", "0.3", "0.7", "0.9", "1.0"],
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135572795-fb7386cd-0169-4245-aa44-30947f27ccd0.png
+.. image:: images/135572795-fb7386cd-0169-4245-aa44-30947f27ccd0.webp
     :width: 400
 
 
@@ -269,7 +269,7 @@ By default, tick labels are displayed to one decimal place:
         "tick_count": 4,
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135572793-4ee31078-042d-4334-9970-0884a779884f.png
+.. image:: images/135572793-4ee31078-042d-4334-9970-0884a779884f.webp
     :width: 400
 
 In this case, we really wanted two decimal places:
@@ -284,7 +284,7 @@ In this case, we really wanted two decimal places:
         "tick_count": 4,
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135572796-878f44a8-e953-49d0-b887-0bda36c5b10a.png
+.. image:: images/135572796-878f44a8-e953-49d0-b887-0bda36c5b10a.webp
     :width: 400
 
 Prefixes and Suffixes and Custom Labels
@@ -308,7 +308,7 @@ an explicit ``ticks`` list will minimise confusion.
         }
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135935943-698c979d-e388-4310-95e1-95d3a2bd335e.png
+.. image:: images/135935943-698c979d-e388-4310-95e1-95d3a2bd335e.webp
     :width: 400
 
 You can also specify prefixes and suffixes for tick labels, either individually or as defaults for all labels.
@@ -333,7 +333,7 @@ You can also specify prefixes and suffixes for tick labels, either individually 
         }
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135936408-6aff7d3f-37b2-4775-bf07-c728cd370991.png
+.. image:: images/135936408-6aff7d3f-37b2-4775-bf07-c728cd370991.webp
     :width: 400
 
 ::
@@ -385,7 +385,7 @@ You can also specify prefixes and suffixes for tick labels, either individually 
         }
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135937334-9664be22-3278-40bb-9fb1-b92d72871f86.png
+.. image:: images/135937334-9664be22-3278-40bb-9fb1-b92d72871f86.webp
     :width: 400
 
 +++++++++++++++++++++++++
@@ -415,7 +415,7 @@ E.g.:
         }
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135939082-3fbf736e-3cf8-4049-b59d-d9f8c563ce57.png
+.. image:: images/135939082-3fbf736e-3cf8-4049-b59d-d9f8c563ce57.webp
     :width: 400
 
 This legend image is too small to fit all the needed data legibly.  This can be fixed by enlarging
@@ -436,7 +436,7 @@ the image:
         "height": 2.5, # 250 pixels at default dpi
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135939074-2f0284a8-5cca-434a-8f0c-8ee3e71a2bbe.png
+.. image:: images/135939074-2f0284a8-5cca-434a-8f0c-8ee3e71a2bbe.webp
     :width: 600
 
 Ramp Strip Location
@@ -460,7 +460,7 @@ For example to move the bar towards the top of the image, raise the bottom::
         "strip_location": [0.05, 0.85, 0.9, 0.15],
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/135939645-85e9c4f9-e5ac-49c0-a678-e3118a883fa5.png
+.. image:: images/135939645-85e9c4f9-e5ac-49c0-a678-e3118a883fa5.webp
     :width: 400
 
 
@@ -564,7 +564,7 @@ For these examples, we will be extending the following style example::
 
 With the default legend settings, the resulting legend looks like this:
 
-.. image:: https://user-images.githubusercontent.com/4548530/135941097-29eddd2e-5c01-4402-af5b-66ec240dde59.png
+.. image:: images/135941097-29eddd2e-5c01-4402-af5b-66ec240dde59.webp
     :width: 300
 
 The first thing to note is that the resulting image is not big enough to contain all the possible values.
@@ -580,7 +580,7 @@ respectively - which is slightly different to the default values for colour-ramp
     },
 
 
-.. image:: https://user-images.githubusercontent.com/4548530/135942120-b27befce-9fe7-4a94-a083-d36326ff31c4.png
+.. image:: images/135942120-b27befce-9fe7-4a94-a083-d36326ff31c4.webp
     :width: 300
 
 Note that a legend-patch is generated for all non-transparent ``value_map`` rules, using the title and/or abstract

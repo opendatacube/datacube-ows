@@ -11,7 +11,7 @@ To use datacube-ows in a project::
 
     import datacube_ows
 
-To use the `stand-alone styling API <https://datacube-ows.readthedocs.io/en/latest/cfg_style_api.html>`_::
+To use the :doc:`stand-alone styling API <cfg_style_api>`::
 
     from datacube_ows.styles.api import *
 
@@ -22,17 +22,17 @@ OWS Command Line Tools
 Datacube-OWS provides two command line tools:
 
 * ``datacube-ows-update`` which is used for creating and maintaining
-  `OWS's database tables and views <https://datacube-ows.readthedocs.io/en/latest/database.html>`_.
+  :doc:`OWS's database tables and views <database>`.
 * ``datacube-ows-cfg`` which is used for managing
-  `OWS configuration files <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
+  :doc:`OWS configuration files <configuration>`.
 
-.. click:: datacube_ows.update_ranges:main
-    :prog: datacube-ows-update
-    :nested: full
+.. click:: datacube_ows.update_ranges_impl:main
+   :prog: datacube-ows-update
+   :nested: full
 
-.. click:: datacube_ows.cfg_parser:main
-    :prog: datacube-ows-update
-    :nested: full
+.. click:: datacube_ows.cfg_parser_impl:main
+   :prog: datacube-ows-update
+   :nested: full
 
 As a Web-Service in Docker with Layers deployed
 -----------------------------------------------
@@ -88,7 +88,9 @@ Index a dataset when ``yaml`` file is not available and ONLY ``.json`` file is a
 
 .. note:: The next step will be superseded soon by an OWS sub-command.
 
-Update extents of a new product or to update a product in Datacube to make it easier for OWS to create getcapabilities documents where the `ows_cfg.py` file is within the code directory.
+Update extents of a new product or to update a product in Datacube to make it
+easier for OWS to create getcapabilities documents where the `ows_cfg.py` file
+is within the code directory.
 
 .. code-block:: console
 

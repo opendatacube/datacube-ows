@@ -29,11 +29,11 @@ OWS Configuration
 .. _introduction:
 
 Introduction
-------------
+============
 
 The behaviour of a datacube_ows server instance can be controlled, customised and extended by configuration files.
 
-Datacube OWS configuration files can be written in Python (as a static serialisable python dictionary) or as JSON.
+Datacube OWS configuration files can be written in Python (as a static serialisable Python dictionary) or as JSON.
 All examples in this documentation will always be presented in Python syntax.  JSON syntax is almost identical, but
 note that there are some important differences:
 
@@ -49,7 +49,7 @@ configuration file. <#general-config-structure>`_
 .. _location:
 
 Where is Configuration Read From?
----------------------------------
+=================================
 
 Configuration is read by default from the ``ows_cfg object`` in ``datacube_ows/ows_cfg.py``
 but this can be overridden by setting the :envvar:`DATACUBE_OWS_CFG` environment variable.
@@ -64,7 +64,7 @@ possible for configurations as python file.
 .. _DATACUBE_OWS_CFG:
 
 The DATACUBE_OWS_CFG Environment Variable
-=========================================
+-----------------------------------------
 
 .. envvar:: DATACUBE_OWS_CFG
 
@@ -102,12 +102,12 @@ alternative applies):
 
    Imported as Python object (expected to be a dictionary).
 
-   N.B. It is up to you to ensure that the Python file in question is in your Python path and
-   that all package directories have a ``__init__.py`` file, etc.
+   .. note:: It is up to you to ensure that the Python file in question is in your Python path and
+      that all package directories have a ``__init__.py`` file, etc.
 
-7. Valid python object name, e.g. ``cfg_prod``
+7. Valid Python object name, e.g. ``cfg_prod``
 
-   Imported as **python** from named object in ``datacube_ows/ows_cfg.py``
+   Imported as **Python** from named object in ``datacube_ows/ows_cfg.py``
 
 8. Blank or not set
 
@@ -116,7 +116,7 @@ alternative applies):
 .. _inclusion:
 
 Inclusion: Breaking Up Config Into Multiple Files
--------------------------------------------------
+=================================================
 
 The root configuration can include configuration content from other Python or JSON files,
 allowing cleaner organisation of configuration and facilitating reuse of common configuration
@@ -199,7 +199,7 @@ Note that this does not just apply when the included Python or JSON entity is a 
 Any of the above include directives could expand to an array, or even to single integer or string.
 
 Configuration Inheritance
--------------------------
+=========================
 
 Sometimes you want to *almost* reuse a piece of configuration - e.g. you want a layer
 that is almost the same as an existing layer but with a handful of minor differences.
@@ -271,7 +271,7 @@ been parsed by the config parser - i.e. it must appear earlier in the definition
 This restriction can be avoided using direct inheritance.
 
 Behaviour of Lists
-++++++++++++++++++
+------------------
 
 Care should be taken of the special handling of lists in configuration:
 
@@ -357,9 +357,10 @@ Or::
     }
 
 
+.. _separatation_and_internationalisation:
 
 Metadata Separation and Internationalisation
---------------------------------------------
+============================================
 
 Human-readable metadata can simply be embedded directly in the configuration.  However in order to support
 use-cases like multi-language internationalisation and integrating metadata with external
@@ -367,7 +368,7 @@ content management systems, all human-readable metadata in the OWS configuration
 into a separate file and managed independently.
 
 Metadata Separation
-+++++++++++++++++++
+-------------------
 
 To separate your metadata from config (either as an end in itself, or as preparation for internationalisation/translation):
 
@@ -420,13 +421,14 @@ Fields that can be included in the message file are:
    then the resulting combined value "less than 0.0" WILL be picked up the translation engine.
 
 Internationalisation/Translation of Metadata
-++++++++++++++++++++++++++++++++++++++++++++
+--------------------------------------------
 
 Once you have extracted your metadata into a single file, separate from the main body of configuration,
 as described `above <#metadata-separation>`_, generate a translation catalog for every language you want
-translations for - including the "native" language that your messages file is already in::
+translations for - including the "native" language that your messages file is already in.
 
-    # Create new translation catalogs for English (en), German (de), French (Fr) and Swahili (Sw).
+For example, to create new translation translation catalogs for English (en),
+German (de), French (Fr) and Swahili (Sw)::
 
     datacube-ows-cfg translation -n -D my_ows_project -d /config/translations -m /config/messages.po en de fr sw
 
@@ -463,7 +465,7 @@ you are serving multi-lingually!  (Adjust your client's "Accept-Language" header
 .. _root-configuration-object:
 
 General Config Structure
-------------------------
+========================
 
 At the top level, the Datacube OWS configuration is a single dictionary with the following elements::
 

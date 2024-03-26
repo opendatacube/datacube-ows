@@ -30,12 +30,11 @@ of their data product and the use of the Open Data Cube (ODC). It aims to:
 2. demonstrate how to configure OWS styles with real-world examples.
 
 For thorough technical description of the configuration format,
-`see the configuration documentation
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
+:doc:`see the configuration documentation <configuration>`.
 
 Setting up an ODC environment and installing datacube-ows is also beyond the scope
 of this HOWTO, but if you are using a JupyterHubs based system like DEA Sandbox,
-a `Quick Start Guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto_jupyter.html>`_
+a :doc:`Quick Start Guide <styling_howto_jupyter>`
 is available.
 
 Introduction - Testing styles
@@ -93,9 +92,7 @@ RGB "true colour" visualisation.
     }
 
 Don't worry yet about understanding what that all means, we'll cover that later. For now, we
-can apply this style to the data, and write the result to disk as a PNG file:
-
-::
+can apply this style to the data, and write the result to disk as a PNG file::
 
     from datacube_ows.styles.api import StandaloneStyle, apply_ows_style_cfg, xarray_image_as_png
 
@@ -106,12 +103,10 @@ can apply this style to the data, and write the result to disk as a PNG file:
 
 The resulting image looks like this:
 
-.. image:: https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png
+.. image:: images/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.webp
     :width: 600
 
-If you are using a notebooks based environment like JupyterHub, you can display the image using the ``plot_image`` API functions:
-
-::
+If you are using a notebooks based environment like JupyterHub, you can display the image using the ``plot_image`` API functions:::
 
     # Assumes the spatial dimensions are called "x" and "y".
     plot_image_with_style_cfg(rgb_cfg, data)
@@ -119,11 +114,9 @@ If you are using a notebooks based environment like JupyterHub, you can display 
     # If the spatial dimensions have other names, you must pass them in manually, e.g.:
     plot_image_with_style_cfg(rgb_cfg, data, x="longitude", y="latitude")
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
 
-Refer to `the documentation <https://datacube-ows.readthedocs.io/en/latest/cfg_style_api.html>`_ for more
+Refer to :doc:`the documentation <cfg_style_api>` for more
 information about the OWS styling API.
 
-`Next <https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html>`_
+:doc:`Next <style_howto_components>`
 we start to look at how style configurations work.

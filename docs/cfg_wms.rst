@@ -37,13 +37,13 @@ E.g.:
 S3 Data URL Elements
 ====================
 
-These entries are used for constructing S3 data urls for use in GetFeatureInfo
+These entries are used for constructing S3 data URLs for use in GetFeatureInfo
 responses.  This feature is restricted to data stored in AWS S3 and is fairly
 specialised to DEA requirements and may not be suitable for other use cases.  All
 these entries are optional.
 
 s3_url
-   The base url exposing the public S3 bucket containing the data.
+   The base URL exposing the public S3 bucket containing the data.
 
 s3_bucket
    The name of the S3 bucket.

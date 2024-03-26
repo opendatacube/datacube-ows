@@ -131,9 +131,7 @@ Saving or Displaying Images
 ---------------------------
 
 A helper method is provided to convert a uint8 RGBA Xarray (such as are returned by
-the ``apply_ows_style`` methods discussed above) into a PNG image:
-
-::
+the ``apply_ows_style`` methods discussed above) into a PNG image::
 
     with open("filename.png", "wb") as fp:
         fp.write(xarray_image_as_png(image)
@@ -173,9 +171,7 @@ Bulk Processing
 
 Bulk processing over a non-spatial dimension of the input data (usually time) is supported via the
 optional ``loop_over`` parameter to ``apply_ows_style``, ``apply_ows_style_cfg``, and
-``xarray_image_as_png``:
-
-::
+``xarray_image_as_png``::
 
     from datacube import Datacube
     from datacube_ows.styles.api import StandaloneStyle

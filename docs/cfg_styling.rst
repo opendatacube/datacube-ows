@@ -286,7 +286,7 @@ E.g. given supported languages (in the global section)::
         "ar"
     ]
 
-You can specify language specific legend urls with::
+You can specify language specific legend URLs with::
 
     "url": {
         "en": "http://myimages.com/this_product/this_style/default_english_legend.png",   # default legend image
@@ -302,7 +302,7 @@ In the above example:
 * French and Arabic requests will get their specific language legends.
 * Italian is not a supported language, so the Italian url will be ignored.  Italian requests will get the default
   (English) legend.
-* Removing the English url from the `urls` dictionary will result in an error as English is the default language.
+* Removing the English URL from the `urls` dictionary will result in an error as English is the default language.
 
 multi_date
 ++++++++++

@@ -1,0 +1,25 @@
+[project]
+name = "docs"
+version = "0.1.0"
+description = "Add a short description here"
+authors = ["Damien Ayers <damien@omad.net>"]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tasks]
+
+[dependencies]
+sphinx = ">=7.2.6,<7.3"
+sphinx-click = ">=5.1.0,<5.2"
+sphinx-autobuild = ">=2024.2.4,<2024.3"
+datacube = ">=1.8.17,<1.9"
+deepdiff = ">=6.7.1,<6.8"
+slugify = ">=0.0.1,<0.1"
+flask-babel = ">=4.0.0,<4.1"
+pillow = ">=10.2.0,<10.3"
+timezonefinder = ">=6.4.1,<6.5"
+matplotlib = ">=3.8.3,<3.9"
+
+[pypi-dependencies]
+pyows = "*"
+colour = "*"

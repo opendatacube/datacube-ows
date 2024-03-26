@@ -354,7 +354,7 @@ are mapped to user-accessible dates. The acceptable values are:
 
 * "summary"
   Data has time dimension based on the start date of start datetime of datasets,
-  which are expected to have a `00:00:00.0000+00" time portion.
+  which are expected to have a ``00:00:00.0000+00`` time portion.
 
   Used for daily, weekly, monthly, quarterly or annual summary data.
 
@@ -410,7 +410,7 @@ Regular Time Axis (time_axis)
 
 The time axis is how OWS publishes the dates for which data is available.  The default
 behaviour (``time_axis`` not specified or ``None``) is to use an irregular time axis, where the available dates
-(as cached in :doc:`the OWS range tables <database`)
+(as cached in :doc:`the OWS range tables <database>`)
 are listed individually.  These long lists of dates lead to unnecessarily large capabilities documents
 for all supported protocols.
 
@@ -454,9 +454,7 @@ Hiding layers from WCS
 If WCS is activated globally, by default all named layers are automatically included as WCS coverages.
 
 If you want to support WCS for some layers only, you can disable individual layers from WCS using either of
-the following methods:
-
-::
+the following methods::
 
     "wcs": False,
 
@@ -473,9 +471,7 @@ Bands Dictionary (bands)
 ------------------------
 
 The "bands" section is required for all named layers.
-It contains a dictionary of supported bands and aliases:
-
-::
+It contains a dictionary of supported bands and aliases::
 
     "bands": {
         "red": ["crimson", "scarlet"],
@@ -509,7 +505,7 @@ Band aliases are useful:
 URL patching (patch_url_function)
 ---------------------------------
 
-An arbitrary function can be supplied to patch data urls for the layer.  URLs from the
+An arbitrary function can be supplied to patch data URLs for the layer.  URLs from the
 ODC database are passed through the patching function before loading.  This can be
 used to access data held by commercial data providers that require cryptographic signing
 of data urls for authentication (e.g. Microsoft Planetary Computer).  They may also be used
@@ -520,7 +516,7 @@ The "patch_url_function" config element is set using OWS's :doc:`function config
 The function is expected to take a string containing an unpatched url and return a
 string containing the patched url.
 
-"patch_url_function" is optional, the default is None, meaning use ODC urls unpatched.
+"patch_url_function" is optional, the default is None, meaning use ODC URLs unpatched.
 
 Note that the same function is applied to all products for the layer.  Multi-product
 (or separate masking product) scenarios that require a different patching paradigm
@@ -958,8 +954,7 @@ loaded from the Data Cube (defaults to an empty list).  This is
 useful if the extent mask function requires a particular band
 or bands to be present.
 
-E.g.
-
+E.g. ::
 
 
     "extent_mask_func": "datacube_ows.ogc_utils.mask_by_quality",

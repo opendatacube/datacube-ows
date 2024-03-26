@@ -96,11 +96,9 @@ vegetation (npv)" band mapped to blue.
         "scale_range": [0.0, 100.0],
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.png
+.. image:: images/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.png>`_
 
 As you can clearly see from comparing this image to the colour map examples in the last chapter,
 areas of cloud and water give false positives as npv.
@@ -138,11 +136,9 @@ keep in the image - pixels that fail any of the pq_mask rules will be transparen
         ]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113673585-89a2b980-96fc-11eb-9b73-cfb222c7c621.png
+.. image:: images/113673585-89a2b980-96fc-11eb-9b73-cfb222c7c621.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/113673585-89a2b980-96fc-11eb-9b73-cfb222c7c621.png>`_
 
 Example: Enumeration masking
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -167,11 +163,9 @@ can be done using ``enum`` masking rules:
         ]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.png
+.. image:: images/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.png>`_
 
 What happened here?  Remember pq_masking rules specify the values to keep, so setting enum to 1 means that we
 only keep pixels which are marked nodata in WOFS - everything else becomes transparent.
@@ -200,11 +194,9 @@ match the rule and make pixels that do transparent:
         ]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113792888-59096100-978a-11eb-9781-b266dc8f40ee.png
+.. image:: images/113792888-59096100-978a-11eb-9781-b266dc8f40ee.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/113792888-59096100-978a-11eb-9781-b266dc8f40ee.png>`_
 
 Example: Complex logic
 &&&&&&&&&&&&&&&&&&&&&&
@@ -252,11 +244,9 @@ Finally we look at a more complex example:
 This is not a particularly useful visualisation, but it hopefully demonstrates how everything fits together
 when building up mask logic.
 
-.. image:: https://user-images.githubusercontent.com/4548530/113793657-29f3ef00-978c-11eb-951a-c9c7488631de.png
+.. image:: images/113793657-29f3ef00-978c-11eb-951a-c9c7488631de.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/113793657-29f3ef00-978c-11eb-951a-c9c7488631de.png>`_
 
 Alpha Masking in Component Styles
 +++++++++++++++++++++++++++++++++
@@ -304,11 +294,9 @@ transparent with values between 0 and 0.5 shown partially transparent:
         "scale_range": (50, 3000),
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113795937-5d854800-9791-11eb-9a49-25ea8cbced64.png
+.. image:: images/113795937-5d854800-9791-11eb-9a49-25ea8cbced64.webp
     :width: 600
 
-`View full size
-<https://user-images.githubusercontent.com/4548530/113795937-5d854800-9791-11eb-9a49-25ea8cbced64.png>`_
 
 `In the next chapter
 <https://datacube-ows.readthedocs.io/en/latest/style_howto_legends.html>`_ we look at how to generate
