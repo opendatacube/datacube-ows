@@ -248,7 +248,7 @@ class DataStacker:
             if pbq.manual_merge:
                 qry_result = self.manual_data_stack(datasets, measurements, pbq.bands, skip_corrections, fuse_func=fuse_func)
             else:
-                qry_result = self.read_data(datasets, measurements, self._geobox, self._resampling, fuse_func=fuse_func)
+                qry_result = self.read_data(datasets, measurements, self._geobox, resampling=self._resampling, fuse_func=fuse_func)
             if data is None:
                 data = qry_result
                 continue
@@ -332,8 +332,9 @@ class DataStacker:
         return result
 
     # Read data for given datasets and measurements per the output_geobox
+    # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data(self, datasets, measurements, geobox, resampling=Resampling.nearest, fuse_func=None):
+    def read_data(self, datasets, measurements, geobox, skip_broken = True, resampling=Resampling.nearest, fuse_func=None):
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
@@ -341,13 +342,15 @@ class DataStacker:
                     geobox,
                     measurements=measurements,
                     fuse_func=fuse_func,
+                    skip_broken_datasets=skip_broken,
                     patch_url=self._product.patch_url)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise
     # Read data for single datasets and measurements per the output_geobox
+    # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data_for_single_dataset(self, dataset, measurements, geobox, resampling=Resampling.nearest, fuse_func=None):
+    def read_data_for_single_dataset(self, dataset, measurements, geobox, skip_broken = True, resampling=Resampling.nearest, fuse_func=None):
         datasets = [dataset]
         dc_datasets = datacube.Datacube.group_datasets(datasets, self._product.time_resolution.dataset_groupby())
         CredentialManager.check_cred()
@@ -357,6 +360,7 @@ class DataStacker:
                 geobox,
                 measurements=measurements,
                 fuse_func=fuse_func,
+                skip_broken_datasets=skip_broken,
                 patch_url=self._product.patch_url)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
