@@ -20,7 +20,7 @@ install_requirements = [
     'deepdiff',
     'matplotlib',
     'pyparsing',
-    'numpy',
+    'numpy>=1.22',
     'scipy',
     'Pillow',
     'Babel',
