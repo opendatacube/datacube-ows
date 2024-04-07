@@ -22,7 +22,7 @@ install_requirements = [
     'pyparsing',
     'numpy>=1.22',
     'scipy',
-    'Pillow',
+    'Pillow>=10.2.0',
     'Babel',
     'Flask-Babel>3.0.0',   # New API in 3.x, bug in 3.0.0
     'psycopg2',
