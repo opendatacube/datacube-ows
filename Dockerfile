@@ -1,5 +1,5 @@
 # Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.4 as builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.5 as builder
 
 # Setup build env for postgresql-client-14
 USER root
@@ -36,7 +36,7 @@ RUN if [ "$PYDEV_DEBUG" = "yes" ]; then \
 RUN pip freeze
 
 # Should match builder base.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.4
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.5
 
 # all the python pip installed libraries
 COPY --from=builder  /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
