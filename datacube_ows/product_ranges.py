@@ -422,22 +422,22 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
             dt_parser = lambda dts: datetime.fromisoformat(dts)
         else:
             dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()
-        times = [dt_parser(d) for d in result["dates"] if d is not None]
+        times = [dt_parser(d) for d in result.dates if d is not None]
         if not times:
             return None
         return {
             "lat": {
-                "min": float(result["lat_min"]),
-                "max": float(result["lat_max"]),
+                "min": float(result.lat_min),
+                "max": float(result.lat_max),
             },
             "lon": {
-                "min": float(result["lon_min"]),
-                "max": float(result["lon_max"]),
+                "min": float(result.lon_min),
+                "max": float(result.lon_max),
             },
             "times": times,
             "start_time": times[0],
             "end_time": times[-1],
             "time_set": set(times),
-            "bboxes": cfg.alias_bboxes(result["bboxes"])
+            "bboxes": cfg.alias_bboxes(result.bboxes)
         }
     return None
