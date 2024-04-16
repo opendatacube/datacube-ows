@@ -24,8 +24,12 @@ ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"
 WORKDIR /code
 COPY . /code
 
-RUN echo "version=\"$(python3 setup.py --version)\"" > datacube_ows/_version.py \
-    && pip install --no-cache-dir .[ops,test]
+WORKDIR /code/datacube-core
+RUN pip install .[s3,performance]
+WORKDIR /code
+
+RUN echo "version=\"$(python3 setup.py --version)\"" > datacube_ows/_version.py
+RUN pip install --no-cache-dir .[ops,test]
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
