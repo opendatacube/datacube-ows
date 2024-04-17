@@ -513,7 +513,7 @@ def test_alpha_style_map(
 
 
     band = np.array([True, True, True])
-    timarray = [np.datetime64(datetime.date.today())]
+    timarray = [np.datetime64(datetime.date.today(), "ns")]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     da = DataArray(band, name='foo',
                          attrs = {
@@ -686,7 +686,7 @@ def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
 
     dim = np.array([0, 1, 2, 3, 4, 5])
     band = np.array([0, 0, 1, 1, 2, 2])
-    timarray = [np.datetime64(datetime.date.today())]
+    timarray = [np.datetime64(datetime.date.today(), "ns")]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     da = DataArray(band, name='foo', coords={"dim": dim}, dims=["dim"])
     dst = Dataset(data_vars={'foo': da})
@@ -841,7 +841,7 @@ def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc):
 
     dim = np.array([0, 1, 2, 3, 4, 5])
     band = np.array([0, 1, 2, 3, 4, 5])
-    timarray = [np.datetime64(datetime.date.today())]
+    timarray = [np.datetime64(datetime.date.today(), "ns")]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     data_vars = {
         "pq": DataArray(band, name='pq', coords={"dim": dim}, dims=["dim"]),

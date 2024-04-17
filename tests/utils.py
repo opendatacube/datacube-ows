@@ -17,7 +17,7 @@ coords = [
         10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0,
     ]),
     ('y', [-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]),
-    ('time', [np.datetime64(datetime.date.today())])
+    ('time', [np.datetime64(datetime.date.today(), "ns")])
 ]
 
 
@@ -54,7 +54,7 @@ def dim1_da(name, vals, coords, with_time=True, attrs=None):
     }
     if with_time:
         dims.append("time")
-        coords["time"] = [np.datetime64(datetime.date.today())]
+        coords["time"] = [np.datetime64(datetime.date.today(), "ns")]
         shape.append(1)
     buff_arr = np.array(vals)
     data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
@@ -77,7 +77,7 @@ def dim1_da_time(name, vals, dates, coords, attrs=None):
     shape = [len(coords), len(dates)]
     coords = {
         "dim": coords,
-        "time": [np.datetime64(d) for d in dates],
+        "time": [np.datetime64(d, "ns") for d in dates],
     }
     buff_arr = np.array(vals)
     data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
