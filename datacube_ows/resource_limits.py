@@ -8,7 +8,8 @@ from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
 
 import affine
 import numpy as np
-from datacube.utils.geometry import CRS, GeoBox, polygon
+from odc.geo.geom import CRS, polygon
+from odc.geo.geobox import GeoBox
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
 from datacube_ows.ogc_utils import (ConfigException, cache_control_headers,
@@ -124,7 +125,7 @@ class RequestScale:
 
 
 RequestScale.standard_scale = RequestScale(CRS("EPSG:3857"), (25.0, 25.0),
-                                           GeoBox(width=256, height=256, affine=affine.identity, crs="EPSG:3857"),
+                                           GeoBox((256, 256), affine=affine.identity, crs="EPSG:3857"),
                                            1, total_band_size=(3 * 2))
 
 

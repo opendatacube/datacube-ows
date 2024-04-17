@@ -7,7 +7,8 @@ import numpy
 import pytz
 import xarray
 from affine import Affine
-from datacube.utils import geometry
+from odc.geo import geom
+from odc.geo.geobox import GeoBox
 from dateutil.parser import parse
 from ows.util import Version
 from rasterio import MemoryFile
@@ -104,7 +105,7 @@ class WCS1GetCoverageRequest():
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="BBOX parameter")
 
-        self.specified_search_extent = geometry.polygon([(self.minx, self.miny),
+        self.specified_search_extent = geom.polygon([(self.minx, self.miny),
                                         (self.minx, self.maxy),
                                         (self.maxx, self.maxy),
                                         (self.maxx, self.miny),
@@ -121,7 +122,7 @@ class WCS1GetCoverageRequest():
             self.maxx = bbox.right
             self.miny = bbox.bottom
             self.maxy = bbox.top
-            self.extent = geometry.polygon(
+            self.extent = geom.polygon(
                 [
                     (self.minx, self.miny), (self.minx, self.maxy),
                     (self.maxx, self.maxy), (self.maxx, self.miny),
@@ -300,7 +301,7 @@ class WCS1GetCoverageRequest():
         trans_aff = Affine.translation(self.minx, self.maxy)
         scale_aff = Affine.scale(xscale, yscale)
         self.affine = trans_aff * scale_aff
-        self.geobox = geometry.GeoBox(self.width, self.height, self.affine, self.response_crs)
+        self.geobox = GeoBox((self.height, self.width), self.affine, self.response_crs)
         self.ows_stats = bool(args.get("ows_stats"))
 
 
@@ -388,7 +389,10 @@ def get_coverage_data(req, qprof):
         datasets = stacker.datasets(index=dc.index)
         qprof.end_event("fetch-datasets")
         if qprof.active:
-            qprof["datasets"] = {str(q): ids for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()}
+            qprof["datasets"] = {
+                str(q): [str(i) for i in ids]
+                for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()
+            }
         qprof.start_event("load-data")
         output = stacker.data(datasets, skip_corrections=True)
         qprof.end_event("load-data")
@@ -457,7 +461,7 @@ def get_tiff(req, data):
 
 def get_netcdf(req, data):
     # Cleanup dataset attributes for NetCDF export
-    data.attrs["crs"] = req.response_crsid # geometry.CRS(response_crs)
+    data.attrs["crs"] = req.response_crsid
     for k, v in data.data_vars.items():
         v.attrs["crs"] = req.response_crsid
         if "spectral_definition" in v.attrs:

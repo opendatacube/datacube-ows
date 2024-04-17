@@ -15,7 +15,8 @@ import numpy
 import numpy.ma
 import pytz
 import xarray
-from datacube.utils import geometry
+from odc.geo import geom
+from odc.geo.geobox import GeoBox
 from datacube.utils.masking import mask_to_dict
 from flask import render_template
 from pandas import Timestamp
@@ -374,7 +375,7 @@ def datasets_in_xarray(xa):
 
 
 def bbox_to_geom(bbox, crs):
-    return datacube.utils.geometry.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
+    return geom.box(bbox.left, bbox.bottom, bbox.right, bbox.top, crs)
 
 
 def user_date_sorter(layer, odc_dates, geom, user_dates):
@@ -777,7 +778,7 @@ def feature_info(args):
     if geobox_is_point(params.geobox):
         geo_point_geobox = params.geobox
     else:
-        geo_point_geobox = datacube.utils.geometry.GeoBox.from_geopolygon(
+        geo_point_geobox = GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
     tz = tz_for_geometry(geo_point_geobox.geographic_extent)
     stacker = DataStacker(params.product, geo_point_geobox, params.times)
@@ -818,10 +819,10 @@ def feature_info(args):
 
                         x = data_x[isel_kwargs[h_coord]].item()
                         y = data_y[isel_kwargs[v_coord]].item()
-                        pt = geometry.point(x, y, params.crs)
+                        pt = geom.point(x, y, params.crs)
 
                         # Project to EPSG:4326
-                        crs_geo = geometry.CRS("EPSG:4326")
+                        crs_geo = geom.CRS("EPSG:4326")
                         ptg = pt.to_crs(crs_geo)
 
                         # Capture lat/long coordinates

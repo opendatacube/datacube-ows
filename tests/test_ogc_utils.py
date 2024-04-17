@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import xarray
-from datacube.utils import geometry
+from odc.geo.geom import polygon
 from pytz import utc
 
 import datacube_ows.ogc_utils
@@ -46,7 +46,7 @@ def test_dataset_center_time():
 @pytest.fixture
 def dummy_ds():
     ds = MagicMock()
-    ds.extent = geometry.polygon(
+    ds.extent = polygon(
         [
             (149.0, -35.3),
             (149.1, -35.3),

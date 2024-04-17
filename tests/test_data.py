@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 import pytz
-from datacube.utils import geometry
+from odc.geo.geom import polygon
 from xarray import Dataset
 
 import datacube_ows.data
@@ -279,7 +279,7 @@ def test_user_date_sorter():
     minx, maxx = 140, 141
     miny, maxy = -35, -34
     crs = "EPSG:4326"
-    geom = geometry.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
+    geom = polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
 
     odc_dates =  [
         np.datetime64(datetime.datetime(2018, 12, 31, 20, 0, 0, tzinfo=pytz.UTC)),

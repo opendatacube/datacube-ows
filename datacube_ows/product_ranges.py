@@ -10,6 +10,7 @@ import math
 from datetime import datetime, timezone
 
 import datacube
+import odc.geo
 from psycopg2.extras import Json
 from sqlalchemy import text
 
@@ -24,7 +25,7 @@ def get_crsids(cfg=None):
 
 
 def get_crses(cfg=None):
-    return {crsid: datacube.utils.geometry.CRS(crsid) for crsid in get_crsids(cfg)}
+    return {crsid: odc.geo.CRS(crsid) for crsid in get_crsids(cfg)}
 
 
 def jsonise_bbox(bbox):
@@ -121,8 +122,8 @@ def create_multiprod_range_entry(dc, product, crses):
 
     r = results[0]
 
-    epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
-    box = datacube.utils.geometry.box(
+    epsg4326 = odc.geo.CRS("EPSG:4326")
+    box = odc.geo.geom.box(
         float(r[2]),
         float(r[0]),
         float(r[3]),
@@ -244,8 +245,8 @@ def create_range_entry(dc, product, crses, time_resolution):
 
   r = results[0]
 
-  epsg4326 = datacube.utils.geometry.CRS("EPSG:4326")
-  box = datacube.utils.geometry.box(
+  epsg4326 = odc.geo.CRS("EPSG:4326")
+  box = odc.geo.geom.box(
     float(r[2]),
     float(r[0]),
     float(r[3]),
