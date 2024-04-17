@@ -38,6 +38,11 @@ Features
 * Supports WCS versions 1.0.0, 2.0.0 and 2.1.0.
 * Richly featured styling engine for serving data visualisations via WMS and WMTS.
 
+System Architecture
+-------------------
+
+.. image:: https://private-user-images.githubusercontent.com/4548530/323402306-25f0d5d0-b165-4b46-b2f7-f05193dde9d1.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTMzOTU4MjEsIm5iZiI6MTcxMzM5NTUyMSwicGF0aCI6Ii80NTQ4NTMwLzMyMzQwMjMwNi0yNWYwZDVkMC1iMTY1LTRiNDYtYjJmNy1mMDUxOTNkZGU5ZDEucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI0MDQxNyUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNDA0MTdUMjMxMjAxWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9MDBhMzUwMWM2MmI4NGQyYjEwNTQwNWQxODNlYzI1MzUwNjZiNGU2Y2E4NTFhYmMwY2NiYTU3NzVkZTg5NjY1YyZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QmYWN0b3JfaWQ9MCZrZXlfaWQ9MCZyZXBvX2lkPTAifQ.oHLvAbdB1aFp8lthx_MfT2uFgst4PqQ_t91Q7FcQS1Y
+
 Community
 ---------
 
@@ -134,9 +139,8 @@ To run the standard Docker image, create a docker volume containing your ows con
         -e AWS_NO_SIGN_REQUEST=yes                                 # Allowing access to AWS S3 buckets
         -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
         -e SENTRY_DSN=https://key@sentry.local/projid \            # Key for Sentry logging (optional)
-        -e DB_HOSTNAME=172.17.0.1 -e DB_PORT=5432 \                # Hostname/IP address and port of ODC postgres database
-        -e DB_DATABASE=datacube \                                  # Name of ODC postgres database
-        -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
+        \ # Database connection URL: postgresql://<username>:<password>@<hostname>:<port>/<database>
+        -e ODC_DEFAULT_DB_URL=postgresql://cube:DataCube@172.17.0.1:5432/datacube \
         -e PYTHONPATH=/code                                        # The default PATH is under env, change this to target /code
         -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
         \                                                          # container at port 8008 on the host machine.
@@ -175,7 +179,7 @@ The following instructions are for installing on a clean Linux system.
 
 * init datacube and ows schema::
 
-    export DATACUBE_DB_URL=postgresql:///ows
+    export ODC_DEFAULT_DB_URL=postgresql:///ows
     datacube system init
 
     # to create schema, tables and materialised views used by datacube-ows.

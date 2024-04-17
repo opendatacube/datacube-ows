@@ -17,26 +17,14 @@ the ``$DATACUBE_OWS_CFG_ALLOW_S3`` environment variable needs to be set to ``YES
 Open DataCube Database Connection
 ---------------------------------
 
-The preferred method of configuring the ODC database is with the ``$DB_*``
-environment variables:
+The preferred method of configuring the ODC database is with the ``$DEFAULT_ODC_DB_URL``
+environment variable. The format of postgres connection URL is::
 
-DB_HOSTNAME:
-    The hostname or IP address of the database server. Defaults to ``localhost``.
-
-DB_PORT:
-    The port number of the database server. Defaults to ``5432``.
-
-DB_DATABASE:
-    The database name.
-
-DB_USERNAME:
-    The database user to connect as.
-
-DB_PASSWORD:
-    The database password.
+    postgresql://<username>:<password>@<hostname>:<port>/<database>
 
 Other valid methods for configuring an OpenDatacube instance (e.g. a ``.datacube.conf`` file)
-should also work.
+should also work.  However OWS currently expects to use the `default` configuration environment
+and only works with legacy/postgres index driver.
 
 Configuring AWS Access
 ----------------------
