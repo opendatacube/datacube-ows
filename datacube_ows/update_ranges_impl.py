@@ -10,7 +10,7 @@ import re
 import sys
 
 import click
-import pkg_resources
+import importlib.resources
 import psycopg2
 import sqlalchemy
 from datacube import Datacube
@@ -128,20 +128,18 @@ def create_schema(dc, role):
 
 
 def run_sql(dc, path, **params):
-    if not pkg_resources.resource_exists(__name__, f"sql/{path}"):
-        print("Cannot find SQL resources - check your datacube-ows installation")
-        return
-    if not pkg_resources.resource_isdir(__name__, f"sql/{path}"):
+    if not importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").is_dir():
         print("Cannot find SQL resource directory - check your datacube-ows installation")
         return
 
-    files = sorted(pkg_resources.resource_listdir(__name__, f"sql/{path}"))
+    files = sorted(importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").iterdir())
 
     filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
     filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
     conn = get_sqlconn(dc)
 
-    for f in files:
+    for fi in files:
+        f = fi.name
         match = filename_pattern.fullmatch(f)
         if not match:
             print(f"Illegal SQL filename: {f} (skipping)")
@@ -151,18 +149,19 @@ def run_sql(dc, path, **params):
             reqs = req_match.group("reqs").split("_")
         else:
             reqs = []
-        sql_stream = pkg_resources.resource_stream(__name__, f"sql/{path}/{f}")
-        sql = ""
-        first = True
-        for line in sql_stream:
-            line = str(line, "utf-8")
-            if first and line.startswith("--"):
-                print(line[2:])
-            else:
-                sql = sql + "\n" + line
-                if first:
-                    print(f"Running {f}")
-            first = False
+        ref = importlib.resources.files("datacube_ows").joinpath(f"sql/{path}/{f}")
+        with ref.open("rb") as fp:
+            sql = ""
+            first = True
+            for line in fp:
+                line = str(line, "utf-8")
+                if first and line.startswith("--"):
+                    print(line[2:])
+                else:
+                    sql = sql + "\n" + line
+                    if first:
+                        print(f"Running {f}")
+                first = False
         if reqs:
             try:
                 kwargs = {v: params[v] for v in reqs}
