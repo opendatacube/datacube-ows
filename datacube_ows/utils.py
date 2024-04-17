@@ -69,8 +69,7 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
         grp_by = lambda ds: npdt64(datetime.datetime(
             ds.time.begin.year,
             ds.time.begin.month,
-            ds.time.begin.day,
-            tzinfo=pytz.utc), "ns")
+            ds.time.begin.day), "ns")
     else:
         grp_by = lambda ds: npdt64(datetime.datetime(
             ds.time.begin.year,
@@ -78,8 +77,7 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
             ds.time.begin.day,
             ds.time.begin.hour,
             ds.time.begin.minute,
-            ds.time.begin.second,
-            tzinfo=ds.time.begin.tzinfo), "ns")
+            ds.time.begin.second), "ns")
     return GroupBy(
         dimension='time',
         group_by_func=grp_by,
