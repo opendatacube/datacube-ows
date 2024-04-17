@@ -9,7 +9,7 @@
 from setuptools import find_packages, setup
 
 install_requirements = [
-    # 'datacube[performance,s3]>1.9.0-rc3',
+    'datacube[performance,s3]>=1.9.0-rc4',
     'flask',
     'requests',
     'affine',
@@ -49,7 +49,7 @@ test_requirements = [
 ]
 
 dev_requirements = [
-    'pydevd-pycharm~=221.5921.27', # For Pycharm 2022.1.3
+    'pydevd-pycharm~=232.10072.31',
     'pylint',
     'sphinx_click',
     'pre-commit',
@@ -103,7 +103,7 @@ Features
             'datacube-ows-cfg=datacube_ows.cfg_parser_impl:main'
         ]
     },
-    python_requires=">=3.8.0",
+    python_requires=">=3.10.0",
     packages=find_packages(exclude=["tests", "tests.cfg", "integration_tests", "integration_tests.cfg"]),
     include_package_data=True,
     install_requires=install_requirements,
@@ -115,7 +115,7 @@ Features
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.10',
     ],
     setup_requires=setup_requirements,
     use_scm_version={

@@ -11,13 +11,19 @@ services:
         - opendatacube/ows:_builder
     image: opendatacube/ows:latest
     # Uncomment for use with non-dockerised postgres (for docker-compose 1.x)
-    network_mode: host
+    # network_mode: host
     environment:
       # Defaults are defined in .env file
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REQUEST_PAYER: ${AWS_REQUEST_PAYER}
       AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT}
+      # Hard coded for now.
+      ODC_ENVIRONMENT: default
+      ODC_DEFAULT_INDEX_DRIVER: postgres
+      # Please switch to single entry url configuration for postgres url
+      ODC_DEFAULT_DB_URL: ${ODC_DEFAULT_DB_URL}
+      # Overridden by preferred URL entry above.
       DB_HOSTNAME: ${DB_HOSTNAME}
       DB_PORT: ${DB_PORT}
       DB_USERNAME: ${DB_USERNAME}
