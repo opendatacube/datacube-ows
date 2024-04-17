@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 from affine import Affine
-from datacube.utils import geometry
+from odc.geo import geom as odc_geom
 
 
 class WCSScalerException(Exception):
@@ -156,16 +156,16 @@ class WCSScaler:
             # Prepare geometry for transformation
             old_crs_obj = self.cfg.crs(self.crs)
             if self.is_slice("x") and self.is_slice("y"):
-                geom = geometry.point(self.min.x, self.min.y, old_crs_obj)
+                geom = odc_geom.point(self.min.x, self.min.y, old_crs_obj)
                 is_point = True
             elif self.is_slice("x") or self.is_slice("y"):
-                geom = geometry.line(
+                geom = odc_geom.line(
                     (
                         (self.min.x, self.min.y),
                         (self.max.x, self.max.y)
                     ), old_crs_obj)
             else:
-                geom = geometry.polygon(
+                geom = odc_geom.polygon(
                     (
                         (self.min.x, self.min.y),
                         (self.min.x, self.max.y),

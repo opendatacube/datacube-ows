@@ -24,7 +24,7 @@ from typing import Optional, Sequence
 import numpy
 from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po
-from datacube.utils import geometry
+from odc.geo import CRS
 from ows import Version
 from slugify import slugify
 
@@ -1415,7 +1415,7 @@ class OWSConfig(OWSMetadataConfig):
             use_crs = crs_alias
         else:
             use_crs = crsid
-        return geometry.CRS(use_crs)
+        return CRS(use_crs)
 
     def response_headers(self, d):
         hdrs = self._response_headers.copy()

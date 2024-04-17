@@ -88,7 +88,7 @@ def mv_search(index: "datacube.index.Index",
 
     :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
     :param times: A list of pairs of datetimes (with time zone)
-    :param geom: A datacube.utils.geometry.Geometry object
+    :param geom: A odc.geo.geom.Geometry object
 
     :return: See MVSelectOpts doc
     """
