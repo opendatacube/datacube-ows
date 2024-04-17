@@ -9,8 +9,8 @@ from enum import Enum
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import pytz
-from odc.geo.geom import Geometry as ODCGeom
 from geoalchemy2 import Geometry
+from odc.geo.geom import Geometry as ODCGeom
 from psycopg2.extras import DateTimeTZRange
 from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, or_, select,
                         text)

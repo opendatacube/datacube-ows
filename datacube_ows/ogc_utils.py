@@ -14,10 +14,10 @@ from urllib.parse import urlparse
 
 import numpy
 from affine import Affine
-from odc.geo.geom import CRS, Geometry
-from odc.geo.geobox import GeoBox
 from dateutil.parser import parse
 from flask import request
+from odc.geo.geobox import GeoBox
+from odc.geo.geom import CRS, Geometry
 from PIL import Image
 from pytz import timezone, utc
 from timezonefinder import TimezoneFinder

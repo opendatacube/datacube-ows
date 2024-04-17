@@ -5,12 +5,12 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import importlib.resources
 import os
 import re
 import sys
 
 import click
-import importlib.resources
 import psycopg2
 import sqlalchemy
 from datacube import Datacube

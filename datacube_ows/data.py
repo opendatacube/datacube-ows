@@ -15,10 +15,10 @@ import numpy
 import numpy.ma
 import pytz
 import xarray
-from odc.geo import geom
-from odc.geo.geobox import GeoBox
 from datacube.utils.masking import mask_to_dict
 from flask import render_template
+from odc.geo import geom
+from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile

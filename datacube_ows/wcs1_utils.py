@@ -7,9 +7,9 @@ import numpy
 import pytz
 import xarray
 from affine import Affine
+from dateutil.parser import parse
 from odc.geo import geom
 from odc.geo.geobox import GeoBox
-from dateutil.parser import parse
 from ows.util import Version
 from rasterio import MemoryFile
 

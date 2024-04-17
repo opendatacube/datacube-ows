@@ -6,9 +6,9 @@
 import collections
 import logging
 
+from dateutil.parser import parse
 from odc.geo import geom
 from odc.geo.geobox import GeoBox
-from dateutil.parser import parse
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
 from rasterio import MemoryFile
 

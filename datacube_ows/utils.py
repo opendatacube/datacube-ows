@@ -10,7 +10,8 @@ from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
 
 import pytz
-from numpy import datetime64 as npdt64, datetime64
+from numpy import datetime64
+from numpy import datetime64 as npdt64
 
 F = TypeVar('F', bound=Callable[..., Any])
 

@@ -22,7 +22,6 @@ try:
 except ImportError:
     NDArray = numpy.ndarray
 from numpy import ubyte
-
 from xarray import Dataset
 
 from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig

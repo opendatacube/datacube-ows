@@ -9,10 +9,10 @@ from datetime import datetime
 import numpy
 import regex as re
 from affine import Affine
-from odc.geo import geom
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
+from odc.geo import geom
 from pytz import utc
 from rasterio.warp import Resampling
 
