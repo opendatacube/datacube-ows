@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import importlib.resources
-import os
 import re
 import sys
 

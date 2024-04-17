@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-import pytz
 from odc.geo.geom import polygon
 from xarray import Dataset
 
