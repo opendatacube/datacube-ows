@@ -438,8 +438,8 @@ def get_tiff(req, data):
         # pylint: disable=protected-access, bad-continuation
         with memfile.open(
             driver="GTiff",
-            width=data.dims[xname],
-            height=data.dims[yname],
+            width=data.sizes[xname],
+            height=data.sizes[yname],
             count=len(data.data_vars),
             transform=req.affine,
             crs=req.response_crsid,
