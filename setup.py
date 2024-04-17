@@ -57,7 +57,7 @@ dev_requirements = [
 ]
 
 operational_requirements = [
-    "gunicorn", "gunicorn[gevent]", "gevent", "prometheus_client", "sentry_sdk",
+    "gunicorn>=22.0.0", "gunicorn[gevent]", "gevent", "prometheus_client", "sentry_sdk",
     "prometheus_flask_exporter", "blinker"
 ]
 setup_requirements = ['setuptools_scm', 'setuptools']
