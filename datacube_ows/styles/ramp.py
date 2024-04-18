@@ -21,7 +21,7 @@ try:
     from numpy.typing import NDArray
 except ImportError:
     NDArray = numpy.ndarray
-
+from numpy import ubyte
 from xarray import Dataset
 
 from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig
@@ -255,7 +255,8 @@ class ColorRamp:
     def get_8bit_value(self, data: "xarray.DataArray", band: str) -> NDArray:
         val: NDArray = self.get_value(data, band)
         val = cast(NDArray, val * 255)
-        return val.astype("uint8")
+        # Is there a way to stop this raising a runtime warning?
+        return val.astype(ubyte)
 
     def apply(self, data: "xarray.DataArray") -> "xarray.Dataset":
         imgdata = cast(MutableMapping[Hashable, Any], {})
@@ -552,7 +553,7 @@ class ColorRampDef(StyleDefBase):
         Apply style to raw data to make an RGBA image xarray (single time slice only)
 
         :param data: Raw data, all bands.
-        :return: RGBA uint8 xarray
+        :return: RGBA ubyte xarray
         """
         d = self.apply_index(data)
         return self.color_ramp.apply(d)

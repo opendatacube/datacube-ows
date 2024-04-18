@@ -38,6 +38,12 @@ Features
 * Supports WCS versions 1.0.0, 2.0.0 and 2.1.0.
 * Richly featured styling engine for serving data visualisations via WMS and WMTS.
 
+System Architecture
+-------------------
+
+.. image:: docs/diagrams/ows_diagram.png
+   :width: 700
+
 Community
 ---------
 
@@ -134,9 +140,8 @@ To run the standard Docker image, create a docker volume containing your ows con
         -e AWS_NO_SIGN_REQUEST=yes                                 # Allowing access to AWS S3 buckets
         -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
         -e SENTRY_DSN=https://key@sentry.local/projid \            # Key for Sentry logging (optional)
-        -e DB_HOSTNAME=172.17.0.1 -e DB_PORT=5432 \                # Hostname/IP address and port of ODC postgres database
-        -e DB_DATABASE=datacube \                                  # Name of ODC postgres database
-        -e DB_USERNAME=cube -e DB_PASSWORD=DataCube \              # Username and password for ODC postgres database
+        \ # Database connection URL: postgresql://<username>:<password>@<hostname>:<port>/<database>
+        -e ODC_DEFAULT_DB_URL=postgresql://cube:DataCube@172.17.0.1:5432/datacube \
         -e PYTHONPATH=/code                                        # The default PATH is under env, change this to target /code
         -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
         \                                                          # container at port 8008 on the host machine.
@@ -175,7 +180,7 @@ The following instructions are for installing on a clean Linux system.
 
 * init datacube and ows schema::
 
-    export DATACUBE_DB_URL=postgresql:///ows
+    export ODC_DEFAULT_DB_URL=postgresql:///ows
     datacube system init
 
     # to create schema, tables and materialised views used by datacube-ows.

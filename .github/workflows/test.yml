@@ -4,7 +4,8 @@ name: Tests
 on:
   pull_request:
     branches:
-        - 'master'
+      - 'master'
+      - 'develop-1.9'
     paths:
       - '**'
       - '!docs/**'
@@ -70,3 +71,5 @@ jobs:
         with:
           directory: ./artifacts/
           fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

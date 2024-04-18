@@ -9,10 +9,10 @@ from datetime import datetime
 import numpy
 import regex as re
 from affine import Affine
-from datacube.utils import geometry
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
+from odc.geo import geom
 from pytz import utc
 from rasterio.warp import Resampling
 
@@ -36,10 +36,10 @@ RESAMPLING_METHODS = {
 
 def _bounding_pts(minx, miny, maxx, maxy, src_crs, dst_crs=None):
     # pylint: disable=too-many-locals
-    p1 = geometry.point(minx, maxy, src_crs)
-    p2 = geometry.point(minx, miny, src_crs)
-    p3 = geometry.point(maxx, maxy, src_crs)
-    p4 = geometry.point(maxx, miny, src_crs)
+    p1 = geom.point(minx, maxy, src_crs)
+    p2 = geom.point(minx, miny, src_crs)
+    p3 = geom.point(maxx, maxy, src_crs)
+    p4 = geom.point(maxx, miny, src_crs)
 
     conv = dst_crs is not None
     gp1 = p1.to_crs(dst_crs) if conv else p1
@@ -89,7 +89,7 @@ def _get_geobox(args, src_crs, dst_crs=None):
 
 def _get_polygon(args, crs):
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
-    poly = geometry.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
+    poly = geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
     return poly
 
 
@@ -104,7 +104,7 @@ def zoom_factor(args, crs):
     # Project to a geographic coordinate system
     # This is why we can't just use the regular geobox.  The scale needs to be
     # "standardised" in some sense, not dependent on the CRS of the request.
-    geo_crs = geometry.CRS("EPSG:4326")
+    geo_crs = geom.CRS("EPSG:4326")
     minx, miny, maxx, maxy = _bounding_pts(
         minx, miny,
         maxx, maxy,
@@ -121,7 +121,7 @@ def img_coords_to_geopoint(geobox, i, j):
     cfg = get_config()
     h_coord = cfg.published_CRSs[str(geobox.crs)]["horizontal_coord"]
     v_coord = cfg.published_CRSs[str(geobox.crs)]["vertical_coord"]
-    return geometry.point(geobox.coordinates[h_coord].values[int(i)],
+    return geom.point(geobox.coordinates[h_coord].values[int(i)],
                           geobox.coordinates[v_coord].values[int(j)],
                           geobox.crs)
 
@@ -423,7 +423,7 @@ class GetMapParameters(GetParameters):
         self.resampling = Resampling.nearest
 
         self.resources = RequestScale(
-            native_crs=geometry.CRS(self.product.native_CRS),
+            native_crs=geom.CRS(self.product.native_CRS),
             native_resolution=(self.product.resolution_x, self.product.resolution_y),
             geobox=self.geobox,
             n_dates=len(self.times),
@@ -486,8 +486,8 @@ def solar_correct_data(data, dataset):
     # See for example http://gsp.humboldt.edu/olm_2015/Courses/GSP_216_Online/lesson4-1/radiometric.html
     native_x = (dataset.bounds.right + dataset.bounds.left) / 2.0
     native_y = (dataset.bounds.top + dataset.bounds.bottom) / 2.0
-    pt = geometry.point(native_x, native_y, dataset.crs)
-    crs_geo = geometry.CRS("EPSG:4326")
+    pt = geom.point(native_x, native_y, dataset.crs)
+    crs_geo = geom.CRS("EPSG:4326")
     geo_pt = pt.to_crs(crs_geo)
     data_time = dataset.center_time.astimezone(utc)
     data_lon, data_lat = geo_pt.coords[0]

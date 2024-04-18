@@ -9,8 +9,8 @@ from enum import Enum
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import pytz
-from datacube.utils.geometry import Geometry as ODCGeom
 from geoalchemy2 import Geometry
+from odc.geo.geom import Geometry as ODCGeom
 from psycopg2.extras import DateTimeTZRange
 from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, or_, select,
                         text)
@@ -88,7 +88,7 @@ def mv_search(index: "datacube.index.Index",
 
     :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
     :param times: A list of pairs of datetimes (with time zone)
-    :param geom: A datacube.utils.geometry.Geometry object
+    :param geom: A odc.geo.geom.Geometry object
 
     :return: See MVSelectOpts doc
     """

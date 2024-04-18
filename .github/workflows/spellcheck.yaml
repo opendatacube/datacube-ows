@@ -4,7 +4,8 @@ name: Spell check
 on:
   pull_request:
     branches:
-        - 'master'
+      - 'master'
+      - 'develop-1.9'
     paths:
       - 'docs/**'
       - '*.md'

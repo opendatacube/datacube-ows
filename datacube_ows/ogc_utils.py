@@ -14,9 +14,10 @@ from urllib.parse import urlparse
 
 import numpy
 from affine import Affine
-from datacube.utils import geometry
 from dateutil.parser import parse
 from flask import request
+from odc.geo.geobox import GeoBox
+from odc.geo.geom import CRS, Geometry
 from PIL import Image
 from pytz import timezone, utc
 from timezonefinder import TimezoneFinder
@@ -108,7 +109,7 @@ def tz_for_coord(lon: Union[float, int], lat: Union[float, int]) -> datetime.tzi
     return timezone(tzn)
 
 
-def local_solar_date_range(geobox: geometry.GeoBox, date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
+def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
     """
     Converts a date to a local solar date datetime range.
 
@@ -169,7 +170,7 @@ def day_summary_date_range(date: datetime.date) -> Tuple[datetime.datetime, date
     return start, end
 
 
-def tz_for_geometry(geom: geometry.Geometry) -> datetime.tzinfo:
+def tz_for_geometry(geom: Geometry) -> datetime.tzinfo:
     """
     Determine the timezone from a geometry.  Be clever if we can,
     otherwise use a minimal timezone based on the longitude.
@@ -177,9 +178,9 @@ def tz_for_geometry(geom: geometry.Geometry) -> datetime.tzinfo:
     :param geom: A geometry object
     :return: A timezone object
     """
-    crs_geo = geometry.CRS("EPSG:4326")
-    geo_geom: geometry.Geometry = geom.to_crs(crs_geo)
-    centroid: geometry.Geometry = geo_geom.centroid
+    crs_geo = CRS("EPSG:4326")
+    geo_geom: Geometry = geom.to_crs(crs_geo)
+    centroid: Geometry = geo_geom.centroid
     try:
         # 1. Try being smart with the centroid of the geometry
         return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
@@ -502,11 +503,11 @@ def lower_get_args() -> MutableMapping[str, str]:
 
 
 def create_geobox(
-        crs: geometry.CRS,
+        crs: CRS,
         minx: Union[float, int], miny: Union[float, int],
         maxx: Union[float, int], maxy: Union[float, int],
         width: Optional[int] = None, height: Optional[int] = None,
-) -> geometry.GeoBox:
+) -> GeoBox:
     """
     Create an ODC Geobox.
 
@@ -532,7 +533,7 @@ def create_geobox(
         scale_y = - scale_x
         height = int(round((float(miny) - float(maxy)) / scale_y))
     affine = Affine.translation(minx, maxy) * Affine.scale(scale_x, scale_y)
-    return geometry.GeoBox(width, height, affine, crs)
+    return GeoBox((height, width), affine, crs)
 
 
 def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=1000):

@@ -10,6 +10,7 @@ from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
 
 import pytz
+from numpy import datetime64
 from numpy import datetime64 as npdt64
 
 F = TypeVar('F', bound=Callable[..., Any])
@@ -69,8 +70,7 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
         grp_by = lambda ds: npdt64(datetime.datetime(
             ds.time.begin.year,
             ds.time.begin.month,
-            ds.time.begin.day,
-            tzinfo=pytz.utc))
+            ds.time.begin.day), "ns")
     else:
         grp_by = lambda ds: npdt64(datetime.datetime(
             ds.time.begin.year,
@@ -78,8 +78,7 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
             ds.time.begin.day,
             ds.time.begin.hour,
             ds.time.begin.minute,
-            ds.time.begin.second,
-            tzinfo=ds.time.begin.tzinfo))
+            ds.time.begin.second), "ns")
     return GroupBy(
         dimension='time',
         group_by_func=grp_by,
@@ -101,7 +100,7 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
         sort_key = base_sort_key
     return GroupBy(
         dimension='time',
-        group_by_func=solar_day,
+        group_by_func=lambda x: datetime64(solar_day(x), "ns"),
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )
@@ -120,7 +119,7 @@ def group_by_mosaic(pnames: Optional[List[str]] = None) -> "datacube.api.query.G
         sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))
     return GroupBy(
         dimension='time',
-        group_by_func=lambda n: npdt64(datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)),
+        group_by_func=lambda n: npdt64(datetime.datetime(1970, 1, 1), "ns"),
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )

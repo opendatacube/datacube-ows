@@ -7,7 +7,7 @@ import datetime
 from unittest.mock import MagicMock
 
 import pytest
-from datacube.utils import geometry
+from odc.geo import CRS
 
 import datacube_ows.wms_utils
 from datacube_ows.ogc_exceptions import WMSException
@@ -255,7 +255,7 @@ def test_get_geobox():
             "height": "256",
             "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
         },
-        src_crs=geometry.CRS("EPSG:4326")
+        src_crs=CRS("EPSG:4326")
     )
     assert gbox.affine
     assert str(gbox.crs) == "EPSG:4326"
@@ -266,8 +266,8 @@ def test_get_geobox():
             "height": "256",
             "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
         },
-        src_crs=geometry.CRS("EPSG:4326"),
-        dst_crs=geometry.CRS("EPSG:3857")
+        src_crs=CRS("EPSG:4326"),
+        dst_crs=CRS("EPSG:3857")
     )
     assert gbox.affine
     assert str(gbox.crs) == "EPSG:3857"
@@ -279,7 +279,7 @@ def test_get_geobox():
                 "height": "256",
                 "bbox": "-43.28507087113431,146.18504300790977,-43.28507087113431,146.64289867785524",
             },
-            src_crs = geometry.CRS("EPSG:4326")
+            src_crs = CRS("EPSG:4326")
         )
     assert "Bounding box must enclose a non-zero area" in str(e.value)
     OWSConfig._instance = None

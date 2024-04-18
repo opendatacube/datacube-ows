@@ -6,8 +6,8 @@
 import collections
 import logging
 
-from datacube.utils import geometry
 from dateutil.parser import parse
+from odc.geo.geobox import GeoBox
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
 from rasterio import MemoryFile
 
@@ -253,7 +253,7 @@ def get_coverage_data(request, styles, qprof):
                 locator="FORMAT or SUBSET"
                                 )
         affine = scaler.affine()
-        geobox = geometry.GeoBox(scaler.size.x, scaler.size.y,
+        geobox = GeoBox((scaler.size.y, scaler.size.x),
                                  affine, cfg.crs(output_crs))
 
         stacker = DataStacker(layer,
@@ -289,8 +289,10 @@ def get_coverage_data(request, styles, qprof):
         datasets = stacker.datasets(dc.index)
         qprof.end_event("fetch-datasets")
         if qprof.active:
-            qprof["datasets"] = {str(q): ids for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()}
-
+            qprof["datasets"] = {
+                str(q): [str(i) for i in ids]
+                for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()
+            }
         qprof.start_event("load-data")
         output = stacker.data(datasets, skip_corrections=True)
         qprof.end_event("load-data")
@@ -395,7 +397,7 @@ def get_tiff(request, data, crs, product, width, height, affine):
 
 def get_netcdf(request, data, crs):
     # Cleanup dataset attributes for NetCDF export
-    data.attrs["crs"] = crs # geometry.CRS(response_crs)
+    data.attrs["crs"] = crs
     for v in data.data_vars.values():
         v.attrs["crs"] = crs
         if "spectral_definition" in v.attrs:

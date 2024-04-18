@@ -14,12 +14,12 @@ from datacube_ows.ows_configuration import TimeRes
 @pytest.fixture
 def simple_geobox():
     from affine import Affine
-    from datacube.utils import geometry
+    from odc.geo.geobox import GeoBox
 
     aff = Affine.translation(145.0, -35.0) * Affine.scale(
         1.0 / 256, 2.0 / 256
     )
-    return geometry.GeoBox(256, 256, aff, 'EPSG:4326')
+    return GeoBox((256, 256), aff, 'EPSG:4326')
 
 
 def test_timeres_enum(simple_geobox):

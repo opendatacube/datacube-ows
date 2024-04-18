@@ -163,8 +163,8 @@ class ComponentStyleDef(StyleDefBase):
                     else:
                         imgband_data = imgband_component
                 if imgband_data is None:
-                    null_np = np.zeros(list(data.dims.values()), 'uint8')
-                    imgband_data = DataArray(null_np, data.coords, data.dims.keys())
+                    null_np = np.zeros(tuple(data.sizes.values()), 'uint8')
+                    imgband_data = DataArray(null_np, data.coords, tuple(data.sizes.keys()))
                 if imgband != "alpha":
                     imgband_data = self.compress_band(imgband, imgband_data)
                 imgdata[imgband] = imgband_data.astype("uint8")

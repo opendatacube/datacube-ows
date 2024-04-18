@@ -51,6 +51,7 @@ bd
 bda
 beb
 befce
+benjimin
 bfa
 bitflag
 bitflags
@@ -117,6 +118,7 @@ dde
 de
 dea
 deafrica
+dependabot
 desc
 describecoverage
 DescribeCoverage
@@ -158,6 +160,7 @@ fdb
 fdba
 fde
 fe
+FeatureInfo
 featurelisturls
 FeatureListURLs
 fqn
@@ -166,6 +169,7 @@ func
 gda
 gdal
 geobase
+geojson
 geomedian
 geoscience
 geoscienceaustralia
@@ -187,6 +191,7 @@ gettext
 gettile
 GetTile
 gh
+GHA
 github
 githubusercontent
 googlemap
@@ -287,6 +292,7 @@ petrak
 pgdata
 pil
 pindge
+pjonsson
 pki
 png
 po

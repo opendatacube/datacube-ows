@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import pytest
-from datacube.utils.geometry import box
+from odc.geo.geom import box
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
@@ -88,7 +88,7 @@ def test_datasets():
         ids = mv_search(dc.index, MVSelectOpts.IDS, products=lyr.products)
         assert len(ids) == len(dss)
         for ds in dss:
-            assert str(ds.id) in ids
+            assert ds.id in ids
 
 
 def test_extent_and_spatial():

@@ -1051,7 +1051,7 @@ def test_wcs20_server(ows_server):
     # Test DescribeCoverage
     for cov in contents:
         desc_cov = wcs.getDescribeCoverage(cov)
-        assert desc_cov
+        assert desc_cov is not None
 
 
 def test_wcs20_getcoverage_geotiff(ows_server):
