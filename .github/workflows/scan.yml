@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - develop-1.9
     paths:
       - ".github/workflows/scan.yml"
       - "Dockerfile"

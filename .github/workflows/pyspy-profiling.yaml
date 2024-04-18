@@ -4,7 +4,8 @@ name: Pyspy Profiling Test
 on:
   pull_request:
     branches:
-        - 'master'
+      - 'master'
+      - 'develop-1.9'
     paths:
       - '**'
       - '.github/workflows/pyspy-profiling.yaml'

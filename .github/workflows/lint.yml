@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - 'master'
+      - 'develop-1.9'
     paths:
       - '**'
       - '.github/workflows/lint.yml'
