@@ -12,7 +12,8 @@ from odc.geo.geom import polygon
 from xarray import Dataset
 
 import datacube_ows.data
-from datacube_ows.data import ProductBandQuery, get_s3_browser_uris
+from datacube_ows.data import get_s3_browser_uris
+from datacube_ows.loading import ProductBandQuery, DataStacker
 from datacube_ows.ogc_exceptions import WMSException
 from tests.test_styles import product_layer  # noqa: F401
 
@@ -299,7 +300,6 @@ def test_user_date_sorter():
 
 
 def test_create_nodata(dummy_raw_calc_data):
-    from datacube_ows.data import DataStacker
     ds = DataStacker.__new__(DataStacker)
     data_in = dummy_raw_calc_data
     prod = MagicMock()

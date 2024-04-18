@@ -12,7 +12,7 @@ from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
 from rasterio import MemoryFile
 
 from datacube_ows.cube_pool import cube
-from datacube_ows.data import DataStacker
+from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config

@@ -18,7 +18,7 @@ from rasterio.warp import Resampling
 
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import ConfigException, create_geobox
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import get_config, OWSNamedLayer
 from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
@@ -126,7 +126,7 @@ def img_coords_to_geopoint(geobox, i, j):
                           geobox.crs)
 
 
-def get_product_from_arg(args, argname="layers"):
+def get_product_from_arg(args, argname="layers") -> OWSNamedLayer:
     layers = args.get(argname, "").split(",")
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
@@ -168,7 +168,7 @@ def get_times_for_product(product):
     return ranges['times']
 
 
-def get_times(args, product):
+def get_times(args, product: OWSNamedLayer) -> list[datetime]:
     # Time parameter
     times_raw = args.get('time', '')
     times = times_raw.split(',')
@@ -176,7 +176,7 @@ def get_times(args, product):
     return list([parse_time_item(item, product) for item in times])
 
 
-def parse_time_item(item, product):
+def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
     times = item.split('/')
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
@@ -319,7 +319,7 @@ class GetParameters():
     def method_specific_init(self, args):
         pass
 
-    def get_product(self, args):
+    def get_product(self, args) -> OWSNamedLayer:
         return get_product_from_arg(args)
 
 
