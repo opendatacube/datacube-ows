@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import enum
 
-from odc.geo.geom import BoundingBox, Geometry
+from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
 from datacube_ows.cube_pool import cube
@@ -67,8 +67,6 @@ class WCS20Extent:
         )
 
     def bbox_crs(self, crs):
-        from odc.geo.geom import point
-
         low = point(*self.lower_corner, crs=self.native_crs).to_crs(crs)
         up = point(*self.upper_corner, crs=self.native_crs).to_crs(crs)
         return (
