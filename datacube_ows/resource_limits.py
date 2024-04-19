@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import math
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Mapping, cast
 
 import affine
 import numpy as np
@@ -14,6 +14,10 @@ from odc.geo.geom import CRS, polygon
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry, ConfigException
 from datacube_ows.ogc_utils import (cache_control_headers,
                                     create_geobox)
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    import datacube_ows.ows_configuration.OWSConfig
 
 
 def parse_cache_age(cfg, entry, section, default=0):
@@ -36,11 +40,11 @@ class RequestScale:
 
     def __init__(self,
                  native_crs: CRS,
-                 native_resolution: Tuple[Union[float, int], Union[float, int]],
+                 native_resolution: tuple[float | int, float | int],
                  geobox: GeoBox,
                  n_dates: int,
-                 request_bands: Optional[Iterable[Mapping[str, Any]]] = None,
-                 total_band_size: Optional[int] = None) -> None:
+                 request_bands: Iterable[Mapping[str, Any]] | None = None,
+                 total_band_size: int | None = None) -> None:
         self.resolution = self._metre_resolution(native_crs, native_resolution)
         self.crs = native_crs
         self.geobox = self._standardise_geobox(geobox)
@@ -66,11 +70,10 @@ class RequestScale:
                              width=geobox.width, height=geobox.height
                              )
 
-    def _metre_resolution(self, crs: CRS, resolution: Tuple[Union[float, int], Union[float, int]]) \
-            -> Tuple[float, float]:
+    def _metre_resolution(self, crs: CRS, resolution: tuple[float | int, float | int]) -> tuple[float, float]:
         # Convert native resolution to metres for ready comparison.
         if crs.units == ('metre', 'metre'):
-            return cast(Tuple[float, float], tuple(abs(r) for r in resolution))
+            return cast(tuple[float, float], tuple(abs(r) for r in resolution))
         resolution_rectangle = polygon(
                             ((0, 0), (0, resolution[1]), resolution, (0, resolution[0]), (0, 0)),
                             crs=crs)
@@ -80,7 +83,7 @@ class RequestScale:
             abs(proj_bbox.top - proj_bbox.bottom),
         )
 
-    def pixel_span(self) -> Tuple[float, float]:
+    def pixel_span(self) -> tuple[float, float]:
         bbox = self.geobox.extent.boundingbox
         return (
             (bbox.right - bbox.left) / self.geobox.width,
@@ -103,7 +106,7 @@ class RequestScale:
     def load_adjusted_zoom_level(self) -> float:
         return self.base_zoom_level - self.zoom_lvl_offset
 
-    def res_xy(self) -> Union[int, float]:
+    def res_xy(self) -> int | float:
         return self.resolution[0] * self.resolution[1]
 
     def __truediv__(self, other: "RequestScale") -> float:
@@ -140,7 +143,7 @@ class CacheControlRules(OWSConfigEntry):
         :param max_datasets: Over-arching maximum dataset limit in context.
         """
         super().__init__(cfg)
-        self.rules = cast(Optional[List[CFG_DICT]], self._raw_cfg)
+        self.rules = cast(list[CFG_DICT] | None, self._raw_cfg)
         self.use_caching: bool = self.rules is not None
         self.max_datasets = max_datasets
         if not self.use_caching:
@@ -149,7 +152,7 @@ class CacheControlRules(OWSConfigEntry):
         # Validate rules
         min_so_far: int = 0
         max_max_age_so_far: int = 0
-        for rule in cast(List[CFG_DICT], self.rules):
+        for rule in cast(list[CFG_DICT], self.rules):
             if "min_datasets" not in rule:
                 raise ConfigException(f"Dataset cache rule does not contain a 'min_datasets' element in {context}")
             if "max_age" not in rule:
@@ -186,18 +189,18 @@ class CacheControlRules(OWSConfigEntry):
         if n_datasets == 0 or n_datasets > self.max_datasets:
             return cache_control_headers(0)
         rule = None
-        for r in self.rules:
-            if n_datasets < r["min_datasets"]:
+        for r in cast(list[CFG_DICT], self.rules):
+            if n_datasets < cast(int, r["min_datasets"]):
                 break
             rule = r
         if rule:
-            return cache_control_headers(rule['max_age'])
+            return cache_control_headers(cast(int, rule['max_age']))
         else:
             return cache_control_headers(0)
 
 
 class ResourceLimited(Exception):
-    def __init__(self, reasons: List[str], wcs_hard=False):
+    def __init__(self, reasons: list[str], wcs_hard=False):
         self.reasons = reasons
         self.wcs_hard = wcs_hard
         super().__init__(f"Resource limit(s) exceeded: {','.join(reasons)}")
@@ -220,13 +223,13 @@ class OWSResourceManagementRules(OWSConfigEntry):
         cfg = cast(CFG_DICT, self._raw_cfg)
         wms_cfg = cast(CFG_DICT, cfg.get("wms", {}))
         wcs_cfg = cast(CFG_DICT, cfg.get("wcs", {}))
-        self.zoom_fill = cast(List[int], wms_cfg.get("zoomed_out_fill_colour", [150, 180, 200, 160]))
+        self.zoom_fill = cast(list[int], wms_cfg.get("zoomed_out_fill_colour", [150, 180, 200, 160]))
         if len(self.zoom_fill) == 3:
             self.zoom_fill += [255]
         if len(self.zoom_fill) != 4:
             raise ConfigException(f"zoomed_out_fill_colour must have 3 or 4 elements in {context}")
-        self.min_zoom = cast(Optional[float], wms_cfg.get("min_zoom_factor"))
-        self.min_zoom_lvl = cast(Optional[Union[int, float]], wms_cfg.get("min_zoom_level"))
+        self.min_zoom = cast(float | None, wms_cfg.get("min_zoom_factor"))
+        self.min_zoom_lvl = cast(int | float | None, wms_cfg.get("min_zoom_level"))
         self.max_datasets_wms = cast(int, wms_cfg.get("max_datasets", 0))
         self.max_datasets_wcs = cast(int, wcs_cfg.get("max_datasets", 0))
         self.max_image_size_wcs = cast(int, wcs_cfg.get("max_image_size", 0))
@@ -248,7 +251,7 @@ class OWSResourceManagementRules(OWSConfigEntry):
         :param request_scale: Model of the resource-intensiveness of the query
         :raises: ResourceLimited if any limits are exceeded.
         """
-        limits_exceeded: List[str] = []
+        limits_exceeded: list[str] = []
         if self.max_datasets_wms > 0 and n_datasets > self.max_datasets_wms:
             limits_exceeded.append("too many datasets")
         if self.min_zoom is not None:
@@ -272,7 +275,7 @@ class OWSResourceManagementRules(OWSConfigEntry):
         :param n_datasets: The number of datasets for the query
         :raises: ResourceLimited if any limits are exceeded.
         """
-        limits_exceeded: List[str] = []
+        limits_exceeded: list[str] = []
         hard = False
         if self.max_datasets_wcs > 0 and n_datasets > self.max_datasets_wcs:
             limits_exceeded.append(f"too many datasets ({n_datasets}: maximum={self.max_datasets_wcs}")

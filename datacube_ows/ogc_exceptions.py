@@ -17,8 +17,8 @@ class OGCException(Exception):
     CURRENT_UPDATE_SEQUENCE = "CurrentUpdateSequence"
     INVALID_UPDATE_SEQUENCE = "InvalidUpdateSequence"
 
-    version = None
-    schema_url = None
+    version: str | None = None
+    schema_url: str | None = None
 
     # pylint: disable=super-init-not-called
     def __init__(self, msg, code=None, locator=None, http_response=400, valid_keys=None):

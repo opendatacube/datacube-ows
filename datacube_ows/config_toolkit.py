@@ -4,10 +4,10 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 from copy import deepcopy
-from typing import Any, MutableMapping
+from typing import Any
 
 
-def deepinherit(parent: MutableMapping[str, Any], child: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+def deepinherit(parent: dict[str, Any], child: dict[str, Any]) -> dict[str, Any]:
     """
     Implements inheritance for configuration.
 
@@ -15,12 +15,12 @@ def deepinherit(parent: MutableMapping[str, Any], child: MutableMapping[str, Any
     :param child: The child configuration to override the parent config
     :return: A new dictionary reflecting the inherited configuration
     """
-    expanded: MutableMapping[str, Any] = deepcopy(parent)
+    expanded: dict[str, Any] = deepcopy(parent)
     deepupdate(expanded, child)
     return expanded
 
 
-def deepupdate(target: MutableMapping[str, Any], src: MutableMapping[str, Any]) -> None:
+def deepupdate(target: dict[str, Any], src: dict[str, Any]) -> None:
     for k in src:
         if isinstance(src[k], dict):
             if k not in target:

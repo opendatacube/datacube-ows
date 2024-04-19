@@ -8,7 +8,7 @@ import logging
 import os
 from importlib import import_module
 from itertools import chain
-from typing import (Any, Callable, Iterable, List, Mapping, MutableMapping,
+from typing import (Any, Callable, Iterable, List, Mapping,
                     Optional, Sequence, Set, TypeVar, Union, cast)
 from urllib.parse import urlparse
 
@@ -35,11 +35,11 @@ RAW_CFG = Union[
         str,
         int,
         float,
-        List[Any],
-        MutableMapping[str, Any]
+        list[Any],
+        dict[str, Any]
 ]
 
-CFG_DICT = MutableMapping[str, RAW_CFG]
+CFG_DICT = dict[str, RAW_CFG]
 
 F = TypeVar('F', bound=Callable[..., Any])
 
@@ -48,7 +48,7 @@ F = TypeVar('F', bound=Callable[..., Any])
 # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
 # pylint: disable=dangerous-default-value
 def cfg_expand(cfg_unexpanded: RAW_CFG,
-               cwd: Optional[str] = None, inclusions: List[str] = []) -> RAW_CFG:
+               cwd: str | None = None, inclusions: list[str] = []) -> RAW_CFG:
     """
     Recursively expand config inclusions.
 
@@ -356,7 +356,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             self._keywords = keyword_set.union(local_keyword_set)
         if self.METADATA_ATTRIBUTION:
             inheriting = False
-            attrib = cast(MutableMapping[str, str], cfg.get("attribution"))
+            attrib = cast(dict[str, str], cfg.get("attribution"))
             if attrib is None and inherit_from is not None:
                 attrib = inherit_from.attribution
                 inheriting = True
@@ -377,7 +377,7 @@ class OWSMetadataConfig(OWSConfigEntry):
                 acc = "none"
             self.register_metadata(self.get_obj_label(), FLD_ACCESS_CONSTRAINTS, acc)
         if self.METADATA_CONTACT_INFO:
-            cfg_contact_info: MutableMapping[str, str] = cast(MutableMapping[str, str], cfg.get("contact_info", {}))
+            cfg_contact_info: dict[str, str] = cast(dict[str, str], cfg.get("contact_info", {}))
             org = cfg_contact_info.get("organisation")
             position = cfg_contact_info.get("position")
             if org:
@@ -385,7 +385,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if position:
                 self.register_metadata(self.get_obj_label(), FLD_CONTACT_POSITION, position)
         if self.METADATA_DEFAULT_BANDS:
-            band_map = cast(MutableMapping[str, List[str]], cfg)
+            band_map = cast(dict[str, List[str]], cfg)
             for k, v in band_map.items():
                 if len(v):
                     self.register_metadata(self.get_obj_label(), k, v[0])
@@ -575,10 +575,10 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     A configuration object that can inherit from and extend an existing configuration object of the same type.
     """
     def __init__(self,
-                 cfg: RAW_CFG, keyvals: MutableMapping[str, str], global_cfg: "datacube_ows.ows_configuration.OWSConfig",
+                 cfg: RAW_CFG, keyvals: dict[str, str], global_cfg: "datacube_ows.ows_configuration.OWSConfig",
                  *args,
-                 keyval_subs: Optional[MutableMapping[str, str]] = None,
-                 keyval_defaults: Optional[MutableMapping[str, str]] = None,
+                 keyval_subs: dict[str, str] | None = None,
+                 keyval_defaults: dict[str, str] | None = None,
                  expanded: bool = False,
                  **kwargs) -> None:
         """
@@ -599,8 +599,8 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     @classmethod
     def expand_inherit(cls,
                        cfg: CFG_DICT, global_cfg: "datacube_ows.ows_configuration.OWSConfig",
-                       keyval_subs: Optional[MutableMapping[str, str]] = None,
-                       keyval_defaults: Optional[MutableMapping[str, str]] = None) -> RAW_CFG:
+                       keyval_subs: dict[str, str] | None = None,
+                       keyval_defaults: dict[str, str] | None = None) -> RAW_CFG:
         """
         Expand inherited config, and apply overrides.
 
@@ -614,7 +614,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
             lookup = True
             # Precludes e.g. defaulting style lookup to current layer.
             lookup_keys = {}
-            inherits = cast(MutableMapping[str, str], cfg["inherits"])
+            inherits = cast(dict[str, str], cfg["inherits"])
             for k in cls.INDEX_KEYS:
                 if k not in inherits and keyval_defaults is not None and k not in keyval_defaults:
                     lookup = False
@@ -629,7 +629,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                 parent_cfg = parent._raw_cfg
             else:
                 parent_cfg = cfg["inherits"]
-            cfg = deepinherit(cast(MutableMapping[str, Any], parent_cfg), cfg)
+            cfg = deepinherit(cast(dict[str, Any], parent_cfg), cfg)
             cfg["inheritance_expanded"] = True
         return cfg
 
