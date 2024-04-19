@@ -14,10 +14,19 @@ from urllib.parse import urlparse
 
 import fsspec
 from datacube.utils.masking import make_mask
+from datacube import Datacube
+from datacube.model import Product
 from flask_babel import gettext as _
+from babel.messages import Catalog, Message
 from xarray import DataArray
 
 from datacube_ows.config_toolkit import deepinherit
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    import datacube_ows.ows_configuration.OWSConfig
+    import datacube_ows.ows_configuration.OWSNamedLayer
+    import datacube_ows.styles.base.StyleMask
 
 _LOG = logging.getLogger(__name__)
 
@@ -33,7 +42,6 @@ RAW_CFG = Union[
 CFG_DICT = MutableMapping[str, RAW_CFG]
 
 F = TypeVar('F', bound=Callable[..., Any])
-
 
 
 # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
@@ -223,7 +231,7 @@ class OWSConfigEntry:
         super().__setattr__(name, val)
 
     # Validate against database and prepare for use.
-    def make_ready(self, dc: "datacube.Datacube", *args, **kwargs) -> None:
+    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
         """
         Perform second phase initialisation with a database connection.
 
@@ -277,14 +285,14 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     # Class registries, mapping metadata paths to their default value and whether the metadata value is
     # unique to that path, or has been inherited from a parent metadata path.
-    _metadata_registry: MutableMapping[str, str] = {}
-    _inheritance_registry: MutableMapping[str, bool] = {}
+    _metadata_registry: dict[str, str] = {}
+    _inheritance_registry: dict[str, bool] = {}
 
-    _msg_src: Optional["babel.messages.Catalog"] = None
+    _msg_src: Catalog | None = None
 
     # Inaccessible attributes to allow type checking
     abstract: str = ""
-    attribution: MutableMapping[str, str] = {}
+    attribution: dict[str, str] = {}
 
     def get_obj_label(self) -> str:
         """Return the metadata path prefix for this object."""
@@ -301,14 +309,14 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     # Holders for managing inheritance.
     @property
-    def default_title(self) -> Optional[str]:
+    def default_title(self) -> str | None:
         return None
 
     @property
-    def default_abstract(self) -> Optional[str]:
+    def default_abstract(self) -> str | None:
         return None
 
-    _keywords: Set[str] = set()
+    _keywords: set[str] = set()
 
     def parse_metadata(self, cfg: CFG_DICT) -> None:
         """
@@ -398,7 +406,7 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.register_metadata(self.get_obj_label(), f"lbl_{tick}", lbl)
 
     @property
-    def keywords(self) -> Set[str]:
+    def keywords(self) -> set[str]:
         """
         Return the keywords for this object (with inheritance, but without metadata separation or translation)
         :return: A set of keywords.
@@ -406,14 +414,14 @@ class OWSMetadataConfig(OWSConfigEntry):
         return self._keywords
 
     @classmethod
-    def set_msg_src(cls, src: "babel.messages.Catalog") -> None:
+    def set_msg_src(cls, src: Catalog) -> None:
         """
         Allow all OWSMetadatConfig subclasses to share a common message catalog.
         :param src: A Message Catalog object
         """
         OWSMetadataConfig._msg_src = src
 
-    def read_metadata(self, lbl: str, fld: str) -> Optional[str]:
+    def read_metadata(self, lbl: str, fld: str) -> str | None:
         """
         Read a general piece of metadata (potentially from another object).
         Resolution order:
@@ -432,12 +440,12 @@ class OWSMetadataConfig(OWSConfigEntry):
             if trans != lookup:
                 return trans
         if self._msg_src is not None:
-            msg = cast("babel.messages.Catalog", self._msg_src).get(lookup)
+            msg: Message | None = cast(Catalog, self._msg_src).get(lookup)
             if not msg:
-                msg = self._metadata_registry.get(lookup)
+                msg_: str | None = self._metadata_registry.get(lookup)
             else:
-                msg = msg.string
-            return msg
+                msg_ = cast(str, msg.string)
+            return msg_
         return self._metadata_registry.get(lookup)
 
     def read_inheritance(self, lbl: str, fld: str) -> bool:
@@ -463,7 +471,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         self._metadata_registry[lookup] = val
         self._inheritance_registry[lookup] = inherited
 
-    def read_local_metadata(self, fld: str) -> Optional[str]:
+    def read_local_metadata(self, fld: str) -> str | None:
         """
         Read a general piece of metadata for this object.
         Resolution order:
@@ -635,7 +643,7 @@ class OWSFlagBandStandalone:
     def __init__(self, band: str) -> None:
         self.pq_band = band
         self.canonical_band_name = band
-        self.pq_names: List["datacube.model.DatasetType"] = []
+        self.pq_names: list[str] = []
         self.pq_ignore_time = False
         self.pq_manual_merge = False
         self.pq_fuse_func: Optional[FunctionWrapper] = None
@@ -657,33 +665,33 @@ class OWSFlagBand(OWSConfigEntry):
         cfg = cast(CFG_DICT, self._raw_cfg)
         self.product = product_cfg
         pq_names = self.product.parse_pq_names(cfg)
-        self.pq_names = pq_names["pq_names"]
+        self.pq_names = cast(list[str], pq_names["pq_names"])
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.main_products = pq_names["main_products"]
-        self.pq_band = cfg["band"]
+        self.pq_band = str(cfg["band"])
         self.canonical_band_name = self.pq_band # Update for aliasing on make_ready
         if "fuse_func" in cfg:
             self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = cfg.get("ignore_time", False)
-        self.ignore_info_flags = cfg.get("ignore_info_flags", [])
+        self.ignore_info_flags = cast(list[str], cfg.get("ignore_info_flags", []))
         self.pq_manual_merge = cfg.get("manual_merge", False)
         self.declare_unready("pq_products")
         self.declare_unready("flags_def")
         self.declare_unready("info_mask")
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc: "datacube.Datacube", *args, **kwargs) -> None:
+    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
         """
         Second round (db-aware) intialisation.
 
         :param dc: A Datacube object
         """
         # pyre-ignore[16]
-        self.pq_products: List["datacube.model.DatasetType"] = []
+        self.pq_products: list[Product] = []
         # pyre-ignore[16]
-        self.pq_low_res_products: List["datacube.model.DatasetType"] = []
+        self.pq_low_res_products: list[Product] = []
         for pqn in self.pq_names:
             if pqn is not None:
                 pq_product = dc.index.products.get_by_name(pqn)
@@ -709,14 +717,14 @@ class OWSFlagBand(OWSConfigEntry):
         # A (hopefully) representative product
         product = self.pq_products[0]
         try:
-            meas = product.lookup_measurements([self.canonical_band_name])[self.canonical_band_name]
+            meas = product.lookup_measurements([str(self.canonical_band_name)])[str(self.canonical_band_name)]
         except KeyError:
             raise ConfigException(
                 f"Band {self.pq_band} does not exist in product {product.name} - cannot be used as a flag band for layer {self.product.name}.")
         if "flags_definition" not in meas:
             raise ConfigException(f"Band {self.pq_band} in product {product.name} has no flags_definition in ODC - cannot be used as a flag band for layer {self.product.name}.")
         # pyre-ignore[16]
-        self.flags_def: Mapping[str, RAW_CFG] = meas["flags_definition"]
+        self.flags_def: dict[str, dict[str, RAW_CFG]] = meas["flags_definition"]
         for bitname in self.ignore_info_flags:
             bit = self.flags_def[bitname]["bits"]
             if not isinstance(bit, int):
@@ -725,7 +733,9 @@ class OWSFlagBand(OWSConfigEntry):
             self.info_mask &= ~flag
         super().make_ready(dc, *args, **kwargs)
 
-FlagBand = Union[OWSFlagBand, OWSFlagBandStandalone]
+
+FlagBand = OWSFlagBand | OWSFlagBandStandalone
+
 
 class FlagProductBands(OWSConfigEntry):
     """
@@ -742,7 +752,7 @@ class FlagProductBands(OWSConfigEntry):
         super().__init__({})
         self.layer = layer
         self.bands: Set[str] = set()
-        self.bands.add(flag_band.canonical_band_name)
+        self.bands.add(str(flag_band.canonical_band_name))
         self.flag_bands = {flag_band.pq_band: flag_band}
         self.product_names = tuple(flag_band.pq_names)
         self.ignore_time = flag_band.pq_ignore_time
@@ -782,17 +792,18 @@ class FlagProductBands(OWSConfigEntry):
         self.declare_unready("low_res_products")
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc: "datacube.Datacube", *args, **kwargs) -> None:
+    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
         """
         Second round (db-aware) intialisation.
 
         :param dc: A Datacube object
         """
         for fb in self.flag_bands.values():
+            fb = cast(OWSFlagBand, fb)
             # pyre-ignore [16]
-            self.products: List["datacube.model.DatasetType"] = fb.pq_products
+            self.products: list[Product] = fb.pq_products
             # pyre-ignore [16]
-            self.low_res_products: List["datacube.model.DatasetType"] = fb.pq_low_res_products
+            self.low_res_products: list[Product] = fb.pq_low_res_products
             break
         if self.main_product:
             self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
@@ -810,7 +821,7 @@ class FlagProductBands(OWSConfigEntry):
         :param layer: A named layer object
         :return: A list of FlagProductBands objects
         """
-        flag_products = []
+        flag_products: list["FlagProductBands"] = []
         for mask in masks:
             handled = False
             for fp in flag_products:
@@ -824,7 +835,7 @@ class FlagProductBands(OWSConfigEntry):
 
     @classmethod
     def build_list_from_flagbands(cls, flagbands: Iterable[OWSFlagBand],
-                                  layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> List["FlagProductBands"]:
+                                  layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> list["FlagProductBands"]:
         """
         Class method to instantiate a list of FlagProductBands from a list of OWS Flag Bands.
 
@@ -834,7 +845,7 @@ class FlagProductBands(OWSConfigEntry):
         :param layer: A named layer object
         :return: A list of FlagProductBands objects
         """
-        flag_products = []
+        flag_products: list["FlagProductBands"] = []
         for fb in flagbands:
             handled = False
             for fp in flag_products:
@@ -858,14 +869,13 @@ class AbstractMaskRule(OWSConfigEntry):
         return "a mask rule"
 
     VALUES_LABEL = "values"
-    def parse_rule_spec(self, cfg: CFG_DICT):
-        self.flags: Optional[CFG_DICT] = None
+    def parse_rule_spec(self, cfg: CFG_DICT) -> None:
+        self.flags: CFG_DICT | None = None
         self.or_flags: bool = False
-        self.values: Optional[List[int]] = None
-        self.invert: bool = cfg.get("invert", False)
+        self.values: list[int] | None = None
+        self.invert = bool(cfg.get("invert", False))
         if "flags" in cfg:
             flags = cast(CFG_DICT, cfg["flags"])
-            self.or_flags: bool = False
             if "or" in flags and "and" in flags:
                 raise ConfigException(
                     f"ValueMap rule in {self.context} combines 'and' and 'or' rules")
@@ -874,10 +884,9 @@ class AbstractMaskRule(OWSConfigEntry):
                 flags = cast(CFG_DICT, flags["or"])
             elif "and" in flags:
                 flags = cast(CFG_DICT, flags["and"])
-            self.flags: Optional[CFG_DICT] = flags
+            self.flags = flags
         else:
             self.flags = None
-            self.or_flags = False
 
         if "values" in cfg:
             val: Any = cfg["values"]
@@ -890,9 +899,9 @@ class AbstractMaskRule(OWSConfigEntry):
             self.values = None
         else:
             if isinstance(val, int):
-                self.values: Optional[List[int]] = [cast(int, val)]
+                self.values = [cast(int, val)]
             else:
-                self.values: Optional[List[int]] = cast(List[int], val)
+                self.values = cast(List[int], val)
 
         if not self.flags and not self.values:
             raise ConfigException(
@@ -901,7 +910,7 @@ class AbstractMaskRule(OWSConfigEntry):
             raise ConfigException(
                 f"Mask rule in {self.context} has both a 'flags' and a 'values' section - choose one.")
 
-    def create_mask(self, data: DataArray) -> DataArray:
+    def create_mask(self, data: DataArray) -> DataArray | None:
         """
         Create a mask from raw flag band data.
 
@@ -909,7 +918,7 @@ class AbstractMaskRule(OWSConfigEntry):
         :return: A boolean DataArray, True where the data matches this rule
         """
         if self.values:
-            mask: Optional[DataArray] = None
+            mask: DataArray | None = None
             for v in cast(List[int], self.values):
                 vmask = data == v
                 if mask is None:
@@ -919,11 +928,11 @@ class AbstractMaskRule(OWSConfigEntry):
         elif self.or_flags:
             mask = None
             for f in cast(CFG_DICT, self.flags).items():
-                f = {f[0]: f[1]}
+                d = {f[0]: f[1]}
                 if mask is None:
-                    mask = make_mask(data, **f)
+                    mask = make_mask(data, **d)
                 else:
-                    mask |= make_mask(data, **f)
+                    mask |= make_mask(data, **d)
         else:
             mask = make_mask(data, **cast(CFG_DICT, self.flags))
         if mask is not None and self.invert:
