@@ -11,8 +11,8 @@ import numpy as np
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import CRS, polygon
 
-from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry
-from datacube_ows.ogc_utils import (ConfigException, cache_control_headers,
+from datacube_ows.config_utils import CFG_DICT, RAW_CFG, OWSConfigEntry, ConfigException
+from datacube_ows.ogc_utils import (cache_control_headers,
                                     create_geobox)
 
 

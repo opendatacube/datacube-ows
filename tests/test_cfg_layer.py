@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
 from datacube_ows.resource_limits import ResourceLimited
 

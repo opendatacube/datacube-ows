@@ -5,32 +5,33 @@
 # SPDX-License-Identifier: Apache-2.0
 import datetime
 import logging
-from importlib import import_module
 from io import BytesIO
-from itertools import chain
-from typing import (Any, Callable, Mapping, MutableMapping, Optional, Sequence,
-                    Tuple, TypeVar, Union, cast)
+from typing import (Any, Mapping, Optional, Sequence, cast)
 from urllib.parse import urlparse
 
 import numpy
+import xarray
 from affine import Affine
 from dateutil.parser import parse
-from flask import request
+from flask import request, Request
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import CRS, Geometry
 from PIL import Image
 from pytz import timezone, utc
 from timezonefinder import TimezoneFinder
 
+from datacube.model import Dataset
+from datacube_ows.config_utils import OWSExtensibleConfigEntry
+
 _LOG: logging.Logger = logging.getLogger(__name__)
 tf = TimezoneFinder(in_memory=True)
 
 
-def dataset_center_time(dataset: "datacube.model.Dataset") -> datetime.datetime:
+def dataset_center_time(dataset: Dataset) -> datetime.datetime:
     """
     Determine a center_time for the dataset
 
-    Use metadata time if possible as this is what WMS uses to calculate it's temporal extents
+    Use metadata time if possible as this is what WMS uses to calculate its temporal extents
     datacube-core center time accessed through the dataset API is calculated and may
     not agree with the metadata document.
 
@@ -43,7 +44,7 @@ def dataset_center_time(dataset: "datacube.model.Dataset") -> datetime.datetime:
         center_time = parse(metadata_time)
     except KeyError:
         try:
-            metadata_time: str = dataset.metadata_doc['properties']['dtr:start_datetime']
+            metadata_time = dataset.metadata_doc['properties']['dtr:start_datetime']
             center_time = parse(metadata_time)
         except KeyError:
             pass
@@ -65,7 +66,7 @@ def solar_date(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.date:
     return dt.astimezone(tz).date()
 
 
-def local_date(ds: "datacube.model.Dataset", tz: Optional[datetime.tzinfo] = None) -> datetime.date:
+def local_date(ds: Dataset, tz: datetime.tzinfo | None =  None) -> datetime.date:
     """
     Calculate the local (solar) date for a dataset.
 
@@ -79,7 +80,7 @@ def local_date(ds: "datacube.model.Dataset", tz: Optional[datetime.tzinfo] = Non
     return solar_date(dt_utc, tz)
 
 
-def tz_for_dataset(ds: "datacube.model.Dataset") -> datetime.tzinfo:
+def tz_for_dataset(ds: Dataset) -> datetime.tzinfo:
     """
     Determine the timezone for a dataset (using it's extent)
 
@@ -89,7 +90,7 @@ def tz_for_dataset(ds: "datacube.model.Dataset") -> datetime.tzinfo:
     return tz_for_geometry(ds.extent)
 
 
-def tz_for_coord(lon: Union[float, int], lat: Union[float, int]) -> datetime.tzinfo:
+def tz_for_coord(lon: float | int, lat: float | int) -> datetime.tzinfo:
     """
     Determine the Timezone for given lat/long coordinates
 
@@ -109,7 +110,7 @@ def tz_for_coord(lon: Union[float, int], lat: Union[float, int]) -> datetime.tzi
     return timezone(tzn)
 
 
-def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
+def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
     """
     Converts a date to a local solar date datetime range.
 
@@ -123,7 +124,7 @@ def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> Tuple[datetim
     return (start.astimezone(utc), end.astimezone(utc))
 
 
-def month_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
+def month_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
     """
     Take a month from a date and convert to a one month long UTC datetime range encompassing the month.
 
@@ -142,7 +143,7 @@ def month_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.d
     return start, end
 
 
-def year_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
+def year_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
     """
     Convert a date to a UTC datetime range encompassing the calendar year including the date.
 
@@ -156,7 +157,7 @@ def year_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.da
     return start, end
 
 
-def day_summary_date_range(date: datetime.date) -> Tuple[datetime.datetime, datetime.datetime]:
+def day_summary_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
     """
     Convert a date to a UTC datetime range encompassing the calendar date.
 
@@ -208,26 +209,6 @@ def resp_headers(d: Mapping[str, str]) -> Mapping[str, str]:
     return get_config().response_headers(d)
 
 
-F = TypeVar('F', bound=Callable[..., Any])
-
-
-def get_function(func: Union[F, str]) -> F:
-    """Converts a config entry to a function, if necessary
-
-    :param func: Either a Callable object or a fully qualified function name str, or None
-    :return: a Callable object, or None
-    """
-    if func is not None and not callable(func):
-        mod_name, func_name = func.rsplit('.', 1)
-        try:
-            mod = import_module(mod_name)
-            func = getattr(mod, func_name)
-        except (ImportError, ModuleNotFoundError, ValueError, AttributeError):
-            raise ConfigException(f"Could not import python object: {func}")
-        assert callable(func)
-    return cast(F, func)
-
-
 def parse_for_base_url(url: str) -> str:
     """
     Extract the base URL from a URL
@@ -240,7 +221,7 @@ def parse_for_base_url(url: str) -> str:
     return parsed
 
 
-def get_service_base_url(allowed_urls: Union[Sequence[str], str], request_url: str) -> str:
+def get_service_base_url(allowed_urls: list[str] | str, request_url: str) -> str:
     """
     Choose the base URL to advertise in XML.
 
@@ -263,9 +244,8 @@ def get_service_base_url(allowed_urls: Union[Sequence[str], str], request_url: s
 
 
 # Collects additional headers from flask request objects
-def capture_headers(req: "flask.Request",
-                    args_dict: MutableMapping[str, Optional[str]]) \
-        -> MutableMapping[str, Optional[str]]:
+def capture_headers(req: Request,
+                    args_dict: dict[str, str | None]) -> dict[str, Optional[str]]:
     """
     Capture significant flask metadata into the args dictionary
 
@@ -282,104 +262,7 @@ def capture_headers(req: "flask.Request",
     return args_dict
 
 
-class ConfigException(Exception):
-    """
-    General exception for OWS Configuration issues.
-    """
-
-
-# Function wrapper for configurable functional elements
-
-
-class FunctionWrapper:
-    """
-    Function wrapper for configurable functional elements
-    """
-
-    def __init__(self,
-                 product_or_style_cfg: Union[
-                     "datacube_ows.ows_configuration.OWSNamedLayer", "datacube_ows.styles.StyleDef"],
-                 func_cfg: Union[F, Mapping[str, Any]],
-                 stand_alone: bool = False) -> None:
-        """
-
-        :param product_or_style_cfg: An instance of either NamedLayer or Style,
-                the context in which the wrapper operates.
-        :param func_cfg: A function or a configuration dictionary representing a function.
-        :param stand_alone: Optional boolean.
-                If False (the default) then only configuration dictionaries will be accepted.
-        """
-        self.style_or_layer_cfg = product_or_style_cfg
-        if callable(func_cfg):
-            if not stand_alone:
-                raise ConfigException(
-                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
-            self._func = func_cfg
-            self._args = []
-            self._kwargs = {}
-            self.band_mapper = None
-            self.pass_layer_cfg = False
-        elif isinstance(func_cfg, str):
-            self._func = get_function(func_cfg)
-            self._args = []
-            self._kwargs = {}
-            self.band_mapper = None
-            self.pass_layer_cfg = False
-        else:
-            if stand_alone and callable(func_cfg["function"]):
-                self._func = func_cfg["function"]
-            elif callable(func_cfg["function"]):
-                raise ConfigException(
-                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
-            else:
-                self._func = get_function(func_cfg["function"])
-            self._args = func_cfg.get("args", [])
-            self._kwargs = func_cfg.get("kwargs", {}).copy()
-            self.pass_layer_cfg = func_cfg.get("pass_layer_cfg", False)
-            if "pass_product_cfg" in func_cfg:
-                _LOG.warning("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
-                             "'mapped_bands'.  Please update your config accordingly")
-            if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
-                if hasattr(product_or_style_cfg, "band_idx"):
-                    # NamedLayer
-                    named_layer = cast("datacube_ows.ows_configuration.OWSNamedLayer",
-                                       product_or_style_cfg)
-                    b_idx = named_layer.band_idx
-                    self.band_mapper = b_idx.band
-                else:
-                    # Style
-                    style = cast("datacube_ows.styles.StyleDef", product_or_style_cfg)
-                    b_idx = style.product.band_idx
-                    delocaliser = style.local_band
-                    self.band_mapper = lambda b: b_idx.band(delocaliser(b))
-            else:
-                self.band_mapper = None
-
-    def __call__(self, *args, **kwargs) -> Any:
-        if args and self._args:
-            calling_args = chain(args, self._args)
-        elif args:
-            calling_args = args
-        else:
-            calling_args = self._args
-        if kwargs and self._kwargs:
-            calling_kwargs = self._kwargs.copy()
-            calling_kwargs.update(kwargs)
-        elif kwargs:
-            calling_kwargs = kwargs.copy()
-        else:
-            calling_kwargs = self._kwargs.copy()
-
-        if self.band_mapper:
-            calling_kwargs["band_mapper"] = self.band_mapper
-
-        if self.pass_layer_cfg:
-            calling_kwargs['layer_cfg'] = self.style_or_layer_cfg
-
-        return self._func(*calling_args, **calling_kwargs)
-
-
-def cache_control_headers(max_age: int) -> str:
+def cache_control_headers(max_age: int) -> dict[str, str]:
     if max_age <= 0:
         return {"cache-control": "no-cache"}
     else:
@@ -388,7 +271,7 @@ def cache_control_headers(max_age: int) -> str:
 
 # Extent Mask Functions
 
-def mask_by_val(data: "xarray.Dataset", band: str, val: Optional[Any] = None) -> "xarray.DataArray":
+def mask_by_val(data: xarray.Dataset, band: str, val: Any = None) -> xarray.DataArray:
     """
     Mask by value.
     Value to mask by may be supplied, or is taken from 'nodata' metadata by default.
@@ -401,7 +284,7 @@ def mask_by_val(data: "xarray.Dataset", band: str, val: Optional[Any] = None) ->
         return data[band] != val
 
 
-def mask_by_val2(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
+def mask_by_val2(data: xarray.Dataset, band: str) -> xarray.DataArray:
     """
     Mask by value, using ODC canonical nodata value
 
@@ -410,14 +293,14 @@ def mask_by_val2(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     return data[band] != data[band].nodata
 
 
-def mask_by_bitflag(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
+def mask_by_bitflag(data: xarray.Dataset, band: str) -> xarray.DataArray:
     """
     Mask by ODC metadata nodata value, as a bitflag
     """
     return ~data[band] & data[band].attrs['nodata']
 
 
-def mask_by_val_in_band(data: "xarray.Dataset", band: str, mask_band: str, val: Any = None) -> "xarray.DataArray":
+def mask_by_val_in_band(data: xarray.Dataset, band: str, mask_band: str, val: Any = None) -> xarray.DataArray:
     """
     Mask all bands by a value in a particular band
 
@@ -427,7 +310,7 @@ def mask_by_val_in_band(data: "xarray.Dataset", band: str, mask_band: str, val: 
     return mask_by_val(data, mask_band, val)
 
 
-def mask_by_quality(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
+def mask_by_quality(data: xarray.Dataset, band: str) -> xarray.DataArray:
     """
     Mask by a quality band.
 
@@ -439,7 +322,7 @@ def mask_by_quality(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     return mask_by_val(data, "quality")
 
 
-def mask_by_extent_flag(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
+def mask_by_extent_flag(data: xarray.Dataset, band: str) -> xarray.DataArray:
     """
     Mask by extent.
 
@@ -448,7 +331,7 @@ def mask_by_extent_flag(data: "xarray.Dataset", band: str) -> "xarray.DataArray"
     return data["extent"] == 1
 
 
-def mask_by_extent_val(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
+def mask_by_extent_val(data: xarray.Dataset, band: str) -> xarray.DataArray:
     """
     Mask by extent value using metadata nodata.
 
@@ -457,7 +340,7 @@ def mask_by_extent_val(data: "xarray.Dataset", band: str) -> "xarray.DataArray":
     return mask_by_val(data, "extent")
 
 
-def mask_by_nan(data: "xarray.Dataset", band: str) -> "numpy.NDArray":
+def mask_by_nan(data: xarray.Dataset, band: str) -> numpy.ndarray:
     """
     Mask by nan, for bands with floating point data
     """
@@ -467,8 +350,8 @@ def mask_by_nan(data: "xarray.Dataset", band: str) -> "numpy.NDArray":
 # Example mosaic date function
 def rolling_window_ndays(
         available_dates: Sequence[datetime.datetime],
-        layer_cfg: "datacube_ows.ows_configuration.OWSNamedLayer",
-        ndays: int = 6) -> Tuple[datetime.datetime, datetime.datetime]:
+        layer_cfg: OWSExtensibleConfigEntry,
+        ndays: int = 6) -> tuple[datetime.datetime, datetime.datetime]:
     idx = -ndays
     days = available_dates[idx:]
     start, _ = layer_cfg.search_times(days[idx])
@@ -486,7 +369,7 @@ def rolling_window_ndays(
 # Method for formatting urls, e.g. for use in feature_info custom inclusions.
 
 
-def lower_get_args() -> MutableMapping[str, str]:
+def lower_get_args() -> dict[str, str]:
     """
     Return Flask request arguments, with argument names converted to lower case.
 
@@ -504,9 +387,9 @@ def lower_get_args() -> MutableMapping[str, str]:
 
 def create_geobox(
         crs: CRS,
-        minx: Union[float, int], miny: Union[float, int],
-        maxx: Union[float, int], maxy: Union[float, int],
-        width: Optional[int] = None, height: Optional[int] = None,
+        minx: float | int, miny: float | int,
+        maxx: float | int, maxy: float | int,
+        width: int | None = None, height: int | None = None,
 ) -> GeoBox:
     """
     Create an ODC Geobox.

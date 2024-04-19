@@ -11,8 +11,7 @@ import pytest
 from xarray import DataArray, Dataset, concat
 
 import datacube_ows.styles
-from datacube_ows.config_utils import OWSEntryNotFound
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import OWSEntryNotFound, ConfigException
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 

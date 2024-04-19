@@ -8,7 +8,7 @@ from typing import Any, Type, cast
 import lark
 from datacube.virtual.expr import formula_parser
 
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
 
 # Lark stuff.
 

@@ -7,8 +7,7 @@ from typing import Optional, Union, cast
 
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import CFG_DICT, ConfigException
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.component import ComponentStyleDef
 from datacube_ows.styles.ramp import ColorRampDef

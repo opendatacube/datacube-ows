@@ -25,9 +25,10 @@ from datacube_ows.cube_pool import cube
 from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import (ConfigException, dataset_center_time,
+from datacube_ows.ogc_utils import (dataset_center_time,
                                     solar_date, tz_for_geometry,
                                     xarray_image_as_png)
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.resource_limits import ResourceLimited

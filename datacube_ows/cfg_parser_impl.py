@@ -15,8 +15,9 @@ from datacube import Datacube
 from deepdiff import DeepDiff
 
 from datacube_ows import __version__
-from datacube_ows.ows_configuration import (ConfigException, OWSConfig,
+from datacube_ows.ows_configuration import (OWSConfig,
                                             OWSFolder, read_config)
+from datacube_ows.config_utils import ConfigException
 
 
 @click.group(invoke_without_command=True)

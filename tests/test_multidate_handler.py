@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.styles.base import StyleDefBase
 
 

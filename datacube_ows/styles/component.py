@@ -9,8 +9,7 @@ from typing import (Any, Callable, Hashable, List, MutableMapping, Optional,
 import numpy as np
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
+from datacube_ows.config_utils import CFG_DICT, ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 
 # pylint: disable=abstract-method

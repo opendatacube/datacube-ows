@@ -53,7 +53,12 @@ dev_requirements = [
     'pylint',
     'sphinx_click',
     'pre-commit',
-    'pipdeptree'
+    'pipdeptree',
+    'mypy',
+    'types-pytz',
+    'types-python-dateutil',
+    'types-requests',
+
 ]
 
 operational_requirements = [

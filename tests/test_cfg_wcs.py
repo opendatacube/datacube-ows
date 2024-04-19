@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import WCSFormat, parse_ows_layer
 
 

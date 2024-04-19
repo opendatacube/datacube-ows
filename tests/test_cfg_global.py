@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import ContactInfo, OWSConfig
 
 

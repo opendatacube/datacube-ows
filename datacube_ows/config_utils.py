@@ -7,8 +7,9 @@ import json
 import logging
 import os
 from importlib import import_module
+from itertools import chain
 from typing import (Any, Callable, Iterable, List, Mapping, MutableMapping,
-                    Optional, Sequence, Set, Union, cast)
+                    Optional, Sequence, Set, TypeVar, Union, cast)
 from urllib.parse import urlparse
 
 import fsspec
@@ -17,7 +18,6 @@ from flask_babel import gettext as _
 from xarray import DataArray
 
 from datacube_ows.config_toolkit import deepinherit
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
 
 _LOG = logging.getLogger(__name__)
 
@@ -31,6 +31,9 @@ RAW_CFG = Union[
 ]
 
 CFG_DICT = MutableMapping[str, RAW_CFG]
+
+F = TypeVar('F', bound=Callable[..., Any])
+
 
 
 # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
@@ -135,6 +138,12 @@ def import_python_obj(path: str) -> RAW_CFG:
     except (ImportError, ValueError, ModuleNotFoundError, AttributeError):
         raise ConfigException(f"Could not import python object: {path}")
     return cast(RAW_CFG, obj)
+
+
+class ConfigException(Exception):
+    """
+    General exception for OWS Configuration issues.
+    """
 
 
 class OWSConfigNotReady(ConfigException):
@@ -920,3 +929,109 @@ class AbstractMaskRule(OWSConfigEntry):
         if mask is not None and self.invert:
             mask = ~mask # pylint: disable=invalid-unary-operand-type
         return mask
+
+
+# Function wrapper for configurable functional elements
+class FunctionWrapper:
+    """
+    Function wrapper for configurable functional elements
+    """
+
+    def __init__(self,
+                 product_or_style_cfg: OWSExtensibleConfigEntry,
+                 func_cfg: F | Mapping[str, Any],
+                 stand_alone: bool = False) -> None:
+        """
+
+        :param product_or_style_cfg: An instance of either NamedLayer or Style,
+                the context in which the wrapper operates.
+        :param func_cfg: A function or a configuration dictionary representing a function.
+        :param stand_alone: Optional boolean.
+                If False (the default) then only configuration dictionaries will be accepted.
+        """
+        self.style_or_layer_cfg = product_or_style_cfg
+        if callable(func_cfg):
+            if not stand_alone:
+                raise ConfigException(
+                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+            self._func = func_cfg
+            self._args = []
+            self._kwargs = {}
+            self.band_mapper = None
+            self.pass_layer_cfg = False
+        elif isinstance(func_cfg, str):
+            self._func = get_function(func_cfg)
+            self._args = []
+            self._kwargs = {}
+            self.band_mapper = None
+            self.pass_layer_cfg = False
+        else:
+            if stand_alone and callable(func_cfg["function"]):
+                self._func = func_cfg["function"]
+            elif callable(func_cfg["function"]):
+                raise ConfigException(
+                    "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
+            else:
+                self._func = get_function(func_cfg["function"])
+            self._args = func_cfg.get("args", [])
+            self._kwargs = func_cfg.get("kwargs", {}).copy()
+            self.pass_layer_cfg = func_cfg.get("pass_layer_cfg", False)
+            if "pass_product_cfg" in func_cfg:
+                _LOG.warning("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
+                             "'mapped_bands'.  Please update your config accordingly")
+            if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
+                if hasattr(product_or_style_cfg, "band_idx"):
+                    # NamedLayer
+                    from datacube_ows.ows_configuration import OWSNamedLayer
+                    named_layer = cast(OWSNamedLayer, product_or_style_cfg)
+                    b_idx = named_layer.band_idx
+                    self.band_mapper = b_idx.band
+                else:
+                    # Style
+                    from datacube_ows.styles import StyleDef
+                    style = cast(StyleDef, product_or_style_cfg)
+                    b_idx = style.product.band_idx
+                    delocaliser = style.local_band
+                    self.band_mapper = lambda b: b_idx.band(delocaliser(b))
+            else:
+                self.band_mapper = None
+
+    def __call__(self, *args, **kwargs) -> Any:
+        if args and self._args:
+            calling_args: Iterable[Any] = chain(args, self._args)
+        elif args:
+            calling_args = args
+        else:
+            calling_args = self._args
+        if kwargs and self._kwargs:
+            calling_kwargs = self._kwargs.copy()
+            calling_kwargs.update(kwargs)
+        elif kwargs:
+            calling_kwargs = kwargs.copy()
+        else:
+            calling_kwargs = self._kwargs.copy()
+
+        if self.band_mapper:
+            calling_kwargs["band_mapper"] = self.band_mapper
+
+        if self.pass_layer_cfg:
+            calling_kwargs['layer_cfg'] = self.style_or_layer_cfg
+
+        return self._func(*calling_args, **calling_kwargs)
+
+
+def get_function(func: F | str) -> F:
+    """Converts a config entry to a function, if necessary
+
+    :param func: Either a Callable object or a fully qualified function name str, or None
+    :return: a Callable object, or None
+    """
+    if func is not None and not callable(func):
+        mod_name, func_name = func.rsplit('.', 1)
+        try:
+            mod = import_module(mod_name)
+            func = getattr(mod, func_name)
+        except (ImportError, ModuleNotFoundError, ValueError, AttributeError):
+            raise ConfigException(f"Could not import python object: {func}")
+        assert callable(func)
+    return cast(F, func)

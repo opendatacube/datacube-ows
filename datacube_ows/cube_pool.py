@@ -6,7 +6,7 @@
 import logging
 from contextlib import contextmanager
 from threading import Lock
-from typing import Generator, MutableMapping, Optional
+from typing import Generator
 
 from datacube import Datacube
 
@@ -28,11 +28,11 @@ class CubePool:
     A Cube pool is a thread-safe resource pool for managing Datacube objects (which map to database connections).
     """
     # _instances, global mapping of CubePools by app name
-    _instances: MutableMapping[str, "CubePool"] = {}
+    _instances: dict[str, "CubePool"] = {}
 
     _cubes_lock_: bool = False
 
-    _instance: Optional[Datacube] = None
+    _instance: Datacube | None = None
 
     def __new__(cls, app: str) -> "CubePool":
         """
@@ -54,7 +54,7 @@ class CubePool:
             self._cubes_lock: Lock = Lock()
             self._cubes_lock_ = True
 
-    def get_cube(self) -> Optional[Datacube]:
+    def get_cube(self) -> Datacube | None:
         """
         Return a Datacube object.  Either generating a new Datacube, or recycling an unassigned one already in the pool.
 
@@ -77,7 +77,7 @@ class CubePool:
 
 
 # Lowlevel CubePool API
-def get_cube(app: str = "ows") -> Optional[Datacube]:
+def get_cube(app: str = "ows") -> Datacube | None:
     """
     Obtain a Datacube object from the appropriate pool
 
@@ -90,7 +90,7 @@ def get_cube(app: str = "ows") -> Optional[Datacube]:
 
 # High Level Cube Pool API
 @contextmanager
-def cube(app: str = "ows") -> Generator[Optional["datacube.api.core.Datacube"], None, None]:
+def cube(app: str = "ows") -> Generator[Datacube | None, None, None]:
     """
     Context manager for using a Datacube object from a pool.
 

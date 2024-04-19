@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 import datetime
+import logging
 from typing import Iterable
 
 import datacube
@@ -11,7 +12,6 @@ from rasterio.enums import Resampling
 from odc.geo.geom import Geometry
 from odc.geo.geobox import GeoBox
 from odc.geo.warp import Resampling
-from datacube_ows.data import _LOG
 from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import OWSNamedLayer
@@ -19,6 +19,8 @@ from datacube_ows.startup_utils import CredentialManager
 from datacube_ows.styles import StyleDef
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import solar_correct_data
+
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 class ProductBandQuery:
@@ -104,7 +106,7 @@ class ProductBandQuery:
     def simple_layer_query(cls, layer: OWSNamedLayer,
                            bands: list[datacube.model.Measurement],
                            manual_merge: bool = False,
-                           fuse_func: datacube.api.FuserFunction | None = None,
+                           fuse_func: datacube.api.core.FuserFunction | None = None,
                            resource_limited: bool = False) -> "ProductBandQuery":
         if resource_limited:
             main_products = layer.low_res_products
@@ -125,7 +127,7 @@ class DataStacker:
         self._product = product
         self.cfg = product.global_cfg
         self._geobox = geobox
-        self._resampling = resampling if resampling is not None else Resampling.nearest
+        self._resampling = resampling if resampling is not None else "nearest"
         self.style = style
         if style:
             self._needed_bands = list(style.needed_bands)
@@ -335,7 +337,7 @@ class DataStacker:
     # Read data for given datasets and measurements per the output_geobox
     # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data(self, datasets, measurements, geobox, skip_broken = True, resampling=Resampling.nearest, fuse_func=None):
+    def read_data(self, datasets, measurements, geobox, skip_broken = True, resampling="nearest", fuse_func=None):
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
@@ -344,14 +346,15 @@ class DataStacker:
                     measurements=measurements,
                     fuse_func=fuse_func,
                     skip_broken_datasets=skip_broken,
-                    patch_url=self._product.patch_url)
+                    patch_url=self._product.patch_url,
+                    resampling=resampling)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise
     # Read data for single datasets and measurements per the output_geobox
     # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data_for_single_dataset(self, dataset, measurements, geobox, skip_broken = True, resampling=Resampling.nearest, fuse_func=None):
+    def read_data_for_single_dataset(self, dataset, measurements, geobox, skip_broken = True, resampling="nearest", fuse_func=None):
         datasets = [dataset]
         dc_datasets = datacube.Datacube.group_datasets(datasets, self._product.time_resolution.dataset_groupby())
         CredentialManager.check_cred()
@@ -362,7 +365,8 @@ class DataStacker:
                 measurements=measurements,
                 fuse_func=fuse_func,
                 skip_broken_datasets=skip_broken,
-                patch_url=self._product.patch_url)
+                patch_url=self._product.patch_url,
+                resampling=resampling)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise

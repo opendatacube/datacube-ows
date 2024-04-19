@@ -3,8 +3,7 @@
 #
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from datacube_ows.config_utils import OWSConfigEntry
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import OWSConfigEntry, ConfigException
 
 # Scale denominators for WebMercator QuadTree Scale Set, starting from zoom level 0.
 # Currently goes to zoom level 14, where the pixel size at the equator is ~10m (i.e. Sentinel2 resolution)

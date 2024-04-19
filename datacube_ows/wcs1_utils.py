@@ -17,7 +17,7 @@ from datacube_ows.cube_pool import cube
 from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.wcs_utils import get_bands_from_styles
