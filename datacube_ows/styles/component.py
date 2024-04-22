@@ -25,7 +25,7 @@ class ComponentStyleDef(StyleDefBase):
     Style Subclass that allows the behaviour of each component (red, green, blue, alpha) to be
     specified independently.
     """
-    def __init__(self, product: OWSNamedLayer,
+    def __init__(self, product: "OWSNamedLayer",
                  style_cfg: CFG_DICT,
                  stand_alone: bool = False,
                  defer_multi_date: bool = False,

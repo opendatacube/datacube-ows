@@ -90,7 +90,7 @@ class LegendBase(OWSConfigEntry):
         if self.style == self.style_or_mdh:
             min_count: int = 1
         else:
-            min_count = self.style_or_mdh.min_count
+            min_count = cast(int, self.style_or_mdh.min_count)
         return f"{style_label}.legend.{min_count}"
 
 
@@ -204,6 +204,9 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.legend_cfg = self.Legend(self, cast(CFG_DICT, raw_cfg.get("legend", {})))
         if not defer_multi_date:
             self.parse_multi_date(raw_cfg)
+
+        self.min_count: int = 1
+        self.max_count: int = 1
 
     # Over-ridden methods
     def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":

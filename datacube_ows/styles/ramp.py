@@ -174,7 +174,7 @@ class ColorRamp:
         """
         self.style = style
         if "color_ramp" in ramp_cfg:
-            raw_scaled_ramp = ramp_cfg["color_ramp"]
+            raw_scaled_ramp = cast(list[CFG_DICT], ramp_cfg["color_ramp"])
         else:
             rmin, rmax = cast(list[float], ramp_cfg["range"])
             unscaled_ramp = UNSCALED_DEFAULT_RAMP
@@ -499,7 +499,7 @@ class ColorRampDef(StyleDefBase):
     auto_legend = True
 
     def __init__(self,
-                 product: OWSNamedLayer,
+                 product: "OWSNamedLayer",
                  style_cfg: CFG_DICT,
                  stand_alone: bool = False,
                  defer_multi_date: bool = False,
@@ -588,6 +588,8 @@ class ColorRampDef(StyleDefBase):
             xformed_data = cast("ColorRampDef", self.style).apply_index(data)
             agg = cast(FunctionWrapper, self.aggregator)(xformed_data)
             return self.color_ramp.apply(agg)
+        class Legend(RampLegendBase):
+            pass
 
 
 # Register ColorRampDef as Style subclass.

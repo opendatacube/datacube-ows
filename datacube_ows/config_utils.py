@@ -8,8 +8,7 @@ import logging
 import os
 from importlib import import_module
 from itertools import chain
-from typing import (Any, Callable, Iterable, List, Mapping,
-                    Optional, Sequence, Set, TypeVar, Union, cast)
+from typing import (Any, Callable, Iterable, Mapping, Optional, Sequence, TypeVar, cast)
 from urllib.parse import urlparse
 
 import fsspec
@@ -30,14 +29,7 @@ if TYPE_CHECKING:
 
 _LOG = logging.getLogger(__name__)
 
-RAW_CFG = Union[
-        None,
-        str,
-        int,
-        float,
-        list[Any],
-        dict[str, Any]
-]
+RAW_CFG = None | str | int | float | list["RAW_CFG"] | dict[str, "RAW_CFG"]
 
 CFG_DICT = dict[str, RAW_CFG]
 
@@ -60,20 +52,20 @@ def cfg_expand(cfg_unexpanded: RAW_CFG,
     if cwd is None:
         cwd = os.getcwd()
 
-    if isinstance(cfg_unexpanded, Mapping):
+    if isinstance(cfg_unexpanded, dict):
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
                 raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
-            ninclusions: List[str] = inclusions.copy()
-            ninclusions.append(cfg_unexpanded["include"])
+            raw_path = cast(str, cfg_unexpanded["include"])
+            ninclusions: list[str] = inclusions.copy()
+            ninclusions.append(cast(str, raw_path))
             # Perform expansion
             if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
                 # JSON Expansion
-                raw_path: str = cfg_unexpanded["include"]
                 try:
                     # Try in actual working directory
                     json_obj: Any = load_json_obj(raw_path)
-                    abs_path: str = os.path.abspath(cfg_unexpanded["include"])
+                    abs_path: str = os.path.abspath(raw_path)
                     cwd = os.path.dirname(abs_path)
                 # pylint: disable=broad-except
                 except Exception:
@@ -91,7 +83,7 @@ def cfg_expand(cfg_unexpanded: RAW_CFG,
                 return cfg_expand(json_obj, cwd=cwd, inclusions=ninclusions)
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
-                return cfg_expand(import_python_obj(cfg_unexpanded["include"]), cwd=cwd, inclusions=ninclusions)
+                return cfg_expand(import_python_obj(raw_path), cwd=cwd, inclusions=ninclusions)
             else:
                 raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
         else:
@@ -175,7 +167,7 @@ class OWSConfigEntry:
         :param args:
         :param kwargs:
         """
-        self._unready_attributes: Set[str] = set()
+        self._unready_attributes: set[str] = set()
         self._raw_cfg: RAW_CFG = cfg
         self.ready: bool = False
 
@@ -347,7 +339,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             else:
                 self.register_metadata(self.get_obj_label(), "abstract", cast(str, local_abstract))
         if self.METADATA_KEYWORDS:
-            local_keyword_set = set(cast(List[str], cfg.get("keywords", [])))
+            local_keyword_set = set(cast(list[str], cfg.get("keywords", [])))
             self.register_metadata(self.get_obj_label(), FLD_KEYWORDS, ",".join(local_keyword_set))
             if inherit_from:
                 keyword_set = inherit_from.keywords
@@ -385,7 +377,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if position:
                 self.register_metadata(self.get_obj_label(), FLD_CONTACT_POSITION, position)
         if self.METADATA_DEFAULT_BANDS:
-            band_map = cast(dict[str, List[str]], cfg)
+            band_map = cast(dict[str, list[str]], cfg)
             for k, v in band_map.items():
                 if len(v):
                     self.register_metadata(self.get_obj_label(), k, v[0])
@@ -535,9 +527,9 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
     """
     A Config Entry object that can be looked up by name (i.e. so it can be inherited from)
     """
-    INDEX_KEYS: List[str] = []
+    INDEX_KEYS: list[str] = []
 
-    def __init__(self, cfg: RAW_CFG, keyvals: Mapping[str, Any], *args, **kwargs) -> None:
+    def __init__(self, cfg: RAW_CFG, keyvals: dict[str, str], *args, **kwargs) -> None:
         """
         Validate and store keyvals for indexed lookup.
 
@@ -555,8 +547,8 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
 
     @classmethod
     def lookup_impl(cls, cfg: "datacube_ows.ows_configuration.OWSConfig",
-                    keyvals: Mapping[str, Any],
-                    subs: Optional[Mapping[str, Any]] = None) -> "OWSIndexedConfigEntry":
+                    keyvals: dict[str, str],
+                    subs: CFG_DICT | None = None) -> "OWSIndexedConfigEntry":
         """
         Lookup a config entry of this type by identifying label(s)
 
@@ -577,8 +569,8 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     def __init__(self,
                  cfg: RAW_CFG, keyvals: dict[str, str], global_cfg: "datacube_ows.ows_configuration.OWSConfig",
                  *args,
-                 keyval_subs: CFG_DICT | None = None,
-                 keyval_defaults: CFG_DICT | None = None,
+                 keyval_subs: dict[str, Any] | None = None,
+                 keyval_defaults: dict[str, str] | None = None,
                  expanded: bool = False,
                  **kwargs) -> None:
         """
@@ -599,8 +591,8 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     @classmethod
     def expand_inherit(cls,
                        cfg: CFG_DICT, global_cfg: "datacube_ows.ows_configuration.OWSConfig",
-                       keyval_subs: CFG_DICT | None = None,
-                       keyval_defaults: CFG_DICT | None = None) -> RAW_CFG:
+                       keyval_subs: dict[str, Any] | None = None,
+                       keyval_defaults: dict[str, str] | None = None) -> RAW_CFG:
         """
         Expand inherited config, and apply overrides.
 
@@ -613,7 +605,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
         if "inherits" in cfg:
             lookup = True
             # Precludes e.g. defaulting style lookup to current layer.
-            lookup_keys: CFG_DICT = {}
+            lookup_keys: dict[str, str] = {}
             inherits = cast(dict[str, str], cfg["inherits"])
             for k in cls.INDEX_KEYS:
                 if k not in inherits and keyval_defaults is not None and k not in keyval_defaults:
@@ -622,7 +614,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                 if k in inherits:
                     lookup_keys[k] = inherits[k]
                 elif keyval_defaults and k in keyval_defaults:
-                    lookup_keys[k] = keyval_defaults[k]
+                    lookup_keys[k] = str(keyval_defaults[k])
             if lookup and lookup_keys:
                 parent = cls.lookup_impl(global_cfg, keyvals=lookup_keys, subs=keyval_subs)
                 # pylint: disable=protected-access
@@ -751,7 +743,7 @@ class FlagProductBands(OWSConfigEntry):
         """
         super().__init__({})
         self.layer = layer
-        self.bands: Set[str] = set()
+        self.bands: set[str] = set()
         self.bands.add(str(flag_band.canonical_band_name))
         self.flag_bands = {flag_band.pq_band: flag_band}
         self.product_names = tuple(flag_band.pq_names)
@@ -811,7 +803,7 @@ class FlagProductBands(OWSConfigEntry):
 
     @classmethod
     def build_list_from_masks(cls, masks: Iterable["datacube_ows.styles.base.StyleMask"],
-                              layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> List["FlagProductBands"]:
+                              layer: "datacube_ows.ows_configuration.OWSNamedLayer") -> list["FlagProductBands"]:
         """
         Class method to instantiate a list of FlagProductBands from a list of style masks.
 
@@ -858,6 +850,9 @@ class FlagProductBands(OWSConfigEntry):
         return flag_products
 
 
+FlagSpec = dict[str, bool | str]
+
+
 class AbstractMaskRule(OWSConfigEntry):
     def __init__(self, band: str, cfg: CFG_DICT, mapper: Callable[[str], str] = lambda x: x) -> None:
         super().__init__(cfg)
@@ -870,29 +865,26 @@ class AbstractMaskRule(OWSConfigEntry):
 
     VALUES_LABEL = "values"
     def parse_rule_spec(self, cfg: CFG_DICT) -> None:
-        self.flags: list[CFG_DICT] | CFG_DICT | None = None
+        self.flags: list[FlagSpec] | FlagSpec | None = None
         self.or_flags: bool | list[bool] = False
         self.values: list[list[int]] | list[int] | None = None
         self.invert: bool | list[bool] = bool(cfg.get("invert", False))
         if "flags" in cfg:
-            flags = cast(CFG_DICT, cfg["flags"])
+            flags = cast(FlagSpec, cfg["flags"])
             if "or" in flags and "and" in flags:
                 raise ConfigException(
                     f"ValueMap rule in {self.context} combines 'and' and 'or' rules")
             elif "or" in flags:
                 self.or_flags = True
-                flags = cast(CFG_DICT, flags["or"])
+                flags = cast(FlagSpec, flags["or"])
             elif "and" in flags:
-                flags = cast(CFG_DICT, flags["and"])
+                flags = cast(FlagSpec, flags["and"])
             self.flags = flags
         else:
             self.flags = None
 
         if "values" in cfg:
             val: Any = cfg["values"]
-        elif "enum" in cfg:
-            val = cfg["enum"]
-            _LOG.warning("enum in pq_masks is deprecated and will be removed in a future release. Refer to the documentation for the new syntax.")
         else:
             val = None
         if val is None:
@@ -901,7 +893,7 @@ class AbstractMaskRule(OWSConfigEntry):
             if isinstance(val, int):
                 self.values = [cast(int, val)]
             else:
-                self.values = cast(List[int], val)
+                self.values = cast(list[int], val)
 
         if not self.flags and not self.values:
             raise ConfigException(
@@ -919,7 +911,7 @@ class AbstractMaskRule(OWSConfigEntry):
         """
         if self.values:
             mask: DataArray | None = None
-            for v in cast(List[int], self.values):
+            for v in cast(list[int], self.values):
                 vmask = data == v
                 if mask is None:
                     mask = vmask

@@ -70,7 +70,7 @@ class MVSelectOpts(Enum):
             return [cast(ClauseElement, count(stv.c.id))]
         if self == self.EXTENT:
             return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
-        raise Exception("Invalid selection option")
+        raise AssertionError("Invalid selection option")
 
 
 DateOrDateTime = datetime.datetime | datetime.date

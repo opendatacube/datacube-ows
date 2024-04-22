@@ -6,7 +6,7 @@
 import io
 import logging
 from datetime import datetime
-from typing import Callable, List, MutableMapping, Optional, Union, cast
+from typing import Callable, MutableMapping, Type, Union, cast
 
 import numpy
 import xarray
@@ -16,9 +16,11 @@ from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
-                                       ConfigException, OWSMetadataConfig)
+from datacube_ows.config_utils import CFG_DICT, AbstractMaskRule, ConfigException, OWSMetadataConfig, FlagSpec
 from datacube_ows.styles.base import StyleDefBase
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSNamedLayer
 
 _LOG = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ class AbstractValueMapRule(AbstractMaskRule):
 
     Construct a ValueMap rule-set with ValueMapRule.value_map_from_config
     """
-    def __init__(self, style_def: "ColorMapStyleDef", band: str, cfg: CFG_DICT) -> None:
+    def __init__(self, style_def: Union["ColorMapStyleDef", "ColorMapStyleDef.MultiDateHandler"], band: str, cfg: CFG_DICT) -> None:
         """
         Construct a Value Map Rule
 
@@ -44,7 +46,7 @@ class AbstractValueMapRule(AbstractMaskRule):
         self.title = cast(str, cfg["title"])
         self.abstract = cast(str, cfg.get("abstract"))
         if self.title and self.abstract:
-            self.label: Optional[str] = f"{self.title} - {self.abstract}"
+            self.label: str | None = f"{self.title} - {self.abstract}"
         elif self.title:
             self.label = self.title
         elif self.abstract:
@@ -63,13 +65,13 @@ class AbstractValueMapRule(AbstractMaskRule):
         if cfg.get("mask"):
             self.alpha = 0.0
         else:
-            self.alpha = float(cast(Union[float, int, str], cfg.get("alpha", 1.0)))
+            self.alpha = float(cast(float | int | str, cfg.get("alpha", 1.0)))
 
     @classmethod
     def value_map_from_config(cls,
                           style_or_mdh: Union["ColorMapStyleDef", "ColorMapStyleDef.MultiDateHandler"],
                           cfg: CFG_DICT
-                              ) -> MutableMapping[str, List["AbstractValueMapRule"]]:
+                              ) -> dict[str, list["AbstractValueMapRule"]]:
         """
         Create a multi-date value map rule set from a config specification
 
@@ -79,20 +81,20 @@ class AbstractValueMapRule(AbstractMaskRule):
         :return: A value map ruleset dictionary.
         """
         if isinstance(style_or_mdh, ColorMapStyleDef):
-            typ = ValueMapRule
+            typ: Type[AbstractValueMapRule] = ValueMapRule
         else:
             mdh = cast(ColorMapStyleDef.MultiDateHandler, style_or_mdh)
             if mdh.aggregator:
-                style_or_mdh = mdh.style
+                style_or_mdh = cast(ColorMapStyleDef, mdh.style)
                 typ = ValueMapRule
             else:
                 if mdh.min_count != mdh.max_count:
                     raise ConfigException(
                         "MultiDate value map only supported on multi-date handlers with min_count and max_count equal.")
                 typ = MultiDateValueMapRule
-        vmap: MutableMapping[str, List["AbstractValueMapRule"]] = {}
+        vmap: dict[str, list["AbstractValueMapRule"]] = {}
         for band_name, rules in cfg.items():
-            band_rules = [typ(style_or_mdh, band_name, rule) for rule in cast(List[CFG_DICT], rules)]
+            band_rules = [typ(style_or_mdh, band_name, rule) for rule in cast(list[CFG_DICT], rules)]
             vmap[band_name] = band_rules
         return vmap
 
@@ -131,21 +133,21 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         :param cfg: The rule specification
         """
         self.mdh = mdh
-        self.invert: List[bool] = []
-        self.flags: Optional[List[CFG_DICT]] = []
-        self.or_flags: Optional[List[bool]] = []
-        self.values: Optional[List[List[int]]] = []
-        super().__init__(style_def=mdh.style, band=band, cfg=cfg)
+        self.invert: list[bool] = []
+        self.flags: list[FlagSpec] = []
+        self.or_flags: list[bool] = []
+        self.values: list[list[int]] = []
+        super().__init__(style_def=cast(ColorMapStyleDef.MultiDateHandler, mdh.style), band=band, cfg=cfg)
 
     def parse_rule_spec(self, cfg: CFG_DICT):
         if "invert" in cfg:
-            self.invert = [bool(b) for b in cfg["invert"]]
+            self.invert = [bool(b) for b in cast(list, cfg["invert"])]
         else:
             self.invert = [False] * self.mdh.max_count
         if len(self.invert) != self.mdh.max_count:
             raise ConfigException(f"Invert entry has wrong number of rule sets for date count")
         if "flags" in cfg:
-            date_flags = cast(CFG_DICT, cfg["flags"])
+            date_flags = cast(list[CFG_DICT], cfg["flags"])
             if len(date_flags) != self.mdh.max_count:
                 raise ConfigException(f"Flags entry has wrong number of rule sets for date count")
             for flags in date_flags:
@@ -154,24 +156,27 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                     raise ConfigException(f"MultiDateValueMap rule in {self.mdh.style.name} of layer {self.mdh.style.product.name} combines 'and' and 'or' rules")
                 elif "or" in flags:
                     or_flag = True
-                    flags = cast(CFG_DICT, flags["or"])
+                    sflags = cast(FlagSpec, flags["or"])
                 elif "and" in flags:
-                    flags = cast(CFG_DICT, flags["and"])
-                self.flags.append(flags)
+                    sflags = cast(FlagSpec, flags["and"])
+                else:
+                    sflags = cast(FlagSpec, flags)
+                self.flags.append(sflags)
                 self.or_flags.append(or_flag)
         else:
-            self.flags = None
-            self.or_flags = None
+            self.flags = []
+            self.or_flags = []
+
         if "values" in cfg:
-            self.values = cast(List[List[int]], list(cfg["values"]))
+            self.values = list(cast(list[list[int]], cfg["values"]))
         else:
-            self.values = None
+            self.values = []
         if not self.flags and not self.values:
             raise ConfigException(f"Multi-Date Value map rule in {self.context} must have a non-empty 'flags' or 'values' section.")
         if self.flags and self.values:
             raise ConfigException(f"Multi-Date Value map rule in {self.context} has both a 'flags' and a 'values' section - choose one.")
 
-    def create_mask(self, data: DataArray) -> DataArray:
+    def create_mask(self, data: DataArray) -> DataArray | None:
         """
         Create a mask from raw flag band data.
 
@@ -179,14 +184,14 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         :return: A boolean dateless DataArray, True where the data matches this rule
         """
         date_slices = (data.sel(time=dt) for dt in data.coords["time"].values)
-        mask: Optional[DataArray] = None
+        mask: DataArray | None = None
         if self.values:
             for d_slice, vals, invert in zip(date_slices, self.values, self.invert):
-                d_mask: Optional[DataArray] = None
+                d_mask: DataArray | None = None
                 if len(vals) == 0:
                     d_mask = d_slice == d_slice
                 else:
-                    for v in cast(List[int], vals):
+                    for v in cast(list[int], vals):
                         vmask = d_slice == v
                         if d_mask is None:
                             d_mask = vmask
@@ -196,27 +201,26 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                     d_mask = ~d_mask # pylint: disable=invalid-unary-operand-type
                 if mask is None:
                     mask = d_mask
-                else:
+                elif d_mask is not None:
                     mask &= d_mask
         else:
             for d_slice, flags, or_flags, invert in zip(date_slices, self.flags, self.or_flags, self.invert):
-                d_mask: Optional[DataArray] = None
+                d_mask = None
                 if not flags:
                     d_mask = d_slice == d_slice
                 elif or_flags:
-                    for f in cast(CFG_DICT, flags).items():
-                        f = {f[0]: f[1]}
+                    for f in ({k: v} for k, v in cast(CFG_DICT, flags).items()):
                         if d_mask is None:
                             d_mask = make_mask(d_slice, **f)
                         else:
                             d_mask |= make_mask(d_slice, **f)
                 else:
                     d_mask = make_mask(d_slice, **cast(CFG_DICT, flags))
-                if invert:
+                if invert and d_mask is not None:
                     d_mask = ~d_mask # pylint: disable=invalid-unary-operand-type
                 if mask is None:
                     mask = d_mask
-                else:
+                elif d_mask is not None:
                     mask &= d_mask
         return mask
 
@@ -227,7 +231,7 @@ def convert_to_uint8(fval):
     return clipped
 
 
-def apply_value_map(value_map: MutableMapping[str, List[AbstractValueMapRule]],
+def apply_value_map(value_map: MutableMapping[str, list[AbstractValueMapRule]],
                     data: Dataset,
                     band_mapper: Callable[[str], str]) -> Dataset:
     imgdata = Dataset(coords={k: v for k, v in data.coords.items() if k != "time"})
@@ -244,7 +248,7 @@ def apply_value_map(value_map: MutableMapping[str, List[AbstractValueMapRule]],
             bdata = ColorMapStyleDef.reint(bdata)
         for rule in reversed(rules):
             mask = rule.create_mask(bdata)
-            if mask.data.any():
+            if mask is not None and mask.data.any():
                 for channel in ("red", "green", "blue", "alpha"):
                     if channel == "alpha":
                         val = convert_to_uint8(rule.alpha)
@@ -268,18 +272,18 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     def __init__(self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast(CFG_DICT, self._raw_cfg)
-        self.ncols = int(raw_cfg.get("ncols", 1))
+        self.ncols = cast(int, raw_cfg.get("ncols", 1))
         if self.ncols < 1:
             raise ConfigException("ncols must be a positive integer")
-        self.patches: List[PatchTemplate] = []
+        self.patches: list[PatchTemplate] = []
 
-    def register_value_map(self, value_map: MutableMapping[str, List["AbstractValueMapRule"]]) -> None:
+    def register_value_map(self, value_map: MutableMapping[str, list["AbstractValueMapRule"]]) -> None:
         for band in value_map.keys():
             for idx, rule in reversed(list(enumerate(value_map[band]))):
                 # only include values that are not transparent (and that have a non-blank title or abstract)
                 if rule.alpha > 0.001 and rule.label:
                     self.patches.append(PatchTemplate(idx, rule))
-        self.parse_metadata(self._raw_cfg)
+        self.parse_metadata(cast(CFG_DICT, self._raw_cfg))
 
     def render(self, bytesio: io.BytesIO) -> None:
         patches = [
@@ -309,9 +313,8 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
 
     # For MetadataConfig
     @property
-    def default_title(self) -> Optional[str]:
+    def default_title(self) -> str | None:
         return ""
-
 
 
 class ColorMapStyleDef(StyleDefBase):
@@ -321,7 +324,7 @@ class ColorMapStyleDef(StyleDefBase):
     auto_legend = True
 
     def __init__(self,
-                 product: "datacube_ows.ows_configuration.OWSNamedLayer",
+                 product: "OWSNamedLayer",
                  style_cfg: CFG_DICT,
                  stand_alone: bool = False,
                  user_defined: bool = False) -> None:
@@ -397,13 +400,13 @@ class ColorMapStyleDef(StyleDefBase):
             :param cfg: The multidate handler configuration
             """
             super().__init__(style, cfg)
-            self._value_map: Optional[MutableMapping[str, AbstractValueMapRule]] = None
+            self._value_map: dict[str, list[AbstractValueMapRule]] | None = None
+            tcfg = cast(CFG_DICT, self._raw_cfg)
             if self.animate:
-                if "value_map" in self._raw_cfg:
+                if "value_map" in tcfg:
                     raise ConfigException("Multidate value maps not supported for animation handlers")
             else:
-                self._value_map = AbstractValueMapRule.value_map_from_config(self,
-                                                        cast(CFG_DICT, self._raw_cfg["value_map"]))
+                self._value_map = AbstractValueMapRule.value_map_from_config(self, cast(CFG_DICT, tcfg["value_map"]))
 
         @property
         def value_map(self):

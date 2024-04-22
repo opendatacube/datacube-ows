@@ -68,7 +68,7 @@ def test_parse_colorramp_defaults():
     assert legend.tick_labels == ["0.0", "1.0"]
     assert legend.width == 4.0
     assert legend.height == 1.25
-    assert legend.strip_location == [0.05, 0.5, 0.9, 0.15]
+    assert legend.strip_location == (0.05, 0.5, 0.9, 0.15)
 
 
 def test_parse_colorramp_legend_beginend():
