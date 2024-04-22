@@ -4,7 +4,8 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import math
-from datetime import datetime
+from datetime import datetime, date
+from typing import cast
 
 import numpy
 import regex as re
@@ -35,7 +36,7 @@ RESAMPLING_METHODS = {
 }
 
 
-def _bounding_pts(minx, miny, maxx, maxy, src_crs, dst_crs=None):
+def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=None):
     # pylint: disable=too-many-locals
     p1 = geom.point(minx, maxy, src_crs)
     p2 = geom.point(minx, miny, src_crs)
@@ -211,7 +212,7 @@ def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
     try:
         time = parse(times[0])
         if not product.time_resolution.is_subday():
-            time = time.date()
+            time = time.date()  # type: ignore[assignment]
     except ValueError:
         raise WMSException(
             "Time dimension value '%s' not valid for this layer" % times[0],

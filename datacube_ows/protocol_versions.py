@@ -21,7 +21,7 @@ FlaskHandler = Callable[[Mapping[str, str]], FlaskResponse]
 
 
 class SupportedSvcVersion:
-    def __init__(self, service: str, version: str, router, exception_class: OGCException) -> None:
+    def __init__(self, service: str, version: str, router, exception_class: type[OGCException]) -> None:
         self.service = service.lower()
         self.service_upper = service.upper()
         self.version = version
@@ -32,7 +32,7 @@ class SupportedSvcVersion:
 
 
 class SupportedSvc:
-    def __init__(self, versions: Sequence[SupportedSvcVersion], default_exception_class: Optional[OGCException] = None):
+    def __init__(self, versions: Sequence[SupportedSvcVersion], default_exception_class: type[OGCException] | None = None):
         self.versions = sorted(versions, key=lambda x: x.version_parts)
         assert len(self.versions) > 0
         self.service = self.versions[0].service
@@ -47,7 +47,7 @@ class SupportedSvc:
         else:
             self.default_exception_class = self.versions[0].exception_class
 
-    def _clean_version_parts(self, unclean: Iterable[str]) -> Sequence[int]:
+    def _clean_version_parts(self, unclean: list[str]) -> list[int]:
         clean = []
         for part in unclean:
             try:
@@ -65,8 +65,8 @@ class SupportedSvc:
     def negotiated_version(self, request_version: str) -> SupportedSvcVersion:
         if not request_version:
             return self.versions[-1]
-        parts: List[str] = list(request_version.split("."))
-        rv_parts: List[int] = self._clean_version_parts(parts)
+        parts: list[str] = list(request_version.split("."))
+        rv_parts: list[int] = self._clean_version_parts(parts)
         while len(rv_parts) < 3:
             rv_parts.append(0)
         for v in reversed(self.versions):

@@ -368,7 +368,7 @@ class TimeRes(Enum):
 
         return times
 
-    def dataset_groupby(self, product_names: Optional[Sequence[str]] = None, is_mosaic=False):
+    def dataset_groupby(self, product_names: list[str] | None = None, is_mosaic=False):
         if self.is_subday():
             return group_by_begin_datetime(product_names, truncate_dates=False)
         elif is_mosaic:
@@ -421,7 +421,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.time_resolution = TimeRes.parse(cfg.get("time_resolution"))
         if not self.time_resolution:
             raise ConfigException(f"Invalid time resolution value {cfg['time_resolution']} in named layer {self.name}")
-        self.mosaic_date_func: Optional[FunctionWrapper] = None
+        self.mosaic_date_func: FunctionWrapper | None = None
         if "mosaic_date_func" in cfg:
             self.mosaic_date_func = FunctionWrapper(self, cfg["mosaic_date_func"])
         if self.mosaic_date_func and not self.time_resolution.allow_mosaic():
