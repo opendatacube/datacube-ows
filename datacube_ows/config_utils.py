@@ -577,8 +577,8 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     def __init__(self,
                  cfg: RAW_CFG, keyvals: dict[str, str], global_cfg: "datacube_ows.ows_configuration.OWSConfig",
                  *args,
-                 keyval_subs: dict[str, str] | None = None,
-                 keyval_defaults: dict[str, str] | None = None,
+                 keyval_subs: CFG_DICT | None = None,
+                 keyval_defaults: CFG_DICT | None = None,
                  expanded: bool = False,
                  **kwargs) -> None:
         """
@@ -599,8 +599,8 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     @classmethod
     def expand_inherit(cls,
                        cfg: CFG_DICT, global_cfg: "datacube_ows.ows_configuration.OWSConfig",
-                       keyval_subs: dict[str, str] | None = None,
-                       keyval_defaults: dict[str, str] | None = None) -> RAW_CFG:
+                       keyval_subs: CFG_DICT | None = None,
+                       keyval_defaults: CFG_DICT | None = None) -> RAW_CFG:
         """
         Expand inherited config, and apply overrides.
 
@@ -613,7 +613,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
         if "inherits" in cfg:
             lookup = True
             # Precludes e.g. defaulting style lookup to current layer.
-            lookup_keys = {}
+            lookup_keys: CFG_DICT = {}
             inherits = cast(dict[str, str], cfg["inherits"])
             for k in cls.INDEX_KEYS:
                 if k not in inherits and keyval_defaults is not None and k not in keyval_defaults:
@@ -870,10 +870,10 @@ class AbstractMaskRule(OWSConfigEntry):
 
     VALUES_LABEL = "values"
     def parse_rule_spec(self, cfg: CFG_DICT) -> None:
-        self.flags: CFG_DICT | None = None
-        self.or_flags: bool = False
-        self.values: list[int] | None = None
-        self.invert = bool(cfg.get("invert", False))
+        self.flags: list[CFG_DICT] | CFG_DICT | None = None
+        self.or_flags: bool | list[bool] = False
+        self.values: list[list[int]] | list[int] | None = None
+        self.invert: bool | list[bool] = bool(cfg.get("invert", False))
         if "flags" in cfg:
             flags = cast(CFG_DICT, cfg["flags"])
             if "or" in flags and "and" in flags:
