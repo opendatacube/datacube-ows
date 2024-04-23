@@ -2,12 +2,14 @@ from collections import OrderedDict
 
 import datetime
 import logging
-from typing import Iterable
+from typing import Iterable, cast, Mapping
+from uuid import UUID
 
 import datacube
 import numpy
 import xarray
-from rasterio.enums import Resampling
+
+from sqlalchemy.engine import Row
 
 from odc.geo.geom import Geometry
 from odc.geo.geobox import GeoBox
@@ -26,12 +28,12 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 class ProductBandQuery:
     def __init__(self,
                  products: list[datacube.model.Product],
-                 bands: list[datacube.model.Measurement],
+                 bands: Iterable[str],
                  main: bool = False, manual_merge: bool = False, ignore_time: bool = False,
                  fuse_func: datacube.api.core.FuserFunction | None = None
     ):
         self.products = products
-        self.bands = bands
+        self.bands = set(bands)
         self.manual_merge = manual_merge
         self.fuse_func = fuse_func
         self.ignore_time = ignore_time
@@ -66,7 +68,7 @@ class ProductBandQuery:
                     pq_products = fp.products
                 queries.append(cls(
                     pq_products,
-                    tuple(fp.bands),
+                    list(fp.bands),
                     manual_merge=fp.manual_merge,
                     ignore_time=fp.ignore_time,
                     fuse_func=fp.fuse_func
@@ -76,9 +78,9 @@ class ProductBandQuery:
     @classmethod
     def full_layer_queries(cls,
                            layer: OWSNamedLayer,
-                           main_bands: list[datacube.model.Measurement] | None = None) -> list["ProductBandQuery"]:
+                           main_bands: list[str] | None = None) -> list["ProductBandQuery"]:
         if main_bands:
-            needed_bands = main_bands
+            needed_bands: Iterable[str] = main_bands
         else:
             needed_bands = set(layer.band_idx.band_cfg.keys())
         queries = [
@@ -95,7 +97,7 @@ class ProductBandQuery:
                 pq_products = fpb.products
                 queries.append(cls(
                     pq_products,
-                    tuple(fpb.bands),
+                    list(fpb.bands),
                     manual_merge=fpb.manual_merge,
                     ignore_time=fpb.ignore_time,
                     fuse_func=fpb.fuse_func
@@ -104,7 +106,7 @@ class ProductBandQuery:
 
     @classmethod
     def simple_layer_query(cls, layer: OWSNamedLayer,
-                           bands: list[datacube.model.Measurement],
+                           bands: Iterable[str],
                            manual_merge: bool = False,
                            fuse_func: datacube.api.core.FuserFunction | None = None,
                            resource_limited: bool = False) -> "ProductBandQuery":
@@ -114,6 +116,7 @@ class ProductBandQuery:
             main_products = layer.products
         return cls(main_products, bands, manual_merge=manual_merge, main=True, fuse_func=fuse_func)
 
+PerPBQReturnType = xarray.DataArray | Iterable[UUID]
 
 class DataStacker:
     @log_call
@@ -159,15 +162,21 @@ class DataStacker:
                    index: datacube.index.Index,
                    all_time: bool = False,
                    point: Geometry | None = None) -> int:
-        return self.datasets(index,
+        return cast(int, self.datasets(index,
                              all_time=all_time, point=point,
-                             mode=MVSelectOpts.COUNT)
+                             mode=MVSelectOpts.COUNT))
 
     def datasets(self, index: datacube.index.Index,
                  all_flag_bands: bool = False,
                  all_time: bool = False,
                  point: Geometry | None = None,
-                 mode: MVSelectOpts = MVSelectOpts.DATASETS) -> int | Iterable[datacube.model.Dataset]:
+                 mode: MVSelectOpts = MVSelectOpts.DATASETS) -> (int
+                                                                 | Iterable[Row]
+                                                                 | Iterable[UUID]
+                                                                 | xarray.DataArray
+                                                                 | Geometry
+                                                                 | None
+                                                                 | Mapping[ProductBandQuery, PerPBQReturnType]):
         if mode == MVSelectOpts.EXTENT or all_time:
             # Not returning datasets - use main product only
             queries = [
@@ -194,7 +203,7 @@ class DataStacker:
             times = None
         else:
             times = self._times
-        results = []
+        results: list[tuple[ProductBandQuery, PerPBQReturnType]] = []
         for query in queries:
             if query.ignore_time:
                 qry_times = None
@@ -206,16 +215,24 @@ class DataStacker:
                                geom=geom,
                                products=query.products)
             if mode == MVSelectOpts.DATASETS:
-                result = datacube.Datacube.group_datasets(result, self.group_by)
+                grpd_result = datacube.Datacube.group_datasets(
+                    cast(Iterable[datacube.model.Dataset], result),
+                    self.group_by
+                )
                 if all_time:
-                    return result
-                results.append((query, result))
+                    return grpd_result
+                results.append((query, grpd_result))
             elif mode == MVSelectOpts.IDS:
+                result_ids = cast(Iterable[UUID], result)
                 if all_time:
-                    return result
-                results.append((query, result))
-            else:
-                return result
+                    return result_ids
+                results.append((query, result_ids))
+            elif mode == MVSelectOpts.ALL:
+                return cast(Iterable[Row], result)
+            elif mode == MVSelectOpts.COUNT:
+                return cast(int, result)
+            else:  # MVSelectOpts.EXTENT
+                return cast(Geometry | None, result)
         return OrderedDict(results)
 
     def create_nodata_filled_flag_bands(self, data, pbq):

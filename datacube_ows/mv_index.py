@@ -6,7 +6,9 @@
 import datetime
 import json
 from enum import Enum
-from typing import Any, Iterable, Optional, Tuple, Union, cast
+from types import UnionType
+from typing import Any, Iterable, Type, TypeVar, cast
+from uuid import UUID as UUID_
 
 import pytz
 from geoalchemy2 import Geometry
@@ -19,6 +21,8 @@ from sqlalchemy.sql.functions import count, func
 
 from datacube.index import Index
 from datacube.model import Product, Dataset
+
+from sqlalchemy.engine import Row
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.elements import ClauseElement
 
@@ -59,7 +63,6 @@ class MVSelectOpts(Enum):
     COUNT = 2
     EXTENT = 3
     DATASETS = 4
-    INVALID = 9999
 
     def sel(self, stv: Table) -> list[ClauseElement]:
         if self == self.ALL:
@@ -73,16 +76,25 @@ class MVSelectOpts(Enum):
         raise AssertionError("Invalid selection option")
 
 
+selection_return_types: dict[MVSelectOpts, Type | UnionType] = {
+    MVSelectOpts.ALL: Iterable[Row],
+    MVSelectOpts.IDS: Iterable[UUID_],
+    MVSelectOpts.DATASETS: Iterable[Dataset],
+    MVSelectOpts.COUNT: int,
+    MVSelectOpts.EXTENT: ODCGeom | None,
+}
+
+
+SelectOut = Iterable[Row] | Iterable[UUID_] | Iterable[Dataset] | int | ODCGeom | None
 DateOrDateTime = datetime.datetime | datetime.date
 TimeSearchTerm = tuple[datetime.datetime, datetime.datetime] | tuple[datetime.date, datetime.date] | DateOrDateTime
 
-MVSearchResult = Iterable[Iterable[Any]] | Iterable[str] | Iterable[Dataset] | int | None | ODCGeom
 
 def mv_search(index: Index,
               sel: MVSelectOpts = MVSelectOpts.IDS,
               times: Iterable[TimeSearchTerm] | None = None,
               geom: ODCGeom | None = None,
-              products: Iterable[Product] | None = None) -> MVSearchResult:
+              products: Iterable[Product] | None = None) -> SelectOut:
     """
     Perform a dataset query via the space_time_view
 
@@ -147,7 +159,7 @@ def mv_search(index: Index,
         elif sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
             for r in conn.execute(s):
                 if sel == MVSelectOpts.COUNT:
-                    return r[0]
+                    return cast(int, r[0])
                 else:  # MVSelectOpts.EXTENT
                     geojson = r[0]
                     if geojson is None:

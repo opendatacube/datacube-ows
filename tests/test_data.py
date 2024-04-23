@@ -268,8 +268,8 @@ def test_pbq_ctor_full(product_layer): # noqa: F811
     assert "Query bands {" in str(pbqs[0])
     assert "} from products [FakeODCProduct(test_odc_product)]"  in str(pbqs[0])
     assert str(pbqs[1]) in (
-        "Query bands ('wongle', 'pq') from products [FakeODCProduct(test_masking_product)]",
-        "Query bands ('pq', 'wongle') from products [FakeODCProduct(test_masking_product)]",
+        "Query bands {'wongle', 'pq'} from products [FakeODCProduct(test_masking_product)]",
+        "Query bands {'pq', 'wongle'} from products [FakeODCProduct(test_masking_product)]",
     )
 
 

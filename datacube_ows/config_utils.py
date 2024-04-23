@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 _LOG = logging.getLogger(__name__)
 
-RAW_CFG = None | str | int | float | list["RAW_CFG"] | dict[str, "RAW_CFG"]
+RAW_CFG = None | str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG"]
 
 CFG_DICT = dict[str, RAW_CFG]
 
@@ -79,7 +79,7 @@ def cfg_expand(cfg_unexpanded: RAW_CFG,
                     except Exception:
                         json_obj = None
                 if json_obj is None:
-                    raise ConfigException("Could not find json file %s" % raw_path)
+                    raise ConfigException(f"Could not find json file {raw_path}")
                 return cfg_expand(json_obj, cwd=cwd, inclusions=ninclusions)
             elif cfg_unexpanded["type"] == "python":
                 # Python Expansion
@@ -666,9 +666,9 @@ class OWSFlagBand(OWSConfigEntry):
             self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
         else:
             self.pq_fuse_func = None
-        self.pq_ignore_time = cfg.get("ignore_time", False)
+        self.pq_ignore_time = bool(cfg.get("ignore_time", False))
         self.ignore_info_flags = cast(list[str], cfg.get("ignore_info_flags", []))
-        self.pq_manual_merge = cfg.get("manual_merge", False)
+        self.pq_manual_merge = bool(cfg.get("manual_merge", False))
         self.declare_unready("pq_products")
         self.declare_unready("flags_def")
         self.declare_unready("info_mask")
@@ -750,7 +750,7 @@ class FlagProductBands(OWSConfigEntry):
         self.ignore_time = flag_band.pq_ignore_time
         self.declare_unready("products")
         self.declare_unready("low_res_products")
-        self.manual_merge = flag_band.pq_manual_merge
+        self.manual_merge = bool(flag_band.pq_manual_merge)
         self.fuse_func = flag_band.pq_fuse_func
         # pyre-ignore[16]
         self.main_product = self.products_match(layer.product_names)
