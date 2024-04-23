@@ -176,7 +176,7 @@ class DataStacker:
                                                                  | xarray.DataArray
                                                                  | Geometry
                                                                  | None
-                                                                 | Mapping[ProductBandQuery, PerPBQReturnType]):
+                                                                 | dict[ProductBandQuery, PerPBQReturnType]):
         if mode == MVSelectOpts.EXTENT or all_time:
             # Not returning datasets - use main product only
             queries = [
@@ -235,17 +235,17 @@ class DataStacker:
                 return cast(Geometry | None, result)
         return OrderedDict(results)
 
-    def create_nodata_filled_flag_bands(self, data, pbq):
+    def create_nodata_filled_flag_bands(self, data: xarray.Dataset, pbq: ProductBandQuery) -> xarray.Dataset:
         var = None
         for var in data.data_vars.variables.keys():
             break
         if var is None:
             raise WMSException("Cannot add default flag data as there is no non-flag data available")
-        template = getattr(data, var)
+        template = cast(xarray.DataArray, getattr(data, cast(str, var)))
         data_new_bands = {}
         for band in pbq.bands:
             default_value = pbq.products[0].measurements[band].nodata
-            new_data = numpy.ndarray(template.shape, dtype="uint8")
+            new_data: numpy.ndarray = numpy.ndarray(template.shape, dtype="uint8")
             new_data.fill(default_value)
             qry_result = template.copy(data=new_data)
             data_new_bands[band] = qry_result
@@ -255,10 +255,12 @@ class DataStacker:
         return data
 
     @log_call
-    def data(self, datasets_by_query, skip_corrections=False):
+    def data(self,
+             datasets_by_query: dict[ProductBandQuery, xarray.DataArray],
+             skip_corrections=False) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, consider-using-enumerate
         # datasets is an XArray DataArray of datasets grouped by time.
-        data = None
+        data: xarray.Dataset | None = None
         for pbq, datasets in datasets_by_query.items():
             if data is not None and len(data.time) == 0:
                 # No data, so no need for masking data.
@@ -269,6 +271,8 @@ class DataStacker:
                 qry_result = self.manual_data_stack(datasets, measurements, pbq.bands, skip_corrections, fuse_func=fuse_func)
             else:
                 qry_result = self.read_data(datasets, measurements, self._geobox, resampling=self._resampling, fuse_func=fuse_func)
+            if qry_result is None:
+                continue
             if data is None:
                 data = qry_result
                 continue
@@ -301,18 +305,24 @@ class DataStacker:
                 # Time-aware mask product has no data, but main product does.
                 data = self.create_nodata_filled_flag_bands(data, pbq)
                 continue
+            assert data is not None
             qry_result.coords["time"] = data.coords["time"]
-            data = xarray.combine_by_coords([data, qry_result], join="exact")
+            data = cast(xarray.Dataset, xarray.combine_by_coords([data, qry_result], join="exact"))
 
         return data
 
     @log_call
-    def manual_data_stack(self, datasets, measurements, bands, skip_corrections, fuse_func):
+    def manual_data_stack(self,
+                          datasets: xarray.DataArray,
+                          measurements: Mapping[str, datacube.model.Measurement],
+                          bands: set[str],
+                          skip_corrections: bool,
+                          fuse_func: datacube.api.core.FuserFunction | None) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         if self.style:
-            flag_bands = set(filter(lambda b: b in self.style.flag_bands, bands))
-            non_flag_bands = set(filter(lambda b: b not in self.style.flag_bands, bands))
+            flag_bands: Iterable[str] = set(filter(lambda b: b in self.style.flag_bands, bands))  # type: ignore[arg-type]
+            non_flag_bands: Iterable[str] = set(filter(lambda b: b not in self.style.flag_bands, bands))  #type: ignore[arg-type]
         else:
             non_flag_bands = bands
             flag_bands = set()
@@ -354,7 +364,13 @@ class DataStacker:
     # Read data for given datasets and measurements per the output_geobox
     # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data(self, datasets, measurements, geobox, skip_broken = True, resampling="nearest", fuse_func=None):
+    def read_data(self,
+                  datasets: xarray.DataArray,
+                  measurements: Mapping[str, datacube.model.Measurement],
+                  geobox: GeoBox,
+                  skip_broken: bool = True,
+                  resampling: Resampling = "nearest",
+                  fuse_func: datacube.api.core.FuserFunction | None = None) -> xarray.Dataset:
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
@@ -368,10 +384,16 @@ class DataStacker:
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise
-    # Read data for single datasets and measurements per the output_geobox
+
     # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data_for_single_dataset(self, dataset, measurements, geobox, skip_broken = True, resampling="nearest", fuse_func=None):
+    def read_data_for_single_dataset(self,
+                                     dataset: datacube.model.Dataset,
+                                     measurements: Mapping[str, datacube.model.Measurement],
+                                     geobox: GeoBox,
+                                     skip_broken: bool = True,
+                                     resampling: Resampling = "nearest",
+                                     fuse_func: datacube.api.core.FuserFunction | None = None) -> xarray.Dataset:
         datasets = [dataset]
         dc_datasets = datacube.Datacube.group_datasets(datasets, self._product.time_resolution.dataset_groupby())
         CredentialManager.check_cred()
