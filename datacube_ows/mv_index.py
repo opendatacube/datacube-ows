@@ -7,7 +7,7 @@ import datetime
 import json
 from enum import Enum
 from types import UnionType
-from typing import Any, Iterable, Type, TypeVar, cast
+from typing import Iterable, Type, cast
 from uuid import UUID as UUID_
 
 import pytz

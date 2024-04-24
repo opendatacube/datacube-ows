@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import re
-from typing import Callable, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Mapping, Sequence, Tuple
 
 from datacube_ows.ogc_exceptions import (OGCException, WCS1Exception,
                                          WCS2Exception, WMSException,

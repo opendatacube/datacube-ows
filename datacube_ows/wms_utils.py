@@ -4,8 +4,7 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import math
-from datetime import datetime, date
-from typing import cast
+from datetime import datetime
 
 import numpy
 import regex as re

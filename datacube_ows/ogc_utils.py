@@ -6,7 +6,7 @@
 import datetime
 import logging
 from io import BytesIO
-from typing import (Any, Mapping, Optional, Sequence, cast)
+from typing import Any, Optional, Sequence, cast
 from urllib.parse import urlparse
 
 import numpy

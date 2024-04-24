@@ -19,7 +19,7 @@ from matplotlib.colors import LinearSegmentedColormap, to_hex
 from numpy import ubyte
 from xarray import Dataset, DataArray
 
-from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig, ConfigException, FunctionWrapper, RAW_CFG
+from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig, ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 
