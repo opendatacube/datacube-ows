@@ -198,7 +198,7 @@ def tz_for_geometry(geom: Geometry) -> datetime.tzinfo:
     return datetime.timezone(datetime.timedelta(hours=offset))
 
 
-def resp_headers(d: Mapping[str, str]) -> Mapping[str, str]:
+def resp_headers(d: dict[str, str]) -> dict[str, str]:
     """
     Take a dictionary of http response headers and all required response headers from the configuration.
 

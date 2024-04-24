@@ -39,14 +39,14 @@ class ComponentStyleDef(StyleDefBase):
         self.raw_rgb_components: dict[str, Callable | LINEAR_COMP_DICT] = {}
         raw_components = cast(dict[str, Callable | LINEAR_COMP_DICT], style_cfg["components"])
         for imgband in ["red", "green", "blue", "alpha"]:
-            components = raw_components.get(imgband)
+            components = cast(Callable | LINEAR_COMP_DICT | CFG_DICT | None, raw_components.get(imgband))
             if components is None:
                 if imgband == "alpha":
                     continue
                 else:
                     raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
             elif callable(components) or "function" in components:
-                self.raw_rgb_components[imgband] = FunctionWrapper(self.product, components,
+                self.raw_rgb_components[imgband] = FunctionWrapper(self.product, cast(CFG_DICT | Callable, components),
                                                                    stand_alone=self.stand_alone)
                 if not self.stand_alone:
                     if "additional_bands" not in style_cfg:

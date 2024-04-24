@@ -8,7 +8,7 @@ import logging
 import re
 from datetime import date, datetime, timedelta
 from itertools import chain
-from typing import Iterable, cast, Any, Mapping
+from typing import cast, Any
 
 import numpy
 import numpy.ma
@@ -465,8 +465,8 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         all_time_datasets = cast(xarray.DataArray, stacker.datasets(dc.index, all_time=True, point=geo_point))
 
         # Taking the data as a single point so our indexes into the data should be 0,0
-        h_coord = cfg.published_CRSs[params.crsid]["horizontal_coord"]
-        v_coord = cfg.published_CRSs[params.crsid]["vertical_coord"]
+        h_coord = cast(str, cfg.published_CRSs[params.crsid]["horizontal_coord"])
+        v_coord = cast(str, cfg.published_CRSs[params.crsid]["vertical_coord"])
         s3_bucket = cfg.s3_bucket
         s3_url = cfg.s3_url
         isel_kwargs = {

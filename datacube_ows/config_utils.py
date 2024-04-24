@@ -24,6 +24,7 @@ from datacube_ows.config_toolkit import deepinherit
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     import datacube_ows.ows_configuration.OWSConfig
+    import datacube_ows.ows_configuration.AttributionCfg
     import datacube_ows.ows_configuration.OWSNamedLayer
     import datacube_ows.styles.base.StyleMask
 
@@ -39,8 +40,8 @@ F = TypeVar('F', bound=Callable[..., Any])
 # inclusions defaulting to an empty list is dangerous, but note that it is never modified.
 # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
 # pylint: disable=dangerous-default-value
-def cfg_expand(cfg_unexpanded: RAW_CFG,
-               cwd: str | None = None, inclusions: list[str] = []) -> RAW_CFG:
+def cfg_expand(cfg_unexpanded: CFG_DICT,
+               cwd: str | None = None, inclusions: list[str] = []) -> CFG_DICT:
     """
     Recursively expand config inclusions.
 
@@ -87,7 +88,10 @@ def cfg_expand(cfg_unexpanded: RAW_CFG,
             else:
                 raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
         else:
-            return {k: cfg_expand(v, cwd=cwd, inclusions=inclusions) for k, v in cfg_unexpanded.items()}
+            return {
+                k: cfg_expand(cast(CFG_DICT, v), cwd=cwd, inclusions=inclusions)
+                for k, v in cfg_unexpanded.items()
+            }
     elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
         return [cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded]
     else:
@@ -125,7 +129,7 @@ def load_json_obj(path: str) -> RAW_CFG:
         return json.load(json_file)
 
 
-def import_python_obj(path: str) -> RAW_CFG:
+def import_python_obj(path: str) -> CFG_DICT:
     """Imports a python dictionary by fully-qualified path
 
     :param: A fully qualified python path.
@@ -137,7 +141,7 @@ def import_python_obj(path: str) -> RAW_CFG:
         obj = getattr(mod, obj_name)
     except (ImportError, ValueError, ModuleNotFoundError, AttributeError):
         raise ConfigException(f"Could not import python object: {path}")
-    return cast(RAW_CFG, obj)
+    return cast(CFG_DICT, obj)
 
 
 class ConfigException(Exception):
@@ -284,7 +288,7 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     # Inaccessible attributes to allow type checking
     abstract: str = ""
-    attribution: dict[str, str] = {}
+    attribution: Optional["datacube_ows.ows_configuration.AttributionCfg"] = None
 
     def get_obj_label(self) -> str:
         """Return the metadata path prefix for this object."""
@@ -406,7 +410,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         return self._keywords
 
     @classmethod
-    def set_msg_src(cls, src: Catalog) -> None:
+    def set_msg_src(cls, src: Catalog | None) -> None:
         """
         Allow all OWSMetadatConfig subclasses to share a common message catalog.
         :param src: A Message Catalog object
@@ -663,7 +667,7 @@ class OWSFlagBand(OWSConfigEntry):
         self.pq_band = str(cfg["band"])
         self.canonical_band_name = self.pq_band # Update for aliasing on make_ready
         if "fuse_func" in cfg:
-            self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(Mapping[str, Any], cfg["fuse_func"]))
+            self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(CFG_DICT, cfg["fuse_func"]))
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = bool(cfg.get("ignore_time", False))
@@ -939,8 +943,8 @@ class FunctionWrapper:
     """
 
     def __init__(self,
-                 product_or_style_cfg: OWSExtensibleConfigEntry,
-                 func_cfg: F | Mapping[str, Any],
+                 product_or_style_cfg: OWSExtensibleConfigEntry | None,
+                 func_cfg: str | CFG_DICT | F,
                  stand_alone: bool = False) -> None:
         """
 
@@ -955,10 +959,10 @@ class FunctionWrapper:
             if not stand_alone:
                 raise ConfigException(
                     "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
-            self._func = func_cfg
-            self._args = []
-            self._kwargs = {}
-            self.band_mapper = None
+            self._func: Callable = func_cfg
+            self._args: list[RAW_CFG] = []
+            self._kwargs: CFG_DICT = {}
+            self.band_mapper: Callable[[str], str] | None = None
             self.pass_layer_cfg = False
         elif isinstance(func_cfg, str):
             self._func = get_function(func_cfg)
@@ -973,10 +977,10 @@ class FunctionWrapper:
                 raise ConfigException(
                     "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name.")
             else:
-                self._func = get_function(func_cfg["function"])
-            self._args = func_cfg.get("args", [])
-            self._kwargs = func_cfg.get("kwargs", {}).copy()
-            self.pass_layer_cfg = func_cfg.get("pass_layer_cfg", False)
+                self._func = get_function(cast(str, func_cfg["function"]))
+            self._args = cast(list[RAW_CFG], func_cfg.get("args", []))
+            self._kwargs = cast(CFG_DICT, func_cfg.get("kwargs", {})).copy()
+            self.pass_layer_cfg = bool(func_cfg.get("pass_layer_cfg", False))
             if "pass_product_cfg" in func_cfg:
                 _LOG.warning("WARNING: pass_product_cfg in function wrapper definitions has been renamed "
                              "'mapped_bands'.  Please update your config accordingly")
@@ -1005,7 +1009,7 @@ class FunctionWrapper:
         else:
             calling_args = self._args
         if kwargs and self._kwargs:
-            calling_kwargs = self._kwargs.copy()
+            calling_kwargs: dict[str, Any] = self._kwargs.copy()
             calling_kwargs.update(kwargs)
         elif kwargs:
             calling_kwargs = kwargs.copy()

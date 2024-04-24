@@ -3,7 +3,12 @@
 #
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from datacube_ows.config_utils import OWSConfigEntry, ConfigException
+from typing import cast, Type
+from datacube_ows.config_utils import OWSConfigEntry, ConfigException, CFG_DICT, RAW_CFG
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
 
 # Scale denominators for WebMercator QuadTree Scale Set, starting from zoom level 0.
 # Currently goes to zoom level 14, where the pixel size at the equator is ~10m (i.e. Sentinel2 resolution)
@@ -29,7 +34,7 @@ webmerc_scale_set = [
 ]
 
 
-def validate_2d_array(array, ident, label, typ):
+def validate_2d_array(array: list, ident: str, label: str, typ: Type):
     try:
         if len(array) != 2:
             raise ConfigException(f"In tile matrix set {ident}, {label} must have two values: f{array}")
@@ -38,55 +43,70 @@ def validate_2d_array(array, ident, label, typ):
         raise ConfigException(f"In tile matrix set {ident}, {label} must be a list of two values: f{array}")
 
 
-def validate_array_typ(array, ident, label, typ):
+def validate_array_typ(array: list, ident: str, label: str, typ: Type):
     for elem in array:
         if not isinstance(elem, typ):
             raise ConfigException(f"In tile matrix set {ident}, {label} has non-{typ.__name__} value of type {elem.__class__.__name__}: {elem}")
 
 
 class TileMatrixSet(OWSConfigEntry):
-    default_tm_sets = {
+    default_tm_sets: CFG_DICT = {
         "WholeWorld_WebMercator": {
             "crs": "EPSG:3857",
-            "matrix_origin": (-20037508.3427892, 20037508.3427892),
-            "tile_size": (256, 256),
-            "scale_set": webmerc_scale_set,
+            "matrix_origin": [-20037508.3427892, 20037508.3427892],
+            "tile_size": [256, 256],
+            "scale_set": cast(RAW_CFG, webmerc_scale_set),
             "wkss": "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible",
         },
     }
 
-    def __init__(self, identifier, cfg, global_cfg):
+    def __init__(self, identifier: str, cfg: CFG_DICT, global_cfg: "OWSConfig"):
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.identifier = identifier
 
-        self.crs_name = cfg["crs"]
+        self.crs_name = cast(str, cfg["crs"])
         if self.crs_name not in self.global_cfg.published_CRSs:
             raise ConfigException(f"Tile matrix set {identifier} has unpublished CRS: {self.crs_name}")
-        self.matrix_origin = cfg["matrix_origin"]
-        validate_2d_array(self.matrix_origin, identifier, "Matrix origin", float)
-        self.tile_size = cfg["tile_size"]
-        validate_2d_array(self.tile_size, identifier, "Tile size", int)
-        self.scale_set = cfg["scale_set"]
+        matrix_origin = cast(list, cfg["matrix_origin"])
+        validate_2d_array(matrix_origin, identifier, "Matrix origin", float)
+        self.matrix_origin = cast(list[float], matrix_origin)
+        if len(self.matrix_origin) != 2:
+            raise ConfigException(f"The origin coordinates of tile matrix set {identifier} must have 2 dimensions")
+        tile_size = cast(list, cfg["tile_size"])
+        validate_2d_array(tile_size, identifier, "Tile size", int)
+        if len(tile_size) != 2:
+            raise ConfigException(f"The tile size of tile matrix set {identifier} must have 2 dimensions")
+        self.tile_size = cast(list[int], tile_size)
+        scale_set = cast(list, cfg["scale_set"])
         try:
-            validate_array_typ(self.scale_set, identifier, "Scale set", float)
+            validate_array_typ(scale_set, identifier, "Scale set", float)
         except TypeError:
             raise ConfigException(f"In tile matrix set {identifier}, scale_set is not a list")
+        self.scale_set = cast(list[float], scale_set)
         if len(self.scale_set) < 1:
             raise ConfigException(f"Tile matrix set {identifier} has no scale denominators in scale_set")
         self.force_raw_crs_name = bool(cfg.get("force_raw_crs_name", False))
-        self.wkss = cfg.get("wkss")
-        self.initial_matrix_exponents = cfg.get("matrix_exponent_initial_offsets", (0, 0))
-        validate_2d_array(self.initial_matrix_exponents, identifier, "Initial matrix exponents", int)
-        self.unit_coefficients = cfg.get("unit_coefficients", (1.0, -1.0))
-        validate_2d_array(self.unit_coefficients, identifier, "Unit coefficients", float)
+        self.wkss = cast(str | None, cfg.get("wkss"))
+        initial_matrix_exponents = cast(list, cfg.get("matrix_exponent_initial_offsets", [0, 0]))
+        validate_2d_array(initial_matrix_exponents, identifier, "Initial matrix exponents", int)
+        if len(initial_matrix_exponents) != 2:
+            raise ConfigException(
+                f"The initial matrix exponents of tile matrix set {identifier} must have 2 dimensions")
+        self.initial_matrix_exponents = cast(list[int], initial_matrix_exponents)
+        unit_coefficients = cast(list, cfg.get("unit_coefficients", [1.0, -1.0]))
+        validate_2d_array(unit_coefficients, identifier, "Unit coefficients", float)
+        if len(unit_coefficients) != 2:
+            raise ConfigException(
+                f"The unit coefficients of tile matrix set {identifier} must have 2 dimensions")
+        self.unit_coefficients = cast(list[float], unit_coefficients)
 
     @property
-    def crs_cfg(self):
+    def crs_cfg(self) -> CFG_DICT:
         return self.global_cfg.published_CRSs[self.crs_name]
 
     @property
-    def crs_display(self):
+    def crs_display(self) -> str:
         if self.force_raw_crs_name:
             return self.crs_name
         if self.crs_name[:5] == "EPSG:":
