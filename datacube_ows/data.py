@@ -10,7 +10,6 @@ from typing import Any, cast
 
 import numpy
 import numpy.ma
-import pytz
 import xarray
 from odc.geo import geom
 from odc.geo.geobox import GeoBox
