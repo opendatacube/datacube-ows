@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import io
 import logging
 from typing import (Any, Iterable, Mapping, MutableMapping, Optional, Sized, Type, Union, cast)
