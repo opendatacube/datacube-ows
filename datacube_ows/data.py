@@ -52,8 +52,7 @@ def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
         elif time_res.is_summary():
             norm_date = date(ts.year,
                              ts.month,
-                             ts.day,
-                             tzinfo=pytz.utc)
+                             ts.day)
             return norm_date == user_date
         else:
             norm_date = datetime(ts.year,

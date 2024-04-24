@@ -6,7 +6,7 @@
 
 import datetime
 import logging
-from typing import Optional, Sequence
+from typing import Optional
 
 from datacube.model import Dataset
 from dateutil.parser import parse

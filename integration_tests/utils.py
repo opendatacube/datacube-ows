@@ -303,7 +303,8 @@ class ODCExtent:
             crs_extent = extent.to_crs(crs)
         crs_bbox = crs_extent.boundingbox
         return {
-            "bbox": f"{min(crs_bbox.left,crs_bbox.right)},{min(crs_bbox.top,crs_bbox.bottom)},{max(crs_bbox.left,crs_bbox.right)},{max(crs_bbox.top,crs_bbox.bottom)}",
+            "bbox": f"{min(crs_bbox.left, crs_bbox.right)},{min(crs_bbox.top, crs_bbox.bottom)},"
+                    f"{max(crs_bbox.left, crs_bbox.right)},{max(crs_bbox.top, crs_bbox.bottom)}",
             "times": ",".join(time_strs),
         }
 
