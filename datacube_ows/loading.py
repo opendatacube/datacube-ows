@@ -4,22 +4,20 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-from collections import OrderedDict
-
 import datetime
 import logging
-from typing import Iterable, cast, Mapping
+from collections import OrderedDict
+from typing import Iterable, Mapping, cast
 from uuid import UUID
 
 import datacube
 import numpy
 import xarray
-
+from odc.geo.geobox import GeoBox
+from odc.geo.geom import Geometry
+from odc.geo.warp import Resampling
 from sqlalchemy.engine import Row
 
-from odc.geo.geom import Geometry
-from odc.geo.geobox import GeoBox
-from odc.geo.warp import Resampling
 from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import OWSNamedLayer

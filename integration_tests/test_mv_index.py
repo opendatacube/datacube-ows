@@ -9,8 +9,8 @@ from odc.geo.geom import box
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
-from datacube_ows.time_utils import local_solar_date_range
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.time_utils import local_solar_date_range
 
 
 def test_full_layer():

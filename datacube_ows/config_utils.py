@@ -13,19 +13,19 @@ from typing import Any, Callable, Iterable, Optional, Sequence, TypeVar, cast
 from urllib.parse import urlparse
 
 import fsspec
-from datacube.utils.masking import make_mask
+from babel.messages import Catalog, Message
 from datacube import Datacube
 from datacube.model import Product
+from datacube.utils.masking import make_mask
 from flask_babel import gettext as _
-from babel.messages import Catalog, Message
 from xarray import DataArray
 
 from datacube_ows.config_toolkit import deepinherit
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    import datacube_ows.ows_configuration.OWSConfig
     import datacube_ows.ows_configuration.AttributionCfg
+    import datacube_ows.ows_configuration.OWSConfig
     import datacube_ows.ows_configuration.OWSNamedLayer
     import datacube_ows.styles.base.StyleMask
 

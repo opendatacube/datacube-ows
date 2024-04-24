@@ -7,7 +7,9 @@
 import json
 from typing import Optional
 from urllib.parse import urlparse
-from flask import Request, request, render_template
+
+from flask import Request, render_template, request
+
 from datacube_ows.config_utils import CFG_DICT
 
 TYPE_CHECKING = False

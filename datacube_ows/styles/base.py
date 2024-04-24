@@ -6,7 +6,8 @@
 
 import io
 import logging
-from typing import (Any, Iterable, Mapping, MutableMapping, Optional, Sized, Type, Union, cast)
+from typing import (Any, Iterable, Mapping, MutableMapping, Optional, Sized,
+                    Type, Union, cast)
 
 import datacube.model
 import numpy as np
@@ -16,12 +17,13 @@ from PIL import Image
 
 import datacube_ows.band_utils
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, AbstractMaskRule,
-                                       FlagBand, FlagProductBands,
+                                       ConfigException, FlagBand,
+                                       FlagProductBands, FunctionWrapper,
                                        OWSConfigEntry, OWSEntryNotFound,
                                        OWSExtensibleConfigEntry,
                                        OWSFlagBandStandalone,
                                        OWSIndexedConfigEntry,
-                                       OWSMetadataConfig, ConfigException, FunctionWrapper)
+                                       OWSMetadataConfig)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 

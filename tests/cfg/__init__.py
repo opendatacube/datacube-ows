@@ -4,4 +4,3 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-

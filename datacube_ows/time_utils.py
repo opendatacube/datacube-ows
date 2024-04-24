@@ -4,13 +4,13 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import datetime
+import logging
 from typing import Optional, Sequence
 
 from datacube.model import Dataset
 from dateutil.parser import parse
-from odc.geo import Geometry, CRS
+from odc.geo import CRS, Geometry
 from odc.geo.geobox import GeoBox
 from pytz import timezone, utc
 from timezonefinder import TimezoneFinder

@@ -11,14 +11,12 @@ from time import monotonic
 from typing import Any, Callable, TypeVar, cast
 
 import pytz
-from numpy import datetime64
-from numpy import datetime64 as npdt64
-
-from sqlalchemy.engine.base import Connection
-
 from datacube import Datacube
 from datacube.api.query import GroupBy, solar_day
 from datacube.model import Dataset
+from numpy import datetime64
+from numpy import datetime64 as npdt64
+from sqlalchemy.engine.base import Connection
 
 F = TypeVar('F', bound=Callable[..., Any])
 
