@@ -873,7 +873,7 @@ ows_cfg = {
 Latest imagery mosaic with no time dimension.
                     """,
                     "mosaic_date_func": {
-                        "function": "datacube_ows.ogc_utils.rolling_window_ndays",
+                        "function": "datacube_ows.time_utils.rolling_window_ndays",
                         "pass_layer_cfg": True,
                         "kwargs": {
                             "ndays": 6,

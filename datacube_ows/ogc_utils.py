@@ -4,19 +4,38 @@
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import logging
+import datetime
 from io import BytesIO
 from typing import Any, cast
-
+from deprecat import deprecat
 import numpy
 import xarray
 from affine import Affine
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import CRS
 from PIL import Image
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.config_utils import OWSExtensibleConfigEntry
+
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
-# Extent Mask Functions
+
+@deprecat(
+    reason="The 'rolling_windows_ndays' mosaicing function has moved to 'datacube.time_utils' - "
+           "please import it from there.",
+    version="1.9.0"
+)
+def rolling_window_ndays(
+        available_dates: list[datetime.datetime],
+        layer_cfg: "OWSExtensibleConfigEntry",
+        ndays: int = 6) -> tuple[datetime.datetime, datetime.datetime]:
+    from datacube_ows.time_utils import rolling_window_ndays
+    return rolling_window_ndays(available_dates=available_dates,
+                                layer_cfg=layer_cfg,
+                                ndays=ndays)
+
 
 def mask_by_val(data: xarray.Dataset, band: str, val: Any = None) -> xarray.DataArray:
     """

@@ -192,7 +192,7 @@ def tz_for_geometry(geom: Geometry) -> datetime.tzinfo:
 
 
 def rolling_window_ndays(
-        available_dates: Sequence[datetime.datetime],
+        available_dates: list[datetime.datetime],
         layer_cfg: OWSExtensibleConfigEntry,
         ndays: int = 6) -> tuple[datetime.datetime, datetime.datetime]:
     idx = -ndays

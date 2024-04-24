@@ -4,14 +4,17 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import json
+from typing import Optional
 from urllib.parse import urlparse
-
 from flask import Request, request, render_template
-
 from datacube_ows.config_utils import CFG_DICT
-from datacube_ows.ows_configuration import OWSConfig, get_config
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
 
 FlaskResponse = tuple[str | bytes, int, dict[str, str]]
+
 
 
 def resp_headers(d: dict[str, str]) -> dict[str, str]:
@@ -100,14 +103,16 @@ def lower_get_args() -> dict[str, str]:
     return d
 
 
-def json_response(result: CFG_DICT, cfg: OWSConfig | None = None) -> FlaskResponse:
+def json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> FlaskResponse:
+    from datacube_ows.ows_configuration import get_config
     if not cfg:
         cfg = get_config()
     assert cfg is not None  # for type checker
     return json.dumps(result), 200, cfg.response_headers({"Content-Type": "application/json"})
 
 
-def html_json_response(result: CFG_DICT, cfg: OWSConfig | None = None) -> FlaskResponse:
+def html_json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> FlaskResponse:
+    from datacube_ows.ows_configuration import get_config
     if not cfg:
         cfg = get_config()
     assert cfg is not None  # for type checker
@@ -115,7 +120,8 @@ def html_json_response(result: CFG_DICT, cfg: OWSConfig | None = None) -> FlaskR
     return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})
 
 
-def png_response(body: bytes, cfg: OWSConfig | None = None, extra_headers: dict[str, str] | None = None) -> FlaskResponse:
+def png_response(body: bytes, cfg: Optional["OWSConfig"] = None, extra_headers: dict[str, str] | None = None) -> FlaskResponse:
+    from datacube_ows.ows_configuration import get_config
     if not cfg:
         cfg = get_config()
     assert cfg is not None  # For type checker
