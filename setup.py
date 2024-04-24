@@ -56,6 +56,7 @@ dev_requirements = [
     'pre-commit',
     'pipdeptree',
     'mypy',
+    'flake8',
     'types-pytz',
     'types-python-dateutil',
     'types-requests',
