@@ -5,9 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from flask import render_template
 
-from datacube_ows.data import json_response
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import cache_control_headers, get_service_base_url
+from datacube_ows.http_utils import get_service_base_url, cache_control_headers, json_response
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call

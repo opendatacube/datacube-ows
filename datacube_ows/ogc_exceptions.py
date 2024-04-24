@@ -9,7 +9,7 @@ from flask import render_template
 from ows.common.types import OWSException, Version
 from ows.common.v20.encoders import xml_encode_exception_report
 
-from datacube_ows.ogc_utils import resp_headers
+from datacube_ows.http_utils import resp_headers
 
 
 class OGCException(Exception):

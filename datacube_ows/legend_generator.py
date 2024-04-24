@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import resp_headers
+from datacube_ows.http_utils import resp_headers
 from datacube_ows.wms_utils import GetLegendGraphicParameters
 
 # Do not use X Server backend

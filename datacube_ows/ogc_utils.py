@@ -3,271 +3,18 @@
 #
 # Copyright (c) 2017-2023 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-import datetime
 import logging
 from io import BytesIO
-from typing import Any, Optional, Sequence, cast
-from urllib.parse import urlparse
+from typing import Any, cast
 
 import numpy
 import xarray
 from affine import Affine
-from dateutil.parser import parse
-from flask import request, Request
 from odc.geo.geobox import GeoBox
-from odc.geo.geom import CRS, Geometry
+from odc.geo.geom import CRS
 from PIL import Image
-from pytz import timezone, utc
-from timezonefinder import TimezoneFinder
-
-from datacube.model import Dataset
-from datacube_ows.config_utils import OWSExtensibleConfigEntry
 
 _LOG: logging.Logger = logging.getLogger(__name__)
-tf = TimezoneFinder(in_memory=True)
-
-
-def dataset_center_time(dataset: Dataset) -> datetime.datetime:
-    """
-    Determine a center_time for the dataset
-
-    Use metadata time if possible as this is what WMS uses to calculate its temporal extents
-    datacube-core center time accessed through the dataset API is calculated and may
-    not agree with the metadata document.
-
-    :param dataset:  An ODC dataset.
-    :return: A datetime object representing the datasets center time
-    """
-    center_time: datetime.datetime = dataset.center_time
-    try:
-        metadata_time: str = dataset.metadata_doc['extent']['center_dt']
-        center_time = parse(metadata_time)
-    except KeyError:
-        try:
-            metadata_time = dataset.metadata_doc['properties']['dtr:start_datetime']
-            center_time = parse(metadata_time)
-        except KeyError:
-            pass
-    return center_time
-
-
-class NoTimezoneException(Exception):
-    """Exception, raised internally if no timezone can be found"""
-
-
-def solar_date(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.date:
-    """
-    Convert a datetime to a new timezone, and evalute as a date.
-
-    :param dt: A datetime in an aribitrary timezone.
-    :param tz: The timezone to evaluate the date in.
-    :return: A date object.
-    """
-    return dt.astimezone(tz).date()
-
-
-def local_date(ds: Dataset, tz: datetime.tzinfo | None =  None) -> datetime.date:
-    """
-    Calculate the local (solar) date for a dataset.
-
-    :param ds: An ODC dataset object
-    :param tz: (optional) A timezone object. If not provided, determine the timezone from extent of the dataset.
-    :return: A date object.
-    """
-    dt_utc: datetime.datetime = dataset_center_time(ds)
-    if not tz:
-        tz = tz_for_geometry(ds.extent)
-    return solar_date(dt_utc, tz)
-
-
-def tz_for_dataset(ds: Dataset) -> datetime.tzinfo:
-    """
-    Determine the timezone for a dataset (using it's extent)
-
-    :param ds: An ODC dataset object
-    :return: A timezone object
-    """
-    return tz_for_geometry(ds.extent)
-
-
-def tz_for_coord(lon: float | int, lat: float | int) -> datetime.tzinfo:
-    """
-    Determine the Timezone for given lat/long coordinates
-
-    :param lon: Longitude, in degress
-    :param lat: Latitude, in degrees
-    :return: A timezone object
-    :raises: NoTimezoneException
-    """
-    try:
-        tzn: Optional[str] = tf.timezone_at(lng=lon, lat=lat)
-    except Exception as e:
-        # Generally shouldn't happen - a common symptom of various geographic and timezone related bugs
-        _LOG.warning("Timezone detection failed for lat %f, lon %s (%s)", lat, lon, str(e))
-        raise
-    if not tzn:
-        raise NoTimezoneException("tz find failed.")
-    return timezone(tzn)
-
-
-def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
-    """
-    Converts a date to a local solar date datetime range.
-
-    :param geobox: Geometry used to determine the appropriate timezone for local date conversion
-    :param date: A date object
-    :return: A tuple of two UTC datetime objects, spanning 1 second shy of 24 hours.
-    """
-    tz: datetime.tzinfo = tz_for_geometry(geobox.geographic_extent)
-    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
-    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
-    return (start.astimezone(utc), end.astimezone(utc))
-
-
-def month_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
-    """
-    Take a month from a date and convert to a one month long UTC datetime range encompassing the month.
-
-    Ignores timezone effects - suitable for statistical/summary data
-
-    :param date: A date or datetime object to take the month and year from
-    :return: A tuple of two UTC datetime objects, delimiting an entire calendar month.
-    """
-    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=utc)
-    y: int = date.year
-    m: int = date.month + 1
-    if m == 13:
-        m = 1
-        y = y + 1
-    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=utc) - datetime.timedelta(days=1)
-    return start, end
-
-
-def year_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
-    """
-    Convert a date to a UTC datetime range encompassing the calendar year including the date.
-
-    Ignores timezone effects - suitable for statistical/summary data
-
-    :param date: A date or datetime object to take the year from
-    :return: A tuple of two UTC datetime objects, delimiting an entire calendar year.
-    """
-    start = datetime.datetime(date.year, 1, 1, 0, 0, 0, tzinfo=utc)
-    end = datetime.datetime(date.year, 12, 31, 23, 59, 59, tzinfo=utc)
-    return start, end
-
-
-def day_summary_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
-    """
-    Convert a date to a UTC datetime range encompassing the calendar date.
-
-    Ignores timezone effects - suitable for statistical/summary data
-
-    :param date: A date or datetime object to take the day, month and year from
-    :return: A tuple of two UTC datetime objects, delimiting a calendar day.
-    """
-    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=utc)
-    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=utc)
-    return start, end
-
-
-def tz_for_geometry(geom: Geometry) -> datetime.tzinfo:
-    """
-    Determine the timezone from a geometry.  Be clever if we can,
-    otherwise use a minimal timezone based on the longitude.
-
-    :param geom: A geometry object
-    :return: A timezone object
-    """
-    crs_geo = CRS("EPSG:4326")
-    geo_geom: Geometry = geom.to_crs(crs_geo)
-    centroid: Geometry = geo_geom.centroid
-    try:
-        # 1. Try being smart with the centroid of the geometry
-        return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
-    except NoTimezoneException:
-        pass
-    for pt in geo_geom.boundary.coords:
-        try:
-            # 2. Try being smart all the points in the geometry
-            return tz_for_coord(pt[0], pt[1])
-        except NoTimezoneException:
-            pass
-    # 3. Meh, just use longitude
-    offset = round(centroid.coords[0][0] / 15.0)
-    return datetime.timezone(datetime.timedelta(hours=offset))
-
-
-def resp_headers(d: dict[str, str]) -> dict[str, str]:
-    """
-    Take a dictionary of http response headers and all required response headers from the configuration.
-
-    :param d:
-    :return:
-    """
-    from datacube_ows.ows_configuration import get_config
-    return get_config().response_headers(d)
-
-
-def parse_for_base_url(url: str) -> str:
-    """
-    Extract the base URL from a URL
-
-    :param url: A URL
-    :return: The base URL (path and parameters stripped)
-    """
-    parsed = urlparse(url)
-    parsed = (parsed.netloc + parsed.path).rstrip("/")
-    return parsed
-
-
-def get_service_base_url(allowed_urls: list[str] | str, request_url: str) -> str:
-    """
-    Choose the base URL to advertise in XML.
-
-    :param allowed_urls: A list of allowed URLs, or a single allowed URL.
-    :param request_url: The URL the incoming request came from
-    :return: Return one of the allowed URLs.  Either one that seems to match the request, or the first in the list
-    """
-    if isinstance(allowed_urls, str):
-        return allowed_urls
-    parsed_request_url = parse_for_base_url(request_url)
-    parsed_allowed_urls = [parse_for_base_url(u) for u in allowed_urls]
-    try:
-        idx: Optional[int] = parsed_allowed_urls.index(parsed_request_url)
-    except ValueError:
-        idx = None
-    url = allowed_urls[idx] if idx is not None else allowed_urls[0]
-    # template includes tailing /, strip any trail slash here to avoid duplicates
-    url = url.rstrip("/")
-    return url
-
-
-# Collects additional headers from flask request objects
-def capture_headers(req: Request,
-                    args_dict: dict[str, str | None]) -> dict[str, Optional[str]]:
-    """
-    Capture significant flask metadata into the args dictionary
-
-    :param req: A Flask request
-    :param args_dict: A Flask args dictionary
-    :return:
-    """
-    args_dict['referer'] = req.headers.get('Referer', None)
-    args_dict['origin'] = req.headers.get('Origin', None)
-    args_dict['requestid'] = req.environ.get("FLASK_REQUEST_ID")
-    args_dict['host'] = req.headers.get('Host', None)
-    args_dict['url_root'] = req.url_root
-
-    return args_dict
-
-
-def cache_control_headers(max_age: int) -> dict[str, str]:
-    if max_age <= 0:
-        return {"cache-control": "no-cache"}
-    else:
-        return {"cache-control": f"max-age={max_age}"}
-
 
 # Extent Mask Functions
 
@@ -348,15 +95,6 @@ def mask_by_nan(data: xarray.Dataset, band: str) -> numpy.ndarray:
 
 
 # Example mosaic date function
-def rolling_window_ndays(
-        available_dates: Sequence[datetime.datetime],
-        layer_cfg: OWSExtensibleConfigEntry,
-        ndays: int = 6) -> tuple[datetime.datetime, datetime.datetime]:
-    idx = -ndays
-    days = available_dates[idx:]
-    start, _ = layer_cfg.search_times(days[idx])
-    _, end = layer_cfg.search_times(days[-1])
-    return (start, end)
 
 
 # Sub-product extractors - Subproducts are currently unsupported
@@ -367,22 +105,6 @@ def rolling_window_ndays(
 #     return int(ls8_s3_path_pattern.search(ds.uris[0]).group("path"))
 
 # Method for formatting urls, e.g. for use in feature_info custom inclusions.
-
-
-def lower_get_args() -> dict[str, str]:
-    """
-    Return Flask request arguments, with argument names converted to lower case.
-
-    Get parameters in WMS are case-insensitive, and intended to be single use.
-    Spec does not specify which instance should be used if a parameter is provided more than once.
-    This function uses the LAST instance.
-    """
-    d = {}
-    for k in request.args.keys():
-        kl = k.lower()
-        for v in request.args.getlist(k):
-            d[kl] = v
-    return d
 
 
 def create_geobox(
@@ -477,6 +199,7 @@ def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=
     im_final.save(img_io, "PNG")
     img_io.seek(0)
     return img_io.read()
+
 
 def render_frame(img_data, width, height):
     """Render to a 3D numpy array an Xarray RGB(A) input
