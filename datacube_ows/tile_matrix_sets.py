@@ -4,8 +4,10 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import cast, Type
-from datacube_ows.config_utils import OWSConfigEntry, ConfigException, CFG_DICT, RAW_CFG
+from typing import Type, cast
+
+from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
+                                       OWSConfigEntry)
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:

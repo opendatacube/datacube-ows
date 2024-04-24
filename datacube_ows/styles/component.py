@@ -9,7 +9,8 @@ from typing import Any, Callable, Hashable, cast
 import numpy as np
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException, FunctionWrapper
+from datacube_ows.config_utils import (CFG_DICT, ConfigException,
+                                       FunctionWrapper)
 from datacube_ows.styles.base import StyleDefBase
 
 TYPE_CHECKING = False

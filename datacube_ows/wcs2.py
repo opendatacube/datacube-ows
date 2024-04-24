@@ -17,8 +17,10 @@ from ows.wcs.v20.decoders import (kvp_decode_describe_coverage,
                                   kvp_decode_get_coverage)
 from ows.wcs.v21 import encoders as encoders_v21
 
+from datacube_ows.http_utils import (cache_control_headers,
+                                     get_service_base_url, json_response,
+                                     resp_headers)
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.http_utils import resp_headers, get_service_base_url, cache_control_headers, json_response
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call

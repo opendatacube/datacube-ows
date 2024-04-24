@@ -6,7 +6,7 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import cast, Any
+from typing import Any, cast
 
 import numpy
 import numpy.ma
@@ -19,18 +19,18 @@ from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 
 from datacube_ows.cube_pool import cube
+from datacube_ows.http_utils import FlaskResponse, json_response, png_response
 from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import (xarray_image_as_png)
-from datacube_ows.http_utils import FlaskResponse, json_response, png_response
-from datacube_ows.time_utils import solar_date, tz_for_geometry
+from datacube_ows.ogc_utils import xarray_image_as_png
 from datacube_ows.ows_configuration import OWSNamedLayer
-from datacube_ows.styles import StyleDef
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.resource_limits import ResourceLimited
+from datacube_ows.styles import StyleDef
+from datacube_ows.time_utils import solar_date, tz_for_geometry
 from datacube_ows.utils import default_to_utc, log_call
-from datacube_ows.wms_utils import (GetMapParameters)
+from datacube_ows.wms_utils import GetMapParameters
 
 _LOG = logging.getLogger(__name__)
 
@@ -288,5 +288,3 @@ def _write_polygon(geobox: GeoBox, polygon: geom.Geometry, zoom_fill: list[int],
             for idx, fill in enumerate(zoom_fill, start=1):
                 thing.write_band(idx, data * fill)
         return memfile.read()
-
-

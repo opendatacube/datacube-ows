@@ -17,8 +17,11 @@ from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT, AbstractMaskRule, ConfigException, OWSMetadataConfig, FlagSpec
+from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
+                                       ConfigException, FlagSpec,
+                                       OWSMetadataConfig)
 from datacube_ows.styles.base import StyleDefBase
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.ows_configuration import OWSNamedLayer

@@ -9,18 +9,18 @@ import logging
 from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
-from typing import (Any, Hashable, MutableMapping, Union, cast, Iterable)
+from typing import Any, Hashable, Iterable, MutableMapping, Union, cast
 
 import matplotlib
 import numpy
 from colour import Color
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex
-
 from numpy import ubyte
-from xarray import Dataset, DataArray
+from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig, ConfigException, FunctionWrapper
+from datacube_ows.config_utils import (CFG_DICT, ConfigException,
+                                       FunctionWrapper, OWSMetadataConfig)
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 

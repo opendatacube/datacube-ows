@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from datacube_ows.config_utils import get_file_loc, ConfigException
+from datacube_ows.config_utils import ConfigException, get_file_loc
 from datacube_ows.ows_configuration import read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

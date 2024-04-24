@@ -18,16 +18,18 @@ from odc.geo import geom
 from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 
-from datacube_ows.config_utils import ConfigException, CFG_DICT, RAW_CFG
+from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException
 from datacube_ows.cube_pool import cube
-from datacube_ows.loading import ProductBandQuery, DataStacker
+from datacube_ows.http_utils import (FlaskResponse, html_json_response,
+                                     json_response)
+from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.http_utils import FlaskResponse, json_response, html_json_response
-from datacube_ows.time_utils import dataset_center_time, tz_for_geometry
 from datacube_ows.ows_configuration import OWSNamedLayer, get_config
 from datacube_ows.styles import StyleDef
+from datacube_ows.time_utils import dataset_center_time, tz_for_geometry
 from datacube_ows.utils import log_call
-from datacube_ows.wms_utils import GetFeatureInfoParameters, img_coords_to_geopoint
+from datacube_ows.wms_utils import (GetFeatureInfoParameters,
+                                    img_coords_to_geopoint)
 
 
 @log_call

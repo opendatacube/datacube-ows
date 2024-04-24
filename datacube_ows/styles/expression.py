@@ -4,14 +4,15 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import operator
 from typing import Any, Type, cast
 
-from xarray import Dataset
-import operator
 import lark
 from datacube.virtual.expr import formula_parser
+from xarray import Dataset
 
 from datacube_ows.config_utils import ConfigException
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     import datacube_ows.styles.StyleDef

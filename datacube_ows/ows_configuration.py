@@ -20,33 +20,35 @@ import os
 from collections.abc import Mapping
 from enum import Enum
 from importlib import import_module
-from typing import Optional, cast, Union, Any, Iterable
+from typing import Any, Iterable, Optional, Union, cast
 
 import numpy
 from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po
+from datacube import Datacube
+from datacube.api.query import GroupBy
+from datacube.model import Measurement
 from odc.geo import CRS
 from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
 
-from datacube import Datacube
-from datacube.model import Measurement
-from datacube.api.query import GroupBy
-
-from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
-                                       OWSEntryNotFound,
+from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
+                                       FlagProductBands, FunctionWrapper,
+                                       OWSConfigEntry, OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
                                        OWSMetadataConfig, cfg_expand,
                                        get_file_loc, import_python_obj,
-                                       load_json_obj, ConfigException, FunctionWrapper, CFG_DICT, RAW_CFG)
+                                       load_json_obj)
 from datacube_ows.cube_pool import ODCInitException, cube, get_cube
 from datacube_ows.ogc_utils import create_geobox
-from datacube_ows.time_utils import local_solar_date_range
-from datacube_ows.resource_limits import OWSResourceManagementRules, parse_cache_age
+from datacube_ows.resource_limits import (OWSResourceManagementRules,
+                                          parse_cache_age)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
-from datacube_ows.utils import group_by_begin_datetime, group_by_mosaic, group_by_solar
+from datacube_ows.time_utils import local_solar_date_range
+from datacube_ows.utils import (group_by_begin_datetime, group_by_mosaic,
+                                group_by_solar)
 
 _LOG = logging.getLogger(__name__)
 

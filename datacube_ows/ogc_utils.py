@@ -4,17 +4,19 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import datetime
+import logging
 from io import BytesIO
 from typing import Any, cast
-from deprecat import deprecat
+
 import numpy
 import xarray
 from affine import Affine
+from deprecat import deprecat
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import CRS
 from PIL import Image
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.config_utils import OWSExtensibleConfigEntry

@@ -10,8 +10,9 @@ from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import CFG_DICT, ConfigException
 from datacube_ows.styles.base import StyleDefBase
-from datacube_ows.styles.component import ComponentStyleDef, LINEAR_COMP_DICT
+from datacube_ows.styles.component import LINEAR_COMP_DICT, ComponentStyleDef
 from datacube_ows.styles.ramp import ColorRampDef
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.ows_configuration import OWSNamedLayer

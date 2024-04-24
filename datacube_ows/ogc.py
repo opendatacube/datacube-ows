@@ -13,9 +13,10 @@ from sqlalchemy import text
 
 from datacube_ows import __version__
 from datacube_ows.cube_pool import cube
+from datacube_ows.http_utils import (capture_headers, get_service_base_url,
+                                     lower_get_args, resp_headers)
 from datacube_ows.legend_generator import create_legend_for_style
 from datacube_ows.ogc_exceptions import OGCException, WMSException
-from datacube_ows.http_utils import resp_headers, get_service_base_url, capture_headers, lower_get_args
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.protocol_versions import supported_versions
 from datacube_ows.startup_utils import *  # pylint: disable=wildcard-import,unused-wildcard-import

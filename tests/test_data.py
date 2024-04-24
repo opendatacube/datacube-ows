@@ -15,7 +15,7 @@ from xarray import Dataset
 import datacube_ows.data
 import datacube_ows.feature_info
 from datacube_ows.feature_info import get_s3_browser_uris
-from datacube_ows.loading import ProductBandQuery, DataStacker
+from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.ogc_exceptions import WMSException
 from tests.test_styles import product_layer  # noqa: F401
 

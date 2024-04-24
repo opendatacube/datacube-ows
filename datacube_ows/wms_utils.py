@@ -17,10 +17,10 @@ from odc.geo import geom
 from pytz import utc
 from rasterio.warp import Resampling
 
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import create_geobox
-from datacube_ows.config_utils import ConfigException
-from datacube_ows.ows_configuration import get_config, OWSNamedLayer
+from datacube_ows.ows_configuration import OWSNamedLayer, get_config
 from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException

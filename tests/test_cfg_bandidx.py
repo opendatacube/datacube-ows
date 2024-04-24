@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from datacube_ows.config_utils import OWSConfigNotReady, ConfigException
+from datacube_ows.config_utils import ConfigException, OWSConfigNotReady
 from datacube_ows.ows_configuration import BandIndex
 
 
