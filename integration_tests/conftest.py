@@ -10,9 +10,9 @@ import os
 pytest_plugins = ["helpers_namespace"]
 import pytest
 from click.testing import CliRunner
+from datacube.cfg import ODCConfig
 from pytest_localserver.http import WSGIServer
 
-from datacube.cfg import ODCConfig
 from datacube_ows import ogc
 from datacube_ows.ogc import app
 
