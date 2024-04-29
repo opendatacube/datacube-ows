@@ -13,7 +13,6 @@ from itertools import chain
 import datacube
 import numpy
 import numpy.ma
-import pytz
 import xarray
 from datacube.utils import geometry
 from datacube.utils.masking import mask_to_dict
