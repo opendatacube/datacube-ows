@@ -16,7 +16,6 @@ import odc.geo
 from psycopg2.extras import Json
 from sqlalchemy import text
 
-from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.ows_configuration import get_config, OWSConfig, OWSMultiProductLayer, TimeRes, OWSNamedLayer
 from datacube_ows.utils import get_sqlconn
 

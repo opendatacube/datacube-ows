@@ -15,7 +15,6 @@ import click
 import psycopg2
 import sqlalchemy
 from datacube import Datacube
-from psycopg2.sql import SQL
 from sqlalchemy import text
 
 from datacube_ows import __version__
