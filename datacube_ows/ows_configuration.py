@@ -1299,7 +1299,7 @@ class OWSConfig(OWSMetadataConfig):
             raise ConfigException("You must support at least one language.")
         self.default_locale = self.locales[0]
         self.message_domain = cast(str, cfg.get("message_domain", "ows_cfg"))
-        self.translations_dir = cfg.get("translations_directory")
+        self.translations_dir = cast(str | None, cfg.get("translations_directory"))
         self.internationalised = self.translations_dir and len(self.locales) > 1
         if self.internationalised:
             _LOG.info("Internationalisation enabled.")

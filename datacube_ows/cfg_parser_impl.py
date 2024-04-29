@@ -9,6 +9,7 @@
 import json
 import os
 import sys
+from typing import cast
 
 import click
 from babel.messages.pofile import write_po
@@ -17,14 +18,14 @@ from deepdiff import DeepDiff
 
 from datacube_ows import __version__
 from datacube_ows.config_utils import ConfigException
-from datacube_ows.ows_configuration import OWSConfig, OWSFolder, read_config
+from datacube_ows.ows_configuration import OWSConfig, OWSFolder, read_config, OWSNamedLayer, OWSLayer
 
 
 @click.group(invoke_without_command=True)
 @click.option(
     "--version", is_flag=True, default=False, help="Show OWS version number and exit"
 )
-def main(version):
+def main(version: bool):  # type: ignore[return]
     # --version
     if version:
         click.echo(f"Open Data Cube Open Web Services (datacube-ows) version {__version__}")
@@ -64,7 +65,7 @@ def main(version):
     "--output-file",
     help="Provide an output inventory file name with extension .json",
 )
-def check(parse_only, folders, styles, input_file, output_file, paths):
+def check(parse_only: bool, folders: bool, styles: bool, input_file: str, output_file: str, paths: list[str]) -> int:
     """Check configuration files
 
     Takes a list of configuration specifications which are each loaded and validated in turn,
@@ -92,7 +93,7 @@ def check(parse_only, folders, styles, input_file, output_file, paths):
     return 0
 
 
-def parse_path(path, parse_only, folders, styles, input_file, output_file):
+def parse_path(path: str | None, parse_only: bool, folders: bool, styles: bool, input_file: str, output_file: str) -> bool:
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
@@ -139,7 +140,7 @@ def parse_path(path, parse_only, folders, styles, input_file, output_file):
     help="Write to a message file with the translatable metadata from the configuration. (Defaults to 'messages.po')"
 )
 @click.argument("path", nargs=1, required=False)
-def extract(path, cfg_only, msg_file):
+def extract(path: str, cfg_only: bool, msg_file: str) -> int:
     """Extract metadata from existing configuration into a message file template.
 
     Takes a configuration specification which is loaded as per the $DATACUBE_OWS_CFG environment variable.
@@ -195,7 +196,8 @@ def extract(path, cfg_only, msg_file):
     help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
 )
 @click.argument("languages", nargs=-1)
-def translation(languages, msg_file, new, domain, translations_dir, cfg):
+def translation(languages: list[str], msg_file: str | None, new: bool,
+                domain: str | None, translations_dir: str | None, cfg: str | None) -> int:
     """Generate a new translations catalog based on the specified message file.
 
     Takes a list of languages to generate catalogs for. "all" can be included as a shorthand
@@ -207,28 +209,31 @@ def translation(languages, msg_file, new, domain, translations_dir, cfg):
     if msg_file is None or domain is None or translations_dir is None or "all" in languages:
         try:
             raw_cfg = read_config(cfg)
-            cfg = OWSConfig(refresh=True, cfg=raw_cfg)
+            config = OWSConfig(refresh=True, cfg=raw_cfg)
         except ConfigException as e:
             click.echo(f"Config exception for path: {str(e)}")
             sys.exit(1)
         if domain is None:
-            click.echo(f"Using message domain '{cfg.message_domain}' from configuration")
-            domain = cfg.message_domain
-        if translations_dir is None and cfg.translations_dir is None:
+            click.echo(f"Using message domain '{config.message_domain}' from configuration")
+            domain = config.message_domain
+        if translations_dir is None and config.translations_dir is None:
             click.echo("No translations directory was supplied or is configured")
             sys.exit(1)
         elif translations_dir is None:
-            click.echo(f"Using translations directory '{cfg.translations_dir}' from configuration")
-            translations_dir = cfg.translations_dir
-        if msg_file is None and cfg.msg_file_name is None:
+            click.echo(f"Using translations directory '{config.translations_dir}' from configuration")
+            translations_dir = config.translations_dir
+        if msg_file is None and config.msg_file_name is None:
             click.echo("No message file name was supplied or is configured")
             sys.exit(1)
         elif msg_file is None:
-            click.echo(f"Using message file location '{cfg.msg_file_name}' from configuration")
-            msg_file = cfg.msg_file_name
-        all_langs = cfg.locales
+            click.echo(f"Using message file location '{config.msg_file_name}' from configuration")
+            msg_file = config.msg_file_name
+        all_langs = config.locales
     else:
         all_langs = []
+    assert msg_file is not None  # For type checker
+    assert domain is not None  # For type checker
+    assert translations_dir is not None  # For type checker
     try:
         fp = open(msg_file, "rb")
         fp.close()
@@ -251,15 +256,16 @@ def translation(languages, msg_file, new, domain, translations_dir, cfg):
     return 0
 
 
-def create_translation(msg_file, translations_dir, domain, locale):
+def create_translation(msg_file: str, translations_dir: str, domain: str, locale: str) -> bool:
     click.echo(f"Creating template for language: {locale}")
     os.system(f"pybabel init -i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
     return True
 
 
-def update_translation(msg_file, translations_dir, domain, locale):
+def update_translation(msg_file: str, translations_dir: str, domain: str, locale: str) -> bool:
     click.echo(f"Updating template for language: {locale}")
-    os.system(f"pybabel update --no-fuzzy-matching --ignore-obsolete -i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
+    os.system(f"pybabel update --no-fuzzy-matching --ignore-obsolete "
+              f"-i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
     return True
 
 
@@ -283,7 +289,7 @@ def update_translation(msg_file, translations_dir, domain, locale):
     help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
 )
 @click.argument("languages", nargs=-1)
-def compile_cmd(languages, domain, translations_dir, cfg):
+def compile_cmd(languages: list[str], domain: str | None, translations_dir: str | None, cfg: str | None) -> int:
     """Compile completed translation files.
 
     Takes a list of languages to generate catalogs for. "all" can be included as a shorthand
@@ -295,22 +301,23 @@ def compile_cmd(languages, domain, translations_dir, cfg):
     if domain is None or translations_dir is None or "all" in languages:
         try:
             raw_cfg = read_config(cfg)
-            cfg = OWSConfig(refresh=True, cfg=raw_cfg)
+            config = OWSConfig(refresh=True, cfg=raw_cfg)
         except ConfigException as e:
             click.echo(f"Config exception for path: {str(e)}")
             sys.exit(1)
         if domain is None:
-            click.echo(f"Using message domain '{cfg.message_domain}' from configuration")
-            domain = cfg.message_domain
-        if translations_dir is None and cfg.translations_dir is None:
+            click.echo(f"Using message domain '{config.message_domain}' from configuration")
+            domain = config.message_domain
+        if translations_dir is None and config.translations_dir is None:
             click.echo("No translations directory was supplied or is configured")
             sys.exit(1)
         elif translations_dir is None:
-            click.echo(f"Using translations directory '{cfg.translations_dir}' from configuration")
-            translations_dir = cfg.translations_dir
-        all_langs = cfg.locales
+            click.echo(f"Using translations directory '{config.translations_dir}' from configuration")
+            translations_dir = config.translations_dir
+        all_langs = config.locales
     else:
         all_langs = []
+    assert translations_dir is not None
     for language in languages:
         if language == "all":
             for supp_lang in all_langs:
@@ -321,18 +328,18 @@ def compile_cmd(languages, domain, translations_dir, cfg):
     return 0
 
 
-def compile_translation(translations_dir, domain, language):
+def compile_translation(translations_dir: str, domain: str, language: str) -> bool:
     click.echo(f"Compiling template for language: {language}")
     os.system(f"pybabel compile -d {translations_dir} -D {domain} -l {language}")
     return True
 
 
-def write_msg_file(msg_file, cfg):
+def write_msg_file(msg_file: str, cfg: OWSConfig) -> None:
     with open(msg_file, "wb") as fp:
         write_po(fp, cfg.export_metadata())
 
 
-def layers_report(config_values, input_file, output_file):
+def layers_report(config_values: dict[str, OWSNamedLayer], input_file: str, output_file: str):
     report = {"total_layers_count": len(config_values.values()), "layers": []}
     for lyr in config_values.values():
         layer = {
@@ -341,7 +348,7 @@ def layers_report(config_values, input_file, output_file):
             "styles_count": len(lyr.styles),
             "styles_list": [styl.name for styl in lyr.styles],
         }
-        report["layers"].append(layer)
+        cast(list[dict], report["layers"]).append(layer)
     if input_file:
         with open(input_file) as f:
             input_file_data = json.load(f)
@@ -357,7 +364,7 @@ def layers_report(config_values, input_file, output_file):
         return True
 
 
-def print_layers(layers, styles, depth):
+def print_layers(layers: list[OWSLayer], styles: bool, depth: int):
     for lyr in layers:
         if isinstance(lyr, OWSFolder):
             indent(depth)
@@ -370,13 +377,13 @@ def print_layers(layers, styles, depth):
                 click.echo(f"{lyr} {depth}")
 
 
-def print_styles(lyr, depth=0):
+def print_styles(lyr: OWSNamedLayer, depth: int = 0):
     for styl in lyr.styles:
         indent(0, for_styles=True)
         print(f". {styl.name}")
 
 
-def indent(depth, for_styles=False):
+def indent(depth: int, for_styles: bool = False):
     for i in range(depth):
         click.echo("  ", nl=False)
     if for_styles:
