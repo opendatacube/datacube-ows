@@ -393,8 +393,7 @@ def user_date_sorter(layer, odc_dates, geom, user_dates):
         elif time_res.is_summary():
             norm_date = date(ts.year,
                              ts.month,
-                             ts.day,
-                             tzinfo=pytz.utc)
+                             ts.day)
             return norm_date == user_date
         else:
             norm_date = datetime(ts.year,
