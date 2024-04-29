@@ -10,6 +10,7 @@ import importlib.resources
 import re
 import sys
 
+import datacube
 import click
 import psycopg2
 import sqlalchemy
@@ -30,9 +31,9 @@ from datacube_ows.startup_utils import initialise_debugging
 @click.option("--merge-only/--no-merge-only", default=False, help="When used with a multiproduct layer, the ranges for underlying datacube products are not updated.")
 @click.option("--version", is_flag=True, default=False, help="Print version string and exit")
 @click.argument("layers", nargs=-1)
-def main(layers,
-         merge_only,
-         schema, views, role, version):
+def main(layers: list[str],
+         merge_only: bool,
+         schema: bool, views: bool, role: str | None, version: bool) -> int:
     """Manage datacube-ows range tables.
 
     Valid invocations:
@@ -78,6 +79,7 @@ def main(layers,
     dc = Datacube(app="ows_update_ranges")
     cfg = get_config(called_from_update_ranges=True)
     if schema:
+        assert role is not None  # for type checker
         print("Checking schema....")
         print("Creating or replacing WMS database schema...")
         create_schema(dc, role)
@@ -109,27 +111,29 @@ def main(layers,
     return 0
 
 
-def create_views(dc):
+def create_views(dc: datacube.Datacube):
     from datacube.cfg import ODCConfig
     odc_cfg = ODCConfig().get_environment()
     dbname = odc_cfg.db_database
     run_sql(dc, "extent_views/create", database=dbname)
 
 
-def refresh_views(dc):
+def refresh_views(dc: datacube.Datacube):
     run_sql(dc, "extent_views/refresh")
 
 
-def create_schema(dc, role):
+def create_schema(dc: datacube.Datacube, role: str):
     run_sql(dc, "wms_schema/create", role=role)
 
 
-def run_sql(dc, path, **params):
+def run_sql(dc: datacube.Datacube, path: str, **params: str):
     if not importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").is_dir():
         print("Cannot find SQL resource directory - check your datacube-ows installation")
         return
 
-    files = sorted(importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").iterdir())
+    files = sorted(
+        importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").iterdir()  # type: ignore[type-var]
+    )
 
     filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
     filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
@@ -151,11 +155,11 @@ def run_sql(dc, path, **params):
             sql = ""
             first = True
             for line in fp:
-                line = str(line, "utf-8")
-                if first and line.startswith("--"):
-                    print(line[2:])
+                sline = str(line, "utf-8")
+                if first and sline.startswith("--"):
+                    print(sline[2:])
                 else:
-                    sql = sql + "\n" + line
+                    sql = sql + "\n" + sline
                     if first:
                         print(f"Running {f}")
                 first = False
@@ -166,10 +170,6 @@ def run_sql(dc, path, **params):
                 print(f"Required parameter {e} for file {f} not supplied - skipping")
                 continue
             sql = sql.format(**kwargs)
-        if f.endswith("_raw.sql"):
-            q = SQL(sql)
-            with conn.connection.cursor() as psycopg2connection:
-                psycopg2connection.execute(q)
-        else:
-            conn.execute(text(sql))
+        # Special handling of "_raw.sql" scripts no longer required in SQLAlchemy 2?
+        conn.execute(text(sql))
     conn.close()

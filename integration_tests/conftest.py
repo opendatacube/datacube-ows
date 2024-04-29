@@ -12,6 +12,7 @@ import pytest
 from click.testing import CliRunner
 from pytest_localserver.http import WSGIServer
 
+from datacube.cfg import ODCConfig
 from datacube_ows import ogc
 from datacube_ows.ogc import app
 
@@ -96,7 +97,8 @@ def product_name():
 
 @pytest.fixture
 def role_name():
-    return os.getenv("DB_USERNAME")
+    odc_env = ODCConfig.get_environment()
+    return odc_env.db_username
 
 
 @pytest.fixture
