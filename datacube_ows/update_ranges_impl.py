@@ -10,8 +10,8 @@ import importlib.resources
 import re
 import sys
 
-import datacube
 import click
+import datacube
 import psycopg2
 import sqlalchemy
 from datacube import Datacube
