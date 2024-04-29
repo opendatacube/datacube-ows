@@ -887,24 +887,25 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         try:
             from datacube_ows.product_ranges import get_ranges
-            self._ranges: dict[str, Any] = get_ranges(dc, self)
+            self._ranges = get_ranges(dc, self)
             if self._ranges is None:
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
             if self.default_time_rule == DEF_TIME_EARLIEST:
-                self.default_time = self._ranges["start_time"]
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["start_time"])
             elif isinstance(self.default_time_rule,
-                            datetime.date) and self.default_time_rule in self._ranges["time_set"]:
-                self.default_time = self.default_time_rule
+                            datetime.date) and self.default_time_rule in cast(set[datetime.datetime | datetime.date],
+                                                                              self._ranges["time_set"]):
+                self.default_time = cast(datetime.datetime | datetime.date, self.default_time_rule)
             elif isinstance(self.default_time_rule, datetime.date):
                 _LOG.warning("default_time for named_layer %s is explicit date (%s) that is "
                              " not available for the layer. Using most recent available date instead.",
                                     self.name,
                                     self.default_time_rule.isoformat()
                 )
-                self.default_time = self._ranges["end_time"]
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
             else:
-                self.default_time = self._ranges["end_time"]
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
 
         # pylint: disable=broad-except
         except Exception as a:
@@ -930,13 +931,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def ranges(self) -> dict[str, Any]:
         if self.dynamic:
             self.force_range_update()
+        assert self._ranges is not None  # For type checker
         return self._ranges
 
     def extract_bboxes(self) -> dict[str, Any]:
         if self._ranges is None:
             return {}
         bboxes = {}
-        for crs_id, bbox in self._ranges["bboxes"].items():
+        for crs_id, bbox in cast(dict[str, dict[str, float]], self._ranges["bboxes"]).items():
             if crs_id in self.global_cfg.published_CRSs:
                 # Assume we've already handled coordinate swapping for
                 # Vertical-coord first CRSs.   Top is top, left is left.
