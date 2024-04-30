@@ -32,12 +32,16 @@ def s3_url_datasets():
             "s3://test-bucket/hello_world/data.yaml"
     ])
     d2 = TestDataset([
-            "s3://test-bucket/hello.word/foo.bar/hello.test.yaml",
-            "s3://test-bucket/hello.word/foo.bar/hello-test.yaml"
+        "s3://test-bucket/hello.word/foo.bar/hello.test.yaml",
+        "s3://test-bucket/hello.word/foo.bar/hello-test.yaml"
+    ])
+    d3 = TestDataset([
+            "s3://test-bucket/this.is/from.stac/hello.test.json",
     ])
 
     datasets.append(d1)
     datasets.append(d2)
+    datasets.append(d3)
 
     class DataSetMock:
         def __init__(self, datasets):
@@ -69,6 +73,7 @@ def test_s3_browser_uris(s3_url_datasets):
 
     assert "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=hello_world" in uris
     assert "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=hello.word/foo.bar" in uris
+    assert "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=this.is/from.stac" in uris
 
 # TODO: read_data is now a method of the DataStacker class. This test needs a rewrite.
 # @patch('xarray.Dataset')
