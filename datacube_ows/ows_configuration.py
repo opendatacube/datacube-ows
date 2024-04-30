@@ -36,12 +36,11 @@ from slugify import slugify
 
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        FlagProductBands, FunctionWrapper,
-                                       OWSConfigEntry, OWSEntryNotFound,
-                                       OWSExtensibleConfigEntry, OWSFlagBand,
-                                       OWSMetadataConfig, cfg_expand,
-                                       get_file_loc, import_python_obj,
-                                       load_json_obj)
-from datacube_ows.cube_pool import ODCInitException
+                                       ODCInitException, OWSConfigEntry,
+                                       OWSEntryNotFound, OWSExtensibleConfigEntry,
+                                       OWSFlagBand, OWSMetadataConfig,
+                                       cfg_expand, get_file_loc,
+                                       import_python_obj, load_json_obj)
 from datacube_ows.ogc_utils import create_geobox
 from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
@@ -575,7 +574,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 self.dc: Datacube = Datacube(env=self.local_env, app=self.global_cfg.odc_app)
             except Exception as e:
                 _LOG.error("ODC initialisation failed: %s", str(e))
-                raise (ODCInitException(e))
+                raise ODCInitException(e)
         else:
             self.dc = self.global_cfg.dc
         self.products: list[Product] = []
@@ -1253,7 +1252,7 @@ class OWSConfig(OWSMetadataConfig):
             self.dc: Datacube = Datacube(env=self.default_env, app=self.odc_app)
         except Exception as e:
             _LOG.error("ODC initialisation failed: %s", str(e))
-            raise (ODCInitException(e))
+            raise ODCInitException(e)
         if self.msg_file_name:
             try:
                 with open(self.msg_file_name, "rb") as fp:
@@ -1492,7 +1491,6 @@ class OWSConfig(OWSMetadataConfig):
         hdrs = self._response_headers.copy()
         hdrs.update(d)
         return hdrs
-
 
 def get_config(refresh=False, called_from_update_ranges=False) -> OWSConfig:
     cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)

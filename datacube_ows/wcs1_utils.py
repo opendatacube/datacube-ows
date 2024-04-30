@@ -15,7 +15,6 @@ from ows.util import Version
 from rasterio import MemoryFile
 
 from datacube_ows.config_utils import ConfigException
-from datacube_ows.cube_pool import cube
 from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS1Exception
@@ -308,103 +307,100 @@ class WCS1GetCoverageRequest:
 
 def get_coverage_data(req, qprof):
     # pylint: disable=too-many-locals, protected-access
-    with cube() as dc:
-        if not dc:
-            raise WCS1Exception("Database connectivity failure")
-        stacker = DataStacker(req.layer,
-                              req.geobox,
-                              req.times,
-                              bands=req.bands)
-        qprof.start_event("count-datasets")
-        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-        qprof.end_event("count-datasets")
-        qprof["n_datasets"] = n_datasets
+    stacker = DataStacker(req.layer,
+                          req.geobox,
+                          req.times,
+                          bands=req.bands)
+    qprof.start_event("count-datasets")
+    n_datasets = stacker.datasets(req.layer.dc.index, mode=MVSelectOpts.COUNT)
+    qprof.end_event("count-datasets")
+    qprof["n_datasets"] = n_datasets
 
-        try:
-            req.layer.resource_limits.check_wcs(n_datasets,
-                                                req.geobox.height, req.geobox.width,
-                                                sum(req.layer.band_idx.dtype_size(b) for b in req.bands),
-                                                len(req.times))
-        except ResourceLimited as e:
-            if e.wcs_hard or not req.layer.low_res_product_names:
-                raise WCS1Exception(
-                    f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                    + "Please reduce the bounds of your request and try again.")
-            stacker.resource_limited = True
-            qprof["resource_limited"] = str(e)
-        if n_datasets == 0:
-            # Return an empty coverage file with full metadata?
-            qprof.start_event("build_empty_dataset")
-            cfg = get_config()
-            x_range = (req.minx, req.maxx)
-            y_range = (req.miny, req.maxy)
-            xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
-            yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
-            xvals = numpy.linspace(
-                x_range[0],
-                x_range[1],
-                num=req.width
-            )
-            yvals = numpy.linspace(
-                y_range[0],
-                y_range[1],
-                num=req.height
-            )
-            if req.layer.time_resolution.is_subday():
-                timevals = [
-                    numpy.datetime64(dt.astimezone(pytz.utc).isoformat(), "ns")
-                    for dt in req.times
-                ]
-            else:
-                timevals = req.times
-            if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
-                nparrays = {
-                    band: (("time", yname, xname),
-                           numpy.full((len(req.times), len(yvals), len(xvals)),
-                                      req.layer.band_idx.nodata_val(band))
-                          )
-                    for band in req.bands
-                }
-            else:
-                nparrays = {
-                    band: (("time", xname, yname),
-                           numpy.full((len(req.times), len(xvals), len(yvals)),
-                                      req.layer.band_idx.nodata_val(band))
-                          )
-                    for band in req.bands
-                }
-            data = xarray.Dataset(
-                nparrays,
-                coords={
-                    "time": timevals,
-                    xname: xvals,
-                    yname: yvals,
-                }
-            ).astype("int16")
-            qprof.start_event("end_empty_dataset")
-            qprof["write_action"] = "Write Empty"
-
-            return n_datasets, data
-
-        qprof.start_event("fetch-datasets")
-        datasets = stacker.datasets(index=dc.index)
-        qprof.end_event("fetch-datasets")
-        if qprof.active:
-            qprof["datasets"] = {
-                str(q): [str(i) for i in ids]
-                for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()
+    try:
+        req.layer.resource_limits.check_wcs(n_datasets,
+                                            req.geobox.height, req.geobox.width,
+                                            sum(req.layer.band_idx.dtype_size(b) for b in req.bands),
+                                            len(req.times))
+    except ResourceLimited as e:
+        if e.wcs_hard or not req.layer.low_res_product_names:
+            raise WCS1Exception(
+                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                + "Please reduce the bounds of your request and try again.")
+        stacker.resource_limited = True
+        qprof["resource_limited"] = str(e)
+    if n_datasets == 0:
+        # Return an empty coverage file with full metadata?
+        qprof.start_event("build_empty_dataset")
+        cfg = get_config()
+        x_range = (req.minx, req.maxx)
+        y_range = (req.miny, req.maxy)
+        xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
+        yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
+        xvals = numpy.linspace(
+            x_range[0],
+            x_range[1],
+            num=req.width
+        )
+        yvals = numpy.linspace(
+            y_range[0],
+            y_range[1],
+            num=req.height
+        )
+        if req.layer.time_resolution.is_subday():
+            timevals = [
+                numpy.datetime64(dt.astimezone(pytz.utc).isoformat(), "ns")
+                for dt in req.times
+            ]
+        else:
+            timevals = req.times
+        if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
+            nparrays = {
+                band: (("time", yname, xname),
+                       numpy.full((len(req.times), len(yvals), len(xvals)),
+                                  req.layer.band_idx.nodata_val(band))
+                      )
+                for band in req.bands
             }
-        qprof.start_event("load-data")
-        output = stacker.data(datasets, skip_corrections=True)
-        qprof.end_event("load-data")
+        else:
+            nparrays = {
+                band: (("time", xname, yname),
+                       numpy.full((len(req.times), len(xvals), len(yvals)),
+                                  req.layer.band_idx.nodata_val(band))
+                      )
+                for band in req.bands
+            }
+        data = xarray.Dataset(
+            nparrays,
+            coords={
+                "time": timevals,
+                xname: xvals,
+                yname: yvals,
+            }
+        ).astype("int16")
+        qprof.start_event("end_empty_dataset")
+        qprof["write_action"] = "Write Empty"
 
-        # Clean extent flag band from output
-        sanitised_bands = [req.layer.band_idx.locale_band(b) for b in req.bands]
-        for k, v in output.data_vars.items():
-            if k not in sanitised_bands:
-                output = output.drop_vars([k])
-        qprof["write_action"] = "Write Data"
-        return n_datasets, output
+        return n_datasets, data
+
+    qprof.start_event("fetch-datasets")
+    datasets = stacker.datasets(index=req.layer.dc.index)
+    qprof.end_event("fetch-datasets")
+    if qprof.active:
+        qprof["datasets"] = {
+            str(q): [str(i) for i in ids]
+            for q, ids in stacker.datasets(req.layer.dc.index, mode=MVSelectOpts.IDS).items()
+        }
+    qprof.start_event("load-data")
+    output = stacker.data(datasets, skip_corrections=True)
+    qprof.end_event("load-data")
+
+    # Clean extent flag band from output
+    sanitised_bands = [req.layer.band_idx.locale_band(b) for b in req.bands]
+    for k, v in output.data_vars.items():
+        if k not in sanitised_bands:
+            output = output.drop_vars([k])
+    qprof["write_action"] = "Write Data"
+    return n_datasets, output
 
 
 def get_tiff(req, data):

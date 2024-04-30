@@ -17,7 +17,6 @@ from pandas import Timestamp
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 
-from datacube_ows.cube_pool import cube
 from datacube_ows.http_utils import FlaskResponse, json_response, png_response
 from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.mv_index import MVSelectOpts
@@ -98,133 +97,130 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
             raise WMSException("Style %s does not support GetMap requests with %d dates" % (params.style.name, n_dates),
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
     qprof["n_dates"] = n_dates
-    with cube() as dc:
+    try:
+        # Tiling.
+        stacker = DataStacker(params.layer, params.geobox, params.times, params.resampling, style=params.style)
+        qprof["zoom_factor"] = params.zf
+        qprof.start_event("count-datasets")
+        n_datasets = stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.COUNT)
+        qprof.end_event("count-datasets")
+        qprof["n_datasets"] = n_datasets
+        qprof["zoom_level_base"] = params.resources.base_zoom_level
+        qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
         try:
-            if not dc:
-                raise WMSException("Database connectivity failure")
-            # Tiling.
-            stacker = DataStacker(params.product, params.geobox, params.times, params.resampling, style=params.style)
-            qprof["zoom_factor"] = params.zf
-            qprof.start_event("count-datasets")
-            n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-            qprof.end_event("count-datasets")
-            qprof["n_datasets"] = n_datasets
-            qprof["zoom_level_base"] = params.resources.base_zoom_level
-            qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
-            try:
-                params.product.resource_limits.check_wms(n_datasets, params.zf, params.resources)
-            except ResourceLimited as e:
-                stacker.resource_limited = True
-                qprof["resource_limited"] = str(e)
-            if qprof.active:
-                q_ds_dict = cast(dict[ProductBandQuery, xarray.DataArray],
-                                 stacker.datasets(dc.index, mode=MVSelectOpts.DATASETS))
-                qprof["datasets"] = []
-                for q, dsxr in q_ds_dict.items():
-                    query_res: dict[str, Any] = {}
-                    query_res["query"] = str(q)
-                    query_res["datasets"] = [
-                        [
-                            f"{ds.id} ({ds.type.name})"
-                            for ds in tdss
-                        ]
-                        for tdss in dsxr.values
+            params.layer.resource_limits.check_wms(n_datasets, params.zf, params.resources)
+        except ResourceLimited as e:
+            stacker.resource_limited = True
+            qprof["resource_limited"] = str(e)
+        if qprof.active:
+            q_ds_dict = cast(dict[ProductBandQuery, xarray.DataArray],
+                             stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.DATASETS))
+            qprof["datasets"] = []
+            for q, dsxr in q_ds_dict.items():
+                query_res: dict[str, Any] = {}
+                query_res["query"] = str(q)
+                query_res["datasets"] = [
+                    [
+                        f"{ds.id} ({ds.type.name})"
+                        for ds in tdss
                     ]
-                    qprof["datasets"].append(query_res)
-            if stacker.resource_limited and not params.product.low_res_product_names:
-                qprof.start_event("extent-in-query")
-                extent = cast(geom.Geometry | None, stacker.datasets(dc.index, mode=MVSelectOpts.EXTENT))
-                qprof.end_event("extent-in-query")
-                if extent is None:
-                    qprof["write_action"] = "No extent: Write Empty"
-                    raise EmptyResponse()
-                else:
-                    qprof["write_action"] = "Polygon"
-                    qprof.start_event("write")
-                    body = _write_polygon(
-                        params.geobox,
-                        extent,
-                        params.product.resource_limits.zoom_fill,
-                        params.product)
-                    qprof.end_event("write")
-            elif n_datasets == 0:
-                qprof["write_action"] = "No datasets: Write Empty"
+                    for tdss in dsxr.values
+                ]
+                qprof["datasets"].append(query_res)
+        if stacker.resource_limited and not params.layer.low_res_product_names:
+            qprof.start_event("extent-in-query")
+            extent = cast(geom.Geometry | None, stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.EXTENT))
+            qprof.end_event("extent-in-query")
+            if extent is None:
+                qprof["write_action"] = "No extent: Write Empty"
                 raise EmptyResponse()
             else:
-                if stacker.resource_limited:
-                    qprof.start_event("count-summary-datasets")
-                    qprof["n_summary_datasets"] = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-                    qprof.end_event("count-summary-datasets")
-                qprof.start_event("fetch-datasets")
-                datasets = cast(dict[ProductBandQuery, xarray.DataArray], stacker.datasets(dc.index))
-                for flagband, dss in datasets.items():
-                    if not dss.any():
-                        _LOG.warning("Flag band %s returned no data", str(flagband))
-                    if len(dss.time) != n_dates and flagband.main:
-                        qprof["write_action"] = f"{n_dates} requested, only {len(dss.time)} found - returning empty image"
-                        raise EmptyResponse()
-                qprof.end_event("fetch-datasets")
-                _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
-                qprof.start_event("load-data")
-                data = stacker.data(datasets)
-                qprof.end_event("load-data")
-                if not data:
-                    qprof["write_action"] = "No Data: Write Empty"
+                qprof["write_action"] = "Polygon"
+                qprof.start_event("write")
+                body = _write_polygon(
+                    params.geobox,
+                    extent,
+                    params.layer.resource_limits.zoom_fill,
+                    params.layer)
+                qprof.end_event("write")
+        elif n_datasets == 0:
+            qprof["write_action"] = "No datasets: Write Empty"
+            raise EmptyResponse()
+        else:
+            if stacker.resource_limited:
+                qprof.start_event("count-summary-datasets")
+                qprof["n_summary_datasets"] = stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.COUNT)
+                qprof.end_event("count-summary-datasets")
+            qprof.start_event("fetch-datasets")
+            datasets = cast(dict[ProductBandQuery, xarray.DataArray], stacker.datasets(params.layer.dc.index))
+            for flagband, dss in datasets.items():
+                if not dss.any():
+                    _LOG.warning("Flag band %s returned no data", str(flagband))
+                if len(dss.time) != n_dates and flagband.main:
+                    qprof["write_action"] = f"{n_dates} requested, only {len(dss.time)} found - returning empty image"
                     raise EmptyResponse()
-                _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
-                qprof.start_event("build-masks")
-                td_masks = []
-                for npdt in data.time.values:
-                    td = data.sel(time=npdt)
-                    td_ext_mask_man: numpy.ndarray | None = None
-                    td_ext_mask: xarray.DataArray | None = None
-                    band = ""
-                    for band in params.style.needed_bands:
-                        if band not in params.style.flag_bands:
-                            if params.product.data_manual_merge:
-                                if td_ext_mask_man is None:
-                                    td_ext_mask_man = ~numpy.isnan(td[band])
-                                else:
-                                    td_ext_mask_man &= ~numpy.isnan(td[band])
+            qprof.end_event("fetch-datasets")
+            _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
+            qprof.start_event("load-data")
+            data = stacker.data(datasets)
+            qprof.end_event("load-data")
+            if not data:
+                qprof["write_action"] = "No Data: Write Empty"
+                raise EmptyResponse()
+            _LOG.debug("load stop %s %s", datetime.now().time(), args["requestid"])
+            qprof.start_event("build-masks")
+            td_masks = []
+            for npdt in data.time.values:
+                td = data.sel(time=npdt)
+                td_ext_mask_man: numpy.ndarray | None = None
+                td_ext_mask: xarray.DataArray | None = None
+                band = ""
+                for band in params.style.needed_bands:
+                    if band not in params.style.flag_bands:
+                        if params.layer.data_manual_merge:
+                            if td_ext_mask_man is None:
+                                td_ext_mask_man = ~numpy.isnan(td[band])
                             else:
-                                for f in params.product.extent_mask_func:
-                                    if td_ext_mask is None:
-                                        td_ext_mask = f(td, band)
-                                    else:
-                                        td_ext_mask &= f(td, band)
-                    if params.product.data_manual_merge:
-                        td_ext_mask = xarray.DataArray(td_ext_mask_man)
-                    if td_ext_mask is None:
-                        td_ext_mask = xarray.DataArray(
-                                            ~numpy.zeros(
-                                                        td[band].values.shape,
-                                                        dtype=numpy.bool_
-                                            ),
-                                            td[band].coords
-                        )
-                    td_masks.append(td_ext_mask)
-                extent_mask = xarray.concat(td_masks, dim=data.time)
-                qprof.end_event("build-masks")
-                qprof["write_action"] = "Write Data"
-                if mdh and mdh.preserve_user_date_order:
-                    sorter = user_date_sorter(
-                                              params.product,
-                                              data.time.values,
-                                              params.geobox.geographic_extent,
-                                              params.times)
-                    data = data.sortby(sorter)
-                    extent_mask = extent_mask.sortby(sorter)
+                                td_ext_mask_man &= ~numpy.isnan(td[band])
+                        else:
+                            for f in params.layer.extent_mask_func:
+                                if td_ext_mask is None:
+                                    td_ext_mask = f(td, band)
+                                else:
+                                    td_ext_mask &= f(td, band)
+                if params.layer.data_manual_merge:
+                    td_ext_mask = xarray.DataArray(td_ext_mask_man)
+                if td_ext_mask is None:
+                    td_ext_mask = xarray.DataArray(
+                                        ~numpy.zeros(
+                                                    td[band].values.shape,
+                                                    dtype=numpy.bool_
+                                        ),
+                                        td[band].coords
+                    )
+                td_masks.append(td_ext_mask)
+            extent_mask = xarray.concat(td_masks, dim=data.time)
+            qprof.end_event("build-masks")
+            qprof["write_action"] = "Write Data"
+            if mdh and mdh.preserve_user_date_order:
+                sorter = user_date_sorter(
+                                          params.layer,
+                                          data.time.values,
+                                          params.geobox.geographic_extent,
+                                          params.times)
+                data = data.sortby(sorter)
+                extent_mask = extent_mask.sortby(sorter)
 
-                body = _write_png(data, params.style, extent_mask, qprof)
-        except EmptyResponse:
-            qprof.start_event("write")
-            body = _write_empty(params.geobox)
-            qprof.end_event("write")
+            body = _write_png(data, params.style, extent_mask, qprof)
+    except EmptyResponse:
+        qprof.start_event("write")
+        body = _write_empty(params.geobox)
+        qprof.end_event("write")
 
     if params.ows_stats:
         return json_response(qprof.profile())
     else:
-        return png_response(body, extra_headers=params.product.resource_limits.wms_cache_rules.cache_headers(n_datasets))
+        return png_response(body, extra_headers=params.layer.resource_limits.wms_cache_rules.cache_headers(n_datasets))
 
 
 @log_call

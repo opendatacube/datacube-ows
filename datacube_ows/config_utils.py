@@ -157,6 +157,13 @@ class OWSConfigNotReady(ConfigException):
     """
 
 
+class ODCInitException(ConfigException):
+    """
+    Exception raised when a Datacube index could not be created
+    """
+
+
+
 class OWSConfigEntry:
     """
     Base class for all configuration objects

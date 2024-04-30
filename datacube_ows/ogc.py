@@ -12,7 +12,6 @@ from flask import g, render_template, request
 from sqlalchemy import text
 
 from datacube_ows import __version__
-from datacube_ows.cube_pool import cube
 from datacube_ows.http_utils import (capture_headers, get_service_base_url,
                                      lower_get_args, resp_headers)
 from datacube_ows.legend_generator import create_legend_for_style
@@ -179,17 +178,15 @@ def ogc_wcs_impl():
 @metrics.summary('ows_heartbeat_pings', "Ping durations", labels={"status": lambda r: r.status})
 def ping():
     db_ok = False
-    with cube() as dc:
-        if dc:
-            # pylint: disable=protected-access
-            with dc.index._db.give_me_a_connection() as conn:
-                results = conn.execute(text("""
-                        SELECT *
-                        FROM wms.product_ranges
-                        LIMIT 1""")
-                )
-                for r in results:
-                    db_ok = True
+    cfg = get_config()
+    with cfg.dc.index._db.give_me_a_connection() as conn:
+        results = conn.execute(text("""
+                SELECT *
+                FROM wms.product_ranges
+                LIMIT 1""")
+        )
+        for r in results:
+            db_ok = True
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
     else:
