@@ -322,7 +322,6 @@ def add_ranges(dc: datacube.Datacube, product_names: list[str], merge_only: bool
     ows_multiproducts: list[OWSMultiProductLayer] = []
     errors = False
     for pname in product_names:
-        dc_product = None
         ows_product = get_config().product_index.get(pname)
         if not ows_product:
             ows_product = get_config().native_product_index.get(pname)
@@ -385,6 +384,7 @@ def add_ranges(dc: datacube.Datacube, product_names: list[str], merge_only: bool
 
     print("Done.")
     return errors
+
 
 def get_ranges(dc: datacube.Datacube, product: OWSNamedLayer,
                path: str | None = None) -> dict[str, Any] | None:
