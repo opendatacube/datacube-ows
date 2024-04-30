@@ -111,7 +111,7 @@ def minimal_dc():
 
 
 @pytest.fixture
-def minimal_global_cfg():
+def minimal_global_cfg(minimal_dc):
     global_cfg = MagicMock()
     global_cfg.keywords = {"global"}
     global_cfg.product_index = {}
@@ -119,6 +119,7 @@ def minimal_global_cfg():
     global_cfg.contact_org = None
     global_cfg.contact_position = None
     global_cfg.abstract = "Global Abstract"
+    global_cfg.dc = minimal_dc
     global_cfg.authorities = {
         "auth0": "http://test.url/auth0",
         "auth1": "http://test.url/auth1",

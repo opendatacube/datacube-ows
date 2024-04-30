@@ -13,10 +13,11 @@ from datacube_ows.ows_configuration import BandIndex
 
 
 @pytest.fixture
-def minimal_prod():
+def minimal_prod(minimal_dc):
     glob = MagicMock()
     glob.internationalised = False
     product = MagicMock()
+    product.dc = minimal_dc
     product.name = "foo"
     product.product_name = "foo"
     product.get_obj_label.return_value = "layer.foo"
@@ -44,7 +45,7 @@ def minimal_prod():
 
 def test_bidx_p_minimal(minimal_prod):
     bidx = BandIndex(minimal_prod, None)
-    assert bidx.product_name == "foo"
+    assert bidx.layer_name == "foo"
     assert bidx.band_cfg == {}
     assert bidx._idx == {}
     assert not bidx.ready
@@ -121,14 +122,14 @@ def test_bidx_p_label(minimal_prod):
     assert "splat" in str(excinfo.value)
 
 
-def test_bidx_makeready(minimal_prod, minimal_dc):
+def test_bidx_makeready(minimal_prod):
     bidx = BandIndex(minimal_prod, {
         "band1": [],
         "band2": ["alias2"],
         "band3": ["alias3", "band3"],
         "band4": ["band4", "alias4"]
     })
-    bidx.make_ready(minimal_dc)
+    bidx.make_ready()
     assert bidx.ready
     assert bidx.band("band1") == "band1"
     assert bidx.band("alias2") == "band2"
@@ -136,10 +137,10 @@ def test_bidx_makeready(minimal_prod, minimal_dc):
     assert bidx.band("alias4") == "band4"
 
 
-def test_bidx_makeready_default(minimal_prod, minimal_dc):
+def test_bidx_makeready_default(minimal_prod):
     import numpy as np
     bidx = BandIndex(minimal_prod, {})
-    bidx.make_ready(minimal_dc)
+    bidx.make_ready()
     assert bidx.ready
     assert "band1" in bidx.band_cfg
     assert "band1" in bidx.measurements
@@ -153,7 +154,7 @@ def test_bidx_makeready_default(minimal_prod, minimal_dc):
     assert np.isnan(bidx.nodata_val("band1"))
 
 
-def test_bidx_makeready_invalid_band(minimal_prod, minimal_dc):
+def test_bidx_makeready_invalid_band(minimal_prod):
     bidx = BandIndex(minimal_prod, {
         "band1": ["band1", "valid"],
         "bandx": ["invalid"]
@@ -161,6 +162,6 @@ def test_bidx_makeready_invalid_band(minimal_prod, minimal_dc):
     assert bidx.band("valid") == "band1"
     assert bidx.band("invalid") == "bandx"
     with pytest.raises(ConfigException) as excinfo:
-        bidx.make_ready(minimal_dc)
+        bidx.make_ready()
     assert "is missing band" in str(excinfo.value)
     assert "bandx" in str(excinfo.value)

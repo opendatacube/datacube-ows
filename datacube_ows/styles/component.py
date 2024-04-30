@@ -88,7 +88,7 @@ class ComponentStyleDef(StyleDefBase):
                 }
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc, *args, **kwargs) -> None:
+    def make_ready(self, *args: Any, **kwargs: Any) -> None:
         """
         Second-phase (db aware) initialisation
 
@@ -102,7 +102,7 @@ class ComponentStyleDef(StyleDefBase):
                 self.rgb_components[band] = component
             else:
                 self.rgb_components[band] = self.dealias_components(component)
-        super().make_ready(dc, *args, **kwargs)
+        super().make_ready(*args, **kwargs)
         self.raw_rgb_components = {}
 
     def dealias_components(self, comp_in: LINEAR_COMP_DICT | None) -> LINEAR_COMP_DICT | None:

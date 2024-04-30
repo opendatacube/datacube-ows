@@ -386,21 +386,21 @@ def add_ranges(dc: datacube.Datacube, product_names: list[str], merge_only: bool
     return errors
 
 
-def get_ranges(dc: datacube.Datacube, product: OWSNamedLayer,
+def get_ranges(layer: OWSNamedLayer,
                path: str | None = None) -> dict[str, Any] | None:
-    cfg = product.global_cfg
-    conn = get_sqlconn(dc)
-    if product.multi_product:
+    cfg = layer.global_cfg
+    conn = get_sqlconn(layer.dc)
+    if layer.multi_product:
         if path is not None:
             raise Exception("Combining subproducts and multiproducts is not yet supported")
         results = conn.execute(text("""
             SELECT *
             FROM wms.multiproduct_ranges
             WHERE wms_product_name=:pname"""),
-                               {"pname": product.name}
+                               {"pname": layer.name}
                               )
     else:
-        prod_id = product.product.id
+        prod_id = layer.product.id
         if path is not None:
             results = conn.execute(text("""
                 SELECT *
@@ -420,7 +420,7 @@ def get_ranges(dc: datacube.Datacube, product: OWSNamedLayer,
                                   )
     for result in results:
         conn.close()
-        if product.time_resolution.is_subday():
+        if layer.time_resolution.is_subday():
             dt_parser: Callable[[str], datetime | date] = lambda dts: datetime.fromisoformat(dts)
         else:
             dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()
