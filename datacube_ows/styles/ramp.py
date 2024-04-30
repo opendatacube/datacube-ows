@@ -1,37 +1,36 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import io
 import logging
 from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
-from typing import (Any, Hashable, List, MutableMapping, Optional, Tuple,
-                    Union, cast)
+from typing import Any, Hashable, Iterable, MutableMapping, Union, cast
 
 import matplotlib
 import numpy
 from colour import Color
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex
-
-try:
-    from numpy.typing import NDArray
-except ImportError:
-    NDArray = numpy.ndarray
 from numpy import ubyte
-from xarray import Dataset
+from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT, OWSMetadataConfig
-from datacube_ows.ogc_utils import ConfigException, FunctionWrapper
+from datacube_ows.config_utils import (CFG_DICT, ConfigException,
+                                       FunctionWrapper, OWSMetadataConfig)
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSNamedLayer
+
 _LOG = logging.getLogger(__name__)
 
-RAMP_SPEC = List[CFG_DICT]
+RAMP_SPEC = list[CFG_DICT]
 
 UNSCALED_DEFAULT_RAMP = cast(RAMP_SPEC,
                              [
@@ -72,7 +71,7 @@ UNSCALED_DEFAULT_RAMP = cast(RAMP_SPEC,
 )
 
 
-def scale_unscaled_ramp(rmin: Union[int, float, str], rmax: Union[int, float, str], unscaled: RAMP_SPEC) -> RAMP_SPEC:
+def scale_unscaled_ramp(rmin: int | float | str, rmax: int | float | str, unscaled: RAMP_SPEC) -> RAMP_SPEC:
     """
     Take a unscaled (normalised) ramp that covers values from 0.0 to 1.0 and scale it linearly to cover the
     provided range.
@@ -100,10 +99,10 @@ def scale_unscaled_ramp(rmin: Union[int, float, str], rmax: Union[int, float, st
     ]
 
 
-def crack_ramp(ramp: RAMP_SPEC) -> Tuple[
-    List[float],
-    List[float], List[float],
-    List[float], List[float],
+def crack_ramp(ramp: RAMP_SPEC) -> tuple[
+    list[float],
+    list[float], list[float],
+    list[float], list[float],
 ]:
     """
     Split a colour ramp into separate (input) value and (output) RGBA lists.
@@ -111,22 +110,22 @@ def crack_ramp(ramp: RAMP_SPEC) -> Tuple[
     :param ramp: input (scaled) colour-ramp definition
     :return: A tuple of four lists of floats: representing values, red, green, blue, alpha.
     """
-    values = cast(List[float], [])
-    red = cast(List[float], [])
-    green = cast(List[float], [])
-    blue = cast(List[float], [])
-    alpha = cast(List[float], [])
+    values = cast(list[float], [])
+    red = cast(list[float], [])
+    green = cast(list[float], [])
+    blue = cast(list[float], [])
+    alpha = cast(list[float], [])
     for r in ramp:
         if isinstance(r["value"], float):
             value: float = cast(float, r["value"])
         else:
-            value = float(cast(Union[int, str], r["value"]))
+            value = float(cast(int | str, r["value"]))
         values.append(value)
         color = Color(r["color"])
         red.append(color.red)
         green.append(color.green)
         blue.append(color.blue)
-        alpha.append(float(cast(Union[float, int, str], r.get("alpha", 1.0))))
+        alpha.append(float(cast(float | int | str, r.get("alpha", 1.0))))
 
     return values, red, green, blue, alpha
 
@@ -176,17 +175,17 @@ class ColorRamp:
         """
         self.style = style
         if "color_ramp" in ramp_cfg:
-            raw_scaled_ramp = ramp_cfg["color_ramp"]
+            raw_scaled_ramp = cast(list[CFG_DICT], ramp_cfg["color_ramp"])
         else:
-            rmin, rmax = cast(List[float], ramp_cfg["range"])
+            rmin, rmax = cast(list[float], ramp_cfg["range"])
             unscaled_ramp = UNSCALED_DEFAULT_RAMP
             if "mpl_ramp" in ramp_cfg:
                 unscaled_ramp = read_mpl_ramp(cast(str, ramp_cfg["mpl_ramp"]))
             raw_scaled_ramp = scale_unscaled_ramp(rmin, rmax, unscaled_ramp)
-        self.ramp = raw_scaled_ramp
+        self.ramp = cast(list[CFG_DICT], raw_scaled_ramp)
 
-        self.values = cast(List[float], [])
-        self.components = cast(MutableMapping[str, List[float]], {})
+        self.values = cast(list[float], [])
+        self.components = cast(MutableMapping[str, list[float]], {})
         self.crack_ramp()
 
         # Handle the mutual interdepencies between the ramp and the legend
@@ -201,7 +200,7 @@ class ColorRamp:
             leg_begin_before_idx = None
             leg_end_before_idx = None
             for idx, col_point in enumerate(self.ramp):
-                col_val = col_point["value"]
+                col_val = cast(int | float, col_point["value"])
                 if not leg_begin_in_ramp and leg_begin_before_idx is None:
                     if isclose(col_val, fleg_begin, abs_tol=1e-9):
                         leg_begin_in_ramp = True
@@ -249,23 +248,23 @@ class ColorRamp:
             "alpha": a
         }
 
-    def get_value(self, data: Union[float, "xarray.DataArray"], band: str) -> NDArray:
+    def get_value(self, data: float | DataArray, band: str) -> numpy.ndarray:
         return numpy.interp(data, self.values, self.components[band])
 
-    def get_8bit_value(self, data: "xarray.DataArray", band: str) -> NDArray:
-        val: NDArray = self.get_value(data, band)
-        val = cast(NDArray, val * 255)
+    def get_8bit_value(self, data: DataArray, band: str) -> numpy.ndarray:
+        val: numpy.ndarray = self.get_value(data, band)
+        val = cast(numpy.ndarray, val * 255)
         # Is there a way to stop this raising a runtime warning?
         return val.astype(ubyte)
 
-    def apply(self, data: "xarray.DataArray") -> "xarray.Dataset":
+    def apply(self, data: DataArray) -> Dataset:
         imgdata = cast(MutableMapping[Hashable, Any], {})
         for band in self.components:
             imgdata[band] = (data.dims, self.get_8bit_value(data, band))
         imgdataset = Dataset(imgdata, coords=data.coords)
         return imgdataset
 
-    def color_alpha_at(self, val: float) -> Tuple[Color, float]:
+    def color_alpha_at(self, val: float) -> tuple[Color, float]:
         color = Color(
             rgb=(
                 self.get_value(val, "red").item(),
@@ -289,11 +288,11 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         if "begin" not in raw_cfg:
             self.begin = Decimal("nan")
         else:
-            self.begin = Decimal(cast(Union[str, float, int], raw_cfg["begin"]))
+            self.begin = Decimal(cast(str | float | int, raw_cfg["begin"]))
         if "end" not in raw_cfg:
             self.end = Decimal("nan")
         else:
-            self.end = Decimal(cast(Union[str, float, int], raw_cfg["end"]))
+            self.end = Decimal(cast(str | float | int, raw_cfg["end"]))
 
         # decimal_places, rounder
         def rounder_str(prec: int) -> str:
@@ -306,32 +305,32 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
             rstr += "1"
             return rstr
 
-        self.decimal_places = raw_cfg.get("decimal_places", 1)
+        self.decimal_places = cast(int, raw_cfg.get("decimal_places", 1))
         if self.decimal_places < 0:
             raise ConfigException("decimal_places cannot be negative")
         self.rounder = Decimal(rounder_str(self.decimal_places))
 
         # Ticks - Non-explicit tick values deferred until we have parsed the associated ramp
         ticks_handled = False
-        self.ticks_every: Optional[Decimal] = None
-        self.tick_count: Optional[int] = None
-        self.ticks: List[Decimal] = []
+        self.ticks_every: Decimal | None = None
+        self.tick_count: int | None = None
+        self.ticks: list[Decimal] = []
         if "ticks_every" in raw_cfg:
             if "tick_count" in raw_cfg:
                 raise ConfigException("Cannot use tick count and ticks_every in the same legend")
             if "ticks" in raw_cfg:
                 raise ConfigException("Cannot use ticks and ticks_every in the same legend")
-            self.ticks_every = Decimal(cast(Union[int, float, str], raw_cfg["ticks_every"]))
+            self.ticks_every = Decimal(cast(int | float | str, raw_cfg["ticks_every"]))
             if self.ticks_every.is_zero() or self.ticks_every.is_signed():
                 raise ConfigException("ticks_every must be greater than zero")
             ticks_handled = True
         if "ticks" in raw_cfg:
             if "tick_count" in raw_cfg:
                 raise ConfigException("Cannot use tick count and ticks in the same legend")
-            self.ticks = [Decimal(t) for t in cast(List[Union[str, int, float]], raw_cfg["ticks"])]
+            self.ticks = [Decimal(t) for t in cast(list[str | int | float], raw_cfg["ticks"])]
             ticks_handled = True
         if not ticks_handled:
-            self.tick_count = int(cast(Union[str, int], raw_cfg.get("tick_count", 1)))
+            self.tick_count = int(cast(str | int, raw_cfg.get("tick_count", 1)))
             if self.tick_count < 0:
                 raise ConfigException("tick_count cannot be negative")
         # prepare for tick labels
@@ -339,16 +338,16 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         defaults = self.cfg_labels.get("default", {})
         self.lbl_default_prefix = defaults.get("prefix", "")
         self.lbl_default_suffix = defaults.get("suffix", "")
-        self.tick_labels: List[str] = []
+        self.tick_labels: list[str] = []
         # handle matplotlib args
-        self.strip_location = cast(List[float],
-                                   raw_cfg.get("strip_location", [0.05, 0.5, 0.9, 0.15]))
+        self.strip_location = cast(tuple[float, float, float, float],
+                                   tuple(cast(Iterable[float], raw_cfg.get("strip_location", [0.05, 0.5, 0.9, 0.15]))))
         # throw error on legacy syntax
         self.fail_legacy()
 
     def fail_legacy(self) -> None:
         if any(
-                legent in self._raw_cfg
+                legent in cast(CFG_DICT, self._raw_cfg)
                 for legent in ["major_ticks", "offset", "scale_by", "radix_point"]
         ):
             raise ConfigException(
@@ -358,18 +357,18 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     def register_ramp(self, ramp: ColorRamp) -> None:
         if self.begin.is_nan():
             for col_def in ramp.ramp:
-                if isclose(col_def.get("alpha", 1.0), 1.0, abs_tol=1e-9):
-                    self.begin = Decimal(col_def["value"])
+                if isclose(cast(float, col_def.get("alpha", 1.0)), 1.0, abs_tol=1e-9):
+                    self.begin = Decimal(cast(int | float, col_def["value"]))
                     break
             if self.begin.is_nan():
-                self.begin = Decimal(ramp.ramp[0]["value"])
+                self.begin = Decimal(cast(int | float, ramp.ramp[0]["value"]))
         if self.end.is_nan():
             for col_def in reversed(ramp.ramp):
-                if isclose(col_def.get("alpha", 1.0), 1.0, abs_tol=1e-9):
-                    self.end = Decimal(col_def["value"])
+                if isclose(cast(int | float, col_def.get("alpha", 1.0)), 1.0, abs_tol=1e-9):
+                    self.end = Decimal(cast(int | float, col_def["value"]))
                     break
             if self.end.is_nan():
-                self.end = Decimal(ramp.ramp[-1]["value"])
+                self.end = Decimal(cast(int | float, ramp.ramp[-1]["value"]))
         for t in self.ticks:
             if t < self.begin or t > self.end:
                 raise ConfigException("Explicit ticks must all be within legend begin/end range")
@@ -401,7 +400,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                 self.tick_labels.append(
                     self.lbl_default_prefix + str(tick) + self.lbl_default_suffix
                 )
-        self.parse_metadata(self._raw_cfg)
+        self.parse_metadata(cast(CFG_DICT, self._raw_cfg))
 
         # Check for legacy legend tips in ramp:
         for r in ramp.ramp:
@@ -422,20 +421,20 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
             _LOG.error("'%s' is a not a valid tick", tick)
             return None
 
-    def create_cdict_ticks(self) -> Tuple[
-        MutableMapping[str, List[Tuple[float, float, float]]],
+    def create_cdict_ticks(self) -> tuple[
+        MutableMapping[str, list[tuple[float, float, float]]],
         MutableMapping[float, str],
     ]:
         normalize_factor = float(self.end) - float(self.begin)
-        cdict = cast(MutableMapping[str, List[Tuple[float, float, float]]], dict())
-        bands = cast(MutableMapping[str, List[Tuple[float, float, float]]], defaultdict(list))
+        cdict = cast(MutableMapping[str, list[tuple[float, float, float]]], dict())
+        bands = cast(MutableMapping[str, list[tuple[float, float, float]]], defaultdict(list))
         started = False
         finished = False
         for index, ramp_point in enumerate(self.style_or_mdh.color_ramp.ramp):
             if finished:
                 break
 
-            value = cast(Union[float, int], ramp_point.get("value"))
+            value = cast(float | int, ramp_point.get("value"))
             normalized = (value - float(self.begin)) / float(normalize_factor)
 
             if not started:
@@ -477,7 +476,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
             plt.rcParams.update(self.mpl_rcparams)
         fig = plt.figure(figsize=(self.width, self.height))
         ax = fig.add_axes(self.strip_location)
-        custom_map = LinearSegmentedColormap(self.plot_name(), cdict)
+        custom_map = LinearSegmentedColormap(self.plot_name(), cdict)  # type: ignore[arg-type]
         color_bar = matplotlib.colorbar.ColorbarBase(
             ax,
             cmap=custom_map,
@@ -489,7 +488,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
 
     # For MetadataConfig
     @property
-    def default_title(self) -> Optional[str]:
+    def default_title(self) -> str | None:
         return self.style.title
 
 
@@ -501,7 +500,7 @@ class ColorRampDef(StyleDefBase):
     auto_legend = True
 
     def __init__(self,
-                 product: "datacube_ows.ows_configuration.OWSNamedLayer",
+                 product: "OWSNamedLayer",
                  style_cfg: CFG_DICT,
                  stand_alone: bool = False,
                  defer_multi_date: bool = False,
@@ -512,23 +511,23 @@ class ColorRampDef(StyleDefBase):
         super(ColorRampDef, self).__init__(product, style_cfg,
                            stand_alone=stand_alone, defer_multi_date=True, user_defined=user_defined)
         style_cfg = cast(CFG_DICT, self._raw_cfg)
-        self.color_ramp = ColorRamp(self, style_cfg, self.legend_cfg)
+        self.color_ramp = ColorRamp(self, style_cfg, cast(ColorRampDef.Legend, self.legend_cfg))
         self.include_in_feature_info = bool(style_cfg.get("include_in_feature_info", True))
 
         if "index_function" in style_cfg:
-            self.index_function = FunctionWrapper(self,
+            self.index_function: FunctionWrapper | Expression = FunctionWrapper(self,
                                                   cast(CFG_DICT, style_cfg["index_function"]),
                                                   stand_alone=self.stand_alone)
             if not self.stand_alone:
-                for band in cast(List[str], style_cfg["needed_bands"]):
+                for band in cast(list[str], style_cfg["needed_bands"]):
                     self.raw_needed_bands.add(band)
         elif "index_expression" in style_cfg:
             self.index_function = Expression(self, cast(str, style_cfg["index_expression"]))
             for band in self.index_function.needed_bands:
                 self.raw_needed_bands.add(band)
             if self.stand_alone:
-                self.needed_bands = [self.local_band(b) for b in self.raw_needed_bands]
-                self.flag_bands = []
+                self.needed_bands = set(self.local_band(b) for b in self.raw_needed_bands)
+                self.flag_bands = set()
         else:
             raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
                 self.name,
@@ -537,7 +536,7 @@ class ColorRampDef(StyleDefBase):
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 
-    def apply_index(self, data: "xarray.Dataset") -> "xarray.DataArray":
+    def apply_index(self, data: Dataset) -> DataArray:
         """
         Caclulate index value across data.
 
@@ -548,7 +547,7 @@ class ColorRampDef(StyleDefBase):
         data['index_function'] = (index_data.dims, index_data.data)
         return data["index_function"]
 
-    def transform_single_date_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
+    def transform_single_date_data(self, data: Dataset) -> Dataset:
         """
         Apply style to raw data to make an RGBA image xarray (single time slice only)
 
@@ -559,7 +558,8 @@ class ColorRampDef(StyleDefBase):
         return self.color_ramp.apply(d)
 
     class Legend(RampLegendBase):
-        pass
+        def plot_name(self):
+            return f"{self.style.product.name}_{self.style.name}_{self.style_or_mdh.min_count}"
 
     class MultiDateHandler(StyleDefBase.MultiDateHandler):
         auto_legend = True
@@ -573,13 +573,13 @@ class ColorRampDef(StyleDefBase):
             """
             super().__init__(style, cfg)
             if self.animate:
-                self.feature_info_label: Optional[str] = None
+                self.feature_info_label: str | None = None
                 self.color_ramp = style.color_ramp
             else:
-                self.feature_info_label = cast(Optional[str], cfg.get("feature_info_label", None))
-                self.color_ramp = ColorRamp(style, cfg, self.legend_cfg)
+                self.feature_info_label = cast(str | None, cfg.get("feature_info_label", None))
+                self.color_ramp = ColorRamp(style, cfg, cast(ColorRampDef.Legend, self.legend_cfg))
 
-        def transform_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
+        def transform_data(self, data: Dataset) -> Dataset:
             """
             Apply image transformation
 
@@ -587,12 +587,11 @@ class ColorRampDef(StyleDefBase):
             :return: RGBA image xarray.  May have a time dimension
             """
             xformed_data = cast("ColorRampDef", self.style).apply_index(data)
-            agg = self.aggregator(xformed_data)
+            agg = cast(FunctionWrapper, self.aggregator)(xformed_data)
             return self.color_ramp.apply(agg)
-
         class Legend(RampLegendBase):
-            def plot_name(self):
-                return f"{self.style.product.name}_{self.style.name}_{self.style_or_mdh.min_count}"
+            pass
+
 
 # Register ColorRampDef as Style subclass.
 StyleDefBase.register_subclass(ColorRampDef, ("range", "color_ramp"))

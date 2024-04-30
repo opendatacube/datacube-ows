@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import datetime
 from unittest.mock import MagicMock, patch
 
@@ -11,8 +12,7 @@ import pytest
 from xarray import DataArray, Dataset, concat
 
 import datacube_ows.styles
-from datacube_ows.config_utils import OWSEntryNotFound
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException, OWSEntryNotFound
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 

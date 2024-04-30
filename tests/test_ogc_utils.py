@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import datetime
 from unittest.mock import MagicMock
 
@@ -11,7 +12,9 @@ import xarray
 from odc.geo.geom import polygon
 from pytz import utc
 
+import datacube_ows.http_utils
 import datacube_ows.ogc_utils
+import datacube_ows.time_utils
 import datacube_ows.utils
 from tests.utils import dummy_da
 
@@ -23,7 +26,7 @@ class DSCT:
 
 
 def test_dataset_center_time():
-    dct = datacube_ows.ogc_utils.dataset_center_time
+    dct = datacube_ows.time_utils.dataset_center_time
     ds = DSCT({})
     assert dct(ds).year == 1970
     ds = DSCT({
@@ -61,28 +64,28 @@ def dummy_ds():
     return ds
 
 def test_tz_for_dataset(dummy_ds):
-    ret = datacube_ows.ogc_utils.tz_for_dataset(dummy_ds)
+    ret = datacube_ows.time_utils.tz_for_dataset(dummy_ds)
     assert ret.zone == "Australia/Sydney"
 
 
 def test_tz_bad_coords():
     with pytest.raises(Exception) as e:
-        tzinf = datacube_ows.ogc_utils.tz_for_coord(-88.8, 155.2)
+        tzinf = datacube_ows.time_utils.tz_for_coord(-88.8, 155.2)
 
 
 def test_local_date(dummy_ds):
-    ld = datacube_ows.ogc_utils.local_date(dummy_ds)
+    ld = datacube_ows.time_utils.local_date(dummy_ds)
     assert ld.year == 2020
     assert ld.day == 26
-    tz = datacube_ows.ogc_utils.tz_for_dataset(dummy_ds)
-    ld = datacube_ows.ogc_utils.local_date(dummy_ds, tz)
+    tz = datacube_ows.time_utils.tz_for_dataset(dummy_ds)
+    ld = datacube_ows.time_utils.local_date(dummy_ds, tz)
     assert ld.year == 2020
     assert ld.day == 26
 
 
 def test_month_date_range_wrap():
     d = datetime.date(2019, 12, 1)
-    a, b = datacube_ows.ogc_utils.month_date_range(d)
+    a, b = datacube_ows.time_utils.month_date_range(d)
     assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=utc)
     assert b == datetime.datetime(2019, 12, 31, 0, 0, 0, tzinfo=utc)
 
@@ -92,43 +95,43 @@ def test_get_service_base_url():
     # not a list
     allowed_urls = "https://foo.hello.world"
     request_url = "https://foo.bar.baz"
-    ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
+    ret = datacube_ows.http_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.hello.world"
 
     # Value not in list
     allowed_urls = ["https://foo.hello.world", "https://alice.bob.eve"]
     request_url = "https://foo.bar.baz"
-    ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
+    ret = datacube_ows.http_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.hello.world"
 
     # Value in list
     allowed_urls = ["https://foo.hello.world", "https://foo.bar.baz", "https://alice.bob.eve"]
     request_url = "https://foo.bar.baz"
-    ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
+    ret = datacube_ows.http_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"
 
     # Trailing /
     allowed_urls = ["https://foo.bar.baz", "https://alice.bob.eve"]
     request_url = "https://foo.bar.baz/"
-    ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
+    ret = datacube_ows.http_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"
 
     # include path
     allowed_urls = ["https://foo.bar.baz", "https://foo.bar.baz/wms/"]
     request_url = "https://foo.bar.baz/wms/"
-    ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
+    ret = datacube_ows.http_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz/wms"
 
     # use value from list instead of request
     allowed_urls = ["https://foo.bar.baz", "https://foo.bar.baz/wms/"]
     request_url = "http://foo.bar.baz/wms/"
-    ret = datacube_ows.ogc_utils.get_service_base_url(allowed_urls, request_url)
+    ret = datacube_ows.http_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz/wms"
 
 
 def test_parse_for_base_url():
     url = "https://hello.world.bar:8000/wms/?CheckSomething"
-    ret = datacube_ows.ogc_utils.parse_for_base_url(url)
+    ret = datacube_ows.http_utils.parse_for_base_url(url)
     assert ret == "hello.world.bar:8000/wms"
 
 
@@ -248,7 +251,7 @@ def test_mask_by_nan():
 
 
 def test_rolling_window():
-    from datacube_ows.ogc_utils import rolling_window_ndays
+    from datacube_ows.time_utils import rolling_window_ndays
 
     class DummyLayer:
         def search_times(self, d):
@@ -274,7 +277,7 @@ def test_rolling_window():
 
 
 def test_day_summary_date_range():
-    start, end = datacube_ows.ogc_utils.day_summary_date_range(datetime.date(2015, 5, 12))
+    start, end = datacube_ows.time_utils.day_summary_date_range(datetime.date(2015, 5, 12))
     assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=utc)
     assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=utc)
 

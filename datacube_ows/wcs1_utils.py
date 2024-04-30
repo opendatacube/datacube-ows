@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import numpy
 import pytz
 import xarray
@@ -13,17 +14,17 @@ from odc.geo.geobox import GeoBox
 from ows.util import Version
 from rasterio import MemoryFile
 
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.cube_pool import cube
-from datacube_ows.data import DataStacker
+from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ogc_utils import ConfigException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.wcs_utils import get_bands_from_styles
 
 
-class WCS1GetCoverageRequest():
+class WCS1GetCoverageRequest:
     version = Version(1, 0, 0)
     # pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
     def __init__(self, args):

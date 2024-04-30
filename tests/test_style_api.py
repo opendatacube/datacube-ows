@@ -1,13 +1,14 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 from decimal import Decimal
 
 import pytest
 
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
 
 from datacube_ows.styles.api import ( # noqa: F401 isort:skip
                                      StandaloneStyle, apply_ows_style,

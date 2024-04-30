@@ -1,15 +1,16 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import os
 import sys
 
 import pytest
 
-from datacube_ows.config_utils import get_file_loc
-from datacube_ows.ows_configuration import ConfigException, read_config
+from datacube_ows.config_utils import ConfigException, get_file_loc
+from datacube_ows.ows_configuration import read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:

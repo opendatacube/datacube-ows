@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import collections
 import logging
 
@@ -12,7 +13,7 @@ from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
 from rasterio import MemoryFile
 
 from datacube_ows.cube_pool import cube
-from datacube_ows.data import DataStacker
+from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config

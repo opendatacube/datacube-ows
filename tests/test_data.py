@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import datetime
 from unittest.mock import MagicMock
 
@@ -12,7 +13,9 @@ from odc.geo.geom import polygon
 from xarray import Dataset
 
 import datacube_ows.data
-from datacube_ows.data import ProductBandQuery, get_s3_browser_uris
+import datacube_ows.feature_info
+from datacube_ows.feature_info import get_s3_browser_uris
+from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.ogc_exceptions import WMSException
 from tests.test_styles import product_layer  # noqa: F401
 
@@ -134,7 +137,7 @@ def test_make_derived_band_dict_nan():
         "fake": fake_style()
     }
 
-    band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
+    band_dict = datacube_ows.feature_info._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == "n/a"
 
 
@@ -161,7 +164,7 @@ def test_make_derived_band_dict_not_nan():
         "fake": fake_style()
     }
 
-    band_dict = datacube_ows.data._make_derived_band_dict(fake_dataset(), style_dict)
+    band_dict = datacube_ows.feature_info._make_derived_band_dict(fake_dataset(), style_dict)
     assert band_dict["fake"] == 10.10
 
 
@@ -185,7 +188,7 @@ def test_make_band_dict_nan(product_layer): # noqa: F811
 
     bands = ["fake"]
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, fake_dataset())
+    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, fake_dataset())
     assert band_dict["fake"] == "n/a"
 
 
@@ -231,13 +234,13 @@ def test_make_band_dict_float(product_layer): # noqa: F811
 
     bands = ["fake"]
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, int_dataset())
+    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, int_dataset())
     assert isinstance(band_dict["fake"], dict)
     assert band_dict["fake"] == {
         "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": 'lay_over'
     }
 
-    band_dict = datacube_ows.data._make_band_dict(product_layer, float_dataset())
+    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, float_dataset())
     assert isinstance(band_dict["fake"], dict)
     assert band_dict["fake"] == {
         "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": 'lay_over'
@@ -267,8 +270,8 @@ def test_pbq_ctor_full(product_layer): # noqa: F811
     assert "Query bands {" in str(pbqs[0])
     assert "} from products [FakeODCProduct(test_odc_product)]"  in str(pbqs[0])
     assert str(pbqs[1]) in (
-        "Query bands ('wongle', 'pq') from products [FakeODCProduct(test_masking_product)]",
-        "Query bands ('pq', 'wongle') from products [FakeODCProduct(test_masking_product)]",
+        "Query bands {'wongle', 'pq'} from products [FakeODCProduct(test_masking_product)]",
+        "Query bands {'pq', 'wongle'} from products [FakeODCProduct(test_masking_product)]",
     )
 
 
@@ -299,7 +302,6 @@ def test_user_date_sorter():
 
 
 def test_create_nodata(dummy_raw_calc_data):
-    from datacube_ows.data import DataStacker
     ds = DataStacker.__new__(DataStacker)
     data_in = dummy_raw_calc_data
     prod = MagicMock()

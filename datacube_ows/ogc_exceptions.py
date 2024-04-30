@@ -1,15 +1,16 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import traceback as tb
 
 from flask import render_template
 from ows.common.types import OWSException, Version
 from ows.common.v20.encoders import xml_encode_exception_report
 
-from datacube_ows.ogc_utils import resp_headers
+from datacube_ows.http_utils import resp_headers
 
 
 class OGCException(Exception):
@@ -17,8 +18,8 @@ class OGCException(Exception):
     CURRENT_UPDATE_SEQUENCE = "CurrentUpdateSequence"
     INVALID_UPDATE_SEQUENCE = "InvalidUpdateSequence"
 
-    version = None
-    schema_url = None
+    version: str | None = None
+    schema_url: str | None = None
 
     # pylint: disable=super-init-not-called
     def __init__(self, msg, code=None, locator=None, http_response=400, valid_keys=None):

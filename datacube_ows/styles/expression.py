@@ -1,14 +1,21 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
+import operator
 from typing import Any, Type, cast
 
 import lark
 from datacube.virtual.expr import formula_parser
+from xarray import Dataset
 
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import ConfigException
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    import datacube_ows.styles.StyleDef
 
 # Lark stuff.
 
@@ -34,7 +41,16 @@ class ExpressionEvaluator(lark.Transformer):
     """
     Standard expression evaluator
     """
-    from operator import add, floordiv, mod, mul, neg, pos, pow, sub, truediv
+    add = operator.add
+    floordiv = operator.floordiv
+    mod = operator.mod
+    mul = operator.mul
+    neg = operator.neg
+    pos = operator.pos
+    pow = operator.pow
+    sub = operator.sub
+    truediv = operator.truediv
+
     not_ = inv = or_ = and_ = xor = not_supported("Bitwise logical operators")
     eq = ne = le = ge = lt = gt = not_supported("Comparison operators")
     lshift = rshift = not_supported("Left and right-shift operators")
@@ -62,11 +78,11 @@ class BandListEvaluator(ExpressionEvaluator):
     """
     Expression evaluator that returns a list of needed bands for the expression.
     """
-    neg = pos = identity
-    add = sub = mul = truediv = floordiv = mod = pow = union
+    neg = pos = identity  # type: ignore[assignment]
+    add = sub = mul = truediv = floordiv = mod = pow = union  # type: ignore[assignment]
 
-    float_literal = empty_gen
-    int_literal = empty_gen
+    float_literal = empty_gen  # type: ignore[assignment]
+    int_literal = empty_gen  # type: ignore[assignment]
 
     def var_name(self, key):
         return set([self.ows_style.local_band(key.value)])
@@ -104,7 +120,7 @@ class Expression:
         if len(self.needed_bands) == 0:
             raise ExpressionException(f"Expression references no bands: {self.expr_str}")
 
-    def eval_cls(self, data: "xarray.Dataset") -> ExpressionEvaluator:
+    def eval_cls(self, data: Dataset) -> ExpressionEvaluator:
         """"
         Return an appropriate Expression Evaluator for a given Dataset
         """
@@ -114,13 +130,13 @@ class Expression:
             evaluator_cls = ExpressionEvaluator
 
         @lark.v_args(inline=True)
-        class ExpressionDataEvaluator(evaluator_cls):
+        class ExpressionDataEvaluator(evaluator_cls):  # type: ignore[valid-type, misc]
             def var_name(self, key):
                 return data[self.ows_style.local_band(key.value)]
 
         # pyre-ignore[19]
         return cast(ExpressionEvaluator, ExpressionDataEvaluator(self.style))
 
-    def __call__(self, data: "xarray.Dataset") -> Any:
+    def __call__(self, data: Dataset) -> Any:
         evaluator: ExpressionEvaluator = self.eval_cls(data)
         return evaluator.transform(self.tree)

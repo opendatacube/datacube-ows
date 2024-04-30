@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 
 #
 #  Note this is NOT the configuration file!
@@ -19,38 +20,43 @@ import os
 from collections.abc import Mapping
 from enum import Enum
 from importlib import import_module
-from typing import Optional, Sequence
+from typing import Any, Iterable, Optional, Union, cast
 
 import numpy
 from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po
+from datacube import Datacube
+from datacube.api.query import GroupBy
+from datacube.model import Measurement
 from odc.geo import CRS
+from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
 
-from datacube_ows.config_utils import (FlagProductBands, OWSConfigEntry,
-                                       OWSEntryNotFound,
+from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
+                                       FlagProductBands, FunctionWrapper,
+                                       OWSConfigEntry, OWSEntryNotFound,
                                        OWSExtensibleConfigEntry, OWSFlagBand,
                                        OWSMetadataConfig, cfg_expand,
                                        get_file_loc, import_python_obj,
                                        load_json_obj)
 from datacube_ows.cube_pool import ODCInitException, cube, get_cube
-from datacube_ows.ogc_utils import (ConfigException, FunctionWrapper,
-                                    create_geobox, local_solar_date_range)
+from datacube_ows.ogc_utils import create_geobox
 from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
+from datacube_ows.time_utils import local_solar_date_range
 from datacube_ows.utils import (group_by_begin_datetime, group_by_mosaic,
                                 group_by_solar)
 
 _LOG = logging.getLogger(__name__)
 
 
-def read_config(path=None):
+def read_config(path: str | None = None) -> CFG_DICT:
     cwd = None
     if path:
-        cfg_env = path
+        cfg_env: str | None = path
     else:
         cfg_env = os.environ.get("DATACUBE_OWS_CFG")
     if not cfg_env:
@@ -75,27 +81,27 @@ class BandIndex(OWSMetadataConfig):
     METADATA_TITLE = False
     METADATA_ABSTRACT = False
 
-    def __init__(self, layer, band_cfg):
+    def __init__(self, layer: "OWSNamedLayer", band_cfg: CFG_DICT):
         if band_cfg is None:
             band_cfg = {}
         super().__init__(band_cfg)
-        self.band_cfg = band_cfg
+        self.band_cfg = cast(dict[str, list[str]], band_cfg)
         self.product = layer
         self.product_name = layer.name
         self.parse_metadata(band_cfg)
-        self._idx = {}
+        self._idx: dict[str, str] = {}
         self.add_aliases(self.band_cfg)
         self.declare_unready("_nodata_vals")
         self.declare_unready("measurements")
         self.declare_unready("_dtypes")
 
-    def global_config(self):
+    def global_config(self) -> "OWSConfig":
         return self.product.global_config()
 
-    def get_obj_label(self):
+    def get_obj_label(self) -> str:
         return self.product.get_obj_label() + ".bands"
 
-    def add_aliases(self, cfg):
+    def add_aliases(self, cfg: dict[str, list[str]]) -> None:
         for b, aliases in cfg.items():
             if b in self._idx:
                 raise ConfigException(f"Duplicate band name/alias: {b} in layer {self.product_name}")
@@ -105,17 +111,19 @@ class BandIndex(OWSMetadataConfig):
                     raise ConfigException(f"Duplicate band name/alias: {a} in layer {self.product_name}")
                 self._idx[a] = b
 
-    def make_ready(self, dc, *args, **kwargs):
-        def floatify_nans(inp):
+    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
+        def floatify_nans(inp: float | int | str) -> float | int:
             if isinstance(inp, str) and inp == "nan":
                 return float(inp)
+            elif isinstance(inp, str):
+                raise ValueError("Invalid nodata value: {inp}")
             else:
                 return inp
         default_to_all = not bool(self._raw_cfg)
         # pylint: disable=attribute-defined-outside-init
-        self.measurements = {}
-        self._nodata_vals = {}
-        self._dtypes = {}
+        self.measurements: dict[str, Measurement] = {}
+        self._nodata_vals: dict[str, int | float] = {}
+        self._dtypes: dict[str, numpy.dtype] = {}
         first_product = True
         for product in self.product.products:
             if first_product and default_to_all:
@@ -124,7 +132,9 @@ class BandIndex(OWSMetadataConfig):
                     self.band_cfg[b] = [b]
                 self.add_aliases(self.band_cfg)
             try:
-                prod_measurements = product.lookup_measurements(list(self.band_cfg.keys()))
+                prod_measurements = cast(
+                    dict[str, Measurement], product.lookup_measurements(list(self.band_cfg.keys()))
+                )
                 if first_product:
                     self.measurements = prod_measurements
                     self._nodata_vals = {name: floatify_nans(model.nodata) for name, model in self.measurements.items()}
@@ -144,12 +154,12 @@ class BandIndex(OWSMetadataConfig):
             first_product = False
         super().make_ready(dc, *args, **kwargs)
 
-    def band(self, name_alias):
+    def band(self, name_alias: str) -> str:
         if name_alias in self._idx:
             return self._idx[name_alias]
         raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
 
-    def locale_band(self, name_alias):
+    def locale_band(self, name_alias: str) -> str:
         try:
             return self.band(name_alias)
         except ConfigException:
@@ -159,55 +169,55 @@ class BandIndex(OWSMetadataConfig):
                 return b
         raise ConfigException(f"Unknown band: {name_alias} in layer {self.product.name}")
 
-    def band_label(self, name_alias):
+    def band_label(self, name_alias) -> str:
         canonical_name = self.band(name_alias)
-        return self.read_local_metadata(canonical_name)
+        return cast(str, self.read_local_metadata(canonical_name))
 
-    def nodata_val(self, name_alias):
+    def nodata_val(self, name_alias: str) -> float | int:
         name = self.band(name_alias)
         return self._nodata_vals[name]
 
-    def dtype_val(self, name_alias):
+    def dtype_val(self, name_alias: str) -> numpy.dtype:
         name = self.band(name_alias)
         return self._dtypes[name]
 
-    def dtype_size(self, name_alias):
+    def dtype_size(self, name_alias: str) -> int:
         return self.dtype_val(name_alias).itemsize
 
-    def band_labels(self):
+    def band_labels(self) -> list[str]:
         return [self.band_label(b) for b in self.band_cfg]
 
-    def band_nodata_vals(self):
+    def band_nodata_vals(self) -> list[int | float]:
         return [self.nodata_val(b) for b in self.band_cfg if b in self.band_cfg]
 
 
 class AttributionCfg(OWSConfigEntry):
-    def __init__(self, cfg, owner):
+    def __init__(self, cfg: CFG_DICT, owner: Union["OWSConfig", "OWSLayer"]):
         super().__init__(cfg)
         self.owner = owner
-        self.url = cfg.get("url")
-        logo = cfg.get("logo")
+        self.url = cast(str | None, cfg.get("url"))
+        logo = cast(dict[str, str] | None, cfg.get("logo"))
         if not self.title and not self.url and not logo:
             raise ConfigException("At least one of title, url and logo is required in an attribution definition")
         if not logo:
-            self.logo_width = None
-            self.logo_height = None
-            self.logo_url = None
-            self.logo_fmt = None
+            self.logo_width: int | None = None
+            self.logo_height: int | None = None
+            self.logo_url: str | None = None
+            self.logo_fmt: str | None = None
         else:
-            self.logo_width = logo.get("width")
-            self.logo_height = logo.get("height")
-            self.logo_url = logo.get("url")
-            self.logo_fmt = logo.get("format")
+            self.logo_width = cast(int | None, logo.get("width"))
+            self.logo_height = cast(int | None, logo.get("height"))
+            self.logo_url = cast(str | None, logo.get("url"))
+            self.logo_fmt = cast(str | None, logo.get("format"))
             if not self.logo_url or not self.logo_fmt:
                 raise ConfigException("url and format must both be specified in an attribution logo.")
 
     @property
-    def title(self):
-        return self.owner.attribution_title
+    def title(self) -> str:
+        return self.owner.attribution_title  # ????
 
     @classmethod
-    def parse(cls, cfg, owner):
+    def parse(cls, cfg: CFG_DICT | None, owner: Union["OWSConfig", "OWSLayer"]) -> Optional["AttributionCfg"]:
         if not cfg:
             return None
         else:
@@ -216,13 +226,13 @@ class AttributionCfg(OWSConfigEntry):
 
 class SuppURL(OWSConfigEntry):
     @classmethod
-    def parse_list(cls, cfg):
+    def parse_list(cls, cfg: list[dict[str, str]] | None) -> list["SuppURL"]:
         if not cfg:
             return []
         return [cls(u) for u in cfg]
 
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, cfg: dict[str, str]):
+        super().__init__(cast(RAW_CFG, cfg))
         self.url = cfg["url"]
         self.format = cfg["format"]
 
@@ -232,37 +242,40 @@ class OWSLayer(OWSMetadataConfig):
     METADATA_ATTRIBUTION = True
 
     named = False
-    def __init__(self, cfg, object_label, parent_layer=None, **kwargs):
+    def __init__(self, cfg: CFG_DICT, object_label: str, parent_layer: Optional["OWSLayer"]=None, **kwargs):
         super().__init__(cfg, **kwargs)
         self.object_label = object_label
-        self.global_cfg = kwargs["global_cfg"]
+        self.global_cfg: "OWSConfig" = kwargs["global_cfg"]
         self.parent_layer = parent_layer
 
         self.parse_metadata(cfg)
         # Inherit or override attribution
         if "attribution" in cfg:
-            self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
+            self.attribution = AttributionCfg.parse(  # type: ignore[assignment]
+                cast(CFG_DICT | None, cfg.get("attribution")),
+                self
+            )
         elif parent_layer:
-            self.attribution = self.parent_layer.attribution
+            self.attribution = cast(OWSLayer, self.parent_layer).attribution
         else:
             self.attribution = self.global_cfg.attribution
 
-    def global_config(self):
+    def global_config(self) -> "OWSConfig":
         return self.global_cfg
 
-    def can_inherit_from(self):
+    def can_inherit_from(self) -> Union["OWSConfig", "OWSLayer"]:
         if self.parent_layer:
             return self.parent_layer
         else:
             return self.global_cfg
 
-    def get_obj_label(self):
+    def get_obj_label(self) -> str:
         return self.object_label
 
-    def layer_count(self):
+    def layer_count(self) -> int:
         return 0
 
-    def unready_layer_count(self):
+    def unready_layer_count(self) -> int:
         return 0
 
     def __str__(self):
@@ -270,7 +283,9 @@ class OWSLayer(OWSMetadataConfig):
 
 
 class OWSFolder(OWSLayer):
-    def __init__(self, cfg, global_cfg, parent_layer=None, sibling=0, **kwargs):
+    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig",
+                 parent_layer: Optional["OWSFolder"] = None,
+                 sibling: int = 0, **kwargs):
         if "label" in cfg:
             obj_lbl = f"folder.{cfg['label']}"
         elif parent_layer:
@@ -281,13 +296,13 @@ class OWSFolder(OWSLayer):
             raise ConfigException(f"Duplicate folder label: {obj_lbl}")
         super().__init__(cfg, parent_layer=parent_layer, object_label=obj_lbl, global_cfg=global_cfg, **kwargs)
         self.slug_name = slugify(self.title, separator="_")
-        self.unready_layers = []
-        self.child_layers = []
+        self.unready_layers: list[OWSLayer] = []
+        self.child_layers: list[OWSLayer] = []
         if "layers" not in cfg:
             raise ConfigException("No layers section in folder layer %s" % self.title)
         child = 0
-        for lyr_cfg in cfg["layers"]:
-            if isinstance(lyr_cfg, Mapping):
+        for lyr_cfg in cast(list[RAW_CFG], cfg["layers"]):
+            if isinstance(lyr_cfg, dict):
                 try:
                     lyr = parse_ows_layer(lyr_cfg, global_cfg=global_cfg, parent_layer=self, sibling=child)
                     self.unready_layers.append(lyr)
@@ -300,13 +315,13 @@ class OWSFolder(OWSLayer):
                 _LOG.error("Non-dictionary where dictionary expected - check for trailing comma? %s...", repr(lyr_cfg)[0:50])
         global_cfg.folder_index[obj_lbl] = self
 
-    def unready_layer_count(self):
+    def unready_layer_count(self) -> int:
         return sum([l.layer_count() for l in self.unready_layers])
 
-    def layer_count(self):
+    def layer_count(self) -> int:
         return sum([l.layer_count() for l in self.child_layers])
 
-    def make_ready(self, dc, *args, **kwargs):
+    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
         still_unready = []
         for lyr in self.unready_layers:
             try:
@@ -337,7 +352,7 @@ class TimeRes(Enum):
         return not self.is_subday()
 
     @classmethod
-    def parse(cls, cfg: Optional[str]) -> Optional["TimeRes"]:
+    def parse(cls, cfg: str | None) -> Optional["TimeRes"]:
         if cfg is None:
             cfg = "solar"
         elif cfg == "raw":
@@ -351,11 +366,13 @@ class TimeRes(Enum):
         except ValueError:
             return None
 
-    def search_times(self, t, geobox=None):
+    def search_times(self,
+                     t: datetime.datetime,
+                     geobox: GeoBox | None = None) -> datetime.datetime | tuple[datetime.datetime, datetime.datetime]:
         if self.is_solar():
             if geobox is None:
                 raise ValueError("Solar time resolution search_times requires a geobox.")
-            times = local_solar_date_range(geobox, t)
+            times: datetime.datetime | tuple[datetime.datetime, datetime.datetime] = local_solar_date_range(geobox, t)
         elif self.is_subday():
             # For subday products, return a single start datetime instead of a range.
             # mv_index will expand this to a one-second search range.
@@ -369,7 +386,7 @@ class TimeRes(Enum):
 
         return times
 
-    def dataset_groupby(self, product_names: Optional[Sequence[str]] = None, is_mosaic=False):
+    def dataset_groupby(self, product_names: list[str] | None = None, is_mosaic=False) -> GroupBy:
         if self.is_subday():
             return group_by_begin_datetime(product_names, truncate_dates=False)
         elif is_mosaic:
@@ -387,13 +404,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
     named = True
 
-    def __init__(self, cfg, global_cfg, parent_layer=None, **kwargs):
-        name = cfg["name"]
+    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig", parent_layer: OWSFolder | None = None, **kwargs):
+        name = cast(str, cfg["name"])
         super().__init__(cfg, object_label=f"layer.{name}", global_cfg=global_cfg, parent_layer=parent_layer,
                          keyvals={"layer": name},
                          **kwargs)
         self.name = name
-        cfg = self._raw_cfg
+        cfg = cast(CFG_DICT, self._raw_cfg)
         self.hide = False
         try:
             self.parse_product_names(cfg)
@@ -416,45 +433,60 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("definition")
 
         if global_cfg.user_band_math_extension:
-            self.user_band_math = cfg.get("user_band_math", False)
+            self.user_band_math = bool(cfg.get("user_band_math", False))
         else:
             self.user_band_math = False
-        self.time_resolution = TimeRes.parse(cfg.get("time_resolution"))
-        if not self.time_resolution:
+        tr = TimeRes.parse(cast(str | None, cfg.get("time_resolution")))
+        if not tr:
             raise ConfigException(f"Invalid time resolution value {cfg['time_resolution']} in named layer {self.name}")
-        self.mosaic_date_func: Optional[FunctionWrapper] = None
+        else:
+            self.time_resolution: TimeRes = tr
+        self.mosaic_date_func: FunctionWrapper | None = None
         if "mosaic_date_func" in cfg:
-            self.mosaic_date_func = FunctionWrapper(self, cfg["mosaic_date_func"])
+            self.mosaic_date_func = FunctionWrapper(self, cast(CFG_DICT, cfg["mosaic_date_func"]))
         if self.mosaic_date_func and not self.time_resolution.allow_mosaic():
             raise ConfigException(f"Mosaic date function not supported for {self.time_resolution} time resolution.")
-        self.default_time_rule = cfg.get("default_time", DEF_TIME_LATEST)
-        if self.default_time_rule not in (DEF_TIME_LATEST, DEF_TIME_EARLIEST):
+        dtr: str = cast(str, cfg.get("default_time", DEF_TIME_LATEST))
+        if dtr in (DEF_TIME_LATEST, DEF_TIME_EARLIEST):
+            self.default_time_rule: str | datetime.datetime | datetime.date = dtr
+        else:
             try:
-                self.default_time_rule = datetime.date.fromisoformat(self.default_time_rule)
+                if self.time_resolution.is_subday():
+                    self.default_time_rule = datetime.datetime.fromisoformat(dtr)
+                else:
+                    self.default_time_rule = datetime.date.fromisoformat(dtr)
             except ValueError:
                 raise ConfigException(
-                    f"Invalid default_time value in named layer {self.name} ({self.default_time_rule})"
+                    f"Invalid default_time value in named layer {self.name} ({dtr})"
                 )
-        self.time_axis = cfg.get("time_axis")
+        self.time_axis = cast(CFG_DICT | None, cfg.get("time_axis"))
         if self.time_axis:
+            if self.time_resolution.is_subday():
+                raise ConfigException(f"Regular time axis is not supported for sub-day time resolutions")
             self.regular_time_axis = True
             if "time_interval" not in self.time_axis:
                 raise ConfigException("No time_interval supplied in time_axis")
-            self.time_axis_interval = self.time_axis["time_interval"]
-            if not isinstance(self.time_axis_interval, int):
+            time_axis_interval = self.time_axis["time_interval"]
+            if isinstance(time_axis_interval, int):
+                self.time_axis_interval: int = time_axis_interval
+            else:
                 raise ConfigException("time_interval must be an integer")
             if self.time_axis_interval <= 0:
                 raise ConfigException("time_interval must be greater than zero")
-            self.time_axis_start = self.time_axis.get("start_date")
-            self.time_axis_end = self.time_axis.get("end_date")
-            if self.time_axis_start is not None:
+            time_axis_start = cast(str | None, self.time_axis.get("start_date"))
+            time_axis_end = cast(str | None, self.time_axis.get("end_date"))
+            if time_axis_start is None:
+                self.time_axis_start: datetime.date | None = None
+            else:
                 try:
-                    self.time_axis_start = datetime.date.fromisoformat(self.time_axis_start)
+                    self.time_axis_start = datetime.date.fromisoformat(time_axis_start)
                 except ValueError:
                     raise ConfigException("time_axis start_date is not a valid ISO format date string")
-            if self.time_axis_end is not None:
+            if time_axis_end is None:
+                self.time_axis_end: datetime.date | None = None
+            else:
                 try:
-                    self.time_axis_end = datetime.date.fromisoformat(self.time_axis_end)
+                    self.time_axis_end = datetime.date.fromisoformat(time_axis_end)
                 except ValueError:
                     raise ConfigException("time_axis end_date is not a valid ISO format date string")
             if (self.time_axis_end is not None
@@ -473,40 +505,42 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
         # TODO: sub-ranges
-        self.band_idx = BandIndex(self, cfg.get("bands"))
+        self.band_idx: BandIndex = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
         self.cfg_native_crs = cfg.get("native_crs")
         self.declare_unready("resolution_x")
         self.declare_unready("resolution_y")
-        self.resource_limits = OWSResourceManagementRules(self.global_cfg, cfg.get("resource_limits", {}), f"Layer {self.name}")
+        self.resource_limits = OWSResourceManagementRules(self.global_cfg,
+                                                          cast(CFG_DICT, cfg.get("resource_limits", {})),
+                                                          f"Layer {self.name}")
         try:
-            self.parse_flags(cfg.get("flags", {}))
+            self.parse_flags(cast(CFG_DICT, cfg.get("flags", {})))
             self.declare_unready("all_flag_band_names")
         except KeyError as e:
             raise ConfigException(f"Missing required config ({str(e)}) in flags section for layer {self.name}")
         try:
-            self.parse_image_processing(cfg["image_processing"])
+            self.parse_image_processing(cast(CFG_DICT, cfg["image_processing"]))
         except KeyError as e:
             raise ConfigException(f"Missing required config ({str(e)}) in image processing section for layer {self.name}")
-        self.identifiers = cfg.get("identifiers", {})
+        self.identifiers = cast(dict[str, str], cfg.get("identifiers", {}))
         for auth in self.identifiers.keys():
             if auth not in self.global_cfg.authorities:
                 raise ConfigException(f"Identifier with non-declared authority: {auth} in layer {self.name}")
-        self.parse_urls(cfg.get("urls", {}))
-        self.parse_feature_info(cfg.get("feature_info", {}))
+        self.parse_urls(cast(CFG_DICT, cfg.get("urls", {})))
+        self.parse_feature_info(cast(CFG_DICT, cfg.get("feature_info", {})))
         self.feature_info_include_utc_dates = cfg.get("feature_info_url_dates", False)
         if "patch_url_function" in cfg:
-            self.patch_url = FunctionWrapper(self, cfg["patch_url_function"])
+            self.patch_url: FunctionWrapper | None = FunctionWrapper(self, cast(CFG_DICT, cfg["patch_url_function"]))
         else:
             self.patch_url = None
         try:
-            self.parse_styling(cfg["styling"])
+            self.parse_styling(cast(CFG_DICT, cfg["styling"]))
         except KeyError as e:
             raise ConfigException(f"Missing required config item {e} in styling section for layer {self.name}")
 
         if self.global_cfg.wcs:
             try:
-                self.parse_wcs(cfg.get("wcs", {}))
+                self.parse_wcs(cast(CFG_DICT | bool, cfg.get("wcs", {})))
             except KeyError as e:
                 raise ConfigException(f"Missing required config item {e} in wcs section for layer {self.name}")
 
@@ -523,14 +557,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             raise ConfigException(f"Duplicate layer name: {self.name}")
         self.global_cfg.product_index[self.name] = self
 
-    def time_axis_representation(self):
+    def time_axis_representation(self) -> str:
         if self.regular_time_axis:
             start, end = self.time_range(self.ranges)
             return f"{start.isoformat()}/{end.isoformat()}/P{self.time_axis_interval}D"
         return ""
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc, *args, **kwargs):
+    def make_ready(self, dc: Datacube, *args, **kwargs):
         self.products = []
         self.low_res_products = []
         for i, prod_name in enumerate(self.product_names):
@@ -552,7 +586,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.force_range_update(dc)
         self.band_idx.make_ready(dc)
         self.resource_limits.make_ready(dc)
-        self.all_flag_band_names = set()
+        self.all_flag_band_names: set[str] = set()
         for fb in self.flag_bands.values():
             fb.make_ready(dc)
             if fb.pq_band in self.all_flag_band_names:
@@ -573,38 +607,45 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             super().make_ready(dc, *args, **kwargs)
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_image_processing(self, cfg):
+    def parse_image_processing(self, cfg: CFG_DICT):
         emf_cfg = cfg["extent_mask_func"]
-        if isinstance(emf_cfg, Mapping) or isinstance(emf_cfg, str):
-            self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]
+        if isinstance(emf_cfg, dict) or isinstance(emf_cfg, str):
+            self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]  # type:ignore[type-var]
         else:
-            self.extent_mask_func = list([FunctionWrapper(self, emf) for emf in emf_cfg])
+            self.extent_mask_func = [
+                FunctionWrapper(self, emf) for emf in cast(list[CFG_DICT | str], emf_cfg)  # type: ignore[type-var]
+            ]
         self.raw_afb = cfg.get("always_fetch_bands", [])
         self.declare_unready("always_fetch_bands")
-        self.solar_correction = cfg.get("apply_solar_corrections", False)
-        self.data_manual_merge = cfg.get("manual_merge", False)
+        self.solar_correction = bool(cfg.get("apply_solar_corrections", False))
+        self.data_manual_merge = bool(cfg.get("manual_merge", False))
         if self.solar_correction and not self.data_manual_merge:
             raise ConfigException("Solar correction requires manual_merge.")
         if self.data_manual_merge and not self.solar_correction and not self.multi_product:
             _LOG.warning("Manual merge is only recommended where solar correction is required and for multi-product layers.")
 
         if cfg.get("fuse_func"):
-            self.fuse_func = FunctionWrapper(self, cfg["fuse_func"])
+            self.fuse_func: FunctionWrapper | None = FunctionWrapper(
+                self,
+                cast(str | CFG_DICT, cfg["fuse_func"])
+            )  # type:ignore[type-var]
         else:
             self.fuse_func = None
 
     # pylint: disable=attribute-defined-outside-init
-    def ready_image_processing(self, dc):
-        self.always_fetch_bands = list([self.band_idx.band(b) for b in self.raw_afb])
+    def ready_image_processing(self, dc: Datacube) -> None:
+        self.always_fetch_bands = list([self.band_idx.band(b) for b in cast(list[str], self.raw_afb)])
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_feature_info(self, cfg):
-        self.feature_info_include_utc_dates = cfg.get("include_utc_dates", False)
-        custom = cfg.get("include_custom", {})
-        self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
+    def parse_feature_info(self, cfg: CFG_DICT):
+        self.feature_info_include_utc_dates = bool(cfg.get("include_utc_dates", False))
+        custom = cast(dict[str, CFG_DICT | str], cfg.get("include_custom", {}))
+        self.feature_info_custom_includes = {
+            k: FunctionWrapper(self, v) for k, v in custom.items()  # type:ignore[type-var]
+        }
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_flags(self, cfg):
+    def parse_flags(self, cfg: CFG_DICT):
         self.flag_bands = {}
         if cfg:
             if isinstance(cfg, dict):
@@ -615,7 +656,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 for fb_cfg in cfg:
                     fb = OWSFlagBand(fb_cfg, self)
                     self.flag_bands[fb.pq_band] = fb
-        pq_names_to_lowres_names = {}
+        pq_names_to_lowres_names: dict[list[str], list[str]] = {}
         for fb in self.flag_bands.values():
             pns = fb.pq_names
             lrpns = fb.pq_low_res_names
@@ -626,36 +667,36 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values(), self)
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_urls(self, cfg):
-        self.feature_list_urls = SuppURL.parse_list(cfg.get("features", []))
-        self.data_urls = SuppURL.parse_list(cfg.get("data", []))
+    def parse_urls(self, cfg: CFG_DICT):
+        self.feature_list_urls = SuppURL.parse_list(cast(list[dict[str, str]], cfg.get("features", [])))
+        self.data_urls = SuppURL.parse_list(cast(list[dict[str, str]], cfg.get("data", [])))
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_styling(self, cfg):
+    def parse_styling(self, cfg: CFG_DICT):
         self.styles = []
         self.style_index = {}
-        for scfg in cfg["styles"]:
+        for scfg in cast(list[CFG_DICT], cfg["styles"]):
             style = StyleDef(self, scfg)
             self.styles.append(style)
             self.style_index[style.name] = style
         if "default_style" in cfg:
             if cfg["default_style"] not in self.style_index:
                 raise ConfigException(f"Default style {cfg['default_style']} is not in the 'styles' for layer {self.name}")
-            self.default_style = self.style_index[cfg["default_style"]]
+            self.default_style = self.style_index[cast(str, cfg["default_style"])]
         else:
             self.default_style = self.styles[0]
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_wcs(self, cfg):
+    def parse_wcs(self, cfg: CFG_DICT | bool):
         if cfg == False:
             self.wcs = False
         elif not self.global_cfg.wcs:
             self.wcs = False
         else:
-            self.wcs = not cfg.get("disable", False)
+            self.wcs = not cast(CFG_DICT, cfg).get("disable", False)
         if not self.wcs:
             return
-
+        assert isinstance(cfg, dict)
         if "native_resolution" in cfg:
             if not self.cfg_native_resolution:
                 _LOG.warning(
@@ -762,7 +803,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
 
     # pylint: disable=attribute-defined-outside-init
-    def ready_wcs(self, dc):
+    def ready_wcs(self, dc: Datacube):
         if self.global_cfg.wcs and self.wcs:
 
             # Prepare Rectified Grids
@@ -831,19 +872,19 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         )
                     }
 
-    def parse_product_names(self, cfg):
+    def parse_product_names(self, cfg: CFG_DICT):
         raise NotImplementedError()
 
-    def parse_pq_names(self, cfg):
+    def parse_pq_names(self, cfg: CFG_DICT):
         raise NotImplementedError()
 
-    def force_range_update(self, ext_dc=None):
+    def force_range_update(self, ext_dc: Datacube | None = None) -> None:
         if ext_dc:
-            dc = ext_dc
+            dc: Datacube | None = ext_dc
         else:
             dc = get_cube()
+        assert dc is not None
         self.hide = False
-        self._ranges = None
         try:
             from datacube_ows.product_ranges import get_ranges
             self._ranges = get_ranges(dc, self)
@@ -851,19 +892,20 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
             if self.default_time_rule == DEF_TIME_EARLIEST:
-                self.default_time = self._ranges["start_time"]
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["start_time"])
             elif isinstance(self.default_time_rule,
-                            datetime.date) and self.default_time_rule in self._ranges["time_set"]:
-                self.default_time = self.default_time_rule
+                            datetime.date) and self.default_time_rule in cast(set[datetime.datetime | datetime.date],
+                                                                              self._ranges["time_set"]):
+                self.default_time = cast(datetime.datetime | datetime.date, self.default_time_rule)
             elif isinstance(self.default_time_rule, datetime.date):
                 _LOG.warning("default_time for named_layer %s is explicit date (%s) that is "
                              " not available for the layer. Using most recent available date instead.",
                                     self.name,
                                     self.default_time_rule.isoformat()
                 )
-                self.default_time = self._ranges["end_time"]
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
             else:
-                self.default_time = self._ranges["end_time"]
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
 
         # pylint: disable=broad-except
         except Exception as a:
@@ -872,7 +914,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.hide = True
             self.bboxes = {}
 
-    def time_range(self, ranges=None):
+    def time_range(self, ranges: dict[str, Any] | None = None):
         if ranges is None:
             ranges = self.ranges
         if self.regular_time_axis and self.time_axis_start:
@@ -886,16 +928,17 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return (start, end)
 
     @property
-    def ranges(self):
+    def ranges(self) -> dict[str, Any]:
         if self.dynamic:
             self.force_range_update()
+        assert self._ranges is not None  # For type checker
         return self._ranges
 
-    def extract_bboxes(self):
+    def extract_bboxes(self) -> dict[str, Any]:
         if self._ranges is None:
             return {}
         bboxes = {}
-        for crs_id, bbox in self._ranges["bboxes"].items():
+        for crs_id, bbox in cast(dict[str, dict[str, float]], self._ranges["bboxes"]).items():
             if crs_id in self.global_cfg.published_CRSs:
                 # Assume we've already handled coordinate swapping for
                 # Vertical-coord first CRSs.   Top is top, left is left.
@@ -908,7 +951,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 }
         return bboxes
 
-    def layer_count(self):
+    def layer_count(self) -> int:
         return 1
 
     def search_times(self, t, geobox=None):
@@ -921,14 +964,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             )
         return self.time_resolution.search_times(t, geobox)
 
-    def dataset_groupby(self):
+    def dataset_groupby(self) -> GroupBy:
         return self.time_resolution.dataset_groupby(is_mosaic=self.mosaic_date_func is not None)
 
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
 
     @classmethod
-    def lookup_impl(cls, cfg, keyvals, subs=None):
+    def lookup_impl(cls, cfg: "OWSConfig", keyvals: dict[str, str], subs: CFG_DICT | None = None):
         try:
             return cfg.product_index[keyvals["layer"]]
         except KeyError:
@@ -938,13 +981,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 class OWSProductLayer(OWSNamedLayer):
     multi_product = False
 
-    def parse_product_names(self, cfg):
-        self.product_name = cfg["product_name"]
-        self.product_names = (self.product_name,)
+    def parse_product_names(self, cfg: CFG_DICT):
+        self.product_name = cast(str, cfg["product_name"])
+        self.product_names: tuple[str, ...] = (self.product_name,)
 
-        self.low_res_product_name  = cfg.get("low_res_product_name")
+        self.low_res_product_name = cast(str, cfg.get("low_res_product_name"))
         if self.low_res_product_name:
-            self.low_res_product_names = (self.low_res_product_name,)
+            self.low_res_product_names: tuple[str, ...] = (self.low_res_product_name,)
         else:
             self.low_res_product_names = tuple()
         if "product_names" in cfg:
@@ -952,18 +995,18 @@ class OWSProductLayer(OWSNamedLayer):
         if "low_res_product_names" in cfg:
             raise ConfigException(f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only")
 
-    def parse_pq_names(self, cfg):
+    def parse_pq_names(self, cfg: CFG_DICT):
         main_product = False
         if "dataset" in cfg:
             raise ConfigException(f"The 'dataset' entry in the flags section is no longer supported.  Please refer to the documentation for the correct format (layer {self.name})")
         if "product" in cfg:
-            pq_names = (cfg["product"],)
+            pq_names: tuple[str, ...] = (cast(str, cfg["product"]),)
         else:
             pq_names = (self.product_name,)
             main_product = (pq_names[0] == self.product_name)
 
         if "low_res_product" in cfg:
-            pq_low_res_names = (cfg.get("low_res_product"),)
+            pq_low_res_names: tuple[str, ...] = (cast(str, cfg.get("low_res_product")),)
         elif main_product:
             pq_low_res_names = self.low_res_product_names
         else:
@@ -983,12 +1026,12 @@ class OWSProductLayer(OWSNamedLayer):
 class OWSMultiProductLayer(OWSNamedLayer):
     multi_product = True
 
-    def parse_product_names(self, cfg):
-        self.product_names = tuple(cfg["product_names"])
+    def parse_product_names(self, cfg: CFG_DICT):
+        self.product_names = tuple(cast(list[str], cfg["product_names"]))
         self.product_name = self.product_names[0]
-        self.low_res_product_names = tuple(cfg.get("low_res_product_names", []))
+        self.low_res_product_names = tuple(cast(list[str], cfg.get("low_res_product_names", [])))
         if self.low_res_product_names:
-            self.low_res_product_name = self.low_res_product_names[0]
+            self.low_res_product_name: str | None = self.low_res_product_names[0]
         else:
             self.low_res_product_name = None
         if "product_name" in cfg:
@@ -996,19 +1039,19 @@ class OWSMultiProductLayer(OWSNamedLayer):
         if "low_res_product_name" in cfg:
             raise ConfigException(f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only")
 
-    def parse_pq_names(self, cfg):
+    def parse_pq_names(self, cfg: CFG_DICT):
         main_products = False
         if "datasets" in cfg:
             raise ConfigException(f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})")
         if "products" in cfg:
-            pq_names = tuple(cfg["products"])
+            pq_names = tuple(cast(list[str], cfg["products"]))
             main_products = pq_names == self.product_names
         else:
             main_products = True
             pq_names = self.product_names
 
         if "low_res_products" in cfg:
-            pq_low_res_names = tuple(cfg["low_res_products"])
+            pq_low_res_names = tuple(cast(list[str], cfg["low_res_products"]))
         else:
             pq_low_res_names = self.low_res_product_names
         if "product" in cfg:
@@ -1021,11 +1064,16 @@ class OWSMultiProductLayer(OWSNamedLayer):
             "main_products": main_products,
         }
 
-    def dataset_groupby(self):
-        return self.time_resolution.dataset_groupby(self.product_names, is_mosaic=self.mosaic_date_func is not None)
+    def dataset_groupby(self) -> GroupBy:
+        return self.time_resolution.dataset_groupby(
+            list(self.product_names),
+            is_mosaic=self.mosaic_date_func is not None)
 
 
-def parse_ows_layer(cfg, global_cfg, parent_layer=None, sibling=0):
+def parse_ows_layer(cfg: CFG_DICT,
+                    global_cfg: "OWSConfig",
+                    parent_layer: OWSFolder | None = None,
+                    sibling: int = 0) -> OWSLayer:
     if cfg.get("name", None):
         if cfg.get("multi_product", False):
             return OWSMultiProductLayer(cfg, global_cfg, parent_layer)
@@ -1037,23 +1085,22 @@ def parse_ows_layer(cfg, global_cfg, parent_layer=None, sibling=0):
 
 class WCSFormat:
     @staticmethod
-    def from_cfg(cfg):
-        renderers = []
+    def from_cfg(cfg: dict[str, CFG_DICT]) -> list["WCSFormat"]:
+        renderers: list[WCSFormat] = []
         for name, fmt in cfg.items():
             if "renderers" in fmt:
                 renderers.append(
                     WCSFormat(
                         name,
-                        fmt["mime"],
-                        fmt["extension"],
-                        fmt["renderers"],
-                        fmt.get("multi-time", False)
+                        cast(str, fmt["mime"]),
+                        cast(str, fmt["extension"]),
+                        cast(dict[int, CFG_DICT], fmt["renderers"]),
+                        bool(fmt.get("multi-time", False))
                     )
                 )
         return renderers
 
-    def __init__(self, name, mime, extension, renderers,
-                 multi_time):
+    def __init__(self, name: str, mime: str, extension: str, renderers: dict[int, CFG_DICT], multi_time: bool):
         self.name = name
         self.mime = mime
         self.extension = extension
@@ -1076,14 +1123,14 @@ class WCSFormat:
 
 
 class ContactInfo(OWSConfigEntry):
-    def __init__(self, cfg, global_cfg):
+    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig"):
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.person = cfg.get("person")
 
         class Address(OWSConfigEntry):
-            def __init__(self, cfg):
-                super().__init__(cfg)
+            def __init__(self, cfg: dict[str, str]):
+                super().__init__(cast(CFG_DICT, cfg))
                 self.type = cfg.get("type")
                 self.address = cfg.get("address")
                 self.city = cfg.get("city")
@@ -1092,27 +1139,27 @@ class ContactInfo(OWSConfigEntry):
                 self.country = cfg.get("country")
 
             @classmethod
-            def parse(cls, cfg):
+            def parse(cls, cfg: dict[str, str] | None) -> Optional["Address"]:
                 if not cfg:
                     return None
                 else:
                     return cls(cfg)
 
-        self.address = Address.parse(cfg.get("address"))
-        self.telephone = cfg.get("telephone")
-        self.fax = cfg.get("fax")
-        self.email = cfg.get("email")
+        self.address = Address.parse(cast(dict[str, str] | None, cfg.get("address")))
+        self.telephone = cast(str | None, cfg.get("telephone"))
+        self.fax = cast(str | None, cfg.get("fax"))
+        self.email = cast(str | None, cfg.get("email"))
 
     @property
-    def organisation(self):
+    def organisation(self) -> str | None:
         return self.global_cfg.contact_org
 
     @property
-    def position(self):
+    def position(self) -> str | None:
         return self.global_cfg.contact_position
 
     @classmethod
-    def parse(cls, cfg, global_cfg):
+    def parse(cls, cfg, global_cfg) -> Optional["ContactInfo"]:
         if cfg:
             return cls(cfg, global_cfg)
         else:
@@ -1120,7 +1167,7 @@ class ContactInfo(OWSConfigEntry):
 
 
 class OWSConfig(OWSMetadataConfig):
-    _instance = None
+    _instance: Optional["OWSConfig"] = None
     initialised = False
 
     def __new__(cls, *args, **kwargs):
@@ -1139,14 +1186,15 @@ class OWSConfig(OWSMetadataConfig):
         return ""
 
     @property
-    def active_products(self):
+    def active_products(self) -> Iterable[OWSNamedLayer]:
         return filter(lambda x: not x.hide, self.product_index.values())
 
     @property
-    def active_product_index(self):
+    def active_product_index(self) -> dict[str, OWSNamedLayer]:
         return {prod.name: prod for prod in self.active_products}
 
-    def __init__(self, refresh=False, cfg=None, ignore_msgfile=False, called_from_update_ranges=False):
+    def __init__(self, refresh=False, cfg: CFG_DICT | None = None,
+                 ignore_msgfile=False, called_from_update_ranges=False):
         self.called_from_update_ranges = called_from_update_ranges
         if not self.initialised or refresh:
             self.msgfile = None
@@ -1154,20 +1202,20 @@ class OWSConfig(OWSMetadataConfig):
                 cfg = read_config()
             super().__init__(cfg)
             try:
-                self.parse_global(cfg["global"], ignore_msgfile)
+                self.parse_global(cast(CFG_DICT, cfg["global"]), ignore_msgfile)
             except KeyError as e:
                 raise ConfigException(
                     "Missing required config entry in 'global' section: %s" % str(e)
                 )
 
             if self.wms or self.wmts:
-                self.parse_wms(cfg.get("wms", {}))
+                self.parse_wms(cast(CFG_DICT, cfg.get("wms", {})))
             else:
                 self.parse_wms({})
 
             if self.wcs:
                 try:
-                    self.parse_wcs(cfg.get("wcs"))
+                    self.parse_wcs(cast(CFG_DICT, cfg.get("wcs")))
                 except KeyError as e:
                     raise ConfigException(
                         "Missing required config entry in 'wcs' section (with WCS enabled): %s" % str(e)
@@ -1175,24 +1223,24 @@ class OWSConfig(OWSMetadataConfig):
             else:
                 self.parse_wcs(None)
             try:
-                self.parse_layers(cfg["layers"])
+                self.parse_layers(cast(list[CFG_DICT], cfg["layers"]))
             except KeyError as e:
                 raise ConfigException("Missing required config entry in 'layers' section")
 
             try:
                 if self.wmts:
-                    self.parse_wmts(cfg.get("wmts", {}))
+                    self.parse_wmts(cast(CFG_DICT, cfg.get("wmts", {})))
                 else:
                     self.parse_wmts({})
             except KeyError as e:
                 raise ConfigException(
                     "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
                 )
-            self.catalog = None
+            self.catalog: Catalog | None = None
             self.initialised = True
 
     #pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc, *args, **kwargs):
+    def make_ready(self, dc: Datacube, *args, **kwargs):
         if self.msg_file_name:
             try:
                 with open(self.msg_file_name, "rb") as fp:
@@ -1201,24 +1249,30 @@ class OWSConfig(OWSMetadataConfig):
                 _LOG.warning("Message file %s does not exist - using metadata from config file", self.msg_file_name)
         else:
             self.set_msg_src(None)
-        self.native_product_index = {}
+        self.native_product_index: dict[str, OWSNamedLayer] = {}
         self.root_layer_folder.make_ready(dc, *args, **kwargs)
         super().make_ready(dc, *args, **kwargs)
 
-    def export_metadata(self):
+    def export_metadata(self) -> Catalog:
         if self.catalog is None:
             now = datetime.datetime.now()
-            self.catalog = Catalog(locale=self.default_locale,
-                                   domain=self.message_domain,
-                                   header_comment=f"""# Translations for datacube-ows metadata instance:
+            header: str = f"""# Translations for datacube-ows metadata instance:
 #      {self.title}
 #
-# {self.contact_info.organisation} {now.isoformat()}
-#""",
+"""
+            if self.contact_info:
+                header += """# {self.contact_info.organisation} {now.isoformat()}
+#"""
+            else:
+                header += """# {now.isoformat()}
+            #"""
+            self.catalog = Catalog(locale=self.default_locale,
+                                   domain=self.message_domain,
+                                   header_comment=header,
                                    project=self.title,
                                    version=f"{now.isoformat()}",
-                                   copyright_holder=self.contact_info.organisation,
-                                   msgid_bugs_address=self.contact_info.email,
+                                   copyright_holder=self.contact_info.organisation if self.contact_info else None,
+                                   msgid_bugs_address=self.contact_info.email if self.contact_info else None,
                                    creation_date=now,
                                    revision_date=now,
                                    fuzzy=False)
@@ -1234,31 +1288,32 @@ class OWSConfig(OWSMetadataConfig):
                 self.catalog.add(id=k, string=v, auto_comments=[v])
         return self.catalog
 
-    def parse_global(self, cfg, ignore_msgfile):
-        self._response_headers = cfg.get("response_headers", {})
-        self.wms = cfg.get("services", {}).get("wms", True)
-        self.wmts = cfg.get("services", {}).get("wmts", True)
-        self.wcs = cfg.get("services", {}).get("wcs", False)
+    def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool):
+        self._response_headers = cast(dict[str, str], cfg.get("response_headers", {}))
+        services = cast(dict[str, bool], cfg.get("services", {}))
+        self.wms = services.get("wms", True)
+        self.wmts = services.get("wmts", True)
+        self.wcs = services.get("wcs", False)
         if not self.wms and not self.wmts and not self.wcs:
             raise ConfigException("At least one service must be active.")
-        self.locales = cfg.get("supported_languages", ["en"])
+        self.locales = cast(list[str], cfg.get("supported_languages", ["en"]))
         if len(self.locales) < 1:
             raise ConfigException("You must support at least one language.")
         self.default_locale = self.locales[0]
-        self.message_domain = cfg.get("message_domain", "ows_cfg")
-        self.translations_dir = cfg.get("translations_directory")
+        self.message_domain = cast(str, cfg.get("message_domain", "ows_cfg"))
+        self.translations_dir = cast(str | None, cfg.get("translations_directory"))
         self.internationalised = self.translations_dir and len(self.locales) > 1
         if self.internationalised:
             _LOG.info("Internationalisation enabled.")
         if ignore_msgfile:
-            self.msg_file_name = None
+            self.msg_file_name: str | None = None
         else:
-            self.msg_file_name = cfg.get("message_file")
+            self.msg_file_name = cast(str | None, cfg.get("message_file"))
         self.parse_metadata(cfg)
         self.allowed_urls = cfg["allowed_urls"]
         self.info_url = cfg["info_url"]
         self.contact_info = ContactInfo.parse(cfg.get("contact_info"), self)
-        self.attribution = AttributionCfg.parse(cfg.get("attribution"), self)
+        self.attribution = AttributionCfg.parse(cast(CFG_DICT | None, cfg.get("attribution")), self)
 
         def make_gml_name(name):
             if name.startswith("EPSG:"):
@@ -1266,11 +1321,11 @@ class OWSConfig(OWSMetadataConfig):
             else:
                 return name
 
-        self.published_CRSs = {}
-        self.internal_CRSs = {}
-        CRS_aliases = {}
-        geographic_CRSs = []
-        for crs_str, crsdef in cfg["published_CRSs"].items():
+        self.published_CRSs: dict[str, CFG_DICT] = {}
+        self.internal_CRSs: dict[str, CFG_DICT] = {}
+        CRS_aliases: dict[str, CFG_DICT] = {}
+        geographic_CRSs: list[str] = []
+        for crs_str, crsdef in cast(dict[str, CFG_DICT], cfg["published_CRSs"]).items():
             if "alias" in crsdef:
                 CRS_aliases[crs_str] = crsdef
                 continue
@@ -1303,7 +1358,7 @@ class OWSConfig(OWSMetadataConfig):
             self.default_geographic_CRS = geographic_CRSs[0]
 
         for alias, alias_def in CRS_aliases.items():
-            target_crs = alias_def["alias"]
+            target_crs = cast(str, alias_def["alias"])
             if target_crs not in self.published_CRSs:
                 _LOG.warning("CRS %s defined as alias for %s, which is not a published CRS - skipping",
                              alias, target_crs)
@@ -1313,15 +1368,15 @@ class OWSConfig(OWSMetadataConfig):
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
 
-    def parse_wms(self, cfg):
+    def parse_wms(self, cfg: CFG_DICT):
         if not self.wms and not self.wmts:
             cfg = {}
-        self.s3_bucket = cfg.get("s3_bucket", "")
-        self.s3_url = cfg.get("s3_url", "")
-        self.s3_aws_zone = cfg.get("s3_aws_zone", "")
+        self.s3_bucket = cast(str, cfg.get("s3_bucket", ""))
+        self.s3_url = cast(str, cfg.get("s3_url", ""))
+        self.s3_aws_zone = cast(str, cfg.get("s3_aws_zone", ""))
         try:
-            self.wms_max_width = int(cfg.get("max_width", 256))
-            self.wms_max_height = int(cfg.get("max_height", 256))
+            self.wms_max_width = int(cast(str | int, cfg.get("max_width", 256)))
+            self.wms_max_height = int(cast(str | int, cfg.get("max_height", 256)))
         except ValueError:
             raise ConfigException(
                 f"max_width and max_height in wms section must be integers: {cfg.get('max_width', 256)},{cfg.get('max_height', 256)}"
@@ -1330,17 +1385,17 @@ class OWSConfig(OWSMetadataConfig):
             raise ConfigException(
                 f"max_width and max_height in wms section must be positive integers: {cfg.get('max_width', 256)},{cfg.get('max_height', 256)}"
             )
-        self.authorities = cfg.get("authorities", {})
+        self.authorities = cast(dict[str, str], cfg.get("authorities", {}))
         self.user_band_math_extension = cfg.get("user_band_math_extension", False)
         self.wms_cap_cache_age = parse_cache_age(cfg, "caps_cache_maxage", "wms")
         if "attribution" in cfg:
             _LOG.warning("Attribution entry in top level 'wms' section will be ignored. Attribution should be moved to the 'global' section")
 
-    def parse_wcs(self, cfg):
+    def parse_wcs(self, cfg: CFG_DICT | None):
         if self.wcs:
             if not isinstance(cfg, Mapping):
                 raise ConfigException("WCS section missing (and WCS is enabled)")
-            self.wcs_formats = WCSFormat.from_cfg(cfg["formats"])
+            self.wcs_formats = WCSFormat.from_cfg(cast(dict[str, CFG_DICT], cfg["formats"]))
             self.wcs_formats_by_name = {
                 fmt.name: fmt
                 for fmt in self.wcs_formats
@@ -1367,12 +1422,12 @@ class OWSConfig(OWSMetadataConfig):
             self.wcs_cap_cache_age = 0
             self.wcs_default_descov_age = 0
 
-    def parse_wmts(self, cfg):
-        tms_cfgs = TileMatrixSet.default_tm_sets.copy()
+    def parse_wmts(self, cfg: CFG_DICT):
+        tms_cfgs = cast(dict[str, CFG_DICT], TileMatrixSet.default_tm_sets.copy())
         if "tile_matrix_sets" in cfg:
-            for identifier, tms in cfg["tile_matrix_sets"].items():
+            for identifier, tms in cast(dict[str, CFG_DICT], cfg["tile_matrix_sets"]).items():
                 tms_cfgs[identifier] = tms
-        self.tile_matrix_sets = {}
+        self.tile_matrix_sets: dict[str, TileMatrixSet] = {}
         for identifier, tms in tms_cfgs.items():
             if len(identifier.split()) != 1:
                 raise ConfigException(f"Invalid identifier: {identifier}")
@@ -1380,24 +1435,24 @@ class OWSConfig(OWSMetadataConfig):
                 raise ConfigException(f"Tile matrix set identifiers must be unique: {identifier}")
             self.tile_matrix_sets[identifier] = TileMatrixSet(identifier, tms, self)
 
-    def parse_layers(self, cfg):
-        self.folder_index = {}
-        self.product_index = {}
+    def parse_layers(self, cfg: list[CFG_DICT]):
+        self.folder_index: dict[str, OWSFolder] = {}
+        self.product_index: dict[str, OWSNamedLayer] = {}
         self.declare_unready("native_product_index")
-        self.root_layer_folder = OWSFolder({
+        self.root_layer_folder = OWSFolder(cast(CFG_DICT, {
             "title": "Root Folder (hidden)",
             "label": "ows_root_hidden",
             "layers": cfg
-        }, global_cfg=self, parent_layer=None)
+        }), global_cfg=self, parent_layer=None)
 
     @property
-    def layers(self):
+    def layers(self) -> list[OWSLayer]:
         return self.root_layer_folder.child_layers
 
-    def alias_bboxes(self, bboxes):
-        out = {}
+    def alias_bboxes(self, bboxes: CFG_DICT) -> CFG_DICT:
+        out: CFG_DICT = {}
         for crsid, crsdef in self.published_CRSs.items():
-            a_crsid = crsdef["alias_of"]
+            a_crsid = cast(str, crsdef["alias_of"])
             if a_crsid:
                 if a_crsid in bboxes:
                     out[crsid] = bboxes[a_crsid]
@@ -1406,7 +1461,7 @@ class OWSConfig(OWSMetadataConfig):
                     out[crsid] = bboxes[crsid]
         return out
 
-    def crs(self, crsid):
+    def crs(self, crsid: str) -> CRS:
         if crsid not in self.published_CRSs:
             raise ConfigException(f"CRS {crsid} is not published")
         crs_def = self.published_CRSs[crsid]
@@ -1417,17 +1472,18 @@ class OWSConfig(OWSMetadataConfig):
             use_crs = crsid
         return CRS(use_crs)
 
-    def response_headers(self, d):
+    def response_headers(self, d: dict[str, str]) -> dict[str, str]:
         hdrs = self._response_headers.copy()
         hdrs.update(d)
         return hdrs
 
 
-def get_config(refresh=False, called_from_update_ranges=False):
+def get_config(refresh=False, called_from_update_ranges=False) -> OWSConfig:
     cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)
     if not cfg.ready:
         try:
             with cube() as dc:
+                assert dc is not None  # For type checker
                 cfg.make_ready(dc)
         except ODCInitException:
             pass

@@ -1,15 +1,16 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import pytest
 from odc.geo.geom import box
 
 from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
-from datacube_ows.ogc_utils import local_solar_date_range
 from datacube_ows.ows_configuration import get_config
+from datacube_ows.time_utils import local_solar_date_range
 
 
 def test_full_layer():
@@ -39,9 +40,8 @@ def test_no_products():
 def test_bad_set_opt():
     cfg = get_config()
     lyr = list(cfg.product_index.values())[0]
-    with cube() as dc:
-        with pytest.raises(AssertionError) as e:
-            sel = mv_search(dc.index, MVSelectOpts.INVALID, products=lyr.products)
+    with pytest.raises(ValueError) as e:
+        sel = MVSelectOpts("INVALID")
 
 
 class MockGeobox:

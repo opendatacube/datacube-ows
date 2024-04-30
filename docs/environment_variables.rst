@@ -17,7 +17,7 @@ the ``$DATACUBE_OWS_CFG_ALLOW_S3`` environment variable needs to be set to ``YES
 Open DataCube Database Connection
 ---------------------------------
 
-The preferred method of configuring the ODC database is with the ``$DEFAULT_ODC_DB_URL``
+The preferred method of configuring the ODC database is with the ``$ODC_DEFAULT_DB_URL``
 environment variable. The format of postgres connection URL is::
 
     postgresql://<username>:<password>@<hostname>:<port>/<database>

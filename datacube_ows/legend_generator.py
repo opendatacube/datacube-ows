@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import io
 import logging
 
@@ -11,8 +12,8 @@ import numpy as np
 # from flask import make_response
 from PIL import Image
 
+from datacube_ows.http_utils import resp_headers
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import resp_headers
 from datacube_ows.wms_utils import GetLegendGraphicParameters
 
 # Do not use X Server backend

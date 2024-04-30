@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import math
 from datetime import datetime
 
@@ -16,9 +17,10 @@ from odc.geo import geom
 from pytz import utc
 from rasterio.warp import Resampling
 
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import ConfigException, create_geobox
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ogc_utils import create_geobox
+from datacube_ows.ows_configuration import OWSNamedLayer, get_config
 from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
@@ -34,7 +36,7 @@ RESAMPLING_METHODS = {
 }
 
 
-def _bounding_pts(minx, miny, maxx, maxy, src_crs, dst_crs=None):
+def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=None):
     # pylint: disable=too-many-locals
     p1 = geom.point(minx, maxy, src_crs)
     p2 = geom.point(minx, miny, src_crs)
@@ -126,7 +128,7 @@ def img_coords_to_geopoint(geobox, i, j):
                           geobox.crs)
 
 
-def get_product_from_arg(args, argname="layers"):
+def get_product_from_arg(args, argname="layers") -> OWSNamedLayer:
     layers = args.get(argname, "").split(",")
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
@@ -168,7 +170,7 @@ def get_times_for_product(product):
     return ranges['times']
 
 
-def get_times(args, product):
+def get_times(args, product: OWSNamedLayer) -> list[datetime]:
     # Time parameter
     times_raw = args.get('time', '')
     times = times_raw.split(',')
@@ -176,7 +178,7 @@ def get_times(args, product):
     return list([parse_time_item(item, product) for item in times])
 
 
-def parse_time_item(item, product):
+def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
     times = item.split('/')
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
@@ -210,7 +212,7 @@ def parse_time_item(item, product):
     try:
         time = parse(times[0])
         if not product.time_resolution.is_subday():
-            time = time.date()
+            time = time.date()  # type: ignore[assignment]
     except ValueError:
         raise WMSException(
             "Time dimension value '%s' not valid for this layer" % times[0],
@@ -319,7 +321,7 @@ class GetParameters():
     def method_specific_init(self, args):
         pass
 
-    def get_product(self, args):
+    def get_product(self, args) -> OWSNamedLayer:
         return get_product_from_arg(args)
 
 

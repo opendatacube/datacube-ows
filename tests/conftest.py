@@ -1,8 +1,9 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import datetime
 from unittest.mock import MagicMock
 
@@ -1055,7 +1056,7 @@ def configs_for_combined_fc_wofs():
             "pq_masks": [
                 {
                     "band": "water",
-                    "enum": 1,
+                    "values": [1],
                 }
             ]
         },
@@ -1069,7 +1070,7 @@ def configs_for_combined_fc_wofs():
             "pq_masks": [
                 {
                     "band": "water",
-                    "enum": 1,
+                    "values": [1],
                     "invert": True,
                 }
             ]
@@ -1085,7 +1086,7 @@ def configs_for_combined_fc_wofs():
                 {
                     # Mask out nodata pixels.
                     "band": "water",
-                    "enum": 1,
+                    "values": [1],
                     "invert": True,
                 },
                 {

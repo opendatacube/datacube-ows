@@ -1,11 +1,12 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import enum
 
-from odc.geo.geom import BoundingBox, Geometry
+from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
 from datacube_ows.cube_pool import cube
@@ -67,8 +68,6 @@ class WCS20Extent:
         )
 
     def bbox_crs(self, crs):
-        from odc.geo.geom import point
-
         low = point(*self.lower_corner, crs=self.native_crs).to_crs(crs)
         up = point(*self.upper_corner, crs=self.native_crs).to_crs(crs)
         return (
@@ -304,7 +303,8 @@ class ODCExtent:
             crs_extent = extent.to_crs(crs)
         crs_bbox = crs_extent.boundingbox
         return {
-            "bbox": f"{min(crs_bbox.left,crs_bbox.right)},{min(crs_bbox.top,crs_bbox.bottom)},{max(crs_bbox.left,crs_bbox.right)},{max(crs_bbox.top,crs_bbox.bottom)}",
+            "bbox": f"{min(crs_bbox.left, crs_bbox.right)},{min(crs_bbox.top, crs_bbox.bottom)},"
+                    f"{max(crs_bbox.left, crs_bbox.right)},{max(crs_bbox.top, crs_bbox.bottom)}",
             "times": ",".join(time_strs),
         }
 

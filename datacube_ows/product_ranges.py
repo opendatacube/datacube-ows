@@ -1,34 +1,37 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 
 #pylint: skip-file
 
 import math
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from typing import Any, Callable, Iterable, cast
 
 import datacube
 import odc.geo
 from psycopg2.extras import Json
 from sqlalchemy import text
 
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import (OWSConfig, OWSMultiProductLayer,
+                                            OWSNamedLayer, TimeRes, get_config)
 from datacube_ows.utils import get_sqlconn
 
 
-def get_crsids(cfg=None):
+def get_crsids(cfg: OWSConfig | None = None) -> Iterable[str]:
     if not cfg:
         cfg = get_config()
     return cfg.internal_CRSs.keys()
 
 
-def get_crses(cfg=None):
+def get_crses(cfg: OWSConfig | None = None) -> dict[str, odc.geo.CRS]:
     return {crsid: odc.geo.CRS(crsid) for crsid in get_crsids(cfg)}
 
 
-def jsonise_bbox(bbox):
+def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
     if isinstance(bbox, dict):
         return bbox
     else:
@@ -40,7 +43,8 @@ def jsonise_bbox(bbox):
         }
 
 
-def create_multiprod_range_entry(dc, product, crses):
+def create_multiprod_range_entry(dc: datacube.Datacube, product: OWSMultiProductLayer,
+                                 crses: dict[str, odc.geo.CRS]) -> None:
     print("Merging multiproduct ranges for %s (ODC products: %s)" % (
         product.name,
         repr(product.product_names)
@@ -147,7 +151,8 @@ def create_multiprod_range_entry(dc, product, crses):
     return
 
 
-def create_range_entry(dc, product, crses, time_resolution):
+def create_range_entry(dc: datacube.Datacube, product: datacube.model.Product,
+                       crses: dict[str, odc.geo.CRS], time_resolution: TimeRes) -> None:
   print("Updating range for ODC product %s..." % product.name)
   # NB. product is an ODC product
   conn = get_sqlconn(dc)
@@ -236,14 +241,14 @@ def create_range_entry(dc, product, crses, time_resolution):
   )
 
   # calculate bounding boxes
-  results = list(conn.execute(text("""
+  lres = list(conn.execute(text("""
     SELECT lat_min,lat_max,lon_min,lon_max
     FROM wms.product_ranges
     WHERE id=:p_id
     """),
       {"p_id": prodid}))
 
-  r = results[0]
+  r = lres[0]
 
   epsg4326 = odc.geo.CRS("EPSG:4326")
   box = odc.geo.geom.box(
@@ -267,7 +272,7 @@ def create_range_entry(dc, product, crses, time_resolution):
   conn.close()
 
 
-def bbox_projections(starting_box, crses):
+def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CRS]) -> dict[str, dict[str, float]]:
    result = {}
    for crsid, crs in crses.items():
        if crs.valid_region is not None:
@@ -285,8 +290,8 @@ def bbox_projections(starting_box, crses):
    return result
 
 
-def sanitise_bbox(bbox):
-    def sanitise_coordinate(coord, fallback):
+def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
+    def sanitise_coordinate(coord: float, fallback: float) -> float:
         return coord if math.isfinite(coord) else fallback
     return {
         "top": sanitise_coordinate(bbox.top, float("9.999999999e99")),
@@ -296,7 +301,7 @@ def sanitise_bbox(bbox):
     }
 
 
-def datasets_exist(dc, product_name):
+def datasets_exist(dc: datacube.Datacube, product_name: str) -> bool:
   conn = get_sqlconn(dc)
 
   results = conn.execute(text("""
@@ -312,9 +317,9 @@ def datasets_exist(dc, product_name):
   return list(results)[0][0] > 0
 
 
-def add_ranges(dc, product_names, merge_only=False):
-    odc_products = {}
-    ows_multiproducts = []
+def add_ranges(dc: datacube.Datacube, product_names: list[str], merge_only: bool = False) -> bool:
+    odc_products: dict[str, dict[str, list[OWSNamedLayer]]] = {}  # Maps OWS layer names to
+    ows_multiproducts: list[OWSMultiProductLayer] = []
     errors = False
     for pname in product_names:
         dc_product = None
@@ -332,16 +337,14 @@ def add_ranges(dc, product_names, merge_only=False):
                 repr(ows_product.product_names)
             ))
             if ows_product.multi_product:
-                ows_multiproducts.append(ows_product)
+                ows_multiproducts.append(cast(OWSMultiProductLayer, ows_product))
         if not ows_product:
             print("Could not find product", pname, "in OWS config")
             dc_product = dc.index.products.get_by_name(pname)
             if dc_product:
                 print("ODC Layer: %s" % pname)
-                if pname in odc_products:
-                    odc_products[pname]["ows"].append(None)
-                else:
-                    odc_products[pname] = {"ows": [None]}
+                if pname not in odc_products:
+                    odc_products[pname] = {"ows": []}
             else:
                 print("Unrecognised product name:", pname)
                 errors = True
@@ -383,10 +386,11 @@ def add_ranges(dc, product_names, merge_only=False):
     print("Done.")
     return errors
 
-def get_ranges(dc, product, path=None, is_dc_product=False):
+def get_ranges(dc: datacube.Datacube, product: OWSNamedLayer,
+               path: str | None = None) -> dict[str, Any] | None:
     cfg = product.global_cfg
     conn = get_sqlconn(dc)
-    if not is_dc_product and product.multi_product:
+    if product.multi_product:
         if path is not None:
             raise Exception("Combining subproducts and multiproducts is not yet supported")
         results = conn.execute(text("""
@@ -396,10 +400,7 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
                                {"pname": product.name}
                               )
     else:
-        if is_dc_product:
-            prod_id = product.id
-        else:
-            prod_id = product.product.id
+        prod_id = product.product.id
         if path is not None:
             results = conn.execute(text("""
                 SELECT *
@@ -420,7 +421,7 @@ def get_ranges(dc, product, path=None, is_dc_product=False):
     for result in results:
         conn.close()
         if product.time_resolution.is_subday():
-            dt_parser = lambda dts: datetime.fromisoformat(dts)
+            dt_parser: Callable[[str], datetime | date] = lambda dts: datetime.fromisoformat(dts)
         else:
             dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()
         times = [dt_parser(d) for d in result.dates if d is not None]

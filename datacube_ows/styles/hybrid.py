@@ -1,17 +1,21 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from typing import Optional, Union, cast
+
+from typing import cast
 
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT
-from datacube_ows.ogc_utils import ConfigException
+from datacube_ows.config_utils import CFG_DICT, ConfigException
 from datacube_ows.styles.base import StyleDefBase
-from datacube_ows.styles.component import ComponentStyleDef
+from datacube_ows.styles.component import LINEAR_COMP_DICT, ComponentStyleDef
 from datacube_ows.styles.ramp import ColorRampDef
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSNamedLayer
 
 
 class HybridStyleDef(ColorRampDef, ComponentStyleDef):
@@ -23,7 +27,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
     auto_legend = False
 
     def __init__(self,
-                 product: "datacube_ows.ows_configuration.OWSNamedLayer",
+                 product: "OWSNamedLayer",
                  style_cfg: CFG_DICT,
                  defer_multi_date: bool = False,
                  stand_alone: bool = False,
@@ -36,11 +40,11 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                                  stand_alone=stand_alone,
                                  user_defined=user_defined)
         style_cfg = cast(CFG_DICT, self._raw_cfg)
-        self.component_ratio = float(cast(Union[float, str], style_cfg["component_ratio"]))
+        self.component_ratio = float(cast(float | str, style_cfg["component_ratio"]))
         if self.component_ratio < 0.0 or self.component_ratio > 1.0:
             raise ConfigException("Component ratio must be a floating point number between 0 and 1")
 
-    def transform_single_date_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
+    def transform_single_date_data(self, data: Dataset) -> Dataset:
         """
         Apply style to raw data to make an RGBA image xarray (single time slice only)
 
@@ -58,8 +62,8 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
             rampdata = DataArray(self.color_ramp.get_value(d, band),
                                  coords=d.coords,
                                  dims=d.dims)
-            component_band_data: Optional[DataArray] = None
-            for c_band, c_intensity in self.rgb_components[band].items():
+            component_band_data: DataArray | None = None
+            for c_band, c_intensity in cast(LINEAR_COMP_DICT, self.rgb_components[band]).items():
                 if callable(c_intensity):
                     imgband_component_data = cast(DataArray, c_intensity(data[c_band], c_band, band))
                 else:

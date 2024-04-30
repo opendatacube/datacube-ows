@@ -1,15 +1,17 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import logging
 
 from flask import render_template
 
-from datacube_ows.data import feature_info, get_map
+from datacube_ows.data import get_map
+from datacube_ows.feature_info import feature_info
+from datacube_ows.http_utils import cache_control_headers, get_service_base_url
 from datacube_ows.ogc_exceptions import WMSException, WMTSException
-from datacube_ows.ogc_utils import cache_control_headers, get_service_base_url
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import log_call
 

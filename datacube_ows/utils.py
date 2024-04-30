@@ -1,17 +1,22 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+
 import datetime
 import logging
 from functools import wraps
 from time import monotonic
-from typing import Any, Callable, List, Optional, TypeVar
+from typing import Any, Callable, TypeVar, cast
 
 import pytz
+from datacube import Datacube
+from datacube.api.query import GroupBy, solar_day
+from datacube.model import Dataset
 from numpy import datetime64
 from numpy import datetime64 as npdt64
+from sqlalchemy.engine.base import Connection
 
 F = TypeVar('F', bound=Callable[..., Any])
 
@@ -27,7 +32,7 @@ def log_call(func: F) -> F:
         _LOG = logging.getLogger()
         _LOG.debug("%s args: %s kwargs: %s", func.__name__, args, kwargs)
         return func(*args, **kwargs)
-    return log_wrapper
+    return cast(F, log_wrapper)
 
 
 def time_call(func: F) -> F:
@@ -40,23 +45,22 @@ def time_call(func: F) -> F:
     For debugging or optimisation research only.  Should not occur in mainline code.
     """
     @wraps(func)
-    def timing_wrapper(*args, **kwargs):
+    def timing_wrapper(*args, **kwargs) -> Any:
         start: float = monotonic()
         result: Any = func(*args, **kwargs)
         stop: float = monotonic()
         _LOG = logging.getLogger()
         _LOG.debug("%s took: %d ms", func.__name__, int((stop - start) * 1000))
         return result
-    return timing_wrapper
+    return cast(F, timing_wrapper)
 
 
-def group_by_begin_datetime(pnames: Optional[List[str]] = None,
-                            truncate_dates: bool = True) -> "datacube.api.query.GroupBy":
+def group_by_begin_datetime(pnames: list[str] | None = None,
+                            truncate_dates: bool = True) -> GroupBy:
     """
     Returns an ODC GroupBy object, suitable for daily/monthly/yearly/etc statistical/summary data.
     (Or for sub-day time resolution data)
     """
-    from datacube.api.query import GroupBy
     base_sort_key = lambda ds: ds.time.begin
     if pnames:
         index = {
@@ -87,8 +91,7 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
     )
 
 
-def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
-    from datacube.api.query import GroupBy, solar_day
+def group_by_solar(pnames: list[str] | None = None) -> GroupBy:
     base_sort_key = lambda ds: ds.time.begin
     if pnames:
         index = {
@@ -106,15 +109,14 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
     )
 
 
-def group_by_mosaic(pnames: Optional[List[str]] = None) -> "datacube.api.query.GroupBy":
-    from datacube.api.query import GroupBy, solar_day
+def group_by_mosaic(pnames: list[str] | None = None) -> GroupBy:
     base_sort_key = lambda ds: ds.time.begin
     if pnames:
         index = {
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (solar_day(ds), index.get(ds.type.name), base_sort_key(ds))
+        sort_key: Callable[[Dataset], tuple] = lambda ds: (solar_day(ds), index.get(ds.type.name), base_sort_key(ds))
     else:
         sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))
     return GroupBy(
@@ -125,7 +127,7 @@ def group_by_mosaic(pnames: Optional[List[str]] = None) -> "datacube.api.query.G
     )
 
 
-def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
+def get_sqlconn(dc: Datacube) -> Connection:
     """
     Extracts a SQLAlchemy database connection from a Datacube object.
 
@@ -133,7 +135,7 @@ def get_sqlconn(dc: "datacube.Datacube") -> "sqlalchemy.engine.base.Connection":
     :return: A SQLAlchemy database connection object.
     """
     # pylint: disable=protected-access
-    return dc.index._db._engine.connect()
+    return dc.index._db._engine.connect()  # type: ignore[attr-defined]
 
 
 def find_matching_date(dt, dates) -> bool:
