@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 
 import fsspec
 from babel.messages import Catalog, Message
-from datacube import Datacube
 from datacube.model import Product
 from datacube.utils.masking import make_mask
 from flask_babel import gettext as _
