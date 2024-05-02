@@ -10,10 +10,13 @@ from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import ContactInfo, OWSConfig
 
 
-def test_minimal_global(minimal_global_raw_cfg, minimal_dc):
+def test_minimal_global(minimal_global_raw_cfg, minimal_dc, monkeypatch):
+    def fake_dc(*args, **kwargs):
+        return minimal_dc
+    monkeypatch.setattr("datacube.Datacube", fake_dc)
     OWSConfig._instance = None
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
-    cfg.make_ready(minimal_dc)
+    cfg.make_ready()
     assert cfg.ready
     assert cfg.initialised
     assert not cfg.wcs_tiff_statistics
@@ -45,7 +48,10 @@ def test_wcs_only(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
     assert cfg.wcs_tiff_statistics
     assert cfg.default_geographic_CRS == "urn:ogc:def:crs:OGC:1.3:CRS84"
 
-def test_geog_crs(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc):
+def test_geog_crs(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc, monkeypatch):
+    def fake_dc(*args, **kwargs):
+        return minimal_dc
+    monkeypatch.setattr("datacube.Datacube", fake_dc)
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {
         "wcs": True,
@@ -199,7 +205,10 @@ def test_tiff_stats(minimal_global_raw_cfg, wcs_global_cfg):
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert not cfg.wcs_tiff_statistics
 
-def test_crs_lookup_fail(minimal_global_raw_cfg, minimal_dc):
+def test_crs_lookup_fail(monkeypatch, minimal_global_raw_cfg, minimal_dc):
+    def fake_dc(*args, **kwargs):
+        return minimal_dc
+    monkeypatch.setattr("datacube.Datacube", fake_dc)
     OWSConfig._instance = None
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     with pytest.raises(ConfigException) as excinfo:
