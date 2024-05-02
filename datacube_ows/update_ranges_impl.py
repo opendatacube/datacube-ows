@@ -103,6 +103,13 @@ def main(layers,
               "       Try running with the --schema options first."
               )
         sys.exit(1)
+    except (psycopg2.errors.NotNullViolation,
+            sqlalchemy.exc.IntegrityError) as e:
+        print("ERROR: OWS materialised views are most likely missing a newly indexed product",
+              "\n",
+              "       Try running with the --views options first."
+              )
+        sys.exit(1)
     if errors:
         sys.exit(1)
 
