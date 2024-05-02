@@ -414,8 +414,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         self.local_env: ODCEnvironment | None = None
         local_env = cast(str | None, cfg.get("env"))
-        if local_env:
-            self.local_env = ODCConfig.get_environment(env=local_env)
+        # TODO: MULTIDB_SUPPORT
+        #     After refactoring the range tables, Uncomment this code for multi-database support
+        #     (Don't forget to add to documentation)
+        #
+        # if local_env:
+        #    self.local_env = ODCConfig.get_environment(env=local_env)
         try:
             self.parse_product_names(cfg)
             if len(self.low_res_product_names) not in (0, len(self.product_names)):
@@ -508,7 +512,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("default_time")
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
-        # TODO: sub-ranges
         self.band_idx: BandIndex = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
         self.cfg_native_crs = cfg.get("native_crs")
@@ -569,14 +572,18 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
-        if self.local_env:
-            try:
-                self.dc: Datacube = Datacube(env=self.local_env, app=self.global_cfg.odc_app)
-            except Exception as e:
-                _LOG.error("ODC initialisation failed: %s", str(e))
-                raise ODCInitException(e)
-        else:
-            self.dc = self.global_cfg.dc
+        # TODO: MULTIDB_SUPPORT
+        #     After refactoring the range tables, Uncomment this code for multi-database support
+        #     (Don't forget to add to documentation)
+        #
+        # if self.local_env:
+        #     try:
+        #         self.dc: Datacube = Datacube(env=self.local_env, app=self.global_cfg.odc_app)
+        #     except Exception as e:
+        #         _LOG.error("ODC initialisation failed: %s", str(e))
+        #         raise ODCInitException(e)
+        # else:
+        self.dc = self.global_cfg.dc
         self.products: list[Product] = []
         self.low_res_products: list[Product] = []
         for i, prod_name in enumerate(self.product_names):
@@ -1301,9 +1308,8 @@ class OWSConfig(OWSMetadataConfig):
         return self.catalog
 
     def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool):
-        default_env = cast(str, cfg.get("env"))
+        self.default_env = cast(str, cfg.get("env"))
         self.odc_app = cast(str, cfg.get("odc_app", "ows"))
-        self.default_env = ODCConfig.get_environment(default_env)
         self._response_headers = cast(dict[str, str], cfg.get("response_headers", {}))
         services = cast(dict[str, bool], cfg.get("services", {}))
         self.wms = services.get("wms", True)
