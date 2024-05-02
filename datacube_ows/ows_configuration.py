@@ -414,6 +414,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.hide = False
         self.local_env: ODCEnvironment | None = None
         local_env = cast(str | None, cfg.get("env"))
+        self.local_env = ODCConfig.get_environment(env=local_env)
         # TODO: MULTIDB_SUPPORT
         #     After refactoring the range tables, Uncomment this code for multi-database support
         #     (Don't forget to add to documentation)
@@ -598,7 +599,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             if low_res_prod_name:
                 product = self.dc.index.products.get_by_name(low_res_prod_name)
                 if not product:
-                    raise ConfigException(f"Could not find product {low_res_prod_name} in datacube for layer {self.name}")
+                    raise ConfigException(
+                        f"Could not find product {low_res_prod_name} in datacube for layer {self.name}"
+                    )
                 self.low_res_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
