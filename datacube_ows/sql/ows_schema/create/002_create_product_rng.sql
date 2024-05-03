@@ -1,7 +1,9 @@
 -- Creating/replacing product ranges table
 
-create table if not exists wms.product_ranges (
-    id smallint not null primary key references agdc.dataset_type (id),
+create table if not exists ows.layer_ranges (
+    layer varchar(255) not null primary key,
+
+    layer_type int not null,
 
     lat_min decimal not null,
     lat_max decimal not null,
@@ -10,4 +12,7 @@ create table if not exists wms.product_ranges (
 
     dates jsonb not null,
 
-    bboxes jsonb not null);
+    bboxes jsonb not null,
+
+    last_updated timestamp not null
+);

@@ -1312,7 +1312,7 @@ class OWSConfig(OWSMetadataConfig):
 
     def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool):
         self.default_env = cast(str, cfg.get("env"))
-        self.odc_app = cast(str, cfg.get("odc_app", "ows"))
+        self.odc_app = cast(str, cfg.get("odc_app", "datacube-ows"))
         self._response_headers = cast(dict[str, str], cfg.get("response_headers", {}))
         services = cast(dict[str, bool], cfg.get("services", {}))
         self.wms = services.get("wms", True)

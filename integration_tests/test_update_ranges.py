@@ -11,7 +11,7 @@ from datacube_ows.update_ranges_impl import main
 
 
 def test_updates_ranges_schema(runner, role_name):
-    result = runner.invoke(main, ["--schema", "--role", role_name])
+    result = runner.invoke(main, ["--schema", "--read-role", role_name, "--write-role", role_name])
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
 

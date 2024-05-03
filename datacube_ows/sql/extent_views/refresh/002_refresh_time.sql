@@ -1,3 +1,3 @@
 -- Refreshing TIME materialized view (Blocking)
 
-REFRESH MATERIALIZED VIEW time_view
+REFRESH MATERIALIZED VIEW ows.time_view
