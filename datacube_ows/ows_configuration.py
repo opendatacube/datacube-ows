@@ -42,7 +42,6 @@ from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        cfg_expand, get_file_loc,
                                        import_python_obj, load_json_obj)
 from datacube_ows.ogc_utils import create_geobox
-from datacube_ows.product_ranges import LayerExtent
 from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef
@@ -50,6 +49,10 @@ from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.time_utils import local_solar_date_range
 from datacube_ows.utils import (group_by_begin_datetime, group_by_mosaic,
                                 group_by_solar)
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.product_ranges import LayerExtent
 
 _LOG = logging.getLogger(__name__)
 
@@ -933,7 +936,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.hide = True
             self.bboxes = {}
 
-    def time_range(self, ranges: LayerExtent | None = None):
+    def time_range(self,
+                   ranges: Optional["LayerExtent"] = None
+                   ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
         if ranges is None:
             ranges = self.ranges
         if self.regular_time_axis and self.time_axis_start:
@@ -947,7 +952,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return (start, end)
 
     @property
-    def ranges(self) -> LayerExtent:
+    def ranges(self) -> "LayerExtent":
         if self.dynamic:
             self.force_range_update()
         assert self._ranges is not None  # For type checker

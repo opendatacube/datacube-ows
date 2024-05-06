@@ -9,13 +9,15 @@ import dataclasses
 import logging
 import math
 from datetime import date, datetime, timezone
-from typing import Any, Callable, Iterable, NamedTuple
+from typing import cast, Callable, Iterable, NamedTuple
 
 import datacube
 import odc.geo
 import sqlalchemy.exc
 from psycopg2.extras import Json
 from sqlalchemy import text
+
+from odc.geo.geom import Geometry
 
 from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer, get_config
@@ -193,7 +195,7 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         # calculate bounding boxes
         # Get extent polygon from materialised views
 
-        extent_4386 = mv_search(layer.dc.index, MVSelectOpts.EXTENT, products=layer.products)
+        extent_4386 = cast(Geometry, mv_search(layer.dc.index, MVSelectOpts.EXTENT, products=layer.products))
 
         all_bboxes = bbox_projections(extent_4386, layer.global_cfg.crses)
 
