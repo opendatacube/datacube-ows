@@ -42,6 +42,7 @@ from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        cfg_expand, get_file_loc,
                                        import_python_obj, load_json_obj)
 from datacube_ows.ogc_utils import create_geobox
+from datacube_ows.product_ranges import LayerExtent
 from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
 from datacube_ows.styles import StyleDef
@@ -910,10 +911,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
             if self.default_time_rule == DEF_TIME_EARLIEST:
-                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["start_time"])
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges.start_time)
             elif isinstance(self.default_time_rule,
                             datetime.date) and self.default_time_rule in cast(set[datetime.datetime | datetime.date],
-                                                                              self._ranges["time_set"]):
+                                                                              self._ranges.time_set):
                 self.default_time = cast(datetime.datetime | datetime.date, self.default_time_rule)
             elif isinstance(self.default_time_rule, datetime.date):
                 _LOG.warning("default_time for named_layer %s is explicit date (%s) that is "
@@ -921,9 +922,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                                     self.name,
                                     self.default_time_rule.isoformat()
                 )
-                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges.end_time)
             else:
-                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges.end_time)
 
         # pylint: disable=broad-except
         except Exception as a:
@@ -932,21 +933,21 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.hide = True
             self.bboxes = {}
 
-    def time_range(self, ranges: dict[str, Any] | None = None):
+    def time_range(self, ranges: LayerExtent | None = None):
         if ranges is None:
             ranges = self.ranges
         if self.regular_time_axis and self.time_axis_start:
             start = self.time_axis_start
         else:
-            start = ranges["times"][0]
+            start = ranges.start_time
         if self.regular_time_axis and self.time_axis_end:
             end = self.time_axis_end
         else:
-            end = ranges["times"][-1]
+            end = ranges.end_time
         return (start, end)
 
     @property
-    def ranges(self) -> dict[str, Any]:
+    def ranges(self) -> LayerExtent:
         if self.dynamic:
             self.force_range_update()
         assert self._ranges is not None  # For type checker
@@ -956,7 +957,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self._ranges is None:
             return {}
         bboxes = {}
-        for crs_id, bbox in cast(dict[str, dict[str, float]], self._ranges["bboxes"]).items():
+        for crs_id, bbox in cast(dict[str, dict[str, float]], self._ranges.bboxes).items():
             if crs_id in self.global_cfg.published_CRSs:
                 # Assume we've already handled coordinate swapping for
                 # Vertical-coord first CRSs.   Top is top, left is left.
@@ -974,7 +975,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     def search_times(self, t, geobox=None):
         if not geobox:
-            bbox = self.ranges["bboxes"][self.native_CRS]
+            bbox = self.ranges.bboxes[self.native_CRS]
             geobox = create_geobox(
                 self.native_CRS,
                 bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],

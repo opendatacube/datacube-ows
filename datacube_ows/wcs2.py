@@ -114,8 +114,8 @@ def get_capabilities(args):
                 coverage_subtype='RectifiedGridCoverage',
                 title=product.title,
                 wgs84_bbox=WGS84BoundingBox([
-                    product.ranges['lon']['min'], product.ranges['lat']['min'],
-                    product.ranges['lon']['max'], product.ranges['lat']['max'],
+                    product.ranges.lon.min, product.ranges.lat.min,
+                    product.ranges.lon.max, product.ranges.lat.max,
                 ])
             )
             for product in cfg.layer_index.values()

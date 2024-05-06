@@ -9,7 +9,7 @@ import dataclasses
 import logging
 import math
 from datetime import date, datetime, timezone
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, NamedTuple
 
 import datacube
 import odc.geo
@@ -17,6 +17,7 @@ import sqlalchemy.exc
 from psycopg2.extras import Json
 from sqlalchemy import text
 
+from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer, get_config
 from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import get_sqlconn
@@ -272,38 +273,32 @@ def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
     return errors
 
 
-def get_ranges(layer: OWSNamedLayer,
-               path: str | None = None) -> dict[str, Any] | None:
+class CoordRange(NamedTuple):
+    min: float
+    max: float
+
+
+class LayerExtent:
+    def __init__(self, lat: CoordRange, lon: CoordRange, times: list[datetime | date], bboxes: CFG_DICT):
+        self.lat = lat
+        self.lon = lon
+        self.times = times
+        self.start_time = times[0]
+        self.end_time = times[-1]
+        self.time_set = set(times)
+        self.bboxes = bboxes
+
+
+def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
     cfg = layer.global_cfg
     conn = get_sqlconn(layer.dc)
-    if layer.multi_product:
-        if path is not None:
-            raise Exception("Combining subproducts and multiproducts is not yet supported")
-        results = conn.execute(text("""
-            SELECT *
-            FROM wms.multiproduct_ranges
-            WHERE wms_product_name=:pname"""),
-                               {"pname": layer.name}
-                              )
-    else:
-        prod_id = layer.product.id
-        if path is not None:
-            results = conn.execute(text("""
-                SELECT *
-                FROM wms.sub_product_ranges
-                WHERE product_id=:pid and sub_product_id=:path"""),
-                                   {
-                                       "pid": prod_id,
-                                       "path": path
-                                   }
-                  )
-        else:
-            results = conn.execute(text("""
-                SELECT *
-                FROM wms.product_ranges
-                WHERE id=:pid"""),
-                                   {"pid": prod_id}
-                                  )
+    results = conn.execute(text("""
+        SELECT *
+        FROM ows.layer_names
+        WHERE layer_name=:pname"""),
+                           {"pname": layer.name}
+                          )
+
     for result in results:
         conn.close()
         if layer.time_resolution.is_subday():
@@ -313,19 +308,10 @@ def get_ranges(layer: OWSNamedLayer,
         times = [dt_parser(d) for d in result.dates if d is not None]
         if not times:
             return None
-        return {
-            "lat": {
-                "min": float(result.lat_min),
-                "max": float(result.lat_max),
-            },
-            "lon": {
-                "min": float(result.lon_min),
-                "max": float(result.lon_max),
-            },
-            "times": times,
-            "start_time": times[0],
-            "end_time": times[-1],
-            "time_set": set(times),
-            "bboxes": cfg.alias_bboxes(result.bboxes)
-        }
+        return LayerExtent(
+            lat=CoordRange(min=float(result.lat_min), max=float(result.lat_max)),
+            lon=CoordRange(min=float(result.lon_min), max=float(result.lon_max)),
+            times=times,
+            bboxes=result.bboxes
+        )
     return None

@@ -83,7 +83,7 @@ def get_coverage_data(request, styles, qprof):
     #
 
     scaler = WCSScaler(layer, subsetting_crs)
-    times = layer.ranges["times"]
+    times = layer.ranges.times
 
     subsets = request.subsets
 

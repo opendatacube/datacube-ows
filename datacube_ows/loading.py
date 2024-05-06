@@ -125,37 +125,37 @@ PerPBQReturnType = xarray.DataArray | Iterable[UUID]
 class DataStacker:
     @log_call
     def __init__(self,
-                 product: OWSNamedLayer,
+                 layer: OWSNamedLayer,
                  geobox: GeoBox,
                  times: list[datetime.datetime],
                  resampling: Resampling | None = None,
                  style: StyleDef | None = None,
                  bands: list[str] | None = None):
-        self._product = product
-        self.cfg = product.global_cfg
+        self._layer = layer
+        self.cfg = layer.global_cfg
         self._geobox = geobox
         self._resampling = resampling if resampling is not None else "nearest"
         self.style = style
         if style:
             self._needed_bands = list(style.needed_bands)
         elif bands:
-            self._needed_bands = [self._product.band_idx.locale_band(b) for b in bands]
+            self._needed_bands = [self._layer.band_idx.locale_band(b) for b in bands]
         else:
-            self._needed_bands = list(self._product.band_idx.measurements.keys())
+            self._needed_bands = list(self._layer.band_idx.measurements.keys())
 
-        for band in self._product.always_fetch_bands:
+        for band in self._layer.always_fetch_bands:
             if band not in self._needed_bands:
                 self._needed_bands.append(band)
         self.raw_times = times
-        if product.mosaic_date_func:
-            self._times = [product.mosaic_date_func(product.ranges["times"])]
+        if layer.mosaic_date_func:
+            self._times = [layer.mosaic_date_func(layer.ranges.times)]
         else:
             self._times = [
-                    self._product.search_times(
+                    self._layer.search_times(
                             t, self._geobox)
                     for t in times
             ]
-        self.group_by = self._product.dataset_groupby()
+        self.group_by = self._layer.dataset_groupby()
         self.resource_limited = False
 
     def needed_bands(self) -> list[str]:
@@ -185,7 +185,7 @@ class DataStacker:
             # Not returning datasets - use main product only
             queries = [
                 ProductBandQuery.simple_layer_query(
-                    self._product,
+                    self._layer,
                     self.needed_bands(),
                     self.resource_limited)
 
@@ -194,10 +194,10 @@ class DataStacker:
             # we have a style - lets go with that.
             queries = ProductBandQuery.style_queries(self.style)
         elif all_flag_bands:
-            queries = ProductBandQuery.full_layer_queries(self._product, self.needed_bands())
+            queries = ProductBandQuery.full_layer_queries(self._layer, self.needed_bands())
         else:
             # Just take needed bands.
-            queries = [ProductBandQuery.simple_layer_query(self._product, self.needed_bands())]
+            queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
 
         if point:
             geom = point
@@ -338,14 +338,14 @@ class DataStacker:
                 d = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
                 extent_mask = None
                 for band in non_flag_bands:
-                    for f in self._product.extent_mask_func:
+                    for f in self._layer.extent_mask_func:
                         if extent_mask is None:
                             extent_mask = f(d, band)
                         else:
                             extent_mask &= f(d, band)
                 if extent_mask is not None:
                     d = d.where(extent_mask)
-                if self._product.solar_correction and not skip_corrections:
+                if self._layer.solar_correction and not skip_corrections:
                     for band in non_flag_bands:
                         d[band] = solar_correct_data(d[band], ds)
                 if merged is None:
@@ -383,7 +383,7 @@ class DataStacker:
                     measurements=measurements,
                     fuse_func=fuse_func,
                     skip_broken_datasets=skip_broken,
-                    patch_url=self._product.patch_url,
+                    patch_url=self._layer.patch_url,
                     resampling=resampling)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
@@ -399,7 +399,7 @@ class DataStacker:
                                      resampling: Resampling = "nearest",
                                      fuse_func: datacube.api.core.FuserFunction | None = None) -> xarray.Dataset:
         datasets = [dataset]
-        dc_datasets = datacube.Datacube.group_datasets(datasets, self._product.time_resolution.dataset_groupby())
+        dc_datasets = datacube.Datacube.group_datasets(datasets, self._layer.time_resolution.dataset_groupby())
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
@@ -408,7 +408,7 @@ class DataStacker:
                 measurements=measurements,
                 fuse_func=fuse_func,
                 skip_broken_datasets=skip_broken,
-                patch_url=self._product.patch_url,
+                patch_url=self._layer.patch_url,
                 resampling=resampling)
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
