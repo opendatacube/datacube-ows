@@ -3,22 +3,22 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-
-
+import dataclasses
 #pylint: skip-file
 
 import logging
 import math
 from datetime import date, datetime, timezone
-from typing import Any, Callable, Iterable, cast
+from typing import Any, Callable, Iterable
 
 import datacube
 import odc.geo
+import sqlalchemy.exc
 from psycopg2.extras import Json
 from sqlalchemy import text
 
-from datacube_ows.ows_configuration import (OWSConfig, OWSMultiProductLayer,
-                                            OWSNamedLayer, get_config)
+from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer, get_config
+from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import get_sqlconn
 
 _LOG = logging.getLogger(__name__)
@@ -45,241 +45,169 @@ def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
             "right": bbox.right,
         }
 
+@dataclasses.dataclass(frozen=True)
+class LayerSignature:
+    time_res: str
+    products: tuple[str, ...]
+    env: str
+    datasets: int
 
-def create_multiprod_range_entry(product: OWSMultiProductLayer) -> None:
-    print("Merging multiproduct ranges for %s (ODC products: %s)" % (
-        product.name,
-        repr(product.product_names)
-    ))
-    conn = get_sqlconn(dc)
-    prodids = [p.id for p in product.products]
-    wms_name = product.name
+    def as_json(self) -> dict[str, list[str] | str | int]:
+        return {
+            "time_res": self.time_res,
+            "products": list(self.products),
+            "env": self.env,
+            "datasets": self.datasets,
+        }
 
-    if all(
-            not datasets_exist(dc, p_name)
-            for p_name in product.product_names
-    ):
-        print("Could not find datasets for any product in multiproduct: ", product.name)
-        conn.close()
-        print("Done")
-        return
 
+def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
+    meta = LayerSignature(time_res=layer.time_resolution.value,
+                          products=tuple(layer.product_names),
+                          env=layer.local_env._name,
+                          datasets=layer.dc.index.datasets.count(product=layer.product_names))
+
+    print(f"Updating range for layer {layer.name}")
+    conn = get_sqlconn(layer.dc)
     txn = conn.begin()
-    # Attempt to insert row
-    conn.execute(text("""
-        INSERT INTO wms.multiproduct_ranges
-        (wms_product_name,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
+    if meta in cache:
+        template = cache[meta][0]
+        print(f"Layer {template} has same signature - reusing")
+        cache[meta].append(layer.name)
+        try:
+            conn.execute(text("""
+            INSERT INTO ows.layer_ranges
+                (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
+            SELECT :layer_id, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated
+            FROM ows.layer_ranges lr2
+            WHERE lr2.layer = :template_id"""),
+                         {
+                                      "layer_id": layer.name,
+                                      "template_id": template
+                                   })
+        except sqlalchemy.exc.IntegrityError:
+            conn.execute(text("""
+            UPDATE ows.layer_ranges lr1
+            SET lat_min = lr2.lat_min,
+                lat_max = lr2.lat_max,
+                lon_min = lr2.lon_min,
+                lon_max = lr2.lon_max,
+                dates = lr2.dates,
+                bboxes = lr2.bboxes,
+                meta = lr2.meta,
+                last_updated = lr2.last_updated
+            FROM ows.layer_ranges lr2
+            WHERE lr1.layer = :layer_id
+            AND   lr2.layer = :template_id"""),
+                         {
+                             "layer_id": layer.name,
+                             "template_id": template
+                         })
+    else:
+        # insert empty row if one does not already exist
+        conn.execute(text("""
+        INSERT INTO ows.layer_ranges
+        (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
         VALUES
-        (:p_id, 0, 0, 0, 0, :empty, :empty)
-        ON CONFLICT (wms_product_name) DO NOTHING
+        (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
+        ON CONFLICT (layer) DO NOTHING
         """),
-             {"p_id": wms_name, "empty": Json("")})
+        {
+            "p_layer": layer.name, "empty": Json(""),
+            "meta": Json(meta.as_json()), "now": datetime.now(tz=timezone.utc)
+        })
 
-    # Update extents
-    conn.execute(text("""
-        UPDATE wms.multiproduct_ranges
-        SET lat_min = subq.lat_min,
-            lat_max = subq.lat_max,
-            lon_min = subq.lon_min,
-            lon_max = subq.lon_max
-        FROM (
-            select min(lat_min) as lat_min,
-                   max(lat_max) as lat_max,
-                   min(lon_min) as lon_min,
-                   max(lon_max) as lon_max
-            from wms.product_ranges
-            where id = ANY (:p_prodids)
-        ) as subq
-        WHERE wms_product_name = :p_id
-        """),
-             {"p_id": wms_name, "p_prodids": prodids})
+        prodids = [p.id for p in layer.products]
+        # Update min/max lat/longs
+        conn.execute(text(
+          """
+          UPDATE ows.layer_ranges lr
+          SET lat_min = st_ymin(subq.bbox),
+              lat_max = st_ymax(subq.bbox),
+              lon_min = st_xmin(subq.bbox),
+              lon_max = st_xmax(subq.bbox)
+          FROM (
+            SELECT st_extent(stv.spatial_extent) as bbox
+            FROM ows.space_time_view stv
+            WHERE stv.dataset_type_ref = ANY(:prodids)
+          ) as subq
+          WHERE lr.layer = :layer_id
+          """),
+          {"layer_id": layer.name, "prodids": prodids})
 
-    # Create sorted list of dates
-    results = conn.execute(text(
-        """
-        SELECT dates
-        FROM   wms.product_ranges
-        WHERE  id  = ANY (:p_prodids)
-        """), {"p_prodids": prodids}
-    )
-    dates = set()
-    for r in results:
-        for d in r[0]:
-            dates.add(d)
-    dates = sorted(dates)
-    conn.execute(text("""
-           UPDATE wms.multiproduct_ranges
+        # Set default timezone
+        conn.execute(text("""set timezone to 'Etc/UTC'"""))
+
+        # Loop over dates
+        dates = set()  # Should get to here!
+        if layer.time_resolution.is_solar():
+          results = conn.execute(text(
+              """
+              select
+                    lower(temporal_extent), upper(temporal_extent),
+                    ST_X(ST_Centroid(spatial_extent))
+              from ows.space_time_view
+              WHERE dataset_type_ref = ANY(:prodids)
+              """),
+              {"prodids": prodids})
+          for result in results:
+              dt1, dt2, lon = result
+              dt = dt1 + (dt2 - dt1) / 2
+              dt = dt.astimezone(timezone.utc)
+
+              solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
+              dates.add(solar_day)
+        else:
+          results = conn.execute(text(
+              """
+              select
+                    array_agg(temporal_extent)
+              from ows.space_time_view
+              WHERE dataset_type_ref = ANY(:prodids)
+              """),
+              {"prodids": prodids}
+          )
+          for result in results:
+              for dat_ran in result[0]:
+                  dates.add(dat_ran.lower)
+
+        if layer.time_resolution.is_subday():
+          date_formatter = lambda d: d.isoformat()
+        else:
+          date_formatter = lambda d: d.strftime("%Y-%m-%d")
+
+        dates = sorted(dates)
+        conn.execute(text("""
+           UPDATE ows.layer_ranges
            SET dates = :dates
-           WHERE wms_product_name= :p_id
-      """),
-         {
-             "dates": Json(dates),
-             "p_id": wms_name
-         }
-    )
-
-    # calculate bounding boxes
-    results = list(conn.execute(text("""
-        SELECT lat_min,lat_max,lon_min,lon_max
-        FROM wms.multiproduct_ranges
-        WHERE wms_product_name=:p_id
+           WHERE layer= :layer_id
         """),
-        {"p_id": wms_name}))
+                   {
+                       "dates": Json(list(map(date_formatter, dates))),
+                       "layer_id": layer.name
+                   }
+        )
+        print("Dates written")
 
-    r = results[0]
+        # calculate bounding boxes
+        # Get extent polygon from materialised views
 
-    epsg4326 = odc.geo.CRS("EPSG:4326")
-    box = odc.geo.geom.box(
-        float(r[2]),
-        float(r[0]),
-        float(r[3]),
-        float(r[1]),
-        epsg4326)
+        extent_4386 = mv_search(layer.dc.index, MVSelectOpts.EXTENT, products=layer.products)
 
-    cfg = get_config()
-    conn.execute(text("""
-        UPDATE wms.multiproduct_ranges
+        all_bboxes = bbox_projections(extent_4386, layer.global_cfg.crses)
+
+        conn.execute(text("""
+        UPDATE ows.layer_ranges
         SET bboxes = :bbox
-        WHERE wms_product_name=:pname
-        """),
-                 {
-                 "bbox": Json({crsid: jsonise_bbox(box.to_crs(crs).boundingbox) for crsid, crs in get_crses(cfg).items()}),
-                 "pname": wms_name
-                 }
-    )
+        WHERE layer = :layer_id
+        """), {
+        "bbox": Json(all_bboxes),
+        "layer_id": layer.name})
+
+        cache[meta] = [layer.name]
 
     txn.commit()
     conn.close()
-    return
-
-
-def create_range_entry(layer: OWSNamedLayer) -> None:
-  print(f"Updating range for layer {layer.name}")
-  meta: dict[str, str | list[str] | int] = {
-      "time_res": str(layer.time_resolution),
-      "products": layer.product_names,
-      "env": layer.local_env._name,
-      "datasets": layer.dc.index.datasets.count(product=layer.product_names)
-  }
-  print(f"     metadata: {repr(meta)}")
-  # NB. product is an ODC product
-  conn = get_sqlconn(layer.dc)
-  txn = conn.begin()
-  print(f"in transaction")
-
-  # insert empty row if one does not already exist
-  conn.execute(text("""
-    INSERT INTO ows.layer_ranges
-    (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
-    VALUES
-    (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
-    ON CONFLICT (layer) DO NOTHING
-    """),
-    {"p_layer": layer.name, "empty": Json(""), "meta": Json(meta), "now": datetime.now(tz=timezone.utc)})
-
-  print("Created empty row")
-  # Update min/max lat/longs
-  conn.execute(text(
-      """
-      UPDATE ows.layer_ranges lr
-      SET lat_min = st_ymin(subq.bbox),
-          lat_max = st_ymax(subq.bbox),
-          lon_min = st_xmin(subq.bbox),
-          lon_max = st_xmax(subq.bbox)
-      FROM (
-        SELECT st_extent(stv.spatial_extent) as bbox
-        FROM ows.space_time_view stv
-        WHERE stv.dataset_type_ref = ANY(:prodids)
-      ) as subq
-      WHERE lr.layer = :layer_id
-      """),
-      {"layer_id": layer.name, "prodids": [p.id for p in layer.products]})
-  print("max/min lat/lon set")
-
-  # Set default timezone
-  conn.execute(text("""set timezone to 'Etc/UTC'"""))
-
-  # Loop over dates
-  dates = set() # Should get to here!
-  print("OK made it to here! Yay!")
-  if layer.time_resolution.is_solar():
-      results = conn.execute(text(
-          """
-          select
-                lower(temporal_extent), upper(temporal_extent),
-                ST_X(ST_Centroid(spatial_extent))
-          from public.space_time_view
-          WHERE dataset_type_ref = :p_id
-          """),
-          {"p_id": prodid})
-      for result in results:
-          dt1, dt2, lon = result
-          dt = dt1 + (dt2 - dt1) / 2
-          dt = dt.astimezone(timezone.utc)
-
-          solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
-          dates.add(solar_day)
-  else:
-      results = conn.execute(text(
-          """
-          select
-                array_agg(temporal_extent)
-          from public.space_time_view
-          WHERE dataset_type_ref = :p_id
-          """),
-          {"p_id": prodid}
-      )
-      for result in results:
-          for dat_ran in result[0]:
-              dates.add(dat_ran.lower)
-
-  if time_resolution.is_subday():
-      date_formatter = lambda d: d.isoformat()
-  else:
-      date_formatter = lambda d: d.strftime("%Y-%m-%d")
-
-  dates = sorted(dates)
-  conn.execute(text("""
-       UPDATE wms.product_ranges
-       SET dates = :dates
-       WHERE id= :p_id
-  """),
-               {
-                   "dates": Json(list(map(date_formatter, dates))),
-                   "p_id": prodid
-               }
-  )
-
-  # calculate bounding boxes
-  lres = list(conn.execute(text("""
-    SELECT lat_min,lat_max,lon_min,lon_max
-    FROM wms.product_ranges
-    WHERE id=:p_id
-    """),
-      {"p_id": prodid}))
-
-  r = lres[0]
-
-  epsg4326 = odc.geo.CRS("EPSG:4326")
-  box = odc.geo.geom.box(
-    float(r[2]),
-    float(r[0]),
-    float(r[3]),
-    float(r[1]),
-    epsg4326)
-
-  all_bboxes = bbox_projections(box, crses)
-
-  conn.execute(text("""
-    UPDATE wms.product_ranges
-    SET bboxes = :bbox
-    WHERE id=:p_id
-    """), {
-    "bbox": Json(all_bboxes),
-    "p_id": product.id})
-
-  txn.commit()
-  conn.close()
 
 
 def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CRS]) -> dict[str, dict[str, float]]:
@@ -331,16 +259,14 @@ def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
     if not layer_names:
         layer_names = list(cfg.layer_index.keys())
     errors = False
+    cache: dict[LayerSignature, list[str]] = {}
     for name in layer_names:
         if name not in cfg.layer_index:
             _LOG.warning("Layer '%s' does not exist in the OWS configuration - skipping", name)
             errors = True
             continue
         layer = cfg.layer_index[name]
-        if layer.multi_product:
-            create_multiprod_range_entry(layer)
-        else:
-            create_range_entry(layer)
+        create_range_entry(layer, cache)
 
     print("Done.")
     return errors

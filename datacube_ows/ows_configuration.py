@@ -1392,6 +1392,7 @@ class OWSConfig(OWSMetadataConfig):
             self.published_CRSs[alias] = target_def.copy()
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
+        self.crses = {s: self.crs(s) for s in self.published_CRSs}
 
     def parse_wms(self, cfg: CFG_DICT):
         if not self.wms and not self.wmts:

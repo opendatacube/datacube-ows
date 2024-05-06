@@ -100,9 +100,7 @@ def main(layers: list[str],
     """
     # --version
     if version:
-        print("Open Data Cube Open Web Services (datacube-ows) version",
-              __version__
-               )
+        print("Open Data Cube Open Web Services (datacube-ows) version", __version__)
         sys.exit(0)
     # Handle old-style calls
     if not layers:
