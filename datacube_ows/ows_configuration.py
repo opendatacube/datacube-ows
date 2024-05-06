@@ -1262,6 +1262,9 @@ class OWSConfig(OWSMetadataConfig):
                 )
             self.catalog: Catalog | None = None
             self.initialised = True
+            self.declare_unready("dc")
+            self.declare_unready("crses")
+            self.declare_unready("native_product_index")
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
@@ -1278,6 +1281,7 @@ class OWSConfig(OWSMetadataConfig):
                 _LOG.warning("Message file %s does not exist - using metadata from config file", self.msg_file_name)
         else:
             self.set_msg_src(None)
+        self.crses = {s: self.crs(s) for s in self.published_CRSs}
         self.native_product_index: dict[str, OWSNamedLayer] = {}
         self.root_layer_folder.make_ready(*args, **kwargs)
         super().make_ready(*args, **kwargs)
@@ -1398,7 +1402,6 @@ class OWSConfig(OWSMetadataConfig):
             self.published_CRSs[alias] = target_def.copy()
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
-        self.crses = {s: self.crs(s) for s in self.published_CRSs}
 
     def parse_wms(self, cfg: CFG_DICT):
         if not self.wms and not self.wmts:

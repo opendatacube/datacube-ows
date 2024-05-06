@@ -13,6 +13,7 @@ import pytest
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
 from datacube_ows.resource_limits import ResourceLimited
+from datacube_ows.product_ranges import LayerExtent, CoordRange
 
 
 def test_missing_title(minimal_global_cfg):
@@ -179,7 +180,7 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range):
         lyr.make_ready()
     assert lyr.ready
     assert not lyr.hide
-    assert lyr.default_time == mock_range["times"][-1]
+    assert lyr.default_time == mock_range.times[-1]
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
     assert lyr.mosaic_date_func is None
@@ -593,14 +594,17 @@ def test_invalid_native_format(minimal_layer_cfg, minimal_global_cfg):
 
 def test_time_range_irreg(minimal_layer_cfg, minimal_global_cfg):
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
-    ranges = {
-        "times": [
+    ranges = LayerExtent(
+        lat=CoordRange(-0.1, 0.1),
+        lon=CoordRange(-0.1, 0.1),
+        times= [
             datetime.date(2021, 1, 5),
             datetime.date(2021, 1, 6),
             datetime.date(2021, 1, 7),
             datetime.date(2021, 1, 8),
-        ]
-    }
+        ],
+        bboxes={}
+    )
     start, end = lyr.time_range(ranges)
     assert start == datetime.date(2021, 1, 5)
     assert end == datetime.date(2021, 1, 8)
@@ -611,14 +615,17 @@ def test_time_range_reg_default(minimal_layer_cfg, minimal_global_cfg):
         "time_interval": 1
     }
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
-    ranges = {
-        "times": [
+    ranges = LayerExtent(
+        lat=CoordRange(-0.1, 0.1),
+        lon=CoordRange(-0.1, 0.1),
+        times= [
             datetime.date(2021, 1, 5),
             datetime.date(2021, 1, 6),
             datetime.date(2021, 1, 7),
             datetime.date(2021, 1, 8),
-        ]
-    }
+        ],
+        bboxes={}
+    )
     start, end = lyr.time_range(ranges)
     assert start == datetime.date(2021, 1, 5)
     assert end == datetime.date(2021, 1, 8)
@@ -715,7 +722,7 @@ def test_earliest_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc
         lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
-    assert lyr.default_time == mock_range["times"][0]
+    assert lyr.default_time == mock_range.times[0]
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
 
@@ -730,7 +737,7 @@ def test_latest_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, 
         lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
-    assert lyr.default_time == mock_range["times"][-1]
+    assert lyr.default_time == mock_range.times[-1]
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
 
@@ -751,8 +758,7 @@ def test_valid_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, m
 
 def test_missing_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
     minimal_layer_cfg["default_time"] = "2020-01-22"
-    lyr = parse_ows_layer(minimal_layer_cfg,
-                          global_cfg=minimal_global_cfg)
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
     with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
@@ -760,7 +766,7 @@ def test_missing_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc,
         lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
-    assert lyr.default_time == mock_range["times"][-1]
+    assert lyr.default_time == mock_range.times[-1]
     assert "a_layer" in str(lyr)
     assert len(lyr.low_res_products) == 0
 

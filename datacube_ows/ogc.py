@@ -179,14 +179,17 @@ def ogc_wcs_impl():
 def ping():
     db_ok = False
     cfg = get_config()
-    with cfg.dc.index._db.give_me_a_connection() as conn:
-        results = conn.execute(text("""
-                SELECT *
-                FROM wms.product_ranges
-                LIMIT 1""")
-        )
-        for r in results:
-            db_ok = True
+    try:
+        with cfg.dc.index._db.give_me_a_connection() as conn:
+            results = conn.execute(text("""
+                    SELECT *
+                    FROM ows.layer_ranges
+                    LIMIT 1""")
+            )
+            for r in results:
+                db_ok = True
+    except Exception:
+        pass
     if db_ok:
         return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
     else:

@@ -296,8 +296,8 @@ def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
     conn = get_sqlconn(layer.dc)
     results = conn.execute(text("""
         SELECT *
-        FROM ows.layer_names
-        WHERE layer_name=:pname"""),
+        FROM ows.layer_ranges
+        WHERE layer=:pname"""),
                            {"pname": layer.name}
                           )
 

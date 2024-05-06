@@ -79,7 +79,7 @@ def test_geog_crs(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc, monkeypatc
             "horizontal_coord": "x",
             "vertical_coord": "y",
         },
-        "EPSG:99899": {  # Made up
+        "EPSG:2154": {  # Made up - epsg:2154 is real, but does not have these properties.
             "geographic": True,
             "horizontal_coord": "longitude",
             "vertical_coord": "latitude",
@@ -87,7 +87,7 @@ def test_geog_crs(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc, monkeypatc
     }
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     cfg.make_ready(minimal_dc)
-    assert cfg.default_geographic_CRS == "EPSG:99899"
+    assert cfg.default_geographic_CRS == "EPSG:2154"
 
 
 def test_contact_details_parse(minimal_global_cfg):

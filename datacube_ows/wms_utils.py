@@ -165,9 +165,9 @@ def get_arg(args, argname, verbose_name, lower=False,
     return fmt
 
 
-def get_times_for_product(product):
-    ranges = product.ranges
-    return ranges['times']
+def get_times_for_layer(layer):
+    ranges = layer.ranges
+    return ranges.times
 
 
 def get_times(args, product: OWSNamedLayer) -> list[datetime | date]:
@@ -207,7 +207,7 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
                 locator="Time parameter")
     elif not times[0]:
         # default to last available time if not supplied.
-        product_times = get_times_for_product(layer)
+        product_times = get_times_for_layer(layer)
         return product_times[-1]
     try:
         time = parse(times[0])
