@@ -118,7 +118,7 @@ def get_capabilities(args):
                     product.ranges['lon']['max'], product.ranges['lat']['max'],
                 ])
             )
-            for product in cfg.product_index.values()
+            for product in cfg.layer_index.values()
             if product.ready and not product.hide and product.wcs
         ],
         formats_supported=[
@@ -264,7 +264,7 @@ def desc_coverages(args):
     products = []
 
     for coverage_id in request_obj.coverage_ids:
-        product = cfg.product_index.get(coverage_id)
+        product = cfg.layer_index.get(coverage_id)
         if product and product.wcs:
             products.append(product)
         else:

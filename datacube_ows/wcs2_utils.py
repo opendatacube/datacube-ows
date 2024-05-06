@@ -51,12 +51,12 @@ def get_coverage_data(request, styles, qprof):
     cfg = get_config()
     qprof.start_event("setup")
     layer_name = request.coverage_id
-    layer = cfg.product_index.get(layer_name)
+    layer = cfg.layer_index.get(layer_name)
     if not layer or not layer.wcs:
         raise WCS2Exception("Invalid coverage: %s" % layer_name,
                             WCS2Exception.NO_SUCH_COVERAGE,
                             locator="COVERAGE parameter",
-                            valid_keys=list(cfg.product_index))
+                            valid_keys=list(cfg.layer_index))
 
     #
     # CRS handling

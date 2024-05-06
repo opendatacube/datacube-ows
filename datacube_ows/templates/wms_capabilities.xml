@@ -279,7 +279,7 @@ http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
         <Format>XML</Format>
     </Exception>
 
-    {% for lyr in cfg.product_index.values() %}
+    {% for lyr in cfg.layer_index.values() %}
         {% if lyr.ready and not lyr.hide and lyr.user_band_math %}
     <dea:SupportedExtension>
         <dea:Extension version="1.0.0">user_band_math</dea:Extension>

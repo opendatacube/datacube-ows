@@ -7,6 +7,7 @@
 
 #pylint: skip-file
 
+import logging
 import math
 from datetime import date, datetime, timezone
 from typing import Any, Callable, Iterable, cast
@@ -17,8 +18,10 @@ from psycopg2.extras import Json
 from sqlalchemy import text
 
 from datacube_ows.ows_configuration import (OWSConfig, OWSMultiProductLayer,
-                                            OWSNamedLayer, TimeRes, get_config)
+                                            OWSNamedLayer, get_config)
 from datacube_ows.utils import get_sqlconn
+
+_LOG = logging.getLogger(__name__)
 
 
 def get_crsids(cfg: OWSConfig | None = None) -> Iterable[str]:
@@ -43,8 +46,7 @@ def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
         }
 
 
-def create_multiprod_range_entry(dc: datacube.Datacube, product: OWSMultiProductLayer,
-                                 crses: dict[str, odc.geo.CRS]) -> None:
+def create_multiprod_range_entry(product: OWSMultiProductLayer) -> None:
     print("Merging multiproduct ranges for %s (ODC products: %s)" % (
         product.name,
         repr(product.product_names)
@@ -151,48 +153,56 @@ def create_multiprod_range_entry(dc: datacube.Datacube, product: OWSMultiProduct
     return
 
 
-def create_range_entry(dc: datacube.Datacube, product: datacube.model.Product,
-                       crses: dict[str, odc.geo.CRS], time_resolution: TimeRes) -> None:
-  print("Updating range for ODC product %s..." % product.name)
+def create_range_entry(layer: OWSNamedLayer) -> None:
+  print(f"Updating range for layer {layer.name}")
+  meta: dict[str, str | list[str] | int] = {
+      "time_res": str(layer.time_resolution),
+      "products": layer.product_names,
+      "env": layer.local_env._name,
+      "datasets": layer.dc.index.datasets.count(product=layer.product_names)
+  }
+  print(f"     metadata: {repr(meta)}")
   # NB. product is an ODC product
-  conn = get_sqlconn(dc)
+  conn = get_sqlconn(layer.dc)
   txn = conn.begin()
-  prodid = product.id
+  print(f"in transaction")
 
   # insert empty row if one does not already exist
   conn.execute(text("""
-    INSERT INTO wms.product_ranges
-    (id,lat_min,lat_max,lon_min,lon_max,dates,bboxes)
+    INSERT INTO ows.layer_ranges
+    (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
     VALUES
-    (:p_id, 0, 0, 0, 0, :empty, :empty)
-    ON CONFLICT (id) DO NOTHING
+    (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
+    ON CONFLICT (layer) DO NOTHING
     """),
-    {"p_id": prodid, "empty": Json("")})
+    {"p_layer": layer.name, "empty": Json(""), "meta": Json(meta), "now": datetime.now(tz=timezone.utc)})
 
-
+  print("Created empty row")
   # Update min/max lat/longs
   conn.execute(text(
       """
-      UPDATE wms.product_ranges pr
+      UPDATE ows.layer_ranges lr
       SET lat_min = st_ymin(subq.bbox),
           lat_max = st_ymax(subq.bbox),
           lon_min = st_xmin(subq.bbox),
           lon_max = st_xmax(subq.bbox)
       FROM (
         SELECT st_extent(stv.spatial_extent) as bbox
-        FROM public.space_time_view stv
-        WHERE stv.dataset_type_ref = :p_id
+        FROM ows.space_time_view stv
+        WHERE stv.dataset_type_ref = ANY(:prodids)
       ) as subq
-      WHERE pr.id = :p_id
+      WHERE lr.layer = :layer_id
       """),
-      {"p_id": prodid})
+      {"layer_id": layer.name, "prodids": [p.id for p in layer.products]})
+  print("max/min lat/lon set")
 
   # Set default timezone
   conn.execute(text("""set timezone to 'Etc/UTC'"""))
 
   # Loop over dates
-  dates = set()
-  if time_resolution.is_solar():
+  dates = set() # Should get to here!
+  print("OK made it to here! Yay!")
+  if layer.time_resolution.is_solar():
       results = conn.execute(text(
           """
           select
@@ -317,70 +327,20 @@ def datasets_exist(dc: datacube.Datacube, product_name: str) -> bool:
   return list(results)[0][0] > 0
 
 
-def add_ranges(dc: datacube.Datacube, product_names: list[str], merge_only: bool = False) -> bool:
-    odc_products: dict[str, dict[str, list[OWSNamedLayer]]] = {}  # Maps OWS layer names to
-    ows_multiproducts: list[OWSMultiProductLayer] = []
+def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
+    if not layer_names:
+        layer_names = list(cfg.layer_index.keys())
     errors = False
-    for pname in product_names:
-        ows_product = get_config().product_index.get(pname)
-        if not ows_product:
-            ows_product = get_config().native_product_index.get(pname)
-        if ows_product:
-            for dc_pname in ows_product.product_names:
-                if dc_pname in odc_products:
-                    odc_products[dc_pname]["ows"].append(ows_product)
-                else:
-                    odc_products[dc_pname] = {"ows": [ows_product]}
-            print("OWS Layer %s maps to ODC Product(s): %s" % (
-                ows_product.name,
-                repr(ows_product.product_names)
-            ))
-            if ows_product.multi_product:
-                ows_multiproducts.append(cast(OWSMultiProductLayer, ows_product))
-        if not ows_product:
-            print("Could not find product", pname, "in OWS config")
-            dc_product = dc.index.products.get_by_name(pname)
-            if dc_product:
-                print("ODC Layer: %s" % pname)
-                if pname not in odc_products:
-                    odc_products[pname] = {"ows": []}
-            else:
-                print("Unrecognised product name:", pname)
-                errors = True
-                continue
-
-    if ows_multiproducts and merge_only:
-        print("Merge-only: Skipping range update of products:", repr(list(odc_products.keys())))
-    else:
-        for pname, ows_prods in odc_products.items():
-            dc_product = dc.index.products.get_by_name(pname)
-            if dc_product is None:
-                print("Could not find ODC product:", pname)
-                errors = True
-            elif datasets_exist(dc, dc_product.name):
-                print("Datasets exist for ODC product",
-                      dc_product.name,
-                      "(OWS layers",
-                      ",".join(p.name for p in ows_prods["ows"]),
-                      ")")
-                time_resolution = None
-                for ows_prod in ows_prods["ows"]:
-                    if ows_prod:
-                        new_tr = ows_prod.time_resolution
-                        if time_resolution is not None and new_tr != time_resolution:
-                            time_resolution = None
-                            errors = True
-                            print("Inconsistent time resolution for ODC product:", pname)
-                            break
-                        time_resolution = new_tr
-                if time_resolution is not None:
-                    create_range_entry(dc, dc_product, get_crses(), time_resolution)
-                else:
-                    print("Could not determine time_resolution for product: ", pname)
-            else:
-                print("Could not find any datasets for: ", pname)
-    for mp in ows_multiproducts:
-        create_multiprod_range_entry(dc, mp, get_crses())
+    for name in layer_names:
+        if name not in cfg.layer_index:
+            _LOG.warning("Layer '%s' does not exist in the OWS configuration - skipping", name)
+            errors = True
+            continue
+        layer = cfg.layer_index[name]
+        if layer.multi_product:
+            create_multiprod_range_entry(layer)
+        else:
+            create_range_entry(layer)
 
     print("Done.")
     return errors

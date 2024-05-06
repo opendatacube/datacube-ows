@@ -202,7 +202,7 @@ def ping():
 def legend(layer, style, dates=None):
     # pylint: disable=redefined-outer-name
     cfg = get_config()
-    product = cfg.product_index.get(layer)
+    product = cfg.layer_index.get(layer)
     if not product:
         return ("Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"}))
     if dates is None:

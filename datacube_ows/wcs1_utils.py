@@ -35,14 +35,14 @@ class WCS1GetCoverageRequest:
             raise WCS1Exception("No coverage specified",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="COVERAGE parameter",
-                                valid_keys=list(cfg.product_index))
+                                valid_keys=list(cfg.layer_index))
         self.layer_name = args["coverage"]
-        self.layer = cfg.product_index.get(self.layer_name)
+        self.layer = cfg.layer_index.get(self.layer_name)
         if not self.layer or not self.layer.wcs:
             raise WCS1Exception("Invalid coverage: %s" % self.layer_name,
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
                                 locator="COVERAGE parameter",
-                                valid_keys=list(cfg.product_index))
+                                valid_keys=list(cfg.layer_index))
 
         # Argument: FORMAT (required) -> a supported format
         if "format" not in args:

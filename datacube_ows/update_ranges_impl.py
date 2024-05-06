@@ -39,13 +39,10 @@ class AbortRun(Exception):
               help="Cleanup up any datacube-ows 1.8.x tables/views")
 @click.option("-e", "--env", default=None,
               help="(Only valid with --schema or --read-role or --write-role or --cleanup) environment to write to.")
-@click.option("--merge-only/--no-merge-only", default=False,
-              help="When used with a multiproduct layer, the ranges for underlying datacube products are not updated.")
 @click.option("--version", is_flag=True, default=False,
               help="Print version string and exit")
 @click.argument("layers", nargs=-1)
 def main(layers: list[str],
-         merge_only: bool,
          env: str | None,
          schema: bool,
          read_role: list[str],
@@ -54,6 +51,8 @@ def main(layers: list[str],
     """Manage datacube-ows range tables.  Exposed on setup as datacube-ows-update
 
     Valid invocations:
+
+    1. Schema/permissions/migration management
 
     * datacube-ows-update --schema
         Create (re-create) the OWS schema (including materialised views)
@@ -64,10 +63,29 @@ def main(layers: list[str],
         The --read-role and --write-role options can also be passed in combination with the --schema option
         described above.
 
+        Read permissions are required for the database role that the datacube-ows service uses.
+
+        Write permissions are required for the database role used to run the Data Management actions below.
+
+        (These schema management actions require higher level permissions.)
+
     * datacube-ows-update --cleanup
         Clean up (drop) any datcube-ows 1.8.x database entities.
 
         The --cleanup option can also be passed in combination with the --schema option described above.
+
+    All of the above schema management actions can also be used with the --env or -E option:
+
+    * datacube-ows-update --cleanup --env dev
+        Use the "dev" environment from the ODC configuration for connecting to the database.
+        (Defaults to env defined in OWS global config, or "default")
+
+    Schema management functions attempt to create or modify database objects and assign permissions over those
+    objects.  They typically need to run with a very high level of database permissions - e.g. depending
+    on the requested action and the current state of the database schema, they may need to be able to create
+    schemas, roles and/or extensions.
+
+    2. Data management (updating OWS indexes)
 
     * datacube-ows-update --views
         Refresh the materialised views
@@ -77,13 +95,6 @@ def main(layers: list[str],
 
     * datacube-ows-update
         Update ranges for all configured OWS layers.
-
-    The --schema, --read-role, --write-role, and/or --cleanup options can also be used with the --env or -E option:
-
-    * datacube-ows-update --cleanup --env dev
-        Use the "dev" environment from the ODC configuration for connecting to the database.
-        (Defaults to env defined in OWS global config, or "default")
-
 
     Uses the DATACUBE_OWS_CFG environment variable to find the OWS config file.
     """
@@ -149,16 +160,17 @@ def main(layers: list[str],
         return 0
 
     print("Deriving extents from materialised views")
-    if not layers:
-        layers = list(cfg.product_index.keys())
     try:
-        errors = add_ranges(dc, layers, merge_only)
-    except (psycopg2.errors.UndefinedColumn,
-            sqlalchemy.exc.ProgrammingError) as e:
-        click.echo("ERROR: OWS schema or extent materialised views appear to be missing")
-        click.echo("")
-        click.echo("       Try running with the --schema options first.")
-        sys.exit(1)
+        errors = add_ranges(cfg, layers)
+        click.echo("Done.")
+    except sqlalchemy.exc.ProgrammingError as e:
+        if isinstance(e.orig, psycopg2.errors.UndefinedColumn):
+            click.echo("ERROR: OWS schema or extent materialised views appear to be missing")
+            click.echo("")
+            click.echo("       Try running with the --schema options first.")
+            sys.exit(1)
+        else:
+            raise e
     if errors:
         sys.exit(1)
 
@@ -180,11 +192,11 @@ def create_schema(dc: datacube.Datacube):
 
 def grant_perms(dc: datacube.Datacube, role: str, read_only: bool = False):
     if read_only:
-        run_sql(dc, "ows_schema/grants/ready_only", role=role)
-        run_sql(dc, "extent_views/grants/ready_only", role=role)
+        run_sql(dc, "ows_schema/grants/read_only", role=role)
+        run_sql(dc, "extent_views/grants/read_only", role=role)
     else:
-        run_sql(dc, "ows_schema/grants/ready_write", role=role)
-        run_sql(dc, "extent_views/grants/ready_write", role=role)
+        run_sql(dc, "ows_schema/grants/read_write", role=role)
+        run_sql(dc, "extent_views/grants/write_refresh", role=role)
 
 
 def cleanup_schema(dc: datacube.Datacube):

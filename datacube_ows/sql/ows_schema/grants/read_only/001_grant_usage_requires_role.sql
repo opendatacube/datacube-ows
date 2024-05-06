@@ -1,3 +1,3 @@
 -- Granting usage on schema
 
-GRANT USAGE ON SCHEMA odc TO {role}
+GRANT USAGE ON SCHEMA ows TO {role}

@@ -433,7 +433,7 @@ def test_resource_limit_checks(minimal_layer_cfg, minimal_global_cfg):
     assert "too much projected resource requirements" not in str(e.value)
     assert e.value.wcs_hard
     minimal_layer_cfg["resource_limits"]["wms"]["min_zoom_level"] = 5
-    minimal_global_cfg.product_index = {}
+    minimal_global_cfg.layer_index = {}
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     with pytest.raises(ResourceLimited) as e:

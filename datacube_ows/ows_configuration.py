@@ -403,6 +403,7 @@ DEF_TIME_EARLIEST = "earliest"
 class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
     named = True
+    multi_product: bool = False
 
     def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig", parent_layer: OWSFolder | None = None, **kwargs):
         name = cast(str, cfg["name"])
@@ -560,10 +561,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 #        else:
 #            self.sub_product_extractor = None
         # And finally, add to the global product index.
-        existing = self.global_cfg.product_index.get(self.name)
+        existing = self.global_cfg.layer_index.get(self.name)
         if existing and existing != self:
             raise ConfigException(f"Duplicate layer name: {self.name}")
-        self.global_cfg.product_index[self.name] = self
+        self.global_cfg.layer_index[self.name] = self
 
     def time_axis_representation(self) -> str:
         if self.regular_time_axis:
@@ -990,7 +991,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     @classmethod
     def lookup_impl(cls, cfg: "OWSConfig", keyvals: dict[str, str], subs: CFG_DICT | None = None):
         try:
-            return cfg.product_index[keyvals["layer"]]
+            return cfg.layer_index[keyvals["layer"]]
         except KeyError:
             raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
 
@@ -1204,7 +1205,7 @@ class OWSConfig(OWSMetadataConfig):
 
     @property
     def active_products(self) -> Iterable[OWSNamedLayer]:
-        return filter(lambda x: not x.hide, self.product_index.values())
+        return filter(lambda x: not x.hide, self.layer_index.values())
 
     @property
     def active_product_index(self) -> dict[str, OWSNamedLayer]:
@@ -1461,7 +1462,7 @@ class OWSConfig(OWSMetadataConfig):
 
     def parse_layers(self, cfg: list[CFG_DICT]):
         self.folder_index: dict[str, OWSFolder] = {}
-        self.product_index: dict[str, OWSNamedLayer] = {}
+        self.layer_index: dict[str, OWSNamedLayer] = {}
         self.declare_unready("native_product_index")
         self.root_layer_folder = OWSFolder(cast(CFG_DICT, {
             "title": "Root Folder (hidden)",

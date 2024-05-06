@@ -136,12 +136,12 @@ def get_layer_from_arg(args, argname="layers") -> OWSNamedLayer:
     layer_chunks = lyr.split("__")
     lyr = layer_chunks[0]
     cfg = get_config()
-    layer = cfg.product_index.get(lyr)
+    layer = cfg.layer_index.get(lyr)
     if not layer:
         raise WMSException("Layer %s is not defined" % lyr,
                            WMSException.LAYER_NOT_DEFINED,
                            locator="Layer parameter",
-                           valid_keys=list(cfg.product_index))
+                           valid_keys=list(cfg.layer_index))
     return layer
 
 

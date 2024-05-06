@@ -97,7 +97,7 @@ def test_metadata_read(monkeypatch, product_name):
         assert "Over-ridden" in folder.abstract
         assert "bunny-rabbit" in folder.abstract
 
-        lyr = cfg.product_index[product_name]
+        lyr = cfg.layer_index[product_name]
         assert "Over-ridden" in lyr.title
         assert "chook" in lyr.title
 

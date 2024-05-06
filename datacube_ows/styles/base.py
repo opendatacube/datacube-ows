@@ -589,7 +589,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             prod = subs["layer"].get(keyvals["layer"])
         if not prod:
             try:
-                prod = cfg.product_index[keyvals["layer"]]
+                prod = cfg.layer_index[keyvals["layer"]]
             except KeyError:
                 raise OWSEntryNotFound(f"No layer named {keyvals['layer']}")
 

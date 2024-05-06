@@ -117,12 +117,12 @@ def parse_path(path: str | None, parse_only: bool, folders: bool, styles: bool, 
         click.echo()
         click.echo("Layers and Styles")
         click.echo("=================")
-        for lyr in cfg.product_index.values():
+        for lyr in cfg.layer_index.values():
             click.echo(f"{lyr.name} [{','.join(lyr.product_names)}]")
             print_styles(lyr)
         click.echo()
     if input_file or output_file:
-        layers_report(cfg.product_index, input_file, output_file)
+        layers_report(cfg.layer_index, input_file, output_file)
     return True
 
 
