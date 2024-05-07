@@ -251,7 +251,8 @@ class OWSLayer(OWSMetadataConfig):
         self.object_label = object_label
         self.global_cfg: "OWSConfig" = kwargs["global_cfg"]
         self.parent_layer = parent_layer
-
+        self._cached_local_env: ODCEnvironment | None = None
+        self._cached_dc: Datacube | None = None
         self.parse_metadata(cfg)
         # Inherit or override attribution
         if "attribution" in cfg:
@@ -263,6 +264,56 @@ class OWSLayer(OWSMetadataConfig):
             self.attribution = cast(OWSLayer, self.parent_layer).attribution
         else:
             self.attribution = self.global_cfg.attribution
+
+    @property
+    def local_env(self) -> ODCEnvironment:
+        # If we have cached inherited environment, use it.
+        if self._cached_local_env:
+            return self._cached_local_env
+
+        # If we have our own custom environment, use it.
+        if hasattr(self, "_local_env") and self._local_env is not None:
+            return self._local_env
+
+        # If we have a parent layer, then it's their problem.
+        if self.parent_layer:
+            # remember, so we don't have to ask our parent layer again.  As a layer we must learn to adult.
+            self._cached_local_env = self.parent_layer.local_env
+        else:
+            # If we have no parent layer, then we have to ask the global government.
+            # and remember, so we don't have to deal with the global government again.
+            self._cached_local_env = self.global_cfg.default_env
+
+        return self._cached_local_env
+
+    @property
+    def dc(self) -> Datacube:
+        # If we have cached inherited datacube, use it.
+        if self._cached_dc:
+            return self._cached_dc
+
+        # If we have our own custom dc, use it.
+        if hasattr(self, "_dc"):
+            return self._dc  # type: ignore[has-type]
+
+        # If we have our own custom environment, try to make a Datacube from it:
+        if hasattr(self, "_local_env") and self._local_env is not None:
+            try:
+                self._dc = Datacube(env=self._local_cfg, app=self.global_cfg.odc_app)
+                return self._dc
+            except Exception as e:
+                raise ODCInitException(str(e))
+
+        # If we have a parent layer, then it's their problem.
+        if self.parent_layer:
+            # remember, so we don't have to ask our parent layer again.  As a layer we must learn to adult.
+            self._cached_dc = self.parent_layer.dc
+        else:
+            # If we have no parent layer, then we have to ask the global government.
+            # and remember, so we don't have to deal with the global government again.
+            self._cached_dc = self.global_cfg.dc
+
+        return self._cached_dc
 
     def global_config(self) -> "OWSConfig":
         return self.global_cfg
@@ -417,9 +468,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.name = name
         cfg = cast(CFG_DICT, self._raw_cfg)
         self.hide = False
-        self.local_env: ODCEnvironment | None = None
+        self._local_env: ODCEnvironment | None = None
         local_env = cast(str | None, cfg.get("env"))
-        self.local_env = ODCConfig.get_environment(env=local_env)
+        self._local_env = ODCConfig.get_environment(env=local_env)
         # TODO: MULTIDB_SUPPORT
         #     After refactoring the range tables, Uncomment this code for multi-database support
         #     (Don't forget to add to documentation)
@@ -578,18 +629,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
-        # TODO: MULTIDB_SUPPORT
-        #     After refactoring the range tables, Uncomment this code for multi-database support
-        #     (Don't forget to add to documentation)
-        #
-        # if self.local_env:
-        #     try:
-        #         self.dc: Datacube = Datacube(env=self.local_env, app=self.global_cfg.odc_app)
-        #     except Exception as e:
-        #         _LOG.error("ODC initialisation failed: %s", str(e))
-        #         raise ODCInitException(e)
-        # else:
-        self.dc = self.global_cfg.dc
         self.products: list[Product] = []
         self.low_res_products: list[Product] = []
         for i, prod_name in enumerate(self.product_names):
@@ -1322,7 +1361,8 @@ class OWSConfig(OWSMetadataConfig):
         return self.catalog
 
     def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool):
-        self.default_env = cast(str, cfg.get("env"))
+        default_env = cast(str, cfg.get("env"))
+        self.default_env = ODCConfig.get_environment(env=default_env)
         self.odc_app = cast(str, cfg.get("odc_app", "datacube-ows"))
         self._response_headers = cast(dict[str, str], cfg.get("response_headers", {}))
         services = cast(dict[str, bool], cfg.get("services", {}))
