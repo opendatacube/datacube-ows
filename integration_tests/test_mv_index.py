@@ -52,7 +52,7 @@ class MockGeobox:
 def test_time_search():
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
-    time = lyr.ranges["times"][-1]
+    time = lyr.ranges.end_time
     geom = box(
         lyr.bboxes["EPSG:4326"]["left"],
         lyr.bboxes["EPSG:4326"]["bottom"],

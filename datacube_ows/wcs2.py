@@ -156,12 +156,12 @@ def create_coverage_description(cfg, product):
             label=product.native_CRS_def["horizontal_coord"],
             index_label='i',
             lower_bound=min(
-                product.ranges["bboxes"][product.native_CRS]["left"],
-                product.ranges["bboxes"][product.native_CRS]["right"],
+                product.ranges.bboxes[product.native_CRS]["left"],
+                product.ranges.bboxes[product.native_CRS]["right"],
             ),
             upper_bound=max(
-                product.ranges["bboxes"][product.native_CRS]["left"],
-                product.ranges["bboxes"][product.native_CRS]["right"],
+                product.ranges.bboxes[product.native_CRS]["left"],
+                product.ranges.bboxes[product.native_CRS]["right"],
             ),
             resolution=product.resolution_x,
             uom='deg',
@@ -171,12 +171,12 @@ def create_coverage_description(cfg, product):
             label=product.native_CRS_def["vertical_coord"],
             index_label='j',
             lower_bound=min(
-                product.ranges["bboxes"][product.native_CRS]["top"],
-                product.ranges["bboxes"][product.native_CRS]["bottom"],
+                product.ranges.bboxes[product.native_CRS]["top"],
+                product.ranges.bboxes[product.native_CRS]["bottom"],
             ),
             upper_bound=max(
-                product.ranges["bboxes"][product.native_CRS]["top"],
-                product.ranges["bboxes"][product.native_CRS]["bottom"],
+                product.ranges.bboxes[product.native_CRS]["top"],
+                product.ranges.bboxes[product.native_CRS]["bottom"],
             ),
             resolution=product.resolution_y,
             uom='deg',
@@ -210,7 +210,7 @@ def create_coverage_description(cfg, product):
                 index_label='k',
                 positions=[
                     f'{t.isoformat()}'
-                    for t in product.ranges['times']
+                    for t in product.ranges.times
                 ],
                 uom='ISO-8601',
                 type=SpatioTemporalType.TEMPORAL,
@@ -223,7 +223,7 @@ def create_coverage_description(cfg, product):
                 index_label='k',
                 positions=[
                     f'{t.isoformat()}T00:00:00.000Z'
-                    for t in product.ranges['times']
+                    for t in product.ranges.times
                 ],
                 uom='ISO-8601',
                 type=SpatioTemporalType.TEMPORAL,
