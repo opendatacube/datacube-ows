@@ -299,7 +299,7 @@ class OWSLayer(OWSMetadataConfig):
         # If we have our own custom environment, try to make a Datacube from it:
         if hasattr(self, "_local_env") and self._local_env is not None:
             try:
-                self._dc = Datacube(env=self._local_cfg, app=self.global_cfg.odc_app)
+                self._dc = Datacube(env=self._local_env, app=self.global_cfg.odc_app)
                 return self._dc
             except Exception as e:
                 raise ODCInitException(str(e))
@@ -468,15 +468,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.name = name
         cfg = cast(CFG_DICT, self._raw_cfg)
         self.hide = False
-        self._local_env: ODCEnvironment | None = None
-        local_env = cast(str | None, cfg.get("env"))
-        self._local_env = ODCConfig.get_environment(env=local_env)
-        # TODO: MULTIDB_SUPPORT
-        #     After refactoring the range tables, Uncomment this code for multi-database support
-        #     (Don't forget to add to documentation)
-        #
-        # if local_env:
-        #    self.local_env = ODCConfig.get_environment(env=local_env)
         try:
             self.parse_product_names(cfg)
             if len(self.low_res_product_names) not in (0, len(self.product_names)):

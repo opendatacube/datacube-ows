@@ -108,6 +108,9 @@ def main(layers: list[str],
     if schema and layers:
         print("Sorry, cannot update the schema and ranges in the same invocation.")
         sys.exit(1)
+    if schema and views:
+        print("Sorry, No point in updating materialised views and updating the schema in the same invocation.")
+        sys.exit(1)
     elif cleanup and layers:
         print("Sorry, cannot cleanup 1.8.x database entities and update ranges in the same invocation.")
         sys.exit(1)

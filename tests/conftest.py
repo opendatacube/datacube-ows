@@ -119,6 +119,7 @@ def minimal_global_cfg(minimal_dc):
     global_cfg.contact_org = None
     global_cfg.contact_position = None
     global_cfg.abstract = "Global Abstract"
+    global_cfg.odc_app = "app"
     global_cfg.dc = minimal_dc
     global_cfg.authorities = {
         "auth0": "http://test.url/auth0",
@@ -173,8 +174,9 @@ def minimal_global_cfg(minimal_dc):
 
 
 @pytest.fixture
-def minimal_parent():
+def minimal_parent(minimal_global_cfg):
     parent = MagicMock()
+    parent.dc = minimal_global_cfg.dc
     parent.abstract = "Parent Abstract"
     parent.keywords = {"global", "parent"}
     parent.attribution.title = "Parent Attribution"

@@ -37,7 +37,7 @@ def test_update_ranges_product(runner, product_name):
 def test_update_ranges_bad_product(runner, product_name):
     result = runner.invoke(main, ["not_a_real_product_name"])
     assert "not_a_real_product_name" in result.output
-    assert "Unrecognised product name" in result.output
+    assert "does not exist in the OWS configuration - skipping" in result.output
     assert result.exit_code == 1
 
 
@@ -48,18 +48,31 @@ def test_update_ranges(runner):
 
 
 def test_update_ranges_misuse_cases(runner, role_name, product_name):
-    result = runner.invoke(main, ["--schema"])
-    assert "Sorry" in result.output
-    assert result.exit_code == 1
-
-    result = runner.invoke(main, ["--role", role_name])
-    assert "Sorry" in result.output
-    assert result.exit_code == 1
-
-    result = runner.invoke(main, ["--views", product_name])
-    assert "Sorry" in result.output
-    assert result.exit_code == 1
-
     result = runner.invoke(main, ["--schema", product_name])
     assert "Sorry" in result.output
     assert result.exit_code == 1
+
+    result = runner.invoke(main, ["--cleanup", product_name])
+    assert "Sorry" in result.output
+    assert result.exit_code == 1
+
+    result = runner.invoke(main, ["--read-role", "role", product_name])
+    assert "Sorry" in result.output
+    assert result.exit_code == 1
+
+    result = runner.invoke(main, ["--write-role", "role", product_name])
+    assert "Sorry" in result.output
+    assert result.exit_code == 1
+
+    result = runner.invoke(main, ["--views", "--schema"])
+    assert "Sorry" in result.output
+    assert result.exit_code == 1
+
+    result = runner.invoke(main, ["--views", "--read-role", "role"])
+    assert "Sorry" in result.output
+    assert result.exit_code == 1
+
+    result = runner.invoke(main, ["--views", "--write-role", "role"])
+    assert "Sorry" in result.output
+    assert result.exit_code == 1
+

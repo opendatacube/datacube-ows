@@ -8,6 +8,7 @@ import dataclasses
 
 import logging
 import math
+import click
 from datetime import date, datetime, timezone
 from typing import cast, Callable, Iterable, NamedTuple
 
@@ -243,19 +244,18 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
 
 
 def datasets_exist(dc: datacube.Datacube, product_name: str) -> bool:
-  conn = get_sqlconn(dc)
+    conn = get_sqlconn(dc)
 
-  results = conn.execute(text("""
-    SELECT COUNT(*)
-    FROM agdc.dataset ds, agdc.dataset_type p
-    WHERE ds.archived IS NULL
-    AND ds.dataset_type_ref = p.id
-    AND p.name = :pname"""),
-                         {"pname": product_name})
+    results = conn.execute(text("""
+        SELECT COUNT(*)
+        FROM agdc.dataset ds, agdc.dataset_type p
+        WHERE ds.archived IS NULL
+        AND ds.dataset_type_ref = p.id
+        AND p.name = :pname"""), {"pname": product_name})
 
-  conn.close()
+    conn.close()
 
-  return list(results)[0][0] > 0
+    return list(results)[0][0] > 0
 
 
 def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
@@ -265,7 +265,7 @@ def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
     cache: dict[LayerSignature, list[str]] = {}
     for name in layer_names:
         if name not in cfg.layer_index:
-            _LOG.warning("Layer '%s' does not exist in the OWS configuration - skipping", name)
+            click.echo(f"Layer '{name}' does not exist in the OWS configuration - skipping")
             errors = True
             continue
         layer = cfg.layer_index[name]
