@@ -36,10 +36,11 @@ def get_sqlalc_engine(index: Index) -> Engine:
 def get_st_view(meta: MetaData) -> Table:
     return Table('space_time_view', meta,
              Column('id', UUID()),
-             Column('dataset_type_ref', SMALLINT()),
-             Column('spatial_extent', Geometry(from_text='ST_GeomFromGeoJSON', name='geometry')),
-             Column('temporal_extent', TSTZRANGE())
-                 )
+                 Column('dataset_type_ref', SMALLINT()),
+                 Column('spatial_extent', Geometry(from_text='ST_GeomFromGeoJSON', name='geometry')),
+                 Column('temporal_extent', TSTZRANGE()),
+                 schema="ows"
+                )
 
 
 _meta = MetaData()
