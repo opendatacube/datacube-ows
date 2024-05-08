@@ -44,7 +44,7 @@ datacube dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/der
 datacube dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x17/y37/2021--P1Y/ga_ls8c_nbart_gm_cyear_3_x17y37_2021--P1Y_final.odc-metadata.yaml --ignore-lineage
 
 # create material view for ranges extents
-datacube-ows-update --schema --role $DB_USERNAME
+datacube-ows-update --schema --read-role $DB_USERNAME  --write-role $DB_USERNAME
 datacube-ows-update
 
 # run test
