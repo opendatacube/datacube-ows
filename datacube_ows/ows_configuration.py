@@ -294,9 +294,8 @@ class OWSLayer(OWSMetadataConfig):
 
         # If we have our own custom dc, use it.
         if hasattr(self, "_dc"):
-            # type: ignore[has-type]
             # pylint: disable=access-member-before-definition
-            return self._dc
+            return self._dc  # type: ignore[has-type]
 
         # If we have our own custom environment, try to make a Datacube from it:
         if hasattr(self, "_local_env") and self._local_env is not None:
