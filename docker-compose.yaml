@@ -11,7 +11,7 @@ services:
         - opendatacube/ows:_builder
     image: opendatacube/ows:latest
     # Uncomment for use with non-dockerised postgres (for docker-compose 1.x)
-    # network_mode: host
+    network_mode: host
     environment:
       # Defaults are defined in .env file
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
