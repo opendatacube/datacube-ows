@@ -93,4 +93,3 @@ def test_update_ranges_misuse_cases(runner, role_name, product_name):
     result = runner.invoke(main, ["--views", "--write-role", "role"])
     assert "Sorry" in result.output
     assert result.exit_code == 1
-
