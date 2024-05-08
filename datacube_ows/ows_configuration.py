@@ -27,7 +27,8 @@ from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po
 from datacube import Datacube
 from datacube.api.query import GroupBy
-from datacube.model import Measurement
+from datacube.model import Measurement, Product
+from datacube.cfg import ODCConfig, ODCEnvironment
 from odc.geo import CRS
 from odc.geo.geobox import GeoBox
 from ows import Version
@@ -35,12 +36,11 @@ from slugify import slugify
 
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        FlagProductBands, FunctionWrapper,
-                                       OWSConfigEntry, OWSEntryNotFound,
-                                       OWSExtensibleConfigEntry, OWSFlagBand,
-                                       OWSMetadataConfig, cfg_expand,
-                                       get_file_loc, import_python_obj,
-                                       load_json_obj)
-from datacube_ows.cube_pool import ODCInitException, cube, get_cube
+                                       ODCInitException, OWSConfigEntry,
+                                       OWSEntryNotFound, OWSExtensibleConfigEntry,
+                                       OWSFlagBand, OWSMetadataConfig,
+                                       cfg_expand, get_file_loc,
+                                       import_python_obj, load_json_obj)
 from datacube_ows.ogc_utils import create_geobox
 from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
@@ -86,8 +86,8 @@ class BandIndex(OWSMetadataConfig):
             band_cfg = {}
         super().__init__(band_cfg)
         self.band_cfg = cast(dict[str, list[str]], band_cfg)
-        self.product = layer
-        self.product_name = layer.name
+        self.layer = layer
+        self.layer_name = layer.name
         self.parse_metadata(band_cfg)
         self._idx: dict[str, str] = {}
         self.add_aliases(self.band_cfg)
@@ -96,22 +96,22 @@ class BandIndex(OWSMetadataConfig):
         self.declare_unready("_dtypes")
 
     def global_config(self) -> "OWSConfig":
-        return self.product.global_config()
+        return self.layer.global_config()
 
     def get_obj_label(self) -> str:
-        return self.product.get_obj_label() + ".bands"
+        return self.layer.get_obj_label() + ".bands"
 
     def add_aliases(self, cfg: dict[str, list[str]]) -> None:
         for b, aliases in cfg.items():
             if b in self._idx:
-                raise ConfigException(f"Duplicate band name/alias: {b} in layer {self.product_name}")
+                raise ConfigException(f"Duplicate band name/alias: {b} in layer {self.layer_name}")
             self._idx[b] = b
             for a in aliases:
                 if a != b and a in self._idx:
-                    raise ConfigException(f"Duplicate band name/alias: {a} in layer {self.product_name}")
+                    raise ConfigException(f"Duplicate band name/alias: {a} in layer {self.layer_name}")
                 self._idx[a] = b
 
-    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
+    def make_ready(self, *args: Any, **kwargs: Any) -> None:
         def floatify_nans(inp: float | int | str) -> float | int:
             if isinstance(inp, str) and inp == "nan":
                 return float(inp)
@@ -125,9 +125,9 @@ class BandIndex(OWSMetadataConfig):
         self._nodata_vals: dict[str, int | float] = {}
         self._dtypes: dict[str, numpy.dtype] = {}
         first_product = True
-        for product in self.product.products:
+        for product in self.layer.products:
             if first_product and default_to_all:
-                native_bands = dc.list_measurements().loc[product.name]
+                native_bands = self.layer.dc.list_measurements().loc[product.name]
                 for b in native_bands.index:
                     self.band_cfg[b] = [b]
                 self.add_aliases(self.band_cfg)
@@ -145,19 +145,19 @@ class BandIndex(OWSMetadataConfig):
                         if ((numpy.isnan(nodata) and not numpy.isnan(floatify_nans(prod_measurements[k].nodata)))
                                 or (not numpy.isnan(nodata) and prod_measurements[k].nodata != nodata)):
                             raise ConfigException(
-                                f"Nodata value mismatch between products for band {k} in multiproduct layer {self.product.name}")
+                                f"Nodata value mismatch between products for band {k} in multiproduct layer {self.layer_name}")
                         if prod_measurements[k].dtype != self._dtypes[k]:
                             raise ConfigException(
-                                f"Data type mismatch between products for band {k} in multiproduct layer {self.product.name}")
+                                f"Data type mismatch between products for band {k} in multiproduct layer {self.layer_name}")
             except KeyError as e:
-                raise ConfigException(f"Product {product.name} in layer {self.product.name} is missing band {e}")
+                raise ConfigException(f"Product {product.name} in layer {self.layer_name} is missing band {e}")
             first_product = False
-        super().make_ready(dc, *args, **kwargs)
+        super().make_ready(*args, **kwargs)
 
     def band(self, name_alias: str) -> str:
         if name_alias in self._idx:
             return self._idx[name_alias]
-        raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.product.name}")
+        raise ConfigException(f"Unknown band name/alias: {name_alias} in layer {self.layer_name}")
 
     def locale_band(self, name_alias: str) -> str:
         try:
@@ -167,7 +167,7 @@ class BandIndex(OWSMetadataConfig):
         for b in self.band_cfg.keys():
             if name_alias == self.band_label(b):
                 return b
-        raise ConfigException(f"Unknown band: {name_alias} in layer {self.product.name}")
+        raise ConfigException(f"Unknown band: {name_alias} in layer {self.layer_name}")
 
     def band_label(self, name_alias) -> str:
         canonical_name = self.band(name_alias)
@@ -321,17 +321,17 @@ class OWSFolder(OWSLayer):
     def layer_count(self) -> int:
         return sum([l.layer_count() for l in self.child_layers])
 
-    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
+    def make_ready(self, *args, **kwargs) -> None:
         still_unready = []
         for lyr in self.unready_layers:
             try:
-                lyr.make_ready(dc, *args, **kwargs)
+                lyr.make_ready(*args, **kwargs)
                 self.child_layers.append(lyr)
             except ConfigException as e:
                 _LOG.error("Could not load layer %s: %s", lyr.title, str(e))
                 still_unready.append(lyr)
         self.unready_layers = still_unready
-        super().make_ready(dc, *args, **kwargs)
+        super().make_ready(*args, **kwargs)
 
 
 class TimeRes(Enum):
@@ -412,6 +412,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.name = name
         cfg = cast(CFG_DICT, self._raw_cfg)
         self.hide = False
+        self.local_env: ODCEnvironment | None = None
+        local_env = cast(str | None, cfg.get("env"))
+        self.local_env = ODCConfig.get_environment(env=local_env)
+        # TODO: MULTIDB_SUPPORT
+        #     After refactoring the range tables, Uncomment this code for multi-database support
+        #     (Don't forget to add to documentation)
+        #
+        # if local_env:
+        #    self.local_env = ODCConfig.get_environment(env=local_env)
         try:
             self.parse_product_names(cfg)
             if len(self.low_res_product_names) not in (0, len(self.product_names)):
@@ -504,7 +513,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("default_time")
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
-        # TODO: sub-ranges
         self.band_idx: BandIndex = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
         self.cfg_native_crs = cfg.get("native_crs")
@@ -564,47 +572,61 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return ""
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc: Datacube, *args, **kwargs):
-        self.products = []
-        self.low_res_products = []
+    def make_ready(self, *args: Any, **kwargs: Any) -> None:
+        # TODO: MULTIDB_SUPPORT
+        #     After refactoring the range tables, Uncomment this code for multi-database support
+        #     (Don't forget to add to documentation)
+        #
+        # if self.local_env:
+        #     try:
+        #         self.dc: Datacube = Datacube(env=self.local_env, app=self.global_cfg.odc_app)
+        #     except Exception as e:
+        #         _LOG.error("ODC initialisation failed: %s", str(e))
+        #         raise ODCInitException(e)
+        # else:
+        self.dc = self.global_cfg.dc
+        self.products: list[Product] = []
+        self.low_res_products: list[Product] = []
         for i, prod_name in enumerate(self.product_names):
             if self.low_res_product_names:
                 low_res_prod_name = self.low_res_product_names[i]
             else:
                 low_res_prod_name = None
-            product = dc.index.products.get_by_name(prod_name)
+            product = self.dc.index.products.get_by_name(prod_name)
             if not product:
                 raise ConfigException(f"Could not find product {prod_name} in datacube for layer {self.name}")
             self.products.append(product)
             if low_res_prod_name:
-                product = dc.index.products.get_by_name(low_res_prod_name)
+                product = self.dc.index.products.get_by_name(low_res_prod_name)
                 if not product:
-                    raise ConfigException(f"Could not find product {low_res_prod_name} in datacube for layer {self.name}")
+                    raise ConfigException(
+                        f"Could not find product {low_res_prod_name} in datacube for layer {self.name}"
+                    )
                 self.low_res_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
-        self.force_range_update(dc)
-        self.band_idx.make_ready(dc)
-        self.resource_limits.make_ready(dc)
+        self.force_range_update()
+        self.band_idx.make_ready()
+        self.resource_limits.make_ready()
         self.all_flag_band_names: set[str] = set()
         for fb in self.flag_bands.values():
-            fb.make_ready(dc)
+            fb.make_ready()
             if fb.pq_band in self.all_flag_band_names:
                 raise ConfigException(f"Duplicate flag band name: {fb.pq_band}")
             self.all_flag_band_names.add(fb.pq_band)
-        self.ready_image_processing(dc)
+        self.ready_image_processing()
         self.ready_native_specs()
         if self.global_cfg.wcs:
-            self.ready_wcs(dc)
+            self.ready_wcs()
         for style in self.styles:
-            style.make_ready(dc, *args, **kwargs)
+            style.make_ready(*args, **kwargs)
         for fpb in self.allflag_productbands:
-            fpb.make_ready(dc, *args, **kwargs)
+            fpb.make_ready(*args, **kwargs)
         if not self.multi_product:
             self.global_cfg.native_product_index[self.product_name] = self
 
         if not self.hide:
-            super().make_ready(dc, *args, **kwargs)
+            super().make_ready(*args, **kwargs)
 
     # pylint: disable=attribute-defined-outside-init
     def parse_image_processing(self, cfg: CFG_DICT):
@@ -633,7 +655,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.fuse_func = None
 
     # pylint: disable=attribute-defined-outside-init
-    def ready_image_processing(self, dc: Datacube) -> None:
+    def ready_image_processing(self) -> None:
         self.always_fetch_bands = list([self.band_idx.band(b) for b in cast(list[str], self.raw_afb)])
 
     # pylint: disable=attribute-defined-outside-init
@@ -803,7 +825,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
 
     # pylint: disable=attribute-defined-outside-init
-    def ready_wcs(self, dc: Datacube):
+    def ready_wcs(self):
         if self.global_cfg.wcs and self.wcs:
 
             # Prepare Rectified Grids
@@ -878,16 +900,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def parse_pq_names(self, cfg: CFG_DICT):
         raise NotImplementedError()
 
-    def force_range_update(self, ext_dc: Datacube | None = None) -> None:
-        if ext_dc:
-            dc: Datacube | None = ext_dc
-        else:
-            dc = get_cube()
-        assert dc is not None
+    def force_range_update(self) -> None:
         self.hide = False
         try:
             from datacube_ows.product_ranges import get_ranges
-            self._ranges = get_ranges(dc, self)
+            self._ranges = get_ranges(self)
             if self._ranges is None:
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
@@ -1240,7 +1257,12 @@ class OWSConfig(OWSMetadataConfig):
             self.initialised = True
 
     #pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc: Datacube, *args, **kwargs):
+    def make_ready(self, *args: Any, **kwargs: Any) -> None:
+        try:
+            self.dc: Datacube = Datacube(env=self.default_env, app=self.odc_app)
+        except Exception as e:
+            _LOG.error("ODC initialisation failed: %s", str(e))
+            raise ODCInitException(e)
         if self.msg_file_name:
             try:
                 with open(self.msg_file_name, "rb") as fp:
@@ -1250,8 +1272,8 @@ class OWSConfig(OWSMetadataConfig):
         else:
             self.set_msg_src(None)
         self.native_product_index: dict[str, OWSNamedLayer] = {}
-        self.root_layer_folder.make_ready(dc, *args, **kwargs)
-        super().make_ready(dc, *args, **kwargs)
+        self.root_layer_folder.make_ready(*args, **kwargs)
+        super().make_ready(*args, **kwargs)
 
     def export_metadata(self) -> Catalog:
         if self.catalog is None:
@@ -1283,12 +1305,14 @@ class OWSConfig(OWSMetadataConfig):
                         "folder.ows_root_hidden.title",
                         "folder.ows_root_hidden.abstract",
                         "folder.ows_root_hidden.local_keywords",
-                 ]:
+                ]:
                     continue
                 self.catalog.add(id=k, string=v, auto_comments=[v])
         return self.catalog
 
     def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool):
+        self.default_env = cast(str, cfg.get("env"))
+        self.odc_app = cast(str, cfg.get("odc_app", "ows"))
         self._response_headers = cast(dict[str, str], cfg.get("response_headers", {}))
         services = cast(dict[str, bool], cfg.get("services", {}))
         self.wms = services.get("wms", True)
@@ -1477,14 +1501,11 @@ class OWSConfig(OWSMetadataConfig):
         hdrs.update(d)
         return hdrs
 
-
 def get_config(refresh=False, called_from_update_ranges=False) -> OWSConfig:
     cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)
     if not cfg.ready:
         try:
-            with cube() as dc:
-                assert dc is not None  # For type checker
-                cfg.make_ready(dc)
+            cfg.make_ready()
         except ODCInitException:
             pass
     return cfg

@@ -15,7 +15,6 @@ from ows.util import Version
 from rasterio import MemoryFile
 
 from datacube_ows.config_utils import ConfigException
-from datacube_ows.cube_pool import cube
 from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS1Exception
@@ -37,10 +36,10 @@ class WCS1GetCoverageRequest:
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="COVERAGE parameter",
                                 valid_keys=list(cfg.product_index))
-        self.product_name = args["coverage"]
-        self.product = cfg.product_index.get(self.product_name)
-        if not self.product or not self.product.wcs:
-            raise WCS1Exception("Invalid coverage: %s" % self.product_name,
+        self.layer_name = args["coverage"]
+        self.layer = cfg.product_index.get(self.layer_name)
+        if not self.layer or not self.layer.wcs:
+            raise WCS1Exception("Invalid coverage: %s" % self.layer_name,
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
                                 locator="COVERAGE parameter",
                                 valid_keys=list(cfg.product_index))
@@ -139,7 +138,7 @@ class WCS1GetCoverageRequest:
             #      CEOS treats no supplied time argument as all time.
             # I'm really not sure what the right thing to do is, but QGIS wants us to do SOMETHING - use configured
             # default.
-            self.times = [self.product.default_time]
+            self.times = [self.layer.default_time]
         else:
             # TODO: the min/max/res format option?
             # It's a bit underspeced. I'm not sure what the "res" would look like.
@@ -150,12 +149,12 @@ class WCS1GetCoverageRequest:
                     continue
                 try:
                     time = parse(t).date()
-                    if time not in self.product.ranges["time_set"]:
+                    if time not in self.layer.ranges["time_set"]:
                         raise WCS1Exception(
-                            "Time value '%s' not a valid date for coverage %s" % (t, self.product_name),
+                            "Time value '%s' not a valid date for coverage %s" % (t, self.layer_name),
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="TIME parameter",
-                            valid_keys=[d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
+                            valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges["time_set"]]
                         )
                     self.times.append(time)
                 except ValueError:
@@ -163,7 +162,7 @@ class WCS1GetCoverageRequest:
                         "Time value '%s' not a valid ISO-8601 date" % t,
                         WCS1Exception.INVALID_PARAMETER_VALUE,
                         locator="TIME parameter",
-                        valid_keys=[d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
+                        valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges["time_set"]]
                     )
             self.times.sort()
 
@@ -172,7 +171,7 @@ class WCS1GetCoverageRequest:
                     "No valid ISO-8601 dates",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
                     locator="TIME parameter",
-                    valid_keys = [d.strftime('%Y-%m-%d') for d in self.product.ranges["time_set"]]
+                    valid_keys = [d.strftime('%Y-%m-%d') for d in self.layer.ranges["time_set"]]
                 )
             elif len(self.times) > 1 and not self.format.multi_time:
                 raise WCS1Exception(
@@ -191,28 +190,28 @@ class WCS1GetCoverageRequest:
                 if not b:
                     continue
                 try:
-                    self.bands.append(self.product.band_idx.locale_band(b))
+                    self.bands.append(self.layer.band_idx.locale_band(b))
                 except ConfigException:
                     raise WCS1Exception(f"Invalid measurement: {b}",
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
                                         locator="MEASUREMENTS parameter",
-                                        valid_keys=self.product.band_idx.band_labels())
+                                        valid_keys=self.layer.band_idx.band_labels())
             if not bands:
                 raise WCS1Exception("No measurements supplied",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="MEASUREMENTS parameter",
-                                    valid_keys = self.product.band_idx.band_labels())
+                                    valid_keys = self.layer.band_idx.band_labels())
         elif "styles" in args and args["styles"]:
             # Use style bands.
             # Non-standard protocol extension.
             #
             # As we have correlated WCS and WMS service implementations,
             # we can accept a style from WMS, and return the bands used for it.
-            self.bands = get_bands_from_styles(args["styles"], self.product)
+            self.bands = get_bands_from_styles(args["styles"], self.layer)
             if not self.bands:
-                self.bands = self.product.band_idx.band_labels()
+                self.bands = self.layer.band_idx.band_labels()
         else:
-            self.bands = self.product.band_idx.band_labels()
+            self.bands = self.layer.band_idx.band_labels()
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
@@ -308,103 +307,100 @@ class WCS1GetCoverageRequest:
 
 def get_coverage_data(req, qprof):
     # pylint: disable=too-many-locals, protected-access
-    with cube() as dc:
-        if not dc:
-            raise WCS1Exception("Database connectivity failure")
-        stacker = DataStacker(req.product,
-                              req.geobox,
-                              req.times,
-                              bands=req.bands)
-        qprof.start_event("count-datasets")
-        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-        qprof.end_event("count-datasets")
-        qprof["n_datasets"] = n_datasets
+    stacker = DataStacker(req.layer,
+                          req.geobox,
+                          req.times,
+                          bands=req.bands)
+    qprof.start_event("count-datasets")
+    n_datasets = stacker.datasets(req.layer.dc.index, mode=MVSelectOpts.COUNT)
+    qprof.end_event("count-datasets")
+    qprof["n_datasets"] = n_datasets
 
-        try:
-            req.product.resource_limits.check_wcs(n_datasets,
-                                                  req.geobox.height, req.geobox.width,
-                                                  sum(req.product.band_idx.dtype_size(b) for b in req.bands),
-                                                  len(req.times))
-        except ResourceLimited as e:
-            if e.wcs_hard or not req.product.low_res_product_names:
-                raise WCS1Exception(
-                    f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                    + "Please reduce the bounds of your request and try again.")
-            stacker.resource_limited = True
-            qprof["resource_limited"] = str(e)
-        if n_datasets == 0:
-            # Return an empty coverage file with full metadata?
-            qprof.start_event("build_empty_dataset")
-            cfg = get_config()
-            x_range = (req.minx, req.maxx)
-            y_range = (req.miny, req.maxy)
-            xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
-            yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
-            xvals = numpy.linspace(
-                x_range[0],
-                x_range[1],
-                num=req.width
-            )
-            yvals = numpy.linspace(
-                y_range[0],
-                y_range[1],
-                num=req.height
-            )
-            if req.product.time_resolution.is_subday():
-                timevals = [
-                    numpy.datetime64(dt.astimezone(pytz.utc).isoformat(), "ns")
-                    for dt in req.times
-                ]
-            else:
-                timevals = req.times
-            if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
-                nparrays = {
-                    band: (("time", yname, xname),
-                           numpy.full((len(req.times), len(yvals), len(xvals)),
-                                      req.product.band_idx.nodata_val(band))
-                          )
-                    for band in req.bands
-                }
-            else:
-                nparrays = {
-                    band: (("time", xname, yname),
-                           numpy.full((len(req.times), len(xvals), len(yvals)),
-                                      req.product.band_idx.nodata_val(band))
-                          )
-                    for band in req.bands
-                }
-            data = xarray.Dataset(
-                nparrays,
-                coords={
-                    "time": timevals,
-                    xname: xvals,
-                    yname: yvals,
-                }
-            ).astype("int16")
-            qprof.start_event("end_empty_dataset")
-            qprof["write_action"] = "Write Empty"
-
-            return n_datasets, data
-
-        qprof.start_event("fetch-datasets")
-        datasets = stacker.datasets(index=dc.index)
-        qprof.end_event("fetch-datasets")
-        if qprof.active:
-            qprof["datasets"] = {
-                str(q): [str(i) for i in ids]
-                for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()
+    try:
+        req.layer.resource_limits.check_wcs(n_datasets,
+                                            req.geobox.height, req.geobox.width,
+                                            sum(req.layer.band_idx.dtype_size(b) for b in req.bands),
+                                            len(req.times))
+    except ResourceLimited as e:
+        if e.wcs_hard or not req.layer.low_res_product_names:
+            raise WCS1Exception(
+                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                + "Please reduce the bounds of your request and try again.")
+        stacker.resource_limited = True
+        qprof["resource_limited"] = str(e)
+    if n_datasets == 0:
+        # Return an empty coverage file with full metadata?
+        qprof.start_event("build_empty_dataset")
+        cfg = get_config()
+        x_range = (req.minx, req.maxx)
+        y_range = (req.miny, req.maxy)
+        xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
+        yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
+        xvals = numpy.linspace(
+            x_range[0],
+            x_range[1],
+            num=req.width
+        )
+        yvals = numpy.linspace(
+            y_range[0],
+            y_range[1],
+            num=req.height
+        )
+        if req.layer.time_resolution.is_subday():
+            timevals = [
+                numpy.datetime64(dt.astimezone(pytz.utc).isoformat(), "ns")
+                for dt in req.times
+            ]
+        else:
+            timevals = req.times
+        if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
+            nparrays = {
+                band: (("time", yname, xname),
+                       numpy.full((len(req.times), len(yvals), len(xvals)),
+                                  req.layer.band_idx.nodata_val(band))
+                      )
+                for band in req.bands
             }
-        qprof.start_event("load-data")
-        output = stacker.data(datasets, skip_corrections=True)
-        qprof.end_event("load-data")
+        else:
+            nparrays = {
+                band: (("time", xname, yname),
+                       numpy.full((len(req.times), len(xvals), len(yvals)),
+                                  req.layer.band_idx.nodata_val(band))
+                      )
+                for band in req.bands
+            }
+        data = xarray.Dataset(
+            nparrays,
+            coords={
+                "time": timevals,
+                xname: xvals,
+                yname: yvals,
+            }
+        ).astype("int16")
+        qprof.start_event("end_empty_dataset")
+        qprof["write_action"] = "Write Empty"
 
-        # Clean extent flag band from output
-        sanitised_bands = [req.product.band_idx.locale_band(b) for b in req.bands]
-        for k, v in output.data_vars.items():
-            if k not in sanitised_bands:
-                output = output.drop_vars([k])
-        qprof["write_action"] = "Write Data"
-        return n_datasets, output
+        return n_datasets, data
+
+    qprof.start_event("fetch-datasets")
+    datasets = stacker.datasets(index=req.layer.dc.index)
+    qprof.end_event("fetch-datasets")
+    if qprof.active:
+        qprof["datasets"] = {
+            str(q): [str(i) for i in ids]
+            for q, ids in stacker.datasets(req.layer.dc.index, mode=MVSelectOpts.IDS).items()
+        }
+    qprof.start_event("load-data")
+    output = stacker.data(datasets, skip_corrections=True)
+    qprof.end_event("load-data")
+
+    # Clean extent flag band from output
+    sanitised_bands = [req.layer.band_idx.locale_band(b) for b in req.bands]
+    for k, v in output.data_vars.items():
+        if k not in sanitised_bands:
+            output = output.drop_vars([k])
+    qprof["write_action"] = "Write Data"
+    return n_datasets, output
 
 
 def get_tiff(req, data):
@@ -434,7 +430,7 @@ def get_tiff(req, data):
     yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
     nodata = 0
     for band in data.data_vars:
-        nodata = req.product.band_idx.nodata_val(band)
+        nodata = req.layer.band_idx.nodata_val(band)
     with MemoryFile() as memfile:
         # pylint: disable=protected-access, bad-continuation
         with memfile.open(
@@ -451,7 +447,7 @@ def get_tiff(req, data):
             dtype=dtype) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
-                dst.set_band_description(idx, req.product.band_idx.band_label(band))
+                dst.set_band_description(idx, req.layer.band_idx.band_label(band))
                 if cfg.wcs_tiff_statistics:
                     dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
                     dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())

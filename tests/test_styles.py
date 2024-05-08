@@ -63,7 +63,7 @@ def product_layer():
     product_layer.always_fetch_bands = ["red", "green", "blue"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx._unready_attributes = []
-    product_layer.band_idx.product = product_layer
+    product_layer.band_idx.layer = product_layer
     product_layer.band_idx.band_cfg = {
         "red": ["crimson", "foo", ],
         "green": [],

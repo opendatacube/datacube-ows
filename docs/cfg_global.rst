@@ -14,6 +14,18 @@ to all services and all layers/coverages.
 
 The Global section is always required and contains the following entries:
 
+Open Data Cube Environment
+==========================
+
+Normally OWS defers to the ODC-1.9 configuration environment (`default`, with legacy support for `datacube`).
+
+You can override this with the ``env`` global config entry::
+
+    "env": "dev"
+
+Future releases will allow this to be over-ridden at the layer level, allowing one OWS instance to serve data
+from multiple indexes.
+
 Metadata Separation and Internationalisation
 ============================================
 

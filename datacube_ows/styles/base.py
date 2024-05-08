@@ -221,7 +221,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         return f"style.{self.product.name}.{self.name}"
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc: "datacube.Datacube", *args, **kwargs) -> None:
+    def make_ready(self, *args, **kwargs) -> None:
         """
         Second-phase (db aware) initialisation
 
@@ -262,7 +262,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                     raise ConfigException(f"Same flag band name {band} appears in different PQ product (sets)")
                 self.flag_bands.add(band)
         for fp in self.flag_products:
-            fp.make_ready(dc)
+            fp.make_ready()
         if not self.stand_alone:
             # TODO: Should be able to remove this pyre-ignore after ows_configuration is typed.
             # pyre-ignore[16]
@@ -270,7 +270,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                 if band not in self.needed_bands:
                     self.needed_bands.add(band)
                     self.flag_bands.add(band)
-        super().make_ready(dc, *args, **kwargs)
+        super().make_ready(*args, **kwargs)
 
     def odc_needed_bands(self) -> Iterable[datacube.model.Measurement]:
         # pyre-ignore[16]

@@ -117,14 +117,14 @@ def get_coverage(args):
         return json_response(qprof.profile())
     headers = {
         "Content-Type": req.format.mime,
-        'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format.extension)
+        'content-disposition': 'attachment; filename=%s.%s' % (req.layer_name, req.format.extension)
     }
-    headers.update(req.product.resource_limits.wcs_cache_rules.cache_headers(n_datasets))
+    headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))
     return (
         req.format.renderer(req.version)(req, data),
         200,
         cfg.response_headers({
             "Content-Type": req.format.mime,
-            'content-disposition': 'attachment; filename=%s.%s' % (req.product_name, req.format.extension)
+            'content-disposition': 'attachment; filename=%s.%s' % (req.layer_name, req.format.extension)
         })
     )

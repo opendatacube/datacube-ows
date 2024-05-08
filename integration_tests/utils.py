@@ -9,7 +9,6 @@ import enum
 from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
-from datacube_ows.cube_pool import cube
 from datacube_ows.mv_index import MVSelectOpts, mv_search
 
 
@@ -371,21 +370,20 @@ class ODCExtent:
     ):
         ext_times = time.slice(self.layer.ranges["times"])
         search_times = [self.layer.search_times(t) for t in ext_times]
-        with cube() as dc:
-            if space.needs_full_extent() and not self.full_extent:
-                self.full_extent = mv_search(
-                    dc.index, products=self.layer.products, sel=MVSelectOpts.EXTENT
-                )
-            if space.needs_time_extent():
-                time_extent = mv_search(
-                    dc.index,
-                    products=self.layer.products,
-                    sel=MVSelectOpts.EXTENT,
-                    times=search_times,
-                )
-            else:
-                time_extent = None
+        if space.needs_full_extent() and not self.full_extent:
+            self.full_extent = mv_search(
+                self.layer.dc.index, products=self.layer.products, sel=MVSelectOpts.EXTENT
+            )
+        if space.needs_time_extent():
+            time_extent = mv_search(
+                self.layer.dc.index,
+                products=self.layer.products,
+                sel=MVSelectOpts.EXTENT,
+                times=search_times,
+            )
+        else:
+            time_extent = None
 
-            extent = space.subset(time_extent, self.full_extent)
+        extent = space.subset(time_extent, self.full_extent)
 
         return extent, ext_times

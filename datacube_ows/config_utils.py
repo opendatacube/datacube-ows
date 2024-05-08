@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 
 import fsspec
 from babel.messages import Catalog, Message
-from datacube import Datacube
 from datacube.model import Product
 from datacube.utils.masking import make_mask
 from flask_babel import gettext as _
@@ -157,6 +156,13 @@ class OWSConfigNotReady(ConfigException):
     """
 
 
+class ODCInitException(ConfigException):
+    """
+    Exception raised when a Datacube index could not be created
+    """
+
+
+
 class OWSConfigEntry:
     """
     Base class for all configuration objects
@@ -228,7 +234,7 @@ class OWSConfigEntry:
         super().__setattr__(name, val)
 
     # Validate against database and prepare for use.
-    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
+    def make_ready(self, *args, **kwargs) -> None:
         """
         Perform second phase initialisation with a database connection.
 
@@ -660,15 +666,15 @@ class OWSFlagBand(OWSConfigEntry):
         """
         super().__init__(cfg, **kwargs)
         cfg = cast(CFG_DICT, self._raw_cfg)
-        self.product = product_cfg
-        pq_names = self.product.parse_pq_names(cfg)
+        self.layer = product_cfg
+        pq_names = self.layer.parse_pq_names(cfg)
         self.pq_names = cast(list[str], pq_names["pq_names"])
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.main_products = pq_names["main_products"]
         self.pq_band = str(cfg["band"])
         self.canonical_band_name = self.pq_band # Update for aliasing on make_ready
         if "fuse_func" in cfg:
-            self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.product, cast(CFG_DICT, cfg["fuse_func"]))
+            self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.layer, cast(CFG_DICT, cfg["fuse_func"]))
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = bool(cfg.get("ignore_time", False))
@@ -679,7 +685,7 @@ class OWSFlagBand(OWSConfigEntry):
         self.declare_unready("info_mask")
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
+    def make_ready(self, *args: Any, **kwargs: Any) -> None:
         """
         Second round (db-aware) intialisation.
 
@@ -691,21 +697,21 @@ class OWSFlagBand(OWSConfigEntry):
         self.pq_low_res_products: list[Product] = []
         for pqn in self.pq_names:
             if pqn is not None:
-                pq_product = dc.index.products.get_by_name(pqn)
+                pq_product = self.layer.dc.index.products.get_by_name(pqn)
                 if pq_product is None:
-                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.product.name} in datacube")
+                    raise ConfigException(f"Could not find flags product {pqn} for layer {self.layer.name} in datacube")
                 self.pq_products.append(pq_product)
         for pqn in self.pq_low_res_names:
             if pqn is not None:
-                pq_product = dc.index.products.get_by_name(pqn)
+                pq_product = self.layer.dc.index.products.get_by_name(pqn)
                 if pq_product is None:
-                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.product.name} in datacube")
+                    raise ConfigException(f"Could not find flags low_res product {pqn} for layer {self.layer.name} in datacube")
                 self.pq_low_res_products.append(pq_product)
 
         # Resolve band alias if necessary.
         if self.main_products:
             try:
-                self.canonical_band_name = self.product.band_idx.band(self.pq_band)
+                self.canonical_band_name = self.layer.band_idx.band(self.pq_band)
             except ConfigException:
                 pass
 
@@ -717,9 +723,9 @@ class OWSFlagBand(OWSConfigEntry):
             meas = product.lookup_measurements([str(self.canonical_band_name)])[str(self.canonical_band_name)]
         except KeyError:
             raise ConfigException(
-                f"Band {self.pq_band} does not exist in product {product.name} - cannot be used as a flag band for layer {self.product.name}.")
+                f"Band {self.pq_band} does not exist in product {product.name} - cannot be used as a flag band for layer {self.layer.name}.")
         if "flags_definition" not in meas:
-            raise ConfigException(f"Band {self.pq_band} in product {product.name} has no flags_definition in ODC - cannot be used as a flag band for layer {self.product.name}.")
+            raise ConfigException(f"Band {self.pq_band} in product {product.name} has no flags_definition in ODC - cannot be used as a flag band for layer {self.layer.name}.")
         # pyre-ignore[16]
         self.flags_def: dict[str, dict[str, RAW_CFG]] = meas["flags_definition"]
         for bitname in self.ignore_info_flags:
@@ -728,7 +734,7 @@ class OWSFlagBand(OWSConfigEntry):
                 continue
             flag = 1 << bit
             self.info_mask &= ~flag
-        super().make_ready(dc, *args, **kwargs)
+        super().make_ready(*args, **kwargs)
 
 
 FlagBand = OWSFlagBand | OWSFlagBandStandalone
@@ -789,7 +795,7 @@ class FlagProductBands(OWSConfigEntry):
         self.declare_unready("low_res_products")
 
     # pylint: disable=attribute-defined-outside-init
-    def make_ready(self, dc: Datacube, *args, **kwargs) -> None:
+    def make_ready(self, *args, **kwargs) -> None:
         """
         Second round (db-aware) intialisation.
 
@@ -804,7 +810,7 @@ class FlagProductBands(OWSConfigEntry):
             break
         if self.main_product:
             self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
-        super().make_ready(dc, *args, **kwargs)
+        super().make_ready(*args, **kwargs)
 
     @classmethod
     def build_list_from_masks(cls, masks: Iterable["datacube_ows.styles.base.StyleMask"],

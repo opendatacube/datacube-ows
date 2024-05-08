@@ -128,21 +128,21 @@ def img_coords_to_geopoint(geobox, i, j):
                           geobox.crs)
 
 
-def get_product_from_arg(args, argname="layers") -> OWSNamedLayer:
+def get_layer_from_arg(args, argname="layers") -> OWSNamedLayer:
     layers = args.get(argname, "").split(",")
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
-    layer = layers[0]
-    layer_chunks = layer.split("__")
-    layer = layer_chunks[0]
+    lyr = layers[0]
+    layer_chunks = lyr.split("__")
+    lyr = layer_chunks[0]
     cfg = get_config()
-    product = cfg.product_index.get(layer)
-    if not product:
-        raise WMSException("Layer %s is not defined" % layer,
+    layer = cfg.product_index.get(lyr)
+    if not layer:
+        raise WMSException("Layer %s is not defined" % lyr,
                            WMSException.LAYER_NOT_DEFINED,
                            locator="Layer parameter",
                            valid_keys=list(cfg.product_index))
-    return product
+    return layer
 
 
 def get_arg(args, argname, verbose_name, lower=False,
@@ -308,21 +308,21 @@ class GetParameters():
                              permitted_values=list(self.cfg.published_CRSs))
         self.crs = self.cfg.crs(self.crsid)
         # Layers
-        self.product = self.get_product(args)
+        self.layer = self.get_layer(args)
 
         self.geometry = _get_polygon(args, self.crs)
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
         # Time parameter
-        self.times = get_times(args, self.product)
+        self.times = get_times(args, self.layer)
 
         self.method_specific_init(args)
 
     def method_specific_init(self, args):
         pass
 
-    def get_product(self, args) -> OWSNamedLayer:
-        return get_product_from_arg(args)
+    def get_layer(self, args) -> OWSNamedLayer:
+        return get_layer_from_arg(args)
 
 
 def single_style_from_args(product, args, required=True):
@@ -386,7 +386,7 @@ def single_style_from_args(product, args, required=True):
 
 class GetLegendGraphicParameters():
     def __init__(self, args):
-        self.product = get_product_from_arg(args, 'layer')
+        self.product = get_layer_from_arg(args, 'layer')
 
         # Validate Format parameter
         self.format = get_arg(args, "format", "image format",
@@ -407,7 +407,7 @@ class GetMapParameters(GetParameters):
                               lower=True,
                               permitted_values=["image/png"])
 
-        self.style = single_style_from_args(self.product, args)
+        self.style = single_style_from_args(self.layer, args)
         cfg = get_config()
         if self.geobox.width > cfg.wms_max_width:
             raise WMSException(f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",
@@ -425,8 +425,8 @@ class GetMapParameters(GetParameters):
         self.resampling = Resampling.nearest
 
         self.resources = RequestScale(
-            native_crs=geom.CRS(self.product.native_CRS),
-            native_resolution=(self.product.resolution_x, self.product.resolution_y),
+            native_crs=geom.CRS(self.layer.native_CRS),
+            native_resolution=(self.layer.resolution_x, self.layer.resolution_y),
             geobox=self.geobox,
             n_dates=len(self.times),
             request_bands=self.style.odc_needed_bands(),
@@ -434,8 +434,8 @@ class GetMapParameters(GetParameters):
 
 
 class GetFeatureInfoParameters(GetParameters):
-    def get_product(self, args):
-        return get_product_from_arg(args, "query_layers")
+    def get_layer(self, args):
+        return get_layer_from_arg(args, "query_layers")
 
     def method_specific_init(self, args):
         # Validate Formata parameter

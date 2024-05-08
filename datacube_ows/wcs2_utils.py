@@ -12,7 +12,6 @@ from odc.geo.geobox import GeoBox
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
 from rasterio import MemoryFile
 
-from datacube_ows.cube_pool import cube
 from datacube_ows.loading import DataStacker
 from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS2Exception
@@ -59,250 +58,245 @@ def get_coverage_data(request, styles, qprof):
                             locator="COVERAGE parameter",
                             valid_keys=list(cfg.product_index))
 
-    with cube() as dc:
-        if not dc:
-            raise WCS2Exception("Database connectivity failure")
-        #
-        # CRS handling
-        #
+    #
+    # CRS handling
+    #
 
-        native_crs = layer.native_CRS
-        subsetting_crs = uniform_crs(cfg, request.subsetting_crs or native_crs)
-        output_crs = uniform_crs(cfg, request.output_crs or subsetting_crs)
+    native_crs = layer.native_CRS
+    subsetting_crs = uniform_crs(cfg, request.subsetting_crs or native_crs)
+    if subsetting_crs not in cfg.published_CRSs:
+        raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
+                            WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
+                            locator=subsetting_crs,
+                            valid_keys=list(cfg.published_CRSs))
 
-        if subsetting_crs not in cfg.published_CRSs:
-            raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
-                                WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
-                                locator=subsetting_crs,
-                                valid_keys=list(cfg.published_CRSs))
+    output_crs = uniform_crs(cfg, request.output_crs or subsetting_crs or native_crs)
 
-        output_crs = uniform_crs(cfg, request.output_crs or subsetting_crs or native_crs)
+    if output_crs not in cfg.published_CRSs:
+        raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
+                            WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
+                            locator=output_crs,
+                            valid_keys=list(cfg.published_CRSs))
 
-        if output_crs not in cfg.published_CRSs:
-            raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
-                                WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
-                                locator=output_crs,
-                                valid_keys=list(cfg.published_CRSs))
+    #
+    # Subsetting/Scaling
+    #
 
-        #
-        # Subsetting/Scaling
-        #
+    scaler = WCSScaler(layer, subsetting_crs)
+    times = layer.ranges["times"]
 
-        scaler = WCSScaler(layer, subsetting_crs)
-        times = layer.ranges["times"]
+    subsets = request.subsets
 
-        subsets = request.subsets
+    if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
+        dimensions = [subset.dimension.lower() for subset in subsets]
+        duplicate_dimensions = [
+            item
+            for item, count in collections.Counter(dimensions).items()
+            if count > 1
+        ]
 
-        if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
-            dimensions = [subset.dimension.lower() for subset in subsets]
-            duplicate_dimensions = [
-                item
-                for item, count in collections.Counter(dimensions).items()
-                if count > 1
-            ]
-
-            raise WCS2Exception("Duplicate dimension%s: %s" % (
-                                    's' if len(duplicate_dimensions) > 1 else '',
-                                    ', '.join(duplicate_dimensions)
-                                ),
-                                WCS2Exception.INVALID_SUBSETTING,
-                                locator=','.join(duplicate_dimensions)
-                                )
-
-        for subset in subsets:
-            dimension = subset.dimension.lower()
-            if dimension == 'time':
-                if isinstance(subset, Trim):
-                    if "," in subset.high:
-                        raise WCS2Exception(
-                            "Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
+        raise WCS2Exception("Duplicate dimension%s: %s" % (
+                                's' if len(duplicate_dimensions) > 1 else '',
+                                ', '.join(duplicate_dimensions)
+                            ),
                             WCS2Exception.INVALID_SUBSETTING,
-                            locator="time")
-                    if layer.time_resolution.is_subday():
-                        low = parse(subset.low) if subset.low is not None else None
-                        low = default_to_utc(low)
-                        high = parse(subset.high) if subset.high is not None else None
-                        high = default_to_utc(high)
-                    else:
-                        low = parse(subset.low).date() if subset.low is not None else None
-                        high = parse(subset.high).date() if subset.high is not None else None
-                    if low is not None:
-                        times = [
-                            time for time in times
-                            if time >= low
-                        ]
-                    if high is not None:
-                        times = [
-                            time for time in times
-                            if time <= high
-                        ]
-                elif isinstance(subset, Slice):
-                    point = parse(subset.point).date()
-                    times = [point]
-            else:
-                try:
-                    if isinstance(subset, Trim):
-                        scaler.trim(dimension, subset.low, subset.high)
-                    elif isinstance(subset, Slice):
-                        scaler.slice(dimension, subset.point)
-                except WCSScalerUnknownDimension:
-                    raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
-                                    WCS2Exception.INVALID_AXIS_LABEL,
-                                    locator=subset.dimension)
+                            locator=','.join(duplicate_dimensions)
+                            )
 
-        #
-        # Transform spatial extent to native CRS.
-        #
-        scaler.to_crs(output_crs)
-
-        #
-        # Scaling
-        #
-
-        scales = request.scales
-        if len(scales) != len(set(subset.axis.lower() for subset in scales)):
-            axes = [subset.axis.lower() for subset in scales]
-            duplicate_axes = [
-                item
-                for item, count in collections.Counter(axes).items()
-                if count > 1
-            ]
-            raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
-                                    'i' if len(duplicate_axes) == 1 else 'e',
-                                    ', '.join(duplicate_axes)
-                                ),
-                                WCS2Exception.INVALID_SCALE_FACTOR,
-                                locator=','.join(duplicate_axes)
-                                )
-
-        for scale in scales:
-            axis = scale.axis.lower()
-
-            if axis in ('time', 'k'):
-                raise WCS2Exception('Cannot scale axis %s' % scale.axis,
-                                    WCS2Exception.INVALID_SCALE_FACTOR,
-                                    locator=scale.axis
-                                    )
-            else:
-                if isinstance(scale, ScaleAxis):
-                    scaler.scale_axis(axis, scale.factor)
-                elif isinstance(scale, ScaleSize):
-                    scaler.scale_size(axis, scale.size)
-                elif isinstance(scale, ScaleExtent):
-                    scaler.scale_extent(axis, scale.low, scale.high)
-
-        #
-        # Rangesubset
-        #
-
-        band_labels = layer.band_idx.band_labels()
-        if request.range_subset:
-            bands = []
-            for range_subset in request.range_subset:
-                if isinstance(range_subset, str):
-                    if range_subset not in band_labels:
-                        raise WCS2Exception('No such field %s' % range_subset,
-                                    WCS2Exception.NO_SUCH_FIELD,
-                                    locator=range_subset,
-                                    valid_keys=band_labels
-                                    )
-                    bands.append(range_subset)
+    for subset in subsets:
+        dimension = subset.dimension.lower()
+        if dimension == 'time':
+            if isinstance(subset, Trim):
+                if "," in subset.high:
+                    raise WCS2Exception(
+                        "Subsets can only contain 2 elements - the lower and upper bounds. For arbitrary date lists, use WCS1",
+                        WCS2Exception.INVALID_SUBSETTING,
+                        locator="time")
+                if layer.time_resolution.is_subday():
+                    low = parse(subset.low) if subset.low is not None else None
+                    low = default_to_utc(low)
+                    high = parse(subset.high) if subset.high is not None else None
+                    high = default_to_utc(high)
                 else:
-                    if range_subset.start not in band_labels:
-                        raise WCS2Exception('No such field %s' % range_subset.start,
-                                            WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
-                                            locator=range_subset.start,
-                                            valid_keys = band_labels)
-                    if range_subset.end not in band_labels:
-                        raise WCS2Exception('No such field %s' % range_subset.end,
-                                            WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
-                                            locator=range_subset.end,
-                                            valid_keys = band_labels)
-
-                    start = band_labels.index(range_subset.start)
-                    end = band_labels.index(range_subset.end)
-                    bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
-        # Uncomment to restore original styles parameter hack.
-        #
-        # elif styles:
-        #     bands = get_bands_from_styles(styles, layer, version=2)
-        #     if not bands:
-        #         bands = band_labels
-        else:
-            bands = band_labels
-
-        #
-        # Format handling
-        #
-
-        if not request.format:
-            fmt = cfg.wcs_formats_by_name[layer.native_format]
+                    low = parse(subset.low).date() if subset.low is not None else None
+                    high = parse(subset.high).date() if subset.high is not None else None
+                if low is not None:
+                    times = [
+                        time for time in times
+                        if time >= low
+                    ]
+                if high is not None:
+                    times = [
+                        time for time in times
+                        if time <= high
+                    ]
+            elif isinstance(subset, Slice):
+                point = parse(subset.point).date()
+                times = [point]
         else:
             try:
-                fmt = cfg.wcs_formats_by_mime[request.format]
-            except KeyError:
-                raise WCS2Exception("Unsupported format: %s" % request.format,
-                                    WCS2Exception.INVALID_PARAMETER_VALUE,
-                                    locator="FORMAT",
-                                    valid_keys=list(cfg.wcs_formats_by_mime))
+                if isinstance(subset, Trim):
+                    scaler.trim(dimension, subset.low, subset.high)
+                elif isinstance(subset, Slice):
+                    scaler.slice(dimension, subset.point)
+            except WCSScalerUnknownDimension:
+                raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
+                                WCS2Exception.INVALID_AXIS_LABEL,
+                                locator=subset.dimension)
 
-        if len(times) > 1 and not fmt.multi_time:
-            raise WCS2Exception(
-                "Format does not support multi-time datasets - "
-                "either constrain the time dimension or choose a different format",
-                WCS2Exception.INVALID_SUBSETTING,
-                locator="FORMAT or SUBSET"
+    #
+    # Transform spatial extent to native CRS.
+    #
+    scaler.to_crs(output_crs)
+
+    #
+    # Scaling
+    #
+
+    scales = request.scales
+    if len(scales) != len(set(subset.axis.lower() for subset in scales)):
+        axes = [subset.axis.lower() for subset in scales]
+        duplicate_axes = [
+            item
+            for item, count in collections.Counter(axes).items()
+            if count > 1
+        ]
+        raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
+                                'i' if len(duplicate_axes) == 1 else 'e',
+                                ', '.join(duplicate_axes)
+                            ),
+                            WCS2Exception.INVALID_SCALE_FACTOR,
+                            locator=','.join(duplicate_axes)
+                            )
+
+    for scale in scales:
+        axis = scale.axis.lower()
+
+        if axis in ('time', 'k'):
+            raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+                                WCS2Exception.INVALID_SCALE_FACTOR,
+                                locator=scale.axis
                                 )
-        affine = scaler.affine()
-        geobox = GeoBox((scaler.size.y, scaler.size.x),
-                                 affine, cfg.crs(output_crs))
+        else:
+            if isinstance(scale, ScaleAxis):
+                scaler.scale_axis(axis, scale.factor)
+            elif isinstance(scale, ScaleSize):
+                scaler.scale_size(axis, scale.size)
+            elif isinstance(scale, ScaleExtent):
+                scaler.scale_extent(axis, scale.low, scale.high)
 
-        stacker = DataStacker(layer,
-                              geobox,
-                              times,
-                              bands=bands)
-        qprof.end_event("setup")
-        qprof.start_event("count-datasets")
-        n_datasets = stacker.datasets(dc.index, mode=MVSelectOpts.COUNT)
-        qprof.end_event("count-datasets")
-        qprof["n_datasets"] = n_datasets
+    #
+    # Rangesubset
+    #
 
+    band_labels = layer.band_idx.band_labels()
+    if request.range_subset:
+        bands = []
+        for range_subset in request.range_subset:
+            if isinstance(range_subset, str):
+                if range_subset not in band_labels:
+                    raise WCS2Exception('No such field %s' % range_subset,
+                                WCS2Exception.NO_SUCH_FIELD,
+                                locator=range_subset,
+                                valid_keys=band_labels
+                                )
+                bands.append(range_subset)
+            else:
+                if range_subset.start not in band_labels:
+                    raise WCS2Exception('No such field %s' % range_subset.start,
+                                        WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
+                                        locator=range_subset.start,
+                                        valid_keys = band_labels)
+                if range_subset.end not in band_labels:
+                    raise WCS2Exception('No such field %s' % range_subset.end,
+                                        WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
+                                        locator=range_subset.end,
+                                        valid_keys = band_labels)
+
+                start = band_labels.index(range_subset.start)
+                end = band_labels.index(range_subset.end)
+                bands.extend(band_labels[start:(end + 1) if end > start else (end - 1)])
+    # Uncomment to restore original styles parameter hack.
+    #
+    # elif styles:
+    #     bands = get_bands_from_styles(styles, layer, version=2)
+    #     if not bands:
+    #         bands = band_labels
+    else:
+        bands = band_labels
+
+    #
+    # Format handling
+    #
+
+    if not request.format:
+        fmt = cfg.wcs_formats_by_name[layer.native_format]
+    else:
         try:
-            layer.resource_limits.check_wcs(n_datasets,
-                                                  geobox.height, geobox.width,
-                                                  sum(layer.band_idx.dtype_size(b) for b in bands),
-                                                  len(times)
-                                           )
-        except ResourceLimited as e:
-            if e.wcs_hard or not layer.low_res_product_names:
-                raise WCS2Exception(
-                    f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                    + "Please reduce the bounds of your request and try again.")
-            stacker.resource_limited = True
-            qprof["resource_limited"] = str(e)
+            fmt = cfg.wcs_formats_by_mime[request.format]
+        except KeyError:
+            raise WCS2Exception("Unsupported format: %s" % request.format,
+                                WCS2Exception.INVALID_PARAMETER_VALUE,
+                                locator="FORMAT",
+                                valid_keys=list(cfg.wcs_formats_by_mime))
 
-        if n_datasets == 0:
-            raise WCS2Exception("The requested spatio-temporal subsets return no data.",
-                            WCS2Exception.INVALID_SUBSETTING,
-                            http_response=404)
+    if len(times) > 1 and not fmt.multi_time:
+        raise WCS2Exception(
+            "Format does not support multi-time datasets - "
+            "either constrain the time dimension or choose a different format",
+            WCS2Exception.INVALID_SUBSETTING,
+            locator="FORMAT or SUBSET"
+                            )
+    affine = scaler.affine()
+    geobox = GeoBox((scaler.size.y, scaler.size.x),
+                             affine, cfg.crs(output_crs))
 
-        qprof.start_event("fetch-datasets")
-        datasets = stacker.datasets(dc.index)
-        qprof.end_event("fetch-datasets")
-        if qprof.active:
-            qprof["datasets"] = {
-                str(q): [str(i) for i in ids]
-                for q, ids in stacker.datasets(dc.index, mode=MVSelectOpts.IDS).items()
-            }
-        qprof.start_event("load-data")
-        output = stacker.data(datasets, skip_corrections=True)
-        qprof.end_event("load-data")
+    stacker = DataStacker(layer,
+                          geobox,
+                          times,
+                          bands=bands)
+    qprof.end_event("setup")
+    qprof.start_event("count-datasets")
+    n_datasets = stacker.datasets(layer.dc.index, mode=MVSelectOpts.COUNT)
+    qprof.end_event("count-datasets")
+    qprof["n_datasets"] = n_datasets
 
-        # Clean extent flag band from output
-        raw_bands = [layer.band_idx.locale_band(b) for b in bands]
-        for k, v in output.data_vars.items():
-            if k not in raw_bands:
-                output = output.drop_vars([k])
+    try:
+        layer.resource_limits.check_wcs(n_datasets,
+                                              geobox.height, geobox.width,
+                                              sum(layer.band_idx.dtype_size(b) for b in bands),
+                                              len(times)
+                                       )
+    except ResourceLimited as e:
+        if e.wcs_hard or not layer.low_res_product_names:
+            raise WCS2Exception(
+                f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
+                + "Please reduce the bounds of your request and try again.")
+        stacker.resource_limited = True
+        qprof["resource_limited"] = str(e)
+
+    if n_datasets == 0:
+        raise WCS2Exception("The requested spatio-temporal subsets return no data.",
+                        WCS2Exception.INVALID_SUBSETTING,
+                        http_response=404)
+
+    qprof.start_event("fetch-datasets")
+    datasets = stacker.datasets(layer.dc.index)
+    qprof.end_event("fetch-datasets")
+    if qprof.active:
+        qprof["datasets"] = {
+            str(q): [str(i) for i in ids]
+            for q, ids in stacker.datasets(layer.dc.index, mode=MVSelectOpts.IDS).items()
+        }
+    qprof.start_event("load-data")
+    output = stacker.data(datasets, skip_corrections=True)
+    qprof.end_event("load-data")
+
+    # Clean extent flag band from output
+    raw_bands = [layer.band_idx.locale_band(b) for b in bands]
+    for k, v in output.data_vars.items():
+        if k not in raw_bands:
+            output = output.drop_vars([k])
 
     #
     # TODO: configurable

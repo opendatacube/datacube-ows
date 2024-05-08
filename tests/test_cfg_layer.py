@@ -169,14 +169,14 @@ def test_make_ready_catch_errors(minimal_global_cfg, minimal_dc):
     assert lyr.ready
 
 
-def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range):
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
     with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
         get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+        lyr.make_ready()
     assert lyr.ready
     assert not lyr.hide
     assert lyr.default_time == mock_range["times"][-1]
@@ -185,12 +185,12 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, 
     assert lyr.mosaic_date_func is None
 
 
-def test_duplicate_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range):
+def test_duplicate_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range):
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
         get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+        lyr.make_ready()
     with pytest.raises(ConfigException) as e:
         lyr = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
@@ -198,11 +198,11 @@ def test_duplicate_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc
     assert "Duplicate layer name" in str(e.value)
 
 
-def test_lowres_named_layer(minimal_layer_cfg, minimal_global_cfg, minimal_dc):
+def test_lowres_named_layer(minimal_layer_cfg, minimal_global_cfg):
     minimal_layer_cfg["low_res_product_name"] = "smol_foo"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    lyr.make_ready(minimal_dc)
+    lyr.make_ready()
     assert len(lyr.low_res_products) == 1
 
 

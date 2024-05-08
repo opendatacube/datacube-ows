@@ -6,7 +6,6 @@
 
 import os
 
-from datacube_ows.cube_pool import cube
 from datacube_ows.ows_configuration import OWSConfig, get_config, read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,8 +43,7 @@ def test_missing_metadata_file(monkeypatch):
         raw_cfg["global"]["translations_directory"] = None
         raw_cfg["global"]["languages"] = ["en"]
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
-        with cube() as dc:
-            cfg.make_ready(dc)
+        cfg.make_ready()
 
         assert "Over-ridden" not in cfg.title
         assert "aardvark" not in cfg.title
@@ -70,8 +68,7 @@ def test_metadata_file_ignore(monkeypatch):
         raw_cfg = read_config()
         raw_cfg["global"]["message_file"] = "integration_tests/cfg/message.po"
         cfg = OWSConfig(refresh=True, cfg=raw_cfg, ignore_msgfile=True)
-        with cube() as dc:
-            cfg.make_ready(dc)
+        cfg.make_ready()
 
         assert "Over-ridden" not in cfg.title
         assert "aardvark" not in cfg.title
@@ -90,8 +87,7 @@ def test_metadata_read(monkeypatch, product_name):
         raw_cfg = read_config()
         raw_cfg["global"]["message_file"] = "integration_tests/cfg/message.po"
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
-        with cube() as dc:
-            cfg.make_ready(dc)
+        cfg.make_ready()
 
         assert "Over-ridden" in cfg.title
         assert "aardvark" in cfg.title

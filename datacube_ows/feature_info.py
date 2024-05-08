@@ -19,11 +19,9 @@ from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException
-from datacube_ows.cube_pool import cube
 from datacube_ows.http_utils import (FlaskResponse, html_json_response,
                                      json_response)
 from datacube_ows.loading import DataStacker, ProductBandQuery
-from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import OWSNamedLayer, get_config
 from datacube_ows.styles import StyleDef
 from datacube_ows.time_utils import dataset_center_time, tz_for_geometry
@@ -155,128 +153,124 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         geo_point_geobox = GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
     tz = tz_for_geometry(geo_point_geobox.geographic_extent)
-    stacker = DataStacker(params.product, geo_point_geobox, params.times)
+    stacker = DataStacker(params.layer, geo_point_geobox, params.times)
     # --- Begin code section requiring datacube.
     cfg = get_config()
-    with cube() as dc:
-        if not dc:
-            raise WMSException("Database connectivity failure")
-        all_time_datasets = cast(xarray.DataArray, stacker.datasets(dc.index, all_time=True, point=geo_point))
+    all_time_datasets = cast(xarray.DataArray, stacker.datasets(params.layer.dc.index, all_time=True, point=geo_point))
 
-        # Taking the data as a single point so our indexes into the data should be 0,0
-        h_coord = cast(str, cfg.published_CRSs[params.crsid]["horizontal_coord"])
-        v_coord = cast(str, cfg.published_CRSs[params.crsid]["vertical_coord"])
-        s3_bucket = cfg.s3_bucket
-        s3_url = cfg.s3_url
-        isel_kwargs = {
-            h_coord: 0,
-            v_coord: 0
-        }
-        if any(all_time_datasets):
-            # Group datasets by time, load only datasets that match the idx_date
-            global_info_written = False
-            feature_json["data"] = []
-            fi_date_index: dict[datetime, RAW_CFG] = {}
-            time_datasets = cast(
-                dict[ProductBandQuery, xarray.DataArray],
-                stacker.datasets(dc.index, all_flag_bands=True, point=geo_point)
-            )
-            data = stacker.data(time_datasets, skip_corrections=True)
-            if data is not None:
-                for dt in data.time.values:
-                    td = data.sel(time=dt)
-                    # Global data that should apply to all dates, but needs some data to extract
-                    if not global_info_written:
-                        global_info_written = True
-                        # Non-geographic coordinate systems need to be projected onto a geographic
-                        # coordinate system.  Why not use EPSG:4326?
-                        # Extract coordinates in CRS
-                        data_x = getattr(td, h_coord)
-                        data_y = getattr(td, v_coord)
+    # Taking the data as a single point so our indexes into the data should be 0,0
+    h_coord = cast(str, cfg.published_CRSs[params.crsid]["horizontal_coord"])
+    v_coord = cast(str, cfg.published_CRSs[params.crsid]["vertical_coord"])
+    s3_bucket = cfg.s3_bucket
+    s3_url = cfg.s3_url
+    isel_kwargs = {
+        h_coord: 0,
+        v_coord: 0
+    }
+    if any(all_time_datasets):
+        # Group datasets by time, load only datasets that match the idx_date
+        global_info_written = False
+        feature_json["data"] = []
+        fi_date_index: dict[datetime, RAW_CFG] = {}
+        time_datasets = cast(
+            dict[ProductBandQuery, xarray.DataArray],
+            stacker.datasets(params.layer.dc.index, all_flag_bands=True, point=geo_point)
+        )
+        data = stacker.data(time_datasets, skip_corrections=True)
+        if data is not None:
+            for dt in data.time.values:
+                td = data.sel(time=dt)
+                # Global data that should apply to all dates, but needs some data to extract
+                if not global_info_written:
+                    global_info_written = True
+                    # Non-geographic coordinate systems need to be projected onto a geographic
+                    # coordinate system.  Why not use EPSG:4326?
+                    # Extract coordinates in CRS
+                    data_x = getattr(td, h_coord)
+                    data_y = getattr(td, v_coord)
 
-                        x = data_x[isel_kwargs[h_coord]].item()
-                        y = data_y[isel_kwargs[v_coord]].item()
-                        pt = geom.point(x, y, params.crs)
+                    x = data_x[isel_kwargs[h_coord]].item()
+                    y = data_y[isel_kwargs[v_coord]].item()
+                    pt = geom.point(x, y, params.crs)
 
-                        # Project to EPSG:4326
-                        crs_geo = geom.CRS("EPSG:4326")
-                        ptg = pt.to_crs(crs_geo)
+                    # Project to EPSG:4326
+                    crs_geo = geom.CRS("EPSG:4326")
+                    ptg = pt.to_crs(crs_geo)
 
-                        # Capture lat/long coordinates
-                        feature_json["lon"], feature_json["lat"] = ptg.coords[0]
+                    # Capture lat/long coordinates
+                    feature_json["lon"], feature_json["lat"] = ptg.coords[0]
 
-                    date_info: CFG_DICT = {}
+                date_info: CFG_DICT = {}
 
-                    ds: Dataset | None = None
-                    for pbq, dss in time_datasets.items():
-                        if pbq.main:
-                            ds = dss.sel(time=dt).values.tolist()[0]
-                            break
-                    assert ds is not None
-                    if params.product.multi_product:
-                        if "platform" in ds.metadata_doc:
-                            date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
-                        else:
-                            date_info["source_product"] = ds.type.name
-
-                    # Extract data pixel
-                    pixel_ds: xarray.Dataset = td.isel(**isel_kwargs)  # type: ignore[arg-type]
-
-                    # Get accurate timestamp from dataset
-                    assert ds.time is not None  # For type checker
-                    if params.product.time_resolution.is_summary():
-                        date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
-                    else:
-                        date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S %Z")
-                    # Collect raw band values for pixel and derived bands from styles
-                    date_info["bands"] = cast(RAW_CFG, _make_band_dict(params.product, pixel_ds))
-                    derived_band_dict = cast(RAW_CFG, _make_derived_band_dict(pixel_ds, params.product.style_index))
-                    if derived_band_dict:
-                        date_info["band_derived"] = derived_band_dict
-                    # Add any custom-defined fields.
-                    for k, f in params.product.feature_info_custom_includes.items():
-                        date_info[k] = f(date_info["bands"])
-
-                    cast(list[RAW_CFG], feature_json["data"]).append(date_info)
-                    fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)["data"][-1]
-            feature_json["data_available_for_dates"] = []
-            pt_native = None
-            for d in all_time_datasets.coords["time"].values:
-                dt_datasets = all_time_datasets.sel(time=d)
-                for ds in dt_datasets.values.item():
-                    assert ds is not None  # For type checker
-                    if pt_native is None:
-                        pt_native = geo_point.to_crs(ds.crs)
-                    elif pt_native.crs != ds.crs:
-                        pt_native = geo_point.to_crs(ds.crs)
-                    if ds.extent and ds.extent.contains(pt_native):
-                        # tolist() converts a numpy datetime64 to a python datatime
-                        dt = Timestamp(stacker.group_by.group_by_func(ds)).to_pydatetime()
-                        if params.product.time_resolution.is_subday():
-                            cast(list[RAW_CFG], feature_json["data_available_for_dates"]).append(dt.isoformat())
-                        else:
-                            cast(list[RAW_CFG], feature_json["data_available_for_dates"]).append(dt.strftime("%Y-%m-%d"))
+                ds: Dataset | None = None
+                for pbq, dss in time_datasets.items():
+                    if pbq.main:
+                        ds = dss.sel(time=dt).values.tolist()[0]
                         break
-            if time_datasets:
-                feature_json["data_links"] = cast(
-                    RAW_CFG,
-                    sorted(get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket)))
-            else:
-                feature_json["data_links"] = []
-            if params.product.feature_info_include_utc_dates:
-                unsorted_dates: list[str] = []
-                for tds in all_time_datasets:
-                    for ds in tds.values.item():
-                        assert ds is not None and ds.time is not None  # for type checker
-                        if params.product.time_resolution.is_solar():
-                            unsorted_dates.append(ds.center_time.strftime("%Y-%m-%d"))
-                        elif params.product.time_resolution.is_subday():
-                            unsorted_dates.append(ds.time.begin.isoformat())
-                        else:
-                            unsorted_dates.append(ds.time.begin.strftime("%Y-%m-%d"))
-                feature_json["data_available_for_utc_dates"] = sorted(
-                    d.center_time.strftime("%Y-%m-%d") for d in all_time_datasets)
-    # --- End code section requiring datacube.
+                assert ds is not None
+                if params.layer.multi_product:
+                    if "platform" in ds.metadata_doc:
+                        date_info["source_product"] = "%s (%s)" % (ds.type.name, ds.metadata_doc["platform"]["code"])
+                    else:
+                        date_info["source_product"] = ds.type.name
+
+                # Extract data pixel
+                pixel_ds: xarray.Dataset = td.isel(**isel_kwargs)  # type: ignore[arg-type]
+
+                # Get accurate timestamp from dataset
+                assert ds.time is not None  # For type checker
+                if params.layer.time_resolution.is_summary():
+                    date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
+                else:
+                    date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S %Z")
+                # Collect raw band values for pixel and derived bands from styles
+                date_info["bands"] = cast(RAW_CFG, _make_band_dict(params.layer, pixel_ds))
+                derived_band_dict = cast(RAW_CFG, _make_derived_band_dict(pixel_ds, params.layer.style_index))
+                if derived_band_dict:
+                    date_info["band_derived"] = derived_band_dict
+                # Add any custom-defined fields.
+                for k, f in params.layer.feature_info_custom_includes.items():
+                    date_info[k] = f(date_info["bands"])
+
+                cast(list[RAW_CFG], feature_json["data"]).append(date_info)
+                fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)["data"][-1]
+        feature_json["data_available_for_dates"] = []
+        pt_native = None
+        for d in all_time_datasets.coords["time"].values:
+            dt_datasets = all_time_datasets.sel(time=d)
+            for ds in dt_datasets.values.item():
+                assert ds is not None  # For type checker
+                if pt_native is None:
+                    pt_native = geo_point.to_crs(ds.crs)
+                elif pt_native.crs != ds.crs:
+                    pt_native = geo_point.to_crs(ds.crs)
+                if ds.extent and ds.extent.contains(pt_native):
+                    # tolist() converts a numpy datetime64 to a python datatime
+                    dt = Timestamp(stacker.group_by.group_by_func(ds)).to_pydatetime()
+                    if params.layer.time_resolution.is_subday():
+                        cast(list[RAW_CFG], feature_json["data_available_for_dates"]).append(dt.isoformat())
+                    else:
+                        cast(list[RAW_CFG], feature_json["data_available_for_dates"]).append(dt.strftime("%Y-%m-%d"))
+                    break
+        if time_datasets:
+            feature_json["data_links"] = cast(
+                RAW_CFG,
+                sorted(get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket)))
+        else:
+            feature_json["data_links"] = []
+        if params.layer.feature_info_include_utc_dates:
+            unsorted_dates: list[str] = []
+            for tds in all_time_datasets:
+                for ds in tds.values.item():
+                    assert ds is not None and ds.time is not None  # for type checker
+                    if params.layer.time_resolution.is_solar():
+                        unsorted_dates.append(ds.center_time.strftime("%Y-%m-%d"))
+                    elif params.layer.time_resolution.is_subday():
+                        unsorted_dates.append(ds.time.begin.isoformat())
+                    else:
+                        unsorted_dates.append(ds.time.begin.strftime("%Y-%m-%d"))
+            feature_json["data_available_for_utc_dates"] = sorted(
+                d.center_time.strftime("%Y-%m-%d") for d in all_time_datasets)
 
     result: CFG_DICT = {
         "type": "FeatureCollection",
