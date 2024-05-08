@@ -19,7 +19,7 @@ def no_db(monkeypatch):
     monkeypatch.setenv("DB_USERNAME", "fakeuser")
     monkeypatch.setenv("DB_PASSWORD", "password")
     monkeypatch.setenv("DB_HOSTNAME", "localhost")
-    monkeypatch.delenv("ODC_DEFAULT_DB_URL")
+    monkeypatch.delenv("ODC_DEFAULT_DB_URL", raising=False)
     from datacube_ows.ows_configuration import get_config
     cfg = get_config(refresh=True)
 
