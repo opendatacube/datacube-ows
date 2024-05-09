@@ -75,7 +75,7 @@ Get Started!
 5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
 
     $ flake8 datacube-ows tests
-    $ python setup.py test or py.test
+    $ pthon setup.py test or py.test
     $ tox
 
    To get flake8 and tox, just pip install them into your virtualenv.
@@ -95,7 +95,7 @@ Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests (and should pass them - and all pre-existing tests!)
 2. If the pull request adds or modifies functionality, the docs should be updated.
-3. The pull request should work for Python 3.7+. Check the results of
+3. The pull request should work for Python 3.10+. Check the results of
    the github actions and make sure that your PR passes all checks and
    does not decrease test coverage.
 
@@ -189,7 +189,7 @@ Merge relationship diagram and orphan diagram
 
 .. code-block:: console
 
-    python3 svg_stack.py --direction=h --margin=100 ../wms/diagrams/summary/relationships.real.large.svg ../wms/diagrams/orphans/orphans.svg > ows.merged.large.svg
+    python svg_stack.py --direction=h --margin=100 ../wms/diagrams/summary/relationships.real.large.svg ../wms/diagrams/orphans/orphans.svg > ows.merged.large.svg
 
     cp svg_stack/ows.merged.large.svg ../datacube-ows/docs/diagrams/db-relationship-diagram.svg
 

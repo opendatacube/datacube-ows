@@ -3,22 +3,19 @@ datacube-ows
 ============
 
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Linting/badge.svg
-        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ALinting
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ACode%20Linting
 
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Tests/badge.svg
         :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ATests
 
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Docker/badge.svg
-        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ADocker
+        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ADockerfile%20Linting
 
 .. image:: https://github.com/opendatacube/datacube-ows/workflows/Scan/badge.svg
         :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22Scan%22
 
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/opendatacube/datacube-ows
-
-.. image:: https://img.shields.io/pypi/v/datacube?label=datacube
-   :alt: PyPI
 
 Datacube Open Web Services
 --------------------------
@@ -41,7 +38,7 @@ Features
 System Architecture
 -------------------
 
-.. image:: docs/diagrams/ows_diagram.png
+.. image:: docs/diagrams/ows_diagram1.9.png
    :width: 700
 
 Community
@@ -141,14 +138,14 @@ To run the standard Docker image, create a docker volume containing your ows con
         -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
         -e SENTRY_DSN=https://key@sentry.local/projid \            # Key for Sentry logging (optional)
         \ # Database connection URL: postgresql://<username>:<password>@<hostname>:<port>/<database>
-        -e ODC_DEFAULT_DB_URL=postgresql://cube:DataCube@172.17.0.1:5432/datacube \
+        -e ODC_DEFAULT_DB_URL=postgresql://myuser:mypassword@172.17.0.1:5432/mydb \
         -e PYTHONPATH=/code                                        # The default PATH is under env, change this to target /code
         -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
         \                                                          # container at port 8008 on the host machine.
         --mount source=test_cfg,target=/code/datacube_ows/config \ # Mount the docker volume where the config lives
         name_of_built_container
 
-The image is based on the standard ODC container.
+The image is based on the standard ODC container and an external database
 
 Installation with Conda
 ------------
@@ -157,7 +154,7 @@ The following instructions are for installing on a clean Linux system.
 
 * Create a conda python 3.8 and activate conda environment::
 
-    conda create -n ows -c conda-forge python=3.8 datacube pre_commit postgis
+    conda create -n ows -c conda-forge python=3.10 datacube pre_commit postgis
     conda activate ows
 
 * install the latest release using pip install::
@@ -186,7 +183,7 @@ The following instructions are for installing on a clean Linux system.
     # to create schema, tables and materialised views used by datacube-ows.
 
     export DATACUBE_OWS_CFG=datacube_ows.ows_cfg_example.ows_cfg
-    datacube-ows-update --role ubuntu --schema
+    datacube-ows-update --read-role ubuntu --write-role ubuntu --schema
 
 
 * Create a configuration file for your service, and all data products you wish to publish in
