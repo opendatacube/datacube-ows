@@ -121,9 +121,9 @@ Refreshing Materialised Views
 
 As datasets are added into or archived out of the ODC database,
 the materialised views become stale, and need to be periodically
-manually refreshed, with the ``--view`` flag.
+manually refreshed, with the ``--views`` flag.
 
-    ``datacube-ows-update --view``
+    ``datacube-ows-update --views``
 
 A lot of the speed of OWS comes from pushing
 expensive database calculations down into these materialised

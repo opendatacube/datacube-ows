@@ -204,10 +204,10 @@ def cleanup_schema(dc: datacube.Datacube):
     run_sql(dc, "ows_schema/cleanup")
 
 
-def run_sql(dc: datacube.Datacube, path: str, **params: str):
+def run_sql(dc: datacube.Datacube, path: str, **params: str) -> bool:
     if not importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").is_dir():
         print("Cannot find SQL resource directory - check your datacube-ows installation")
-        return
+        return False
 
     files = sorted(
         importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").iterdir()  # type: ignore[type-var]
@@ -216,12 +216,13 @@ def run_sql(dc: datacube.Datacube, path: str, **params: str):
     filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
     filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
     conn = get_sqlconn(dc)
-
+    all_ok: bool = True
     for fi in files:
         f = fi.name
         match = filename_pattern.fullmatch(f)
         if not match:
             click.echo(f"Illegal SQL filename: {f} (skipping)")
+            all_ok = False
             continue
         req_match = filename_req_pattern.fullmatch(f)
         if req_match:
@@ -235,17 +236,16 @@ def run_sql(dc: datacube.Datacube, path: str, **params: str):
             for line in fp:
                 sline = str(line, "utf-8")
                 if first and sline.startswith("--"):
-                    print(sline[2:])
+                    click.echo(f" - Running {sline[2:]}")
                 else:
                     sql = sql + "\n" + sline
-                    if first:
-                        click.echo(f"Running {f}")
                 first = False
         if reqs:
             try:
                 kwargs = {v: params[v] for v in reqs}
             except KeyError as e:
                 click.echo(f"Required parameter {e} for file {f} not supplied - skipping")
+                all_ok = False
                 continue
             sql = sql.format(**kwargs)
         try:
@@ -263,4 +263,5 @@ def run_sql(dc: datacube.Datacube, path: str, **params: str):
                     raise e
             else:
                 raise e
+    return all_ok
     conn.close()

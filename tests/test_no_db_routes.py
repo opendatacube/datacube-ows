@@ -14,14 +14,14 @@ if src_dir not in sys.path:
     sys.path.append(src_dir)
 
 
+def reset_global_config():
+    from datacube_ows.ows_configuration import OWSConfig
+    OWSConfig._instance = None
+
+
 def no_db(monkeypatch):
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.minimal_cfg.ows_cfg")
-    monkeypatch.setenv("DB_USERNAME", "fakeuser")
-    monkeypatch.setenv("DB_PASSWORD", "password")
-    monkeypatch.setenv("DB_HOSTNAME", "localhost")
-    monkeypatch.delenv("ODC_DEFAULT_DB_URL", raising=False)
-    from datacube_ows.ows_configuration import get_config
-    cfg = get_config(refresh=True)
+    reset_global_config()
 
 
 def test_db_connect_fail(monkeypatch, flask_client):
@@ -30,6 +30,7 @@ def test_db_connect_fail(monkeypatch, flask_client):
     no_db(monkeypatch)
     rv = flask_client.get('/ping')
     assert rv.status_code == 500
+    reset_global_config()
 
 
 def test_wcs_fail(monkeypatch, flask_client):
@@ -38,6 +39,7 @@ def test_wcs_fail(monkeypatch, flask_client):
     no_db(monkeypatch)
     rv = flask_client.get('/wcs')
     assert rv.status_code == 400
+    reset_global_config()
 
 
 def test_wms_fail(monkeypatch, flask_client):
@@ -46,6 +48,7 @@ def test_wms_fail(monkeypatch, flask_client):
     no_db(monkeypatch)
     rv = flask_client.get('/wms')
     assert rv.status_code == 400
+    reset_global_config()
 
 
 def test_wmts_fail(monkeypatch, flask_client):
@@ -54,6 +57,7 @@ def test_wmts_fail(monkeypatch, flask_client):
     no_db(monkeypatch)
     rv = flask_client.get('/wmts')
     assert rv.status_code == 400
+    reset_global_config()
 
 
 def test_legend_fail(monkeypatch, flask_client):
@@ -62,6 +66,7 @@ def test_legend_fail(monkeypatch, flask_client):
     no_db(monkeypatch)
     rv = flask_client.get("/legend/layer/style/legend.png")
     assert rv.status_code == 404
+    reset_global_config()
 
 
 def test_index_fail(monkeypatch, flask_client):
@@ -70,3 +75,4 @@ def test_index_fail(monkeypatch, flask_client):
     no_db(monkeypatch)
     rv = flask_client.get('/')
     assert rv.status_code == 500
+    reset_global_config()
