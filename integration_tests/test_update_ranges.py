@@ -63,4 +63,3 @@ def test_update_ranges(runner):
     result = runner.invoke(main)
     assert "ERROR" not in result.output
     assert result.exit_code == 0
-
