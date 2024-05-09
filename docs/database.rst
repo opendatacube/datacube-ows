@@ -69,7 +69,7 @@ Cleaning up an old datacube-ows 1.8 schema
 ==========================================
 
 In the 1.8.x series of datacube-ows releases, the OWS specific views and tables were stored somewhat haphazardly
-in the misleadingly named ``wms`` schema with some entites in the ``public`` schema.
+in the misleadingly named ``wms`` schema with some entities in the ``public`` schema.
 
 After upgrading OWS to a 1.9.x series release, these older database entities can be dropped from the database
 with the ``--cleanup`` option::
