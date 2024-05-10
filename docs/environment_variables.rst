@@ -23,8 +23,16 @@ environment variable. The format of postgres connection URL is::
     postgresql://<username>:<password>@<hostname>:<port>/<database>
 
 Other valid methods for configuring an OpenDatacube instance (e.g. a ``.datacube.conf`` file)
-should also work.  However OWS currently expects to use the `default` configuration environment
-and only works with legacy/postgres index driver.
+should also work.  Note that OWS currently only works with legacy/postgres index driver.
+Postgis support is hopefully coming soon.
+
+An ODC environment other than ``default`` can be used by setting the ``env`` option in the global OWS
+configuration.
+
+Note that ``docker-compose`` arrangement used for integration testing on github also redundantly requires
+the ``$DB_USERNAME``, ``$DB_PASSWORD``, ``$DB_DATABSE`` and ``$DB_PORT`` environment variables to set up
+the generic docker postgres container.  If you are connecting to an existing database, these variables
+are not required.
 
 Configuring AWS Access
 ----------------------
@@ -92,6 +100,8 @@ Dev Tools
 
 PYDEV_DEBUG:
     If set to anything other than "n", "f", "no" or "false" (case insensitive), activates PyDev remote debugging.
+
+    NEVER use in production.
 
 DEFER_CFG_PARSE:
     If set, the configuration file is not read and parsed at startup.  This

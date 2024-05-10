@@ -35,14 +35,14 @@ class WCS1GetCoverageRequest:
             raise WCS1Exception("No coverage specified",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
                                 locator="COVERAGE parameter",
-                                valid_keys=list(cfg.product_index))
+                                valid_keys=list(cfg.layer_index))
         self.layer_name = args["coverage"]
-        self.layer = cfg.product_index.get(self.layer_name)
+        self.layer = cfg.layer_index.get(self.layer_name)
         if not self.layer or not self.layer.wcs:
             raise WCS1Exception("Invalid coverage: %s" % self.layer_name,
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
                                 locator="COVERAGE parameter",
-                                valid_keys=list(cfg.product_index))
+                                valid_keys=list(cfg.layer_index))
 
         # Argument: FORMAT (required) -> a supported format
         if "format" not in args:
@@ -149,12 +149,12 @@ class WCS1GetCoverageRequest:
                     continue
                 try:
                     time = parse(t).date()
-                    if time not in self.layer.ranges["time_set"]:
+                    if time not in self.layer.ranges.time_set:
                         raise WCS1Exception(
                             "Time value '%s' not a valid date for coverage %s" % (t, self.layer_name),
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="TIME parameter",
-                            valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges["time_set"]]
+                            valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
                         )
                     self.times.append(time)
                 except ValueError:
@@ -162,7 +162,7 @@ class WCS1GetCoverageRequest:
                         "Time value '%s' not a valid ISO-8601 date" % t,
                         WCS1Exception.INVALID_PARAMETER_VALUE,
                         locator="TIME parameter",
-                        valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges["time_set"]]
+                        valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
                     )
             self.times.sort()
 
@@ -171,7 +171,7 @@ class WCS1GetCoverageRequest:
                     "No valid ISO-8601 dates",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
                     locator="TIME parameter",
-                    valid_keys = [d.strftime('%Y-%m-%d') for d in self.layer.ranges["time_set"]]
+                    valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
                 )
             elif len(self.times) > 1 and not self.format.multi_time:
                 raise WCS1Exception(

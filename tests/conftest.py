@@ -114,11 +114,12 @@ def minimal_dc():
 def minimal_global_cfg(minimal_dc):
     global_cfg = MagicMock()
     global_cfg.keywords = {"global"}
-    global_cfg.product_index = {}
+    global_cfg.layer_index = {}
     global_cfg.attribution.title = "Global Attribution"
     global_cfg.contact_org = None
     global_cfg.contact_position = None
     global_cfg.abstract = "Global Abstract"
+    global_cfg.odc_app = "app"
     global_cfg.dc = minimal_dc
     global_cfg.authorities = {
         "auth0": "http://test.url/auth0",
@@ -173,8 +174,9 @@ def minimal_global_cfg(minimal_dc):
 
 
 @pytest.fixture
-def minimal_parent():
+def minimal_parent(minimal_global_cfg):
     parent = MagicMock()
+    parent.dc = minimal_global_cfg.dc
     parent.abstract = "Parent Abstract"
     parent.keywords = {"global", "parent"}
     parent.attribution.title = "Parent Attribution"
@@ -248,26 +250,18 @@ def minimal_multiprod_cfg():
 
 @pytest.fixture
 def mock_range():
+    from datacube_ows.product_ranges import LayerExtent, CoordRange
     times = [datetime.date(2010, 1, 1), datetime.date(2010, 1, 2), datetime.date(2010, 1, 3)]
-    return {
-        "lat": {
-            "min": -0.1,
-            "max": 0.1,
-        },
-        "lon": {
-            "min": -0.1,
-            "max": 0.1,
-        },
-        "times": times,
-        "start_time": times[0],
-        "end_time": times[-1],
-        "time_set": set(times),
-        "bboxes": {
+    return LayerExtent(
+        lat=CoordRange(-0.1, 0.1),
+        lon=CoordRange(-0.1, 0.1),
+        times=times,
+        bboxes={
             "EPSG:4326": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1, },
             "EPSG:3577": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1, },
             "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1, },
         }
-    }
+    )
 
 
 @pytest.fixture

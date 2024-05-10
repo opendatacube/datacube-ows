@@ -1,3 +1,3 @@
--- Installing Postgis extensions on public schema
+-- Installing Postgis extensions
 
 create extension if not exists postgis

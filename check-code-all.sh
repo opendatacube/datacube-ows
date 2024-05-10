@@ -21,7 +21,7 @@ datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-c
 
 # Geomedian for summary product testing
 
-datacube product add https://explorer-aws.dea.ga.gov.au/products/ga_ls8c_nbart_gm_cyear_3.odc-product.yaml
+datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/geomedian-au/ga_ls8c_nbart_gm_cyear_3.odc-product.yaml
 
 # S2 multiproduct datasets
 datacube dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/baseline/ga_s2bm_ard_3/52/LGM/2017/07/19/20170719T030622/ga_s2bm_ard_3-2-1_52LGM_2017-07-19_final.odc-metadata.yaml --ignore-lineage
@@ -44,7 +44,7 @@ datacube dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/der
 datacube dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x17/y37/2021--P1Y/ga_ls8c_nbart_gm_cyear_3_x17y37_2021--P1Y_final.odc-metadata.yaml --ignore-lineage
 
 # create material view for ranges extents
-datacube-ows-update --schema --role $DB_USERNAME
+datacube-ows-update --schema --write-role $DB_USERNAME
 datacube-ows-update
 
 # run test

@@ -1,7 +1,9 @@
 aa
 administrivia
 adocker
+ACode
 ADocker
+ADockerfile
 ae
 aec
 aedee
@@ -255,7 +257,10 @@ multidate
 multiproc
 multiproduct
 mv
+mydb
+mypassword
 mysecretpassword
+myuser
 namespace
 natively
 ncols

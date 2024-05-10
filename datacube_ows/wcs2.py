@@ -114,11 +114,11 @@ def get_capabilities(args):
                 coverage_subtype='RectifiedGridCoverage',
                 title=product.title,
                 wgs84_bbox=WGS84BoundingBox([
-                    product.ranges['lon']['min'], product.ranges['lat']['min'],
-                    product.ranges['lon']['max'], product.ranges['lat']['max'],
+                    product.ranges.lon.min, product.ranges.lat.min,
+                    product.ranges.lon.max, product.ranges.lat.max,
                 ])
             )
-            for product in cfg.product_index.values()
+            for product in cfg.layer_index.values()
             if product.ready and not product.hide and product.wcs
         ],
         formats_supported=[
@@ -156,12 +156,12 @@ def create_coverage_description(cfg, product):
             label=product.native_CRS_def["horizontal_coord"],
             index_label='i',
             lower_bound=min(
-                product.ranges["bboxes"][product.native_CRS]["left"],
-                product.ranges["bboxes"][product.native_CRS]["right"],
+                product.ranges.bboxes[product.native_CRS]["left"],
+                product.ranges.bboxes[product.native_CRS]["right"],
             ),
             upper_bound=max(
-                product.ranges["bboxes"][product.native_CRS]["left"],
-                product.ranges["bboxes"][product.native_CRS]["right"],
+                product.ranges.bboxes[product.native_CRS]["left"],
+                product.ranges.bboxes[product.native_CRS]["right"],
             ),
             resolution=product.resolution_x,
             uom='deg',
@@ -171,12 +171,12 @@ def create_coverage_description(cfg, product):
             label=product.native_CRS_def["vertical_coord"],
             index_label='j',
             lower_bound=min(
-                product.ranges["bboxes"][product.native_CRS]["top"],
-                product.ranges["bboxes"][product.native_CRS]["bottom"],
+                product.ranges.bboxes[product.native_CRS]["top"],
+                product.ranges.bboxes[product.native_CRS]["bottom"],
             ),
             upper_bound=max(
-                product.ranges["bboxes"][product.native_CRS]["top"],
-                product.ranges["bboxes"][product.native_CRS]["bottom"],
+                product.ranges.bboxes[product.native_CRS]["top"],
+                product.ranges.bboxes[product.native_CRS]["bottom"],
             ),
             resolution=product.resolution_y,
             uom='deg',
@@ -210,7 +210,7 @@ def create_coverage_description(cfg, product):
                 index_label='k',
                 positions=[
                     f'{t.isoformat()}'
-                    for t in product.ranges['times']
+                    for t in product.ranges.times
                 ],
                 uom='ISO-8601',
                 type=SpatioTemporalType.TEMPORAL,
@@ -223,7 +223,7 @@ def create_coverage_description(cfg, product):
                 index_label='k',
                 positions=[
                     f'{t.isoformat()}T00:00:00.000Z'
-                    for t in product.ranges['times']
+                    for t in product.ranges.times
                 ],
                 uom='ISO-8601',
                 type=SpatioTemporalType.TEMPORAL,
@@ -264,7 +264,7 @@ def desc_coverages(args):
     products = []
 
     for coverage_id in request_obj.coverage_ids:
-        product = cfg.product_index.get(coverage_id)
+        product = cfg.layer_index.get(coverage_id)
         if product and product.wcs:
             products.append(product)
         else:

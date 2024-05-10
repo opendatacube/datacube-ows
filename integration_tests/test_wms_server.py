@@ -8,6 +8,7 @@ from urllib import request
 
 import pytest
 import requests
+import math
 from lxml import etree
 from owslib.wms import WebMapService
 
@@ -107,7 +108,7 @@ def test_getcap_response(ows_server):
         geo_bbox = layer.findall(
             "./{http://www.opengis.net/wms}BoundingBox[@CRS='EPSG:4326']"
         )[0]
-        assert wLong.text == geo_bbox.attrib["miny"]
+        assert math.isclose(float(wLong.text), float(geo_bbox.attrib["miny"]), rel_tol=1e-8)
 
 
 def test_wms_server(ows_server):

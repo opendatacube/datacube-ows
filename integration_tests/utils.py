@@ -368,7 +368,7 @@ class ODCExtent:
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
     ):
-        ext_times = time.slice(self.layer.ranges["times"])
+        ext_times = time.slice(self.layer.ranges.times)
         search_times = [self.layer.search_times(t) for t in ext_times]
         if space.needs_full_extent() and not self.full_extent:
             self.full_extent = mv_search(

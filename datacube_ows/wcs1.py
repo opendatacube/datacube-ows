@@ -84,7 +84,7 @@ def desc_coverages(args):
     if coverages:
         coverages = coverages.split(",")
         for c in coverages:
-            p = cfg.product_index.get(c)
+            p = cfg.layer_index.get(c)
             if p and p.wcs:
                 products.append(p)
             else:
@@ -92,7 +92,7 @@ def desc_coverages(args):
                                     WCS1Exception.COVERAGE_NOT_DEFINED,
                                     locator="Coverage parameter")
     else:
-        for p in cfg.product_index.values():
+        for p in cfg.layer_index.values():
             if p.ready and p.wcs:
                 products.append(p)
     min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)

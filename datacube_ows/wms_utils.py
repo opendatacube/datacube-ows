@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from datetime import datetime
+from datetime import datetime, date
 
 import numpy
 import regex as re
@@ -136,12 +136,12 @@ def get_layer_from_arg(args, argname="layers") -> OWSNamedLayer:
     layer_chunks = lyr.split("__")
     lyr = layer_chunks[0]
     cfg = get_config()
-    layer = cfg.product_index.get(lyr)
+    layer = cfg.layer_index.get(lyr)
     if not layer:
         raise WMSException("Layer %s is not defined" % lyr,
                            WMSException.LAYER_NOT_DEFINED,
                            locator="Layer parameter",
-                           valid_keys=list(cfg.product_index))
+                           valid_keys=list(cfg.layer_index))
     return layer
 
 
@@ -165,20 +165,19 @@ def get_arg(args, argname, verbose_name, lower=False,
     return fmt
 
 
-def get_times_for_product(product):
-    ranges = product.ranges
-    return ranges['times']
+def get_times_for_layer(layer: OWSNamedLayer) -> list[datetime | date]:
+    return layer.ranges.times
 
 
-def get_times(args, product: OWSNamedLayer) -> list[datetime]:
+def get_times(args, layer: OWSNamedLayer) -> list[datetime | date]:
     # Time parameter
     times_raw = args.get('time', '')
     times = times_raw.split(',')
 
-    return list([parse_time_item(item, product) for item in times])
+    return list([parse_time_item(item, layer) for item in times])
 
 
-def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
+def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
     times = item.split('/')
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
@@ -186,16 +185,16 @@ def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
     # If all times are equal we can proceed
     if len(times) > 1:
         # TODO WMS Time range selections (/ notation) are poorly and incompletely implemented.
-        start, end = parse_wms_time_strings(times, with_tz=product.time_resolution.is_subday())
-        if product.time_resolution.is_subday():
-            matching_times = [t for t in product.ranges['times'] if start <= t <= end]
+        start, end = parse_wms_time_strings(times, with_tz=layer.time_resolution.is_subday())
+        if layer.time_resolution.is_subday():
+            matching_times: list[datetime | date] = [t for t in layer.ranges.times if start <= t <= end]
         else:
             start, end = start.date(), end.date()
-            matching_times = [t for t in product.ranges['times'] if start <= t <= end]
+            matching_times = [t for t in layer.ranges.times if start <= t <= end]
         if matching_times:
             # default to the first matching time
             return matching_times[0]
-        elif product.regular_time_axis:
+        elif layer.regular_time_axis:
             raise WMSException(
                 "No data available for time dimension range '%s'-'%s' for this layer" % (start, end),
                 WMSException.INVALID_DIMENSION_VALUE,
@@ -207,11 +206,11 @@ def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
                 locator="Time parameter")
     elif not times[0]:
         # default to last available time if not supplied.
-        product_times = get_times_for_product(product)
+        product_times = get_times_for_layer(layer)
         return product_times[-1]
     try:
         time = parse(times[0])
-        if not product.time_resolution.is_subday():
+        if not layer.time_resolution.is_subday():
             time = time.date()  # type: ignore[assignment]
     except ValueError:
         raise WMSException(
@@ -220,8 +219,8 @@ def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
             locator="Time parameter")
 
     # Validate time parameter for requested layer.
-    if product.regular_time_axis:
-        start, end = product.time_range()
+    if layer.regular_time_axis:
+        start, end = layer.time_range()
         if time < start:
             raise WMSException(
                 "Time dimension value '%s' not valid for this layer" % times[0],
@@ -232,19 +231,19 @@ def parse_time_item(item: str, product: OWSNamedLayer) -> datetime:
                 "Time dimension value '%s' not valid for this layer" % times[0],
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-        if (time - start).days % product.time_axis_interval != 0:
+        if (time - start).days % layer.time_axis_interval != 0:
             raise WMSException(
                 "Time dimension value '%s' not valid for this layer" % times[0],
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-    elif product.time_resolution.is_subday():
-        if not find_matching_date(time, product.ranges["times"]):
+    elif layer.time_resolution.is_subday():
+        if not find_matching_date(time, layer.ranges.times):
             raise WMSException(
                 "Time dimension value '%s' not valid for this layer" % times[0],
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
     else:
-        if time not in product.ranges["time_set"]:
+        if time not in layer.ranges.time_set:
             raise WMSException(
                 "Time dimension value '%s' not valid for this layer" % times[0],
                 WMSException.INVALID_DIMENSION_VALUE,

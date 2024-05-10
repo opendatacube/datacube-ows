@@ -95,7 +95,7 @@ Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests (and should pass them - and all pre-existing tests!)
 2. If the pull request adds or modifies functionality, the docs should be updated.
-3. The pull request should work for Python 3.7+. Check the results of
+3. The pull request should work for Python 3.10+. Check the results of
    the github actions and make sure that your PR passes all checks and
    does not decrease test coverage.
 
@@ -143,8 +143,9 @@ indexing and create db dump
 
   # now go to ows container
   docker exec -it datacube-ows_ows_1 bash
-  datacube-ows-update --schema --role <db_read_role>
-  datacube-ows-update --views
+  # Run this a database superuser role
+  datacube-ows-update --schema --read-role <db_read_role> --write-role <db_write_role>
+  # Run this as the <db_write_role> user above
   datacube-ows-update
   exit
 
@@ -176,22 +177,6 @@ manually modify translation for `de` for `assert` test to pass, then create `ows
   exit
   # from outside of the container, cp all the translation files to local.
   docker cp datacube-ows_ows_1:/tmp/translations datacube-ows/integrations/cfg/
-
-
-Generating database relationship diagram
-----------------------------------------
-
-.. code-block:: console
-
-    docker run -it --rm -v "$PWD:/output" --network="host" schemaspy/schemaspy:snapshot -u $DB_USERNAME -host localhost -port $DB_PORT -db $DB_DATABASE -t pgsql11 -schemas wms -norows -noviews -pfp -imageformat svg
-
-Merge relationship diagram and orphan diagram
-
-.. code-block:: console
-
-    python3 svg_stack.py --direction=h --margin=100 ../wms/diagrams/summary/relationships.real.large.svg ../wms/diagrams/orphans/orphans.svg > ows.merged.large.svg
-
-    cp svg_stack/ows.merged.large.svg ../datacube-ows/docs/diagrams/db-relationship-diagram.svg
 
 
 Links

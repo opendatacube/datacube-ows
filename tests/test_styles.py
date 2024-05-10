@@ -80,7 +80,7 @@ def product_layer():
         "azure": "red",
         "fake": "fake",
     }
-    product_layer.global_cfg.product_index = {
+    product_layer.global_cfg.layer_index = {
         "test_product": product_layer
     }
     product_layer.data_manual_merge = False

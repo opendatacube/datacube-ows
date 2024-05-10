@@ -9,6 +9,7 @@ ows_cfg = {
         "title": "Minimal test config",
         "allowed_urls": [],
         "info_url": "http://opendatacube.org",
+        "env": "nosuchdb",
         "published_CRSs": {
             "EPSG:3857": {  # Web Mercator
                 "geographic": False,

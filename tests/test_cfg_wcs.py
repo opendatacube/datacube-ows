@@ -18,7 +18,7 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
     minimal_layer_cfg["product_name"] = "foo_nativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    mock_range["bboxes"]["EPSG:4326"] = {
+    mock_range.bboxes["EPSG:4326"] = {
         "top": 0.1, "bottom": 0.1,
         "left": -0.1, "right": 0.1,
     }
@@ -30,10 +30,10 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
     assert "Grid High y is non-positive" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "EPSG:4326" in str(excinfo.value)
-    minimal_global_cfg.product_index = {}
+    minimal_global_cfg.layer_index = {}
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    mock_range["bboxes"]["EPSG:4326"] = {
+    mock_range.bboxes["EPSG:4326"] = {
         "top": 0.1, "bottom": -0.1,
         "left": -0.1, "right": -0.1,
     }

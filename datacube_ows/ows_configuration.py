@@ -50,6 +50,10 @@ from datacube_ows.time_utils import local_solar_date_range
 from datacube_ows.utils import (group_by_begin_datetime, group_by_mosaic,
                                 group_by_solar)
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.product_ranges import LayerExtent
+
 _LOG = logging.getLogger(__name__)
 
 
@@ -247,7 +251,8 @@ class OWSLayer(OWSMetadataConfig):
         self.object_label = object_label
         self.global_cfg: "OWSConfig" = kwargs["global_cfg"]
         self.parent_layer = parent_layer
-
+        self._cached_local_env: ODCEnvironment | None = None
+        self._cached_dc: Datacube | None = None
         self.parse_metadata(cfg)
         # Inherit or override attribution
         if "attribution" in cfg:
@@ -259,6 +264,57 @@ class OWSLayer(OWSMetadataConfig):
             self.attribution = cast(OWSLayer, self.parent_layer).attribution
         else:
             self.attribution = self.global_cfg.attribution
+
+    @property
+    def local_env(self) -> ODCEnvironment:
+        # If we have cached inherited environment, use it.
+        if self._cached_local_env:
+            return self._cached_local_env
+
+        # If we have our own custom environment, use it.
+        if hasattr(self, "_local_env") and self._local_env is not None:
+            return self._local_env
+
+        # If we have a parent layer, then it's their problem.
+        if self.parent_layer:
+            # remember, so we don't have to ask our parent layer again.  As a layer we must learn to adult.
+            self._cached_local_env = self.parent_layer.local_env
+        else:
+            # If we have no parent layer, then we have to ask the global government.
+            # and remember, so we don't have to deal with the global government again.
+            self._cached_local_env = self.global_cfg.default_env
+
+        return self._cached_local_env
+
+    @property
+    def dc(self) -> Datacube:
+        # If we have cached inherited datacube, use it.
+        if self._cached_dc:
+            return self._cached_dc
+
+        # If we have our own custom dc, use it.
+        if hasattr(self, "_dc"):
+            # pylint: disable=access-member-before-definition
+            return self._dc  # type: ignore[has-type]
+
+        # If we have our own custom environment, try to make a Datacube from it:
+        if hasattr(self, "_local_env") and self._local_env is not None:
+            try:
+                self._dc = Datacube(env=self._local_env, app=self.global_cfg.odc_app)
+                return self._dc
+            except Exception as e:
+                raise ODCInitException(str(e)) from None
+
+        # If we have a parent layer, then it's their problem.
+        if self.parent_layer:
+            # remember, so we don't have to ask our parent layer again.  As a layer we must learn to adult.
+            self._cached_dc = self.parent_layer.dc
+        else:
+            # If we have no parent layer, then we have to ask the global government.
+            # and remember, so we don't have to deal with the global government again.
+            self._cached_dc = self.global_cfg.dc
+
+        return self._cached_dc
 
     def global_config(self) -> "OWSConfig":
         return self.global_cfg
@@ -403,6 +459,7 @@ DEF_TIME_EARLIEST = "earliest"
 class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     INDEX_KEYS = ["layer"]
     named = True
+    multi_product: bool = False
 
     def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig", parent_layer: OWSFolder | None = None, **kwargs):
         name = cast(str, cfg["name"])
@@ -412,15 +469,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.name = name
         cfg = cast(CFG_DICT, self._raw_cfg)
         self.hide = False
-        self.local_env: ODCEnvironment | None = None
-        local_env = cast(str | None, cfg.get("env"))
-        self.local_env = ODCConfig.get_environment(env=local_env)
-        # TODO: MULTIDB_SUPPORT
-        #     After refactoring the range tables, Uncomment this code for multi-database support
-        #     (Don't forget to add to documentation)
-        #
-        # if local_env:
-        #    self.local_env = ODCConfig.get_environment(env=local_env)
         try:
             self.parse_product_names(cfg)
             if len(self.low_res_product_names) not in (0, len(self.product_names)):
@@ -560,10 +608,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 #        else:
 #            self.sub_product_extractor = None
         # And finally, add to the global product index.
-        existing = self.global_cfg.product_index.get(self.name)
+        existing = self.global_cfg.layer_index.get(self.name)
         if existing and existing != self:
             raise ConfigException(f"Duplicate layer name: {self.name}")
-        self.global_cfg.product_index[self.name] = self
+        self.global_cfg.layer_index[self.name] = self
 
     def time_axis_representation(self) -> str:
         if self.regular_time_axis:
@@ -573,18 +621,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
-        # TODO: MULTIDB_SUPPORT
-        #     After refactoring the range tables, Uncomment this code for multi-database support
-        #     (Don't forget to add to documentation)
-        #
-        # if self.local_env:
-        #     try:
-        #         self.dc: Datacube = Datacube(env=self.local_env, app=self.global_cfg.odc_app)
-        #     except Exception as e:
-        #         _LOG.error("ODC initialisation failed: %s", str(e))
-        #         raise ODCInitException(e)
-        # else:
-        self.dc = self.global_cfg.dc
         self.products: list[Product] = []
         self.low_res_products: list[Product] = []
         for i, prod_name in enumerate(self.product_names):
@@ -909,10 +945,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
             if self.default_time_rule == DEF_TIME_EARLIEST:
-                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["start_time"])
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges.start_time)
             elif isinstance(self.default_time_rule,
                             datetime.date) and self.default_time_rule in cast(set[datetime.datetime | datetime.date],
-                                                                              self._ranges["time_set"]):
+                                                                              self._ranges.time_set):
                 self.default_time = cast(datetime.datetime | datetime.date, self.default_time_rule)
             elif isinstance(self.default_time_rule, datetime.date):
                 _LOG.warning("default_time for named_layer %s is explicit date (%s) that is "
@@ -920,9 +956,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                                     self.name,
                                     self.default_time_rule.isoformat()
                 )
-                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges.end_time)
             else:
-                self.default_time = cast(datetime.datetime | datetime.date, self._ranges["end_time"])
+                self.default_time = cast(datetime.datetime | datetime.date, self._ranges.end_time)
 
         # pylint: disable=broad-except
         except Exception as a:
@@ -931,21 +967,23 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.hide = True
             self.bboxes = {}
 
-    def time_range(self, ranges: dict[str, Any] | None = None):
+    def time_range(self,
+                   ranges: Optional["LayerExtent"] = None
+                   ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
         if ranges is None:
             ranges = self.ranges
         if self.regular_time_axis and self.time_axis_start:
             start = self.time_axis_start
         else:
-            start = ranges["times"][0]
+            start = ranges.start_time
         if self.regular_time_axis and self.time_axis_end:
             end = self.time_axis_end
         else:
-            end = ranges["times"][-1]
+            end = ranges.end_time
         return (start, end)
 
     @property
-    def ranges(self) -> dict[str, Any]:
+    def ranges(self) -> "LayerExtent":
         if self.dynamic:
             self.force_range_update()
         assert self._ranges is not None  # For type checker
@@ -955,7 +993,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self._ranges is None:
             return {}
         bboxes = {}
-        for crs_id, bbox in cast(dict[str, dict[str, float]], self._ranges["bboxes"]).items():
+        for crs_id, bbox in cast(dict[str, dict[str, float]], self._ranges.bboxes).items():
             if crs_id in self.global_cfg.published_CRSs:
                 # Assume we've already handled coordinate swapping for
                 # Vertical-coord first CRSs.   Top is top, left is left.
@@ -973,7 +1011,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     def search_times(self, t, geobox=None):
         if not geobox:
-            bbox = self.ranges["bboxes"][self.native_CRS]
+            bbox = self.ranges.bboxes[self.native_CRS]
             geobox = create_geobox(
                 self.native_CRS,
                 bbox["left"], bbox["bottom"], bbox["right"], bbox["top"],
@@ -990,7 +1028,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     @classmethod
     def lookup_impl(cls, cfg: "OWSConfig", keyvals: dict[str, str], subs: CFG_DICT | None = None):
         try:
-            return cfg.product_index[keyvals["layer"]]
+            return cfg.layer_index[keyvals["layer"]]
         except KeyError:
             raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
 
@@ -1204,7 +1242,7 @@ class OWSConfig(OWSMetadataConfig):
 
     @property
     def active_products(self) -> Iterable[OWSNamedLayer]:
-        return filter(lambda x: not x.hide, self.product_index.values())
+        return filter(lambda x: not x.hide, self.layer_index.values())
 
     @property
     def active_product_index(self) -> dict[str, OWSNamedLayer]:
@@ -1255,6 +1293,9 @@ class OWSConfig(OWSMetadataConfig):
                 )
             self.catalog: Catalog | None = None
             self.initialised = True
+            self.declare_unready("dc")
+            self.declare_unready("crses")
+            self.declare_unready("native_product_index")
 
     #pylint: disable=attribute-defined-outside-init
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
@@ -1271,6 +1312,7 @@ class OWSConfig(OWSMetadataConfig):
                 _LOG.warning("Message file %s does not exist - using metadata from config file", self.msg_file_name)
         else:
             self.set_msg_src(None)
+        self.crses = {s: self.crs(s) for s in self.published_CRSs}
         self.native_product_index: dict[str, OWSNamedLayer] = {}
         self.root_layer_folder.make_ready(*args, **kwargs)
         super().make_ready(*args, **kwargs)
@@ -1311,8 +1353,9 @@ class OWSConfig(OWSMetadataConfig):
         return self.catalog
 
     def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool):
-        self.default_env = cast(str, cfg.get("env"))
-        self.odc_app = cast(str, cfg.get("odc_app", "ows"))
+        default_env = cast(str, cfg.get("env"))
+        self.default_env = ODCConfig.get_environment(env=default_env)
+        self.odc_app = cast(str, cfg.get("odc_app", "datacube-ows"))
         self._response_headers = cast(dict[str, str], cfg.get("response_headers", {}))
         services = cast(dict[str, bool], cfg.get("services", {}))
         self.wms = services.get("wms", True)
@@ -1461,7 +1504,7 @@ class OWSConfig(OWSMetadataConfig):
 
     def parse_layers(self, cfg: list[CFG_DICT]):
         self.folder_index: dict[str, OWSFolder] = {}
-        self.product_index: dict[str, OWSNamedLayer] = {}
+        self.layer_index: dict[str, OWSNamedLayer] = {}
         self.declare_unready("native_product_index")
         self.root_layer_folder = OWSFolder(cast(CFG_DICT, {
             "title": "Root Folder (hidden)",

@@ -2,7 +2,7 @@
 
 -- Try all different locations for temporal extents and UNION them
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS time_view_new (dataset_type_ref, ID, temporal_extent)
+CREATE MATERIALIZED VIEW IF NOT EXISTS ows.time_view_new (dataset_type_ref, ID, temporal_extent)
 AS
 with
 -- Crib metadata to use as for string matching various types

@@ -206,7 +206,7 @@ def test_wcs1_time_exceptions(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO
     )
@@ -269,7 +269,7 @@ def test_wcs1_multi_time_exceptions(ows_server):
     contents = list(wcs.contents)
     test_layer_name = contents[0]
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO
     )
@@ -299,7 +299,7 @@ def test_wcs1_getcov_no_meas(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -328,7 +328,7 @@ def test_wcs1_getcov_multi_style(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -357,7 +357,7 @@ def test_wcs1_width_height_res_exceptions(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -551,7 +551,7 @@ def test_wcs1_style(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -615,7 +615,7 @@ def test_wcs1_ows_stats(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -647,7 +647,7 @@ def test_wcs1_getcov_bad_meas(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -676,7 +676,7 @@ def test_wcs1_getcov_badexception(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -706,7 +706,7 @@ def test_wcs1_getcov_interp(ows_server):
         if not test_layer_name.startswith("s2_l"):
             break
     cfg = get_config(refresh=True)
-    layer = cfg.product_index[test_layer_name]
+    layer = cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -868,7 +868,7 @@ def test_extent_utils():
     OWSConfig._instance = None
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1062,7 +1062,7 @@ def test_wcs20_getcoverage_geotiff(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.product_index[contents[0]]
+    layer = cfg.layer_index[contents[0]]
     assert layer.ready and not layer.hide
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
@@ -1084,7 +1084,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
-    layer = cfg.product_index.get("s2_l2a_clone")
+    layer = cfg.layer_index.get("s2_l2a_clone")
     assert layer.ready and not layer.hide
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
@@ -1108,7 +1108,7 @@ def test_wcs20_getcoverage_netcdf(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.product_index[contents[0]]
+    layer = cfg.layer_index[contents[0]]
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326"
@@ -1135,7 +1135,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
     contents = list(wcs.contents)
     for lyr_name in contents:
         if not lyr_name.startswith('s2_l'):
-            layer = cfg.product_index[lyr_name]
+            layer = cfg.layer_index[lyr_name]
             break
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
@@ -1163,7 +1163,7 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server):
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.product_index[contents[0]]
+    layer = cfg.layer_index[contents[0]]
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326"
@@ -1188,7 +1188,7 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server):
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     assert len(contents) == 6
-    layer = cfg.product_index[contents[0]]
+    layer = cfg.layer_index[contents[0]]
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326"
@@ -1211,7 +1211,7 @@ def test_wcs21_server(ows_server):
     assert r.status_code == 200
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             assert lyr.name in r.text
@@ -1255,7 +1255,7 @@ def test_wcs21_describecoverage(ows_server):
 def test_wcs21_getcoverage(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1283,7 +1283,7 @@ def test_wcs21_getcoverage(ows_server):
 def test_wcs21_ows_stats(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1328,7 +1328,7 @@ def test_wcs2_getcov_badcov(ows_server):
 def test_wcs2_getcov_unpub_subset_crs(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1351,7 +1351,7 @@ def test_wcs2_getcov_unpub_subset_crs(ows_server):
 def test_wcs2_getcov_unpub_output_crs(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1374,7 +1374,7 @@ def test_wcs2_getcov_unpub_output_crs(ows_server):
 def test_wcs2_getcov_dup_subset_dims(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1403,7 +1403,7 @@ def test_wcs2_getcov_dup_subset_dims(ows_server):
 def test_wcs2_getcov_trim_time(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1437,7 +1437,7 @@ def test_wcs2_getcov_trim_time(ows_server):
 def test_wcs2_getcov_badtrim_time(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1472,7 +1472,7 @@ def test_wcs2_getcov_badtrim_time(ows_server):
 def test_wcs2_getcov_slice_space(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1502,7 +1502,7 @@ def test_wcs2_getcov_slice_space(ows_server):
 def test_wcs2_getcov_invalid_space_dim(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1533,7 +1533,7 @@ def test_wcs2_getcov_invalid_space_dim(ows_server):
 def test_wcs2_getcov_duplicate_scale_dim(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1563,7 +1563,7 @@ def test_wcs2_getcov_duplicate_scale_dim(ows_server):
 def test_wcs2_getcov_unscalable_dim(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1593,7 +1593,7 @@ def test_wcs2_getcov_unscalable_dim(ows_server):
 def test_wcs2_getcov_styles(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1669,7 +1669,7 @@ def test_wcs2_getcov_styles(ows_server):
 def test_wcs2_tiff_multidate(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1700,7 +1700,7 @@ def test_wcs2_tiff_multidate(ows_server):
 def test_wcs2_getcov_bands(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1730,7 +1730,7 @@ def test_wcs2_getcov_bands(ows_server):
 def test_wcs2_getcov_band_range(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1760,7 +1760,7 @@ def test_wcs2_getcov_band_range(ows_server):
 def test_wcs2_getcov_bad_band(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1791,7 +1791,7 @@ def test_wcs2_getcov_bad_band(ows_server):
 def test_wcs2_getcov_bad_band_range(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1839,7 +1839,7 @@ def test_wcs2_getcov_bad_band_range(ows_server):
 def test_wcs2_getcov_native_format(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith('s2_l'):
             layer = lyr
             break
@@ -1867,7 +1867,7 @@ def test_wcs2_getcov_native_format(ows_server):
 def test_wcs2_getcov_bad_format(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1914,7 +1914,7 @@ def test_wcs2_getcov_bad_format(ows_server):
 def test_wcs2_getcov_bad_multitime_format(ows_server):
     cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.product_index.values():
+    for lyr in cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break

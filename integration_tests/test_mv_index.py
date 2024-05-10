@@ -14,14 +14,14 @@ from datacube_ows.time_utils import local_solar_date_range
 
 def test_full_layer():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
+    lyr = list(cfg.layer_index.values())[0]
     sel = mv_search(lyr.dc.index, MVSelectOpts.COUNT, products=lyr.products)
     assert sel > 0
 
 
 def test_select_all():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
+    lyr = list(cfg.layer_index.values())[0]
     rows = mv_search(lyr.dc.index, MVSelectOpts.ALL, products=lyr.products)
     for row in rows:
         assert len(row) > 1
@@ -29,7 +29,7 @@ def test_select_all():
 
 def test_no_products():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
+    lyr = list(cfg.layer_index.values())[0]
     with pytest.raises(Exception) as e:
         sel = mv_search(lyr.dc.index, MVSelectOpts.COUNT)
     assert "Must filter by product/layer" in str(e.value)
@@ -37,7 +37,7 @@ def test_no_products():
 
 def test_bad_set_opt():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
+    lyr = list(cfg.layer_index.values())[0]
     with pytest.raises(ValueError) as e:
         sel = MVSelectOpts("INVALID")
 
@@ -51,8 +51,8 @@ class MockGeobox:
 
 def test_time_search():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
-    time = lyr.ranges["times"][-1]
+    lyr = list(cfg.layer_index.values())[0]
+    time = lyr.ranges.end_time
     geom = box(
         lyr.bboxes["EPSG:4326"]["left"],
         lyr.bboxes["EPSG:4326"]["bottom"],
@@ -70,7 +70,7 @@ def test_time_search():
 
 def test_count():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
+    lyr = list(cfg.layer_index.values())[0]
     count = mv_search(lyr.dc.index, MVSelectOpts.COUNT, products=lyr.products)
     ids = mv_search(lyr.dc.index, MVSelectOpts.IDS, products=lyr.products)
     assert len(ids) == count
@@ -78,7 +78,7 @@ def test_count():
 
 def test_datasets():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
+    lyr = list(cfg.layer_index.values())[0]
     dss = mv_search(lyr.dc.index, MVSelectOpts.DATASETS, products=lyr.products)
     ids = mv_search(lyr.dc.index, MVSelectOpts.IDS, products=lyr.products)
     assert len(ids) == len(dss)
@@ -88,7 +88,7 @@ def test_datasets():
 
 def test_extent_and_spatial():
     cfg = get_config()
-    lyr = list(cfg.product_index.values())[0]
+    lyr = list(cfg.layer_index.values())[0]
     layer_ext_bbx = (
         lyr.bboxes["EPSG:4326"]["left"],
         lyr.bboxes["EPSG:4326"]["bottom"],
