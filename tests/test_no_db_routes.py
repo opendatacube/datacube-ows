@@ -8,6 +8,7 @@
 """
 import os
 import sys
+import pytest
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
@@ -19,60 +20,46 @@ def reset_global_config():
     OWSConfig._instance = None
 
 
+@pytest.fixture
 def no_db(monkeypatch):
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.minimal_cfg.ows_cfg")
     reset_global_config()
+    yield
+    reset_global_config()
 
 
-def test_db_connect_fail(monkeypatch, flask_client):
+def test_db_connect_fail(no_db, flask_client):
     """Start with a database connection"""
-
-    no_db(monkeypatch)
     rv = flask_client.get('/ping')
     assert rv.status_code == 500
-    reset_global_config()
 
 
-def test_wcs_fail(monkeypatch, flask_client):
+def test_wcs_fail(no_db, flask_client):
     """WCS endpoint fails"""
-
-    no_db(monkeypatch)
     rv = flask_client.get('/wcs')
     assert rv.status_code == 400
-    reset_global_config()
 
 
-def test_wms_fail(monkeypatch, flask_client):
+def test_wms_fail(no_db, flask_client):
     """WMS endpoint fails"""
-
-    no_db(monkeypatch)
     rv = flask_client.get('/wms')
     assert rv.status_code == 400
-    reset_global_config()
 
 
-def test_wmts_fail(monkeypatch, flask_client):
+def test_wmts_fail(no_db, flask_client):
     """WMTS endpoint fails"""
-
-    no_db(monkeypatch)
     rv = flask_client.get('/wmts')
     assert rv.status_code == 400
-    reset_global_config()
 
 
-def test_legend_fail(monkeypatch, flask_client):
+def test_legend_fail(no_db, flask_client):
     """Fail on legend"""
-
-    no_db(monkeypatch)
     rv = flask_client.get("/legend/layer/style/legend.png")
     assert rv.status_code == 404
-    reset_global_config()
 
 
-def test_index_fail(monkeypatch, flask_client):
+def test_index_fail(no_db, flask_client):
     """Base index endpoint fails"""
     # Should actually be 200 TODO
-    no_db(monkeypatch)
     rv = flask_client.get('/')
     assert rv.status_code == 500
-    reset_global_config()
