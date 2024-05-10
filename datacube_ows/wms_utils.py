@@ -165,17 +165,16 @@ def get_arg(args, argname, verbose_name, lower=False,
     return fmt
 
 
-def get_times_for_layer(layer):
-    ranges = layer.ranges
-    return ranges.times
+def get_times_for_layer(layer: OWSNamedLayer) -> list[datetime | date]:
+    return layer.ranges.times
 
 
-def get_times(args, product: OWSNamedLayer) -> list[datetime | date]:
+def get_times(args, layer: OWSNamedLayer) -> list[datetime | date]:
     # Time parameter
     times_raw = args.get('time', '')
     times = times_raw.split(',')
 
-    return list([parse_time_item(item, product) for item in times])
+    return list([parse_time_item(item, layer) for item in times])
 
 
 def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
