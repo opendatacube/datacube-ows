@@ -252,7 +252,7 @@ Local Postgres database
 5. Write an ows config file to identify the products you want available in ows, see example here: https://github.com/opendatacube/datacube-ows/blob/master/datacube_ows/ows_cfg_example.py
 6. Run ``datacube-ows-update --schema --read-role <db_read_role> --write-role <db_write_role>`` as a database
    superuser role to create ows specific tables and views
-7. Run ``datacube-ows-update`` as ``db_write_role`` to pupulate ows extent tables.
+7. Run ``datacube-ows-update`` as ``db_write_role`` to populate ows extent tables.
 
 Apache2 mod_wsgi
 ----------------
