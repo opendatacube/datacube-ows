@@ -32,7 +32,7 @@ configuration.
 Note that ``docker-compose`` arrangement used for integration testing on github also redundantly requires
 the ``$DB_USERNAME``, ``$DB_PASSWORD``, ``$DB_DATABSE`` and ``$DB_PORT`` environment variables to set up
 the generic docker postgres container.  If you are connecting to an existing database, these variables
-will not be required.
+are not required.
 
 Configuring AWS Access
 ----------------------

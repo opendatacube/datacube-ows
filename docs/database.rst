@@ -141,7 +141,8 @@ ENVIRONMENT. This will leave OWS broken and unable to respond to
 requests until the refresh is complete.
 
 In a production environment you should not be refreshing views
-much more than 2 or 3 times a day unless your database is very small.
+much more than 2 or 3 times a day unless your database is small
+(e.g. less than a few thousand datasets).
 
 =====================
 Updating range tables
