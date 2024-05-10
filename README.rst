@@ -183,7 +183,7 @@ The following instructions are for installing on a clean Linux system.
     # to create schema, tables and materialised views used by datacube-ows.
 
     export DATACUBE_OWS_CFG=datacube_ows.ows_cfg_example.ows_cfg
-    datacube-ows-update --read-role ubuntu --write-role ubuntu --schema
+    datacube-ows-update --write-role ubuntu --schema
 
 
 * Create a configuration file for your service, and all data products you wish to publish in
@@ -250,8 +250,9 @@ Local Postgres database
       | xargs -n1 -I {} datacube dataset add s3://deafrica-data/{}
 
 5. Write an ows config file to identify the products you want available in ows, see example here: https://github.com/opendatacube/datacube-ows/blob/master/datacube_ows/ows_cfg_example.py
-6. Run `datacube-ows-update --schema --role <db_read_role>` to create ows specific tables
-7. Run `datacube-ows-update` to generate ows extents.
+6. Run ``datacube-ows-update --schema --read-role <db_read_role> --write-role <db_write_role>`` as a database
+   superuser role to create ows specific tables and views
+7. Run ``datacube-ows-update`` as ``db_write_role`` to pupulate ows extent tables.
 
 Apache2 mod_wsgi
 ----------------

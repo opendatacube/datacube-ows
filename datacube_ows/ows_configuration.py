@@ -303,7 +303,7 @@ class OWSLayer(OWSMetadataConfig):
                 self._dc = Datacube(env=self._local_env, app=self.global_cfg.odc_app)
                 return self._dc
             except Exception as e:
-                raise ODCInitException(str(e))
+                raise ODCInitException(str(e)) from None
 
         # If we have a parent layer, then it's their problem.
         if self.parent_layer:
