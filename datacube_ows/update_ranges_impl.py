@@ -133,7 +133,7 @@ def main(layers: list[str],
     app = cfg.odc_app + "-update"
     errors: bool = False
     if schema or read_role or write_role or cleanup:
-        if cfg.default_env and env is not None:
+        if cfg.default_env and env is None:
             dc = Datacube(env=cfg.default_env, app=app)
         else:
             dc = Datacube(env=env, app=app)
@@ -255,13 +255,13 @@ def run_sql(dc: datacube.Datacube, path: str, **params: str) -> bool:
                 click.echo(
                     f"Insufficient Privileges.  Schema altering actions should be run by a role with admin privileges"
                 )
-                raise AbortRun()
+                raise AbortRun() from None
             elif isinstance(e.orig, psycopg2.errors.DuplicateObject):
                 if f.endswith('_ignore_duplicates.sql'):
                     click.echo(f"Ignoring 'already exists' error")
                 else:
-                    raise e
+                    raise e from None
             else:
-                raise e
+                raise e from e
     return all_ok
     conn.close()
