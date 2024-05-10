@@ -147,8 +147,8 @@ class DataStacker:
             if band not in self._needed_bands:
                 self._needed_bands.append(band)
         self.raw_times = times
-        if layer.mosaic_date_func:
-            self._times = [layer.mosaic_date_func(layer.ranges.times)]
+        if self._layer.mosaic_date_func:
+            self._times = [self._layer.mosaic_date_func(layer.ranges.times)]
         else:
             self._times = [
                     self._layer.search_times(
