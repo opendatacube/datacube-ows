@@ -7,6 +7,20 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.40 (2024-04-29)
+-------------------
+
+Bug fix release
+
+* Loading now uses `skip_broken_datasets=True` by default. (#1001)
+* Bump base osgeo/gdal docker image version. (#1003)
+* Update versions of several upstream packages to avoid known security issues (#1004, #1005, #1008)
+* pre-commit autoupdate (#1006)
+* Make S3 URL rewriting work with metadata indexed from STAC (#1011)
+* Update HISTORY.rst and increment default version for release and some tests. (#1013)
+
+This release includes contributions from @whatnick, @pjonsson, @SpacemanPaul, and various automatic updater bots.
+
 1.8.39 (2024-03-13)
 -------------------
 
