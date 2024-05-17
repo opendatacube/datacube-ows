@@ -12,24 +12,32 @@ from datacube_ows.update_ranges_impl import main
 
 def test_update_ranges_schema_without_roles(runner):
     result = runner.invoke(main, ["--schema"])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
 
 
 def test_update_ranges_schema_with_roles(runner, role_name):
     result = runner.invoke(main, ["--schema", "--read-role", role_name, "--write-role", role_name])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
 
 
 def test_update_ranges_roles_only(runner, role_name):
     result = runner.invoke(main, ["--read-role", role_name, "--write-role", role_name])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
 
 
 def test_update_ranges_cleanup(runner):
     result = runner.invoke(main, ["--cleanup"])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
 
@@ -37,6 +45,8 @@ def test_update_ranges_cleanup(runner):
 def test_update_ranges_views(runner):
     result = runner.invoke(main, ["--views"])
     assert "Cannot find SQL resource" not in result.output
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
     assert result.exit_code == 0
 
 

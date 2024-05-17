@@ -173,8 +173,6 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                        "layer_id": layer.name
                    }
         )
-        print("Dates written")
-
         # calculate bounding boxes
         # Get extent polygon from materialised views
 
