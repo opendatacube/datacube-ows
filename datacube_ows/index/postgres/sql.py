@@ -26,12 +26,12 @@ def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
 
 
 def run_sql(dc: Datacube, path: str, **params: str) -> bool:
-    if not importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").is_dir():
+    if not importlib.resources.files("datacube_ows").joinpath(f"sql/postgres/{path}").is_dir():
         print("Cannot find SQL resource directory - check your datacube-ows installation")
         return False
 
     files = sorted(
-        importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").iterdir()  # type: ignore[type-var]
+        importlib.resources.files("datacube_ows").joinpath(f"sql/postgres/{path}").iterdir()  # type: ignore[type-var]
     )
 
     filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
@@ -50,7 +50,7 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
             reqs = req_match.group("reqs").split("_")
         else:
             reqs = []
-        ref = importlib.resources.files("datacube_ows").joinpath(f"sql/{path}/{f}")
+        ref = importlib.resources.files("datacube_ows").joinpath(f"sql/postgres/{path}/{f}")
         with ref.open("rb") as fp:
             sql = ""
             first = True

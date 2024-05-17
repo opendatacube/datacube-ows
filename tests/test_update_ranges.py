@@ -67,7 +67,7 @@ def test_update_ranges_misuse_cases(runner, role_name, layer_name):
 
 
 def test_run_sql(minimal_dc):
-    assert not run_sql(minimal_dc, "sql/no_such_directory")
+    assert not run_sql(minimal_dc, "no_such_directory")
 
     assert not run_sql(minimal_dc, "templates")
 
