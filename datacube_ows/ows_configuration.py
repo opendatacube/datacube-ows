@@ -41,6 +41,7 @@ from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        OWSFlagBand, OWSMetadataConfig,
                                        cfg_expand, get_file_loc,
                                        import_python_obj, load_json_obj)
+from datacube_ows.index.api import OWSAbstractIndex, ows_index
 from datacube_ows.ogc_utils import create_geobox
 from datacube_ows.resource_limits import (OWSResourceManagementRules,
                                           parse_cache_age)
@@ -315,6 +316,9 @@ class OWSLayer(OWSMetadataConfig):
             self._cached_dc = self.global_cfg.dc
 
         return self._cached_dc
+
+    def ows_index(self) -> OWSAbstractIndex:
+        return ows_index(self.dc)
 
     def global_config(self) -> "OWSConfig":
         return self.global_cfg
@@ -863,7 +867,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     # pylint: disable=attribute-defined-outside-init
     def ready_wcs(self):
         if self.global_cfg.wcs and self.wcs:
-
             # Prepare Rectified Grids
             try:
                 native_bounding_box = self.bboxes[self.native_CRS]
@@ -878,8 +881,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.origin_y = native_bounding_box["bottom"]
 
 
-            if (native_bounding_box["right"] - native_bounding_box["left"]) < self.resolution_x:
-                ConfigException(
+            if abs(native_bounding_box["right"] - native_bounding_box["left"]) < abs(self.resolution_x):
+                raise ConfigException(
                     "Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
                     % (
                         self.native_CRS,
@@ -889,8 +892,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         native_bounding_box["right"] - native_bounding_box["left"],
                         self.resolution_x
                     ))
-            if (native_bounding_box["top"] - native_bounding_box["bottom"]) < self.resolution_x:
-                ConfigException(
+            if abs(native_bounding_box["top"] - native_bounding_box["bottom"]) < abs(self.resolution_y):
+                raise ConfigException(
                     "Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
                     % (
                         self.native_CRS,
@@ -939,8 +942,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def force_range_update(self) -> None:
         self.hide = False
         try:
-            from datacube_ows.product_ranges import get_ranges
-            self._ranges = get_ranges(self)
+            self._ranges = self.ows_index().get_ranges(self)
             if self._ranges is None:
                 raise Exception("Null product range")
             self.bboxes = self.extract_bboxes()
