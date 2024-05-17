@@ -105,9 +105,12 @@ Features
     url='https://github.com/opendatacube/datacube-ows',
     entry_points={
         'console_scripts': [
-            'datacube-ows=datacube_ows.wsgi:main',
-            'datacube-ows-update=datacube_ows.update_ranges_impl:main',
-            'datacube-ows-cfg=datacube_ows.cfg_parser_impl:main'
+            'datacube-ows = datacube_ows.wsgi:main',
+            'datacube-ows-update = datacube_ows.update_ranges_impl:main',
+            'datacube-ows-cfg = datacube_ows.cfg_parser_impl:main'
+        ],
+        "datacube_ows.plugins.index": [
+            'postgres = datacube_ows.index.postgres.api:ows_index_driver_init',
         ]
     },
     python_requires=">=3.10.0",

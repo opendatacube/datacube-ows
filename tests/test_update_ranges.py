@@ -9,7 +9,8 @@ https://click.palletsprojects.com/en/7.x/testing/
 """
 import pytest
 from click.testing import CliRunner
-from datacube_ows.update_ranges_impl import main, run_sql
+from datacube_ows.update_ranges_impl import main
+from datacube_ows.index.postgres.sql import run_sql
 
 
 @pytest.fixture
