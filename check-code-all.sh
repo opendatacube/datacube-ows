@@ -28,7 +28,7 @@ datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-c
 
 datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/geomedian-au/ga_ls8c_nbart_gm_cyear_3.odc-product.yaml
 
-# S2 datasets from us-west-2
+# S2 datasets from us-west-2 (might not work)
 MDL=./integration_tests/metadata
 python ${MDL}/metadata_importer.py <<EOF
 ${MDL}/s2_l2a_ds_01.yaml https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XD/2021/12/S2B_51LXD_20211231_0_L2A/S2B_51LXD_20211231_0_L2A.json

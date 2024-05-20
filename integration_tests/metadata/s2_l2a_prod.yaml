@@ -1,19 +1,18 @@
----
-name: s2_l2a 
+name: s2_l2a
 metadata:
   product:
-    name: s2_l2a 
+    name: s2_l2a
 description: Sentinel-2a and Sentinel-2b imagery, processed to Level 2A (Surface Reflectance) and converted to Cloud Optimized GeoTIFFs
 measurements:
-- name: B01 
-  dtype: uint16, 
-  units: "1", 
-  nodata: 0, 
+- name: B01
+  dtype: uint16
+  units: "1"
+  nodata: 0
   aliases:
   - band_01
   - coastal_aerosol
-- name": B02 
-  dtype: uint16 
+- name: B02
+  dtype: uint16
   units: "1"
   nodata: 0
   aliases:
@@ -101,7 +100,7 @@ measurements:
   - mask
   - qa
   flags_definition:
-    qa: 
+    qa:
       bits:
       - 0
       - 1
@@ -111,19 +110,19 @@ measurements:
       - 5
       - 6
       - 7
-      values: 
-	"0": no data
-        "1": saturated or defective
-        "2": dark area pixels
-        "3": cloud shadows
-        "4": vegetation
-        "5": bare soils
-        "6": water
-        "7": unclassified
-        "8": cloud medium probability
-        "9": cloud high probability
-        "10": thin cirrus
-        "11": snow or ice
+      values:
+        '0': no data
+        '1': saturated or defective
+        '2': dark area pixels
+        '3': cloud shadows
+        '4': vegetation
+        '5': bare soils
+        '6': water
+        '7': unclassified
+        '8': cloud medium probability
+        '9': cloud high probability
+        '10': thin cirrus
+        '11': snow or ice
       description: Sen2Cor Scene Classification
 - name: AOT
   dtype: uint16
@@ -138,4 +137,3 @@ measurements:
   aliases:
   - scene_average_water_vapour
 metadata_type: eo3
-...

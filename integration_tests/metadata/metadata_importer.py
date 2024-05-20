@@ -4,7 +4,6 @@
 import fileinput
 import yaml
 from datacube import Datacube
-from datacube.model import Dataset
 from datacube.index.hl import Doc2Dataset
 
 dc = Datacube()
@@ -25,4 +24,3 @@ for line in fileinput.input():
     else:
         print("Dataset add failed:", err)
         exit(1)
-
