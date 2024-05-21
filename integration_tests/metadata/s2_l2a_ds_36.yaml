@@ -1,0 +1,192 @@
+$schema: https://schemas.opendatacube.org/dataset
+accessories:
+  info:
+    path: https://roda.sentinel-hub.com/sentinel-s2-l2a/tiles/51/L/XF/2021/12/21/0/tileInfo.json
+  metadata:
+    path: https://roda.sentinel-hub.com/sentinel-s2-l2a/tiles/51/L/XF/2021/12/21/0/metadata.xml
+  thumbnail:
+    path: https://roda.sentinel-hub.com/sentinel-s2-l1c/tiles/51/L/XF/2021/12/21/0/preview.jpg
+crs: epsg:32751
+extent:
+  lat:
+    begin: -13.655153200298894
+    end: -12.657006390818566
+  lon:
+    begin: 123.92118806572519
+    end: 124.93951216306945
+geometry:
+  coordinates:
+  - - - 600001.0
+      - 8490221.0
+    - - 600001.0
+      - 8591222.0
+    - - 602064.0
+      - 8600019.0
+    - - 709799.0
+      - 8600019.0
+    - - 709799.0
+      - 8490221.0
+    - - 600001.0
+      - 8490221.0
+  type: Polygon
+grid_spatial:
+  projection:
+    geo_ref_points:
+      ll:
+        x: 600000.0
+        y: 8490220.0
+      lr:
+        x: 709800.0
+        y: 8490220.0
+      ul:
+        x: 600000.0
+        y: 8600020.0
+      ur:
+        x: 709800.0
+        y: 8600020.0
+    spatial_reference: epsg:32751
+    valid_data:
+      coordinates:
+      - - - 600001.0
+          - 8490221.0
+        - - 600001.0
+          - 8591222.0
+        - - 602064.0
+          - 8600019.0
+        - - 709799.0
+          - 8600019.0
+        - - 709799.0
+          - 8490221.0
+        - - 600001.0
+          - 8490221.0
+      type: Polygon
+grids:
+  default:
+    shape:
+    - 10980
+    - 10980
+    transform:
+    - 10
+    - 0
+    - 600000
+    - 0
+    - -10
+    - 8600020
+    - 0
+    - 0
+    - 1
+  g20m:
+    shape:
+    - 5490
+    - 5490
+    transform:
+    - 20
+    - 0
+    - 600000
+    - 0
+    - -20
+    - 8600020
+    - 0
+    - 0
+    - 1
+  g320m:
+    shape:
+    - 343
+    - 343
+    transform:
+    - 320
+    - 0
+    - 600000
+    - 0
+    - -320
+    - 8600020
+    - 0
+    - 0
+    - 1
+  g60m:
+    shape:
+    - 1830
+    - 1830
+    transform:
+    - 60
+    - 0
+    - 600000
+    - 0
+    - -60
+    - 8600020
+    - 0
+    - 0
+    - 1
+id: 82bf9be0-a6e6-5c5d-a859-c3c81b57c43e
+label: S2B_MSIL2A_20211221T015619_N0301_R117_T51LXF_20211221T035336
+lineage:
+  source_datasets: {}
+measurements:
+  AOT:
+    grid: g60m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/AOT.tif
+  B01:
+    grid: g60m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B01.tif
+  B02:
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B02.tif
+  B03:
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B03.tif
+  B04:
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B04.tif
+  B05:
+    grid: g20m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B05.tif
+  B06:
+    grid: g20m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B06.tif
+  B07:
+    grid: g20m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B07.tif
+  B08:
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B08.tif
+  B09:
+    grid: g60m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B09.tif
+  B11:
+    grid: g20m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B11.tif
+  B12:
+    grid: g20m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B12.tif
+  B8A:
+    grid: g20m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/B8A.tif
+  SCL:
+    grid: g20m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/SCL.tif
+  WVP:
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/WVP.tif
+  overview:
+    grid: g320m
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/L2A_PVI.tif
+  visual:
+    path: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/51/L/XF/2021/12/S2B_51LXF_20211221_0_L2A/TCI.tif
+product:
+  name: s2_l2a
+properties:
+  created: '2021-12-21T06:04:21.304Z'
+  datetime: '2021-12-21T02:01:08Z'
+  eo:cloud_cover: 98.67
+  eo:constellation: sentinel-2
+  eo:gsd: 10
+  eo:instrument: MSI
+  eo:off_nadir: 0
+  eo:platform: sentinel-2b
+  odc:file_format: GeoTIFF
+  odc:processing_datetime: '2021-12-21T06:04:21.304Z'
+  odc:region_code: 51LXF
+  proj:epsg: 32751
+  sentinel:data_coverage: 99.92
+  sentinel:grid_square: XF
+  sentinel:latitude_band: L
+  sentinel:product_id: S2B_MSIL2A_20211221T015619_N0301_R117_T51LXF_20211221T035336
+  sentinel:sequence: '0'
+  sentinel:utm_zone: 51
+  sentinel:valid_cloud_cover: true
+  updated: '2021-12-21T06:04:21.304Z'
