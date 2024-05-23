@@ -24,7 +24,7 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
     }
     assert mock_range.bboxes["EPSG:4326"]["bottom"] > 0
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
@@ -40,7 +40,7 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
         "top": 0.1, "bottom": -0.1,
         "left": -0.1, "right": -0.1,
     }
-    with patch("datacube_ows.index.postgres.api.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
