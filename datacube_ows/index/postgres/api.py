@@ -16,7 +16,7 @@ from datacube.model import Product, Dataset
 
 from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.index.api import OWSAbstractIndex, OWSAbstractIndexDriver, LayerSignature, LayerExtent, TimeSearchTerm
-from .product_ranges import create_range_entry, get_ranges
+from .product_ranges import create_range_entry as create_range_entry_impl, get_ranges as get_ranges_impl
 from .mv_index import MVSelectOpts, mv_search
 from .sql import run_sql
 
@@ -51,10 +51,10 @@ class OWSPostgresIndex(OWSAbstractIndex):
         run_sql(dc, "extent_views/refresh")
 
     def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
-        create_range_entry(layer, cache)
+        create_range_entry_impl(layer, cache)
 
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
-        return get_ranges(layer)
+        return get_ranges_impl(layer)
 
     def ds_search(self,
                   layer: OWSNamedLayer,
