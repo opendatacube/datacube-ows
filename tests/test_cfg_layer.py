@@ -13,7 +13,7 @@ import pytest
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
 from datacube_ows.resource_limits import ResourceLimited
-from datacube_ows.product_ranges import LayerExtent, CoordRange
+from datacube_ows.index import LayerExtent, CoordRange
 
 
 def test_missing_title(minimal_global_cfg):
@@ -175,7 +175,7 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range):
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready()
     assert lyr.ready
@@ -189,7 +189,7 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range):
 def test_duplicate_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range):
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready()
     with pytest.raises(ConfigException) as e:
@@ -340,7 +340,7 @@ def test_minimal_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -717,7 +717,7 @@ def test_earliest_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -732,7 +732,7 @@ def test_latest_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, 
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -747,7 +747,7 @@ def test_valid_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, m
                           global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -761,7 +761,7 @@ def test_missing_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc,
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -826,7 +826,7 @@ def test_native_crs_none(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock
     minimal_layer_cfg["product_name"] = "foo_nonativecrs"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
@@ -859,7 +859,7 @@ def test_no_native_resolution(minimal_global_cfg, minimal_layer_cfg, minimal_dc,
     minimal_layer_cfg["product_name"] = "foo_nonativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
@@ -873,7 +873,7 @@ def test_no_native_resolution_noniter(minimal_global_cfg, minimal_layer_cfg, min
     minimal_layer_cfg["product_name"] = "foo_nonativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
@@ -887,7 +887,7 @@ def test_no_native_resolution_badlen(minimal_global_cfg, minimal_layer_cfg, mini
     minimal_layer_cfg["product_name"] = "foo_nonativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
@@ -901,7 +901,7 @@ def test_native_resolution_mismatch(minimal_global_cfg, minimal_layer_cfg, minim
     minimal_layer_cfg["product_name"] = "foo_nativeres"
     lyr = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert not lyr.hide

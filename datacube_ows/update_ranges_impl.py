@@ -6,24 +6,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-import importlib.resources
-import re
 import sys
 
 import click
-import datacube
 import psycopg2
 import sqlalchemy
 from datacube import Datacube
-from sqlalchemy import text
 
 from datacube_ows import __version__
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.product_ranges import add_ranges, get_sqlconn
+from datacube_ows.ows_configuration import OWSConfig
+from datacube_ows.index import AbortRun, LayerSignature, ows_index
 from datacube_ows.startup_utils import initialise_debugging
-
-class AbortRun(Exception):
-    pass
 
 
 @click.command()
@@ -132,7 +126,7 @@ def main(layers: list[str],
     cfg = get_config(called_from_update_ranges=True)
     app = cfg.odc_app + "-update"
     errors: bool = False
-    if schema or read_role or write_role or cleanup:
+    if schema or read_role or write_role or cleanup or views:
         if cfg.default_env and env is None:
             dc = Datacube(env=cfg.default_env, app=app)
         else:
@@ -142,16 +136,19 @@ def main(layers: list[str],
         try:
             if schema:
                 click.echo("Creating or replacing OWS database schema:...")
-                create_schema(dc)
+                ows_index(dc).create_schema(dc)
             for role in read_role:
                 click.echo(f"Granting read-only access to role {role}...")
-                grant_perms(dc, role, read_only=True)
+                ows_index(dc).grant_perms(dc, role, read_only=True)
             for role in write_role:
                 click.echo(f"Granting read/write access to role {role}...")
-                grant_perms(dc, role)
+                ows_index(dc).grant_perms(dc, role)
+            if views:
+                click.echo("Updating materialised views...")
+                ows_index(dc).update_geotemporal_index(dc)
             if cleanup:
                 click.echo("Cleaning up datacube-1.8.x range tables and views...")
-                cleanup_schema(dc)
+                ows_index(dc).cleanup_schema(dc)
         except AbortRun:
             click.echo("Aborting schema update")
             errors = True
@@ -183,90 +180,18 @@ def main(layers: list[str],
     return 0
 
 
-def refresh_views(dc: datacube.Datacube):
-    run_sql(dc, "extent_views/refresh")
-
-
-def create_schema(dc: datacube.Datacube):
-    click.echo("Creating/updating schema and tables...")
-    run_sql(dc, "ows_schema/create")
-    click.echo("Creating/updating materialised views...")
-    run_sql(dc, "extent_views/create")
-    click.echo("Setting ownership of materialised views...")
-    run_sql(dc, "extent_views/grants/refresh_owner")
-
-
-def grant_perms(dc: datacube.Datacube, role: str, read_only: bool = False):
-    if read_only:
-        run_sql(dc, "ows_schema/grants/read_only", role=role)
-        run_sql(dc, "extent_views/grants/read_only", role=role)
-    else:
-        run_sql(dc, "ows_schema/grants/read_write", role=role)
-        run_sql(dc, "extent_views/grants/write_refresh", role=role)
-
-
-def cleanup_schema(dc: datacube.Datacube):
-    run_sql(dc, "ows_schema/cleanup")
-
-
-def run_sql(dc: datacube.Datacube, path: str, **params: str) -> bool:
-    if not importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").is_dir():
-        print("Cannot find SQL resource directory - check your datacube-ows installation")
-        return False
-
-    files = sorted(
-        importlib.resources.files("datacube_ows").joinpath(f"sql/{path}").iterdir()  # type: ignore[type-var]
-    )
-
-    filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
-    filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
-    conn = get_sqlconn(dc)
-    all_ok: bool = True
-    for fi in files:
-        f = fi.name
-        match = filename_pattern.fullmatch(f)
-        if not match:
-            click.echo(f"Illegal SQL filename: {f} (skipping)")
-            all_ok = False
+def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
+    if not layer_names:
+        layer_names = list(cfg.layer_index.keys())
+    errors = False
+    cache: dict[LayerSignature, list[str]] = {}
+    for name in layer_names:
+        if name not in cfg.layer_index:
+            click.echo(f"Layer '{name}' does not exist in the OWS configuration - skipping")
+            errors = True
             continue
-        req_match = filename_req_pattern.fullmatch(f)
-        if req_match:
-            reqs = req_match.group("reqs").split("_")
-        else:
-            reqs = []
-        ref = importlib.resources.files("datacube_ows").joinpath(f"sql/{path}/{f}")
-        with ref.open("rb") as fp:
-            sql = ""
-            first = True
-            for line in fp:
-                sline = str(line, "utf-8")
-                if first and sline.startswith("--"):
-                    click.echo(f" - Running {sline[2:]}")
-                else:
-                    sql = sql + "\n" + sline
-                first = False
-        if reqs:
-            try:
-                kwargs = {v: params[v] for v in reqs}
-            except KeyError as e:
-                click.echo(f"Required parameter {e} for file {f} not supplied - skipping")
-                all_ok = False
-                continue
-            sql = sql.format(**kwargs)
-        try:
-            conn.execute(text(sql))
-        except sqlalchemy.exc.ProgrammingError as e:
-            if isinstance(e.orig, psycopg2.errors.InsufficientPrivilege):
-                click.echo(
-                    f"Insufficient Privileges.  Schema altering actions should be run by a role with admin privileges"
-                )
-                raise AbortRun() from None
-            elif isinstance(e.orig, psycopg2.errors.DuplicateObject):
-                if f.endswith('_ignore_duplicates.sql'):
-                    click.echo(f"Ignoring 'already exists' error")
-                else:
-                    raise e from None
-            else:
-                raise e from e
-    return all_ok
-    conn.close()
+        layer = cfg.layer_index[name]
+        layer.ows_index().create_range_entry(layer, cache)
+
+    print("Done.")
+    return errors

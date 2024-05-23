@@ -13,7 +13,7 @@ from odc.geo import CRS
 import datacube_ows.wms_utils
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import TimeRes
-from datacube_ows.product_ranges import LayerExtent, CoordRange
+from datacube_ows.index import LayerExtent, CoordRange
 
 
 def test_parse_time_delta():

@@ -6,6 +6,7 @@
 
 import datetime
 from unittest.mock import MagicMock
+from datacube.cfg import ODCConfig
 
 import numpy as np
 import pytest
@@ -50,6 +51,7 @@ def minimal_dc():
         "bar": nb,
     }
     dc.list_measurements.return_value = lmo
+    dc.index.environment = ODCConfig.get_environment()
 
     def product_by_name(s):
         if 'lookupfail' in s:
@@ -121,6 +123,7 @@ def minimal_global_cfg(minimal_dc):
     global_cfg.abstract = "Global Abstract"
     global_cfg.odc_app = "app"
     global_cfg.dc = minimal_dc
+    global_cfg.default_env = ODCConfig.get_environment()
     global_cfg.authorities = {
         "auth0": "http://test.url/auth0",
         "auth1": "http://test.url/auth1",
@@ -250,7 +253,7 @@ def minimal_multiprod_cfg():
 
 @pytest.fixture
 def mock_range():
-    from datacube_ows.product_ranges import LayerExtent, CoordRange
+    from datacube_ows.index import LayerExtent, CoordRange
     times = [datetime.date(2010, 1, 1), datetime.date(2010, 1, 2), datetime.date(2010, 1, 3)]
     return LayerExtent(
         lat=CoordRange(-0.1, 0.1),
@@ -1154,3 +1157,10 @@ def xyt_dummydata():
             "blue": dummy_da(1500, "blue", xyt_coords, dtype="int16"),
             "nir": dummy_da(2000, "nir", xyt_coords, dtype="int16"),
         })
+
+
+@pytest.fixture
+def empty_driver_cache():
+    from datacube_ows.index.driver import OWSIndexDriverCache
+    OWSIndexDriverCache._instance = None
+    return None

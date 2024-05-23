@@ -12,7 +12,7 @@ from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import WCSFormat, parse_ows_layer
 
 
-def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range):
+def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range, empty_driver_cache):
     minimal_global_cfg.wcs = True
     minimal_layer_cfg["native_crs"] = "EPSG:4326"
     minimal_layer_cfg["product_name"] = "foo_nativeres"
@@ -22,12 +22,15 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
         "top": 0.1, "bottom": 0.1,
         "left": -0.1, "right": 0.1,
     }
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    assert mock_range.bboxes["EPSG:4326"]["bottom"] > 0
+    assert not lyr.ready
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
+            get_rng.assert_called()
     assert not lyr.ready
-    assert "Grid High y is non-positive" in str(excinfo.value)
+    assert "but vertical resolution is " in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "EPSG:4326" in str(excinfo.value)
     minimal_global_cfg.layer_index = {}
@@ -37,11 +40,11 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
         "top": 0.1, "bottom": -0.1,
         "left": -0.1, "right": -0.1,
     }
-    with patch("datacube_ows.product_ranges.get_ranges") as get_rng:
+    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
-    assert "Grid High x is non-positive" in str(excinfo.value)
+    assert "but horizontal resolution is " in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "EPSG:4326" in str(excinfo.value)
 

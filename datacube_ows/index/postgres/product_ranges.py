@@ -3,14 +3,11 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-import dataclasses
-#pylint: skip-file
 
 import logging
 import math
-import click
 from datetime import date, datetime, timezone
-from typing import cast, Callable, Iterable, NamedTuple
+from typing import cast, Callable, Iterable
 
 import datacube
 import odc.geo
@@ -20,10 +17,10 @@ from sqlalchemy import text
 
 from odc.geo.geom import Geometry
 
-from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer, get_config
 from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import get_sqlconn
+from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 
 _LOG = logging.getLogger(__name__)
 
@@ -47,21 +44,6 @@ def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
             "bottom": bbox.bottom,
             "left": bbox.left,
             "right": bbox.right,
-        }
-
-@dataclasses.dataclass(frozen=True)
-class LayerSignature:
-    time_res: str
-    products: tuple[str, ...]
-    env: str
-    datasets: int
-
-    def as_json(self) -> dict[str, list[str] | str | int]:
-        return {
-            "time_res": self.time_res,
-            "products": list(self.products),
-            "env": self.env,
-            "datasets": self.datasets,
         }
 
 
@@ -191,8 +173,6 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                        "layer_id": layer.name
                    }
         )
-        print("Dates written")
-
         # calculate bounding boxes
         # Get extent polygon from materialised views
 
@@ -241,54 +221,6 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
         "left": sanitise_coordinate(bbox.left, float("-9.999999999e99")),
         "right": sanitise_coordinate(bbox.right, float("9.999999999e99")),
     }
-
-
-def datasets_exist(dc: datacube.Datacube, product_name: str) -> bool:
-    conn = get_sqlconn(dc)
-
-    results = conn.execute(text("""
-        SELECT COUNT(*)
-        FROM agdc.dataset ds, agdc.dataset_type p
-        WHERE ds.archived IS NULL
-        AND ds.dataset_type_ref = p.id
-        AND p.name = :pname"""), {"pname": product_name})
-
-    conn.close()
-
-    return list(results)[0][0] > 0
-
-
-def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
-    if not layer_names:
-        layer_names = list(cfg.layer_index.keys())
-    errors = False
-    cache: dict[LayerSignature, list[str]] = {}
-    for name in layer_names:
-        if name not in cfg.layer_index:
-            click.echo(f"Layer '{name}' does not exist in the OWS configuration - skipping")
-            errors = True
-            continue
-        layer = cfg.layer_index[name]
-        create_range_entry(layer, cache)
-
-    print("Done.")
-    return errors
-
-
-class CoordRange(NamedTuple):
-    min: float
-    max: float
-
-
-class LayerExtent:
-    def __init__(self, lat: CoordRange, lon: CoordRange, times: list[datetime | date], bboxes: CFG_DICT):
-        self.lat = lat
-        self.lon = lon
-        self.times = times
-        self.start_time = times[0]
-        self.end_time = times[-1]
-        self.time_set = set(times)
-        self.bboxes = bboxes
 
 
 def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
