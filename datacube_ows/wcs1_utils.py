@@ -359,7 +359,8 @@ def get_coverage_data(req, qprof):
                 nparrays = {
                     band: (("time", yname, xname),
                            numpy.full((len(req.times), len(yvals), len(xvals)),
-                                      req.product.band_idx.nodata_val(band))
+                                      req.product.band_idx.nodata_val(band),
+                                      dtype=req.product.band_idx.dtype_val(band))
                           )
                     for band in req.bands
                 }
@@ -367,7 +368,8 @@ def get_coverage_data(req, qprof):
                 nparrays = {
                     band: (("time", xname, yname),
                            numpy.full((len(req.times), len(xvals), len(yvals)),
-                                      req.product.band_idx.nodata_val(band))
+                                      req.product.band_idx.nodata_val(band),
+                                      dtype=req.product.band_idx.dtype_val(band))
                           )
                     for band in req.bands
                 }

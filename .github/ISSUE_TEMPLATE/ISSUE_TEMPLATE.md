@@ -18,11 +18,11 @@ assignees: ''
 4.
 
 ## Context (Environment)
-### `datacube-ows` version (datacube-ows --version):
-<!-- Run command datacube-ows --versiion -->
+### `datacube-ows` version (datacube-ows-update --version):
+<!-- Run command datacube-ows-update --version -->
 
 ### `ows_config.py` file (link, sample code)
-<!-- Porvide a link to config or paste the config code below -->
+<!-- Provide a link to config or paste the config code below -->
 
 ### datacube product metadata (datacube product show product_name)
 <!-- If issue is related to a specific layer, run `datacube product show <product_name>` to get the product metadata and provide below -->
