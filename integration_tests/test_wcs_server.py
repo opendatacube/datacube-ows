@@ -1099,6 +1099,13 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server):
             scalesize="x(3000),y(3000)",
         )
     assert "too much data for a single request" in str(e.value)
+    # Test default request
+    with pytest.raises(ServiceException) as e:
+        output = wcs.getCoverage(
+            identifier=[layer.name],
+            format="application/x-netcdf",
+        )
+    assert "too much data for a single request" in str(e.value)
 
 
 def test_wcs20_getcoverage_netcdf(ows_server):
