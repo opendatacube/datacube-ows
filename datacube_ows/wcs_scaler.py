@@ -132,20 +132,20 @@ class WCSScaler:
         skip_y_xform = False
         if not self.subsetted.x and not self.subsetted.y:
             # Neither axis subsetted
-            self.min.x = self.layer.ranges["bboxes"][new_crs]["left"]
-            self.max.x = self.layer.ranges["bboxes"][new_crs]["right"]
-            self.min.y = self.layer.ranges["bboxes"][new_crs]["bottom"]
-            self.max.y = self.layer.ranges["bboxes"][new_crs]["top"]
+            self.min.x = self.layer.ranges.bboxes[new_crs]["left"]
+            self.max.x = self.layer.ranges.bboxes[new_crs]["right"]
+            self.min.y = self.layer.ranges.bboxes[new_crs]["bottom"]
+            self.max.y = self.layer.ranges.bboxes[new_crs]["top"]
             self.crs = new_crs
         elif not self.subsetted.x or not self.subsetted.y:
             # One axis subsetted
             if self.subsetted.x:
-                self.min.y = self.layer.ranges["bboxes"][self.crs]["bottom"]
-                self.max.y = self.layer.ranges["bboxes"][self.crs]["top"]
+                self.min.y = self.layer.ranges.bboxes[self.crs]["bottom"]
+                self.max.y = self.layer.ranges.bboxes[self.crs]["top"]
                 skip_y_xform = True
             if self.subsetted.y:
-                self.min.x = self.layer.ranges["bboxes"][self.crs]["left"]
-                self.max.x = self.layer.ranges["bboxes"][self.crs]["right"]
+                self.min.x = self.layer.ranges.bboxes[self.crs]["left"]
+                self.max.x = self.layer.ranges.bboxes[self.crs]["right"]
                 skip_x_xform = True
         else:
             # Both axes subsetted
@@ -188,14 +188,14 @@ class WCSScaler:
                 proj_geom = geom.to_crs(new_crs_obj)
                 bbox = proj_geom.boundingbox
                 if skip_x_xform:
-                    self.min.x = self.layer.ranges["bboxes"][new_crs]["left"]
-                    self.max.x = self.layer.ranges["bboxes"][new_crs]["right"]
+                    self.min.x = self.layer.ranges.bboxes[new_crs]["left"]
+                    self.max.x = self.layer.ranges.bboxes[new_crs]["right"]
                 else:
                     self.min.x = bbox.left
                     self.max.x = bbox.right
                 if skip_y_xform:
-                    self.min.y = self.layer.ranges["bboxes"][new_crs]["bottom"]
-                    self.max.y = self.layer.ranges["bboxes"][new_crs]["top"]
+                    self.min.y = self.layer.ranges.bboxes[new_crs]["bottom"]
+                    self.max.y = self.layer.ranges.bboxes[new_crs]["top"]
                 else:
                     self.min.y = bbox.bottom
                     self.max.y = bbox.top
