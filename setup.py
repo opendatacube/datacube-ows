@@ -50,7 +50,7 @@ test_requirements = [
 
 dev_requirements = [
     'pydevd-pycharm~=221.5921.27', # For Pycharm 2022.1.3
-    'pylint==2.4.4',
+    'pylint==3.2.3',
     'sphinx_click',
     'pre-commit==2.13.0',
     'pipdeptree'
