@@ -10,6 +10,7 @@ import pytest
 from affine import Affine
 
 from datacube_ows.ows_configuration import OWSConfig, OWSProductLayer
+from datacube_ows.index.api import CoordRange, LayerExtent
 from datacube_ows.wcs_scaler import (SpatialParameter, WCSScaler,
                                      WCSScalerUnknownDimension)
 
@@ -124,20 +125,11 @@ def layer_crs_geom():
     times = [datetime.date(2013, 1, 1), datetime.date(2014, 1, 1), datetime.date(2015, 1, 1),
               datetime.date(2016, 1, 1), datetime.date(2017, 1, 1), datetime.date(2018, 1, 1)]
     product_layer.dynamic = False
-    product_layer._ranges = {
-        'lat': {
-            'min': -34.5250413940276,
-            'max': -33.772472435988
-        },
-        'lon': {
-            'min': 150.330509919584,
-            'max': 151.258021405841
-        },
-        'times': times,
-        'start_time': datetime.date(2013, 1, 1),
-        'end_time': datetime.date(2018, 1, 1),
-        'time_set': set(times),
-        'bboxes': {
+    product_layer._ranges = LayerExtent(
+        lat=CoordRange(min=-34.5250413940276, max=-33.772472435988),
+        lon=CoordRange(min=150.330509919584, max=151.258021405841),
+        times=times,
+        bboxes={
             'EPSG:3111': {
                 'top': 5725844.213533809, 'left': -1623290.9363678931,
                 'right': 3983581.449863785, 'bottom': 1042109.9920098772
@@ -155,7 +147,7 @@ def layer_crs_geom():
                 'right': 157.105656164263, 'bottom': -45.761684927317
             }
         }
-    }
+    )
     return product_layer
 
 
