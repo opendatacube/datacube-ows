@@ -671,6 +671,8 @@ def get_s3_browser_uris(datasets, pt=None, s3url="", s3bucket=""):
                         if ds.crs != last_crs:
                             pt_native = pt.to_crs(ds.crs)
                             last_crs = ds.crs
+                        else:
+                            pt_native = pt
                         if ds.extent.contains(pt_native):
                             uris.append(ds.uris)
                     else:

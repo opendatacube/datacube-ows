@@ -526,7 +526,7 @@ def create_geobox(
     if width is not None:
         scale_x = (float(maxx) - float(minx)) / width
     else:
-        scale_x = -scale_y
+        scale_x = -scale_y  # pylint: disable=possibly-used-before-assignment
         width = int(round((float(maxx) - float(minx)) / scale_x))
     if height is None:
         scale_y = - scale_x
