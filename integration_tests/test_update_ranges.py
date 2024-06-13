@@ -18,16 +18,16 @@ def test_update_ranges_schema_without_roles(runner):
     assert result.exit_code == 0
 
 
-def test_update_ranges_schema_with_roles(runner, role_name):
-    result = runner.invoke(main, ["--schema", "--read-role", role_name, "--write-role", role_name])
+def test_update_ranges_schema_with_roles(runner, read_role_name, write_role_name):
+    result = runner.invoke(main, ["--schema", "--read-role", read_role_name, "--write-role", write_role_name])
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
 
 
-def test_update_ranges_roles_only(runner, role_name):
-    result = runner.invoke(main, ["--read-role", role_name, "--write-role", role_name])
+def test_update_ranges_roles_only(runner, read_role_name, write_role_name):
+    result = runner.invoke(main, ["--read-role", read_role_name, "--write-role", write_role_name])
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output

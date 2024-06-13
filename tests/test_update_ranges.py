@@ -10,7 +10,7 @@ https://click.palletsprojects.com/en/7.x/testing/
 import pytest
 from click.testing import CliRunner
 from datacube_ows.update_ranges_impl import main
-from datacube_ows.index.postgres.sql import run_sql
+from datacube_ows.index.sql import run_sql
 
 
 @pytest.fixture
@@ -67,8 +67,8 @@ def test_update_ranges_misuse_cases(runner, role_name, layer_name):
 
 
 def test_run_sql(minimal_dc):
-    assert not run_sql(minimal_dc, "no_such_directory")
+    assert not run_sql(minimal_dc, "postgres", "no_such_directory")
 
-    assert not run_sql(minimal_dc, "templates")
+    assert not run_sql(minimal_dc, "postgres", "templates")
 
-    assert not run_sql(minimal_dc, "ows_schema/grants/read_only")
+    assert not run_sql(minimal_dc, "postgres", "ows_schema/grants/read_only")

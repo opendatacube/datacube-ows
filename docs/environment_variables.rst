@@ -29,10 +29,24 @@ Postgis support is hopefully coming soon.
 An ODC environment other than ``default`` can be used by setting the ``env`` option in the global OWS
 configuration.
 
+For Running Integration Tests
+-----------------------------
+
+The integration tests need to be able to call a running a OWS server connected the test database
+and running the version of the OWS codebase being tested.
+
+SERVER_URL:
+    The URL of the test server.  Defaults to ``http://localhost:5000``
+
+SERVER_DB_USERNAME:
+    This is the database username used by the test server to connect to the test database.  Defaults to
+    the same database username being used by the integration tests themselves.
+
 Note that ``docker-compose`` arrangement used for integration testing on github also redundantly requires
 the ``$DB_USERNAME``, ``$DB_PASSWORD``, ``$DB_DATABSE`` and ``$DB_PORT`` environment variables to set up
 the generic docker postgres container.  If you are connecting to an existing database, these variables
 are not required.
+
 
 Configuring AWS Access
 ----------------------
@@ -114,8 +128,9 @@ The provided ``Dockerfile`` and ``docker-compose.yaml`` read additional
 environment variables at build time.  Please refer to the `README <https://datacube-ows.readthedocs.io/en/latest/readme.html>`_
 for further details.
 
-environment variables exclusive for docker-compose
+Environment variables exclusive for docker-compose
 --------------------------------------------------
+
 OWS_CFG_DIR:
     path to a folder containing ows config files anywhere on the local machine
 
