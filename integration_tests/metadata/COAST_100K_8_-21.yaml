@@ -1,0 +1,41 @@
+$schema: https://schemas.opendatacube.org/dataset
+crs: epsg:3577
+extent:
+  lat:
+    begin: -19.38776011021664
+    end: -18.43108812058793
+  lon:
+    begin: 139.58869840733868
+    end: 140.59834925204385
+grids:
+  default:
+    shape:
+      - 4000
+      - 4000
+    transform:
+    - 25.0
+    - 0
+    - 800000.0
+    - 0
+    - -25.0
+    - -2000000.0
+    - 0
+    - 0
+    - 1
+id: 701478bc-2625-4743-99bf-10865d3bb2da
+label: COAST_100K_8_-21
+lineage:
+  source_datasets: {}
+measurements:
+  land:
+    path: COAST_100K_8_-21.tif
+product:
+  name: geodata_coast_100k
+properties:
+  created: '2018-12-03T04:31:43.146830'
+  datetime: '2004-01-01T00:00:00'
+  odc:file_format: GeoTIFF
+  odc:region_code: 8_-21
+  eo:instrument: unknown
+  eo:platform: unknown
+  proj:epsg: 3577
