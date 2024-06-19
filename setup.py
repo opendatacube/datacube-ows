@@ -111,6 +111,7 @@ Features
         ],
         "datacube_ows.plugins.index": [
             'postgres = datacube_ows.index.postgres.api:ows_index_driver_init',
+            'postgis = datacube_ows.index.postgis.api:ows_index_driver_init',
         ]
     },
     python_requires=">=3.10.0",
