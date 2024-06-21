@@ -24,21 +24,24 @@ class OWSPostgisIndex(OWSAbstractIndex):
 
     # method to delete obsolete schemas etc.
     def cleanup_schema(self, dc: Datacube):
+        # No obsolete schema for postgis databases to clean up.
         pass
 
     # Schema creation method
     def create_schema(self, dc: Datacube):
-        raise NotImplementedError()
+        click.echo("Creating/updating schema and tables...")
+        self._run_sql(dc, "ows_schema/create")
 
     # Permission management method
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False):
         if read_only:
-            raise NotImplementedError()
+            self._run_sql(dc, "ows_schema/grants/read_only", role=role)
         else:
-            raise NotImplementedError()
+            self._run_sql(dc, "ows_schema/grants/read_write", role=role)
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     def update_geotemporal_index(self, dc: Datacube):
+        # Native ODC geotemporal index used in postgis driver.
         pass
 
     def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
