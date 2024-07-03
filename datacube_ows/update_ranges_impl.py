@@ -167,7 +167,7 @@ def main(layers: list[str],
             click.echo("")
             click.echo("       Try running with the --schema options first.")
             sys.exit(1)
-        elif isinstance(e.orig, psycopg2.errors.NotNullViloation):
+        elif isinstance(e.orig, psycopg2.errors.NotNullViolation):
             click.echo("ERROR: OWS materialised views are most likely missing a newly indexed product")
             click.echo("")
             click.echo("       Try running with the --viewes options first.")

@@ -7,7 +7,7 @@
 import click
 
 from threading import Lock
-from typing import Iterable, Type
+from typing import Any, Iterable, Type
 from uuid import UUID
 
 from odc.geo import Geometry, CRS
@@ -17,6 +17,7 @@ from datacube.model import Product, Dataset
 from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.index.api import OWSAbstractIndex, OWSAbstractIndexDriver, LayerSignature, LayerExtent, TimeSearchTerm
 from datacube_ows.index.sql import run_sql
+from .product_ranges import create_range_entry as create_range_entry_impl, get_ranges as get_ranges_impl
 
 
 class OWSPostgisIndex(OWSAbstractIndex):
@@ -45,10 +46,24 @@ class OWSPostgisIndex(OWSAbstractIndex):
         pass
 
     def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
-        raise NotImplementedError()
+        create_range_entry_impl(layer, cache)
 
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
-        raise NotImplementedError()
+        return get_ranges_impl(layer)
+
+    def _query(self,
+               times: Iterable[TimeSearchTerm] | None = None,
+               geom: Geometry | None = None,
+               products: Iterable[Product] | None = None
+               ) -> dict[str, Any]:
+        query: dict[str, Any] = {}
+        if geom:
+            query["geometry"] = geom
+        if products is not None:
+            query["product"] = [p.name for p in products]
+        if times:
+            query["time"] = times
+        return query
 
     def ds_search(self,
                   layer: OWSNamedLayer,
@@ -56,7 +71,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                   geom: Geometry | None = None,
                   products: Iterable[Product] | None = None
                   ) -> Iterable[Dataset]:
-        raise NotImplementedError()
+        return layer.dc.index.datasets.search(**self._query(times, geom, products))
 
     def dsid_search(self,
                     layer: OWSNamedLayer,
@@ -64,7 +79,8 @@ class OWSPostgisIndex(OWSAbstractIndex):
                     geom: Geometry | None = None,
                     products: Iterable[Product] | None = None
                     ) -> Iterable[UUID]:
-        raise NotImplementedError()
+        for ds in layer.dc.index.datasets.search_returning(field_names=["id"], **self._query(times, geom, products)):
+            yield ds.id  # type: ignore[attr-defined]
 
     def count(self,
               layer: OWSNamedLayer,
@@ -72,7 +88,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
               geom: Geometry | None = None,
               products: Iterable[Product] | None = None
               ) -> int:
-        raise NotImplementedError()
+        return layer.dc.index.datasets.count(**self._query(times, geom, products))
 
     def extent(self,
                layer: OWSNamedLayer,
@@ -81,7 +97,14 @@ class OWSPostgisIndex(OWSAbstractIndex):
                products: Iterable[Product] | None = None,
                crs: CRS | None = None
                ) -> Geometry | None:
-        raise NotImplementedError()
+        if crs is None:
+            crs = CRS("epsg:4326")
+        return layer.dc.index.datasets.spatial_extent(
+            layer.dc.index.datasets.search(
+                **self._query(times, geom, products)
+            ),
+            crs=crs
+        )
 
     def _run_sql(self, dc: Datacube, path: str, **params: str) -> bool:
         return run_sql(dc, self.name, path, **params)

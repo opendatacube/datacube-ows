@@ -6,7 +6,7 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any, cast
+from typing import Any
 
 import numpy
 import numpy.ma
@@ -18,8 +18,7 @@ from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 
 from datacube_ows.http_utils import FlaskResponse, json_response, png_response
-from datacube_ows.loading import DataStacker, ProductBandQuery
-from datacube_ows.mv_index import MVSelectOpts
+from datacube_ows.loading import DataStacker
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import xarray_image_as_png
 from datacube_ows.ows_configuration import OWSNamedLayer
@@ -102,7 +101,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
         stacker = DataStacker(params.layer, params.geobox, params.times, params.resampling, style=params.style)
         qprof["zoom_factor"] = params.zf
         qprof.start_event("count-datasets")
-        n_datasets = stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.COUNT)
+        n_datasets = stacker.n_datasets()
         qprof.end_event("count-datasets")
         qprof["n_datasets"] = n_datasets
         qprof["zoom_level_base"] = params.resources.base_zoom_level
@@ -113,8 +112,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
             stacker.resource_limited = True
             qprof["resource_limited"] = str(e)
         if qprof.active:
-            q_ds_dict = cast(dict[ProductBandQuery, xarray.DataArray],
-                             stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.DATASETS))
+            q_ds_dict = stacker.datasets()
             qprof["datasets"] = []
             for q, dsxr in q_ds_dict.items():
                 query_res: dict[str, Any] = {}
@@ -129,7 +127,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                 qprof["datasets"].append(query_res)
         if stacker.resource_limited and not params.layer.low_res_product_names:
             qprof.start_event("extent-in-query")
-            extent = cast(geom.Geometry | None, stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.EXTENT))
+            extent = stacker.extent(crs=params.crs)
             qprof.end_event("extent-in-query")
             if extent is None:
                 qprof["write_action"] = "No extent: Write Empty"
@@ -149,10 +147,10 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
         else:
             if stacker.resource_limited:
                 qprof.start_event("count-summary-datasets")
-                qprof["n_summary_datasets"] = stacker.datasets(params.layer.dc.index, mode=MVSelectOpts.COUNT)
+                qprof["n_summary_datasets"] = stacker.n_datasets()
                 qprof.end_event("count-summary-datasets")
             qprof.start_event("fetch-datasets")
-            datasets = cast(dict[ProductBandQuery, xarray.DataArray], stacker.datasets(params.layer.dc.index))
+            datasets = stacker.datasets()
             for flagband, dss in datasets.items():
                 if not dss.any():
                     _LOG.warning("Flag band %s returned no data", str(flagband))

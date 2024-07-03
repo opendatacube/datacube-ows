@@ -7,7 +7,7 @@
 import logging
 import math
 from datetime import date, datetime, timezone
-from typing import cast, Callable, Iterable
+from typing import Callable, Iterable
 
 import datacube
 import odc.geo
@@ -15,10 +15,9 @@ import sqlalchemy.exc
 from psycopg2.extras import Json
 from sqlalchemy import text
 
-from odc.geo.geom import Geometry
+from odc.geo.geom import CRS
 
 from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer, get_config
-from datacube_ows.index.postgres.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import get_sqlconn
 from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 
@@ -53,7 +52,7 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                           env=layer.local_env._name,
                           datasets=layer.dc.index.datasets.count(product=layer.product_names))
 
-    print(f"Postgres Updating range for layer {layer.name}")
+    print(f"Postgis Updating range for layer {layer.name}")
     print(f"(signature: {meta.as_json!r})")
     conn = get_sqlconn(layer.dc)
     txn = conn.begin()
@@ -105,22 +104,6 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         })
 
         prodids = [p.id for p in layer.products]
-        # Update min/max lat/longs
-        conn.execute(text(
-          """
-          UPDATE ows.layer_ranges lr
-          SET lat_min = st_ymin(subq.bbox),
-              lat_max = st_ymax(subq.bbox),
-              lon_min = st_xmin(subq.bbox),
-              lon_max = st_xmax(subq.bbox)
-          FROM (
-            SELECT st_extent(stv.spatial_extent) as bbox
-            FROM ows.space_time_view stv
-            WHERE stv.dataset_type_ref = ANY(:prodids)
-          ) as subq
-          WHERE lr.layer = :layer_id
-          """),
-          {"layer_id": layer.name, "prodids": prodids})
 
         # Set default timezone
         conn.execute(text("""set timezone to 'Etc/UTC'"""))
@@ -130,15 +113,19 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         if layer.time_resolution.is_solar():
           results = conn.execute(text(
               """
-              select
-                    lower(temporal_extent), upper(temporal_extent),
-                    ST_X(ST_Centroid(spatial_extent))
-              from ows.space_time_view
-              WHERE dataset_type_ref = ANY(:prodids)
+              select lower(dt.search_val), upper(dt.search_val),
+                     lower(lon.search_val), upper(lon.search_val)
+              from odc.dataset ds, odc.dataset_search_datetime dt, odc.dataset_search_num lon
+              where ds.product_ref = ANY(:prodids)
+              AND ds.id = dt.dataset_ref
+              AND ds.id = lon.dataset_ref
+              AND dt.search_key = :time
+              AND lon.search_key = :lon
               """),
-              {"prodids": prodids})
+              {"prodids": prodids, "time": "time", "lon": "lon"})
           for result in results:
-              dt1, dt2, lon = result
+              dt1, dt2, ll, lu = result
+              lon = (ll + lu) / 2
               dt = dt1 + (dt2 - dt1) / 2
               dt = dt.astimezone(timezone.utc)
 
@@ -148,9 +135,12 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
           results = conn.execute(text(
               """
               select
-                    array_agg(temporal_extent)
-              from ows.space_time_view
-              WHERE dataset_type_ref = ANY(:prodids)
+                    array_agg(dt.search_val)
+              from odc.dataset_search_datetime dt,
+                   odc.dataset ds
+              WHERE ds.product_ref = ANY(:prodids)
+              AND   ds.id = dt.dataset_ref
+              AND   dt.search_key = 'time'
               """),
               {"prodids": prodids}
           )
@@ -177,17 +167,38 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         # calculate bounding boxes
         # Get extent polygon from materialised views
 
-        extent_4386 = cast(Geometry, mv_search(layer.dc.index, MVSelectOpts.EXTENT, products=layer.products))
+        base_crs = CRS(layer.native_CRS)
+        if base_crs not in layer.dc.index.spatial_indexes():
+            print(f"Native CRS for layer {layer.name} ({layer.native_CRS}) does not have a spatial index. "
+                  "Using epsg:4326 for extent calculations.")
+            base_crs = CRS("EPSG:4326")
 
-        all_bboxes = bbox_projections(extent_4386, layer.global_cfg.crses)
+        base_extent = None
+        for product in layer.products:
+            prod_extent = layer.dc.index.products.spatial_extent(product, base_crs)
+            if base_extent is None:
+                base_extent = prod_extent
+            else:
+                base_extent = base_extent | prod_extent
+        assert base_extent is not None
+        all_bboxes = bbox_projections(base_extent, layer.global_cfg.crses)
 
         conn.execute(text("""
         UPDATE ows.layer_ranges
-        SET bboxes = :bbox
+        SET bboxes = :bbox,
+            lat_min = :lat_min,
+            lat_max = :lat_max,
+            lon_min = :lon_min,
+            lon_max = :lon_max
         WHERE layer = :layer_id
         """), {
-        "bbox": Json(all_bboxes),
-        "layer_id": layer.name})
+            "bbox": Json(all_bboxes),
+            "layer_id": layer.name,
+            "lat_min": all_bboxes['EPSG:4326']['bottom'],
+            "lat_max": all_bboxes['EPSG:4326']['top'],
+            "lon_min": all_bboxes['EPSG:4326']['left'],
+            "lon_max": all_bboxes['EPSG:4326']['right']
+        })
 
         cache[meta] = [layer.name]
 

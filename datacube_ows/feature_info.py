@@ -158,7 +158,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
     stacker = DataStacker(params.layer, geo_point_geobox, params.times)
     # --- Begin code section requiring datacube.
     cfg = get_config()
-    all_time_datasets = cast(xarray.DataArray, stacker.datasets(params.layer.dc.index, all_time=True, point=geo_point))
+    all_time_datasets = stacker.datasets_all_time(point=geo_point)
 
     # Taking the data as a single point so our indexes into the data should be 0,0
     h_coord = cast(str, cfg.published_CRSs[params.crsid]["horizontal_coord"])
@@ -174,10 +174,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         global_info_written = False
         feature_json["data"] = []
         fi_date_index: dict[datetime, RAW_CFG] = {}
-        time_datasets = cast(
-            dict[ProductBandQuery, xarray.DataArray],
-            stacker.datasets(params.layer.dc.index, all_flag_bands=True, point=geo_point)
-        )
+        time_datasets = stacker.datasets(all_flag_bands=True, point=geo_point)
         data = stacker.data(time_datasets, skip_corrections=True)
         if data is not None:
             for dt in data.time.values:

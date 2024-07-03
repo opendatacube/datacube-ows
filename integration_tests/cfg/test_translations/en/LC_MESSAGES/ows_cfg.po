@@ -1,13 +1,14 @@
-# Translations for datacube-ows metadata instance:
-# Over-ridden: aardvark
+# English translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
-# Acme Corporation 2022-03-24T23:29:57.407805
 msgid ""
 msgstr ""
-"Project-Id-Version: Over-ridden: aardvark 2022-03-24T23:29:57.407805\n"
-"Report-Msgid-Bugs-To: test@example.com\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2024-07-03 17:29+1000\n"
-"PO-Revision-Date: 2022-03-24 23:33+0000\n"
+"PO-Revision-Date: 2024-07-03 17:29+1000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
 "Language-Team: en <LL@li.org>\n"
@@ -18,13 +19,13 @@ msgstr ""
 "Generated-By: Babel 2.15.0\n"
 
 msgid "global.title"
-msgstr "Open web-services for the Open Data Cube"
+msgstr "Over-ridden: aardvark"
 
 msgid "folder.sentinel2.abstract"
-msgstr "Images from the sentinel 2 satellite"
+msgstr "Over-ridden: bunny-rabbit"
 
 msgid "layer.s2_l2a.title"
-msgstr "Surface reflectance (Sentinel-2)"
+msgstr "Over-ridden: chook"
 
 msgid "style.s2_l2a.simple_rgb.title"
-msgstr "Simple RGB"
+msgstr "Over-ridden: donkey"

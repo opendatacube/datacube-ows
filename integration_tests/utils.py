@@ -9,8 +9,6 @@ import enum
 from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
-from datacube_ows.mv_index import MVSelectOpts, mv_search
-
 
 class WCS20Extent:
     def __init__(self, desc_cov):
@@ -371,14 +369,11 @@ class ODCExtent:
         ext_times = time.slice(self.layer.ranges.times)
         search_times = [self.layer.search_times(t) for t in ext_times]
         if space.needs_full_extent() and not self.full_extent:
-            self.full_extent = mv_search(
-                self.layer.dc.index, products=self.layer.products, sel=MVSelectOpts.EXTENT
-            )
+            self.full_extent = self.layer.ows_index().extent(layer=self.layer, products=self.layer.products)
         if space.needs_time_extent():
-            time_extent = mv_search(
-                self.layer.dc.index,
+            time_extent = self.layer.ows_index().extent(
+                layer=self.layer,
                 products=self.layer.products,
-                sel=MVSelectOpts.EXTENT,
                 times=search_times,
             )
         else:
