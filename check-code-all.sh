@@ -145,10 +145,9 @@ datacube -E owspostgis dataset add https://dea-public-data.s3.ap-southeast-2.ama
 
 # create material view for ranges extents
 datacube-ows-update --schema --write-role $POSTGRES_USER --read-role $SERVER_DB_USERNAME
-datacube-ows-update
 
 datacube-ows-update -E owspostgis --schema --write-role $POSTGRES_USER --read-role $SERVER_DB_USERNAME
-datacube-ows-update -E owspostgis
+datacube-ows-update owspostgis
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
