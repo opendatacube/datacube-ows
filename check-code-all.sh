@@ -144,10 +144,10 @@ datacube -E owspostgis dataset add https://dea-public-data.s3.ap-southeast-2.ama
 datacube -E owspostgis dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x17/y37/2021--P1Y/ga_ls8c_nbart_gm_cyear_3_x17y37_2021--P1Y_final.odc-metadata.yaml --ignore-lineage
 
 # create material view for ranges extents
-datacube-ows-update --schema --write-role $DB_USERNAME --read-role $SERVER_DB_USERNAME
+datacube-ows-update --schema --write-role $POSTGRES_USER --read-role $SERVER_DB_USERNAME
 datacube-ows-update
 
-datacube-ows-update -E owspostgis --schema --write-role $DB_USERNAME --read-role $SERVER_DB_USERNAME
+datacube-ows-update -E owspostgis --schema --write-role $POSTGRES_USER --read-role $SERVER_DB_USERNAME
 datacube-ows-update -E owspostgis
 
 # Run tests, taking coverage.
