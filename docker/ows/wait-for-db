@@ -4,7 +4,7 @@ RETRIES=10
 
 # Wait until Database is ready
 until pg_isready --dbname=$POSTGRES_DB --host=localhost --username=$POSTGRES_USER || [ $RETRIES -eq 0 ]; do
-  echo "Waiting for $POSTGRES_SB databases, $((RETRIES-=1)) remaining attempts..."
+  echo "Waiting for $POSTGRES_DB databases, $((RETRIES-=1)) remaining attempts..."
   sleep 2
 done
 

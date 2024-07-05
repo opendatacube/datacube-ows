@@ -25,7 +25,9 @@ services:
       # Please switch to single entry url configuration for postgres url
       ODC_DEFAULT_DB_URL: ${ODC_DEFAULT_DB_URL}
       ODC_OWSPOSTGIS_DB_URL: ${ODC_OWSPOSTGIS_DB_URL}
-      PGISREADY_ARGS: ${PGISREADY_ARGS}
+      # for wait-for-db check
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
       PYTHONPATH: ${PYTHONPATH}
       DATACUBE_OWS_CFG: ${DATACUBE_OWS_CFG}
