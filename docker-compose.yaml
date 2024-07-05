@@ -26,8 +26,9 @@ services:
       ODC_DEFAULT_DB_URL: ${ODC_DEFAULT_DB_URL}
       ODC_OWSPOSTGIS_DB_URL: ${ODC_OWSPOSTGIS_DB_URL}
       # for wait-for-db check
-      POSTGRES_DB: ${POSTGRES_DB}
+      READY_PROBE_DB: ${READY_PROBE_DB}
       POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_HOSTNAME: ${POSTGRES_HOSTNAME}
       SERVER_DB_USERNAME: ${SERVER_DB_USERNAME}
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
       PYTHONPATH: ${PYTHONPATH}
