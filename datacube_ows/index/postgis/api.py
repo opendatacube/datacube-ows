@@ -52,13 +52,14 @@ class OWSPostgisIndex(OWSAbstractIndex):
         return get_ranges_impl(layer)
 
     def _query(self,
+               layer: OWSNamedLayer,
                times: Iterable[TimeSearchTerm] | None = None,
                geom: Geometry | None = None,
                products: Iterable[Product] | None = None
                ) -> dict[str, Any]:
         query: dict[str, Any] = {}
         if geom:
-            query["geometry"] = geom
+            query["geopolygon"] = self._prep_geom(layer, geom)
         if products is not None:
             query["product"] = [p.name for p in products]
         if times:
@@ -71,7 +72,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                   geom: Geometry | None = None,
                   products: Iterable[Product] | None = None
                   ) -> Iterable[Dataset]:
-        return layer.dc.index.datasets.search(**self._query(times, geom, products))
+        return layer.dc.index.datasets.search(**self._query(layer, times, geom, products))
 
     def dsid_search(self,
                     layer: OWSNamedLayer,
@@ -79,7 +80,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                     geom: Geometry | None = None,
                     products: Iterable[Product] | None = None
                     ) -> Iterable[UUID]:
-        for ds in layer.dc.index.datasets.search_returning(field_names=["id"], **self._query(times, geom, products)):
+        for ds in layer.dc.index.datasets.search_returning(layer, field_names=["id"], **self._query(times, geom, products)):
             yield ds.id  # type: ignore[attr-defined]
 
     def count(self,
@@ -88,7 +89,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
               geom: Geometry | None = None,
               products: Iterable[Product] | None = None
               ) -> int:
-        return layer.dc.index.datasets.count(**self._query(times, geom, products))
+        return layer.dc.index.datasets.count(layer, **self._query(times, geom, products))
 
     def extent(self,
                layer: OWSNamedLayer,
@@ -101,7 +102,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
             crs = CRS("epsg:4326")
         return layer.dc.index.datasets.spatial_extent(
             layer.dc.index.datasets.search(
-                **self._query(times, geom, products)
+                **self._query(layer, times, geom, products)
             ),
             crs=crs
         )

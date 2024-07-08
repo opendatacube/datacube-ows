@@ -9,6 +9,8 @@ sh ./docker/ows/wait-for-db
 
 datacube system init
 datacube -E owspostgis system init
+datacube -E owspostgis spindex create 3577
+datacube -E owspostgis system init
 
 # Add extended metadata types
 

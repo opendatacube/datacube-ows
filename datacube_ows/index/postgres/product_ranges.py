@@ -54,7 +54,7 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                           datasets=layer.dc.index.datasets.count(product=layer.product_names))
 
     print(f"Postgres Updating range for layer {layer.name}")
-    print(f"(signature: {meta.as_json!r})")
+    print(f"(signature: {meta.as_json()!r})")
     conn = get_sqlconn(layer.dc)
     txn = conn.begin()
     if meta in cache:

@@ -13,7 +13,8 @@ from uuid import UUID
 from datacube import Datacube
 from datacube.index.abstract import AbstractIndex
 from datacube.model import Product, Dataset
-from odc.geo import Geometry, CRS
+from odc.geo.geom import Geometry, CRS, polygon
+from odc.geo.geobox import GeoBox
 
 from datacube_ows.config_utils import CFG_DICT, ConfigException
 
@@ -128,6 +129,7 @@ class OWSAbstractIndex(ABC):
                products: Iterable[Product] | None = None,
                crs: CRS | None = None
                ) -> Geometry | None:
+        geom = self._prep_geom(layer, geom)
         if crs is None:
             crs = CRS("epsg:4326")
         ext: Geometry | None = None
@@ -148,6 +150,25 @@ class OWSAbstractIndex(ABC):
             return ext.to_crs(crs)
         return ext
 
+    def _prep_geom(self, layer: "OWSNamedLayer", any_geom: Geometry) -> Geometry:
+        if any_geom.geom_type == "Point":
+            any_geom = any_geom.to_crs(layer.native_CRS)
+            x, y = any_geom.coords[0]
+            delta_x, delta_y = layer.cfg_native_resolution
+            return polygon(
+                (
+                    (x, y),
+                    (x + delta_x, y),
+                    (x + delta_x, y + delta_y),
+                    (x, y + delta_y),
+                    (x, y),
+                ),
+                crs=layer.native_CRS
+            )
+        elif any_geom.geom_type in ("MultiPoint", "LineString", "MultiLineString"):
+            return any_geom.convex_hull()
+        else:
+            return any_geom
 
 class OWSAbstractIndexDriver(ABC):
     @classmethod
