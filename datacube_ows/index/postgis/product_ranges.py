@@ -210,7 +210,7 @@ def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CR
    result = {}
    for crsid, crs in crses.items():
        if crs.valid_region is not None:
-           test_box = starting_box.to_crs(crs.valid_region.crs)
+           test_box = starting_box.to_crs("epsg:4326")
            clipped_crs_region = (test_box & crs.valid_region)
            if clipped_crs_region.wkt == 'POLYGON EMPTY':
                continue
