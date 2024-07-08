@@ -14,7 +14,6 @@ from datacube import Datacube
 from datacube.index.abstract import AbstractIndex
 from datacube.model import Product, Dataset
 from odc.geo.geom import Geometry, CRS, polygon
-from odc.geo.geobox import GeoBox
 
 from datacube_ows.config_utils import CFG_DICT, ConfigException
 
@@ -150,7 +149,9 @@ class OWSAbstractIndex(ABC):
             return ext.to_crs(crs)
         return ext
 
-    def _prep_geom(self, layer: "OWSNamedLayer", any_geom: Geometry) -> Geometry:
+    def _prep_geom(self, layer: "OWSNamedLayer", any_geom: Geometry | None) -> Geometry | None:
+        if any_geom is None:
+            return None
         if any_geom.geom_type == "Point":
             any_geom = any_geom.to_crs(layer.native_CRS)
             x, y = any_geom.coords[0]
@@ -166,7 +167,7 @@ class OWSAbstractIndex(ABC):
                 crs=layer.native_CRS
             )
         elif any_geom.geom_type in ("MultiPoint", "LineString", "MultiLineString"):
-            return any_geom.convex_hull()
+            return any_geom.convex_hull
         else:
             return any_geom
 

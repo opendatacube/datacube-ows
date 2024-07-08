@@ -80,7 +80,8 @@ class OWSPostgisIndex(OWSAbstractIndex):
                     geom: Geometry | None = None,
                     products: Iterable[Product] | None = None
                     ) -> Iterable[UUID]:
-        for ds in layer.dc.index.datasets.search_returning(layer, field_names=["id"], **self._query(times, geom, products)):
+        for ds in layer.dc.index.datasets.search_returning(field_names=["id"],
+                                                           **self._query(layer, times, geom, products)):
             yield ds.id  # type: ignore[attr-defined]
 
     def count(self,
@@ -89,7 +90,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
               geom: Geometry | None = None,
               products: Iterable[Product] | None = None
               ) -> int:
-        return layer.dc.index.datasets.count(layer, **self._query(times, geom, products))
+        return layer.dc.index.datasets.count(**self._query(layer, times, geom, products))
 
     def extent(self,
                layer: OWSNamedLayer,
