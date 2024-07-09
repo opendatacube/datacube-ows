@@ -80,8 +80,8 @@ class OWSPostgisIndex(OWSAbstractIndex):
             time_args = []
             for t in times:
                 if isinstance(t, (datetime.date, datetime.datetime)):
-                    st, tmax = normalise_to_dtr(t)
-                    time_args.append(Range(st, tmax))
+                    start, tmax = normalise_to_dtr(t)
+                    time_args.append(Range(start, tmax))
                 else:
                     st, et = t
                     st, _ = normalise_to_dtr(st)
