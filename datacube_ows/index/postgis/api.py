@@ -128,9 +128,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         if crs is None:
             crs = CRS("epsg:4326")
         return layer.dc.index.datasets.spatial_extent(
-            layer.dc.index.datasets.search(
-                **self._query(layer, times, geom, products)
-            ),
+            self.dsid_search(layer, times=times, geom=geom, products=products),
             crs=crs
         )
 

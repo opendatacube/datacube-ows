@@ -225,8 +225,8 @@ class ODCExtent:
                 hslice_bbox = BoundingBox(
                     left=bbox.left,
                     right=bbox.right,
-                    top=offset_y + 0.02 * height,
-                    bottom=offset_y - 0.02 * height,
+                    top=offset_y + 0.01 * height,
+                    bottom=offset_y - 0.01 * height,
                 )
                 hslice_geom = geom_from_bbox(hslice_bbox)
                 hslice_geom = hslice_geom.intersection(time_extent)
@@ -234,7 +234,7 @@ class ODCExtent:
                 hslice_bbox = BoundingBox(
                     left=bbox.left,
                     right=bbox.right,
-                    top=bbox.bottom + 0.02 * height,
+                    top=bbox.bottom + 0.01 * height,
                     bottom=bbox.bottom,
                 )
                 hslice_geom = geom_from_bbox(hslice_bbox)
@@ -253,8 +253,8 @@ class ODCExtent:
             elif self == self.OFFSET_SUBSET_FOR_TIMES:
                 offset_x = centre_x + 0.25 * height
                 vslice_bbox = BoundingBox(
-                    left=offset_x - 0.02 * width,
-                    right=offset_x + 0.02 * width,
+                    left=offset_x - 0.01 * width,
+                    right=offset_x + 0.01 * width,
                     top=slice_bbox.top,
                     bottom=slice_bbox.bottom,
                 )
