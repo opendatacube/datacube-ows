@@ -65,7 +65,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         if products is not None:
             query["product"] = [p.name for p in products]
         if times is not None:
-            time_args = []
+
             def normalise_to_dtr(unnorm: datetime.datetime | datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
                 if isinstance(unnorm, datetime.datetime):
                     st: datetime.datetime = default_to_utc(unnorm)
@@ -73,8 +73,11 @@ class OWSPostgisIndex(OWSAbstractIndex):
                 elif isinstance(t, datetime.date):
                     st = datetime.datetime(unnorm.year, unnorm.month, unnorm.day, tzinfo=datetime.timezone.utc)
                     tmax = st + datetime.timedelta(days=1)
+                else:
+                    raise ValueError("Not a datetime object")
                 return st, tmax
 
+            time_args = []
             for t in times:
                 if isinstance(t, (datetime.date, datetime.datetime)):
                     st, tmax = normalise_to_dtr(t)
