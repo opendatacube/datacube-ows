@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import click
+import datetime
 
 from threading import Lock
 from typing import Any, Iterable, Type
@@ -12,12 +13,13 @@ from uuid import UUID
 
 from odc.geo import Geometry, CRS
 from datacube import Datacube
-from datacube.model import Product, Dataset
+from datacube.model import Product, Dataset, Range
 
 from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.index.api import OWSAbstractIndex, OWSAbstractIndexDriver, LayerSignature, LayerExtent, TimeSearchTerm
 from datacube_ows.index.sql import run_sql
 from .product_ranges import create_range_entry as create_range_entry_impl, get_ranges as get_ranges_impl
+from ...utils import default_to_utc
 
 
 class OWSPostgisIndex(OWSAbstractIndex):
@@ -62,8 +64,29 @@ class OWSPostgisIndex(OWSAbstractIndex):
             query["geopolygon"] = self._prep_geom(layer, geom)
         if products is not None:
             query["product"] = [p.name for p in products]
-        if times:
-            query["time"] = times
+        if times is not None:
+            time_args = []
+            def normalise_to_dtr(unnorm: datetime.datetime | datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
+                if isinstance(unnorm, datetime.datetime):
+                    st: datetime.datetime = default_to_utc(unnorm)
+                    tmax = st + datetime.timedelta(seconds=1)
+                elif isinstance(t, datetime.date):
+                    st = datetime.datetime(unnorm.year, unnorm.month, unnorm.day, tzinfo=datetime.timezone.utc)
+                    tmax = st + datetime.timedelta(days=1)
+                return st, tmax
+
+            for t in times:
+                if isinstance(t, (datetime.date, datetime.datetime)):
+                    st, tmax = normalise_to_dtr(t)
+                    time_args.append(Range(st, tmax))
+                else:
+                    st, et = t
+                    st, _ = normalise_to_dtr(st)
+                    et, _ = normalise_to_dtr(et)
+                    time_args.append(Range(st, et))
+            if len(time_args) > 1:
+                raise ValueError("Huh?")
+            query["time"] = time_args[0]
         return query
 
     def ds_search(self,
