@@ -24,26 +24,13 @@ from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 _LOG = logging.getLogger(__name__)
 
 
-def get_crsids(cfg: OWSConfig | None = None) -> Iterable[str]:
-    if not cfg:
-        cfg = get_config()
-    return cfg.internal_CRSs.keys()
-
-
-def get_crses(cfg: OWSConfig | None = None) -> dict[str, odc.geo.CRS]:
-    return {crsid: odc.geo.CRS(crsid) for crsid in get_crsids(cfg)}
-
-
 def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
-    if isinstance(bbox, dict):
-        return bbox
-    else:
-        return {
-            "top": bbox.top,
-            "bottom": bbox.bottom,
-            "left": bbox.left,
-            "right": bbox.right,
-        }
+    return {
+        "top": bbox.top,
+        "bottom": bbox.bottom,
+        "left": bbox.left,
+        "right": bbox.right,
+    }
 
 
 def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:

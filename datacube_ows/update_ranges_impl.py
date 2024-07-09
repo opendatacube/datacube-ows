@@ -127,10 +127,14 @@ def main(layers: list[str],
     app = cfg.odc_app + "-update"
     errors: bool = False
     if schema or read_role or write_role or cleanup or views:
-        if cfg.default_env and env is None:
-            dc = Datacube(env=cfg.default_env, app=app)
-        else:
-            dc = Datacube(env=env, app=app)
+        try:
+            if cfg.default_env and env is None:
+                dc = Datacube(env=cfg.default_env, app=app)
+            else:
+                dc = Datacube(env=env, app=app)
+        except:
+            click.echo(f"Unable to connect to the {env or cfg.default_env} database.")
+            sys.exit(1)
 
         click.echo(f"Applying database schema updates to the {dc.index.environment.db_database} database:...")
         try:

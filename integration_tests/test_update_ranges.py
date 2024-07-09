@@ -16,6 +16,11 @@ def test_update_ranges_schema_without_roles(runner):
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
+    result = runner.invoke(main, ["-E", "owspostgis", "--schema"])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
+    assert "Cannot find SQL resource" not in result.output
+    assert result.exit_code == 0
 
 
 def test_update_ranges_schema_with_roles(runner, read_role_name, write_role_name):
@@ -24,10 +29,25 @@ def test_update_ranges_schema_with_roles(runner, read_role_name, write_role_name
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0
+    result = runner.invoke(main, ["-E", "owspostgis",
+                                  "--schema", "--read-role", read_role_name, "--write-role", write_role_name])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
+    assert "Cannot find SQL resource" not in result.output
+    assert result.exit_code == 0
+    result = runner.invoke(main, ["-E", "nonononodontcallanenviornmentthis",
+                                  "--schema", "--read-role", read_role_name, "--write-role", write_role_name])
+    assert "Unable to connect to the nonono" in result.output
+    assert result.exit_code == 1
 
 
 def test_update_ranges_roles_only(runner, read_role_name, write_role_name):
     result = runner.invoke(main, ["--read-role", read_role_name, "--write-role", write_role_name])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
+    assert "Cannot find SQL resource" not in result.output
+    assert result.exit_code == 0
+    result = runner.invoke(main, ["-E", "owspostgis", "--read-role", read_role_name, "--write-role", write_role_name])
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output

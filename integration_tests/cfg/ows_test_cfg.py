@@ -648,6 +648,11 @@ ows_cfg = {
                 "horizontal_coord": "x",
                 "vertical_coord": "y",
             },
+            "EPSG:6933": {  # Africa - invalid for our test data
+                "geographic": False,
+                "horizontal_coord": "x",
+                "vertical_coord": "y",
+            },
         },
         # If True the new EXPERIMENTAL materialised views are used for spatio-temporal extents.
         # If False (the default), the old "update_ranges" tables (and native ODC search methods) are used.
