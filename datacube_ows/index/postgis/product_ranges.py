@@ -7,7 +7,7 @@
 import logging
 import math
 from datetime import date, datetime, timezone
-from typing import Callable, Iterable
+from typing import Callable
 
 import datacube
 import odc.geo
@@ -17,7 +17,7 @@ from sqlalchemy import text
 
 from odc.geo.geom import CRS
 
-from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer, get_config
+from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.utils import get_sqlconn
 from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 
