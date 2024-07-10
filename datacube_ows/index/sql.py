@@ -71,15 +71,12 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
             sql = sql.format(**kwargs)
         try:
             result = conn.execute(sqlalchemy.text(sql))
-            click.echo(f"    ...  succeeded(?) with {result!r} rowcount {result.rowcount}")
-            if result.returns_rows:
-                for r in result:
-                    click.echo(f"    ...  succeeded(?) with {r!r}")
+            click.echo(f"    ...  succeeded(?) with rowcount {result.rowcount}")
 
         except sqlalchemy.exc.ProgrammingError as e:
             if isinstance(e.orig, psycopg2.errors.InsufficientPrivilege):
                 click.echo(
-                    f"Insufficient Privileges (user {dc.index.environment.db_username}).  Schema altering actions should be run by a role with admin privileges"
+                    f"Insufficient Privileges (user {dc.index.environment.db_username}). Schema altering actions should be run by a role with admin privileges"
                 )
                 raise AbortRun() from None
             elif isinstance(e.orig, psycopg2.errors.DuplicateObject):
