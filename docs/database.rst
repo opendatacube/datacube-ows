@@ -23,7 +23,7 @@ Open Data Cube Native Entities
 
 The core of the Datacube-OWS application database is found in either
 the ``agdc`` schema (for the legacy ``postgres`` index driver), or
-ther ``odc`` schema (for the new ``postgis`` index driver).
+the ``odc`` schema (for the new ``postgis`` index driver).
 See
 `Open Data Cube <https://datacube-core.readthedocs.io/en/latest/>`_.
 
