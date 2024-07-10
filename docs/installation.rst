@@ -51,10 +51,10 @@ of the config file, and edit it to reflect your requirements.
     $ DATACUBE_OWS_CFG=ows_local_cfg.ows_cfg
 
 * We currently recommend using pip with pre-built binary packages. Create a
-  new python 3.6 or 3.7 virtualenv and run pip install against the supplied
+  new python 3.10+ virtualenv and run pip install against the supplied
   requirements.txt::
 
-    pip install --pre -r requirements.txt
+    pip install -e .[all]
 
 To install datacube-ows, run:
 
@@ -129,7 +129,7 @@ E.g. to set up a new database:
 
     $ docker exec -it datacube-ows_ows_1 bash
     ows_1$ datacube system init
-    ows_1$ datacube-ows-update --schema --role ubuntu
+    ows_1$ datacube-ows-update --schema --write-role ubuntu
     ows_1$ datacube-ows-update
 
 

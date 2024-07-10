@@ -185,6 +185,10 @@ The following instructions are for installing on a clean Linux system.
     export DATACUBE_OWS_CFG=datacube_ows.ows_cfg_example.ows_cfg
     datacube-ows-update --write-role ubuntu --schema
 
+    # If you are not using the `default` ODC environment, you can specify the environment to create the schema in:
+
+    datacube-ows-update -E myenv --write-role ubuntu --schema
+
 
 * Create a configuration file for your service, and all data products you wish to publish in
   it.
@@ -199,7 +203,9 @@ The following instructions are for installing on a clean Linux system.
 
 * When additional datasets are added to the datacube, the following steps will need to be run::
 
+    # Update the materialised views (postgis index driver only - can be skipped for the postgis index driver):
     datacube-ows-update --views
+    # Update the range tables (both index drivers)
     datacube-ows-update
 
 * If you are accessing data on AWS S3 and running `datacube_ows` on Ubuntu you may encounter errors with ``GetMap``
