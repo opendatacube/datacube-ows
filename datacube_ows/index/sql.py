@@ -74,12 +74,6 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
                     sql = sql + "\n" + sline
                 first = False
         if reqs:
-            try:
-                kwargs = {v: params[v] for v in reqs}
-            except KeyError as e:
-                click.echo(f"Required parameter {e} for file {f} not supplied - skipping")
-                all_ok = False
-                continue
             sql = sql.format(**kwargs)
         try:
             result = conn.execute(sqlalchemy.text(sql))
