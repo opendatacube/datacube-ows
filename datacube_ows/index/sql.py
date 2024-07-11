@@ -50,6 +50,15 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
             reqs = req_match.group("reqs").split("_")
         else:
             reqs = []
+        if reqs:
+            try:
+                kwargs = {v: params[v] for v in reqs}
+            except KeyError as e:
+                click.echo(f"Required parameter {e} for file {f} not supplied - skipping")
+                all_ok = False
+                continue
+        else:
+            kwargs = {}
         ref = importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}/{f}")
         with ref.open("rb") as fp:
             sql = ""
@@ -57,7 +66,10 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
             for line in fp:
                 sline = str(line, "utf-8")
                 if first and sline.startswith("--"):
-                    click.echo(f" - Running {sline[2:]}")
+                    if reqs:
+                        click.echo(f" - Running {sline[2:].format(**kwargs)}")
+                    else:
+                        click.echo(f" - Running {sline[2:]}")
                 else:
                     sql = sql + "\n" + sline
                 first = False
