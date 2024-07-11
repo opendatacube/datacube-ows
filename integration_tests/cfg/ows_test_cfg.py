@@ -648,6 +648,11 @@ ows_cfg = {
                 "horizontal_coord": "x",
                 "vertical_coord": "y",
             },
+            "EPSG:6933": {  # Africa - invalid for our test data
+                "geographic": False,
+                "horizontal_coord": "x",
+                "vertical_coord": "y",
+            },
         },
         # If True the new EXPERIMENTAL materialised views are used for spatio-temporal extents.
         # If False (the default), the old "update_ranges" tables (and native ODC search methods) are used.
@@ -731,9 +736,9 @@ ows_cfg = {
     #    is also a coverage, that may be requested in WCS DescribeCoverage or WCS GetCoverage requests.
     "layers": [
         {
-            "title": "s2",
-            "abstract": "Images from the sentinel 2 satellite",
-            "keywords": ["sentinel2"],
+            "title": "Postgres Data",
+            "abstract": "Data from the postgres test database",
+            "keywords": ["postgres"],
             "attribution": {
                 # Attribution must contain at least one of ("title", "url" and "logo")
                 # A human readable title for the attribution - e.g. the name of the attributed organisation
@@ -752,200 +757,456 @@ ows_cfg = {
                     "format": "image/png",
                 },
             },
-            "label": "sentinel2",
+            "label": "postgres",
             "layers": [
                 {
-                    "title": "Surface reflectance (Sentinel-2)",
-                    "name": "s2_l2a",
-                    "abstract": """layer s2_l2a""",
-                    "product_name": "s2_l2a",
-                    "bands": bands_sentinel,
-                    "dynamic": True,
-                    "resource_limits": reslim_continental,
-                    "time_resolution": "subday",
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": False,  # True
-                        "apply_solar_corrections": False,
-                    },
-                    "flags": [
-                        {
-                            "band": "SCL",
-                            "product": "s2_l2a",
-                            "ignore_time": False,
-                            "ignore_info_flags": [],
-                            # This band comes from main product, so cannot set flags manual_merge independently
-                            # "manual_merge": True,
+                    "title": "s2",
+                    "abstract": "Images from the sentinel 2 satellite",
+                    "keywords": ["sentinel2"],
+                    "attribution": {
+                        # Attribution must contain at least one of ("title", "url" and "logo")
+                        # A human readable title for the attribution - e.g. the name of the attributed organisation
+                        "title": "Open Data Cube - OWS",
+                        # The associated - e.g. URL for the attributed organisation
+                        "url": "https://www.opendatacube.org/",
+                        # Logo image - e.g. for the attributed organisation
+                        "logo": {
+                            # Image width in pixels (optional)
+                            "width": 268,
+                            # Image height in pixels (optional)
+                            "height": 68,
+                            # URL for the logo image. (required if logo specified)
+                            "url": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png",
+                            # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+                            "format": "image/png",
                         },
-                    ],
-                    "native_crs": "EPSG:3857",
-                    "native_resolution": [30.0, -30.0],
-                    "styling": {
-                        "default_style": "simple_rgb",
-                        "styles": styles_s2_list,
                     },
-                },
-                {
-                    "inherits": {
-                        "layer": "s2_l2a",
-                    },
-                    "title": "s2_l2a Clone",
-                    "abstract": "Imagery from the s2_l2a Clone",
-                    "name": "s2_l2a_clone",
-                    "low_res_product_name": "s2_l2a",
-                    "image_processing": {
-                        "extent_mask_func": [],
-                        "manual_merge": True,
-                        "apply_solar_corrections": True,
-                    },
-                    "resource_limits": {
-                        "wcs": {
-                            "max_image_size": 2000 * 2000 * 3 * 2,
-                        }
-                    },
-                    "patch_url_function": f"{cfgbase}utils.trivial_identity",
-                },
-            ]
-        },
-        {
-            "title": "DEA Config Samples",
-            "abstract": "",
-            "layers": [
-                {
-                    "title": "DEA Surface Reflectance (Sentinel-2)",
-                    "name": "s2_ard_granule_nbar_t",
-                    "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
-                This product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture.
-                These corrections have been applied to all satellite imagery in the Sentinel-2 archive. This is undertaken to allow comparison of imagery acquired at different times, in different seasons and in different geographic locations.
-                These products also indicate where the imagery has been affected by cloud or cloud shadow, contains missing data or has been affected in other ways. The Surface Reflectance products are useful as a fundamental starting point for any further analysis, and underpin all other optical derived Digital Earth Australia products.
-                This is a definitive archive of daily Sentinel-2 data. This is processed using correct ancillary data to provide a more accurate product than the Near Real Time.
-                The Surface Reflectance product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture. These corrections have been applied to all satellite imagery in the Sentinel-2 archive.
-                The Normalised Difference Chlorophyll Index (NDCI) is based on the method of Mishra & Mishra 2012, and adapted to bands on the Sentinel-2A & B sensors.
-                The index indicates levels of chlorophyll-a (chl-a) concentrations in complex turbid productive waters such as those encountered in many inland water bodies. The index has not been validated in Australian waters, and there are a range of environmental conditions that may have an effect on the accuracy of the derived index values in this test implementation, including:
-                - Influence on the remote sensing signal from nearby land and/or atmospheric effects
-                - Optically shallow water
-                - Cloud cover
-                Mishra, S., Mishra, D.R., 2012. Normalized difference chlorophyll index: A novel model for remote estimation of chlorophyll-a concentration in turbid productive waters. Remote Sensing of Environment, Remote Sensing of Urban Environments 117, 394–406. https://doi.org/10.1016/j.rse.2011.10.016
-                For more information see http://pid.geoscience.gov.au/dataset/ga/129684
-                https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentinel-2-msi
-                For service status information, see https://status.dea.ga.gov.au
-                                """,
-                    "multi_product": True,
-                    "product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
-                    "low_res_product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
-                    "bands": bands_sentinel2_ard_nbart,
-                    "resource_limits": reslim_for_sentinel2,
-                    "native_crs": "EPSG:3577",
-                    "native_resolution": [10.0, -10.0],
-                    "image_processing": {
-                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        "always_fetch_bands": [],
-                        "manual_merge": False,
-                    },
-                    "flags": [
+                    "label": "sentinel2",
+                    "layers": [
                         {
-                            "band": "fmask_alias",
-                            "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
-                            "ignore_time": False,
-                            "ignore_info_flags": []
+                            "title": "Surface reflectance (Sentinel-2)",
+                            "name": "s2_l2a",
+                            "abstract": """layer s2_l2a""",
+                            "product_name": "s2_l2a",
+                            "bands": bands_sentinel,
+                            "dynamic": True,
+                            "resource_limits": reslim_continental,
+                            "time_resolution": "subday",
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,  # True
+                                "apply_solar_corrections": False,
+                            },
+                            "flags": [
+                                {
+                                    "band": "SCL",
+                                    "product": "s2_l2a",
+                                    "ignore_time": False,
+                                    "ignore_info_flags": [],
+                                    # This band comes from main product, so cannot set flags manual_merge independently
+                                    # "manual_merge": True,
+                                },
+                            ],
+                            "native_crs": "EPSG:3857",
+                            "native_resolution": [30.0, -30.0],
+                            "styling": {
+                                "default_style": "simple_rgb",
+                                "styles": styles_s2_list,
+                            },
                         },
                         {
-                            "band": "land",
-                            "products": ["geodata_coast_100k", "geodata_coast_100k"],
-                            "ignore_time": True,
-                            "ignore_info_flags": []
+                            "inherits": {
+                                "layer": "s2_l2a",
+                            },
+                            "title": "s2_l2a Clone",
+                            "abstract": "Imagery from the s2_l2a Clone",
+                            "name": "s2_l2a_clone",
+                            "low_res_product_name": "s2_l2a",
+                            "image_processing": {
+                                "extent_mask_func": [],
+                                "manual_merge": True,
+                                "apply_solar_corrections": True,
+                            },
+                            "resource_limits": {
+                                "wcs": {
+                                    "max_image_size": 2000 * 2000 * 3 * 2,
+                                }
+                            },
+                            "patch_url_function": f"{cfgbase}utils.trivial_identity",
                         },
-                    ],
-                    "time_axis": {
-                        "time_interval": 1
-                    },
-                    "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
+                    ]
                 },
                 {
-                    "inherits": {
-                        "layer": "s2_ard_granule_nbar_t",
-                    },
-                    "title": "DEA Surface Reflectance Mosaic (Sentinel-2)",
-                    "name": "s2_ard_latest_mosaic",
-                    "multi_product": True,
-                    "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
+                    "title": "DEA Config Samples",
+                    "abstract": "",
+                    "layers": [
+                        {
+                            "title": "DEA Surface Reflectance (Sentinel-2)",
+                            "name": "s2_ard_granule_nbar_t",
+                            "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
+                        This product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture.
+                        These corrections have been applied to all satellite imagery in the Sentinel-2 archive. This is undertaken to allow comparison of imagery acquired at different times, in different seasons and in different geographic locations.
+                        These products also indicate where the imagery has been affected by cloud or cloud shadow, contains missing data or has been affected in other ways. The Surface Reflectance products are useful as a fundamental starting point for any further analysis, and underpin all other optical derived Digital Earth Australia products.
+                        This is a definitive archive of daily Sentinel-2 data. This is processed using correct ancillary data to provide a more accurate product than the Near Real Time.
+                        The Surface Reflectance product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture. These corrections have been applied to all satellite imagery in the Sentinel-2 archive.
+                        The Normalised Difference Chlorophyll Index (NDCI) is based on the method of Mishra & Mishra 2012, and adapted to bands on the Sentinel-2A & B sensors.
+                        The index indicates levels of chlorophyll-a (chl-a) concentrations in complex turbid productive waters such as those encountered in many inland water bodies. The index has not been validated in Australian waters, and there are a range of environmental conditions that may have an effect on the accuracy of the derived index values in this test implementation, including:
+                        - Influence on the remote sensing signal from nearby land and/or atmospheric effects
+                        - Optically shallow water
+                        - Cloud cover
+                        Mishra, S., Mishra, D.R., 2012. Normalized difference chlorophyll index: A novel model for remote estimation of chlorophyll-a concentration in turbid productive waters. Remote Sensing of Environment, Remote Sensing of Urban Environments 117, 394–406. https://doi.org/10.1016/j.rse.2011.10.016
+                        For more information see http://pid.geoscience.gov.au/dataset/ga/129684
+                        https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentinel-2-msi
+                        For service status information, see https://status.dea.ga.gov.au
+                                        """,
+                            "multi_product": True,
+                            "product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                            "low_res_product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                            "bands": bands_sentinel2_ard_nbart,
+                            "resource_limits": reslim_for_sentinel2,
+                            "native_crs": "EPSG:3577",
+                            "native_resolution": [10.0, -10.0],
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,
+                            },
+                            "flags": [
+                                {
+                                    "band": "fmask_alias",
+                                    "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                                    "ignore_time": False,
+                                    "ignore_info_flags": []
+                                },
+                                {
+                                    "band": "land",
+                                    "products": ["geodata_coast_100k", "geodata_coast_100k"],
+                                    "ignore_time": True,
+                                    "ignore_info_flags": []
+                                },
+                            ],
+                            "time_axis": {
+                                "time_interval": 1
+                            },
+                            "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
+                        },
+                        {
+                            "inherits": {
+                                "layer": "s2_ard_granule_nbar_t",
+                            },
+                            "title": "DEA Surface Reflectance Mosaic (Sentinel-2)",
+                            "name": "s2_ard_latest_mosaic",
+                            "multi_product": True,
+                            "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
 
-Latest imagery mosaic with no time dimension.
-                    """,
-                    "mosaic_date_func": {
-                        "function": "datacube_ows.time_utils.rolling_window_ndays",
-                        "pass_layer_cfg": True,
-                        "kwargs": {
-                            "ndays": 6,
+        Latest imagery mosaic with no time dimension.
+                            """,
+                            "mosaic_date_func": {
+                                "function": "datacube_ows.time_utils.rolling_window_ndays",
+                                "pass_layer_cfg": True,
+                                "kwargs": {
+                                    "ndays": 6,
+                                }
+                            }
+                        },
+                        {
+                            "title": "DEA Fractional Cover (Landsat)",
+                            "name": "ga_ls_fc_3",
+                            "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
+                        Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
+                        green (leaves, grass, and growing crops)
+                        brown (branches, dry grass or hay, and dead leaf litter)
+                        bare ground (soil or rock)
+                        DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
+                        https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
+                        For service status information, see https://status.dea.ga.gov.au""",
+                            "product_name": "ga_ls_fc_3",
+                            "bands": bands_fc_3,
+                            "resource_limits": reslim_for_sentinel2,
+                            "dynamic": True,
+                            "native_crs": "EPSG:3577",
+                            "native_resolution": [25, -25],
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,
+                            },
+                            "flags": [
+                                # flags is now a list of flag band definitions - NOT a dictionary with identifiers
+                                {
+                                    "band": "land",
+                                    "product": "geodata_coast_100k",
+                                    "ignore_time": True,
+                                    "ignore_info_flags": [],
+                                },
+                                {
+                                    "band": "water",
+                                    "product": "ga_ls_wo_3",
+                                    "ignore_time": False,
+                                    "ignore_info_flags": [],
+                                    "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                                },
+                            ],
+                            "styling": {
+                                "default_style": "fc_rgb_unmasked",
+                                "styles": [style_fc_c3_rgb_unmasked],
+                            },
                         }
-                    }
+                    ]
                 },
                 {
-                    "title": "DEA Fractional Cover (Landsat)",
-                    "name": "ga_ls_fc_3",
-                    "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
-                Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
-                green (leaves, grass, and growing crops)
-                brown (branches, dry grass or hay, and dead leaf litter)
-                bare ground (soil or rock)
-                DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
-                https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
-                For service status information, see https://status.dea.ga.gov.au""",
-                    "product_name": "ga_ls_fc_3",
-                    "bands": bands_fc_3,
+                    "title": "Landsat-8 Geomedian",
+                    "name": "ls8_geomedian",
+                    "abstract": """DEA Landsat-8 Geomedian""",
+                    "product_name": "ga_ls8c_nbart_gm_cyear_3",
+                    "bands": bands_c3_ls,
                     "resource_limits": reslim_for_sentinel2,
-                    "dynamic": True,
+                    "dynamic": False,
                     "native_crs": "EPSG:3577",
+                    "time_resolution": "summary",
                     "native_resolution": [25, -25],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "always_fetch_bands": [],
                         "manual_merge": False,
                     },
-                    "flags": [
-                        # flags is now a list of flag band definitions - NOT a dictionary with identifiers
-                        {
-                            "band": "land",
-                            "product": "geodata_coast_100k",
-                            "ignore_time": True,
-                            "ignore_info_flags": [],
-                        },
-                        {
-                            "band": "water",
-                            "product": "ga_ls_wo_3",
-                            "ignore_time": False,
-                            "ignore_info_flags": [],
-                            "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
-                    ],
                     "styling": {
-                        "default_style": "fc_rgb_unmasked",
-                        "styles": [style_fc_c3_rgb_unmasked],
+                        "default_style": "simple_rgb",
+                        "styles": styles_ls_list,
                     },
                 }
-            ]
+            ] ####### End of "postgres" layers
         },
         {
-            "title": "Landsat-8 Geomedian",
-            "name": "ls8_geomedian",
-            "abstract": """DEA Landsat-8 Geomedian""",
-            "product_name": "ga_ls8c_nbart_gm_cyear_3",
-            "bands": bands_c3_ls,
-            "resource_limits": reslim_for_sentinel2,
-            "dynamic": False,
-            "native_crs": "EPSG:3577",
-            "time_resolution": "summary",
-            "native_resolution": [25, -25],
-            "image_processing": {
-                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                "always_fetch_bands": [],
-                "manual_merge": False,
+            "title": "Postgis Data",
+            "abstract": "Data from the postgis test database",
+            "keywords": ["postgis"],
+            "attribution": {
+                # Attribution must contain at least one of ("title", "url" and "logo")
+                # A human readable title for the attribution - e.g. the name of the attributed organisation
+                "title": "Open Data Cube - OWS",
+                # The associated - e.g. URL for the attributed organisation
+                "url": "https://www.opendatacube.org/",
+                # Logo image - e.g. for the attributed organisation
+                "logo": {
+                    # Image width in pixels (optional)
+                    "width": 268,
+                    # Image height in pixels (optional)
+                    "height": 68,
+                    # URL for the logo image. (required if logo specified)
+                    "url": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png",
+                    # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
+                    "format": "image/png",
+                },
             },
-            "styling": {
-                "default_style": "simple_rgb",
-                "styles": styles_ls_list,
-            },
-        }
-    ],  ##### End of "layers" list.
+            "label": "postgis",
+            "layers": [
+                {
+                    "title": "s2 (postgis)",
+                    "abstract": "Images from the sentinel 2 satellite (postgis db)",
+                    "keywords": ["sentinel2"],
+                    "label": "sentinel2_pgis",
+                    "layers": [
+                        {
+                            "title": "Surface reflectance (Sentinel-2) (postgis db)",
+                            "name": "s2_l2a_postgis",
+                            "abstract": """layer s2_l2a (postgis db)""",
+                            "product_name": "s2_l2a",
+                            "bands": bands_sentinel,
+                            "env": "owspostgis",
+                            "dynamic": True,
+                            "resource_limits": reslim_continental,
+                            "time_resolution": "subday",
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,  # True
+                                "apply_solar_corrections": False,
+                            },
+                            "flags": [
+                                {
+                                    "band": "SCL",
+                                    "product": "s2_l2a",
+                                    "ignore_time": False,
+                                    "ignore_info_flags": [],
+                                    # This band comes from main product, so cannot set flags manual_merge independently
+                                    # "manual_merge": True,
+                                },
+                            ],
+                            "native_crs": "EPSG:3857",
+                            "native_resolution": [30.0, -30.0],
+                            "styling": {
+                                "default_style": "simple_rgb",
+                                "styles": styles_s2_list,
+                            },
+                        },
+                        {
+                            "inherits": {
+                                "layer": "s2_l2a_postgis",
+                            },
+                            "title": "s2_l2a Clone (postgis db)",
+                            "abstract": "Imagery from the s2_l2a Clone (postgis db)",
+                            "name": "s2_l2a_clone_postgis",
+                            "env": "owspostgis",
+                            "low_res_product_name": "s2_l2a",
+                            "image_processing": {
+                                "extent_mask_func": [],
+                                "manual_merge": True,
+                                "apply_solar_corrections": True,
+                            },
+                            "resource_limits": {
+                                "wcs": {
+                                    "max_image_size": 2000 * 2000 * 3 * 2,
+                                }
+                            },
+                            "patch_url_function": f"{cfgbase}utils.trivial_identity",
+                        },
+                    ]
+                },
+                {
+                    "title": "DEA Config Samples",
+                    "abstract": "",
+                    "layers": [
+                        {
+                            "title": "DEA Surface Reflectance (Sentinel-2) (postgis db)",
+                            "name": "s2_ard_granule_nbar_t_postgis",
+                            "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
+                    This product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture.
+                    These corrections have been applied to all satellite imagery in the Sentinel-2 archive. This is undertaken to allow comparison of imagery acquired at different times, in different seasons and in different geographic locations.
+                    These products also indicate where the imagery has been affected by cloud or cloud shadow, contains missing data or has been affected in other ways. The Surface Reflectance products are useful as a fundamental starting point for any further analysis, and underpin all other optical derived Digital Earth Australia products.
+                    This is a definitive archive of daily Sentinel-2 data. This is processed using correct ancillary data to provide a more accurate product than the Near Real Time.
+                    The Surface Reflectance product has been corrected to account for variations caused by atmospheric properties, sun position and sensor view angle at time of image capture. These corrections have been applied to all satellite imagery in the Sentinel-2 archive.
+                    The Normalised Difference Chlorophyll Index (NDCI) is based on the method of Mishra & Mishra 2012, and adapted to bands on the Sentinel-2A & B sensors.
+                    The index indicates levels of chlorophyll-a (chl-a) concentrations in complex turbid productive waters such as those encountered in many inland water bodies. The index has not been validated in Australian waters, and there are a range of environmental conditions that may have an effect on the accuracy of the derived index values in this test implementation, including:
+                    - Influence on the remote sensing signal from nearby land and/or atmospheric effects
+                    - Optically shallow water
+                    - Cloud cover
+                    Mishra, S., Mishra, D.R., 2012. Normalized difference chlorophyll index: A novel model for remote estimation of chlorophyll-a concentration in turbid productive waters. Remote Sensing of Environment, Remote Sensing of Urban Environments 117, 394–406. https://doi.org/10.1016/j.rse.2011.10.016
+                    For more information see http://pid.geoscience.gov.au/dataset/ga/129684
+                    https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentinel-2-msi
+                    For service status information, see https://status.dea.ga.gov.au (postgis db)
+                                    """,
+                            "multi_product": True,
+                            "product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                            "low_res_product_names": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                            "bands": bands_sentinel2_ard_nbart,
+                            "env": "owspostgis",
+                            "resource_limits": reslim_for_sentinel2,
+                            "native_crs": "EPSG:3577",
+                            "native_resolution": [10.0, -10.0],
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,
+                            },
+                            "flags": [
+                                {
+                                    "band": "fmask_alias",
+                                    "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                                    "ignore_time": False,
+                                    "ignore_info_flags": []
+                                },
+                                {
+                                    "band": "land",
+                                    "products": ["geodata_coast_100k", "geodata_coast_100k"],
+                                    "ignore_time": True,
+                                    "ignore_info_flags": []
+                                },
+                            ],
+                            "time_axis": {
+                                "time_interval": 1
+                            },
+                            "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
+                        },
+                        {
+                            "inherits": {
+                                "layer": "s2_ard_granule_nbar_t_postgis",
+                            },
+                            "title": "DEA Surface Reflectance Mosaic (Sentinel-2) (postgis)",
+                            "name": "s2_ard_latest_mosaic_postgis",
+                            "multi_product": True,
+                            "abstract": """Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + Terrain Illumination Correction (Sentinel-2 MSI)
+
+    Latest imagery mosaic with no time dimension. (postgis db)
+                        """,
+                            "mosaic_date_func": {
+                                "function": "datacube_ows.time_utils.rolling_window_ndays",
+                                "pass_layer_cfg": True,
+                                "kwargs": {
+                                    "ndays": 6,
+                                }
+                            }
+                        },
+                        {
+                            "title": "DEA Fractional Cover (Landsat) (postgis db)",
+                            "name": "ga_ls_fc_3_postgis",
+                            "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
+                    Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
+                    green (leaves, grass, and growing crops)
+                    brown (branches, dry grass or hay, and dead leaf litter)
+                    bare ground (soil or rock)
+                    DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
+                    https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
+                    For service status information, see https://status.dea.ga.gov.au (postgis db)""",
+                            "product_name": "ga_ls_fc_3",
+                            "bands": bands_fc_3,
+                            "resource_limits": reslim_for_sentinel2,
+                            "env": "owspostgis",
+                            "dynamic": True,
+                            "native_crs": "EPSG:3577",
+                            "native_resolution": [25, -25],
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,
+                            },
+                            "flags": [
+                                # flags is now a list of flag band definitions - NOT a dictionary with identifiers
+                                {
+                                    "band": "land",
+                                    "product": "geodata_coast_100k",
+                                    "ignore_time": True,
+                                    "ignore_info_flags": [],
+                                },
+                                {
+                                    "band": "water",
+                                    "product": "ga_ls_wo_3",
+                                    "ignore_time": False,
+                                    "ignore_info_flags": [],
+                                    "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                                },
+                            ],
+                            "styling": {
+                                "default_style": "fc_rgb_unmasked",
+                                "styles": [style_fc_c3_rgb_unmasked],
+                            },
+                        }
+                    ]
+                },
+                {
+                    "title": "Landsat-8 Geomedian (postgis db)",
+                    "name": "ls8_geomedian_postgis",
+                    "abstract": """DEA Landsat-8 Geomedian (postgis db)""",
+                    "product_name": "ga_ls8c_nbart_gm_cyear_3",
+                    "bands": bands_c3_ls,
+                    "env": "owspostgis",
+                    "resource_limits": reslim_for_sentinel2,
+                    "dynamic": False,
+                    "native_crs": "EPSG:3577",
+                    "time_resolution": "summary",
+                    "native_resolution": [25, -25],
+                    "image_processing": {
+                        "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                        "always_fetch_bands": [],
+                        "manual_merge": False,
+                    },
+                    "styling": {
+                        "default_style": "simple_rgb",
+                        "styles": styles_ls_list,
+                    },
+                }
+            ]  ####### End of "postgis" layers
+        },
+    ]  ##### End of "layers" list.
 }  #### End of test configuration object

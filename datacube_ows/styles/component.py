@@ -165,7 +165,7 @@ class ComponentStyleDef(StyleDefBase):
                     else:
                         imgband_data = imgband_component
                 if imgband_data is None:
-                    null_np = np.zeros(tuple(data.sizes.values()), 'uint8')
+                    null_np = np.zeros(tuple(data.sizes.values()), 'float64')
                     imgband_data = DataArray(null_np, data.coords, tuple(data.sizes.keys()))
                 if imgband != "alpha":
                     imgband_data = self.compress_band(imgband, imgband_data)

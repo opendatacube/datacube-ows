@@ -96,9 +96,17 @@ def product_name():
 
 
 @pytest.fixture
-def role_name():
+def write_role_name():
     odc_env = ODCConfig.get_environment()
     return odc_env.db_username
+
+
+@pytest.fixture
+def read_role_name(write_role_name):
+    if read_role_name := os.environ.get("SERVER_DB_USERNAME"):
+        return read_role_name
+    else:
+        return write_role_name
 
 
 @pytest.fixture

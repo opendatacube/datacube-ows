@@ -1,0 +1,31 @@
+# German translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2024-07-03 17:29+1000\n"
+"PO-Revision-Date: 2024-07-03 17:29+1000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: de\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+msgid "global.title"
+msgstr "Over-ridden: aardvark"
+
+msgid "folder.sentinel2.abstract"
+msgstr "Over-ridden: bunny-rabbit"
+
+msgid "layer.s2_l2a.title"
+msgstr "Over-ridden: chook"
+
+msgid "style.s2_l2a.simple_rgb.title"
+msgstr "Over-ridden: donkey"

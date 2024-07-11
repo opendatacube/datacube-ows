@@ -18,7 +18,7 @@ from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.index.api import OWSAbstractIndex, OWSAbstractIndexDriver, LayerSignature, LayerExtent, TimeSearchTerm
 from .product_ranges import create_range_entry as create_range_entry_impl, get_ranges as get_ranges_impl
 from .mv_index import MVSelectOpts, mv_search
-from .sql import run_sql
+from datacube_ows.index.sql import run_sql
 
 
 class OWSPostgresIndex(OWSAbstractIndex):
@@ -26,29 +26,29 @@ class OWSPostgresIndex(OWSAbstractIndex):
 
     # method to delete obsolete schemas etc.
     def cleanup_schema(self, dc: Datacube):
-        run_sql(dc, "ows_schema/cleanup")
+        self._run_sql(dc, "ows_schema/cleanup")
 
     # Schema creation method
     def create_schema(self, dc: Datacube):
         click.echo("Creating/updating schema and tables...")
-        run_sql(dc, "ows_schema/create")
+        self._run_sql(dc, "ows_schema/create")
         click.echo("Creating/updating materialised views...")
-        run_sql(dc, "extent_views/create")
+        self._run_sql(dc, "extent_views/create")
         click.echo("Setting ownership of materialised views...")
-        run_sql(dc, "extent_views/grants/refresh_owner")
+        self._run_sql(dc, "extent_views/grants/refresh_owner")
 
     # Permission management method
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False):
         if read_only:
-            run_sql(dc, "ows_schema/grants/read_only", role=role)
-            run_sql(dc, "extent_views/grants/read_only", role=role)
+            self._run_sql(dc, "ows_schema/grants/read_only", role=role)
+            self._run_sql(dc, "extent_views/grants/read_only", role=role)
         else:
-            run_sql(dc, "ows_schema/grants/read_write", role=role)
-            run_sql(dc, "extent_views/grants/write_refresh", role=role)
+            self._run_sql(dc, "ows_schema/grants/read_write", role=role)
+            self._run_sql(dc, "extent_views/grants/write_refresh", role=role)
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     def update_geotemporal_index(self, dc: Datacube):
-        run_sql(dc, "extent_views/refresh")
+        self._run_sql(dc, "extent_views/refresh")
 
     def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
         create_range_entry_impl(layer, cache)
@@ -96,6 +96,9 @@ class OWSPostgresIndex(OWSAbstractIndex):
             return extent
         else:
             return extent.to_crs(crs)
+
+    def _run_sql(self, dc: Datacube, path: str, **params: str) -> bool:
+        return run_sql(dc, self.name, path, **params)
 
 
 pgdriverlock = Lock()

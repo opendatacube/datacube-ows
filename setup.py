@@ -10,7 +10,7 @@
 from setuptools import find_packages, setup
 
 install_requirements = [
-    'datacube[performance,s3]>=1.9.0-rc4',
+    'datacube[performance,s3]>=1.9.0-rc9',
     'flask',
     'requests',
     'affine',
@@ -111,6 +111,7 @@ Features
         ],
         "datacube_ows.plugins.index": [
             'postgres = datacube_ows.index.postgres.api:ows_index_driver_init',
+            'postgis = datacube_ows.index.postgis.api:ows_index_driver_init',
         ]
     },
     python_requires=">=3.10.0",

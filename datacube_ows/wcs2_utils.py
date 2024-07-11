@@ -13,7 +13,6 @@ from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
 from rasterio import MemoryFile
 
 from datacube_ows.loading import DataStacker
-from datacube_ows.mv_index import MVSelectOpts
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
@@ -257,7 +256,7 @@ def get_coverage_data(request, styles, qprof):
                           bands=bands)
     qprof.end_event("setup")
     qprof.start_event("count-datasets")
-    n_datasets = stacker.datasets(layer.dc.index, mode=MVSelectOpts.COUNT)
+    n_datasets = stacker.n_datasets()
     qprof.end_event("count-datasets")
     qprof["n_datasets"] = n_datasets
 
@@ -281,12 +280,12 @@ def get_coverage_data(request, styles, qprof):
                         http_response=404)
 
     qprof.start_event("fetch-datasets")
-    datasets = stacker.datasets(layer.dc.index)
+    datasets = stacker.datasets()
     qprof.end_event("fetch-datasets")
     if qprof.active:
         qprof["datasets"] = {
             str(q): [str(i) for i in ids]
-            for q, ids in stacker.datasets(layer.dc.index, mode=MVSelectOpts.IDS).items()
+            for q, ids in stacker.dsids().items()
         }
     qprof.start_event("load-data")
     output = stacker.data(datasets, skip_corrections=True)

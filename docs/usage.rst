@@ -92,7 +92,7 @@ Update extents of a new product or to update a product in Datacube to make it ea
 
 .. code-block:: console
 
-    $ datacube-ows-update --views --blocking
+    $ datacube-ows-update --views
     $ datacube-ows-update alos_palsar_mosaic
 
 Deploy the Digital Earth Africa OWS config available `here <https://github.com/digitalearthafrica/config/blob/master/services/ows_cfg.py>`_

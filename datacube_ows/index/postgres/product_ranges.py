@@ -6,8 +6,9 @@
 
 import logging
 import math
+import click
 from datetime import date, datetime, timezone
-from typing import cast, Callable, Iterable
+from typing import cast, Callable
 
 import datacube
 import odc.geo
@@ -17,22 +18,12 @@ from sqlalchemy import text
 
 from odc.geo.geom import Geometry
 
-from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer, get_config
-from datacube_ows.mv_index import MVSelectOpts, mv_search
+from datacube_ows.ows_configuration import OWSNamedLayer
+from datacube_ows.index.postgres.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import get_sqlconn
 from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 
 _LOG = logging.getLogger(__name__)
-
-
-def get_crsids(cfg: OWSConfig | None = None) -> Iterable[str]:
-    if not cfg:
-        cfg = get_config()
-    return cfg.internal_CRSs.keys()
-
-
-def get_crses(cfg: OWSConfig | None = None) -> dict[str, odc.geo.CRS]:
-    return {crsid: odc.geo.CRS(crsid) for crsid in get_crsids(cfg)}
 
 
 def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
@@ -53,12 +44,13 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                           env=layer.local_env._name,
                           datasets=layer.dc.index.datasets.count(product=layer.product_names))
 
-    print(f"Updating range for layer {layer.name}")
+    click.echo(f"Postgres Updating range for layer {layer.name}")
+    click.echo(f"(signature: {meta.as_json()!r})")
     conn = get_sqlconn(layer.dc)
     txn = conn.begin()
     if meta in cache:
         template = cache[meta][0]
-        print(f"Layer {template} has same signature - reusing")
+        click.echo(f"Layer {template} has same signature - reusing")
         cache[meta].append(layer.name)
         try:
             conn.execute(text("""

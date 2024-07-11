@@ -1,4 +1,3 @@
-# This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
 # Copyright (c) 2017-2024 OWS Contributors
@@ -255,6 +254,10 @@ class OWSLayer(OWSMetadataConfig):
         self._cached_local_env: ODCEnvironment | None = None
         self._cached_dc: Datacube | None = None
         self.parse_metadata(cfg)
+        # Do we have a local ODC environment override?
+        local_env = cfg.get("env")
+        if local_env is not None:
+            self._local_env = ODCConfig.get_environment(env=str(local_env))
         # Inherit or override attribution
         if "attribution" in cfg:
             self.attribution = AttributionCfg.parse(  # type: ignore[assignment]

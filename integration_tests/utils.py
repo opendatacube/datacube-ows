@@ -9,8 +9,6 @@ import enum
 from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
-from datacube_ows.mv_index import MVSelectOpts, mv_search
-
 
 class WCS20Extent:
     def __init__(self, desc_cov):
@@ -227,8 +225,8 @@ class ODCExtent:
                 hslice_bbox = BoundingBox(
                     left=bbox.left,
                     right=bbox.right,
-                    top=offset_y + 0.02 * height,
-                    bottom=offset_y - 0.02 * height,
+                    top=offset_y + 0.01 * height,
+                    bottom=offset_y - 0.01 * height,
                 )
                 hslice_geom = geom_from_bbox(hslice_bbox)
                 hslice_geom = hslice_geom.intersection(time_extent)
@@ -236,7 +234,7 @@ class ODCExtent:
                 hslice_bbox = BoundingBox(
                     left=bbox.left,
                     right=bbox.right,
-                    top=bbox.bottom + 0.02 * height,
+                    top=bbox.bottom + 0.01 * height,
                     bottom=bbox.bottom,
                 )
                 hslice_geom = geom_from_bbox(hslice_bbox)
@@ -255,8 +253,8 @@ class ODCExtent:
             elif self == self.OFFSET_SUBSET_FOR_TIMES:
                 offset_x = centre_x + 0.25 * height
                 vslice_bbox = BoundingBox(
-                    left=offset_x - 0.02 * width,
-                    right=offset_x + 0.02 * width,
+                    left=offset_x - 0.01 * width,
+                    right=offset_x + 0.01 * width,
                     top=slice_bbox.top,
                     bottom=slice_bbox.bottom,
                 )
@@ -371,14 +369,11 @@ class ODCExtent:
         ext_times = time.slice(self.layer.ranges.times)
         search_times = [self.layer.search_times(t) for t in ext_times]
         if space.needs_full_extent() and not self.full_extent:
-            self.full_extent = mv_search(
-                self.layer.dc.index, products=self.layer.products, sel=MVSelectOpts.EXTENT
-            )
+            self.full_extent = self.layer.ows_index().extent(layer=self.layer, products=self.layer.products)
         if space.needs_time_extent():
-            time_extent = mv_search(
-                self.layer.dc.index,
+            time_extent = self.layer.ows_index().extent(
+                layer=self.layer,
                 products=self.layer.products,
-                sel=MVSelectOpts.EXTENT,
                 times=search_times,
             )
         else:

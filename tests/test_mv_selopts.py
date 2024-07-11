@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-from datacube_ows.mv_index import MVSelectOpts
+from datacube_ows.index.postgres.mv_index import MVSelectOpts
 
 
 def test_all():

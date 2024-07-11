@@ -1,0 +1,37 @@
+name: geodata_coast_100k
+description: Coastline data for Australia
+metadata_type: eo3
+license: CC-BY-4.0
+metadata:
+  product:
+    name: geodata_coast_100k
+measurements:
+- name: land
+  dtype: uint8
+  flags_definition:
+    land_type:
+      bits:
+      - 0
+      - 1
+      description: Sea, Mainland or Island
+      values:
+        0: sea
+        1: island
+        2: mainland
+    sea:
+      bits:
+      - 0
+      - 1
+      description: Sea
+      values:
+        0: true
+  nodata: 0
+  units: '1'
+load:
+  crs: 'EPSG:3577'
+  resolution:
+    y: -25
+    x: 25
+  align:
+    y: 0
+    x: 0

@@ -21,14 +21,15 @@ services:
       # Hard coded for now.
       ODC_ENVIRONMENT: default
       ODC_DEFAULT_INDEX_DRIVER: postgres
+      ODC_OWSPOSTGIS_INDEX_DRIVER: postgis
       # Please switch to single entry url configuration for postgres url
       ODC_DEFAULT_DB_URL: ${ODC_DEFAULT_DB_URL}
-      # Overridden by preferred URL entry above.
-      DB_HOSTNAME: ${DB_HOSTNAME}
-      DB_PORT: ${DB_PORT}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: ${DB_DATABASE}
+      ODC_OWSPOSTGIS_DB_URL: ${ODC_OWSPOSTGIS_DB_URL}
+      # for wait-for-db check
+      READY_PROBE_DB: ${READY_PROBE_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_HOSTNAME: ${POSTGRES_HOSTNAME}
+      SERVER_DB_USERNAME: ${SERVER_DB_USERNAME}
       # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
       PYTHONPATH: ${PYTHONPATH}
       DATACUBE_OWS_CFG: ${DATACUBE_OWS_CFG}

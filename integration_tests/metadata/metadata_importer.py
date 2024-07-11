@@ -7,8 +7,10 @@ from datacube import Datacube
 from datacube.index.hl import Doc2Dataset
 
 dc = Datacube()
+dc_pgis = Datacube(env="owspostgis")
 
-doc2ds = Doc2Dataset(dc.index, products=["s2_l2a"], skip_lineage=True, verify_lineage=False)
+doc2ds = Doc2Dataset(dc.index, products=["s2_l2a", "geodata_coast_100k"], skip_lineage=True, verify_lineage=False)
+doc2ds_pgis = Doc2Dataset(dc_pgis.index, products=["s2_l2a", "geodata_coast_100k"], skip_lineage=True, verify_lineage=False)
 
 for line in fileinput.input():
     filename, uri = line.split()
@@ -20,7 +22,14 @@ for line in fileinput.input():
         del doc["extent"]
     ds, err = doc2ds(doc, uri)
     if ds:
-        dc.index.datasets.add(ds)
+        dc.index.datasets.add(ds, with_lineage=False)
     else:
-        print("Dataset add failed:", err)
+        print("Dataset add (postgres) failed:", err)
+        exit(1)
+
+    ds, err = doc2ds_pgis(doc, uri)
+    if ds:
+        dc_pgis.index.datasets.add(ds, with_lineage=False)
+    else:
+        print("Dataset add (postgis) failed:", err)
         exit(1)

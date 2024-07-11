@@ -25,13 +25,13 @@ def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
     return dc.index._db._engine.connect()  # type: ignore[attr-defined]
 
 
-def run_sql(dc: Datacube, path: str, **params: str) -> bool:
-    if not importlib.resources.files("datacube_ows").joinpath(f"sql/postgres/{path}").is_dir():
+def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
+    if not importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}").is_dir():
         print("Cannot find SQL resource directory - check your datacube-ows installation")
         return False
 
     files = sorted(
-        importlib.resources.files("datacube_ows").joinpath(f"sql/postgres/{path}").iterdir()  # type: ignore[type-var]
+        importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}").iterdir()  # type: ignore[type-var]
     )
 
     filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
@@ -50,17 +50,6 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
             reqs = req_match.group("reqs").split("_")
         else:
             reqs = []
-        ref = importlib.resources.files("datacube_ows").joinpath(f"sql/postgres/{path}/{f}")
-        with ref.open("rb") as fp:
-            sql = ""
-            first = True
-            for line in fp:
-                sline = str(line, "utf-8")
-                if first and sline.startswith("--"):
-                    click.echo(f" - Running {sline[2:]}")
-                else:
-                    sql = sql + "\n" + sline
-                first = False
         if reqs:
             try:
                 kwargs = {v: params[v] for v in reqs}
@@ -68,18 +57,32 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
                 click.echo(f"Required parameter {e} for file {f} not supplied - skipping")
                 all_ok = False
                 continue
+        else:
+            kwargs = {}
+        ref = importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}/{f}")
+        with ref.open("rb") as fp:
+            sql = ""
+            first = True
+            for line in fp:
+                sline = str(line, "utf-8")
+                if first and sline.startswith("--"):
+                    if reqs:
+                        click.echo(f" - Running {sline[2:].format(**kwargs)}")
+                    else:
+                        click.echo(f" - Running {sline[2:]}")
+                else:
+                    sql = sql + "\n" + sline
+                first = False
+        if reqs:
             sql = sql.format(**kwargs)
         try:
             result = conn.execute(sqlalchemy.text(sql))
-            click.echo(f"    ...  succeeded(?) with {result!r} rowcount {result.rowcount}")
-            if result.returns_rows:
-                for r in result:
-                    click.echo(f"    ...  succeeded(?) with {r!r}")
+            click.echo(f"    ...  succeeded(?) with rowcount {result.rowcount}")
 
         except sqlalchemy.exc.ProgrammingError as e:
             if isinstance(e.orig, psycopg2.errors.InsufficientPrivilege):
                 click.echo(
-                    f"Insufficient Privileges (user {dc.index.environment.db_username}).  Schema altering actions should be run by a role with admin privileges"
+                    f"Insufficient Privileges (user {dc.index.environment.db_username}). Schema altering actions should be run by a role with admin privileges"
                 )
                 raise AbortRun() from None
             elif isinstance(e.orig, psycopg2.errors.DuplicateObject):

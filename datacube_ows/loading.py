@@ -14,11 +14,9 @@ import datacube
 import numpy
 import xarray
 from odc.geo.geobox import GeoBox
-from odc.geo.geom import Geometry
+from odc.geo.geom import Geometry, CRS
 from odc.geo.warp import Resampling
-from sqlalchemy.engine import Row
 
-from datacube_ows.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.startup_utils import CredentialManager
@@ -161,36 +159,77 @@ class DataStacker:
     def needed_bands(self) -> list[str]:
         return self._needed_bands
 
-    @log_call
-    def n_datasets(self,
-                   index: datacube.index.Index,
-                   all_time: bool = False,
-                   point: Geometry | None = None) -> int:
-        return cast(int, self.datasets(index,
-                             all_time=all_time, point=point,
-                             mode=MVSelectOpts.COUNT))
+    def n_datasets(self) -> int:
+        if self.style:
+            # we have a style - lets go with that.
+            queries = ProductBandQuery.style_queries(self.style)
+        else:
+            # Just take needed bands.
+            queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
+        geom = self._geobox.extent
+        for query in queries:
+            if query.ignore_time:
+                qry_times = None
+            else:
+                qry_times = self._times
+            return self._layer.ows_index().count(self._layer, times=qry_times, geom=geom, products=query.products)
+        return 0
 
-    def datasets(self, index: datacube.index.Index,
-                 all_flag_bands: bool = False,
-                 all_time: bool = False,
-                 point: Geometry | None = None,
-                 mode: MVSelectOpts = MVSelectOpts.DATASETS) -> (int
-                                                                 | Iterable[Row]
-                                                                 | Iterable[UUID]
-                                                                 | xarray.DataArray
-                                                                 | Geometry
-                                                                 | None
-                                                                 | dict[ProductBandQuery, PerPBQReturnType]):
-        if mode == MVSelectOpts.EXTENT or all_time:
-            # Not returning datasets - use main product only
-            queries = [
-                ProductBandQuery.simple_layer_query(
+    def extent(self, crs: CRS | None = None) -> Geometry | None:
+        query = ProductBandQuery.simple_layer_query(
+                self._layer,
+                self.needed_bands(),
+                self.resource_limited
+        )
+        geom = self._geobox.extent
+        if query.ignore_time:
+            times = None
+        else:
+            times = self._times
+        return self._layer.ows_index().extent(self._layer, times=times, geom=geom, products=query.products, crs=crs)
+
+    def dsids(self) -> dict[ProductBandQuery, Iterable[UUID]]:
+        if self.style:
+            # we have a style - lets go with that.
+            queries = ProductBandQuery.style_queries(self.style)
+        else:
+            # Just take needed bands.
+            queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
+        results: list[tuple[ProductBandQuery, Iterable[UUID]]] = []
+        for query in queries:
+            if query.ignore_time:
+                qry_times = None
+            else:
+                qry_times = self._times
+            result = self._layer.ows_index().dsid_search(self._layer, times=qry_times, geom=self._geobox.extent,
+                                                         products=query.products)
+            results.append((query, result))
+        return OrderedDict(results)
+
+    def datasets_all_time(self, point: Geometry | None = None) -> xarray.DataArray:
+        query = ProductBandQuery.simple_layer_query(
                     self._layer,
                     self.needed_bands(),
                     self.resource_limited)
+        if point:
+            geom = point
+        else:
+            geom = self._geobox.extent
+        result = self._layer.ows_index().ds_search(
+            layer=self._layer,
+            geom=geom,
+            products=query.products)
+        grpd_result = datacube.Datacube.group_datasets(
+            cast(Iterable[datacube.model.Dataset], result),
+            self.group_by
+        )
+        return grpd_result
 
-            ]
-        elif self.style:
+    def datasets(self,
+                 all_flag_bands: bool = False,
+                 point: Geometry | None = None,
+                 ) -> dict[ProductBandQuery, xarray.DataArray]:
+        if self.style:
             # we have a style - lets go with that.
             queries = ProductBandQuery.style_queries(self.style)
         elif all_flag_bands:
@@ -203,40 +242,22 @@ class DataStacker:
             geom = point
         else:
             geom = self._geobox.extent
-        if all_time:
-            times = None
-        else:
-            times = self._times
-        results: list[tuple[ProductBandQuery, PerPBQReturnType]] = []
+        results: list[tuple[ProductBandQuery, xarray.DataArray]] = []
         for query in queries:
             if query.ignore_time:
                 qry_times = None
             else:
-                qry_times = times
-            result = mv_search(index,
-                               sel=mode,
+                qry_times = self._times
+            result = self._layer.ows_index().ds_search(
+                               layer=self._layer,
                                times=qry_times,
                                geom=geom,
                                products=query.products)
-            if mode == MVSelectOpts.DATASETS:
-                grpd_result = datacube.Datacube.group_datasets(
-                    cast(Iterable[datacube.model.Dataset], result),
-                    self.group_by
-                )
-                if all_time:
-                    return grpd_result
-                results.append((query, grpd_result))
-            elif mode == MVSelectOpts.IDS:
-                result_ids = cast(Iterable[UUID], result)
-                if all_time:
-                    return result_ids
-                results.append((query, result_ids))
-            elif mode == MVSelectOpts.ALL:
-                return cast(Iterable[Row], result)
-            elif mode == MVSelectOpts.COUNT:
-                return cast(int, result)
-            else:  # MVSelectOpts.EXTENT
-                return cast(Geometry | None, result)
+            grpd_result = datacube.Datacube.group_datasets(
+                cast(Iterable[datacube.model.Dataset], result),
+                self.group_by
+            )
+            results.append((query, grpd_result))
         return OrderedDict(results)
 
     def create_nodata_filled_flag_bands(self, data: xarray.Dataset, pbq: ProductBandQuery) -> xarray.Dataset:

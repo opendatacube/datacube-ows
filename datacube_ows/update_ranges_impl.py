@@ -31,7 +31,7 @@ from datacube_ows.startup_utils import initialise_debugging
               help="(Only valid with --schema) Role(s) to grant both read and write/update database permissions to")
 @click.option("--cleanup", is_flag=True, default=False,
               help="Cleanup up any datacube-ows 1.8.x tables/views")
-@click.option("-e", "--env", default=None,
+@click.option("-E", "--env", default=None,
               help="(Only valid with --schema or --read-role or --write-role or --cleanup) environment to write to.")
 @click.option("--version", is_flag=True, default=False,
               help="Print version string and exit")
@@ -127,10 +127,14 @@ def main(layers: list[str],
     app = cfg.odc_app + "-update"
     errors: bool = False
     if schema or read_role or write_role or cleanup or views:
-        if cfg.default_env and env is None:
-            dc = Datacube(env=cfg.default_env, app=app)
-        else:
-            dc = Datacube(env=env, app=app)
+        try:
+            if cfg.default_env and env is None:
+                dc = Datacube(env=cfg.default_env, app=app)
+            else:
+                dc = Datacube(env=env, app=app)
+        except:
+            click.echo(f"Unable to connect to the {env or cfg.default_env} database.")
+            sys.exit(1)
 
         click.echo(f"Applying database schema updates to the {dc.index.environment.db_database} database:...")
         try:
@@ -167,7 +171,7 @@ def main(layers: list[str],
             click.echo("")
             click.echo("       Try running with the --schema options first.")
             sys.exit(1)
-        elif isinstance(e.orig, psycopg2.errors.NotNullViloation):
+        elif isinstance(e.orig, psycopg2.errors.NotNullViolation):
             click.echo("ERROR: OWS materialised views are most likely missing a newly indexed product")
             click.echo("")
             click.echo("       Try running with the --viewes options first.")
