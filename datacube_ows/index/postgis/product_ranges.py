@@ -8,6 +8,7 @@ import logging
 import math
 from datetime import date, datetime, timezone
 from typing import Callable
+import click
 
 import datacube
 import odc.geo
@@ -39,13 +40,13 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                           env=layer.local_env._name,
                           datasets=layer.dc.index.datasets.count(product=layer.product_names))
 
-    print(f"Postgis Updating range for layer {layer.name}")
-    print(f"(signature: {meta.as_json()!r})")
+    click.echo(f"Postgis Updating range for layer {layer.name}")
+    click.echo(f"(signature: {meta.as_json()!r})")
     conn = get_sqlconn(layer.dc)
     txn = conn.begin()
     if meta in cache:
         template = cache[meta][0]
-        print(f"Layer {template} has same signature - reusing")
+        click.echo(f"Layer {template} has same signature - reusing")
         cache[meta].append(layer.name)
         try:
             conn.execute(text("""
@@ -156,7 +157,7 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
 
         base_crs = CRS(layer.native_CRS)
         if base_crs not in layer.dc.index.spatial_indexes():
-            print(f"Native CRS for layer {layer.name} ({layer.native_CRS}) does not have a spatial index. "
+            click.echo(f"Native CRS for layer {layer.name} ({layer.native_CRS}) does not have a spatial index. "
                   "Using epsg:4326 for extent calculations.")
             base_crs = CRS("EPSG:4326")
 

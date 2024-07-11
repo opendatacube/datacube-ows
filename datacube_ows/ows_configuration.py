@@ -254,10 +254,11 @@ class OWSLayer(OWSMetadataConfig):
         self._cached_local_env: ODCEnvironment | None = None
         self._cached_dc: Datacube | None = None
         self.parse_metadata(cfg)
-        # Inherit or override attribution
+        # Do we have a local ODC environment override?
         local_env = cfg.get("env")
         if local_env is not None:
             self._local_env = ODCConfig.get_environment(env=str(local_env))
+        # Inherit or override attribution
         if "attribution" in cfg:
             self.attribution = AttributionCfg.parse(  # type: ignore[assignment]
                 cast(CFG_DICT | None, cfg.get("attribution")),
