@@ -150,9 +150,13 @@ class OWSAbstractIndex(ABC):
         return ext
 
     def _prep_geom(self, layer: "OWSNamedLayer", any_geom: Geometry | None) -> Geometry | None:
+        # Prepare a Geometry for geospatial search
+        # Perhaps Core can be updated so this is not needed?
         if any_geom is None:
+            # None?  Leave as None
             return None
         if any_geom.geom_type == "Point":
+            # Point?  Expand to a polygon covering a single native pixel.
             any_geom = any_geom.to_crs(layer.native_CRS)
             x, y = any_geom.coords[0]
             delta_x, delta_y = layer.cfg_native_resolution
@@ -167,8 +171,10 @@ class OWSAbstractIndex(ABC):
                 crs=layer.native_CRS
             )
         elif any_geom.geom_type in ("MultiPoint", "LineString", "MultiLineString"):
+            # Not a point, but not a polygon or multipolygon?  Expand to polygon by taking convex hull
             return any_geom.convex_hull
         else:
+            # Return polygons and multipolygons as is.
             return any_geom
 
 class OWSAbstractIndexDriver(ABC):
