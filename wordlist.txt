@@ -37,6 +37,7 @@ audreyr
 australia
 auth
 autogenerate
+autoupdate
 awk
 aws
 ba
@@ -51,6 +52,7 @@ bd
 bda
 beb
 befce
+benjimin
 bfa
 bitflag
 bitflags
@@ -117,12 +119,14 @@ dde
 de
 dea
 deafrica
+dependabot
 desc
 describecoverage
 DescribeCoverage
 dev
 df
 digitalearthafrica
+dimensioned
 dir
 dns
 docstrings
@@ -166,6 +170,7 @@ func
 gda
 gdal
 geobase
+geojson
 geomedian
 geoscience
 geoscienceaustralia
@@ -187,6 +192,7 @@ gettext
 gettile
 GetTile
 gh
+GHA
 github
 githubusercontent
 googlemap
@@ -287,6 +293,7 @@ petrak
 pgdata
 pil
 pindge
+pjonsson
 pki
 png
 po
