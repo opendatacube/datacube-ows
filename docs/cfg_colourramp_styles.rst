@@ -65,7 +65,7 @@ entry.
 index_function
 ++++++++++++++
 
-The `index_function` allows the user to declare a callback function
+The ``index_function`` allows the user to declare a callback function
 to calculate the index value using OWS's
 `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 The function is expected to take an xarray Dataset containing all the
@@ -76,12 +76,12 @@ an xarray Dataset containing the index value.
 
 A `small library <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html#band-utils-functions>`_
 of general purpose band math functions
-are provided in `datacube_ows.band_utils`.
+are provided in ``datacube_ows.band_utils``.
 
 needed_bands list
 +++++++++++++++++
 
-The `needed_bands` entry must list the names (or aliases) of
+The ``needed_bands`` entry must list the names (or aliases) of
 all the bands required by the
 `index_function <#index-function>`__.
 
@@ -125,7 +125,7 @@ Ramp Scale (Range)
 ==================
 
 For the Matplotlib colour ramps and the default colour ramp, you need to specify
-a value range over which the colour ramp is applied. The `range` element can be set
+a value range over which the colour ramp is applied. The ``range`` element can be set
 to a tuple containing the index function values that should be mapped to the lowest
 and highest colour ramp values.
 
@@ -154,8 +154,8 @@ E.g.::
 Manual color_ramp
 =================
 
-A colour ramp can be created manually using the `color_ramp` style configuration
-entry.  `color_ramp` should be a list of `colour point definitions <#colour-point-definition>`_.
+A colour ramp can be created manually using the ``color_ramp`` style configuration
+entry.  ``color_ramp`` should be a list of `colour point definitions <#colour-point-definition>`_.
 Each colour point definition describes a mapping from a value to a colour.
 
 The list should be sorted in order of ascending value. If the index function value
@@ -218,9 +218,9 @@ Legend Configuration
 Colour-ramp styles support automatic legend generation.
 
 Automatic legend generation can be deactivated using the
-`show_legend` and `url` legend elements
+``show_legend`` and ``url`` legend elements
 `common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#legend>`_.
-(`show_legend` is `True` by default for colour-ramp styles.)
+(``show_legend`` is ``True`` by default for colour-ramp styles.)
 
 Legend Title
 ============
@@ -421,7 +421,7 @@ Over-riding labels for individual ticks
 +++++++++++++++++++++++++++++++++++++++
 
 If a tick's default label (with no prefix or suffix) appears as a key
-in the `tick_labels` dictionary then the prefix, suffix or label of
+in the ``tick_labels`` dictionary then the prefix, suffix or label of
 that tick label can be overridden.
 
 E.g.::
@@ -474,7 +474,7 @@ further information.
 Image Size
 ++++++++++
 
-The `width` and `height` values are passed to matplotlib to specify the size
+The ``width`` and ``height`` values are passed to matplotlib to specify the size
 of the generated image.
 
 The image size defaults to 4 inches wide by 1.25 inches tall.  The default
@@ -492,7 +492,7 @@ strip_location
 ++++++++++++++
 
 The location of the coloured ramp strip within the legend image can be
-customised with the `strip_location` element.  This should be a tuple
+customised with the ``strip_location`` element.  This should be a tuple
 of four floats which is passed directly to the MatPlotLib Figure.add_axes
 function.
 
@@ -512,7 +512,7 @@ MatPlotLib rc params
 ++++++++++++++++++++
 
 Other MatPlotLib customisations (as they would appear in a .matplotlibrc file)
-can be specified with the optional `rcParams` element, defaulting to {}, meaning
+can be specified with the optional ``rcParams`` element, defaulting to {}, meaning
 the MatPlotLib defaults for all options.
 
 For a full list of possible options refer to
@@ -537,16 +537,28 @@ by providing for an aggregator function that converts the multi-date index data
 into a dateless index, and apply either the style's colour ramp (i.e. the same
 as the single-date case), or a separate colour ramp.
 
+pass_raw_data
+=============
+
+The ``pass_raw_data`` entry controls what data is passed to the aggregator function:
+
+``pass_raw_data == False`` (the default):
+    The aggregator function is passed a time-dimensioned DataArray containing the output
+    of the index function.
+
+``pass_raw_data == True``:
+    The aggregator function is passed a time-dimensioned Dataset, containing all of the
+    declared needed bands.
+
 aggregator_function
 ===================
 
-The `aggregator_function` entry is required for colour ramp style
+The ``aggregator_function`` entry is required for colour ramp style
 multi-date handlers.  It is a function defined using OWS's
 `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 
-The function is assumed to take a single xarray Dataset with a time dimension.
-The value at each time slice is the output of the `index function <#index-function>`__
-at that time.  The function should return an xarray Dataset with no time
+The first argument passed to the function depends on the value of the ``pass_raw_data``
+element, as described above. The function should return an xarray DataArray with no time
 dimension, containing the data used as an input to the
 `multi-date handler's colour ramp <#multi-date-colour-ramps>`__.
 
