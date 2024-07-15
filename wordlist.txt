@@ -162,6 +162,7 @@ fdb
 fdba
 fde
 fe
+FeatureInfo
 featurelisturls
 FeatureListURLs
 fqn
