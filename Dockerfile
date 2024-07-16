@@ -1,5 +1,5 @@
 # Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.5 as builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.5 AS builder
 
 # Setup build env for postgresql-client-14
 USER root
