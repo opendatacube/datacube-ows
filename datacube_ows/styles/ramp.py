@@ -574,9 +574,11 @@ class ColorRampDef(StyleDefBase):
             if self.animate:
                 self.feature_info_label: Optional[str] = None
                 self.color_ramp = style.color_ramp
+                self.pass_raw_data = False
             else:
                 self.feature_info_label = cast(Optional[str], cfg.get("feature_info_label", None))
                 self.color_ramp = ColorRamp(style, cfg, self.legend_cfg)
+                self.pass_raw_data = bool(cfg.get("pass_raw_data", False))
 
         def transform_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
             """
@@ -585,13 +587,17 @@ class ColorRampDef(StyleDefBase):
             :param data: Raw data
             :return: RGBA image xarray.  May have a time dimension
             """
-            xformed_data = cast("ColorRampDef", self.style).apply_index(data)
-            agg = self.aggregator(xformed_data)
+            if self.pass_raw_data:
+                agg = self.aggregator(data)
+            else:
+                xformed_data = cast("ColorRampDef", self.style).apply_index(data)
+                agg = self.aggregator(xformed_data)
             return self.color_ramp.apply(agg)
 
         class Legend(RampLegendBase):
             def plot_name(self):
                 return f"{self.style.product.name}_{self.style.name}_{self.style_or_mdh.min_count}"
+
 
 # Register ColorRampDef as Style subclass.
 StyleDefBase.register_subclass(ColorRampDef, ("range", "color_ramp"))
