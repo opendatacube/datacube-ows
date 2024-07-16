@@ -18,6 +18,7 @@ they always received the results of the index function.)
 * Several minor bug-fixes and improved error handling in WCS code (#1027)
 * Automated updates (#1022)
 * Allow multi-date handler aggregator functions to receive raw data (#1033)
+* Update HISTORY.rst and increment default version for release (#1034)
 
 This release includes contributions from @SpacemanPaul and @whatnick
 
