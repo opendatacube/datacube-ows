@@ -189,6 +189,17 @@ def multi_date_delta(data, time_direction=-1):
 def multi_date_pass(data):
     return data
 
+def multi_date_raw_example(data, band1, band2, band_mapper=None):
+    if band_mapper:
+        band1 = band_mapper(band1)
+        band2 = band_mapper(band2)
+    data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)
+    return (
+            (data2[band1] - data1[band1]) - (data2[band2] - data1[band2])
+    ) / (
+            data1[band1] + data1[band2] + data2[band1] + data2[band2]
+    )
+
 
 @band_modulator
 @scalable

@@ -394,8 +394,14 @@ style_ls_ndvi_delta = {
             "allowed_count_range": [2, 2],
             "animate": False,
             "preserve_user_date_order": True,
+            "pass_raw_data": True,
             "aggregator_function": {
-                "function": "datacube_ows.band_utils.multi_date_delta",
+                "function": "datacube_ows.band_utils.multi_date_raw_example",
+                "mapped_bands": True,
+                "kwargs": {
+                    "band1": "nir",
+                    "band2": "red",
+                }
             },
             "mpl_ramp": "RdYlBu",
             "range": [-1.0, 1.0],

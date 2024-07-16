@@ -129,6 +129,7 @@ DescribeCoverage
 dev
 df
 digitalearthafrica
+dimensioned
 dir
 dns
 docstrings
