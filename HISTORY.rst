@@ -7,6 +7,20 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.41 (2024-07-16)
+-------------------
+
+New Feature!  Multi-date handler aggregator functions for colour-ramp type styles can now receive
+either the results of the index function, or the raw band data by setting a config option.  (Previously
+they always received the results of the index function.)
+
+* Improved error messages when creating extents without materialised views (#1016)
+* Several minor bug-fixes and improved error handling in WCS code (#1027)
+* Automated updates (#1022)
+* Allow multi-date handler aggregator functions to receive raw data (#1033)
+
+This release includes contributions from @SpacemanPaul and @whatnick
+
 1.8.40 (2024-04-29)
 -------------------
 
