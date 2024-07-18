@@ -28,6 +28,7 @@ eo3_ranges as
    from agdc.dataset where
       metadata_type_ref in (select id from metadata_lookup where name='eo3')
       and archived is null
+      and substr(metadata #>> '{crs}', 1, 5) = 'EPSG:'
   ),
 -- This is eo spatial (Uses ALOS-PALSAR over Africa as a sample product)
 eo_corners as
@@ -97,4 +98,5 @@ select id,
       ) as spatial_extent
  from agdc.dataset where
         metadata_type_ref in (select id from metadata_lookup where name like 'eo3_%')
+        and substr(metadata #>> '{grid_spatial, projection, spatial_reference}', 1, 5) = 'EPSG:'
         and archived is null
