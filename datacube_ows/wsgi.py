@@ -15,6 +15,7 @@ sys.path.append("/opt")
 os.environ.setdefault("DATACUBE_CONFIG_PATH", "/opt/odc/.datacube.conf.local")
 
 from datacube_ows import __version__
+
 from datacube_ows.ogc import app  # isort:skip
 
 application = app

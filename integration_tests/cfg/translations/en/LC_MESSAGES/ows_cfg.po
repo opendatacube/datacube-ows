@@ -28,4 +28,3 @@ msgstr "Surface reflectance (Sentinel-2)"
 
 msgid "style.s2_l2a.simple_rgb.title"
 msgstr "Simple RGB"
-
