@@ -1385,14 +1385,19 @@ class OWSConfig(OWSMetadataConfig):
         self.product_index = {}
         self.declare_unready("native_product_index")
         self.root_layer_folder = OWSFolder({
-            "title": "Root Folder (hidden)",
-            "label": "ows_root_hidden",
+            "title": self.title,
+            "abstract": self.abstract,
+            "label": "ows_root",
             "layers": cfg
         }, global_cfg=self, parent_layer=None)
 
     @property
     def layers(self):
-        return self.root_layer_folder.child_layers
+        # Multiple top-level are not consistent with a strict reading of the OWS standard.
+        # If we have multiple top-level folders, wrap them in an auto-generated top-level folder.
+        if len(self.root_layer_folder.child_layers) == 1:
+            return self.root_layer_folder.child_layers
+        return [self.root_layer_folder]
 
     def alias_bboxes(self, bboxes):
         out = {}
