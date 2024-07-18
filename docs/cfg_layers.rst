@@ -17,6 +17,15 @@ at least one named layer (defined below).
 
 The "layers" section is a list of Layer configurations.
 
+> Note: Although many WMS clients support multiple
+> top-level layers, a strict reading of the WMS standard requires
+> only one. Some WMS clients do not recognise all top level
+> layers if more than one is defined.
+>
+> Therefore, in the interests of WMS standards compliance, if you define multiple top
+> level layers, they will be automatically wrapped in a single top-level folder
+> using the global metadata.
+
 A layer may be either:
 
 * A `named layer <#named-layers>`_ which represents a queryable

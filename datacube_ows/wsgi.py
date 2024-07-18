@@ -14,12 +14,19 @@ sys.path.append("/opt")
 # The location of the datcube config file.
 os.environ.setdefault("DATACUBE_CONFIG_PATH", "/opt/odc/.datacube.conf.local")
 
+from datacube_ows import __version__
+
 from datacube_ows.ogc import app  # isort:skip
 
 application = app
 
 
 def main():
+    if "--version" in sys.argv:
+        print("Open Data Cube Open Web Services (datacube-ows) version",
+              __version__
+              )
+        exit(0)
     app.run()
 
 
