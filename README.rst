@@ -38,6 +38,18 @@ Features
 * Supports WCS versions 1.0.0, 2.0.0 and 2.1.0.
 * Richly featured styling engine for serving data visualisations via WMS and WMTS.
 
+Known CRS Limitations
+---------------------
+
+1. ODC datasets with WKT-format CRSs will not work with OWS - data from such datasets
+   will never be displayed. OWS currently only works with EPSG format CRSs.
+
+2. Datasets that straddle the anti-meridian or the north or south polar region will
+   cause issues with the legacy postgres driver.
+
+These are fundamental limitation of the way OWS works with the postgres ODC index driver.
+These limitations will be addressed in v1.9.0, but only for the new ODC postgis index driver.
+
 Community
 ---------
 
