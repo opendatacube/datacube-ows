@@ -41,6 +41,18 @@ System Architecture
 .. image:: docs/diagrams/ows_diagram1.9.png
    :width: 700
 
+Known CRS Limitations
+---------------------
+
+1. ODC datasets with WKT-format CRSs will not work with OWS - data from such datasets
+   will never be displayed. OWS currently only works with EPSG format CRSs.
+
+2. Datasets that straddle the anti-meridian or the north or south polar region will
+   cause issues with the legacy postgres driver.
+
+These are fundamental limitation of the way OWS works with the postgres ODC index driver.
+These limitations will be addressed in v1.9.0, but only for the new ODC postgis index driver.
+
 Community
 ---------
 

@@ -28,6 +28,7 @@ eo3_ranges as
    from agdc.dataset where
       metadata_type_ref in (select id from metadata_lookup where name='eo3')
       and archived is null
+      and upper(substr(metadata #>> '{crs}', 1, 5)) = 'EPSG:'
   ),
 -- This is eo spatial (Uses ALOS-PALSAR over Africa as a sample product)
 eo_corners as
@@ -45,7 +46,7 @@ eo_corners as
         and archived is null
    and (metadata #>> '{grid_spatial, projection, valid_data}' is null
        or
-        substr(metadata #>> '{grid_spatial, projection, spatial_reference}', 1, 4) <> 'EPSG'
+        upper(substr(metadata #>> '{grid_spatial, projection, spatial_reference}', 1, 5)) <> 'EPSG:'
    )
 ),
 eo_geoms as
@@ -62,8 +63,8 @@ eo_geoms as
    from agdc.dataset where
         metadata_type_ref in (select id from metadata_lookup where name in ('eo','eo_s2_nrt','gqa_eo','eo_plus', 'boku'))
         and archived is null
-   and metadata #>> '{grid_spatial, projection, valid_data}' is not null
-   and substr(metadata #>> '{grid_spatial, projection, spatial_reference}', 1, 5) = 'EPSG:'
+        and metadata #>> '{grid_spatial, projection, valid_data}' is not null
+        and upper(substr(metadata #>> '{grid_spatial, projection, spatial_reference}', 1, 5)) = 'EPSG:'
 )
 select id,format('POLYGON(( %s %s, %s %s, %s %s, %s %s, %s %s))',
                  lon_begin, lat_begin, lon_end, lat_begin,  lon_end, lat_end,
@@ -97,4 +98,5 @@ select id,
       ) as spatial_extent
  from agdc.dataset where
         metadata_type_ref in (select id from metadata_lookup where name like 'eo3_%')
+        and upper(substr(metadata #>> '{grid_spatial, projection, spatial_reference}', 1, 5)) = 'EPSG:'
         and archived is null
