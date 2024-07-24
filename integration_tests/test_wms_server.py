@@ -299,34 +299,45 @@ def test_wms_getfeatureinfo(ows_server):
     for test_layer_name in contents:
         test_layer = wms.contents[test_layer_name]
 
-        bbox = test_layer.boundingBoxWGS84
-        response = wms.getfeatureinfo(
-            layers=[test_layer_name],
-            srs="EPSG:4326",
-            bbox=pytest.helpers.enclosed_bbox(bbox),
-            size=(256, 256),
-            format="image/png",
-            query_layers=[test_layer_name],
-            info_format="application/json",
-            xy=(250, 250),
-        )
+        test_times = test_layer.timepositions
+        if test_times is None:
+            test_times = [None]
+        elif len(test_times) > 8:
+            test_times = [test_times[0], test_times[6], test_times[-1]]
+        elif len(test_times) == 1 and '/' in test_times[0]:
+            test_times = test_times[0].split('/')
+            test_times = list(test_times[0:2])
+        for test_time in test_times:
+            bbox = test_layer.boundingBoxWGS84
+            response = wms.getfeatureinfo(
+                layers=[test_layer_name],
+                srs="EPSG:4326",
+                bbox=pytest.helpers.enclosed_bbox(bbox),
+                size=(256, 256),
+                format="image/png",
+                query_layers=[test_layer_name],
+                info_format="application/json",
+                times=test_time,
+                xy=(250, 250),
+            )
 
-        assert response
-        assert response.info()["Content-Type"] == "application/json"
+            assert response
+            assert response.info()["Content-Type"] == "application/json"
 
-        response = wms.getfeatureinfo(
-            layers=[test_layer_name],
-            srs="EPSG:4326",
-            bbox=pytest.helpers.enclosed_bbox(bbox),
-            size=(256, 256),
-            format="image/png",
-            query_layers=[test_layer_name],
-            info_format="text/html",
-            xy=(250, 250),
-        )
+            response = wms.getfeatureinfo(
+                layers=[test_layer_name],
+                srs="EPSG:4326",
+                bbox=pytest.helpers.enclosed_bbox(bbox),
+                size=(256, 256),
+                format="image/png",
+                query_layers=[test_layer_name],
+                info_format="text/html",
+                times=test_time,
+                xy=(250, 250),
+            )
 
-        assert response
-        assert response.info()["Content-Type"] == "text/html"
+            assert response
+            assert response.info()["Content-Type"] == "text/html"
 
 
 def test_wms_getlegend(ows_server):
