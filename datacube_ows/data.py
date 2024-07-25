@@ -889,8 +889,8 @@ def feature_info(args):
                         for k, f in mdh.feature_info_includes.items():
                             # Function signature: pass in:
                             # * a multi-date single pixel (1x1xn) multiband xarray Dataset,
-                            date_info[k] = f(pixel_ds)
-                        feature_json["data"].apppend(date_info)
+                            date_info[k] = f(data)
+                        feature_json["data"].append(date_info)
             feature_json["data_available_for_dates"] = []
             pt_native = None
             for d in all_time_datasets.coords["time"].values:

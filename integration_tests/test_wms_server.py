@@ -340,6 +340,43 @@ def test_wms_getfeatureinfo(ows_server):
             assert response.info()["Content-Type"] == "text/html"
 
 
+def test_custom_feature_info(ows_server, product_name):
+    wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
+
+    test_layer = wms.contents[product_name]
+    query_times = ['2021-12-21T02:01:19', '2021-12-26T02:01:29']
+    bbox = test_layer.boundingBoxWGS84
+    response = requests.get(ows_server.url + '/wms', params={
+        "service": "WMS",
+        "version": "1.3.0",
+        "request": "GetFeatureInfo",
+        "query_layers": product_name,
+        "width": "256",
+        "height": "256",
+        "crs": "EPSG:4326",
+        "bbox": ",".join(str(f) for f in pytest.helpers.enclosed_bbox(bbox, flip=True)),
+        "info_format": "application/json",
+        "feature_count": "20",
+        "styles": "ndvi_delta",
+        "time": ",".join(query_times),
+        "i": "250",
+        "j": "250",
+    })
+    js = response.json()
+    feature = js["features"][0]
+    data = feature["properties"]["data"]
+    for time_slice in data:
+        if time_slice["time"] == "all":
+            assert "red_diff" in time_slice
+            assert "nir_diff" in time_slice
+        else:
+            assert "Sen2Cor Scene Classification" in time_slice["legacy_data"]["SCL"]
+            assert time_slice["legacy_data"]["red_edge_2"] > 0
+            assert "SCL" in time_slice["override"]
+            assert "B8A" in time_slice["override"]
+            assert time_slice["platform"] in ("sentinel-2a", "sentinel-2b")
+
+
 def test_wms_getlegend(ows_server):
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0")

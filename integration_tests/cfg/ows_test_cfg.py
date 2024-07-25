@@ -419,14 +419,14 @@ style_ls_ndvi_delta = {
             },
             "custom_includes": {
                 "red_diff": {
-                    "function": f"{cfgbase}utils.new_finfo_vars",
+                    "function": f"{cfgbase}utils.new_twodate_finfo",
                     "mapped_bands": True,
                     "kwargs": {
                         "band": "red"
                     }
                 },
                 "nir_diff": {
-                    "function": f"{cfgbase}utils.new_finfo_vars",
+                    "function": f"{cfgbase}utils.new_twodate_finfo",
                     "mapped_bands": True,
                     "kwargs": {
                         "band": "nir"
