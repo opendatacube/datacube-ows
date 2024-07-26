@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'datacube-ows'
-copyright = u"2020, Geoscience Australia"
+copyright = u"2017-2024, Open Data Cube Steering Council and contributors (Open Source License)"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
