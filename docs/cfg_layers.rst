@@ -1281,7 +1281,7 @@ Legacy Include Custom Feature Info (include_custom)
 The legacy ``include_custom`` entry is supported for backwards compatibility in favour
 of the ``custom_includes`` entry described above.
 
-The behavour is identical to ``custom_includes`` except that arguments passed to the function
+The behaviour is identical to ``custom_includes`` except that arguments passed to the function
 are different.  Instead of the arguments described above, the function(s) are passed a dictionary
 with a key for each known band, mapping to the numeric value of that band at the chosen pixel.
 
