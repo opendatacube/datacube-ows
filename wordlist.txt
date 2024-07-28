@@ -171,6 +171,7 @@ FeatureListURLs
 fqn
 fs
 func
+fuser
 gda
 gdal
 geobase
@@ -410,6 +411,7 @@ wholeworld
 WholeWorld
 wkid
 wkss
+WKT
 wms
 wmts
 wofs

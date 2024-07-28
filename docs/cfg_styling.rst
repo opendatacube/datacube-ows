@@ -231,6 +231,19 @@ E.g.
         # or invalid - all other pixels are displayed.
     ],
 
+
+Feature Info Custom Style Includes (custom_includes)
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+In addition to the custom includes defined `at the layer level
+<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#custom-layer-includes-custom-includes>`_,
+custom includes can also be defined at the style level.  These are applied only if the GetFeatureInfo
+request specifies a style, and override and entries defined at the layer level.
+
+Style-level includes `behave identically
+<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#custom-layer-includes-custom-includes>`_
+to layer level ``custom-includes`` entries.
+
 Legend
 ++++++
 
@@ -389,3 +402,19 @@ a multi-date handler with the "animate" flag set to True.  E.g.:
 This returns an animated image in the Animated PNG format, with one frame per requested date value.  The
 frame rate of the animation can be controlled with the optional ``frame_duration`` element, which is
 measured in milliseconds and defaults to 1000 if not supplied.
+
+Feature Info Multi-Date Custom Includes (custom_includes)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In addition to the custom includes defined `at the layer level
+<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#custom-layer-includes-custom-includes>`_, and
+`at the style level, as described above<#feature-info-custom-style-includes-custom-includes>`_,
+If the GetFeatureInfo requests a style AND multiple dates, then the multi-date handler
+can define additional custom feature info.
+
+An additional dictionary is appended to the `propoerties::data` list, that already contains a dictionary
+for each date returned by the query. The additional dictionary has ``"time": "all"`` and the fields
+defined by the multi-date handler custom_includes entry.
+
+Unlike other ``custom_include`` entries, the functions specified by the mult-date version is passed
+a MULTI_DATE, single-pixel, multi-band ``xarray.Dataset``.  (Note that no ODC metadata is passed.)

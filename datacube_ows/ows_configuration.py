@@ -705,9 +705,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def parse_feature_info(self, cfg: CFG_DICT):
         self.feature_info_include_utc_dates = bool(cfg.get("include_utc_dates", False))
         custom = cast(dict[str, CFG_DICT | str], cfg.get("include_custom", {}))
-        self.feature_info_custom_includes = {
-            k: FunctionWrapper(self, v) for k, v in custom.items()  # type:ignore[type-var]
-        }
+        self.legacy_feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
+        if self.legacy_feature_info_custom_includes:
+            _LOG.warning("In layer %s: The 'include_custom' directive is deprecated and will be removed in version 1.9. "
+                         "Please refer to the documentation for information on how to migrate your configuration "
+                         "to the new 'custom_includes' directive.", self.name)
+        custom = cfg.get("custom_includes", {})
+        self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
 
     # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg: CFG_DICT):

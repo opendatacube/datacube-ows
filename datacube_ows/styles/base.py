@@ -204,6 +204,10 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.declare_unready("needed_bands")
         self.declare_unready("flag_bands")
 
+        self.feature_info_includes = {
+            k: FunctionWrapper(self, v)
+            for k, v in style_cfg.get("custom_includes", {}).items()
+        }
         self.legend_cfg = self.Legend(self, cast(CFG_DICT, raw_cfg.get("legend", {})))
         if not defer_multi_date:
             self.parse_multi_date(raw_cfg)
@@ -535,6 +539,10 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                     raise ConfigException("Aggregator function is required for non-animated multi-date handlers.")
             self.legend_cfg = self.Legend(self, cast(CFG_DICT, raw_cfg.get("legend", {})))
             self.preserve_user_date_order = cast(bool, cfg.get("preserve_user_date_order", False))
+            self.feature_info_includes = {
+                k: FunctionWrapper(self.style, v)
+                for k, v in cfg.get("custom_includes", {}).items()
+            }
 
         def applies_to(self, count: int) -> bool:
             """Does this multidate handler apply to a request with this number of dates?"""
