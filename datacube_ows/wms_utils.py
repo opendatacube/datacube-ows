@@ -324,9 +324,9 @@ class GetParameters():
         return get_layer_from_arg(args)
 
 
-def single_style_from_args(product, args, required=True):
+def single_style_from_args(layer, args, required=True):
     # User Band Math (overrides style if present).
-    if product.user_band_math and "code" in args and "colorscheme" in args:
+    if layer.user_band_math and "code" in args and "colorscheme" in args:
         code = args["code"]
         mpl_ramp = args["colorscheme"]
         try:
@@ -347,7 +347,7 @@ def single_style_from_args(product, args, required=True):
             raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
                                locator="Colorscalerange parameter")
         try:
-            style = StyleDef(product, {
+            style = StyleDef(layer, {
                 "name": "custom_user_style",
                 "index_expression": code,
                 "mpl_ramp": mpl_ramp,
@@ -374,28 +374,28 @@ def single_style_from_args(product, args, required=True):
         if not style_r and not required:
             return None
         if not style_r:
-            style_r = product.default_style.name
-        style = product.style_index.get(style_r)
+            style_r = layer.default_style.name
+        style = layer.style_index.get(style_r)
         if not style:
             raise WMSException("Style %s is not defined" % style_r,
                                WMSException.STYLE_NOT_DEFINED,
                                locator="Style parameter",
-                               valid_keys=list(product.style_index))
+                               valid_keys=list(layer.style_index))
     return style
 
 class GetLegendGraphicParameters():
     def __init__(self, args):
-        self.product = get_layer_from_arg(args, 'layer')
+        self.layer = get_layer_from_arg(args, 'layer')
 
         # Validate Format parameter
         self.format = get_arg(args, "format", "image format",
                               errcode=WMSException.INVALID_FORMAT,
                               lower=True,
                               permitted_values=["image/png"])
-        self.style = single_style_from_args(self.product, args)
+        self.style = single_style_from_args(self.layer, args)
         self.styles = [self.style]
         # Time parameter
-        self.times = get_times(args, self.product)
+        self.times = get_times(args, self.layer)
 
 
 class GetMapParameters(GetParameters):
@@ -456,7 +456,7 @@ class GetFeatureInfoParameters(GetParameters):
                                "%s parameter" % coords[0])
         self.i = int(i)
         self.j = int(j)
-        self.style = single_style_from_args(self.product, args, required=False)
+        self.style = single_style_from_args(self.layer, args, required=False)
 
 
 # Solar angle correction functions

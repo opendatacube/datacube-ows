@@ -232,22 +232,22 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                     # legacy function signature: pass in band and index data as a dictionary
                     date_info[k] = f(date_info["bands"])
 
-                 # Any custom-defined layer fields
-                    # (entries from the legacy are overwritten by the new if both exist)
-                    for k, f in params.product.feature_info_custom_includes.items():
-                        # New function signature: pass in:
+                # Any custom-defined layer fields
+                # (entries from the legacy are overwritten by the new if both exist)
+                for k, f in params.layer.feature_info_custom_includes.items():
+                    # New function signature: pass in:
+                    # * a single pixel (1x1x1) multiband xarray Dataset, and
+                    # * the ODC Dataset model (i.e. full ODC metadata)
+                    date_info[k] = f(pixel_ds, ds)
+
+                if params.style is not None:
+                    # Any custom-defined style fields
+                    # (style definitions override layer-level entries where both exist)
+                    for k, f in params.style.feature_info_includes.items():
+                        # Function signature: pass in:
                         # * a single pixel (1x1x1) multiband xarray Dataset, and
                         # * the ODC Dataset model (i.e. full ODC metadata)
                         date_info[k] = f(pixel_ds, ds)
-
-                    if params.style is not None:
-                        # Any custom-defined style fields
-                        # (style definitions override layer-level entries where both exist)
-                        for k, f in params.style.feature_info_includes.items():
-                            # Function signature: pass in:
-                            # * a single pixel (1x1x1) multiband xarray Dataset, and
-                            # * the ODC Dataset model (i.e. full ODC metadata)
-                            date_info[k] = f(pixel_ds, ds)
 
                 cast(list[RAW_CFG], feature_json["data"]).append(date_info)
                 fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)["data"][-1]
