@@ -1234,35 +1234,38 @@ days.
 This configuration option is provided to allow compatibility with other systems that
 do not use solar days and is not recommended for normal use.
 
-Include Custom Info (include_custom)
-++++++++++++++++++++++++++++++++++++
+Custom Layer Includes (custom_includes)
++++++++++++++++++++++++++++++++++++++++
 
-Determines how multiple dataset arrays are compressed into a
-single time array. Specified using OWS's `function configuration
-format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
-
-"include_custom" allows custom data to be included in GetFeatureInfo responses. It
+"custom_includes" allows custom data to be included in GetFeatureInfo responses. It
 is optional and defaults to an empty dictionary (i.e. no custom data.)
 
-The keys of the "include_custom" dictionary are the keys that will be included in the
-GetFeatureInfo responses.  They should therefore be keys that are not included by
-default (e.g. "data", "data_available_for_dates", "data_links") - if you use one of
-these keys, the defined custom data will REPLACE the default data for these keys.
-
-The values for the dictionary entries are Python functions specified using
+``custom_includes`` is dictionary mapping keys to functions specified with
 OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
 
-The specified function(s) are expected to be passed a dictionary of band values
-(as parameter "data") and can return any data that can be serialised to JSON.
+The keys of the "custom_includes" dictionary are the keys that will be included in the
+GetFeatureInfo responses.  They should therefore be keys that are not included by
+default (i.e. "time", "bands", "band_derived") - if you use of these keys, the custom data
+will REPLACE the default values.
 
-E.g.
+Custom includes defined here may be over-ridden by custom includes set at the style level if
+the GetFeatureInfo request includes the style.
 
-::
+The specified function(s) are passed:
+
+ * A single-pixel, single time-step, multi-band ``xarray.Dataset``.
+ * A ``datacube.model.Dataset``.  Note that if multiple datasets are available for the same area,
+   the one supplied to the function may not be the one the pixel was loaded from, depending on
+   the fuser function.  This will usually not be an issue.
+
+The specified function(s) can to return any data that can be serialised to JSON.
+
+E.g.::
 
     "feature_info": {
         "include_custom": {
             "timeseries": {
-                "function": "datacube_ows.ogc_utils.feature_info_url_template",
+                "function": "my_config_funcs.time_series_url",
                 "pass_product_cfg": False,
                 "kwargs": {
                     "template": "https://host.domain/path/{data['f_id']:06}.csv"
@@ -1270,6 +1273,23 @@ E.g.
             }
         }
     }
+
+
+Legacy Include Custom Feature Info (include_custom)
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The legacy ``include_custom`` entry is supported for backwards compatibility in favour
+of the ``custom_includes`` entry described above.
+
+The behaviour is identical to ``custom_includes`` except that arguments passed to the function
+are different.  Instead of the arguments described above, the function(s) are passed a dictionary
+with a key for each known band, mapping to the numeric value of that band at the chosen pixel.
+
+"include_custom" allows custom data to be included in GetFeatureInfo responses. It
+is optional and defaults to an empty dictionary (i.e. no custom data.)
+
+Legacy ``include_custom`` entries can be over-ridden by new-style ``custom-includes``.
+
 
 -----------------------------------
 Styling Section (styling)

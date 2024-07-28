@@ -455,6 +455,7 @@ class GetFeatureInfoParameters(GetParameters):
                                "%s parameter" % coords[0])
         self.i = int(i)
         self.j = int(j)
+        self.style = single_style_from_args(self.product, args, required=False)
 
 
 # Solar angle correction functions
