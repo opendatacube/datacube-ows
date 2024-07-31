@@ -9,7 +9,7 @@ import logging
 import os
 from importlib import import_module
 from itertools import chain
-from typing import Any, Callable, Iterable, Optional, Sequence, TypeVar, cast
+from typing import Any, Callable, Iterable, Optional, Sequence, cast
 from urllib.parse import urlparse
 
 import fsspec
