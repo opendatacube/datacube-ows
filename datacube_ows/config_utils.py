@@ -34,7 +34,7 @@ RAW_CFG = None | str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG
 
 CFG_DICT = dict[str, RAW_CFG]
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = Callable[..., Any]
 
 
 # inclusions defaulting to an empty list is dangerous, but note that it is never modified.

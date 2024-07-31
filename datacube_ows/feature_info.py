@@ -264,7 +264,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                         # Function signature: pass in:
                         # * a multi-date single pixel (1x1xn) multiband xarray Dataset,
                         date_info[k] = f(data)
-                feature_json["data"].append(date_info)
+                cast(list[RAW_CFG], feature_json["data"]).append(date_info)
         feature_json["data_available_for_dates"] = []
         pt_native = None
         for d in all_time_datasets.coords["time"].values:

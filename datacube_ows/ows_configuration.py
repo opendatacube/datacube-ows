@@ -34,7 +34,7 @@ from ows import Version
 from slugify import slugify
 
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
-                                       FlagProductBands, FunctionWrapper,
+                                       F, FlagProductBands, FunctionWrapper,
                                        ODCInitException, OWSConfigEntry,
                                        OWSEntryNotFound, OWSExtensibleConfigEntry,
                                        OWSFlagBand, OWSMetadataConfig,
@@ -710,7 +710,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             _LOG.warning("In layer %s: The 'include_custom' directive is deprecated and will be removed in version 1.9. "
                          "Please refer to the documentation for information on how to migrate your configuration "
                          "to the new 'custom_includes' directive.", self.name)
-        custom = cfg.get("custom_includes", {})
+        custom = cast(dict[str, CFG_DICT | str | F], cfg.get("custom_includes", {}))
         self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
 
     # pylint: disable=attribute-defined-outside-init

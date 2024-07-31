@@ -589,11 +589,13 @@ class ColorRampDef(StyleDefBase):
             :return: RGBA image xarray.  May have a time dimension
             """
             if self.pass_raw_data:
+                assert self.aggregator is not None  # For type-checker
                 agg = self.aggregator(data)
             else:
                 xformed_data = cast("ColorRampDef", self.style).apply_index(data)
                 agg = cast(FunctionWrapper, self.aggregator)(xformed_data)
             return self.color_ramp.apply(agg)
+
         class Legend(RampLegendBase):
             pass
 
