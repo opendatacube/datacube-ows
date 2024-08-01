@@ -412,9 +412,9 @@ In addition to the custom includes defined `at the layer level
 If the GetFeatureInfo requests a style AND multiple dates, then the multi-date handler
 can define additional custom feature info.
 
-An additional dictionary is appended to the `propoerties::data` list, that already contains a dictionary
+An additional dictionary is appended to the `properties::data` list, that already contains a dictionary
 for each date returned by the query. The additional dictionary has ``"time": "all"`` and the fields
 defined by the multi-date handler custom_includes entry.
 
-Unlike other ``custom_include`` entries, the functions specified by the mult-date version is passed
+Unlike other ``custom_include`` entries, the functions specified by the multi-date version is passed
 a MULTI_DATE, single-pixel, multi-band ``xarray.Dataset``.  (Note that no ODC metadata is passed.)
