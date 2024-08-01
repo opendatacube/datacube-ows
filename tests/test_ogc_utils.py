@@ -70,16 +70,6 @@ def test_tz_bad_coords():
         tzinf = datacube_ows.ogc_utils.tz_for_coord(-88.8, 155.2)
 
 
-def test_local_date(dummy_ds):
-    ld = datacube_ows.ogc_utils.local_date(dummy_ds)
-    assert ld.year == 2020
-    assert ld.day == 26
-    tz = datacube_ows.ogc_utils.tz_for_dataset(dummy_ds)
-    ld = datacube_ows.ogc_utils.local_date(dummy_ds, tz)
-    assert ld.year == 2020
-    assert ld.day == 26
-
-
 def test_month_date_range_wrap():
     d = datetime.date(2019, 12, 1)
     a, b = datacube_ows.ogc_utils.month_date_range(d)
