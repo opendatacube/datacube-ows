@@ -7,6 +7,22 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.42 (2024-08-01)
+-------------------
+
+Bug fixes and major extensions for defining custom feature info includes - refer to the documentation
+for details.
+
+* Fix dockerfile casing warning (#1035)
+* Add --version argument to datacube-ows CLI entry point (#1036)
+* Auto-add implicit single top-level folder to ensure strict WMS standard compliance (#1036)
+* Changes to materialised view definition to prevent errors on databases with WKT CRS (#1037)
+* Custom Feature Info enhancements (#1039)
+* Miscellaneous cleanup and backported fixes from 1.9 branch (#1042)
+* Update default version number and HISTORY.rst for release (#1043)
+
+This release includes contributions from @SpacemanPaul and @pjonsson.
+
 1.8.41 (2024-07-16)
 -------------------
 
