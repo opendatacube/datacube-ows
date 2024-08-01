@@ -1516,7 +1516,7 @@ class OWSConfig(OWSMetadataConfig):
         self.layer_index: dict[str, OWSNamedLayer] = {}
         self.declare_unready("native_product_index")
         self.root_layer_folder = OWSFolder(cast(CFG_DICT, {
-            "title": "Root Folder (hidden)",
+            "title": self.title,
             "abstract": self.abstract,
             "label": "ows_root",
             "layers": cfg
