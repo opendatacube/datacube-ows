@@ -2,10 +2,46 @@
 History
 =======
 
+1.9.x Releases
+==============
+
+Datacube-ows version 1.9.x indicates that it is designed work with datacube-core versions 1.9.x.
+
+1.9.0-rc1 (2024-08-01)
+----------------------
+
+* Compatibility with datacube-1.9 and postgres index driver (#1009)
+* Cleanup (#1012)
+* ODC environment configuration (#1015)
+* Postgres ranges rebuild (#1017)
+* Cherry picks of bug fixes and new features from 1.8 branch (#1018, #1028, #1040)
+* Test database build (#1021)
+* Index driver abstraction (#1020)
+* Postgis driver support (#1032)
+* Prepare for 1.9.0-rc1 release (#1044)
+
+This release includes contributions from @SpacemanPaul
+
 1.8.x Releases
 ==============
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
+
+1.8.42 (2024-08-01)
+-------------------
+
+Bug fixes and major extensions for defining custom feature info includes - refer to the documentation
+for details.
+
+* Fix dockerfile casing warning (#1035)
+* Add --version argument to datacube-ows CLI entry point (#1036)
+* Auto-add implicit single top-level folder to ensure strict WMS standard compliance (#1036)
+* Changes to materialised view definition to prevent errors on databases with WKT CRS (#1037)
+* Custom Feature Info enhancements (#1039)
+* Miscellaneous cleanup and backported fixes from 1.9 branch (#1042)
+* Update default version number and HISTORY.rst for release (#1043)
+
+This release includes contributions from @SpacemanPaul and @pjonsson.
 
 1.8.41 (2024-07-16)
 -------------------
