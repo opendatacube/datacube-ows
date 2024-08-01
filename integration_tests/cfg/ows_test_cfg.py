@@ -389,13 +389,23 @@ style_ls_ndvi_delta = {
         {"value": 0.9, "color": "#237100"},
         {"value": 1.0, "color": "#114D04"},
     ],
+    "custom_includes": {
+        "override": f"{cfgbase}utils.new_finfo_vars",  # Over-rides above
+        "platform": f"{cfgbase}utils.new_finfo_platform",  # from metadata
+    },
     "multi_date": [
         {
             "allowed_count_range": [2, 2],
             "animate": False,
             "preserve_user_date_order": True,
+            "pass_raw_data": True,
             "aggregator_function": {
-                "function": "datacube_ows.band_utils.multi_date_delta",
+                "function": "datacube_ows.band_utils.multi_date_raw_example",
+                "mapped_bands": True,
+                "kwargs": {
+                    "band1": "nir",
+                    "band2": "red",
+                }
             },
             "mpl_ramp": "RdYlBu",
             "range": [-1.0, 1.0],
@@ -407,6 +417,22 @@ style_ls_ndvi_delta = {
                     "0.0",
                     "1.0",
                 ]
+            },
+            "custom_includes": {
+                "red_diff": {
+                    "function": f"{cfgbase}utils.new_twodate_finfo",
+                    "mapped_bands": True,
+                    "kwargs": {
+                        "band": "red"
+                    }
+                },
+                "nir_diff": {
+                    "function": f"{cfgbase}utils.new_twodate_finfo",
+                    "mapped_bands": True,
+                    "kwargs": {
+                        "band": "nir"
+                    }
+                },
             },
             "feature_info_label": "ndvi_delta",
         },
@@ -808,6 +834,16 @@ ows_cfg = {
                                     # "manual_merge": True,
                                 },
                             ],
+                            "feature_info": {
+                                "include_custom": {
+                                    "legacy_data": f"{cfgbase}utils.legacy_finfo_data",  # Will be kept
+                                    "override": f"{cfgbase}utils.legacy_finfo_data",  # Will be overriden by non-legacy
+                                },
+                                "custom_includes": {
+                                    "override": f"{cfgbase}utils.new_finfo_vars",  # Over-rides above
+                                    "platform": f"{cfgbase}utils.new_finfo_platform",  # from metadata
+                                },
+                            },
                             "native_crs": "EPSG:3857",
                             "native_resolution": [30.0, -30.0],
                             "styling": {

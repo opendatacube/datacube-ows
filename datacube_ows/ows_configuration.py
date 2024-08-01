@@ -34,7 +34,7 @@ from ows import Version
 from slugify import slugify
 
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
-                                       FlagProductBands, FunctionWrapper,
+                                       F, FlagProductBands, FunctionWrapper,
                                        ODCInitException, OWSConfigEntry,
                                        OWSEntryNotFound, OWSExtensibleConfigEntry,
                                        OWSFlagBand, OWSMetadataConfig,
@@ -705,9 +705,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def parse_feature_info(self, cfg: CFG_DICT):
         self.feature_info_include_utc_dates = bool(cfg.get("include_utc_dates", False))
         custom = cast(dict[str, CFG_DICT | str], cfg.get("include_custom", {}))
-        self.feature_info_custom_includes = {
-            k: FunctionWrapper(self, v) for k, v in custom.items()  # type:ignore[type-var]
-        }
+        self.legacy_feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
+        if self.legacy_feature_info_custom_includes:
+            _LOG.warning("In layer %s: The 'include_custom' directive is deprecated and will be removed in version 1.9. "
+                         "Please refer to the documentation for information on how to migrate your configuration "
+                         "to the new 'custom_includes' directive.", self.name)
+        custom = cast(dict[str, CFG_DICT | str | F], cfg.get("custom_includes", {}))
+        self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
 
     # pylint: disable=attribute-defined-outside-init
     def parse_flags(self, cfg: CFG_DICT):
@@ -1512,14 +1516,19 @@ class OWSConfig(OWSMetadataConfig):
         self.layer_index: dict[str, OWSNamedLayer] = {}
         self.declare_unready("native_product_index")
         self.root_layer_folder = OWSFolder(cast(CFG_DICT, {
-            "title": "Root Folder (hidden)",
-            "label": "ows_root_hidden",
+            "title": self.title,
+            "abstract": self.abstract,
+            "label": "ows_root",
             "layers": cfg
         }), global_cfg=self, parent_layer=None)
 
     @property
     def layers(self) -> list[OWSLayer]:
-        return self.root_layer_folder.child_layers
+        # Multiple top-level are not consistent with a strict reading of the OWS standard.
+        # If we have multiple top-level folders, wrap them in an auto-generated top-level folder.
+        if len(self.root_layer_folder.child_layers) == 1:
+            return self.root_layer_folder.child_layers
+        return [self.root_layer_folder]
 
     def alias_bboxes(self, bboxes: CFG_DICT) -> CFG_DICT:
         out: CFG_DICT = {}

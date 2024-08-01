@@ -9,7 +9,7 @@ import logging
 import os
 from importlib import import_module
 from itertools import chain
-from typing import Any, Callable, Iterable, Optional, Sequence, TypeVar, cast
+from typing import Any, Callable, Iterable, Optional, Sequence, cast
 from urllib.parse import urlparse
 
 import fsspec
@@ -34,7 +34,7 @@ RAW_CFG = None | str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG
 
 CFG_DICT = dict[str, RAW_CFG]
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = Callable[..., Any]
 
 
 # inclusions defaulting to an empty list is dangerous, but note that it is never modified.

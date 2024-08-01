@@ -227,12 +227,44 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 derived_band_dict = cast(RAW_CFG, _make_derived_band_dict(pixel_ds, params.layer.style_index))
                 if derived_band_dict:
                     date_info["band_derived"] = derived_band_dict
-                # Add any custom-defined fields.
-                for k, f in params.layer.feature_info_custom_includes.items():
+                # Add any legacy custom-defined fields.
+                for k, f in params.layer.legacy_feature_info_custom_includes.items():
+                    # legacy function signature: pass in band and index data as a dictionary
                     date_info[k] = f(date_info["bands"])
+
+                # Any custom-defined layer fields
+                # (entries from the legacy are overwritten by the new if both exist)
+                for k, f in params.layer.feature_info_custom_includes.items():
+                    # New function signature: pass in:
+                    # * a single pixel (1x1x1) multiband xarray Dataset, and
+                    # * the ODC Dataset model (i.e. full ODC metadata)
+                    date_info[k] = f(pixel_ds, ds)
+
+                if params.style is not None:
+                    # Any custom-defined style fields
+                    # (style definitions override layer-level entries where both exist)
+                    for k, f in params.style.feature_info_includes.items():
+                        # Function signature: pass in:
+                        # * a single pixel (1x1x1) multiband xarray Dataset, and
+                        # * the ODC Dataset model (i.e. full ODC metadata)
+                        date_info[k] = f(pixel_ds, ds)
 
                 cast(list[RAW_CFG], feature_json["data"]).append(date_info)
                 fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)["data"][-1]
+            # Multidate custom includes reflect all selected times on multidate requests,
+            # and are added as an extra all-time data record after the date ones.
+            times = list(data.time.values)
+            if len(times) > 1 and params.style is not None:
+                mdh = params.style.get_multi_date_handler(times)
+                if mdh is not None:
+                    date_info = {
+                        "time": "all"
+                    }
+                    for k, f in mdh.feature_info_includes.items():
+                        # Function signature: pass in:
+                        # * a multi-date single pixel (1x1xn) multiband xarray Dataset,
+                        date_info[k] = f(data)
+                cast(list[RAW_CFG], feature_json["data"]).append(date_info)
         feature_json["data_available_for_dates"] = []
         pt_native = None
         for d in all_time_datasets.coords["time"].values:

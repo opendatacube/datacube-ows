@@ -301,34 +301,82 @@ def test_wms_getfeatureinfo(ows_server):
     for test_layer_name in contents:
         test_layer = wms.contents[test_layer_name]
 
-        bbox = test_layer.boundingBoxWGS84
-        response = wms.getfeatureinfo(
-            layers=[test_layer_name],
-            srs="EPSG:4326",
-            bbox=pytest.helpers.enclosed_bbox(bbox),
-            size=(256, 256),
-            format="image/png",
-            query_layers=[test_layer_name],
-            info_format="application/json",
-            xy=(250, 250),
-        )
+        test_times = test_layer.timepositions
+        if test_times is None:
+            test_times = [None]
+        elif len(test_times) > 8:
+            test_times = [test_times[0], test_times[6], test_times[-1]]
+        elif len(test_times) == 1 and '/' in test_times[0]:
+            test_times = test_times[0].split('/')
+            test_times = list(test_times[0:2])
+        for test_time in test_times:
+            bbox = test_layer.boundingBoxWGS84
+            response = wms.getfeatureinfo(
+                layers=[test_layer_name],
+                srs="EPSG:4326",
+                bbox=pytest.helpers.enclosed_bbox(bbox),
+                size=(256, 256),
+                format="image/png",
+                query_layers=[test_layer_name],
+                info_format="application/json",
+                times=test_time,
+                xy=(250, 250),
+            )
 
-        assert response
-        assert response.info()["Content-Type"] == "application/json"
+            assert response
+            assert response.info()["Content-Type"] == "application/json"
 
-        response = wms.getfeatureinfo(
-            layers=[test_layer_name],
-            srs="EPSG:4326",
-            bbox=pytest.helpers.enclosed_bbox(bbox),
-            size=(256, 256),
-            format="image/png",
-            query_layers=[test_layer_name],
-            info_format="text/html",
-            xy=(250, 250),
-        )
+            response = wms.getfeatureinfo(
+                layers=[test_layer_name],
+                srs="EPSG:4326",
+                bbox=pytest.helpers.enclosed_bbox(bbox),
+                size=(256, 256),
+                format="image/png",
+                query_layers=[test_layer_name],
+                info_format="text/html",
+                times=test_time,
+                xy=(250, 250),
+            )
 
-        assert response
-        assert response.info()["Content-Type"] == "text/html"
+            assert response
+            assert response.info()["Content-Type"] == "text/html"
+
+
+def test_custom_feature_info(ows_server, product_name):
+    wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
+
+    test_layer = wms.contents[product_name]
+    query_times = ['2021-12-21T02:01:19', '2021-12-26T02:01:29']
+    bbox = test_layer.boundingBoxWGS84
+    response = requests.get(ows_server.url + '/wms', params={
+        "service": "WMS",
+        "version": "1.3.0",
+        "request": "GetFeatureInfo",
+        "query_layers": product_name,
+        "width": "256",
+        "height": "256",
+        "crs": "EPSG:4326",
+        "bbox": ",".join(str(f) for f in pytest.helpers.enclosed_bbox(bbox, flip=True)),
+        "info_format": "application/json",
+        "feature_count": "20",
+        "styles": "ndvi_delta",
+        "time": ",".join(query_times),
+        "i": "250",
+        "j": "250",
+    })
+    js = response.json()
+    feature = js["features"][0]
+    data = feature["properties"]["data"]
+    for time_slice in data:
+        if time_slice["time"] == "all":
+            assert "red_diff" in time_slice
+            assert "nir_diff" in time_slice
+        else:
+            assert "Sen2Cor Scene Classification" in time_slice["legacy_data"]["SCL"]
+            assert time_slice["legacy_data"]["red_edge_2"] > 0
+            assert "SCL" in time_slice["override"]
+            assert "B8A" in time_slice["override"]
+            assert time_slice["platform"] in ("sentinel-2a", "sentinel-2b")
 
 
 def test_wms_getlegend(ows_server):
