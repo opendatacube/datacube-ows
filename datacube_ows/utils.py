@@ -70,7 +70,7 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
             ds.time.begin.year,
             ds.time.begin.month,
             ds.time.begin.day,
-            tzinfo=pytz.utc))
+            tzinfo=pytz.utc), "ns")
     else:
         grp_by = lambda ds: npdt64(datetime.datetime(
             ds.time.begin.year,
@@ -79,7 +79,7 @@ def group_by_begin_datetime(pnames: Optional[List[str]] = None,
             ds.time.begin.hour,
             ds.time.begin.minute,
             ds.time.begin.second,
-            tzinfo=ds.time.begin.tzinfo))
+            tzinfo=ds.time.begin.tzinfo), "ns")
     return GroupBy(
         dimension='time',
         group_by_func=grp_by,
@@ -120,7 +120,9 @@ def group_by_mosaic(pnames: Optional[List[str]] = None) -> "datacube.api.query.G
         sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))
     return GroupBy(
         dimension='time',
-        group_by_func=lambda n: npdt64(datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)),
+        group_by_func=lambda n: npdt64(
+            datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
+            "ns"),
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )

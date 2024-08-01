@@ -350,7 +350,7 @@ def get_coverage_data(req, qprof):
             )
             if req.product.time_resolution.is_subday():
                 timevals = [
-                    numpy.datetime64(dt.astimezone(pytz.utc).isoformat())
+                    numpy.datetime64(dt.astimezone(pytz.utc).isoformat(), "ns")
                     for dt in req.times
                 ]
             else:

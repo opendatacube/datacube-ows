@@ -64,20 +64,6 @@ def solar_date(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.date:
     return dt.astimezone(tz).date()
 
 
-def local_date(ds: "datacube.model.Dataset", tz: Optional[datetime.tzinfo] = None) -> datetime.date:
-    """
-    Calculate the local (solar) date for a dataset.
-
-    :param ds: An ODC dataset object
-    :param tz: (optional) A timezone object. If not provided, determine the timezone from extent of the dataset.
-    :return: A date object.
-    """
-    dt_utc: datetime.datetime = dataset_center_time(ds)
-    if not tz:
-        tz = tz_for_geometry(ds.extent)
-    return solar_date(dt_utc, tz)
-
-
 def tz_for_dataset(ds: "datacube.model.Dataset") -> datetime.tzinfo:
     """
     Determine the timezone for a dataset (using it's extent)
