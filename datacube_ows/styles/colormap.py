@@ -231,7 +231,7 @@ def apply_value_map(value_map: MutableMapping[str, List[AbstractValueMapRule]],
                     data: Dataset,
                     band_mapper: Callable[[str], str]) -> Dataset:
     imgdata = Dataset(coords={k: v for k, v in data.coords.items() if k != "time"})
-    shape = list(imgdata.dims.values())
+    shape = list(imgdata.sizes.values())
     for channel in ("red", "green", "blue", "alpha"):
         c = numpy.full(shape, 0, dtype="uint8")
         imgdata[channel] = DataArray(c, coords=imgdata.coords)
