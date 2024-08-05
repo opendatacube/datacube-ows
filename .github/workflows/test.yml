@@ -62,7 +62,7 @@ jobs:
           chmod a+rw artifacts
           export $(grep -v '^#' .env_simple | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows_18 /bin/sh -c "cd /code;./check-code-all.sh"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
       - name: Upload All coverage to Codecov
