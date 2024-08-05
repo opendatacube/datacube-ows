@@ -7,10 +7,10 @@ import datetime
 import logging
 from functools import wraps
 from time import monotonic
-from numpy import datetime64
 from typing import Any, Callable, List, Optional, TypeVar
 
 import pytz
+from numpy import datetime64
 from numpy import datetime64 as npdt64
 
 F = TypeVar('F', bound=Callable[..., Any])
