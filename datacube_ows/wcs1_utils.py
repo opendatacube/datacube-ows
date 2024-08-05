@@ -350,7 +350,7 @@ def get_coverage_data(req, qprof):
             )
             if req.product.time_resolution.is_subday():
                 timevals = [
-                    numpy.datetime64(dt.astimezone(pytz.utc).isoformat(), "ns")
+                    numpy.datetime64(dt.astimezone(pytz.utc).replace(tzinfo=None).isoformat(), "ns")
                     for dt in req.times
                 ]
             else:
@@ -436,8 +436,8 @@ def get_tiff(req, data):
         # pylint: disable=protected-access, bad-continuation
         with memfile.open(
             driver="GTiff",
-            width=data.dims[xname],
-            height=data.dims[yname],
+            width=data.sizes[xname],
+            height=data.sizes[yname],
             count=len(data.data_vars),
             transform=req.affine,
             crs=req.response_crsid,
