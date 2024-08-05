@@ -28,7 +28,7 @@ on:
 
 env:
   ORG: opendatacube
-  IMAGE: ows
+  IMAGE: ows_18
 
 jobs:
   unit-integration-performance-tests:
