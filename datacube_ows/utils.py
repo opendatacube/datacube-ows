@@ -10,7 +10,6 @@ from time import monotonic
 from typing import Any, Callable, List, Optional, TypeVar
 
 import pytz
-from numpy import datetime64
 from numpy import datetime64 as npdt64
 
 F = TypeVar('F', bound=Callable[..., Any])
@@ -94,7 +93,7 @@ def group_by_solar(pnames: Optional[List[str]] = None) -> "datacube.api.query.Gr
         sort_key = base_sort_key
     return GroupBy(
         dimension='time',
-        group_by_func=lambda x: datetime64(solar_day(x), "ns"),
+        group_by_func=lambda x: npdt64(solar_day(x), "ns"),
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )
