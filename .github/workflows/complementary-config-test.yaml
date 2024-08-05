@@ -59,8 +59,8 @@ jobs:
           cd ./datacube-ows
           export $(grep -v '^#' ./complementary_config_test/.env_complementary_config_dea_dev | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml up -d
-          docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml exec -T ows /bin/sh -c "cd /code; sh ./docker/ows/wait-for-db"
-          docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml exec -T ows /bin/sh -c "datacube system init; datacube system check"
-          docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code; ./compare-cfg.sh"
+          docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml exec -T ows_18 /bin/sh -c "cd /code; sh ./docker/ows/wait-for-db"
+          docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml exec -T ows_18 /bin/sh -c "datacube system init; datacube system check"
+          docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml exec -T ows_18 /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows_18 /bin/sh -c "cd /code; ./compare-cfg.sh"
           docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml down
