@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-import pytz
 from datacube.utils import geometry
 from xarray import Dataset
 
