@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   index:
     image: opendatacube/datacube-index:latest

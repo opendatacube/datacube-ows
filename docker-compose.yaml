@@ -1,5 +1,3 @@
-version: '3.4'
-
 # Default compose will create an ows image, with dev settings and connect to a local db
 services:
   ows:
