@@ -54,6 +54,8 @@ jobs:
       # Build prod image and tag as latest, connect to pre-indexed database
       - name: Build and run prod OWS images (stage 2)
         run: |
+          export LOCAL_UID=$(id -u $USER)
+          export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up -d
 

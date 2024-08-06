@@ -38,6 +38,16 @@ RUN pip freeze
 # Should match builder base.
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.8.5
 
+RUN apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            gosu \
+            tini \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
+
+# Add login-script for UID/GID-remapping.
+COPY --chown=root:root --link docker/files/remap-user.sh /usr/local/bin/remap-user.sh
+
 # all the python pip installed libraries
 COPY --from=builder  /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
 COPY --from=builder  /usr/lib/python3/dist-packages /usr/lib/python3/dist-packages
@@ -68,7 +78,7 @@ WORKDIR /code
 COPY . /code
 
 # Configure user
-RUN useradd -m -s /bin/bash -N -g 100 -u 1001 ows
+RUN useradd -m -s /bin/bash ows
 WORKDIR "/home/ows"
 
 ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
@@ -78,5 +88,5 @@ ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
 
 RUN chown 1000:100 /dev/shm
 
-USER ows
+ENTRYPOINT ["/usr/local/bin/remap-user.sh"]
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers=3", "--threads=2", "-k", "gevent", "--timeout", "121", "--pid", "/home/ows/gunicorn.pid", "--log-level", "info", "--worker-tmp-dir", "/dev/shm", "--config", "python:datacube_ows.gunicorn_config", "datacube_ows.wsgi"]
