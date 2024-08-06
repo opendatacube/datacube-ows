@@ -56,6 +56,8 @@ jobs:
 
       - name: Config parser check
         run: |
+          export LOCAL_UID=$(id -u $USER)
+          export LOCAL_GID=$(id -g $USER)
           cd ./datacube-ows
           export $(grep -v '^#' ./complementary_config_test/.env_complementary_config_dea_dev | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.cleandb.yaml up -d
