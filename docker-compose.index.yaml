@@ -9,5 +9,6 @@ services:
       DB_DATABASE: ${DB_DATABASE}
     restart: always
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     command: tail -f /dev/null

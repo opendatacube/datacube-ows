@@ -63,7 +63,7 @@ jobs:
           export LOCAL_UID=$(id -u $USER)
           export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml up -d
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml up -d --wait --build
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml down
 

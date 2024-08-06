@@ -57,12 +57,7 @@ jobs:
           export LOCAL_UID=$(id -u $USER)
           export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up -d
-
-      - name: Sleep for 10 seconds
-        uses: whatnick/wait-action@master
-        with:
-          time: '10s'
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up -d --wait
 
       # Run some tests on the images
       # These tests require a working database
