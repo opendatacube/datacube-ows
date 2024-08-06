@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   postgres:
     # db with some data from s2_l2a pre-indexed

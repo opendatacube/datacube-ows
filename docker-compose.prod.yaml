@@ -1,5 +1,3 @@
-version: '3.4'
-
 # override default compose to change the launch command
 
 services:
