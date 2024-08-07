@@ -55,9 +55,9 @@ jobs:
         export LOCAL_UID=$(id -u $USER)
         export LOCAL_GID=$(id -g $USER)
         export $(grep -v '^#' .env_simple | xargs)
-        echo "::set-output name=PID::$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' \
+        echo "PID=$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' \
         $(docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows_18) \
-        | cut -c2-))"
+        | cut -c2-))" >> $GITHUB_OUTPUT
 
     - name: Run py-spy profiling (stage 1 - run profiling service)
       timeout-minutes: 1
