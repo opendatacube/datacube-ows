@@ -10,7 +10,7 @@ repos:
     hooks:
     -   id: isort
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.1
     hooks:
     -   id: flake8
         args: ["--ignore=E501", "--select=F401,E201,E202,E203,E502,E241,E225,E306,E231,E226,E123,F811"]
@@ -19,7 +19,7 @@ repos:
 #     hooks:
 #     -   id: bandit
 -   repo: https://github.com/PyCQA/pylint
-    rev: v3.2.3
+    rev: v3.2.6
     hooks:
       - id: pylint
         args: ["--disable=C,R,W,E1136"]
