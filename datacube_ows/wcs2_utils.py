@@ -6,6 +6,7 @@
 import collections
 import logging
 
+import numpy
 from datacube.utils import geometry
 from dateutil.parser import parse
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
@@ -386,10 +387,10 @@ def get_tiff(request, data, crs, product, width, height, affine):
                 dst.write(data[band].values, idx)
                 dst.set_band_description(idx, product.band_idx.band_label(band))
                 if cfg.wcs_tiff_statistics:
-                    dst.update_tags(idx, STATISTICS_MINIMUM=data[band].values.min())
-                    dst.update_tags(idx, STATISTICS_MAXIMUM=data[band].values.max())
-                    dst.update_tags(idx, STATISTICS_MEAN=data[band].values.mean())
-                    dst.update_tags(idx, STATISTICS_STDDEV=data[band].values.std())
+                    dst.update_tags(idx, STATISTICS_MINIMUM=numpy.nanmin(data[band].values))
+                    dst.update_tags(idx, STATISTICS_MAXIMUM=numpy.nanmax(data[band].values))
+                    dst.update_tags(idx, STATISTICS_MEAN=numpy.nanmean(data[band].values))
+                    dst.update_tags(idx, STATISTICS_STDDEV=numpy.nanstd(data[band].values))
         return memfile.read()
 
 
