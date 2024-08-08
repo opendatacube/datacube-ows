@@ -2,9 +2,6 @@
 # Convenience script for running Travis-like checks.
 set -ex
 
-# ensure db is ready
-sh ./docker/ows/wait-for-db
-
 # Initialise ODC schemas
 
 datacube system init

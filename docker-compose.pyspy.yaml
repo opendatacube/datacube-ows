@@ -1,9 +1,10 @@
-version: '3.4'
-
 services:
   ows:
     cap_add:
       - SYS_PTRACE
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   pyspy:
     build: docker/pyspy/

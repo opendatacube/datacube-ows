@@ -1,9 +1,8 @@
-version: '3.4'
-
 services:
   postgres:
     # db
     build: docker/database/
+    hostname: postgres
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -11,7 +10,15 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "postgres", "-q", "-d", "$POSTGRES_DB", "-U", "$POSTGRES_USER"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
   # Overwrite ows so it can talk to docker db
   ows:
     ports:
       - 8000:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
