@@ -7,24 +7,24 @@ on:
         - 'master'
     paths:
       - '**'
-      - '.github/workflows/test-prod.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
       - '!.github/**'
+      - '.github/workflows/test-prod.yaml'
 
   push:
     branches:
       - 'master'
     paths:
       - '**'
-      - '.github/workflows/test-prod.yaml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
       - '!.github/**'
+      - '.github/workflows/test-prod.yaml'
 
 env:
   ORG: opendatacube
