@@ -1,9 +1,8 @@
-version: '3.4'
-
 services:
   postgres:
     # clean postgis db
     image: kartoza/postgis:13-3.1
+    hostname: postgres
     environment:
       - POSTGRES_DB=${DB_DATABASE}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -11,9 +10,17 @@ services:
     ports:
       - "${DB_PORT}:5432"
     restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "postgres", "-q", "-d", "$POSTGRES_DB", "-U", "$POSTGRES_USER"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
   # Overwrite ows so it can talk to docker db
   ows_18:
     ports:
       - 8000:8000
     environment:
       DB_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy

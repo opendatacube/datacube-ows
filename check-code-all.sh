@@ -2,8 +2,6 @@
 # Convenience script for running Travis-like checks.
 set -ex
 
-# ensure db is ready
-sh ./docker/ows/wait-for-db
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
 
