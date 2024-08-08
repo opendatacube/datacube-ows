@@ -5,8 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import collections
 import logging
-import numpy
 
+import numpy
 from datacube.utils import geometry
 from dateutil.parser import parse
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
