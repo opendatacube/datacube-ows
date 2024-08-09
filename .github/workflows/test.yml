@@ -48,7 +48,7 @@ jobs:
       # the production image
       - name: Build dev OWS image
         run: |
-          docker build \
+          docker build --build-arg ENVIRONMENT=test \
             --tag    ${ORG}/${IMAGE}:_builder \
             .
 
@@ -64,7 +64,7 @@ jobs:
           export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml up -d --wait --build
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /code;./check-code-all.sh"
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows_18 /bin/sh -c "cd /code && ./check-code-all.sh"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
       - name: Upload All coverage to Codecov

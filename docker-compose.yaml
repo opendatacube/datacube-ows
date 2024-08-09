@@ -5,6 +5,7 @@ services:
       context: .
       args:
         PYDEV_DEBUG: "${PYDEV_DEBUG}"
+        ENVIRONMENT: test
       cache_from:
         - opendatacube/ows:_builder
     image: opendatacube/ows:latest
