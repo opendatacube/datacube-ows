@@ -55,9 +55,6 @@ COPY --from=builder  /usr/lib/python3.10/distutils/* /usr/lib/python3.10/distuti
 # postgres client
 COPY --from=builder  /usr/lib/postgresql /usr/lib/postgresql
 COPY --from=builder  /usr/share/postgresql /usr/share/postgresql
-# perl5 is used for pg_isready
-COPY --from=builder  /usr/share/perl5 /usr/share/perl5
-COPY --from=builder  /usr/bin/pg_isready /usr/bin/pg_isready
 # datacube cli
 COPY --from=builder  /usr/local/bin/datacube /usr/local/bin/datacube
 # datacube-ows cli
