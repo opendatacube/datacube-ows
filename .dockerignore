@@ -1,3 +1,9 @@
 datacube_wms/wms_cfg_local.py
 .pytest_cache
 */__pycache__
+
+venv
+.venv
+
+.pixi
+.git
