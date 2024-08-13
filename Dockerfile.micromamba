@@ -1,0 +1,22 @@
+FROM mambaorg/micromamba:1.5.8
+COPY --chown=$MAMBA_USER:$MAMBA_USER env.micromamba.yaml /tmp/env.yaml
+RUN --mount=type=cache,target=/opt/conda/pkgs micromamba install -y -n base -f /tmp/env.yaml && \
+    micromamba clean --all --yes
+
+ARG MAMBA_DOCKERFILE_ACTIVATE=1  # (otherwise python will not be found)
+
+
+COPY --chown=$MAMBA_USER:$MAMBA_USER . /tmp/code
+
+ARG PSEUDO_VERSION # strongly recommended to update based on git describe
+
+RUN SETUPTOOLS_SCM_PRETEND_VERSION_FOR_DATACUBE_OWS=${PSEUDO_VERSION} pip install /tmp/code #-e .[test]
+#RUN pip install /code
+#python -c 'import uuid; print(uuid.uuid4())' > /tmp/my_uuid
+
+ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
+    CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
+    GDAL_HTTP_MAX_RETRY="10" \
+    GDAL_HTTP_RETRY_DELAY="1"
+
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers=3", "-k", "gthread", "--timeout", "121", "--pid", "/tmp/gunicorn.pid", "--log-level", "info", "--worker-tmp-dir", "/dev/shm", "--config", "python:datacube_ows.gunicorn_config", "datacube_ows.wsgi"]
