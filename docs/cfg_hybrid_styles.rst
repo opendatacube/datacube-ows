@@ -7,7 +7,7 @@ OWS Configuration - Hybrid Styles
 Hybrid Styles
 -------------
 
-Hybrid styles are an experimental type of `style <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ that
+Hybrid styles are an experimental type of :doc:`style <cfg_styling>` that
 return a linear combination of a component style and a colour ramp style.
 
 This can allow for a more easily visually interpreted image, but
@@ -15,8 +15,8 @@ there are usually better ways to achieve the same effect on the
 client side.
 
 Hybrid styles support most [*]_ elements supported by either
-`component styles <https://datacube-ows.readthedocs.io/en/latest/cfg_component_styles.html>`_ or
-`colour ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html>`_ and
+:doc:`component styles <cfg_component_styles>` or
+:doc:`colour ramp styles <cfg_colourramp_styles>` and
 define two independent styles (one of each type) that
 are then blended according to the required `component_ratio` entry.
 

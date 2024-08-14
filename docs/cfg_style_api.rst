@@ -125,7 +125,7 @@ There are two API functions that provide this functionality: ``apply_ows_style``
 
 For more detailed examples,
 refer to the
-`styling how-to guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto.html>`_.
+:doc:`styling how-to guide <styling_howto>`.
 
 Saving or Displaying Images
 ---------------------------

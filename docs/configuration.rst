@@ -7,7 +7,6 @@ OWS Configuration
    :hidden:
    :glob:
 
-   configuration
    cfg_global
    cfg_wms
    cfg_wmts
@@ -21,7 +20,6 @@ OWS Configuration
    cfg_colourmap_styles
    cfg_hybrid_styles
    cfg_style_api
-   cfg_style_api_examples
 
 .. contents:: Table of Contents
 
@@ -32,8 +30,8 @@ Introduction
 
 The behaviour of a datacube_ows server instance can be controlled, customised and extended by configuration files.
 
-Datacube OWS configuration files can be written in Python (as a static serialisable python dictionary) or as JSON.
-All examples in this documentation will always be presented in Python syntax.  JSON syntax is almost identical, but
+Datacube OWS configuration files can be written in Python (as a static serialisable Python dictionary) or as JSON.
+All examples in this documentation will always be presented in Python syntax. JSON syntax is almost identical, but
 note that there are some important differences:
 
 1. JSON string literals must always be delimited with double quotes - so no Python-style single quote strings!
@@ -53,10 +51,10 @@ Where is Configuration Read From?
 Configuration is read by default from the ``ows_cfg object`` in ``datacube_ows/ows_cfg.py``
 but this can be overridden by setting the ``$DATACUBE_OWS_CFG`` environment variable.
 
-Configuration can be read from a python file, a json file, or a collection of python
-and/or json files.
+Configuration can be read from a Python file, a JSON file, or a collection of python
+and/or JSON files.
 
-A json file can optionally also be fetched from AWS S3 if access to S3 is configured correctly for datacube_ows
+A JSON file can optionally also be fetched from AWS S3 if access to S3 is configured correctly for datacube_ows
 and the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3`` is set to ``YES``. Please note that this is not
 possible for configurations as python file.
 
@@ -116,12 +114,10 @@ allowing cleaner organisation of configuration and facilitating reuse of common 
 elements across different layers within the one configuration and between different
 configurations or deployment environments.
 
-N.B. The examples here illustrate the inclusion directives only, and are not valid Datacube OWS configuration!
+.. note:: The examples here illustrate the inclusion directives only, and are not valid Datacube OWS configuration!
 
 If you are simply loading config as a Python object, this can be directly achieved by normal programmatic techniques,
-e.g.:
-
-::
+e.g.::
 
   handy_config = {
      "desc": "This is a piece of config that might want to use in multiple places",
@@ -142,7 +138,7 @@ e.g.:
   ]
 
 
-If you want to reuse chunks of config in json, or wish to combine json with and python in your configuration,
+If you want to reuse chunks of config in JSON, or wish to combine JSON with and Python in your configuration,
 the following convention applies in both Python and JSON:
 
 Any JSON or Python element that forms the full configuration tree or a subset of it,
@@ -159,7 +155,7 @@ can be supplied in any of the following ways:
            "another_entry": "llama"
        }
 
-2. Include a python object (by FQN - fully qualified name):
+2. Include a Python object (by FQN - fully qualified name):
 
    ::
 
@@ -172,7 +168,7 @@ can be supplied in any of the following ways:
 
    The path must be fully qualified.  Relative Python imports are not supported.
 
-   N.B. It is up to you to ensure that the Python file in question is in your Python path and
+   .. note:: It is up to you to ensure that the Python file in question is in your Python path and
    that all package directories have a ``__init__.py`` file, etc.
 
 
@@ -185,12 +181,12 @@ can be supplied in any of the following ways:
            "type": "json"
        }
 
-   N.B. Resolution of relative file paths is done in the following order:
+   .. note:: Resolution of relative file paths is done in the following order:
 
-   a) Relative to the working directory of the web app.
-
-   b) If a JSON file is being included from another JSON file, relative to
-      directory in which the including file resides.
+      a) Relative to the working directory of the web app.
+   
+      b) If a JSON file is being included from another JSON file, relative to
+         directory in which the including file resides.
 
 Note that this does not just apply when the included python or json entity is a dictionary/object.
 Any of the above include directives could expand to an array, or even to single integer or string.
@@ -259,8 +255,8 @@ The child objects can also be used in turn as the parents of subsequent layers,
 as long as cyclic dependencies are avoided.
 
 There are two types of named configuration object that support inheritance:
-named `Layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ and
-`styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_.
+named :doc:`Layers <cfg_layers>` and
+:doc:`Layer Styles <cfg_styling>`.
 The exact way to inherit by name differs depending on the object type so
 `see <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#inheritance>`_
 the
@@ -332,9 +328,7 @@ a common abstract base style that has an empty list for the color ramp.  Eg.
         "color_ramp": [ ... ], # All New Color Ramp
     }
 
-Or:
-
-::
+Or::
 
     abstract_base_style = {
         "abstract": """
@@ -498,28 +492,28 @@ At the top level, the Datacube OWS configuration is a single dictionary with the
      ]
   }
 
-The `global <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html>`_ section contains configuration that
+The :doc:`global <cfg_global>` section contains configuration that
 applies to the whole server across all services and layers.
-The `global <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html>`_ section is always required.
+The :doc:`global <cfg_global>` section is always required.
 
-The `wms <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html>`_ section contains configuration that applies to the WMS/WMTS
+The :doc:`wms <cfg_wms>` section contains configuration that applies to the WMS/WMTS
 services aross all layers.
-The `wmts <https://datacube-ows.readthedocs.io/en/latest/cfg_wmts.html>`_ section contains configuration that applies to the WMTS
+The :doc:`wmts <cfg_wmts>` section contains configuration that applies to the WMTS
 services aross all layers.
-The `wms <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html>`_ section can be omitted if only the WCS service is
+The :doc:`wms <cfg_wms>` section can be omitted if only the WCS service is
 activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section), or if the default values for all entries are acceptable.
 
-The `wmts <https://datacube-ows.readthedocs.io/en/latest/cfg_wmts.html>`_ section is optional.
+The :doc:`wmts <cfg_wmts>` section is optional.
 
-The `wcs <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html>`_ section must be supplied if the WCS service is
+The :doc:`wcs <cfg_wcs>` section must be supplied if the WCS service is
 activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
 section).
 
 WMTS is implemented as a thin wrapper around the WMS implementation. Therefore configuration in the
 WMS section generally applies equally to WMTS.
 
-The `layers <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html>`_ section
+The :doc:`layers <cfg_layers>` section
 contains a list of layer configurations.  The configured layers define the
 layers (in WMS and WMTS) and coverages (in WCS) that the instance serves, and their behaviour. The layers section
 is always required.

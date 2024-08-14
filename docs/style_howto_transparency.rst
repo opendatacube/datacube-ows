@@ -310,6 +310,6 @@ transparent with values between 0 and 0.5 shown partially transparent:
 `View full size
 <https://user-images.githubusercontent.com/4548530/113795937-5d854800-9791-11eb-9a49-25ea8cbced64.png>`_
 
-`In the next chapter
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_legends.html>`_ we look at how to generate
+:doc:`In the next chapter
+<style_howto_legends>` we look at how to generate
 legends for datacube-ows styles.

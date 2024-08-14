@@ -7,7 +7,7 @@ OWS Configuration - Colourmap Styles
 Colour-Map Styles
 -----------------
 
-Colour-map Styles are `styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ where
+:doc:`Colour-map Styles <cfg_styling>` are where
 each pixel is mapped to one particular colour from a fixed pallet
 by applying a logical decision tree to the flag data for that pixel.
 
@@ -118,7 +118,7 @@ Rules
 Each Value Rule must also specify the rule to evaluate when it applies.
 
 For details, refer to the
-`OWS Masking Syntax <https://datacube-ows.readthedocs.io/en/latest/cfg_masks.html>`_.
+:doc:`OWS Masking Syntax <cfg_masks>`.
 
 ------
 Legend
@@ -339,7 +339,7 @@ Aggregator function
 ===================
 
 Alternately, you can define an aggregator function using OWS's
-`function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+:doc:`function configuration format <cfg_functions>`.
 
 The function is passed a multi-date Xarray Dataset and is expected to return a timeless Dataset,
 which can then be rendered using either the single-date value-map, or a separate single-date value-map

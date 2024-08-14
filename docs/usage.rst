@@ -11,7 +11,7 @@ To use datacube-ows in a project::
 
     import datacube_ows
 
-To use the `stand-alone styling API <https://datacube-ows.readthedocs.io/en/latest/cfg_style_api.html>`_::
+To use the :doc:`stand-alone styling API <cfg_style_api>`::
 
     from datacube_ows.styles.api import *
 
@@ -22,15 +22,15 @@ OWS Command Line Tools
 Datacube-OWS provides two command line tools:
 
 * ``datacube-ows-update`` which is used for creating and maintaining
-  `OWS's database tables and views <https://datacube-ows.readthedocs.io/en/latest/database.html>`_.
+  :doc:`OWS's database tables and views <database>`.
 * ``datacube-ows-cfg`` which is used for managing
-  `OWS configuration files <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
+  :doc:`OWS configuration files <configuration>`.
 
-.. click:: datacube_ows.update_ranges:main
+.. click:: datacube_ows.update_ranges_impl:main
     :prog: datacube-ows-update
     :nested: full
 
-.. click:: datacube_ows.cfg_parser:main
+.. click:: datacube_ows.cfg_parser_impl:main
     :prog: datacube-ows-update
     :nested: full
 
@@ -95,12 +95,12 @@ Update extents of a new product or to update a product in Datacube to make it ea
     $ datacube-ows-update --views --blocking
     $ datacube-ows-update alos_palsar_mosaic
 
-Deploy the Digital Earth Africa OWS config available `here <https://github.com/digitalearthafrica/config/blob/master/services/ows_cfg.py>`_
+Deploy the `Digital Earth Africa OWS config <https://github.com/digitalearthafrica/config/blob/master/services/ows_cfg.py>`_
 by copying to ows_cfg.py. Ideally load the config outside
 a docker container to iterate faster.
 
 Run GetCapabilities via curl to ensure data is present.
-Perform GetMap via Qgis to ensure data is visible.
+Perform GetMap via QGIS to ensure data is visible.
 
 .. code-block:: console
 

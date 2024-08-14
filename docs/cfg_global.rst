@@ -7,8 +7,8 @@ OWS Configuration - Global Section
 Global Section
 --------------
 
-The "global" section of the `root configuration object
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+The "global" section of the :doc:`root configuration object
+<configuration>`
 contains config entries that apply
 to all services and all layers/coverages.
 
@@ -22,7 +22,7 @@ The following global configuration items are relevant to
 <https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
 
 Message File (message_file)
-+++++++++++++++++++++++++++
+---------------------------
 
 The "message_file" entry gives the path to the message file.
 
@@ -38,20 +38,20 @@ Note: the `message_file` configuration entry is not required (except as an inter
 if `translations_directory` is set.  The order of metadata resolution is:
 
 1) If Internationalisation is active via the `translations_directory` config entry, take the
-   value from the *.mo file corresponding to the best available language match for the request
+   value from the \*.mo file corresponding to the best available language match for the request
    headers.
 2) If a translation for the metadata entry is not available, or if internationalisation is not
    active, get the value from the `message_file` if it is configured.
 3) Otherwise, fallback to the value in the main body of the config.
 
 Message Domain (message_domain)
-+++++++++++++++++++++++++++++++
+-------------------------------
 
 The message domain used by internationalisation.  Defaults to "ows_cfg".
 
 
 Translations Directory (translations_directory)
-+++++++++++++++++++++++++++++++++++++++++++++++
+-----------------------------------------------
 
 The path to the directory containing translation subdirectories.  Traditionally known as "locales".
 Defaults to None, meaning no translation support.
@@ -61,7 +61,7 @@ Required for internationalisation.
 
 
 Supported Languages (supported_languages)
-+++++++++++++++++++++++++++++++++++++++++
+-----------------------------------------
 
 A list of supported languages for internationalisation.  Defaults to English only (``['en']``).
 The first language listed is treated as the default language, and it is assumed that all metadata
@@ -264,7 +264,7 @@ logo
 All of the above elements are optional, but at least one must be
 provided if the attribution section exists.
 
-----------------
+
 Attribution Logo
 ----------------
 
