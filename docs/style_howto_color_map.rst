@@ -370,6 +370,6 @@ equivalent:
     },
 
 We've seen how to use transparency in colour-ramp styles in the last chapter, and in colour-map styles in this
-one.   `In the next chapter
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_transparency.html>`_ we explore other ways
+one. :doc:`In the next chapter
+<style_howto_transparency>` we explore other ways
 of achieving transparency in datacube-ows.

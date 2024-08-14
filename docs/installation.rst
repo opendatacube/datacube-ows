@@ -16,16 +16,16 @@ Stable release
 
 datacube-ows is released to PyPI and the latest release can be found on https://pypi.org/project/datacube-ows/.
 
-Install Postgis
+Install PostGIS
 ----------------
-In addition to the database installed for `Datacube Core`, `datacube-ows` also require `postgis` installed.
+In addition to the database installed for `Datacube Core`, `datacube-ows` also requires PostGIS_ installed.
 
 .. code-block:: console
 
     $ sudo apt-get install postgis
 
 Download datacube-ows source
---------------------------
+----------------------------
 The sources for datacube-ows can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
@@ -66,11 +66,12 @@ To install datacube-ows, run:
 .. _datacube-core: https://datacube-core.readthedocs.io/en/latest/
 .. _Github repo: https://github.com/opendatacube/datacube-ows
 .. _zip: https://github.com/opendatacube/datacube-ows/archive/master.zip
+.. _PostGIS: https://postgis.net/
 
 Update_range natively
 ---------------------
 
-Refer to the `database documentation <https://datacube-ows.readthedocs.io/en/latest/database.html>`_ documentation
+Refer to the :doc:`database documentation <database>` documentation
 for information on how to setup and maintain a Datacube OWS database.
 
 From sources ( within Docker )
@@ -102,7 +103,7 @@ of the config file, and edit it to reflect your requirements.
     $ vi .env
 
 Create an external PostgreSQL Database for OWS use. (See
-the `database documentation <https://datacube-ows.readthedocs.io/en/latest/database.html>`__ for
+the :doc:`database documentation <database>` for
 more information.)  jUse this as a
 sidecar docker or natively on the host system. The following
 steps assume the database is on the host system for networking
@@ -120,7 +121,7 @@ Update_range via docker
 -----------------------
 
 Connect to the running docker to run datacube-ows-update/update_range.py
-commands (see the `database documentation <https://datacube-ows.readthedocs.io/en/latest/database.html>`__ for more
+commands (see the :doc:`database documentation <database>` for more
 information).
 
 E.g. to set up a new database:

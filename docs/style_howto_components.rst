@@ -332,6 +332,5 @@ land cover types across the whole area covered by the data, and come up with a c
 configuration that looks reasonably good everywhere.
 
 But as any scientist will tell you, when it comes to visualisation, linear equations can
-only get you so far, so `next
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_components_nonlinear.html>`_
+only get you so far, so :doc:`next <style_howto_components_nonlinear>`
 we start to look at how to apply more powerful maths to calculate components.

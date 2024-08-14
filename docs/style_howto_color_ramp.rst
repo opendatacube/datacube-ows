@@ -243,6 +243,6 @@ where 0.0 is totally transparent and 1.0 (the default) is opaque.  Note that you
 show the next layer down on the map.  The full size view shows the image against a grey background on most
 browsers, which may help to convey the sense of transparency.)
 
-`Next up
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_color_map.html>`_
-we will look at colour-map styles, which are useful for visualising discrete measurement bands.
+:doc:`Next up, colour-map styles
+<style_howto_color_map`
+, which are useful for visualising discrete measurement bands.

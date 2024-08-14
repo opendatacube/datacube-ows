@@ -1,6 +1,6 @@
-============
+==========================
 Datacube Open Web Services
-============
+==========================
 
 .. image:: https://github.com/opendatacube/datacube-ows/actions/workflows/lint.yml/badge.svg
    :target: https://github.com/opendatacube/datacube-ows/actions/workflows/lint.yml
@@ -59,7 +59,7 @@ Community
 
 This project welcomes community participation.
 
-`Join the ODC Discord <http://slack.opendatacube.org>`__ if you need help
+`Join the ODC Discord <https://discord.com/invite/4hhBQVas5U>`__ if you need help
 setting up or using this project, or the Open Data Cube more generally.
 
 Please help us to keep the Open Data Cube community open and inclusive by
@@ -204,11 +204,11 @@ The following instructions are for installing on a clean Linux system.
 
 * Create a configuration file for your service, and all data products you wish to publish in
   it.
-  `Detailed documentation of the configuration format can be found here.<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+  `Detailed documentation of the configuration format can be found here. <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 
 * Set environment variables as required.
   Environment variables that directly or indirectly affect the running of OWS
-  are `documented here<https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
+  are `documented here <https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
 
 
 * Run ``datacube-ows-update`` (in the Datacube virtual environment).

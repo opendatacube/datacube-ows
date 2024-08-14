@@ -1,7 +1,11 @@
 FROM mambaorg/micromamba:1.5.8
 COPY --chown=$MAMBA_USER:$MAMBA_USER env.micromamba.yaml /tmp/env.yaml
 RUN --mount=type=cache,target=/opt/conda/pkgs micromamba install -y -n base -f /tmp/env.yaml && \
-    micromamba clean --all --yes
+    micromamba clean --all --yes --force-pkgs-dirs && \
+#    find /home/mambauser/.mamba/pkgs -type d \( -name test -o -name tests \) -print0 | xargs -0 rm -rf && \
+    find /opt/conda/lib -type d \( -name test -o -name tests \) -print0 | xargs -0 rm -rf && \
+    rm -rf /opt/conda/lib/libpython3* /opt/conda/include /opt/conda/share/{gir-1.0,poppler,man}
+# TODO: pieces of botocore (98Mb) and scipy (72Mb) can likely be removed
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1  # (otherwise python will not be found)
 
