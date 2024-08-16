@@ -7,8 +7,8 @@ OWS Configuration - Layers
 Layers Section
 ==============
 
-The "layers" section of the `root configuration object
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+The "layers" section of the :doc:`root configuration object
+<configuration>`
 contains definitions of the various layers (WMS/WMTS)
 and coverages (WCS) that installation serves.
 
@@ -245,8 +245,8 @@ E.g.
     }
 
 If the
-`manual merge option in the
-image_processing section discussed below<#manual-merge-manual-merge>`_
+:ref:`manual merge option in the
+image_processing section discussed below <manual-merge-manual-merge>`
 is set to ``True``, then overlapping products are layered according to the priority
 order specified in ``product_names``
 
@@ -313,8 +313,8 @@ A date-aware product can be presented as a single-date mosaic layer with no publ
 dimension with the optional `mosaic_date_func` element.
 
 If supplied, the ``mosaic_date_func`` must be a function, declared
-using OWS's `function configuration format
-<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+using OWS's :doc:`function configuration format
+<cfg_functions>`.
 
 The Mosaic Date Function should take a list of available dates and return a tuple of two datetimes
 to be used in the dataset search operation.
@@ -361,7 +361,7 @@ are mapped to user-accessible dates. The acceptable values are:
 
 * "summary"
   Data has time dimension based on the start date of start datetime of datasets,
-  which are expected to have a `00:00:00.0000+00" time portion.
+  which are expected to have a `00:00:00.0000+00` time portion.
 
   Used for daily, weekly, monthly, quarterly or annual summary data.
 
@@ -417,7 +417,7 @@ Regular Time Axis (time_axis)
 
 The time axis is how OWS publishes the dates for which data is available.  The default
 behaviour (``time_axis`` not specified or ``None``) is to use an irregular time axis, where the available dates
-(as cached in `the OWS range tables <datacube-ows-update <https://datacube-ows.readthedocs.io/en/latest/database.html>`_)
+(as cached in :doc:`the OWS range tables <datacube-ows-update <database>`)
 are listed individually.  These long lists of dates lead to unnecessarily large capabilities documents
 for all supported protocols.
 
@@ -525,8 +525,8 @@ of data urls for authentication (e.g. Microsoft Planetary Computer).  They may a
 to handle various network proxying or data-migration scenarios where the URLs visible to the
 OWS server are different to the URLs at indexing time.
 
-The "patch_url_function" config element is set using OWS's `function configuration format
-<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+The "patch_url_function" config element is set using OWS's :doc:`function configuration format
+<cfg_functions>`.
 The function is expected to take a string containing an unpatched url and return a
 string containing the patched url.
 
@@ -866,7 +866,7 @@ An additional element, ``describe_cache_maxage`` is also provided,
 which controls the cache control headers for WCS DescribeCoverage requests
 for the coverage/layer.  This element is optional, and defaults
 to the value set in the
-`top-level WCS section<https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html#describeconverage-default-cache-control-headers-default-desc-cache-maxage>`_
+`top-level WCS section <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html#describeconverage-default-cache-control-headers-default-desc-cache-maxage>`_
 
 ++++++++++++
 max_datasets
@@ -933,8 +933,8 @@ use:
     "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
 
 If this is not appropriate or possible for your data, you can
-set an alternative function using OWS's `function configuration format
-<https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.  Some sample functions are included in ``datacube_ows.ogc_utils``.
+set an alternative function using OWS's :doc:`function configuration format
+<cfg_functions>`.  Some sample functions are included in ``datacube_ows.ogc_utils``.
 
 The function is assumed to take two arguments, data (an xarray Dataset) and
 band (a band name).  (Plus any additional arguments you may be passing in
@@ -979,8 +979,8 @@ Fuse Function (fuse_func)
 +++++++++++++++++++++++++
 
 Determines how multiple dataset arrays are compressed into a
-single time array. Specified using OWS's `function configuration
-format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+single time array. Specified using OWS's :doc:`function configuration
+format <cfg_functions>`.
 
 The fuse function is passed through to directly to the datacube
 load_data() function - refer to the Open Data Cube documentation
@@ -1241,7 +1241,7 @@ Custom Layer Includes (custom_includes)
 is optional and defaults to an empty dictionary (i.e. no custom data.)
 
 ``custom_includes`` is dictionary mapping keys to functions specified with
-OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+OWS's :doc:`function configuration format <cfg_functions>`.
 
 The keys of the "custom_includes" dictionary are the keys that will be included in the
 GetFeatureInfo responses.  They should therefore be keys that are not included by
@@ -1291,11 +1291,11 @@ is optional and defaults to an empty dictionary (i.e. no custom data.)
 Legacy ``include_custom`` entries can be over-ridden by new-style ``custom-includes``.
 
 
------------------------------------
+-------------------------
 Styling Section (styling)
------------------------------------
+-------------------------
 
-The `"styling" section <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ describes the WMS and WMTS styles for
+The :doc:`"styling" section <cfg_styling>` describes the WMS and WMTS styles for
 the layer.
 
 

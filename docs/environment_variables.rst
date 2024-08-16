@@ -113,7 +113,7 @@ Docker and Docker-compose
 -------------------------
 
 The provided ``Dockerfile`` and ``docker-compose.yaml`` read additional
-environment variables at build time.  Please refer to the `README <https://datacube-ows.readthedocs.io/en/latest/readme.html>`_
+environment variables at build time.  Please refer to the :doc:`README <readme>`
 for further details.
 
 environment variables exclusive for docker-compose

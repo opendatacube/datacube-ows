@@ -4,7 +4,6 @@ OWS Styling HOW-TO Guide
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
 
    style_howto_components
    style_howto_components_nonlinear
@@ -12,6 +11,7 @@ OWS Styling HOW-TO Guide
    style_howto_color_map
    style_howto_transparency
    style_howto_legends
+   styling_howto_jupyter
 
 .. contents:: Table of Contents
 
@@ -29,12 +29,12 @@ of their data product and the use of the Open Data Cube (ODC). It aims to:
 2. demonstrate how to configure OWS styles with real-world examples.
 
 For thorough technical description of the configuration format,
-`see the configuration documentation
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_.
+:doc:`see the configuration documentation
+<configuration>`.
 
 Setting up an ODC environment and installing datacube-ows is also beyond the scope
 of this HOWTO, but if you are using a JupyterHubs based system like DEA Sandbox,
-a `Quick Start Guide <https://datacube-ows.readthedocs.io/en/latest/styling_howto_jupyter.html>`_
+a :doc:`Quick Start Guide <styling_howto_jupyter>`
 is available.
 
 Introduction - Testing styles
@@ -67,8 +67,8 @@ definition.
 
 .. note::
 
-    If ``apply_ows_style_cfg()`` returns
-    ::
+    If ``apply_ows_style_cfg()`` returns::
+
         WMSException: Style stand_alone does not support requests with 2 dates
 
     set ``group_by='solar_day'``
@@ -121,8 +121,8 @@ If you are using a notebooks based environment like JupyterHub, you can display 
 `View full size
 <https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
 
-Refer to `the documentation <https://datacube-ows.readthedocs.io/en/latest/cfg_style_api.html>`_ for more
+Refer to :doc:`the Style API documentation <cfg_style_api>` for more
 information about the OWS styling API.
 
-`Next <https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html>`_
+:doc:`Next <style_howto_components>`
 we start to look at how style configurations work.

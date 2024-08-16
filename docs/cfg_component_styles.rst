@@ -7,7 +7,7 @@ OWS Configuration - Components
 Component Styles
 ----------------
 
-Component Styles are `styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html>`_ where
+Component Styles are :doc:`styles <cfg_styling>` where
 each component channel of the image (red, green, blue and optionally
 alpha) is calculated independently from the data for that pixel.
 
@@ -228,7 +228,7 @@ Callback Function Components
 +++++++++++++++++++++++++++++
 
 In a callback function component, the user declares a callback function
-using OWS's `function configuration format <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_.
+using OWS's :doc:`function configuration format <cfg_functions>`.
 
 The function must take an xarray Dataset containing the raw band data
 and return a xarray DataArray containing the channel data.  It is

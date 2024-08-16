@@ -16,7 +16,7 @@ Auto-legend-generation for Colour Ramp Styles
 +++++++++++++++++++++++++++++++++++++++++++++
 
 The first type of style that supports automatic legend-generation is
-`colour ramp styles <https://datacube-ows.readthedocs.io/en/latest/style_howto_color_ramp.html>`_.
+:doc:`colour ramp styles <style_howto_color_ramp>`.
 
 For these examples, we will use a simple colour ramp style using a Matplotlib named colour ramp:
 
@@ -478,7 +478,7 @@ Auto-legend-generation for Colour Map Styles
 ++++++++++++++++++++++++++++++++++++++++++++
 
 Auto-generated legends are also available for
-`colour map styles<https://datacube-ows.readthedocs.io/en/latest/style_howto_color_map.html>`_.
+:doc:`colour map styles <style_howto_color_map>`.
 
 For these examples, we will be extending the following style example:
 

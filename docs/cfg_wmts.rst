@@ -7,11 +7,11 @@ OWS Configuration - WMTS Section
 WMTS Section
 ------------
 
-The "wmts" section of the `root configuration object
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+The "wmts" section of the :doc:`root configuration object
+<configuration>`
 contains config entries that apply only to WMTS service for all layers.
 
-Note that the `wms <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html>`_ section
+Note that the :doc:`wms <cfg_wms>` section
 also contains configuration that applies to the WMTS service.
 
 All entries in the WMTS section are optional and the entire section can therefore be omitted.
