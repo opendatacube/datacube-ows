@@ -80,4 +80,3 @@ man_pages = [
      u'datacube-ows Documentation',
      [u'Datacube OWS Team'], 1)
 ]
-
