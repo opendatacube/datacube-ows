@@ -38,6 +38,7 @@ install_requirements = [
     'xarray',
     'pyows',
     'prometheus_flask_exporter',
+    'setuptools_scm'
 ]
 
 test_requirements = [
