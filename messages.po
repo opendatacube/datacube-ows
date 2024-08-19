@@ -1,0 +1,883 @@
+# Translations for datacube-ows metadata instance:
+#      Over-ridden: aardvark
+#
+# Acme Corporation 2024-08-05T11:27:36.172003
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Over-ridden: aardvark 2024-08-05T11:27:36.172003\n"
+"Report-Msgid-Bugs-To: test@example.com\n"
+"POT-Creation-Date: 2024-08-05 11:27+1005\n"
+"PO-Revision-Date: 2024-08-05 11:27+1005\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#. Open web-services for the Open Data Cube
+msgid "global.title"
+msgstr "Open web-services for the Open Data Cube"
+
+#. This web-service serves georectified raster data from our very own special
+#. Open Datacube instance.
+msgid "global.abstract"
+msgstr ""
+"This web-service serves georectified raster data from our very own "
+"special Open Datacube instance."
+
+#. satellite,time-series,australia
+msgid "global.local_keywords"
+msgstr "satellite,time-series,australia"
+
+#. none
+msgid "global.fees"
+msgstr "none"
+
+#. none
+msgid "global.access_constraints"
+msgstr "none"
+
+#. Acme Corporation
+msgid "global.contact_org"
+msgstr "Acme Corporation"
+
+#. CIO (Chief Imaginary Officer)
+msgid "global.contact_position"
+msgstr "CIO (Chief Imaginary Officer)"
+
+#. Over-ridden: aardvark
+msgid "folder.ows_root.title"
+msgstr "Over-ridden: aardvark"
+
+#. This web-service serves georectified raster data from our very own special
+#. Open Datacube instance.
+msgid "folder.ows_root.abstract"
+msgstr ""
+"This web-service serves georectified raster data from our very own "
+"special Open Datacube instance."
+
+msgid "folder.ows_root.local_keywords"
+msgstr ""
+
+#. s2
+msgid "folder.sentinel2.title"
+msgstr "s2"
+
+#. Images from the sentinel 2 satellite
+msgid "folder.sentinel2.abstract"
+msgstr "Images from the sentinel 2 satellite"
+
+#. sentinel2
+msgid "folder.sentinel2.local_keywords"
+msgstr "sentinel2"
+
+#. Open Data Cube - OWS
+msgid "folder.sentinel2.attribution_title"
+msgstr "Open Data Cube - OWS"
+
+#. Surface reflectance (Sentinel-2)
+msgid "layer.s2_l2a.title"
+msgstr "Surface reflectance (Sentinel-2)"
+
+#. layer s2_l2a
+msgid "layer.s2_l2a.abstract"
+msgstr "layer s2_l2a"
+
+msgid "layer.s2_l2a.local_keywords"
+msgstr ""
+
+#. coastal_aerosol
+msgid "layer.s2_l2a.bands.B01"
+msgstr "coastal_aerosol"
+
+#. blue
+msgid "layer.s2_l2a.bands.B02"
+msgstr "blue"
+
+#. green
+msgid "layer.s2_l2a.bands.B03"
+msgstr "green"
+
+#. red
+msgid "layer.s2_l2a.bands.B04"
+msgstr "red"
+
+#. red_edge_1
+msgid "layer.s2_l2a.bands.B05"
+msgstr "red_edge_1"
+
+#. red_edge_2
+msgid "layer.s2_l2a.bands.B06"
+msgstr "red_edge_2"
+
+#. red_edge_3
+msgid "layer.s2_l2a.bands.B07"
+msgstr "red_edge_3"
+
+#. nir
+msgid "layer.s2_l2a.bands.B08"
+msgstr "nir"
+
+#. nir_narrow
+msgid "layer.s2_l2a.bands.B8A"
+msgstr "nir_narrow"
+
+#. water_vapour
+msgid "layer.s2_l2a.bands.B09"
+msgstr "water_vapour"
+
+#. swir_1
+msgid "layer.s2_l2a.bands.B11"
+msgstr "swir_1"
+
+#. swir_2
+msgid "layer.s2_l2a.bands.B12"
+msgstr "swir_2"
+
+#. aerosol_optical_thickness
+msgid "layer.s2_l2a.bands.AOT"
+msgstr "aerosol_optical_thickness"
+
+#. scene_average_water_vapour
+msgid "layer.s2_l2a.bands.WVP"
+msgstr "scene_average_water_vapour"
+
+#. mask
+msgid "layer.s2_l2a.bands.SCL"
+msgstr "mask"
+
+#. Simple RGB
+msgid "style.s2_l2a.simple_rgb.title"
+msgstr "Simple RGB"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.s2_l2a.simple_rgb.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. Simple RGB Clone
+msgid "style.s2_l2a.style_ls_simple_rgb_clone.title"
+msgstr "Simple RGB Clone"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.s2_l2a.style_ls_simple_rgb_clone.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. False colour multi-band infra-red
+msgid "style.s2_l2a.infra_red.title"
+msgstr "False colour multi-band infra-red"
+
+#. Simple false-colour image, using the near and short-wave infra-red bands
+msgid "style.s2_l2a.infra_red.abstract"
+msgstr "Simple false-colour image, using the near and short-wave infra-red bands"
+
+#. Blue - 490
+msgid "style.s2_l2a.blue.title"
+msgstr "Blue - 490"
+
+#. Blue band, centered on 490nm
+msgid "style.s2_l2a.blue.abstract"
+msgstr "Blue band, centered on 490nm"
+
+#. NDVI
+msgid "style.s2_l2a.ndvi.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.s2_l2a.ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI
+msgid "style.s2_l2a.ndvi.legend.1.title"
+msgstr "NDVI"
+
+#. dimensionless
+msgid "style.s2_l2a.ndvi.legend.1.units"
+msgstr "dimensionless"
+
+#. low
+msgid "style.s2_l2a.ndvi.legend.1.lbl_0.0"
+msgstr "low"
+
+#. high
+msgid "style.s2_l2a.ndvi.legend.1.lbl_1.0"
+msgstr "high"
+
+#. NDVI
+msgid "style.s2_l2a.ndvi_expr.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.s2_l2a.ndvi_expr.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI
+msgid "style.s2_l2a.ndvi_expr.legend.1.title"
+msgstr "NDVI"
+
+#. NDVI plus RGB
+msgid "style.s2_l2a.rgb_ndvi.title"
+msgstr "NDVI plus RGB"
+
+#. Normalised Difference Vegetation Index (blended with RGB) - a derived index
+#. that correlates well with the existence of vegetation
+msgid "style.s2_l2a.rgb_ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index (blended with RGB) - a derived "
+"index that correlates well with the existence of vegetation"
+
+#. NDVI plus RGB
+msgid "style.s2_l2a.rgb_ndvi.legend.1.title"
+msgstr "NDVI plus RGB"
+
+#. NDVI - Red, NIR
+msgid "style.s2_l2a.ndvi_delta.title"
+msgstr "NDVI - Red, NIR"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.s2_l2a.ndvi_delta.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI - Red, NIR
+msgid "style.s2_l2a.ndvi_delta.legend.1.title"
+msgstr "NDVI - Red, NIR"
+
+#. NDVI - Red, NIR
+msgid "style.s2_l2a.ndvi_delta.legend.2.title"
+msgstr "NDVI - Red, NIR"
+
+#. s2_l2a Clone
+msgid "layer.s2_l2a_clone.title"
+msgstr "s2_l2a Clone"
+
+#. Imagery from the s2_l2a Clone
+msgid "layer.s2_l2a_clone.abstract"
+msgstr "Imagery from the s2_l2a Clone"
+
+msgid "layer.s2_l2a_clone.local_keywords"
+msgstr ""
+
+#. coastal_aerosol
+msgid "layer.s2_l2a_clone.bands.B01"
+msgstr "coastal_aerosol"
+
+#. blue
+msgid "layer.s2_l2a_clone.bands.B02"
+msgstr "blue"
+
+#. green
+msgid "layer.s2_l2a_clone.bands.B03"
+msgstr "green"
+
+#. red
+msgid "layer.s2_l2a_clone.bands.B04"
+msgstr "red"
+
+#. red_edge_1
+msgid "layer.s2_l2a_clone.bands.B05"
+msgstr "red_edge_1"
+
+#. red_edge_2
+msgid "layer.s2_l2a_clone.bands.B06"
+msgstr "red_edge_2"
+
+#. red_edge_3
+msgid "layer.s2_l2a_clone.bands.B07"
+msgstr "red_edge_3"
+
+#. nir
+msgid "layer.s2_l2a_clone.bands.B08"
+msgstr "nir"
+
+#. nir_narrow
+msgid "layer.s2_l2a_clone.bands.B8A"
+msgstr "nir_narrow"
+
+#. water_vapour
+msgid "layer.s2_l2a_clone.bands.B09"
+msgstr "water_vapour"
+
+#. swir_1
+msgid "layer.s2_l2a_clone.bands.B11"
+msgstr "swir_1"
+
+#. swir_2
+msgid "layer.s2_l2a_clone.bands.B12"
+msgstr "swir_2"
+
+#. aerosol_optical_thickness
+msgid "layer.s2_l2a_clone.bands.AOT"
+msgstr "aerosol_optical_thickness"
+
+#. scene_average_water_vapour
+msgid "layer.s2_l2a_clone.bands.WVP"
+msgstr "scene_average_water_vapour"
+
+#. mask
+msgid "layer.s2_l2a_clone.bands.SCL"
+msgstr "mask"
+
+#. Simple RGB
+msgid "style.s2_l2a_clone.simple_rgb.title"
+msgstr "Simple RGB"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.s2_l2a_clone.simple_rgb.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. Simple RGB Clone
+msgid "style.s2_l2a_clone.style_ls_simple_rgb_clone.title"
+msgstr "Simple RGB Clone"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.s2_l2a_clone.style_ls_simple_rgb_clone.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. False colour multi-band infra-red
+msgid "style.s2_l2a_clone.infra_red.title"
+msgstr "False colour multi-band infra-red"
+
+#. Simple false-colour image, using the near and short-wave infra-red bands
+msgid "style.s2_l2a_clone.infra_red.abstract"
+msgstr "Simple false-colour image, using the near and short-wave infra-red bands"
+
+#. Blue - 490
+msgid "style.s2_l2a_clone.blue.title"
+msgstr "Blue - 490"
+
+#. Blue band, centered on 490nm
+msgid "style.s2_l2a_clone.blue.abstract"
+msgstr "Blue band, centered on 490nm"
+
+#. NDVI
+msgid "style.s2_l2a_clone.ndvi.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.s2_l2a_clone.ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI
+msgid "style.s2_l2a_clone.ndvi.legend.1.title"
+msgstr "NDVI"
+
+#. dimensionless
+msgid "style.s2_l2a_clone.ndvi.legend.1.units"
+msgstr "dimensionless"
+
+#. low
+msgid "style.s2_l2a_clone.ndvi.legend.1.lbl_0.0"
+msgstr "low"
+
+#. high
+msgid "style.s2_l2a_clone.ndvi.legend.1.lbl_1.0"
+msgstr "high"
+
+#. NDVI
+msgid "style.s2_l2a_clone.ndvi_expr.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.s2_l2a_clone.ndvi_expr.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI
+msgid "style.s2_l2a_clone.ndvi_expr.legend.1.title"
+msgstr "NDVI"
+
+#. NDVI plus RGB
+msgid "style.s2_l2a_clone.rgb_ndvi.title"
+msgstr "NDVI plus RGB"
+
+#. Normalised Difference Vegetation Index (blended with RGB) - a derived index
+#. that correlates well with the existence of vegetation
+msgid "style.s2_l2a_clone.rgb_ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index (blended with RGB) - a derived "
+"index that correlates well with the existence of vegetation"
+
+#. NDVI plus RGB
+msgid "style.s2_l2a_clone.rgb_ndvi.legend.1.title"
+msgstr "NDVI plus RGB"
+
+#. NDVI - Red, NIR
+msgid "style.s2_l2a_clone.ndvi_delta.title"
+msgstr "NDVI - Red, NIR"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.s2_l2a_clone.ndvi_delta.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI - Red, NIR
+msgid "style.s2_l2a_clone.ndvi_delta.legend.1.title"
+msgstr "NDVI - Red, NIR"
+
+#. NDVI - Red, NIR
+msgid "style.s2_l2a_clone.ndvi_delta.legend.2.title"
+msgstr "NDVI - Red, NIR"
+
+#. DEA Config Samples
+msgid "folder.ows_root.1.title"
+msgstr "DEA Config Samples"
+
+msgid "folder.ows_root.1.abstract"
+msgstr ""
+
+msgid "folder.ows_root.1.local_keywords"
+msgstr ""
+
+#. DEA Surface Reflectance (Sentinel-2)
+msgid "layer.s2_ard_granule_nbar_t.title"
+msgstr "DEA Surface Reflectance (Sentinel-2)"
+
+#. Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance +
+#. Terrain Illumination Correction (Sentinel-2 MSI)                 This
+#. product has been corrected to account for variations caused by atmospheric
+#. properties, sun position and sensor view angle at time of image capture.
+#. These corrections have been applied to all satellite imagery in the
+#. Sentinel-2 archive. This is undertaken to allow comparison of imagery
+#. acquired at different times, in different seasons and in different
+#. geographic locations.                 These products also indicate where the
+#. imagery has been affected by cloud or cloud shadow, contains missing data or
+#. has been affected in other ways. The Surface Reflectance products are useful
+#. as a fundamental starting point for any further analysis, and underpin all
+#. other optical derived Digital Earth Australia products.                 This
+#. is a definitive archive of daily Sentinel-2 data. This is processed using
+#. correct ancillary data to provide a more accurate product than the Near Real
+#. Time.                 The Surface Reflectance product has been corrected to
+#. account for variations caused by atmospheric properties, sun position and
+#. sensor view angle at time of image capture. These corrections have been
+#. applied to all satellite imagery in the Sentinel-2 archive.
+#. The Normalised Difference Chlorophyll Index (NDCI) is based on the method of
+#. Mishra & Mishra 2012, and adapted to bands on the Sentinel-2A & B sensors.
+#. The index indicates levels of chlorophyll-a (chl-a) concentrations in
+#. complex turbid productive waters such as those encountered in many inland
+#. water bodies. The index has not been validated in Australian waters, and
+#. there are a range of environmental conditions that may have an effect on the
+#. accuracy of the derived index values in this test implementation, including:
+#. - Influence on the remote sensing signal from nearby land and/or atmospheric
+#. effects                 - Optically shallow water                 - Cloud
+#. cover                 Mishra, S., Mishra, D.R., 2012. Normalized difference
+#. chlorophyll index: A novel model for remote estimation of chlorophyll-a
+#. concentration in turbid productive waters. Remote Sensing of Environment,
+#. Remote Sensing of Urban Environments 117, 394–406.
+#. https://doi.org/10.1016/j.rse.2011.10.016                 For more
+#. information see http://pid.geoscience.gov.au/dataset/ga/129684
+#. https://cmi.ga.gov.au/data-products/dea/190/dea-surface-reflectance-nbart-sentinel-2-msi
+#. For service status information, see https://status.dea.ga.gov.au
+msgid "layer.s2_ard_granule_nbar_t.abstract"
+msgstr ""
+"Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + "
+"Terrain Illumination Correction (Sentinel-2 MSI)\n"
+"                This product has been corrected to account for variations"
+" caused by atmospheric properties, sun position and sensor view angle at "
+"time of image capture.\n"
+"                These corrections have been applied to all satellite "
+"imagery in the Sentinel-2 archive. This is undertaken to allow comparison"
+" of imagery acquired at different times, in different seasons and in "
+"different geographic locations.\n"
+"                These products also indicate where the imagery has been "
+"affected by cloud or cloud shadow, contains missing data or has been "
+"affected in other ways. The Surface Reflectance products are useful as a "
+"fundamental starting point for any further analysis, and underpin all "
+"other optical derived Digital Earth Australia products.\n"
+"                This is a definitive archive of daily Sentinel-2 data. "
+"This is processed using correct ancillary data to provide a more accurate"
+" product than the Near Real Time.\n"
+"                The Surface Reflectance product has been corrected to "
+"account for variations caused by atmospheric properties, sun position and"
+" sensor view angle at time of image capture. These corrections have been "
+"applied to all satellite imagery in the Sentinel-2 archive.\n"
+"                The Normalised Difference Chlorophyll Index (NDCI) is "
+"based on the method of Mishra & Mishra 2012, and adapted to bands on the "
+"Sentinel-2A & B sensors.\n"
+"                The index indicates levels of chlorophyll-a (chl-a) "
+"concentrations in complex turbid productive waters such as those "
+"encountered in many inland water bodies. The index has not been validated"
+" in Australian waters, and there are a range of environmental conditions "
+"that may have an effect on the accuracy of the derived index values in "
+"this test implementation, including:\n"
+"                - Influence on the remote sensing signal from nearby land"
+" and/or atmospheric effects\n"
+"                - Optically shallow water\n"
+"                - Cloud cover\n"
+"                Mishra, S., Mishra, D.R., 2012. Normalized difference "
+"chlorophyll index: A novel model for remote estimation of chlorophyll-a "
+"concentration in turbid productive waters. Remote Sensing of Environment,"
+" Remote Sensing of Urban Environments 117, 394–406. "
+"https://doi.org/10.1016/j.rse.2011.10.016\n"
+"                For more information see "
+"http://pid.geoscience.gov.au/dataset/ga/129684\n"
+"                https://cmi.ga.gov.au/data-products/dea/190/dea-surface-"
+"reflectance-nbart-sentinel-2-msi\n"
+"                For service status information, see "
+"https://status.dea.ga.gov.au\n"
+"                                "
+
+msgid "layer.s2_ard_granule_nbar_t.local_keywords"
+msgstr ""
+
+#. nbar_coastal_aerosol
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_coastal_aerosol"
+msgstr "nbar_coastal_aerosol"
+
+#. nbar_blue
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_blue"
+msgstr "nbar_blue"
+
+#. nbar_green
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_green"
+msgstr "nbar_green"
+
+#. nbar_red
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_red"
+msgstr "nbar_red"
+
+#. nbar_red_edge_1
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_red_edge_1"
+msgstr "nbar_red_edge_1"
+
+#. nbar_red_edge_2
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_red_edge_2"
+msgstr "nbar_red_edge_2"
+
+#. nbar_red_edge_3
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_red_edge_3"
+msgstr "nbar_red_edge_3"
+
+#. nbar_nir_1
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_nir_1"
+msgstr "nbar_nir_1"
+
+#. nbar_nir_2
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_nir_2"
+msgstr "nbar_nir_2"
+
+#. nbar_swir_2
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_swir_2"
+msgstr "nbar_swir_2"
+
+#. nbar_swir_3
+msgid "layer.s2_ard_granule_nbar_t.bands.nbart_swir_3"
+msgstr "nbar_swir_3"
+
+#. fmask
+msgid "layer.s2_ard_granule_nbar_t.bands.fmask"
+msgstr "fmask"
+
+#. Normalised Difference Chlorophyll Index - Red Edge, Red
+msgid "style.s2_ard_granule_nbar_t.ndci.title"
+msgstr "Normalised Difference Chlorophyll Index - Red Edge, Red"
+
+#. Normalised Difference Chlorophyll Index - a derived index that correlates
+#. well with the existence of chlorophyll
+msgid "style.s2_ard_granule_nbar_t.ndci.abstract"
+msgstr ""
+"Normalised Difference Chlorophyll Index - a derived index that correlates"
+" well with the existence of chlorophyll"
+
+#. Normalised Difference Chlorophyll Index - Red Edge, Red
+msgid "style.s2_ard_granule_nbar_t.ndci.legend.1.title"
+msgstr "Normalised Difference Chlorophyll Index - Red Edge, Red"
+
+#. unitless
+msgid "style.s2_ard_granule_nbar_t.ndci.legend.1.units"
+msgstr "unitless"
+
+#. Modified Normalised Difference Water Index - Green, SWIR
+msgid "style.s2_ard_granule_nbar_t.mndwi.title"
+msgstr "Modified Normalised Difference Water Index - Green, SWIR"
+
+#. Modified Normalised Difference Water Index - a derived index that correlates
+#. well with the existence of water (Xu 2006)
+msgid "style.s2_ard_granule_nbar_t.mndwi.abstract"
+msgstr ""
+"Modified Normalised Difference Water Index - a derived index that "
+"correlates well with the existence of water (Xu 2006)"
+
+#. Modified Normalised Difference Water Index - Green, SWIR
+msgid "style.s2_ard_granule_nbar_t.mndwi.legend.1.title"
+msgstr "Modified Normalised Difference Water Index - Green, SWIR"
+
+#. Modified Normalised Difference Water Index - Green, SWIR
+msgid "style.s2_ard_granule_nbar_t.mndwi.legend.2.title"
+msgstr "Modified Normalised Difference Water Index - Green, SWIR"
+
+#. DEA Surface Reflectance Mosaic (Sentinel-2)
+msgid "layer.s2_ard_latest_mosaic.title"
+msgstr "DEA Surface Reflectance Mosaic (Sentinel-2)"
+
+#. Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance +
+#. Terrain Illumination Correction (Sentinel-2 MSI)  Latest imagery mosaic with
+#. no time dimension.
+msgid "layer.s2_ard_latest_mosaic.abstract"
+msgstr ""
+"Sentinel-2 Multispectral Instrument - Nadir BRDF Adjusted Reflectance + "
+"Terrain Illumination Correction (Sentinel-2 MSI)\n"
+"\n"
+"Latest imagery mosaic with no time dimension.\n"
+"                    "
+
+msgid "layer.s2_ard_latest_mosaic.local_keywords"
+msgstr ""
+
+#. nbar_coastal_aerosol
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_coastal_aerosol"
+msgstr "nbar_coastal_aerosol"
+
+#. nbar_blue
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_blue"
+msgstr "nbar_blue"
+
+#. nbar_green
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_green"
+msgstr "nbar_green"
+
+#. nbar_red
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_red"
+msgstr "nbar_red"
+
+#. nbar_red_edge_1
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_red_edge_1"
+msgstr "nbar_red_edge_1"
+
+#. nbar_red_edge_2
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_red_edge_2"
+msgstr "nbar_red_edge_2"
+
+#. nbar_red_edge_3
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_red_edge_3"
+msgstr "nbar_red_edge_3"
+
+#. nbar_nir_1
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_nir_1"
+msgstr "nbar_nir_1"
+
+#. nbar_nir_2
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_nir_2"
+msgstr "nbar_nir_2"
+
+#. nbar_swir_2
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_swir_2"
+msgstr "nbar_swir_2"
+
+#. nbar_swir_3
+msgid "layer.s2_ard_latest_mosaic.bands.nbart_swir_3"
+msgstr "nbar_swir_3"
+
+#. fmask
+msgid "layer.s2_ard_latest_mosaic.bands.fmask"
+msgstr "fmask"
+
+#. Normalised Difference Chlorophyll Index - Red Edge, Red
+msgid "style.s2_ard_latest_mosaic.ndci.title"
+msgstr "Normalised Difference Chlorophyll Index - Red Edge, Red"
+
+#. Normalised Difference Chlorophyll Index - a derived index that correlates
+#. well with the existence of chlorophyll
+msgid "style.s2_ard_latest_mosaic.ndci.abstract"
+msgstr ""
+"Normalised Difference Chlorophyll Index - a derived index that correlates"
+" well with the existence of chlorophyll"
+
+#. Normalised Difference Chlorophyll Index - Red Edge, Red
+msgid "style.s2_ard_latest_mosaic.ndci.legend.1.title"
+msgstr "Normalised Difference Chlorophyll Index - Red Edge, Red"
+
+#. unitless
+msgid "style.s2_ard_latest_mosaic.ndci.legend.1.units"
+msgstr "unitless"
+
+#. Modified Normalised Difference Water Index - Green, SWIR
+msgid "style.s2_ard_latest_mosaic.mndwi.title"
+msgstr "Modified Normalised Difference Water Index - Green, SWIR"
+
+#. Modified Normalised Difference Water Index - a derived index that correlates
+#. well with the existence of water (Xu 2006)
+msgid "style.s2_ard_latest_mosaic.mndwi.abstract"
+msgstr ""
+"Modified Normalised Difference Water Index - a derived index that "
+"correlates well with the existence of water (Xu 2006)"
+
+#. Modified Normalised Difference Water Index - Green, SWIR
+msgid "style.s2_ard_latest_mosaic.mndwi.legend.1.title"
+msgstr "Modified Normalised Difference Water Index - Green, SWIR"
+
+#. Modified Normalised Difference Water Index - Green, SWIR
+msgid "style.s2_ard_latest_mosaic.mndwi.legend.2.title"
+msgstr "Modified Normalised Difference Water Index - Green, SWIR"
+
+#. DEA Fractional Cover (Landsat)
+msgid "layer.ga_ls_fc_3.title"
+msgstr "DEA Fractional Cover (Landsat)"
+
+#. Geoscience Australia Landsat Fractional Cover Collection 3
+#. Fractional Cover (FC), developed by the Joint Remote Sensing Research
+#. Program, is a measurement that splits the landscape into three parts, or
+#. fractions:                 green (leaves, grass, and growing crops)
+#. brown (branches, dry grass or hay, and dead leaf litter)
+#. bare ground (soil or rock)                 DEA uses Fractional Cover to
+#. characterise every 30 m square of Australia for any point in time from 1987
+#. to today.
+#. https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
+#. For service status information, see https://status.dea.ga.gov.au
+msgid "layer.ga_ls_fc_3.abstract"
+msgstr ""
+"Geoscience Australia Landsat Fractional Cover Collection 3\n"
+"                Fractional Cover (FC), developed by the Joint Remote "
+"Sensing Research Program, is a measurement that splits the landscape into"
+" three parts, or fractions:\n"
+"                green (leaves, grass, and growing crops)\n"
+"                brown (branches, dry grass or hay, and dead leaf litter)\n"
+"                bare ground (soil or rock)\n"
+"                DEA uses Fractional Cover to characterise every 30 m "
+"square of Australia for any point in time from 1987 to today.\n"
+"                https://cmi.ga.gov.au/data-products/dea/629/dea-"
+"fractional-cover-landsat-c3\n"
+"                For service status information, see "
+"https://status.dea.ga.gov.au"
+
+msgid "layer.ga_ls_fc_3.local_keywords"
+msgstr ""
+
+#. bare_soil
+msgid "layer.ga_ls_fc_3.bands.bs"
+msgstr "bare_soil"
+
+#. photosynthetic_vegetation
+msgid "layer.ga_ls_fc_3.bands.pv"
+msgstr "photosynthetic_vegetation"
+
+#. non_photosynthetic_vegetation
+msgid "layer.ga_ls_fc_3.bands.npv"
+msgstr "non_photosynthetic_vegetation"
+
+#. ue
+msgid "layer.ga_ls_fc_3.bands.ue"
+msgstr "ue"
+
+#. Three-band Fractional Cover Unmasked (Warning: includes invalid data)
+msgid "style.ga_ls_fc_3.fc_rgb_unmasked.title"
+msgstr "Three-band Fractional Cover Unmasked (Warning: includes invalid data)"
+
+#. Fractional cover medians - red is bare soil, green is green vegetation and
+#. blue is non-green vegetation
+msgid "style.ga_ls_fc_3.fc_rgb_unmasked.abstract"
+msgstr ""
+"Fractional cover medians - red is bare soil, green is green vegetation "
+"and blue is non-green vegetation"
+
+#. Landsat-8 Geomedian
+msgid "layer.ls8_geomedian.title"
+msgstr "Landsat-8 Geomedian"
+
+#. DEA Landsat-8 Geomedian
+msgid "layer.ls8_geomedian.abstract"
+msgstr "DEA Landsat-8 Geomedian"
+
+msgid "layer.ls8_geomedian.local_keywords"
+msgstr ""
+
+#. red
+msgid "layer.ls8_geomedian.bands.red"
+msgstr "red"
+
+#. green
+msgid "layer.ls8_geomedian.bands.green"
+msgstr "green"
+
+#. blue
+msgid "layer.ls8_geomedian.bands.blue"
+msgstr "blue"
+
+#. nir
+msgid "layer.ls8_geomedian.bands.nir"
+msgstr "nir"
+
+#. swir1
+msgid "layer.ls8_geomedian.bands.swir1"
+msgstr "swir1"
+
+#. swir2
+msgid "layer.ls8_geomedian.bands.swir2"
+msgstr "swir2"
+
+#. sdev
+msgid "layer.ls8_geomedian.bands.sdev"
+msgstr "sdev"
+
+#. edev
+msgid "layer.ls8_geomedian.bands.edev"
+msgstr "edev"
+
+#. bcdev
+msgid "layer.ls8_geomedian.bands.bcdev"
+msgstr "bcdev"
+
+#. count
+msgid "layer.ls8_geomedian.bands.count"
+msgstr "count"
+
+#. Simple RGB
+msgid "style.ls8_geomedian.simple_rgb.title"
+msgstr "Simple RGB"
+
+#. Simple true-colour image, using the red, green and blue bands
+msgid "style.ls8_geomedian.simple_rgb.abstract"
+msgstr "Simple true-colour image, using the red, green and blue bands"
+
+#. False colour multi-band infra-red
+msgid "style.ls8_geomedian.infra_red.title"
+msgstr "False colour multi-band infra-red"
+
+#. Simple false-colour image, using the near and short-wave infra-red bands
+msgid "style.ls8_geomedian.infra_red.abstract"
+msgstr "Simple false-colour image, using the near and short-wave infra-red bands"
+
+#. NDVI
+msgid "style.ls8_geomedian.ndvi.title"
+msgstr "NDVI"
+
+#. Normalised Difference Vegetation Index - a derived index that correlates
+#. well with the existence of vegetation
+msgid "style.ls8_geomedian.ndvi.abstract"
+msgstr ""
+"Normalised Difference Vegetation Index - a derived index that correlates "
+"well with the existence of vegetation"
+
+#. NDVI
+msgid "style.ls8_geomedian.ndvi.legend.1.title"
+msgstr "NDVI"
+
+#. dimensionless
+msgid "style.ls8_geomedian.ndvi.legend.1.units"
+msgstr "dimensionless"
+
+#. low
+msgid "style.ls8_geomedian.ndvi.legend.1.lbl_0.0"
+msgstr "low"
+
+#. high
+msgid "style.ls8_geomedian.ndvi.legend.1.lbl_1.0"
+msgstr "high"

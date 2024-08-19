@@ -69,6 +69,7 @@ RUN EXTRAS=$([ "$ENVIRONMENT" = "deployment" ] || echo ",test") && \
            python3-pip))
 
 # Configure user
+USER ubuntu
 WORKDIR "/home/ubuntu"
 
 ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
