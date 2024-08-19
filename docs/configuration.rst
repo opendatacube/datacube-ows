@@ -184,7 +184,7 @@ can be supplied in any of the following ways:
    .. note:: Resolution of relative file paths is done in the following order:
 
       a) Relative to the working directory of the web app.
-   
+
       b) If a JSON file is being included from another JSON file, relative to
          directory in which the including file resides.
 
