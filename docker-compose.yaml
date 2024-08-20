@@ -12,8 +12,8 @@ services:
     # Uncomment for use with non-dockerised postgres (for docker-compose 1.x)
     # network_mode: host
     environment:
-      LOCAL_UID: ${LOCAL_UID:-1001}
-      LOCAL_GID: ${LOCAL_GID:-1001}
+      LOCAL_UID: ${LOCAL_UID:-1000}
+      LOCAL_GID: ${LOCAL_GID:-1000}
       # Defaults are defined in .env file
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}

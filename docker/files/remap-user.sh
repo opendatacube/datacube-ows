@@ -4,8 +4,8 @@
 # If $LOCAL_UID or $LOCAL_GID are not set, they default to 1001 (default
 # for the first user created in Ubuntu).
 
-USER_ID=${LOCAL_UID:-1001}
-GROUP_ID=${LOCAL_GID:-1001}
+USER_ID=${LOCAL_UID:-1000}
+GROUP_ID=${LOCAL_GID:-1000}
 OWS_ID=$(id -u ows)
 
 [[ "$USER_ID" == "$OWS_ID" ]] || usermod -u $USER_ID -o -m -d /home/ows ows

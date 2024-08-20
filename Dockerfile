@@ -69,6 +69,7 @@ RUN EXTRAS=$([ "$ENVIRONMENT" = "deployment" ] || echo ",test") && \
            python3-pip))
 
 # Configure user
+RUN userdel -r ubuntu
 RUN useradd -m -s /bin/bash ows
 WORKDIR "/home/ubuntu"
 
