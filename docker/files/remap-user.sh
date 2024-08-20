@@ -7,7 +7,7 @@
 USER_ID=${LOCAL_UID:-1000}
 GROUP_ID=${LOCAL_GID:-1000}
 
-[[ "$USER_ID" == "1000" ]] || usermod -u $USER_ID -o -m -d /home/ows ubuntu
-[[ "$GROUP_ID" == "1000" ]] || groupmod -g $GROUP_ID ubuntu
+[[ "$USER_ID" == "1000" ]] || usermod -u $USER_ID -o -m -d /home/ows ows
+[[ "$GROUP_ID" == "1000" ]] || groupmod -g $GROUP_ID ows
 [[ $(id -u) != "0" ]] || GOSU="/usr/sbin/gosu ubuntu"
 exec /usr/bin/tini -- $GOSU "$@"
