@@ -1,14 +1,13 @@
 #!/bin/bash -e
 
 # Script that gives the container user uid $LOCAL_UID and gid $LOCAL_GID.
-# If $LOCAL_UID or $LOCAL_GID are not set, they default to 1001 (default
+# If $LOCAL_UID or $LOCAL_GID are not set, they default to 1000 (default
 # for the first user created in Ubuntu).
 
 USER_ID=${LOCAL_UID:-1000}
 GROUP_ID=${LOCAL_GID:-1000}
-OWS_ID=$(id -u ows)
 
-[[ "$USER_ID" == "$OWS_ID" ]] || usermod -u $USER_ID -o -m -d /home/ows ows
-[[ "$GROUP_ID" == "$OWS_ID" ]] || groupmod -g $GROUP_ID ows
-[[ $(id -u) != "0" ]] || GOSU="/usr/sbin/gosu ows"
+[[ "$USER_ID" == "1000" ]] || usermod -u $USER_ID -o -m -d /home/ubuntu ubuntu
+[[ "$GROUP_ID" == "1000" ]] || groupmod -g $GROUP_ID ubuntu
+[[ $(id -u) != "0" ]] || GOSU="/usr/sbin/gosu ubuntu"
 exec /usr/bin/tini -- $GOSU "$@"
