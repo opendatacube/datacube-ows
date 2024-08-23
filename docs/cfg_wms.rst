@@ -7,8 +7,8 @@ OWS Configuration - WMS Section
 WMS Section
 --------------
 
-The "wms" section of the `root configuration object
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+The "wms" section of the :doc:`root configuration object
+<configuration>`
 contains config entries that apply
 to the WMS/WMTS services for all layers.
 

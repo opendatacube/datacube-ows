@@ -9,7 +9,7 @@ Non-Linear Components: Functions
 --------------------------------
 
 All the examples in the
-`previous section <https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html>`_
+:doc:`previous section <style_howto_components>`
 involved using linearly scaled, linear combinations of bands to calculate channel values.
 If we want to evaluate components using more sophisticated calculations, we need to use
 python functions.
@@ -97,7 +97,7 @@ Non-Linear Components: OWS Function Syntax and Scalable
 -------------------------------------------------------
 
 You can use the ``@scalable`` decorator provided by the API, and OWS's
-`extended function syntax <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html>`_
+:doc:`extended function syntax <cfg_functions>`
 for a more streamlined solution to scaling:
 
 Example: red-ndvi-blue (half scale)
@@ -191,6 +191,5 @@ Note that utility functions are referenced by name, rather than importing the na
 `View full size
 <https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png>`_
 
-`Next up
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_colour_ramp.html>`_
+:doc:`Next up <style_howto_colour_ramp>`
 we will look at colour ramp styles.

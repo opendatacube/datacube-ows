@@ -19,6 +19,7 @@ install_requirements = [
     'fsspec',
     'lxml',
     'deepdiff',
+    'importlib_metadata',
     'matplotlib',
     'pyparsing',
     'numpy>=1.22',

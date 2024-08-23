@@ -134,6 +134,7 @@ dimensioned
 dir
 dns
 docstrings
+dockerfile
 dsn
 dtype
 eae
@@ -219,6 +220,7 @@ html
 http
 https
 img
+impl
 incrementing
 init
 initdb
@@ -307,6 +309,7 @@ pjonsson
 pki
 png
 po
+PostGIS
 postgis
 postgres
 postgresql
@@ -351,6 +354,7 @@ rtaib
 runtime
 satisifies
 scalable
+schemas
 scikit
 scm
 sdev

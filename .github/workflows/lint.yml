@@ -8,12 +8,12 @@ on:
       - 'develop-1.9'
     paths:
       - '**'
-      - '.github/workflows/lint.yml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
       - '!.github/**'
+      - '.github/workflows/lint.yml'
 
   push:
     branches:
@@ -21,12 +21,12 @@ on:
       - 'develop-1.9'
     paths:
       - '**'
-      - '.github/workflows/lint.yml'
       - '!docs/**'
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
       - '!.github/**'
+      - '.github/workflows/lint.yml'
 
 jobs:
   pylint:

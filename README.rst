@@ -1,24 +1,25 @@
-============
-datacube-ows
-============
+==========================
+Datacube Open Web Services
+==========================
 
-.. image:: https://github.com/opendatacube/datacube-ows/workflows/Linting/badge.svg
-        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ACode%20Linting
+.. image:: https://github.com/opendatacube/datacube-ows/actions/workflows/lint.yml/badge.svg
+   :target: https://github.com/opendatacube/datacube-ows/actions/workflows/lint.yml
 
-.. image:: https://github.com/opendatacube/datacube-ows/workflows/Tests/badge.svg
-        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ATests
+.. image:: https://github.com/opendatacube/datacube-ows/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/opendatacube/datacube-ows/actions/workflows/test.yml
 
-.. image:: https://github.com/opendatacube/datacube-ows/workflows/Docker/badge.svg
-        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3ADockerfile%20Linting
+.. image:: https://github.com/opendatacube/datacube-ows/actions/workflows/docker.yml/badge.svg
+   :target: https://github.com/opendatacube/datacube-ows/actions/workflows/docker.yml
 
-.. image:: https://github.com/opendatacube/datacube-ows/workflows/Scan/badge.svg
-        :target: https://github.com/opendatacube/datacube-ows/actions?query=workflow%3A%22Scan%22
+.. image:: https://github.com/opendatacube/datacube-ows/actions/workflows/scan.yml/badge.svg
+   :target: https://github.com/opendatacube/datacube-ows/actions/workflows/scan.yml
 
 .. image:: https://codecov.io/gh/opendatacube/datacube-ows/branch/master/graph/badge.svg
-        :target: https://codecov.io/gh/opendatacube/datacube-ows
+   :target: https://codecov.io/gh/opendatacube/datacube-ows
 
-Datacube Open Web Services
---------------------------
+.. image:: https://img.shields.io/pypi/v/datacube?label=datacube
+   :alt: PyPI
+
 
 Datacube-OWS provides a way to serve data indexed in an Open Data Cube as visualisations, through
 open web services (OGC WMS, WMTS and WCS).
@@ -58,10 +59,8 @@ Community
 
 This project welcomes community participation.
 
-`Join the ODC Slack <http://slack.opendatacube.org>`__ if you need help
+`Join the ODC Discord <https://discord.com/invite/4hhBQVas5U>`__ if you need help
 setting up or using this project, or the Open Data Cube more generally.
-Conversation about datacube-ows is mostly concentrated in the Slack
-channel ``#wms``.
 
 Please help us to keep the Open Data Cube community open and inclusive by
 reading and following our `Code of Conduct <code-of-conduct.md>`__.
@@ -70,8 +69,8 @@ Setup
 -----
 
 Datacube_ows (and datacube_core itself) has many complex dependencies on particular versions of
-geospatial libraries.  Dependency conflicts are almost unavoidable in environments that also contain
-other large complex geospatial software packages.  We therefore strongly recommend some kind of
+geospatial libraries. Dependency conflicts are almost unavoidable in environments that also contain
+other large complex geospatial software packages. We therefore strongly recommend some kind of
 containerised solution and we supply scripts for building appropriate Docker containers.
 
 Linting
@@ -93,7 +92,7 @@ And example configuration file `datacube_ows/ows_cfg_example.py` is also provide
 may not be as up-to-date as the formal documentation.
 
 Environment variables that directly or indirectly affect the running of OWS
-are `documented here<https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
+are `documented here <https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
 
 Docker-Compose
 --------------
@@ -105,23 +104,23 @@ We use docker-compose to make development and testing of the containerised ows i
 
 Set up your environment by creating a `.env` file (see below).
 
-To start OWS with flask connected to a pre-existing database on your local machine: ::
+To start OWS with flask connected to a pre-existing database on your local machine::
 
   docker-compose up
 
-The first time you run docker-compose, you will need to add the `--build` option: ::
+The first time you run docker-compose, you will need to add the `--build` option::
 
   docker-compose up --build
 
-To start ows with a pre-indexed database: ::
+To start ows with a pre-indexed database::
 
   docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up
 
-To start ows with db and gunicorn instead of flask (production) ::
+To start ows with db and gunicorn instead of flask (production)::
 
   docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up
 
-The default environment variables (in .env file) can be overriden by setting local environment variables ::
+The default environment variables (in .env file) can be overriden by setting local environment variables::
 
   # Enable pydev for pycharm (needs rebuild to install python libs)
   # hot reload is not supported, so we need to set FLASK_DEV to production
@@ -140,7 +139,8 @@ setup env with .env file
 
 Docker
 ------
-To run the standard Docker image, create a docker volume containing your ows config files and use something like: ::
+
+To run the standard Docker image, create a docker volume containing your ows config files and use something like::
 
   docker build --tag=name_of_built_container .
 
@@ -160,20 +160,20 @@ To run the standard Docker image, create a docker volume containing your ows con
 The image is based on the standard ODC container and an external database
 
 Installation with Conda
-------------
+-----------------------
 
 The following instructions are for installing on a clean Linux system.
 
-* Create a conda python 3.8 and activate conda environment::
+* Create and activate a Python 3.10 Conda environment::
 
     conda create -n ows -c conda-forge python=3.10 datacube pre_commit postgis
     conda activate ows
 
-* install the latest release using pip install::
+* Install the latest release using pip install::
 
     pip install datacube-ows[all]
 
-* setup a database::
+* Initialise and run PostgreSQL::
 
     pgdata=$(pwd)/.dbdata
     initdb -D ${pgdata} --auth-host=md5 --encoding=UTF8 --username=ubuntu
@@ -181,13 +181,13 @@ The following instructions are for installing on a clean Linux system.
 
     createdb ows -U ubuntu
 
-* enable postgis extension::
+* Enable the PostGIS extension::
 
     psql -d ows
     create extension postgis;
     \q
 
-* init datacube and ows schema::
+* Initialise the Datacube and OWS schemas::
 
     export ODC_DEFAULT_DB_URL=postgresql:///ows
     datacube system init
@@ -204,11 +204,11 @@ The following instructions are for installing on a clean Linux system.
 
 * Create a configuration file for your service, and all data products you wish to publish in
   it.
-  `Detailed documentation of the configuration format can be found here.<https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
+  `Detailed documentation of the configuration format can be found here. <https://datacube-ows.readthedocs.io/en/latest/configuration.html>`_
 
 * Set environment variables as required.
   Environment variables that directly or indirectly affect the running of OWS
-  are `documented here<https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
+  are `documented here <https://datacube-ows.readthedocs.io/en/latest/environment_variables.html>`_.
 
 
 * Run ``datacube-ows-update`` (in the Datacube virtual environment).
@@ -228,8 +228,8 @@ The following instructions are for installing on a clean Linux system.
     mkdir -p /etc/pki/tls/certs
     ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
 
-* Launch flask app using your favorite WSGI server.  We recommend using Gunicorn with
-  either nginx or a load balancer.
+* Launch the flask app using your favorite WSGI server. We recommend using Gunicorn with
+  either Nginx or a load balancer.
 
 The following approaches have also been tested:
 
@@ -256,6 +256,7 @@ Flask Dev Server
 
 Local Postgres database
 -----------------------
+
 1. create an empty database and db_user
 2. run `datacube system init` after creating a datacube config file
 3. A product added to your datacube `datacube product add url` some examples are here: https://github.com/GeoscienceAustralia/dea-config/tree/master/products
