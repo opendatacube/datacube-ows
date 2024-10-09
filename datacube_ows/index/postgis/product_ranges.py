@@ -10,7 +10,6 @@ from datetime import date, datetime, timezone
 from typing import Callable
 import click
 
-from antimeridian import fix_shape
 import datacube
 import odc.geo
 import sqlalchemy.exc
