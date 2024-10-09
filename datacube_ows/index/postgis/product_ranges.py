@@ -168,7 +168,10 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                 base_extent = prod_extent
             else:
                 base_extent = base_extent | prod_extent
-        assert base_extent is not None
+        if base_extent is None:
+            click.echo(f"Layer {layer.name} has no extent in CRS {base_crs}.  Skipping.")
+            return
+
         all_bboxes = bbox_projections(base_extent, layer.global_cfg.crses)
 
         conn.execute(text("""
@@ -197,19 +200,8 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
 def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CRS]) -> dict[str, dict[str, float]]:
    result = {}
    for crsid, crs in crses.items():
-       if crs.valid_region is not None:
-           test_box = starting_box.to_crs("epsg:4326")
-           clipped_crs_region = (test_box & crs.valid_region)
-           if clipped_crs_region.wkt == 'POLYGON EMPTY':
-               continue
-           clipped_crs_bbox = clipped_crs_region.to_crs(crs).boundingbox
-       else:
-           clipped_crs_bbox = None
-       if clipped_crs_bbox is not None:
-           result[crsid] = jsonise_bbox(clipped_crs_bbox)
-       else:
-           projbbox = starting_box.to_crs(crs).boundingbox
-           result[crsid] = sanitise_bbox(projbbox)
+        projbbox = starting_box.to_crs(crs).boundingbox
+        result[crsid] = sanitise_bbox(projbbox)
    return result
 
 
