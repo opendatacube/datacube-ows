@@ -182,7 +182,9 @@ class CacheControlRules(OWSConfigEntry):
         if not self.use_caching:
             return {}
         assert n_datasets >= 0
-        if n_datasets == 0 or n_datasets > self.max_datasets:
+        # If there are no datasets, don't cache. But if the max_datasets isn't 0, check
+        # we're not exceeding it, and in that case, don't cache either.
+        if n_datasets == 0 or (self.max_datasets > 0 and n_datasets > self.max_datasets):
             return cache_control_headers(0)
         rule = None
         for r in self.rules:
