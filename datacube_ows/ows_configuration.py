@@ -1311,7 +1311,7 @@ class OWSConfig(OWSMetadataConfig):
         try:
             self.dc: Datacube = Datacube(env=self.default_env, app=self.odc_app)
         except Exception as e:
-            _LOG.error("ODC initialisation failed: %s", str(e))
+            _LOG.error("ODC initialisation of env %s failed: %s", self.default_env._name, str(e))
             raise ODCInitException(e)
         if self.msg_file_name:
             try:

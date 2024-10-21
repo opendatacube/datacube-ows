@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 import math
 from datetime import datetime, date
 
@@ -25,6 +26,8 @@ from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
 from datacube_ows.utils import default_to_utc, find_matching_date
+
+_LOG = logging.getLogger(__name__)
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,
@@ -67,23 +70,32 @@ def _get_geobox_xy(args, crs):
     return minx, miny, maxx, maxy
 
 
-def _get_geobox(args, src_crs, dst_crs=None):
+def _get_geobox(args, crs):
     width = int(args['width'])
     height = int(args['height'])
-    minx, miny, maxx, maxy = _get_geobox_xy(args, src_crs)
+    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
 
     if minx == maxx or miny == maxy:
         raise WMSException("Bounding box must enclose a non-zero area")
-    if dst_crs is not None:
-        minx, miny, maxx, maxy = _bounding_pts(
-            minx, miny,
-            maxx, maxy,
-            src_crs, dst_crs=dst_crs
-        )
 
-    out_crs = src_crs if dst_crs is None else dst_crs
+    if crs.epsg == 3857:
+        # Web Mercator anti-meridian hack
+        if maxx < -13_000_000 or minx > 13_000_000:
+            _LOG.warning("Applying anti-meridian hack! x=~ %f, %f    y=~ %f, %f", minx, maxx, miny, maxy)
+            # Closer to the anti-meridian than the prime meridian:
+            # re-project to epsg:3832 (Pacific Web-Mercator)
+            ll = geom.point(x=minx, y=miny, crs=crs).to_crs("epsg:3832")
+            ur = geom.point(x=maxx, y=maxy, crs=crs).to_crs("epsg:3832")
+            minx, miny = ll.coords[0]
+            maxx, maxy = ur.coords[0]
+            crs = geom.CRS("epsg:3832")
+        else:
+            _LOG.warning("NOT applying anti-meridian hack! x=~ %f, %f  y=~ %f %f", minx, maxx, miny, maxy)
+    else:
+        _LOG.warning("Not a 3857 query!")
+
     return create_geobox(
-        out_crs,
+        crs,
         minx, miny, maxx, maxy,
         width, height
     )
@@ -312,6 +324,13 @@ class GetParameters():
         self.geometry = _get_polygon(args, self.crs)
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
+        _LOG.warning("geobox bbox = %s", repr(self.geobox.boundingbox))
+        # Web-merc antimeridian hack:
+        if self.geobox.crs != self.crs:
+            self.crs = self.geobox.crs
+            self.geometry = self.geometry.to_crs(self.crs)
+        _LOG.warning("geometry = %s", repr(self.geometry))
+
         # Time parameter
         self.times = get_times(args, self.layer)
 

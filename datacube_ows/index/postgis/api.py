@@ -6,6 +6,7 @@
 
 import click
 import datetime
+import logging
 
 from threading import Lock
 from typing import Any, Iterable, Type
@@ -14,12 +15,15 @@ from uuid import UUID
 from odc.geo import Geometry, CRS
 from datacube import Datacube
 from datacube.model import Product, Dataset, Range
+from antimeridian import fix_shape
 
 from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.index.api import OWSAbstractIndex, OWSAbstractIndexDriver, LayerSignature, LayerExtent, TimeSearchTerm
 from datacube_ows.index.sql import run_sql
 from .product_ranges import create_range_entry as create_range_entry_impl, get_ranges as get_ranges_impl
 from ...utils import default_to_utc
+
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 class OWSPostgisIndex(OWSAbstractIndex):
@@ -61,7 +65,10 @@ class OWSPostgisIndex(OWSAbstractIndex):
                ) -> dict[str, Any]:
         query: dict[str, Any] = {}
         if geom:
-            query["geopolygon"] = self._prep_geom(layer, geom)
+            geopoly = self._prep_geom(layer, geom).to_crs("epsg:4326")
+            geopoly = Geometry(fix_shape(geopoly.geom), crs="epsg:4326")
+            query["geopolygon"] = geopoly
+            _LOG.warning("geopolygon is %s", repr(query["geopolygon"]))
         if products is not None:
             query["product"] = [p.name for p in products]
         if times is not None:

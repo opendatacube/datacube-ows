@@ -22,6 +22,7 @@ install_requirements = [
     'importlib_metadata',
     'matplotlib',
     'pyparsing',
+    'antimeridian',
     'numpy>=1.22',
     'scipy',
     'Pillow>=10.2.0',
@@ -51,7 +52,8 @@ test_requirements = [
 ]
 
 dev_requirements = [
-    'pydevd-pycharm~=232.10072.31',
+    'pydevd-pycharm~=242.21829.153',
+
     'pylint',
     'sphinx_click',
     'pre-commit',

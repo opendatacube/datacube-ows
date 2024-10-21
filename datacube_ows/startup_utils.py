@@ -178,7 +178,8 @@ def parse_config_file(log=None):
 
 
 def initialise_flask(name):
-    app = Flask(name.split('.')[0])
+    app_path = os.path.dirname(os.path.abspath(__file__))
+    app = Flask(name.split('.')[0], template_folder=os.path.join(app_path, 'templates'))
     return app
 
 def pass_through(undecorated):

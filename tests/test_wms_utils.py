@@ -267,18 +267,6 @@ def test_get_geobox():
     assert gbox.affine
     assert str(gbox.crs) == "EPSG:4326"
 
-    gbox = datacube_ows.wms_utils._get_geobox(
-        args={
-            "width": "256",
-            "height": "256",
-            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
-        },
-        src_crs=CRS("EPSG:4326"),
-        dst_crs=CRS("EPSG:3857")
-    )
-    assert gbox.affine
-    assert str(gbox.crs) == "EPSG:3857"
-
     with pytest.raises(WMSException) as e:
         gbox = datacube_ows.wms_utils._get_geobox(
             args={
