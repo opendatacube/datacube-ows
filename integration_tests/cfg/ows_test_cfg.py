@@ -12,7 +12,7 @@ if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
     trans_dir = "."
 else:
     cfgbase = "config."
-    trans_dir = "/code"
+    trans_dir = "/src"
 
 
 # THIS IS A TESTING FILE
