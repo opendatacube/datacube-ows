@@ -54,7 +54,7 @@ jobs:
       - name: Test and lint dev OWS image
         run: |
           mkdir artifacts
-          docker run -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) -v ${PWD}/artifacts:/mnt/artifacts ${ORG}/${IMAGE}:_builder /bin/sh -c "cd /code && ./check-code.sh"
+          docker run -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) -v ${PWD}/artifacts:/mnt/artifacts ${ORG}/${IMAGE}:_builder /bin/sh -c "cd /src && ./check-code.sh"
           mv ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
 
       - name: Dockerized Integration Pytest
@@ -63,7 +63,7 @@ jobs:
           export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml up -d --wait --build
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows_18 /bin/sh -c "cd /code && ./check-code-all.sh"
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows_18 /bin/sh -c "cd /src && ./check-code-all.sh"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml down
 
       - name: Upload All coverage to Codecov

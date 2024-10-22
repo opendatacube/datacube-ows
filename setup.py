@@ -3,7 +3,7 @@
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
-# Copyright (c) 2017-2023 OWS Contributors
+# Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
 from setuptools import find_packages, setup
@@ -49,11 +49,9 @@ test_requirements = [
 ]
 
 dev_requirements = [
-    'pydevd-pycharm~=221.5921.27', # For Pycharm 2022.1.3
-    'pylint==3.2.3',
+    'pydevd-pycharm~=242.23339.19',  # For Pycharm 2024.2.3
+    'pylint',
     'sphinx_click',
-    'pre-commit==2.13.0',
-    'pipdeptree'
 ]
 
 operational_requirements = [
@@ -115,7 +113,7 @@ Features
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.8',
     ],
     setup_requires=setup_requirements,
     use_scm_version={

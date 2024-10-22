@@ -177,7 +177,7 @@ def parse_config_file(log=None):
 
 
 def initialise_flask(name):
-    app = Flask(name.split('.')[0])
+    app = Flask(name)
     return app
 
 def pass_through(undecorated):
