@@ -33,13 +33,13 @@ services:
       # Enable Metrics
       prometheus_multiproc_dir: ${prometheus_multiproc_dir}
       # Dev flags
-      FLASK_APP: /code/datacube_ows/ogc.py
+      FLASK_APP: /src/datacube_ows/ogc.py
       FLASK_ENV: ${FLASK_ENV}
       PYDEV_DEBUG: "${PYDEV_DEBUG}"
       SENTRY_DSN: "${SENTRY_DSN}"
     volumes:
       - ${OWS_CFG_DIR}:${OWS_CFG_MOUNT_DIR}
-      - ./:/code/
+      - ./:/src/
       - ./artifacts:/mnt/artifacts
     restart: always
     command: ["flask", "run", "--host=0.0.0.0", "--port=8000"]
