@@ -52,12 +52,11 @@ test_requirements = [
 ]
 
 dev_requirements = [
-    'pydevd-pycharm~=242.21829.153',
+    'pydevd-pycharm~=242.23339.19',
 
     'pylint',
     'sphinx_click',
     'pre-commit',
-    'pipdeptree',
     'mypy',
     'flake8',
     'types-pytz',

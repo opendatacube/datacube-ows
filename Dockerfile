@@ -1,5 +1,5 @@
 # Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1 AS builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.2 AS builder
 
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
@@ -26,7 +26,7 @@ RUN python3 -m pip --disable-pip-version-check -q wheel --no-binary psycopg2 psy
           python3 -m pip --disable-pip-version-check -q wheel --no-binary pyproj pyproj)
 
 # Should match builder base.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.2
 
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
@@ -40,6 +40,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && ([ "$ENVIRONMENT" = "deployment" ] || \
           apt-get install -y --no-install-recommends \
             proj-bin) \
+    && apt-get upgrade -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
 
@@ -47,8 +48,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 COPY --chown=root:root --link docker/files/remap-user.sh /usr/local/bin/remap-user.sh
 
 # Copy source code and install it
-WORKDIR /code
-COPY . /code
+WORKDIR /src
+COPY . /src
 
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
@@ -62,7 +63,7 @@ RUN EXTRAS=$([ "$ENVIRONMENT" = "deployment" ] || echo ",test") && \
        python3 -m pip --disable-pip-version-check install --no-cache-dir .[dev] --break-system-packages) && \
     python3 -m pip freeze && \
     ([ "$ENVIRONMENT" != "deployment" ] || \
-       (rm -rf /code/* /code/.git* && \
+       (rm -rf /src/* /src/.git* && \
         apt-get purge -y \
            git \
            git-man \
