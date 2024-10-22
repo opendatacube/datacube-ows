@@ -10,7 +10,7 @@ services:
         - opendatacube/ows_18:_builder
     image: opendatacube/ows_18:latest
     # Uncomment for use with non-dockerised postgres (for docker-compose 1.x)
-    # network_mode: host
+    network_mode: host
     environment:
       LOCAL_UID: ${LOCAL_UID:-1000}
       LOCAL_GID: ${LOCAL_GID:-1000}
@@ -24,7 +24,7 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}
-      # Path from the PYTHONPATH to the config object (default PYTHONPATH is /env)
+      # Path from the PYTHONPATH to the config object (default PYTHONPATH is /src)
       PYTHONPATH: ${PYTHONPATH}
       DATACUBE_OWS_CFG: ${DATACUBE_OWS_CFG}
       AWS_DEFAULT_REGION: ${AWS_REGION}
