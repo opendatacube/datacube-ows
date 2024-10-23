@@ -53,7 +53,6 @@ test_requirements = [
 
 dev_requirements = [
     'pydevd-pycharm~=242.23339.19',
-
     'pylint',
     'sphinx_click',
     'pre-commit',
@@ -62,7 +61,6 @@ dev_requirements = [
     'types-pytz',
     'types-python-dateutil',
     'types-requests',
-
 ]
 
 operational_requirements = [
