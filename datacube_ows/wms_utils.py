@@ -78,21 +78,14 @@ def _get_geobox(args, crs):
     if minx == maxx or miny == maxy:
         raise WMSException("Bounding box must enclose a non-zero area")
 
-    if crs.epsg == 3857:
-        # Web Mercator anti-meridian hack
-        if maxx < -13_000_000 or minx > 13_000_000:
-            _LOG.warning("Applying anti-meridian hack! x=~ %f, %f    y=~ %f, %f", minx, maxx, miny, maxy)
-            # Closer to the anti-meridian than the prime meridian:
+    if crs.epsg == 3857 and (maxx < -13_000_000 or minx > 13_000_000):
+            # EPSG:3857 query AND closer to the anti-meridian than the prime meridian:
             # re-project to epsg:3832 (Pacific Web-Mercator)
             ll = geom.point(x=minx, y=miny, crs=crs).to_crs("epsg:3832")
             ur = geom.point(x=maxx, y=maxy, crs=crs).to_crs("epsg:3832")
             minx, miny = ll.coords[0]
             maxx, maxy = ur.coords[0]
             crs = geom.CRS("epsg:3832")
-        else:
-            _LOG.warning("NOT applying anti-meridian hack! x=~ %f, %f  y=~ %f %f", minx, maxx, miny, maxy)
-    else:
-        _LOG.warning("Not a 3857 query!")
 
     return create_geobox(
         crs,
@@ -118,11 +111,11 @@ def zoom_factor(args, crs):
     # Project to a geographic coordinate system
     # This is why we can't just use the regular geobox.  The scale needs to be
     # "standardised" in some sense, not dependent on the CRS of the request.
-    geo_crs = geom.CRS("EPSG:4326")
+    # TODO: can we do better in polar regions?
     minx, miny, maxx, maxy = _bounding_pts(
         minx, miny,
         maxx, maxy,
-        crs, dst_crs=geo_crs
+        crs, dst_crs="epsg:4326"
     )
     # Create geobox affine transformation (N.B. Don't need an actual Geobox)
     affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
@@ -508,8 +501,7 @@ def solar_correct_data(data, dataset):
     native_x = (dataset.bounds.right + dataset.bounds.left) / 2.0
     native_y = (dataset.bounds.top + dataset.bounds.bottom) / 2.0
     pt = geom.point(native_x, native_y, dataset.crs)
-    crs_geo = geom.CRS("EPSG:4326")
-    geo_pt = pt.to_crs(crs_geo)
+    geo_pt = pt.to_crs("epsg:4326")
     data_time = dataset.center_time.astimezone(utc)
     data_lon, data_lat = geo_pt.coords[0]
 

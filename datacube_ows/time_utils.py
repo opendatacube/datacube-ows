@@ -112,7 +112,7 @@ def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetim
     :param date: A date object
     :return: A tuple of two UTC datetime objects, spanning 1 second shy of 24 hours.
     """
-    tz: datetime.tzinfo = tz_for_geometry(geobox.geographic_extent)
+    tz: datetime.tzinfo = tz_for_geometry(geobox.extent)
     start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
     end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
     return (start.astimezone(utc), end.astimezone(utc))
@@ -174,20 +174,14 @@ def tz_for_geometry(geom: Geometry) -> datetime.tzinfo:
     :return: A timezone object
     """
     crs_geo = CRS("EPSG:4326")
-    geo_geom: Geometry = geom.to_crs(crs_geo)
-    centroid: Geometry = geo_geom.centroid
+    raw_centroid = geom.centroid
+    centroid: Geometry = raw_centroid.to_crs(crs_geo)
     try:
         # 1. Try being smart with the centroid of the geometry
         return tz_for_coord(centroid.coords[0][0], centroid.coords[0][1])
     except NoTimezoneException:
         pass
-    for pt in geo_geom.boundary.coords:
-        try:
-            # 2. Try being smart all the points in the geometry
-            return tz_for_coord(pt[0], pt[1])
-        except NoTimezoneException:
-            pass
-    # 3. Meh, just use longitude
+    # 2. Meh, just use longitude
     offset = round(centroid.coords[0][0] / 15.0)
     return datetime.timezone(datetime.timedelta(hours=offset))
 

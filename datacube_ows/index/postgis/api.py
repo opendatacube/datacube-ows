@@ -65,10 +65,13 @@ class OWSPostgisIndex(OWSAbstractIndex):
                ) -> dict[str, Any]:
         query: dict[str, Any] = {}
         if geom:
-            geopoly = self._prep_geom(layer, geom).to_crs("epsg:4326")
-            geopoly = Geometry(fix_shape(geopoly.geom), crs="epsg:4326")
-            query["geopolygon"] = geopoly
-            _LOG.warning("geopolygon is %s", repr(query["geopolygon"]))
+            if geom.crs in layer.dc.index.spatial_indexes():
+                query["geopolygon"] = geom
+            else:
+                # Default to 4326 and take a long hard look at yourself.
+                geopoly = self._prep_geom(layer, geom).to_crs("epsg:4326")
+                geopoly = Geometry(fix_shape(geopoly.geom), crs="epsg:4326")
+                query["geopolygon"] = geopoly
         if products is not None:
             query["product"] = [p.name for p in products]
         if times is not None:
