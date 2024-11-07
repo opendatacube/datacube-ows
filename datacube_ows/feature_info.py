@@ -112,7 +112,9 @@ def _make_band_dict(prod_cfg: OWSNamedLayer, pixel_dataset: xarray.Dataset) -> d
 
 
 @log_call
-def _make_derived_band_dict(pixel_dataset: xarray.Dataset, style_index: dict[str, StyleDef]) -> dict[str, int | float | str]:
+def _make_derived_band_dict(
+    pixel_dataset: xarray.Dataset, style_index: dict[str, StyleDef]
+) -> dict[str, str | int | float]:
     """Creates a dict of values for bands derived by styles.
     This only works for styles with an `index_function` defined.
 
@@ -120,7 +122,7 @@ def _make_derived_band_dict(pixel_dataset: xarray.Dataset, style_index: dict[str
     :param dict(str, StyleCfg) style_index: dict of style configuration dicts
     :return: dict of style names to derived value
     """
-    derived_band_dict = {}
+    derived_band_dict: dict[str, int | float | str] = {}
     for style_name, style in style_index.items():
         if not style.include_in_feature_info:
             continue

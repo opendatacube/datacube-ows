@@ -156,11 +156,6 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         # Get extent polygon from materialised views
 
         base_crs = CRS(layer.native_CRS)
-        # if base_crs not in layer.dc.index.spatial_indexes():
-        #     click.echo(f"Native CRS for layer {layer.name} ({layer.native_CRS}) does not have a spatial index. "
-        #           "Using epsg:4326 for extent calculations.")
-        #     base_crs = CRS("EPSG:4326")
-
         base_extent = None
         for product in layer.products:
             prod_extent = layer.dc.index.products.spatial_extent(product, base_crs)

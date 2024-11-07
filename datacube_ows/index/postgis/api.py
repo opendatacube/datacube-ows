@@ -6,7 +6,6 @@
 
 import click
 import datetime
-import logging
 
 from threading import Lock
 from typing import Any, Iterable, Type
@@ -22,8 +21,6 @@ from datacube_ows.index.api import OWSAbstractIndex, OWSAbstractIndexDriver, Lay
 from datacube_ows.index.sql import run_sql
 from .product_ranges import create_range_entry as create_range_entry_impl, get_ranges as get_ranges_impl
 from ...utils import default_to_utc
-
-_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 class OWSPostgisIndex(OWSAbstractIndex):
@@ -65,11 +62,13 @@ class OWSPostgisIndex(OWSAbstractIndex):
                ) -> dict[str, Any]:
         query: dict[str, Any] = {}
         if geom:
-            if geom.crs in layer.dc.index.spatial_indexes():
+            if geom.crs and geom.crs in layer.dc.index.spatial_indexes():
                 query["geopolygon"] = geom
             else:
                 # Default to 4326 and take a long hard look at yourself.
-                geopoly = self._prep_geom(layer, geom).to_crs("epsg:4326")
+                prepared_geom = self._prep_geom(layer, geom)
+                assert prepared_geom is not None
+                geopoly = prepared_geom.to_crs("epsg:4326")
                 geopoly = Geometry(fix_shape(geopoly.geom), crs="epsg:4326")
                 query["geopolygon"] = geopoly
         if products is not None:

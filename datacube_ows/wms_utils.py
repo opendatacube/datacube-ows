@@ -4,7 +4,6 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import math
 from datetime import datetime, date
 
@@ -27,7 +26,6 @@ from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
 from datacube_ows.utils import default_to_utc, find_matching_date
 
-_LOG = logging.getLogger(__name__)
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,
@@ -317,12 +315,10 @@ class GetParameters():
         self.geometry = _get_polygon(args, self.crs)
         # BBox, height and width parameters
         self.geobox = _get_geobox(args, self.crs)
-        _LOG.warning("geobox bbox = %s", repr(self.geobox.boundingbox))
         # Web-merc antimeridian hack:
         if self.geobox.crs != self.crs:
             self.crs = self.geobox.crs
             self.geometry = self.geometry.to_crs(self.crs)
-        _LOG.warning("geometry = %s", repr(self.geometry))
 
         # Time parameter
         self.times = get_times(args, self.layer)
