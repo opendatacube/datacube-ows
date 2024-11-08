@@ -1431,14 +1431,7 @@ class OWSConfig(OWSMetadataConfig):
                                     "but has a vertical coordinate that is not 'latitude'")
         # default_geographic_CRS is used by WCS1
         if not self.wcs:
-            self.published_CRSs["EPSG:3832"] = {
-                "geographic": False,
-                "horizontal_coord": "x",
-                "vertical_coord": "y",
-                "vertical_coord_first": False,
-                "gml_name": make_gml_name("EPSG:3832"),
-                "alias_of": None
-            }
+            self.default_geographic_CRS = ""
         elif not geographic_CRSs:
             raise ConfigException(f"At least one geographic CRS must be supplied")
         elif "EPSG:4326" in geographic_CRSs or "WGS-84" in geographic_CRSs:
