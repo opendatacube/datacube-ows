@@ -47,6 +47,7 @@ class MockGeobox:
         if geom.crs != "EPSG:4326":
             geom = geom.to_crs("EPSG:4326")
         self.geographic_extent = geom
+        self.extent = geom
 
 
 def test_time_search():

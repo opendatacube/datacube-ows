@@ -1433,6 +1433,19 @@ class OWSConfig(OWSMetadataConfig):
         else:
             self.default_geographic_CRS = geographic_CRSs[0]
 
+        if "EPSG:3857" not in self.published_CRSs:
+            _LOG.warning("EPSG:3857 (Web mercator) is not a published CRS")
+        elif "EPSG:3832" not in self.published_CRSs:
+            # Have web merc but not Pacific Web merc - just add it silently.
+            self.published_CRSs["EPSG:3832"] = {
+                "geographic": False,
+                "horizontal_coord": "x",
+                "vertical_coord": "y",
+                "vertical_coord_first": False,
+                "gml_name": make_gml_name("EPSG:3832"),
+                "alias_of": None
+            }
+
         for alias, alias_def in CRS_aliases.items():
             target_crs = cast(str, alias_def["alias"])
             if target_crs not in self.published_CRSs:
