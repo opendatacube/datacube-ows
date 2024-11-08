@@ -1431,7 +1431,7 @@ class OWSConfig(OWSMetadataConfig):
                                     "but has a vertical coordinate that is not 'latitude'")
         # default_geographic_CRS is used by WCS1
         if not self.wcs:
-            self.default_geographic_CRS["EPSG:3832"] = {
+            self.published_CRSs["EPSG:3832"] = {
                 "geographic": False,
                 "horizontal_coord": "x",
                 "vertical_coord": "y",
