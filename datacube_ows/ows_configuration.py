@@ -396,6 +396,9 @@ class OWSFolder(OWSLayer):
         self.unready_layers = still_unready
         super().make_ready(*args, **kwargs)
 
+    def __repr__(self) -> str:
+        return f"OWS Folder <{self.title}>"
+
 
 class TimeRes(Enum):
     SUBDAY = "subday"
@@ -1041,6 +1044,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         except KeyError:
             raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
 
+    def __repr__(self) -> str:
+        return f"OWS Layer <{self.name}>"
+
 
 class OWSProductLayer(OWSNamedLayer):
     multi_product = False
@@ -1425,7 +1431,14 @@ class OWSConfig(OWSMetadataConfig):
                                     "but has a vertical coordinate that is not 'latitude'")
         # default_geographic_CRS is used by WCS1
         if not self.wcs:
-            self.default_geographic_CRS = ""
+            self.default_geographic_CRS["EPSG:3832"] = {
+                "geographic": False,
+                "horizontal_coord": "x",
+                "vertical_coord": "y",
+                "vertical_coord_first": False,
+                "gml_name": make_gml_name("EPSG:3832"),
+                "alias_of": None
+            }
         elif not geographic_CRSs:
             raise ConfigException(f"At least one geographic CRS must be supplied")
         elif "EPSG:4326" in geographic_CRSs or "WGS-84" in geographic_CRSs:
