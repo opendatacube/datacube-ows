@@ -92,6 +92,7 @@ coverages
 cp
 createdb
 credentialling
+christophfriedrich
 crs
 crss
 CRSs
@@ -263,6 +264,7 @@ multiproduct
 mv
 mysecretpassword
 namespace
+NaNs
 natively
 ncols
 ndays
