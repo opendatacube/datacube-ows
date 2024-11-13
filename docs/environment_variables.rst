@@ -101,7 +101,7 @@ prometheus_multiproc_dir:
 
 PROXY_FIX:
     If ``$PROXY_FIX`` is set to "true", "yes", "on" or "1", the Flask application will trust the
-    X-Forwarded-For and X-Forwarded-Proto headers from a proxy server.
+    X-Forwarded-For and other headers from a proxy server.
 
     This is useful when running behind a reverse proxy server such as Nginx or CloudFront.
 
