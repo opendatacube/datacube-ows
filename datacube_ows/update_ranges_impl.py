@@ -94,7 +94,7 @@ def main(layers: list[str],
     """
     # --version
     if version:
-        click.echo("Open Data Cube Open Web Services (datacube-ows) version", __version__)
+        click.echo(f"Open Data Cube Open Web Services (datacube-ows) version {__version__}")
         sys.exit(0)
     # Handle old-style calls
     if not layers:
