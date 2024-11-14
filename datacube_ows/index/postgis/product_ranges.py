@@ -159,6 +159,11 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         base_extent = None
         for product in layer.products:
             prod_extent = layer.dc.index.products.spatial_extent(product, base_crs)
+            if prod_extent is None:
+                # Workaround - this should be handled in core.
+                prod_extent = layer.dc.index.products.spatial_extent(product)
+                if prod_extent is not None:
+                    prod_extent = prod_extent.to_crs(base_crs)
             if base_extent is None:
                 base_extent = prod_extent
             else:

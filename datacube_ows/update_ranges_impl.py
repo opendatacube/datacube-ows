@@ -94,31 +94,31 @@ def main(layers: list[str],
     """
     # --version
     if version:
-        print("Open Data Cube Open Web Services (datacube-ows) version", __version__)
+        click.echo("Open Data Cube Open Web Services (datacube-ows) version", __version__)
         sys.exit(0)
     # Handle old-style calls
     if not layers:
         layers = []
     if schema and layers:
-        print("Sorry, cannot update the schema and ranges in the same invocation.")
+        click.echo("Sorry, cannot update the schema and ranges in the same invocation.")
         sys.exit(1)
     if schema and views:
-        print("Sorry, No point in updating materialised views and updating the schema in the same invocation.")
+        click.echo("Sorry, No point in updating materialised views and updating the schema in the same invocation.")
         sys.exit(1)
     elif cleanup and layers:
-        print("Sorry, cannot cleanup 1.8.x database entities and update ranges in the same invocation.")
+        click.echo("Sorry, cannot cleanup 1.8.x database entities and update ranges in the same invocation.")
         sys.exit(1)
     elif views and cleanup:
-        print("Sorry, cannot update the materialised views and cleanup the database in the same invocation.")
+        click.echo("Sorry, cannot update the materialised views and cleanup the database in the same invocation.")
         sys.exit(1)
     elif views and layers:
-        print("Sorry, cannot update the materialised views and ranges in the same invocation.")
+        click.echo("Sorry, cannot update the materialised views and ranges in the same invocation.")
         sys.exit(1)
     elif read_role and (views or layers):
-        print("Sorry, read-role can't be granted with view or range updates")
+        click.echo("Sorry, read-role can't be granted with view or range updates")
         sys.exit(1)
     elif write_role and (views or layers):
-        print("Sorry, write-role can't be granted with view or range updates")
+        click.echo("Sorry, write-role can't be granted with view or range updates")
         sys.exit(1)
 
     initialise_debugging()
@@ -161,7 +161,7 @@ def main(layers: list[str],
             sys.exit(1)
         return 0
 
-    print("Deriving extents from materialised views")
+    click.echo("Deriving extents from materialised views and/or spatial indexes")
     try:
         errors = add_ranges(cfg, layers)
         click.echo("Done.")
@@ -174,7 +174,7 @@ def main(layers: list[str],
         elif isinstance(e.orig, psycopg2.errors.NotNullViolation):
             click.echo("ERROR: OWS materialised views are most likely missing a newly indexed product")
             click.echo("")
-            click.echo("       Try running with the --viewes options first.")
+            click.echo("       Try running with the --views options first.")
             sys.exit(1)
         else:
             raise e
@@ -197,5 +197,5 @@ def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
         layer = cfg.layer_index[name]
         layer.ows_index().create_range_entry(layer, cache)
 
-    print("Done.")
+    click.echo("Done.")
     return errors
