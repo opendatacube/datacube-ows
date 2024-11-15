@@ -7,6 +7,20 @@ History
 
 Datacube-ows version 1.8.x indicates that it is designed work with datacube-core versions 1.8.x.
 
+1.8.43 (2024-11-15)
+-------------------
+
+* Suppress various upstream warning messages (#1045)
+* Various docker image cleanups and updates (#1046, #1047, #1048, #1057, #1059, #1061, #1080)
+* Various CI cleanups/improvements (#1050, #1052, #1053, #1055)
+* Fix TIFF statistics in case WCS output has NaNs (#1054)
+* Documentation improvements (#1064)
+* Various auto-updates (#1066. #1071, #1075, #1078, #1082, #1088)
+* Fix bug in resource limiting defaults (#1077)
+* Prepare for release (#1089)
+
+This release includes contributions from @SpacemanPaul, @alexgleith, @christophfriedrich and @pjonsson.
+
 1.8.42 (2024-08-01)
 -------------------
 
