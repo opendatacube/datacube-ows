@@ -155,24 +155,9 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         # calculate bounding boxes
         # Get extent polygon from materialised views
 
-        base_crs = CRS(layer.native_CRS)
-        base_extent = None
-        for product in layer.products:
-            prod_extent = layer.dc.index.products.spatial_extent(product, base_crs)
-            if prod_extent is None:
-                # Workaround - this should be handled in core.
-                prod_extent = layer.dc.index.products.spatial_extent(product)
-                if prod_extent is not None:
-                    prod_extent = prod_extent.to_crs(base_crs)
-            if base_extent is None:
-                base_extent = prod_extent
-            else:
-                base_extent = base_extent | prod_extent
-        if base_extent is None:
-            click.echo(f"Layer {layer.name} has no extent in CRS {base_crs}.  Skipping.")
+        all_bboxes = build_bboxes(layer)
+        if not all_bboxes:
             return
-
-        all_bboxes = bbox_projections(base_extent, layer.global_cfg.crses)
 
         conn.execute(text("""
         UPDATE ows.layer_ranges
@@ -197,6 +182,40 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
     conn.close()
 
 
+def build_bboxes(layer: OWSNamedLayer) -> dict[str, dict[str, float]]:
+    # User native CRS for base extent, unless no spatial index for it, in which case
+    # use 4326 which always has a spatial index.
+    base_crs = CRS(layer.native_CRS)
+    if base_crs not in layer.dc.index.spatial_indexes:
+        base_crs = CRS("epsg:4326")
+    base_extent = extent_for_layer(layer, base_crs)
+    if base_extent is None:
+        click.echo(f"Layer {layer.name} has no extent in CRS {base_crs}.  Skipping.")
+        return {}
+    result = {}
+    for crsid, crs in layer.global_config().crses.items():
+        if crs == base_crs:
+            result[crsid] = sanitise_bbox(base_extent.boundingbox)
+        elif crs in layer.dc.index.spatial_indexes:
+            extent = extent_for_layer(layer, crs)
+            result[crsid] = sanitise_bbox(extent.boundingbox)
+        else:
+            extent = base_extent.to_crs(crs)
+            result[crsid] = sanitise_bbox(extent.boundingbox)
+    return result
+
+
+def extent_for_layer(layer: OWSNamedLayer, crs: CRS) -> odc.geo.Geometry | None:
+    ext = None
+    for product in layer.products:
+        prod_extent = layer.dc.index.products.spatial_extent(product, crs)
+        if ext is None:
+            ext = prod_extent
+        else:
+            ext = ext | prod_extent
+    return ext
+
+
 def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CRS]) -> dict[str, dict[str, float]]:
    result = {}
    for crsid, crs in crses.items():
@@ -206,14 +225,29 @@ def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CR
 
 
 def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
-    def sanitise_coordinate(coord: float, fallback: float) -> float:
-        return coord if math.isfinite(coord) else fallback
-    return {
-        "top": sanitise_coordinate(bbox.top, float("9.999999999e99")),
-        "bottom": sanitise_coordinate(bbox.bottom, float("-9.999999999e99")),
-        "left": sanitise_coordinate(bbox.left, float("-9.999999999e99")),
-        "right": sanitise_coordinate(bbox.right, float("9.999999999e99")),
-    }
+    def sanitise_coordinate(coord: float, fallback: float, upper: bool) -> float:
+        if not math.isfinite(coord):
+            return fallback
+        elif upper and coord > fallback:
+            return fallback
+        elif not upper and coord < fallback:
+            return fallback
+        else:
+            return coord
+    if bbox.crs == CRS("epsg:4326"):
+        return {
+            "top": sanitise_coordinate(bbox.top, float("90.0"), True),
+            "bottom": sanitise_coordinate(bbox.bottom, float("-90.0"), False),
+            "left": sanitise_coordinate(bbox.left, float("-180"), False),
+            "right": sanitise_coordinate(bbox.right, float("180.0"), True),
+        }
+    else:
+        return {
+            "top": sanitise_coordinate(bbox.top, float("9.999999999e99"), True),
+            "bottom": sanitise_coordinate(bbox.bottom, float("-9.999999999e99"), False),
+            "left": sanitise_coordinate(bbox.left, float("-9.999999999e99"), False),
+            "right": sanitise_coordinate(bbox.right, float("9.999999999e99"), True),
+        }
 
 
 def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
