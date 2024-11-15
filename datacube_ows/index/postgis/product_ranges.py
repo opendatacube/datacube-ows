@@ -196,8 +196,11 @@ def build_bboxes(layer: OWSNamedLayer) -> dict[str, dict[str, float]]:
     for crsid, crs in layer.global_config().crses.items():
         if crs == base_crs:
             result[crsid] = sanitise_bbox(base_extent.boundingbox)
-        elif crs in layer.dc.index.spatial_indexes:
+        elif crs in layer.dc.index.spatial_indexes():
             extent = extent_for_layer(layer, crs)
+            if extent is None:
+                click.echo(f"Layer {layer.name} has no extent in CRS {crs}.  Skipping.")
+                return {}
             result[crsid] = sanitise_bbox(extent.boundingbox)
         else:
             extent = base_extent.to_crs(crs)
@@ -239,7 +242,7 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
             "top": sanitise_coordinate(bbox.top, float("90.0"), True),
             "bottom": sanitise_coordinate(bbox.bottom, float("-90.0"), False),
             "left": sanitise_coordinate(bbox.left, float("-180"), False),
-            "right": sanitise_coordinate(bbox.right, float("180.0"), True),
+            "right": sanitise_coordinate(bbox.right, float("9.999999999e99"), True),
         }
     else:
         return {
