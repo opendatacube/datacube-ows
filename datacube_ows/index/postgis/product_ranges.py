@@ -186,7 +186,7 @@ def build_bboxes(layer: OWSNamedLayer) -> dict[str, dict[str, float]]:
     # User native CRS for base extent, unless no spatial index for it, in which case
     # use 4326 which always has a spatial index.
     base_crs = CRS(layer.native_CRS)
-    if base_crs not in layer.dc.index.spatial_indexes:
+    if base_crs not in layer.dc.index.spatial_indexes():
         base_crs = CRS("epsg:4326")
     base_extent = extent_for_layer(layer, base_crs)
     if base_extent is None:
