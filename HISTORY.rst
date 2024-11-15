@@ -7,6 +7,16 @@ History
 
 Datacube-ows version 1.9.x indicates that it is designed work with datacube-core versions 1.9.x.
 
+1.9.0-rc2 (2024-11-15)
+----------------------
+
+* Antimeridian handling (#1076, #1083, #1086,
+* Fix bug in resource limiting defaults (#1077)
+* Add support for proxy fix header handling (#1085)
+* Cherry pick recent updates from mainline (#1087)
+
+This release includes contributions from @SpacemanPaul and @alexgleith.
+
 1.9.0-rc1 (2024-08-01)
 ----------------------
 
