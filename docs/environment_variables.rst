@@ -99,6 +99,14 @@ prometheus_multiproc_dir:
     The `Prometheus event monitoring system <https://prometheus.io>`_ is activated by
     setting this lower case environment variable.
 
+PROXY_FIX:
+    If ``$PROXY_FIX`` is set to "true", "yes", "on" or "1", the Flask application will trust the
+    X-Forwarded-For and other headers from a proxy server.
+
+    This is useful when running behind a reverse proxy server such as Nginx or CloudFront.
+
+    NEVER use in production without a reverse proxy server.
+
 Dev Tools
 ---------
 

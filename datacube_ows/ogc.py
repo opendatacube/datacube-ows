@@ -18,7 +18,14 @@ from datacube_ows.ogc_utils import (capture_headers, get_service_base_url,
                                     lower_get_args, resp_headers)
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.protocol_versions import supported_versions
-from datacube_ows.startup_utils import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from datacube_ows.startup_utils import (initialise_aws_credentials,
+                                        initialise_babel, initialise_debugging,
+                                        initialise_flask,
+                                        initialise_ignorable_warnings,
+                                        initialise_logger,
+                                        initialise_prometheus,
+                                        initialise_sentry, parse_config_file,
+                                        proxy_fix)
 from datacube_ows.wcs1 import WCS_REQUESTS
 from datacube_ows.wms import WMS_REQUESTS
 
@@ -42,6 +49,9 @@ babel = initialise_babel(cfg, app)
 # Initialisation of external libraries that depend on Flask
 # (controlled by environment variables)
 metrics = initialise_prometheus(app, _LOG)
+
+# Add middleware to fix proxy headers, controlled by environment variables
+app = proxy_fix(app, _LOG)
 
 # Protocol/Version lookup table
 OWS_SUPPORTED = supported_versions()

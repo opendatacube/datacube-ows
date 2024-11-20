@@ -209,6 +209,15 @@ def initialise_prometheus(app, log=None):
         return metrics
     return FakeMetrics()
 
+def proxy_fix(app, log=None):
+    # Proxy Fix, to respect X-Forwarded-For headers
+    if os.environ.get("PROXY_FIX", False):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+        if log is not None:
+            log.info("ProxyFix was enabled")
+    return app
+
 def request_extractor():
     qreq = request.args.get('request')
     return qreq
