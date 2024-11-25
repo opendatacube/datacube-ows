@@ -8,7 +8,7 @@ import sys
 import traceback
 from time import monotonic
 
-from flask import g, render_template, request
+from flask import g, jsonify, render_template, request
 from sqlalchemy import text
 
 from datacube_ows import __version__
@@ -174,6 +174,10 @@ def ogc_svc_impl(svc):
         ogc_e = version_support.exception_class("Unexpected server error: %s" % str(e), http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
+@app.route('/headers', methods=['GET'])
+def headers():
+    # Return all request headers in JSON format
+    return jsonify({"headers": dict(request.headers)})
 
 @app.route('/wms')
 @prometheus_ows_ogc_metric
