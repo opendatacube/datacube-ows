@@ -14,7 +14,6 @@ import pytz
 from datacube import Datacube
 from datacube.api.query import GroupBy, solar_day
 from datacube.model import Dataset
-from numpy import datetime64
 from numpy import datetime64 as npdt64
 from sqlalchemy.engine.base import Connection
 
@@ -103,7 +102,7 @@ def group_by_solar(pnames: list[str] | None = None) -> GroupBy:
         sort_key = base_sort_key
     return GroupBy(
         dimension='time',
-        group_by_func=lambda x: datetime64(solar_day(x), "ns"),
+        group_by_func=lambda x: npdt64(solar_day(x), "ns"),  # type: ignore[call-overload]
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )

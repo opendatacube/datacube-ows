@@ -8,7 +8,7 @@ import logging
 import re
 from datetime import datetime
 from itertools import chain
-from typing import cast
+from typing import cast, Iterable
 
 import numpy
 import xarray
@@ -206,7 +206,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 ds: Dataset | None = None
                 for pbq, dss in time_datasets.items():
                     if pbq.main:
-                        ds = dss.sel(time=dt).values.tolist()[0]
+                        ds = cast(Dataset, dss.sel(time=dt).values.tolist()[0])
                         break
                 assert ds is not None
                 if params.layer.multi_product:
@@ -271,7 +271,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         pt_native = None
         for d in all_time_datasets.coords["time"].values:
             dt_datasets = all_time_datasets.sel(time=d)
-            for ds in dt_datasets.values.item():
+            for ds in cast(Iterable[Dataset], dt_datasets.values.item()):
                 assert ds is not None  # For type checker
                 if pt_native is None:
                     pt_native = geo_point.to_crs(ds.crs)

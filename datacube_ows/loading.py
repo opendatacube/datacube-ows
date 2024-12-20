@@ -355,7 +355,7 @@ class DataStacker:
         for dt in datasets.time.values:
             tds = datasets.sel(time=dt)
             merged = None
-            for ds in tds.values.item():
+            for ds in cast(Iterable[datacube.model.Dataset], tds.values.item()):
                 d = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
                 extent_mask = None
                 for band in non_flag_bands:
