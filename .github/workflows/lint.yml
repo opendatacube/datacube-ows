@@ -4,7 +4,7 @@ name: Code Linting
 on:
   pull_request:
     branches:
-      - 'master'
+      - 'develop'
       - 'develop-1.9'
     paths:
       - '**'
@@ -17,7 +17,7 @@ on:
 
   push:
     branches:
-      - 'master'
+      - 'develop'
       - 'develop-1.9'
     paths:
       - '**'

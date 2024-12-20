@@ -4,7 +4,7 @@ name: Pyspy Profiling Test
 on:
   pull_request:
     branches:
-      - 'master'
+      - 'ddevelop'
       - 'develop-1.9'
     paths:
       - '**'
@@ -17,7 +17,8 @@ on:
 
   push:
     branches:
-      - 'master'
+      - 'ddevelop'
+      - 'develop-1.9'
     paths:
       - '**'
       - '!docs/**'

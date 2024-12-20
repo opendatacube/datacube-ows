@@ -4,7 +4,8 @@ name: Complementary config test
 on:
   pull_request:
     branches:
-        - 'master'
+      - 'develop-1.9'
+      - 'develop'
     paths:
       - '**'
       - '!docs/**'
@@ -16,7 +17,8 @@ on:
 
   push:
     branches:
-      - 'master'
+      - 'develop-1.9'
+      - 'develop'
     paths:
       - '**'
       - '!docs/**'
