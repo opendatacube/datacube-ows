@@ -7,6 +7,23 @@ History
 
 Datacube-ows version 1.9.x indicates that it is designed work with datacube-core versions 1.9.x.
 
+1.9.0 (2024-12-23)
+------------------
+
+This is the first OWS release compatible with the 1.9.x series datacube-core releases.
+
+New features from the 1.8.x series releases include:
+
+* Full support for the postgis index driver
+* Support for multi-database environment (Can serve data out of multiple indexes)
+* Seamless rendering around the antimeridian for most wms and wmts clients.
+
+Changes from 1.9.0-rc2:
+
+* Update HISTORY.rst and default version number ready for release
+* Active CI jobs are now cancelled on PR update (#1091)
+* Auto upstream library bumps (#1093, #1095)
+
 1.9.0-rc2 (2024-11-15)
 ----------------------
 
