@@ -152,7 +152,7 @@ def read_mpl_ramp(mpl_ramp: str) -> RAMP_SPEC:
         }
     )
     for val in val_range:
-        rgba_hex = to_hex(cmap(val))
+        rgba_hex = to_hex(cast(tuple[float, float, float, float], cmap(val)))
         unscaled_cmap.append(
             {
                 "value": float(val),

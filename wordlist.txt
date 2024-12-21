@@ -22,6 +22,8 @@ AND'd
 anded
 ANDed
 antired
+Antimeridian
+antimeridian
 ap
 apache
 api
@@ -76,6 +78,7 @@ ce
 cfb
 cfg
 ci
+christophfriedrich
 cli
 cloudfront
 codebase
@@ -270,6 +273,7 @@ mypassword
 mysecretpassword
 myuser
 namespace
+NaNs
 natively
 ncols
 ndays
