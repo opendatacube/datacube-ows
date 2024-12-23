@@ -17,7 +17,7 @@ on:
 
   push:
     branches:
-      - 'ddevelop'
+      - 'develop'
       - 'develop-1.9'
     paths:
       - '**'
