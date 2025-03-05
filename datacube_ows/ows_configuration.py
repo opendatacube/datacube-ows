@@ -33,6 +33,7 @@ from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
 
+from build.lib.datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        F, FlagProductBands, FunctionWrapper,
                                        ODCInitException, OWSConfigEntry,
@@ -998,7 +999,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def ranges(self) -> "LayerExtent":
         if self.dynamic:
             self.force_range_update()
-        assert self._ranges is not None  # For type checker
+        if self._ranges is not None:
+            self.hide = True
+            raise WMSException("Invalid layer")
+        # For type checker
         return self._ranges
 
     def extract_bboxes(self) -> dict[str, Any]:
