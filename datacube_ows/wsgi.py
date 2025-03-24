@@ -13,7 +13,7 @@ import sys
 sys.path.append("/opt")
 
 # The location of the datcube config file.
-os.environ.setdefault("DATACUBE_CONFIG_PATH", "/opt/odc/.datacube.conf.local")
+os.environ.setdefault("ODC_CONFIG_PATH", "/opt/odc/.datacube.conf.local")
 
 from datacube_ows import __version__
 
