@@ -4,11 +4,12 @@ services:
     image: kartoza/postgis:16
     hostname: postgres
     environment:
-      - POSTGRES_DB=${DB_DATABASE}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB
+      - POSTGRES_PORT
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
     ports:
-      - "${DB_PORT}:5432"
+      - "${POSTGRES_PORT}:5432"
     restart: always
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "postgres", "-q", "-d", "$POSTGRES_DB", "-U", "$POSTGRES_USER"]
@@ -20,7 +21,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      DB_PORT: 5432
+      POSTGRES_PORT: 5432
     depends_on:
       postgres:
         condition: service_healthy
