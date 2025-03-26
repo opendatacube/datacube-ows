@@ -111,7 +111,7 @@ def test_initialise_sentry(monkeypatch):
 
 
 def test_prometheus_inactive(monkeypatch):
-    monkeypatch.setenv("prometheus_multiproc_dir", "")
+    monkeypatch.setenv("PROMETHEUS_MULTIPROC_DIR", "")
     from datacube_ows.startup_utils import initialise_prometheus
     initialise_prometheus(None)
 
