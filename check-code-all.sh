@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 # Convenience script for running Travis-like checks.
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --no-test)
+      NO_TEST=1
+      shift
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
+
 set -ex
 
 # Initialise ODC schemas
@@ -150,7 +164,9 @@ datacube-ows-update
 
 # Run tests, taking coverage.
 # Users can specify extra folders as arguments.
-python3 -m pytest --cov=datacube_ows --cov-report=xml integration_tests/
-cp /tmp/coverage.xml /mnt/artifacts
+if [ -z "$NO_TEST" ]; then
+  python3 -m pytest --cov=datacube_ows --cov-report=xml integration_tests/
+  cp /tmp/coverage.xml /mnt/artifacts
+fi
 
 set +x
