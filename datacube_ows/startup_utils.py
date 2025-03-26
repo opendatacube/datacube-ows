@@ -202,7 +202,7 @@ class FakeMetrics:
 
 def initialise_prometheus(app, log=None):
     # Prometheus
-    if os.environ.get("prometheus_multiproc_dir", False):
+    if os.environ.get("PROMETHEUS_MULTIPROC_DIR", False):
         from prometheus_flask_exporter.multiprocess import \
             GunicornInternalPrometheusMetrics
         metrics = GunicornInternalPrometheusMetrics(app, group_by="endpoint")

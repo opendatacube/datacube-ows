@@ -112,9 +112,9 @@ SENTRY_DSN:
     system is activated and configured with the ``$SENTRY_DSN``
     environment variables.
 
-prometheus_multiproc_dir:
+PROMETHEUS_MULTIPROC_DIR:
     The `Prometheus event monitoring system <https://prometheus.io>`_ is activated by
-    setting this lower case environment variable.
+    setting this environment variable.
 
 PROXY_FIX:
     If ``$PROXY_FIX`` is set to "true", "yes", "on" or "1", the Flask application will trust the
