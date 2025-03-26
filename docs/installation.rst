@@ -71,7 +71,7 @@ To install datacube-ows, run:
 Update_range natively
 ---------------------
 
-Refer to the :doc:`database documentation <database>` documentation
+Refer to the :doc:`database documentation <database>`
 for information on how to setup and maintain a Datacube OWS database.
 
 From sources ( within Docker )
