@@ -248,8 +248,9 @@ class ColorRamp:
             "alpha": a
         }
 
+    # FIXME: this function can also return float64.
     def get_value(self, data: float | DataArray, band: str) -> numpy.ndarray:
-        return numpy.interp(data, self.values, self.components[band])
+        return numpy.interp(data, self.values, self.components[band])  # type: ignore[return-value]
 
     def get_8bit_value(self, data: DataArray, band: str) -> numpy.ndarray:
         val: numpy.ndarray = self.get_value(data, band)
