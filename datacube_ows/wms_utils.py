@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 import numpy
 import regex as re
@@ -263,7 +263,7 @@ def parse_time_delta(delta_str):
 
 def parse_wms_time_string(t, start=True):
     if t.upper() == 'PRESENT':
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
     elif t.startswith('P'):
         return parse_time_delta(t)
     else:

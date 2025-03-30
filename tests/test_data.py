@@ -106,7 +106,7 @@ def test_s3_browser_uris(s3_url_datasets):
 #
 #     class fake_dataset:
 #         def __init__(self):
-#             self.center_time = datetime.utcnow()
+#             self.center_time = datetime.now(timezone.utc)
 #             self.id = 1
 #             self.metadata = dict()
 #
