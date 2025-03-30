@@ -48,7 +48,7 @@ def test_parse_wms_time_strings_with_present():
     import datetime as dt
     start, end = datacube_ows.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
     assert start == dt.datetime(2018, 1, 10, 0, 0)
-    assert (dt.datetime.utcnow() - end).total_seconds() < 60
+    assert (dt.datetime.now(dt.timezone.utc) - end).total_seconds() < 60
 
 
 @pytest.fixture
