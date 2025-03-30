@@ -149,11 +149,11 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         else:
             self.invert = [False] * self.mdh.max_count
         if len(self.invert) != self.mdh.max_count:
-            raise ConfigException(f"Invert entry has wrong number of rule sets for date count")
+            raise ConfigException("Invert entry has wrong number of rule sets for date count")
         if "flags" in cfg:
             date_flags = cast(list[CFG_DICT], cfg["flags"])
             if len(date_flags) != self.mdh.max_count:
-                raise ConfigException(f"Flags entry has wrong number of rule sets for date count")
+                raise ConfigException("Flags entry has wrong number of rule sets for date count")
             for flags in date_flags:
                 or_flag: bool = False
                 if "or" in flags and "and" in flags:

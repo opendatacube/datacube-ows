@@ -344,15 +344,15 @@ def single_style_from_args(layer, args, required=True):
                                locator="Colorscalerange parameter")
         colorscalerange = args.get("colorscalerange", "0,1").split(",")
         if len(colorscalerange) != 2:
-            raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+            raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
                                locator="Colorscalerange parameter")
         try:
             colorscalerange = [float(r) for r in colorscalerange]
         except ValueError:
-            raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+            raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
                                locator="Colorscalerange parameter")
         if colorscalerange[0] >= colorscalerange[1]:
-            raise WMSException(f"Colorscale range must be two numbers, sorted and separated by a comma.",
+            raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
                                locator="Colorscalerange parameter")
         try:
             style = StyleDef(layer, {

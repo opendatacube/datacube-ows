@@ -52,7 +52,7 @@ class ComponentStyleDef(StyleDefBase):
                                                                    stand_alone=self.stand_alone)
                 if not self.stand_alone:
                     if "additional_bands" not in style_cfg:
-                        raise ConfigException(f"Style with a function component must declare additional_bands.")
+                        raise ConfigException("Style with a function component must declare additional_bands.")
                     for b in cast(list[str], style_cfg.get("additional_bands", [])):
                         self.raw_needed_bands.add(b)
             else:

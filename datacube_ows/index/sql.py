@@ -87,7 +87,7 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
                 raise AbortRun() from None
             elif isinstance(e.orig, psycopg2.errors.DuplicateObject):
                 if f.endswith('_ignore_duplicates.sql'):
-                    click.echo(f"Ignoring 'already exists' error")
+                    click.echo("Ignoring 'already exists' error")
                 else:
                     raise e from None
             else:

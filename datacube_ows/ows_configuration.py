@@ -529,7 +529,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.time_axis = cast(CFG_DICT | None, cfg.get("time_axis"))
         if self.time_axis:
             if self.time_resolution.is_subday():
-                raise ConfigException(f"Regular time axis is not supported for sub-day time resolutions")
+                raise ConfigException("Regular time axis is not supported for sub-day time resolutions")
             self.regular_time_axis = True
             if "time_interval" not in self.time_axis:
                 raise ConfigException("No time_interval supplied in time_axis")
@@ -1433,7 +1433,7 @@ class OWSConfig(OWSMetadataConfig):
         if not self.wcs:
             self.default_geographic_CRS = ""
         elif not geographic_CRSs:
-            raise ConfigException(f"At least one geographic CRS must be supplied")
+            raise ConfigException("At least one geographic CRS must be supplied")
         elif "EPSG:4326" in geographic_CRSs or "WGS-84" in geographic_CRSs:
             self.default_geographic_CRS = "urn:ogc:def:crs:OGC:1.3:CRS84"
         else:

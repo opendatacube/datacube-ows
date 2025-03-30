@@ -285,7 +285,7 @@ class OWSResourceManagementRules(OWSConfigEntry):
             limits_exceeded.append(f"too many datasets ({n_datasets}: maximum={self.max_datasets_wcs}")
         pixel_count = height * width
         if self.max_image_size_wcs > 0 and n_dates * pixel_count * pixel_size > self.max_image_size_wcs:
-            limits_exceeded.append(f"too much data for a single request - try selecting fewer pixels or less bands")
+            limits_exceeded.append("too much data for a single request - try selecting fewer pixels or bands")
             hard = True
         if limits_exceeded:
             raise ResourceLimited(limits_exceeded, wcs_hard=hard)
