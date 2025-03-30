@@ -5,7 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from typing import Any, Iterable, Mapping, cast
+from typing import Any, cast
+from collections.abc import Iterable, Mapping
 
 import affine
 import numpy as np

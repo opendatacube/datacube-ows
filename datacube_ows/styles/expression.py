@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import operator
-from typing import Any, Type, cast
+from typing import Any, cast
 
 import lark
 from datacube.virtual.expr import formula_parser
@@ -125,7 +125,7 @@ class Expression:
         Return an appropriate Expression Evaluator for a given Dataset
         """
         if self.style.user_defined:
-            evaluator_cls: Type[ExpressionEvaluator] = UserDefinedExpressionEvaluator
+            evaluator_cls: type[ExpressionEvaluator] = UserDefinedExpressionEvaluator
         else:
             evaluator_cls = ExpressionEvaluator
 

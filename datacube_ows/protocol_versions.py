@@ -6,7 +6,7 @@
 
 
 import re
-from typing import Callable, Mapping, Sequence, Tuple
+from collections.abc import Callable, Mapping, Sequence
 
 from datacube_ows.ogc_exceptions import (OGCException, WCS1Exception,
                                          WCS2Exception, WMSException,
@@ -17,7 +17,7 @@ from datacube_ows.wcs2 import handle_wcs2
 from datacube_ows.wms import handle_wms
 from datacube_ows.wmts import handle_wmts
 
-FlaskResponse = Tuple
+FlaskResponse = tuple
 FlaskHandler = Callable[[Mapping[str, str]], FlaskResponse]
 
 

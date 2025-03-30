@@ -9,7 +9,8 @@ import logging
 import os
 from importlib import import_module
 from itertools import chain
-from typing import Any, Callable, Iterable, Optional, Sequence, cast
+from typing import Any, Optional, cast
+from collections.abc import Callable, Iterable, Sequence
 from urllib.parse import urlparse
 
 import fsspec
@@ -649,7 +650,7 @@ class OWSFlagBandStandalone:
         self.pq_names: list[str] = []
         self.pq_ignore_time = False
         self.pq_manual_merge = False
-        self.pq_fuse_func: Optional[FunctionWrapper] = None
+        self.pq_fuse_func: FunctionWrapper | None = None
 
 
 class OWSFlagBand(OWSConfigEntry):
@@ -674,7 +675,7 @@ class OWSFlagBand(OWSConfigEntry):
         self.pq_band = str(cfg["band"])
         self.canonical_band_name = self.pq_band # Update for aliasing on make_ready
         if "fuse_func" in cfg:
-            self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.layer, cast(CFG_DICT, cfg["fuse_func"]))
+            self.pq_fuse_func: FunctionWrapper | None = FunctionWrapper(self.layer, cast(CFG_DICT, cfg["fuse_func"]))
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = bool(cfg.get("ignore_time", False))
@@ -824,7 +825,7 @@ class FlagProductBands(OWSConfigEntry):
         :param layer: A named layer object
         :return: A list of FlagProductBands objects
         """
-        flag_products: list["FlagProductBands"] = []
+        flag_products: list[FlagProductBands] = []
         for mask in masks:
             handled = False
             for fp in flag_products:
@@ -848,7 +849,7 @@ class FlagProductBands(OWSConfigEntry):
         :param layer: A named layer object
         :return: A list of FlagProductBands objects
         """
-        flag_products: list["FlagProductBands"] = []
+        flag_products: list[FlagProductBands] = []
         for fb in flagbands:
             handled = False
             for fp in flag_products:

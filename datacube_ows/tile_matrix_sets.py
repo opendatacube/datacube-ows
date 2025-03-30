@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Type, cast
+from typing import cast
 
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        OWSConfigEntry)
@@ -37,7 +37,7 @@ webmerc_scale_set = [
 ]
 
 
-def validate_2d_array(array: list, ident: str, label: str, typ: Type):
+def validate_2d_array(array: list, ident: str, label: str, typ: type):
     try:
         if len(array) != 2:
             raise ConfigException(f"In tile matrix set {ident}, {label} must have two values: f{array}")
@@ -46,7 +46,7 @@ def validate_2d_array(array: list, ident: str, label: str, typ: Type):
         raise ConfigException(f"In tile matrix set {ident}, {label} must be a list of two values: f{array}")
 
 
-def validate_array_typ(array: list, ident: str, label: str, typ: Type):
+def validate_array_typ(array: list, ident: str, label: str, typ: type):
     for elem in array:
         if not isinstance(elem, typ):
             raise ConfigException(f"In tile matrix set {ident}, {label} has non-{typ.__name__} value of type {elem.__class__.__name__}: {elem}")

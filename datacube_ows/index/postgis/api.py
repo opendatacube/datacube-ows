@@ -8,7 +8,8 @@ import click
 import datetime
 
 from threading import Lock
-from typing import Any, Iterable, Type
+from typing import Any
+from collections.abc import Iterable
 from uuid import UUID
 
 from odc.geo import Geometry, CRS
@@ -151,7 +152,7 @@ pgisdriverlock = Lock()
 class OWSPostgisIndexDriver(OWSAbstractIndexDriver):
     _driver = None
     @classmethod
-    def ows_index_class(cls) -> Type[OWSAbstractIndex]:
+    def ows_index_class(cls) -> type[OWSAbstractIndex]:
         return OWSPostgisIndex
 
     @classmethod

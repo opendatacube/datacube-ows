@@ -8,7 +8,8 @@ import logging
 import math
 import click
 from datetime import date, datetime, timezone
-from typing import cast, Callable
+from typing import cast
+from collections.abc import Callable
 
 import datacube
 import odc.geo

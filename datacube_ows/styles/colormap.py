@@ -7,7 +7,8 @@
 import io
 import logging
 from datetime import datetime
-from typing import Callable, MutableMapping, Type, Union, cast
+from typing import Union, cast
+from collections.abc import Callable, MutableMapping
 
 import numpy
 import xarray
@@ -85,7 +86,7 @@ class AbstractValueMapRule(AbstractMaskRule):
         :return: A value map ruleset dictionary.
         """
         if isinstance(style_or_mdh, ColorMapStyleDef):
-            typ: Type[AbstractValueMapRule] = ValueMapRule
+            typ: type[AbstractValueMapRule] = ValueMapRule
         else:
             mdh = cast(ColorMapStyleDef.MultiDateHandler, style_or_mdh)
             if mdh.aggregator:
@@ -96,7 +97,7 @@ class AbstractValueMapRule(AbstractMaskRule):
                     raise ConfigException(
                         "MultiDate value map only supported on multi-date handlers with min_count and max_count equal.")
                 typ = MultiDateValueMapRule
-        vmap: dict[str, list["AbstractValueMapRule"]] = {}
+        vmap: dict[str, list[AbstractValueMapRule]] = {}
         for band_name, rules in cfg.items():
             band_rules = [typ(style_or_mdh, band_name, rule) for rule in cast(list[CFG_DICT], rules)]
             vmap[band_name] = band_rules

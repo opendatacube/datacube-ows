@@ -6,8 +6,8 @@
 
 import io
 import logging
-from typing import (Any, Iterable, Mapping, MutableMapping, Optional, Sized,
-                    Type, Union, cast)
+from typing import Any, Optional, Union, cast
+from collections.abc import Iterable, Mapping, MutableMapping, Sized
 
 import datacube.model
 import numpy as np
@@ -111,11 +111,11 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     # For OWSMetaDataConfig
     @property
-    def default_title(self) -> Optional[str]:
+    def default_title(self) -> str | None:
         return "Stand-Alone Style"
 
     @property
-    def default_abstract(self) -> Optional[str]:
+    def default_abstract(self) -> str | None:
         return "Stand-Alone Style"
 
     # Over-ridden by subclasses that support auto-legends
@@ -124,7 +124,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     include_in_feature_info: bool = False
 
     def __new__(cls, product: Optional["datacube_ows.ows_configuration.OWSNamedLayer"] = None,
-                style_cfg: Optional[CFG_DICT] = None,
+                style_cfg: CFG_DICT | None = None,
                 stand_alone: bool = False,
                 defer_multi_date: bool = False,
                 user_defined: bool = False) -> "StyleDefBase":
@@ -183,7 +183,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.local_band_map = cast(MutableMapping[str, str], raw_cfg.get("band_map", {}))
         if self.local_band_map:
             pass
-        self.product: "datacube_ows.ows_configuration.OWSNamedLayer" = product
+        self.product: datacube_ows.ows_configuration.OWSNamedLayer = product
         if self.stand_alone:
             self.name = cast(str, raw_cfg.get("name", "stand_alone"))
         else:
@@ -296,7 +296,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     def parse_multi_date(self, cfg: CFG_DICT) -> None:
         """Used by __init__()"""
-        self.multi_date_handlers: list["StyleDefBase.MultiDateHandler"] = []
+        self.multi_date_handlers: list[StyleDefBase.MultiDateHandler] = []
         for mb_cfg in cast(list[CFG_DICT], cfg.get("multi_date", [])):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
@@ -329,7 +329,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                 result = result & mask_data
         return result
 
-    def apply_mask_to_image(self, img_data: xr.Dataset, mask: Optional[xr.DataArray],
+    def apply_mask_to_image(self, img_data: xr.Dataset, mask: xr.DataArray | None,
                             input_date_count: int, output_date_count: int) -> xr.Dataset:
         """
         Apply a mask to an image xarray.
@@ -353,7 +353,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             alpha = img_data.alpha
         if mask is not None:
             if output_date_count == 1 and input_date_count > 1:
-                flat_mask: Optional[xr.DataArray] = None
+                flat_mask: xr.DataArray | None = None
                 for coord in mask.coords["time"].values:
                     mask_slice = mask.sel(time=coord)
                     if flat_mask is None:
@@ -365,7 +365,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         img_data = img_data.assign({"alpha": alpha})
         return img_data
 
-    def transform_data(self, data: xr.Dataset, mask: Optional[xr.DataArray]) -> xr.Dataset:
+    def transform_data(self, data: xr.Dataset, mask: xr.DataArray | None) -> xr.Dataset:
         """
         Apply style to raw data to make an RGBA image xarray (time aware-ish)
 
@@ -408,7 +408,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if not legend.show_legend:
             return None
         if legend.legend_urls:
-            locale: Optional[str] = None
+            locale: str | None = None
             if self.global_config().internationalised:
                 locale = get_locale().language
             if locale not in self.global_config().locales:
@@ -459,7 +459,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         raise WMSException(f"Style {self.name} does not support requests with {count} dates")
 
     @classmethod
-    def register_subclass(cls, subclass: Type["StyleDefBase"], triggers: Iterable[str], priority: bool = False) -> None:
+    def register_subclass(cls, subclass: type["StyleDefBase"], triggers: Iterable[str], priority: bool = False) -> None:
         """
         Register a subclass with the base class
 
@@ -475,7 +475,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             style_class_reg.append((subclass, triggers))
 
     @classmethod
-    def determine_subclass(cls, cfg: CFG_DICT) -> Optional[Type["StyleDefBase"]]:
+    def determine_subclass(cls, cfg: CFG_DICT) -> type["StyleDefBase"] | None:
         """
         Determine the subclass to use from a raw configuration
         :param cfg: The configuration for some StyleDef subclass
@@ -582,7 +582,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     def lookup_impl(cls,
                     cfg: "datacube_ows.ows_configuration.OWSConfig",
                     keyvals: Mapping[str, Any],
-                    subs: Optional[Mapping[str, Any]] = None) -> OWSIndexedConfigEntry:
+                    subs: Mapping[str, Any] | None = None) -> OWSIndexedConfigEntry:
         """
         Lookup a config entry of this type by identifying label(s)
 
@@ -610,8 +610,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
 
 # Style class registries
-style_class_priority_reg: list[tuple[Type[StyleDefBase], Iterable[str]]] = []
-style_class_reg: list[tuple[Type[StyleDefBase], Iterable[str]]] = []
+style_class_priority_reg: list[tuple[type[StyleDefBase], Iterable[str]]] = []
+style_class_reg: list[tuple[type[StyleDefBase], Iterable[str]]] = []
 
 
 class StyleMask(AbstractMaskRule):

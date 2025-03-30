@@ -221,7 +221,7 @@ class WCSScaler:
         else:
             res = grid["resolution"][1]
         scaled_size = abs(
-            ((dim_max - dim_min) * factor / res)
+            (dim_max - dim_min) * factor / res
         )
         self.set_size(dimension, scaled_size)
 

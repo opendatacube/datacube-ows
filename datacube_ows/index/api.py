@@ -7,7 +7,8 @@
 import dataclasses
 from abc import ABC, abstractmethod
 from datetime import datetime, date
-from typing import NamedTuple, Iterable, Type
+from typing import NamedTuple
+from collections.abc import Iterable
 from uuid import UUID
 
 from datacube import Datacube
@@ -180,7 +181,7 @@ class OWSAbstractIndex(ABC):
 class OWSAbstractIndexDriver(ABC):
     @classmethod
     @abstractmethod
-    def ows_index_class(cls) -> Type[OWSAbstractIndex]:
+    def ows_index_class(cls) -> type[OWSAbstractIndex]:
         ...
 
     @classmethod

@@ -7,7 +7,7 @@
 import logging
 import math
 from datetime import date, datetime, timezone
-from typing import Callable
+from collections.abc import Callable
 import click
 
 import datacube
