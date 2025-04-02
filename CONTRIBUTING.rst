@@ -4,8 +4,8 @@
 Contributing
 ============
 
-Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.
+Contributions are welcome, and they are greatly appreciated! Every little
+bit helps, and credit will always be given.
 
 We have a `code of conduct<code-of-conduct.md>`_, so please follow it in all your interactions with the project.
 
