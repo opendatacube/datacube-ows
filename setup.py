@@ -10,7 +10,7 @@
 from setuptools import find_packages, setup
 
 install_requirements = [
-    'datacube[performance,s3]>=1.9.0-rc11',
+    'datacube[performance,s3]>=1.9.2',
     'flask',
     'requests',
     'affine',
@@ -52,7 +52,7 @@ test_requirements = [
 ]
 
 dev_requirements = [
-    'pydevd-pycharm~=242.23339.19',
+    'pydevd-pycharm~=243.26053.29',
     'pylint',
     'sphinx_click',
     'pre-commit',
