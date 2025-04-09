@@ -113,7 +113,9 @@ def ogc_impl():
         elif op:
             # Should we return a WMS or WCS exception if there is no service specified?
             # Defaulting to WMS because that's what we already have.
-            raise WMSException("Invalid service and/or request", locator="Service and request parameters")
+            raise WMSException(
+                "Invalid service and/or request",
+                locator="Service and request parameters")
         else:
             cfg = get_config()   # pylint: disable=redefined-outer-name
             url = nocase_args.get('Host', nocase_args['url_root'])

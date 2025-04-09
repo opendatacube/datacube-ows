@@ -248,12 +248,12 @@ class ColorRamp:
             "alpha": a
         }
 
-    def get_value(self, data: float | DataArray, band: str) -> numpy.ndarray:
+    def get_value(self, data: float | DataArray, band: str) -> numpy.ndarray | float:
         return numpy.interp(data, self.values, self.components[band])
 
     def get_8bit_value(self, data: DataArray, band: str) -> numpy.ndarray:
-        val: numpy.ndarray = self.get_value(data, band)
-        val = cast(numpy.ndarray, val * 255)
+        val = cast(numpy.ndarray, self.get_value(data, band))
+        val = val * 255
         # Is there a way to stop this raising a runtime warning?
         return val.astype(ubyte)
 
@@ -267,12 +267,12 @@ class ColorRamp:
     def color_alpha_at(self, val: float) -> tuple[Color, float]:
         color = Color(
             rgb=(
-                self.get_value(val, "red").item(),
-                self.get_value(val, "green").item(),
-                self.get_value(val, "blue").item(),
+                float(self.get_value(val, "red")),
+                float(self.get_value(val, "green")),
+                float(self.get_value(val, "blue")),
             )
         )
-        alpha = cast(float, self.get_value(val, "alpha"))
+        alpha = float(self.get_value(val, "alpha"))
         return color, alpha
 
 

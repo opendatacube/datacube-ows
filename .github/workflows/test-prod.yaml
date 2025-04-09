@@ -4,8 +4,7 @@ name: Prod dockercompose test
 on:
   pull_request:
     branches:
-      - 'develop'
-      - 'develop-1.9'
+      - 'disabled/this-is-not-a-branch'
     paths:
       - '**'
       - '!docs/**'
@@ -17,8 +16,7 @@ on:
 
   push:
     branches:
-      - 'develop'
-      - 'develop-1.9'
+      - 'disabled/this-is-not-a-branch'
     paths:
       - '**'
       - '!docs/**'
