@@ -6,7 +6,6 @@
 
 
 #pylint: skip-file
-import os
 import sys
 
 # This is the directory of the source code that the web app will run from

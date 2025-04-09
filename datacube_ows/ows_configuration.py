@@ -999,7 +999,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def ranges(self) -> "LayerExtent":
         if self.dynamic:
             self.force_range_update()
-        if self._ranges is not None:
+        if self._ranges is None:
             self.hide = True
             raise WMSException("Invalid layer")
         # For type checker
