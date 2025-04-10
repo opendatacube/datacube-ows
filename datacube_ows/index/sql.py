@@ -92,5 +92,5 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
                     raise e from None
             else:
                 raise e from e
-    return all_ok
     conn.close()
+    return all_ok
