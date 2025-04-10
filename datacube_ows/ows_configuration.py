@@ -990,7 +990,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             end = self.time_axis_end
         else:
             end = ranges.end_time
-        return (start, end)
+        return start, end
 
     @property
     def ranges(self) -> "LayerExtent":

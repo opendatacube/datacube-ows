@@ -787,11 +787,11 @@ class OpenAsWriteable(object):
         """
         Restore back file permissions and close file handle (if any).
         """
-        if (self._file_handle is not None):
+        if self._file_handle is not None:
             self._file_handle.close()
 
             actual_permissions = stat.S_IMODE(os.lstat(self._filename).st_mode)
-            if (actual_permissions != self._file_permissions):
+            if actual_permissions != self._file_permissions:
                 try:
                     os.chmod(self._filename, self._file_permissions)
                 except PermissionError:
@@ -957,7 +957,7 @@ def main():
                         LOGGER.info("Would be updating changed file: {}".format(file))
                     else:
                         with open_as_writable(file, arguments) as fw:
-                            if (fw is not None):
+                            if fw is not None:
                                 # if we found a header, replace it
                                 # otherwise, add it after the lines to skip
                                 head_start = finfo["headStart"]
@@ -991,7 +991,7 @@ def main():
                             LOGGER.info("Would be updating year line in file {}".format(file))
                         else:
                             with open_as_writable(file, arguments) as fw:
-                                if (fw is not None):
+                                if fw is not None:
                                     LOGGER.debug("Updating years in file {} in line {}".format(file, years_line))
                                     fw.writelines(lines[0:years_line])
                                     fw.write(yearsPattern.sub(years, lines[years_line]))
