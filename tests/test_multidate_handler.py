@@ -98,4 +98,4 @@ def test_multidate_handler():
 
     assert "Aggregator function is required" in str(excinfo.value)
 
-    assert mdh.transform_data(None) == None
+    assert mdh.transform_data(None) is None
