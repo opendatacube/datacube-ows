@@ -34,12 +34,12 @@ datacube -E owspostgis metadata add https://raw.githubusercontent.com/Geoscience
 datacube product add ./integration_tests/metadata/s2_l2a_prod.yaml
 datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/c3/ga_s2am_ard_3.odc-product.yaml
 datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/c3/ga_s2bm_ard_3.odc-product.yaml
-#datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/land_and_vegetation/c3_fc/ga_ls_fc_3.odc-product.yaml
+datacube product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/land_and_vegetation/c3_fc/ga_ls_fc_3.odc-product.yaml
 
 datacube -E owspostgis product add ./integration_tests/metadata/s2_l2a_prod.yaml
 datacube -E owspostgis product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/c3/ga_s2am_ard_3.odc-product.yaml
 datacube -E owspostgis product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/baseline_satellite_data/c3/ga_s2bm_ard_3.odc-product.yaml
-#datacube -E owspostgis product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/land_and_vegetation/c3_fc/ga_ls_fc_3.odc-product.yaml
+datacube -E owspostgis product add https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/products/land_and_vegetation/c3_fc/ga_ls_fc_3.odc-product.yaml
 
 # add flag masking products
 datacube product add ./integration_tests/metadata/product_geodata_coast_100k.yaml
@@ -141,10 +141,10 @@ datacube -E owspostgis dataset add https://dea-public-data.s3.ap-southeast-2.ama
 
 # flag masking datasets
 datacube dataset add https://data.dea.ga.gov.au/derivative/ga_ls_wo_3/1-6-0/094/077/2018/02/08/ga_ls_wo_3_094077_2018-02-08_final.odc-metadata.yaml --ignore-lineage
-#datacube dataset add https://data.dea.ga.gov.au/derivative/ga_ls_fc_3/2-5-1/094/077/2018/02/08/ga_ls_fc_3_094077_2018-02-08_final.odc-metadata.yaml --ignore-lineage
+datacube dataset add https://data.dea.ga.gov.au/derivative/ga_ls_fc_3/2-5-1/094/077/2018/02/08/ga_ls_fc_3_094077_2018-02-08_final.odc-metadata.yaml --ignore-lineage
 
 datacube -E owspostgis dataset add https://data.dea.ga.gov.au/derivative/ga_ls_wo_3/1-6-0/094/077/2018/02/08/ga_ls_wo_3_094077_2018-02-08_final.odc-metadata.yaml --ignore-lineage
-#datacube -E owspostgis dataset add https://data.dea.ga.gov.au/derivative/ga_ls_fc_3/2-5-1/094/077/2018/02/08/ga_ls_fc_3_094077_2018-02-08_final.odc-metadata.yaml --ignore-lineage
+datacube -E owspostgis dataset add https://data.dea.ga.gov.au/derivative/ga_ls_fc_3/2-5-1/094/077/2018/02/08/ga_ls_fc_3_094077_2018-02-08_final.odc-metadata.yaml --ignore-lineage
 
 # Geomedian datasets
 datacube dataset add https://dea-public-data.s3.ap-southeast-2.amazonaws.com/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x17/y37/2019--P1Y/ga_ls8c_nbart_gm_cyear_3_x17y37_2019--P1Y_final.odc-metadata.yaml --ignore-lineage

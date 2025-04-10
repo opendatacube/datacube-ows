@@ -946,49 +946,49 @@ ows_cfg = {
                                 }
                             }
                         },
-                        # {
-                        #     "title": "DEA Fractional Cover (Landsat)",
-                        #     "name": "ga_ls_fc_3",
-                        #     "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
-                        # Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
-                        # green (leaves, grass, and growing crops)
-                        # brown (branches, dry grass or hay, and dead leaf litter)
-                        # bare ground (soil or rock)
-                        # DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
-                        # https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
-                        # For service status information, see https://status.dea.ga.gov.au""",
-                        #     "product_name": "ga_ls_fc_3",
-                        #     "bands": bands_fc_3,
-                        #     "resource_limits": reslim_for_sentinel2,
-                        #     "dynamic": True,
-                        #     "native_crs": "EPSG:3577",
-                        #     "native_resolution": [25, -25],
-                        #     "image_processing": {
-                        #         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                        #         "always_fetch_bands": [],
-                        #         "manual_merge": False,
-                        #     },
-                        #     "flags": [
-                        #         # flags is now a list of flag band definitions - NOT a dictionary with identifiers
-                        #         {
-                        #             "band": "land",
-                        #             "product": "geodata_coast_100k",
-                        #             "ignore_time": True,
-                        #             "ignore_info_flags": [],
-                        #         },
-                        #         {
-                        #             "band": "water",
-                        #             "product": "ga_ls_wo_3",
-                        #             "ignore_time": False,
-                        #             "ignore_info_flags": [],
-                        #             "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        #         },
-                        #     ],
-                        #     "styling": {
-                        #         "default_style": "fc_rgb_unmasked",
-                        #         "styles": [style_fc_c3_rgb_unmasked],
-                        #     },
-                        # }
+                        {
+                            "title": "DEA Fractional Cover (Landsat)",
+                            "name": "ga_ls_fc_3",
+                            "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
+                        Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
+                        green (leaves, grass, and growing crops)
+                        brown (branches, dry grass or hay, and dead leaf litter)
+                        bare ground (soil or rock)
+                        DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
+                        https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
+                        For service status information, see https://status.dea.ga.gov.au""",
+                            "product_name": "ga_ls_fc_3",
+                            "bands": bands_fc_3,
+                            "resource_limits": reslim_for_sentinel2,
+                            "dynamic": True,
+                            "native_crs": "EPSG:3577",
+                            "native_resolution": [25, -25],
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,
+                            },
+                            "flags": [
+                                # flags is now a list of flag band definitions - NOT a dictionary with identifiers
+                                {
+                                    "band": "land",
+                                    "product": "geodata_coast_100k",
+                                    "ignore_time": True,
+                                    "ignore_info_flags": [],
+                                },
+                                {
+                                    "band": "water",
+                                    "product": "ga_ls_wo_3",
+                                    "ignore_time": False,
+                                    "ignore_info_flags": [],
+                                    "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                                },
+                            ],
+                            "styling": {
+                                "default_style": "fc_rgb_unmasked",
+                                "styles": [style_fc_c3_rgb_unmasked],
+                            },
+                        }
                     ]
                 },
                 {
@@ -1174,50 +1174,50 @@ ows_cfg = {
                                 }
                             }
                         },
-                #         {
-                #             "title": "DEA Fractional Cover (Landsat) (postgis db)",
-                #             "name": "ga_ls_fc_3_postgis",
-                #             "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
-                #     Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
-                #     green (leaves, grass, and growing crops)
-                #     brown (branches, dry grass or hay, and dead leaf litter)
-                #     bare ground (soil or rock)
-                #     DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
-                #     https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
-                #     For service status information, see https://status.dea.ga.gov.au (postgis db)""",
-                #             "product_name": "ga_ls_fc_3",
-                #             "bands": bands_fc_3,
-                #             "resource_limits": reslim_for_sentinel2,
-                #             "env": "owspostgis",
-                #             "dynamic": True,
-                #             "native_crs": "EPSG:3577",
-                #             "native_resolution": [25, -25],
-                #             "image_processing": {
-                #                 "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-                #                 "always_fetch_bands": [],
-                #                 "manual_merge": False,
-                #             },
-                #             "flags": [
-                #                 # flags is now a list of flag band definitions - NOT a dictionary with identifiers
-                #                 {
-                #                     "band": "land",
-                #                     "product": "geodata_coast_100k",
-                #                     "ignore_time": True,
-                #                     "ignore_info_flags": [],
-                #                 },
-                #                 {
-                #                     "band": "water",
-                #                     "product": "ga_ls_wo_3",
-                #                     "ignore_time": False,
-                #                     "ignore_info_flags": [],
-                #                     "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                #                 },
-                #             ],
-                #             "styling": {
-                #                 "default_style": "fc_rgb_unmasked",
-                #                 "styles": [style_fc_c3_rgb_unmasked],
-                #             },
-                #         }
+                        {
+                            "title": "DEA Fractional Cover (Landsat) (postgis db)",
+                            "name": "ga_ls_fc_3_postgis",
+                            "abstract": """Geoscience Australia Landsat Fractional Cover Collection 3
+                    Fractional Cover (FC), developed by the Joint Remote Sensing Research Program, is a measurement that splits the landscape into three parts, or fractions:
+                    green (leaves, grass, and growing crops)
+                    brown (branches, dry grass or hay, and dead leaf litter)
+                    bare ground (soil or rock)
+                    DEA uses Fractional Cover to characterise every 30 m square of Australia for any point in time from 1987 to today.
+                    https://cmi.ga.gov.au/data-products/dea/629/dea-fractional-cover-landsat-c3
+                    For service status information, see https://status.dea.ga.gov.au (postgis db)""",
+                            "product_name": "ga_ls_fc_3",
+                            "bands": bands_fc_3,
+                            "resource_limits": reslim_for_sentinel2,
+                            "env": "owspostgis",
+                            "dynamic": True,
+                            "native_crs": "EPSG:3577",
+                            "native_resolution": [25, -25],
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,
+                            },
+                            "flags": [
+                                # flags is now a list of flag band definitions - NOT a dictionary with identifiers
+                                {
+                                    "band": "land",
+                                    "product": "geodata_coast_100k",
+                                    "ignore_time": True,
+                                    "ignore_info_flags": [],
+                                },
+                                {
+                                    "band": "water",
+                                    "product": "ga_ls_wo_3",
+                                    "ignore_time": False,
+                                    "ignore_info_flags": [],
+                                    "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
+                                },
+                            ],
+                            "styling": {
+                                "default_style": "fc_rgb_unmasked",
+                                "styles": [style_fc_c3_rgb_unmasked],
+                            },
+                        }
                     ]
                 },
                 {
