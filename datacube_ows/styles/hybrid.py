@@ -67,7 +67,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                 if callable(c_intensity):
                     imgband_component_data = cast(DataArray, c_intensity(data[c_band], c_band, band))
                 else:
-                    imgband_component_data = cast(DataArray, data[c_band] * cast(DataArray, c_intensity))
+                    imgband_component_data = data[c_band] * cast(DataArray, c_intensity)
                 if component_band_data is not None:
                     component_band_data += imgband_component_data
                 else:

@@ -212,8 +212,8 @@ class AttributionCfg(OWSConfigEntry):
         else:
             self.logo_width = cast(int | None, logo.get("width"))
             self.logo_height = cast(int | None, logo.get("height"))
-            self.logo_url = cast(str | None, logo.get("url"))
-            self.logo_fmt = cast(str | None, logo.get("format"))
+            self.logo_url = logo.get("url")
+            self.logo_fmt = logo.get("format")
             if not self.logo_url or not self.logo_fmt:
                 raise ConfigException("url and format must both be specified in an attribution logo.")
 

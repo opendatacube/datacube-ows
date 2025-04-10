@@ -220,10 +220,7 @@ class DataStacker:
             layer=self._layer,
             geom=geom,
             products=query.products)
-        grpd_result = datacube.Datacube.group_datasets(
-            cast(Iterable[datacube.model.Dataset], result),
-            self.group_by
-        )
+        grpd_result = datacube.Datacube.group_datasets(result, self.group_by)
         return grpd_result
 
     def datasets(self,
@@ -254,10 +251,7 @@ class DataStacker:
                                times=qry_times,
                                geom=geom,
                                products=query.products)
-            grpd_result = datacube.Datacube.group_datasets(
-                cast(Iterable[datacube.model.Dataset], result),
-                self.group_by
-            )
+            grpd_result = datacube.Datacube.group_datasets(result, self.group_by)
             results.append((query, grpd_result))
         return OrderedDict(results)
 
