@@ -59,7 +59,7 @@ def cfg_expand(cfg_unexpanded: CFG_DICT,
                 raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
             raw_path = cast(str, cfg_unexpanded["include"])
             ninclusions: list[str] = inclusions.copy()
-            ninclusions.append(cast(str, raw_path))
+            ninclusions.append(raw_path)
             # Perform expansion
             if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
                 # JSON Expansion
@@ -344,7 +344,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if local_abstract is None and inherit_from is not None:
                 self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, inherit_from.abstract, inherited=True)
             elif local_abstract is None and self.default_abstract is not None:
-                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, cast(str, self.default_abstract))
+                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, self.default_abstract)
             elif local_abstract is None:
                 raise ConfigException(f"Entity {self.get_obj_label()} has no abstract")
             else:
@@ -443,7 +443,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if trans != lookup:
                 return trans
         if self._msg_src is not None:
-            msg: Message | None = cast(Catalog, self._msg_src).get(lookup)
+            msg: Message | None = self._msg_src.get(lookup)
             if not msg:
                 msg_: str | None = self._metadata_registry.get(lookup)
             else:
@@ -902,7 +902,7 @@ class AbstractMaskRule(OWSConfigEntry):
             self.values = None
         else:
             if isinstance(val, int):
-                self.values = [cast(int, val)]
+                self.values = [val]
             else:
                 self.values = cast(list[int], val)
 
