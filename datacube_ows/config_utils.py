@@ -10,6 +10,7 @@ import os
 from importlib import import_module
 from itertools import chain
 from typing import Any, Optional, cast
+from typing_extensions import override
 from collections.abc import Callable, Iterable, Sequence
 from urllib.parse import urlparse
 
@@ -207,6 +208,7 @@ class OWSConfigEntry:
         except AttributeError:
             return default
 
+    @override
     def __getattribute__(self, name: str) -> Any:
         """
         Throw an error if an unready attribute is accessed.
@@ -221,6 +223,7 @@ class OWSConfigEntry:
             raise OWSConfigNotReady(f"The following parameters have not been initialised: {self._unready_attributes}")
         return object.__getattribute__(self, name)
 
+    @override
     def __setattr__(self, name: str, val: Any) -> None:
         """
         Mark unready attributes off as they get set
@@ -507,6 +510,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         """
         return cast("datacube_ows.ows_configuration.OWSConfig", self)
 
+    @override
     def __getattribute__(self, name: str) -> Any:
         """"
         Expose separated or internationalised metadata as attributes
@@ -686,6 +690,7 @@ class OWSFlagBand(OWSConfigEntry):
         self.declare_unready("info_mask")
 
     # pylint: disable=attribute-defined-outside-init
+    @override
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
         """
         Second round (db-aware) intialisation.
@@ -796,6 +801,7 @@ class FlagProductBands(OWSConfigEntry):
         self.declare_unready("low_res_products")
 
     # pylint: disable=attribute-defined-outside-init
+    @override
     def make_ready(self, *args, **kwargs) -> None:
         """
         Second round (db-aware) intialisation.

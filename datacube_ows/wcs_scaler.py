@@ -6,6 +6,7 @@
 
 from affine import Affine
 from odc.geo import geom as odc_geom
+from typing_extensions import override
 
 
 class WCSScalerException(Exception):
@@ -64,6 +65,7 @@ class SpatialParameter:
     def __getattr__(self, dim):
         return self[dim]
 
+    @override
     def __setattr__(self, dim, val):
         if dim in ("x", "y", "layer", "crs_def"):
             super().__setattr__(dim, val)

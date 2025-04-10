@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import traceback as tb
+from typing_extensions import override
 
 from flask import render_template
 from ows.common.types import OWSException, Version
@@ -100,6 +101,7 @@ class WCS2Exception(OGCException):
     schema_url = "http://schemas.opengis.net/wcs/2.0/wcsAll.xsd"
 
     # pylint: disable=dangerous-default-value
+    @override
     def exception_response(self, traceback=[]):
         exceptions = [
             OWSException(

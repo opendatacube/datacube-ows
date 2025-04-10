@@ -10,6 +10,7 @@ from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
 from typing import Any, Union, cast
+from typing_extensions import override
 from collections.abc import Hashable, Iterable, MutableMapping
 
 import matplotlib
@@ -470,6 +471,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     def plot_name(self):
         return f"{self.style.product.name}_{self.style.name}"
 
+    @override
     def render(self, bytesio: io.BytesIO) -> None:
         cdict, ticks = self.create_cdict_ticks()
         plt.rcdefaults()
@@ -489,6 +491,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
 
     # For MetadataConfig
     @property
+    @override
     def default_title(self) -> str | None:
         return self.style.title
 
@@ -548,6 +551,7 @@ class ColorRampDef(StyleDefBase):
         data['index_function'] = (index_data.dims, index_data.data)
         return data["index_function"]
 
+    @override
     def transform_single_date_data(self, data: Dataset) -> Dataset:
         """
         Apply style to raw data to make an RGBA image xarray (single time slice only)
@@ -559,6 +563,7 @@ class ColorRampDef(StyleDefBase):
         return self.color_ramp.apply(d)
 
     class Legend(RampLegendBase):
+        @override
         def plot_name(self):
             return f"{self.style.product.name}_{self.style.name}_{self.style_or_mdh.min_count}"
 
@@ -582,6 +587,7 @@ class ColorRampDef(StyleDefBase):
                 self.color_ramp = ColorRamp(style, cfg, cast(ColorRampDef.Legend, self.legend_cfg))
                 self.pass_raw_data = bool(cfg.get("pass_raw_data", False))
 
+        @override
         def transform_data(self, data: Dataset) -> Dataset:
             """
             Apply image transformation

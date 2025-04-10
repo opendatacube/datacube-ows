@@ -7,6 +7,7 @@
 import io
 import logging
 from typing import Any, Optional, Union, cast
+from typing_extensions import override
 from collections.abc import Iterable, Mapping, MutableMapping, Sized
 
 import datacube.model
@@ -111,10 +112,12 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     # For OWSMetaDataConfig
     @property
+    @override
     def default_title(self) -> str | None:
         return "Stand-Alone Style"
 
     @property
+    @override
     def default_abstract(self) -> str | None:
         return "Stand-Alone Style"
 
@@ -216,16 +219,18 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.min_count: int = 1
         self.max_count: int = 1
 
-    # Over-ridden methods
+    @override
     def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
         """"Global config object"""
         return self.product.global_cfg
 
+    @override
     def get_obj_label(self) -> str:
         """Object label for metadata management"""
         return f"style.{self.product.name}.{self.name}"
 
     # pylint: disable=attribute-defined-outside-init
+    @override
     def make_ready(self, *args, **kwargs) -> None:
         """
         Second-phase (db aware) initialisation
@@ -550,6 +555,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             """Does this multidate handler apply to a request with this number of dates?"""
             return self.min_count <= count and self.max_count >= count
 
+        @override
         def __repr__(self) -> str:
             if self.min_count == self.max_count:
                 return str(self.min_count)
@@ -579,6 +585,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
 
     @classmethod
+    @override
     def lookup_impl(cls,
                     cfg: "datacube_ows.ows_configuration.OWSConfig",
                     keyvals: Mapping[str, Any],
@@ -633,6 +640,7 @@ class StyleMask(AbstractMaskRule):
         else:
             self.flag_band = cast(FlagBand, self.style.product.flag_bands[self.band])
 
+    @override
     def create_mask(self, data: xr.DataArray) -> xr.DataArray | None:
         mask = super().create_mask(data)
         return mask

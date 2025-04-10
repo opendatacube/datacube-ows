@@ -6,6 +6,7 @@
 
 import math
 from datetime import datetime, date, timezone
+from typing_extensions import override
 
 import numpy
 import regex as re
@@ -407,6 +408,7 @@ class GetLegendGraphicParameters:
 
 
 class GetMapParameters(GetParameters):
+    @override
     def method_specific_init(self, args):
         # Validate Format parameter
         self.format = get_arg(args, "format", "image format",
@@ -441,9 +443,11 @@ class GetMapParameters(GetParameters):
 
 
 class GetFeatureInfoParameters(GetParameters):
+    @override
     def get_layer(self, args):
         return get_layer_from_arg(args, "query_layers")
 
+    @override
     def method_specific_init(self, args):
         # Validate Formata parameter
         self.format = get_arg(args, "info_format", "info format", lower=True,
