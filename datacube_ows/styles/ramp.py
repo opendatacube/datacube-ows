@@ -9,7 +9,8 @@ import logging
 from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
-from typing import Any, Hashable, Iterable, MutableMapping, Union, cast
+from typing import Any, Union, cast
+from collections.abc import Hashable, Iterable, MutableMapping
 
 import matplotlib
 import numpy

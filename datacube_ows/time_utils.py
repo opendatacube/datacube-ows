@@ -6,7 +6,6 @@
 
 import datetime
 import logging
-from typing import Optional
 
 from datacube.model import Dataset
 from dateutil.parser import parse
@@ -94,7 +93,7 @@ def tz_for_coord(lon: float | int, lat: float | int) -> datetime.tzinfo:
     :raises: NoTimezoneException
     """
     try:
-        tzn: Optional[str] = tf.timezone_at(lng=lon, lat=lat)
+        tzn: str | None = tf.timezone_at(lng=lon, lat=lat)
     except Exception as e:
         # Generally shouldn't happen - a common symptom of various geographic and timezone related bugs
         _LOG.warning("Timezone detection failed for lat %f, lon %s (%s)", lat, lon, str(e))

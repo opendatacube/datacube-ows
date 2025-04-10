@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #

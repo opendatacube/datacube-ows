@@ -6,8 +6,6 @@
 
 import io
 import logging
-from typing import Optional
-
 import requests
 from PIL import Image
 
@@ -16,7 +14,7 @@ from datacube_ows.ogc_exceptions import WMSException
 _LOG = logging.getLogger(__name__)
 
 
-def get_image_from_url(url: str) -> Optional[Image.Image]:
+def get_image_from_url(url: str) -> Image.Image | None:
     """
     Fetch image a png from external URL, and return it as an Image.
 

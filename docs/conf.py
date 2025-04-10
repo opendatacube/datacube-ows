@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
@@ -46,8 +45,8 @@ source_suffix = {
 master_doc = 'index'
 
 # General information about the project.
-project = u'datacube-ows'
-copyright = u"2017-2024, Open Data Cube Steering Council and contributors (Open Source License)"
+project = 'datacube-ows'
+copyright = "2017-2024, Open Data Cube Steering Council and contributors (Open Source License)"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -78,6 +77,6 @@ htmlhelp_basename = 'datacube_owsdoc'
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'datacube_ows',
-     u'datacube-ows Documentation',
-     [u'Datacube OWS Team'], 1)
+     'datacube-ows Documentation',
+     ['Datacube OWS Team'], 1)
 ]

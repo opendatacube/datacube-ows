@@ -7,7 +7,8 @@
 import datetime
 import logging
 from collections import OrderedDict
-from typing import Iterable, Mapping, cast
+from typing import cast
+from collections.abc import Iterable, Mapping
 from uuid import UUID
 
 import datacube
@@ -41,7 +42,7 @@ class ProductBandQuery:
         self.ignore_time = ignore_time
         self.main = main
         self.key = (
-            tuple((p.id for p in self.products)),
+            tuple(p.id for p in self.products),
             tuple(bands)
         )
 

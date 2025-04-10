@@ -23,7 +23,7 @@ def flask_client():
         yield client
 
 
-class generic_obj(object):
+class generic_obj:
     pass
 
 

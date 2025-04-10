@@ -89,9 +89,7 @@ def test_wmts_getcap_section(ows_server):
     for section in section_options:
         resp = requests.get(
             ows_server.url
-            + "/wmts?request=GetCapabilities&service=WMTS&version=1.0.0&section={}".format(
-                section
-            ),
+            + f"/wmts?request=GetCapabilities&service=WMTS&version=1.0.0&section={section}",
             timeout=10,
         )
 

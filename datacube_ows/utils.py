@@ -8,7 +8,8 @@ import datetime
 import logging
 from functools import wraps
 from time import monotonic
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar, cast
+from collections.abc import Callable
 
 import pytz
 from datacube import Datacube
