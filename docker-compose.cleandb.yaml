@@ -22,7 +22,7 @@ services:
   # Overwrite ows so it can talk to docker db
   ows:
     ports:
-      - 8000:8000
+      - "8000:8000"
     environment:
       POSTGRES_PORT: 5432
     depends_on:

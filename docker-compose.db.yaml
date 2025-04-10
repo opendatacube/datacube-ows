@@ -21,7 +21,7 @@ services:
   # Overwrite ows so it can talk to docker db
   ows:
     ports:
-      - 8000:8000
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
