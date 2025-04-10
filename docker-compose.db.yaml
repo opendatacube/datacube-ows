@@ -10,6 +10,9 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     restart: always
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "postgres", "-q", "-d", "$POSTGRES_DB", "-U", "$POSTGRES_USER"]
       timeout: 45s
