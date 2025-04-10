@@ -760,9 +760,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def parse_wcs(self, cfg: CFG_DICT | bool):
-        if cfg == False:
-            self.wcs = False
-        elif not self.global_cfg.wcs:
+        if cfg == False or not self.global_cfg.wcs:
             self.wcs = False
         else:
             self.wcs = not cast(CFG_DICT, cfg).get("disable", False)
