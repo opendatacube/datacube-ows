@@ -260,7 +260,7 @@ class OWSLayer(OWSMetadataConfig):
             self._local_env = ODCConfig.get_environment(env=str(local_env))
         # Inherit or override attribution
         if "attribution" in cfg:
-            self.attribution = AttributionCfg.parse(  # type: ignore[assignment]
+            self.attribution = AttributionCfg.parse(
                 cast(CFG_DICT | None, cfg.get("attribution")),
                 self
             )
@@ -678,10 +678,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def parse_image_processing(self, cfg: CFG_DICT):
         emf_cfg = cfg["extent_mask_func"]
         if isinstance(emf_cfg, dict) or isinstance(emf_cfg, str):
-            self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]  # type:ignore[type-var]
+            self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]
         else:
             self.extent_mask_func = [
-                FunctionWrapper(self, emf) for emf in cast(list[CFG_DICT | str], emf_cfg)  # type: ignore[type-var]
+                FunctionWrapper(self, emf) for emf in cast(list[CFG_DICT | str], emf_cfg)
             ]
         self.raw_afb = cfg.get("always_fetch_bands", [])
         self.declare_unready("always_fetch_bands")
@@ -696,7 +696,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.fuse_func: FunctionWrapper | None = FunctionWrapper(
                 self,
                 cast(str | CFG_DICT, cfg["fuse_func"])
-            )  # type:ignore[type-var]
+            )
         else:
             self.fuse_func = None
 

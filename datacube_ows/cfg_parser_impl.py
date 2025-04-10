@@ -26,7 +26,7 @@ from datacube_ows.ows_configuration import (OWSConfig, OWSFolder, OWSLayer,
 @click.option(
     "--version", is_flag=True, default=False, help="Show OWS version number and exit"
 )
-def main(version: bool):  # type: ignore[return]
+def main(version: bool):
     # --version
     if version:
         click.echo(f"Open Data Cube Open Web Services (datacube-ows) version {__version__}")
