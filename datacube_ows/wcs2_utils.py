@@ -26,7 +26,7 @@ _LOG = logging.getLogger(__name__)
 
 
 def uniform_crs(cfg, crs):
-    " Helper function to transform a URL style EPSG definition to an 'EPSG:nnn' one "
+    """Helper function to transform a URL style EPSG definition to an 'EPSG:nnn' one"""
     if crs.startswith('http://www.opengis.net/def/crs/EPSG/'):
         code = crs.rpartition('/')[-1]
         crs = 'EPSG:%s' % code

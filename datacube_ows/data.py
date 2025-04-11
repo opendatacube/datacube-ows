@@ -115,15 +115,13 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
             q_ds_dict = stacker.datasets()
             qprof["datasets"] = []
             for q, dsxr in q_ds_dict.items():
-                query_res: dict[str, Any] = {}
-                query_res["query"] = str(q)
-                query_res["datasets"] = [
-                    [
-                        f"{ds.id} ({ds.type.name})"
-                        for ds in tdss
+                query_res: dict[str, Any] = {
+                    "query": str(q),
+                    "datasets": [
+                        [f"{ds.id} ({ds.type.name})" for ds in tdss]
+                        for tdss in dsxr.values
                     ]
-                    for tdss in dsxr.values
-                ]
+                }
                 qprof["datasets"].append(query_res)
         if stacker.resource_limited and not params.layer.low_res_product_names:
             qprof.start_event("extent-in-query")

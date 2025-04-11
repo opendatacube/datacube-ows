@@ -89,11 +89,7 @@ def minimal_dc():
             for s in ls:
                 if s == "bandx":
                     raise KeyError("bandx")
-                m = {}
-                m["name"] = s
-                m["nodata"] = "nan"
-                m["dtype"] = "float32"
-                m["units"] = 1
+                m = {"name": s, "nodata": "nan", "dtype": "float32", "units": 1}
                 if s == "band4":
                     m["flags_definition"] = {
                         "moo": {"bits": 0},

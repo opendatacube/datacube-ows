@@ -211,9 +211,9 @@ def ping():
     except Exception:
         pass
     if db_ok:
-        return (render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"}))
+        return render_template("ping.html", status="Up"), 200, resp_headers({"Content-Type": "text/html"})
     else:
-        return (render_template("ping.html", status="Down"), 500, resp_headers({"Content-Type": "text/html"}))
+        return render_template("ping.html", status="Down"), 500, resp_headers({"Content-Type": "text/html"})
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
@@ -227,7 +227,7 @@ def legend(layer, style, dates=None):
     cfg = get_config()
     product = cfg.layer_index.get(layer)
     if not product:
-        return ("Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"}))
+        return "Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"})
     if dates is None:
         args = lower_get_args()
         ndates = int(args.get("ndates", 0))
@@ -236,10 +236,10 @@ def legend(layer, style, dates=None):
     try:
         img = create_legend_for_style(product, style, ndates)
     except WMSException as e:
-        return (str(e), e.http_response, resp_headers({"Content-Type": "text/plain"}))
+        return str(e), e.http_response, resp_headers({"Content-Type": "text/plain"})
 
     if not img:
-        return ("Unknown Style", 404, resp_headers({"Content-Type": "text/plain"}))
+        return "Unknown Style", 404, resp_headers({"Content-Type": "text/plain"})
     return img
 
 # Flask middleware

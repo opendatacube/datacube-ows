@@ -255,7 +255,7 @@ def test_rolling_window():
 
     class DummyLayer:
         def search_times(self, d):
-            return (d, d)
+            return d, d
     lyr = DummyLayer()
 
     start, end = rolling_window_ndays(

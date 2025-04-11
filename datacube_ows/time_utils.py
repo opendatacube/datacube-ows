@@ -114,7 +114,7 @@ def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetim
     tz: datetime.tzinfo = tz_for_geometry(geobox.extent)
     start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
     end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
-    return (start.astimezone(utc), end.astimezone(utc))
+    return start.astimezone(utc), end.astimezone(utc)
 
 
 def month_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
@@ -193,4 +193,4 @@ def rolling_window_ndays(
     days = available_dates[idx:]
     start, _ = layer_cfg.search_times(days[idx])
     _, end = layer_cfg.search_times(days[-1])
-    return (start, end)
+    return start, end

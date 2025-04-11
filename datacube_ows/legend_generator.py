@@ -57,4 +57,4 @@ def create_legends_from_styles(styles, ndates=0):
     # legend = make_response(b.getvalue())
     # legend.mimetype = 'image/png'
     # b.close()
-    return (b.getvalue(), 200, resp_headers({"Content-Type": "image/png"}))
+    return b.getvalue(), 200, resp_headers({"Content-Type": "image/png"})
