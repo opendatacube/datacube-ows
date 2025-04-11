@@ -238,7 +238,7 @@ def translation(languages: list[str], msg_file: str | None, new: bool,
     try:
         fp = open(msg_file, "rb")
         fp.close()
-    except IOError:
+    except OSError:
         click.echo("Message file {msg_file} does not exist or cannot be read.")
         sys.exit(1)
     for language in languages:

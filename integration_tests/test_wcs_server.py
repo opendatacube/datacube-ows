@@ -1187,7 +1187,6 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server):
         assert "Format does not support multi-time datasets" in str(e)
 
 
-@pytest.mark.skip(reason="FIXME: broken until ga_ls_fc_3 product is fixed")
 def test_wcs20_getcoverage_multidate_netcdf(ows_server):
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service

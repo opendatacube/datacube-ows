@@ -7,7 +7,8 @@
 import io
 import logging
 from datetime import datetime
-from typing import Callable, MutableMapping, Type, Union, cast
+from typing import Union, cast
+from collections.abc import Callable, MutableMapping
 
 import numpy
 import xarray
@@ -85,9 +86,9 @@ class AbstractValueMapRule(AbstractMaskRule):
         :return: A value map ruleset dictionary.
         """
         if isinstance(style_or_mdh, ColorMapStyleDef):
-            typ: Type[AbstractValueMapRule] = ValueMapRule
+            typ: type[AbstractValueMapRule] = ValueMapRule
         else:
-            mdh = cast(ColorMapStyleDef.MultiDateHandler, style_or_mdh)
+            mdh = style_or_mdh
             if mdh.aggregator:
                 style_or_mdh = cast(ColorMapStyleDef, mdh.style)
                 typ = ValueMapRule
@@ -96,7 +97,7 @@ class AbstractValueMapRule(AbstractMaskRule):
                     raise ConfigException(
                         "MultiDate value map only supported on multi-date handlers with min_count and max_count equal.")
                 typ = MultiDateValueMapRule
-        vmap: dict[str, list["AbstractValueMapRule"]] = {}
+        vmap: dict[str, list[AbstractValueMapRule]] = {}
         for band_name, rules in cfg.items():
             band_rules = [typ(style_or_mdh, band_name, rule) for rule in cast(list[CFG_DICT], rules)]
             vmap[band_name] = band_rules
@@ -195,7 +196,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                 if len(vals) == 0:
                     d_mask = d_slice == d_slice
                 else:
-                    for v in cast(list[int], vals):
+                    for v in vals:
                         vmask = d_slice == v
                         if d_mask is None:
                             d_mask = vmask
@@ -246,7 +247,7 @@ def apply_value_map(value_map: MutableMapping[str, list[AbstractValueMapRule]],
     for cfg_band, rules in value_map.items():
         # Run through each item
         band = band_mapper(cfg_band)
-        bdata = cast(DataArray, data[band])
+        bdata = data[band]
         if bdata.dtype.kind == 'f':
             # Convert back to int for bitmasking
             bdata = ColorMapStyleDef.reint(bdata)

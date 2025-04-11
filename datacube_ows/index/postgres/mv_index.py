@@ -8,7 +8,8 @@ import datetime
 import json
 from enum import Enum
 from types import UnionType
-from typing import Iterable, Type, cast
+from typing import cast
+from collections.abc import Iterable
 from uuid import UUID as UUID_
 
 import pytz
@@ -74,7 +75,7 @@ class MVSelectOpts(Enum):
         raise AssertionError("Invalid selection option")
 
 
-selection_return_types: dict[MVSelectOpts, Type | UnionType] = {
+selection_return_types: dict[MVSelectOpts, type | UnionType] = {
     MVSelectOpts.ALL: Iterable[Row],
     MVSelectOpts.IDS: Iterable[UUID_],
     MVSelectOpts.DATASETS: Iterable[Dataset],

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 # This file is part of datacube-ows, part of the Open Data Cube project.
 # See https://opendatacube.org for more information.
 #
@@ -46,7 +45,7 @@ __version__ = '0.8.8'
 __author__ = 'Johann Petrak'
 __license__ = 'MIT'
 
-LOGGER = logging.getLogger("licenseheaders_{}".format(__version__))
+LOGGER = logging.getLogger(f"licenseheaders_{__version__}")
 
 
 default_dir = "."
@@ -395,13 +394,13 @@ def parse_command_line(argv):
                                      epilog=example,
                                      formatter_class=formatter_class)
     parser.add_argument("-V", "--version", action="version",
-                        version="%(prog)s {}".format(__version__))
+                        version=f"%(prog)s {__version__}")
     parser.add_argument("-v", "--verbose", dest="verbose_count",
                         action="count", default=0,
                         help="increases log verbosity (can be specified "
                              "1 to 3 times, default shows errors only)")
     parser.add_argument("-d", "--dir", dest="dir", default=default_dir,
-                        help="The directory to recursively process (default: {}).".format(default_dir))
+                        help=f"The directory to recursively process (default: {default_dir}).")
     parser.add_argument("-f", "--files", dest="files", nargs='*', type=str,
                         help="The list of files to process. If not empty - will disable '--dir' option")
     parser.add_argument("-b", action="store_true",
@@ -421,7 +420,7 @@ def parse_command_line(argv):
     parser.add_argument("-u", "--projurl", dest="projecturl", default=None,
                         help="Url of project to use.")
     parser.add_argument("--enc", nargs=1, dest="encoding", default=default_encoding,
-                        help="Encoding of program files (default: {})".format(default_encoding))
+                        help=f"Encoding of program files (default: {default_encoding})")
     parser.add_argument("--dry", action="store_true", help="Only show what would get done, do not change any files")
     parser.add_argument("--safesubst", action="store_true",
                         help="Do not raise error if template variables cannot be substituted.")
@@ -526,7 +525,7 @@ def read_template(template_file, vardict, args):
     :param args: the program arguments
     :return: lines of the template, with variables replaced
     """
-    with open(template_file, 'r') as f:
+    with open(template_file) as f:
         lines = f.readlines()
     if args.safesubst:
         lines = [Template(line).safe_substitute(vardict) for line in lines]
@@ -597,7 +596,7 @@ def read_file(file, args, type_settings):
     settings = type_settings.get(ftype)
     if not os.access(file, os.R_OK):
         LOGGER.error("File %s is not readable.", file)
-    with open(file, 'r', encoding=args.encoding) as f:
+    with open(file, encoding=args.encoding) as f:
         lines = f.readlines()
     # now iterate throw the lines and try to determine the various indies
     # first try to find the start of the header: skip over shebang or empty lines
@@ -607,7 +606,7 @@ def read_file(file, args, type_settings):
     block_comment_end_pattern = settings.get("blockCommentEndPattern")
     line_comment_start_pattern = settings.get("lineCommentStartPattern")
     i = 0
-    LOGGER.info("Processing file {} as {}".format(file, ftype))
+    LOGGER.info(f"Processing file {file} as {ftype}")
     for line in lines:
         if (i == 0 or i == skip) and keep_first and keep_first.findall(line):
             skip = i + 1
@@ -638,7 +637,7 @@ def read_file(file, args, type_settings):
                     "haveLicense": have_license
                     }
         i = i + 1
-    LOGGER.debug("Found preliminary start at {}, i={}, lines={}".format(head_start, i, len(lines)))
+    LOGGER.debug(f"Found preliminary start at {head_start}, i={i}, lines={len(lines)}")
     # now we have either reached the end, or we are at a line where a block start or line comment occurred
     # if we have reached the end, return default dictionary without info
     if i == len(lines):
@@ -656,7 +655,7 @@ def read_file(file, args, type_settings):
     if isBlockHeader:
         LOGGER.debug("Found comment start, process until end")
         for j in range(i, len(lines)):
-            LOGGER.debug("Checking line {}".format(j))
+            LOGGER.debug(f"Checking line {j}")
             if licensePattern.findall(lines[j]):
                 have_license = True
             elif block_comment_end_pattern.findall(lines[j]):
@@ -730,7 +729,7 @@ def make_backup(file, arguments):
             copyfile(file, file + ".bak")
 
 
-class OpenAsWriteable(object):
+class OpenAsWriteable:
     """
     This contextmanager wraps standard open(file, 'w', encoding=...) using
     arguments.encoding encoding. If file cannot be written (read-only file),
@@ -769,14 +768,14 @@ class OpenAsWriteable(object):
                     try:
                         os.chmod(filename, file_permissions | stat.S_IWUSR)
                     except PermissionError:
-                        LOGGER.warning("File {} cannot be made writable, it will be skipped.".format(filename))
+                        LOGGER.warning(f"File {filename} cannot be made writable, it will be skipped.")
                 else:
-                    LOGGER.warning("File {} is not writable, it will be skipped.".format(filename))
+                    LOGGER.warning(f"File {filename} is not writable, it will be skipped.")
 
             if os.access(filename, os.W_OK):
                 file_handle = open(filename, 'w', encoding=arguments.encoding)
         else:
-            LOGGER.warning("File {} does not exist, it will be skipped.".format(filename))
+            LOGGER.warning(f"File {filename} does not exist, it will be skipped.")
 
         self._file_handle = file_handle
         self._file_permissions = file_permissions
@@ -795,7 +794,7 @@ class OpenAsWriteable(object):
                 try:
                     os.chmod(self._filename, self._file_permissions)
                 except PermissionError:
-                    LOGGER.error("File {} permissions could not be restored.".format(self._filename))
+                    LOGGER.error(f"File {self._filename} permissions could not be restored.")
 
             self._file_handle = None
             self._file_permissions = None
@@ -881,7 +880,7 @@ def main():
             # first get all the names of our own templates
             # for this get first the path of this file
             templates_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
-            LOGGER.debug("File path: {}".format(os.path.abspath(__file__)))
+            LOGGER.debug(f"File path: {os.path.abspath(__file__)}")
             # get all the templates in the templates directory
             templates = [f for f in get_paths("*.tmpl", templates_dir)]
             templates = [(os.path.splitext(os.path.basename(t))[0], t) for t in templates]
@@ -894,20 +893,20 @@ def main():
             if len(tmpls) == 1:
                 tmpl_name = tmpls[0][0]
                 tmpl_file = tmpls[0][1]
-                LOGGER.info("Using template file {} for {}".format(tmpl_file, tmpl_name))
+                LOGGER.info(f"Using template file {tmpl_file} for {tmpl_name}")
                 template_lines = read_template(tmpl_file, settings, arguments)
             else:
                 if len(tmpls) == 0:
                     # check if we can interpret the option as file
                     if os.path.isfile(opt_tmpl):
-                        LOGGER.info("Using file {}".format(os.path.abspath(opt_tmpl)))
+                        LOGGER.info(f"Using file {os.path.abspath(opt_tmpl)}")
                         template_lines = read_template(os.path.abspath(opt_tmpl), settings, arguments)
                     else:
-                        LOGGER.error("Not a built-in template and not a file, cannot proceed: {}".format(opt_tmpl))
+                        LOGGER.error(f"Not a built-in template and not a file, cannot proceed: {opt_tmpl}")
                         LOGGER.error("Built in templates: {}".format(", ".join([t[0] for t in templates])))
                         error = True
                 else:
-                    LOGGER.error("There are multiple matching template names: {}".format([t[0] for t in tmpls]))
+                    LOGGER.error(f"There are multiple matching template names: {[t[0] for t in tmpls]}")
                     error = True
         else:
             # no tmpl parameter
@@ -932,13 +931,13 @@ def main():
                 paths = get_paths(patterns, arguments.dir)
 
             for file in paths:
-                LOGGER.debug("Considering file: {}".format(file))
+                LOGGER.debug(f"Considering file: {file}")
                 file = os.path.normpath(file)
                 if limit2exts is not None and not any([file.endswith(ext) for ext in limit2exts]):
-                    LOGGER.info("Skipping file with non-matching extension: {}".format(file))
+                    LOGGER.info(f"Skipping file with non-matching extension: {file}")
                     continue
                 if arguments.exclude and any([fnmatch.fnmatch(file, pat) for pat in arguments.exclude]):
-                    LOGGER.info("Ignoring file {}".format(file))
+                    LOGGER.info(f"Ignoring file {file}")
                     continue
                 finfo = read_file(file, arguments, type_settings)
                 if not finfo:
@@ -954,7 +953,7 @@ def main():
                 if template_lines:
                     make_backup(file, arguments)
                     if arguments.dry:
-                        LOGGER.info("Would be updating changed file: {}".format(file))
+                        LOGGER.info(f"Would be updating changed file: {file}")
                     else:
                         with open_as_writable(file, arguments) as fw:
                             if fw is not None:
@@ -966,7 +965,7 @@ def main():
                                 ftype = finfo["type"]
                                 skip = finfo["skip"]
                                 if head_start is not None and head_end is not None and have_license:
-                                    LOGGER.debug("Replacing header in file {}".format(file))
+                                    LOGGER.debug(f"Replacing header in file {file}")
                                     # first write the lines before the header
                                     fw.writelines(lines[0:head_start])
                                     #  now write the new header from the template lines
@@ -974,7 +973,7 @@ def main():
                                     #  now write the rest of the lines
                                     fw.writelines(lines[head_end + 1:])
                                 else:
-                                    LOGGER.debug("Adding header to file {}, skip={}".format(file, skip))
+                                    LOGGER.debug(f"Adding header to file {file}, skip={skip}")
                                     fw.writelines(lines[0:skip])
                                     fw.writelines(for_type(template_lines, ftype, type_settings))
                                     if head_start is not None and not have_license:
@@ -988,7 +987,7 @@ def main():
                     if years_line is not None:
                         make_backup(file, arguments)
                         if arguments.dry:
-                            LOGGER.info("Would be updating year line in file {}".format(file))
+                            LOGGER.info(f"Would be updating year line in file {file}")
                         else:
                             with open_as_writable(file, arguments) as fw:
                                 if fw is not None:

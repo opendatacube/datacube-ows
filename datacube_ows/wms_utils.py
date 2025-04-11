@@ -294,7 +294,7 @@ def parse_wms_time_strings(parts, with_tz=False):
     return start, end
 
 
-class GetParameters():
+class GetParameters:
     def __init__(self, args):
         self.cfg = get_config()
         # Version
@@ -391,7 +391,7 @@ def single_style_from_args(layer, args, required=True):
                                valid_keys=list(layer.style_index))
     return style
 
-class GetLegendGraphicParameters():
+class GetLegendGraphicParameters:
     def __init__(self, args):
         self.layer = get_layer_from_arg(args, 'layer')
 

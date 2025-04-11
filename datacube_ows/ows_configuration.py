@@ -19,7 +19,8 @@ import os
 from collections.abc import Mapping
 from enum import Enum
 from importlib import import_module
-from typing import Any, Iterable, Optional, Union, cast
+from typing import Any, Optional, Union, cast
+from collections.abc import Iterable
 
 import numpy
 from babel.messages.catalog import Catalog
@@ -211,8 +212,8 @@ class AttributionCfg(OWSConfigEntry):
         else:
             self.logo_width = cast(int | None, logo.get("width"))
             self.logo_height = cast(int | None, logo.get("height"))
-            self.logo_url = cast(str | None, logo.get("url"))
-            self.logo_fmt = cast(str | None, logo.get("format"))
+            self.logo_url = logo.get("url")
+            self.logo_fmt = logo.get("format")
             if not self.logo_url or not self.logo_fmt:
                 raise ConfigException("url and format must both be specified in an attribution logo.")
 
@@ -249,7 +250,7 @@ class OWSLayer(OWSMetadataConfig):
     def __init__(self, cfg: CFG_DICT, object_label: str, parent_layer: Optional["OWSLayer"]=None, **kwargs):
         super().__init__(cfg, **kwargs)
         self.object_label = object_label
-        self.global_cfg: "OWSConfig" = kwargs["global_cfg"]
+        self.global_cfg: OWSConfig = kwargs["global_cfg"]
         self.parent_layer = parent_layer
         self._cached_local_env: ODCEnvironment | None = None
         self._cached_dc: Datacube | None = None
@@ -1250,7 +1251,7 @@ class OWSConfig(OWSMetadataConfig):
     METADATA_CONTACT_INFO = True
 
     @property
-    def default_abstract(self) -> Optional[str]:
+    def default_abstract(self) -> str | None:
         return ""
 
     @property

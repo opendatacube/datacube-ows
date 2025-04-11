@@ -5,7 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from typing import Any, Iterable, Mapping, cast
+from typing import Any, cast
+from collections.abc import Iterable, Mapping
 
 import affine
 import numpy as np
@@ -161,10 +162,10 @@ class CacheControlRules(OWSConfigEntry):
                 raise ConfigException(f"Dataset cache rule does not contain a 'max_age' element in {context}")
             if not isinstance(rule["min_datasets"], int):
                 raise ConfigException(f"Dataset cache rule has non-integer 'min_datasets' element in {context}")
-            min_datasets =  cast(int, rule["min_datasets"])
+            min_datasets = rule["min_datasets"]
             if not isinstance(rule["max_age"], int):
                 raise ConfigException(f"Dataset cache rule has non-integer 'max_age' element in {context}")
-            max_age = cast(int, rule["max_age"])
+            max_age = rule["max_age"]
             if min_datasets <= 0:
                 raise ConfigException(f"Invalid dataset cache rule in {context}: min_datasets must be greater than zero.")
             if min_datasets <= min_so_far:

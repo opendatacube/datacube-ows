@@ -9,7 +9,8 @@ import logging
 from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
-from typing import Any, Hashable, Iterable, MutableMapping, Union, cast
+from typing import Any, Union, cast
+from collections.abc import Hashable, Iterable, MutableMapping
 
 import matplotlib
 import numpy
@@ -117,7 +118,7 @@ def crack_ramp(ramp: RAMP_SPEC) -> tuple[
     alpha = cast(list[float], [])
     for r in ramp:
         if isinstance(r["value"], float):
-            value: float = cast(float, r["value"])
+            value: float = r["value"]
         else:
             value = float(cast(int | str, r["value"]))
         values.append(value)
@@ -182,7 +183,7 @@ class ColorRamp:
             if "mpl_ramp" in ramp_cfg:
                 unscaled_ramp = read_mpl_ramp(cast(str, ramp_cfg["mpl_ramp"]))
             raw_scaled_ramp = scale_unscaled_ramp(rmin, rmax, unscaled_ramp)
-        self.ramp = cast(list[CFG_DICT], raw_scaled_ramp)
+        self.ramp = raw_scaled_ramp
 
         self.values = cast(list[float], [])
         self.components = cast(MutableMapping[str, list[float]], {})

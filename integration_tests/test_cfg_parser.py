@@ -42,7 +42,6 @@ def test_cfg_parser_folders_parse_only(runner):
     assert result.exit_code == 1
 
 
-@pytest.mark.skip(reason="FIXME: broken ga_ls_fc_3 product definition")
 def test_cfg_parser_input_file_compare(runner):
     this_dir = os.path.dirname(os.path.dirname(__file__))
     result = runner.invoke(main, ["check", "-i", f"{this_dir}/ows_cfg_report.json"])

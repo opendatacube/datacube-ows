@@ -9,7 +9,8 @@ import logging
 import os
 from importlib import import_module
 from itertools import chain
-from typing import Any, Callable, Iterable, Optional, Sequence, cast
+from typing import Any, Optional, cast
+from collections.abc import Callable, Iterable, Sequence
 from urllib.parse import urlparse
 
 import fsspec
@@ -59,7 +60,7 @@ def cfg_expand(cfg_unexpanded: CFG_DICT,
                 raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
             raw_path = cast(str, cfg_unexpanded["include"])
             ninclusions: list[str] = inclusions.copy()
-            ninclusions.append(cast(str, raw_path))
+            ninclusions.append(raw_path)
             # Perform expansion
             if "type" not in cfg_unexpanded or cfg_unexpanded["type"] == "json":
                 # JSON Expansion
@@ -344,7 +345,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if local_abstract is None and inherit_from is not None:
                 self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, inherit_from.abstract, inherited=True)
             elif local_abstract is None and self.default_abstract is not None:
-                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, cast(str, self.default_abstract))
+                self.register_metadata(self.get_obj_label(), FLD_ABSTRACT, self.default_abstract)
             elif local_abstract is None:
                 raise ConfigException(f"Entity {self.get_obj_label()} has no abstract")
             else:
@@ -443,7 +444,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if trans != lookup:
                 return trans
         if self._msg_src is not None:
-            msg: Message | None = cast(Catalog, self._msg_src).get(lookup)
+            msg: Message | None = self._msg_src.get(lookup)
             if not msg:
                 msg_: str | None = self._metadata_registry.get(lookup)
             else:
@@ -649,7 +650,7 @@ class OWSFlagBandStandalone:
         self.pq_names: list[str] = []
         self.pq_ignore_time = False
         self.pq_manual_merge = False
-        self.pq_fuse_func: Optional[FunctionWrapper] = None
+        self.pq_fuse_func: FunctionWrapper | None = None
 
 
 class OWSFlagBand(OWSConfigEntry):
@@ -674,7 +675,7 @@ class OWSFlagBand(OWSConfigEntry):
         self.pq_band = str(cfg["band"])
         self.canonical_band_name = self.pq_band # Update for aliasing on make_ready
         if "fuse_func" in cfg:
-            self.pq_fuse_func: Optional[FunctionWrapper] = FunctionWrapper(self.layer, cast(CFG_DICT, cfg["fuse_func"]))
+            self.pq_fuse_func: FunctionWrapper | None = FunctionWrapper(self.layer, cast(CFG_DICT, cfg["fuse_func"]))
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = bool(cfg.get("ignore_time", False))
@@ -824,7 +825,7 @@ class FlagProductBands(OWSConfigEntry):
         :param layer: A named layer object
         :return: A list of FlagProductBands objects
         """
-        flag_products: list["FlagProductBands"] = []
+        flag_products: list[FlagProductBands] = []
         for mask in masks:
             handled = False
             for fp in flag_products:
@@ -848,7 +849,7 @@ class FlagProductBands(OWSConfigEntry):
         :param layer: A named layer object
         :return: A list of FlagProductBands objects
         """
-        flag_products: list["FlagProductBands"] = []
+        flag_products: list[FlagProductBands] = []
         for fb in flagbands:
             handled = False
             for fp in flag_products:
@@ -902,7 +903,7 @@ class AbstractMaskRule(OWSConfigEntry):
             self.values = None
         else:
             if isinstance(val, int):
-                self.values = [cast(int, val)]
+                self.values = [val]
             else:
                 self.values = cast(list[int], val)
 

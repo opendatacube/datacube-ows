@@ -14,7 +14,7 @@ doc2ds_pgis = Doc2Dataset(dc_pgis.index, products=["s2_l2a", "geodata_coast_100k
 
 for line in fileinput.input():
     filename, uri = line.split()
-    with open(filename, "r") as fp:
+    with open(filename) as fp:
         doc = yaml.safe_load(fp)
     if "grid_spatial" in doc:
         del doc["grid_spatial"]

@@ -7,7 +7,8 @@
 import datetime
 import logging
 from collections import OrderedDict
-from typing import Iterable, Mapping, cast
+from typing import cast
+from collections.abc import Iterable, Mapping
 from uuid import UUID
 
 import datacube
@@ -41,7 +42,7 @@ class ProductBandQuery:
         self.ignore_time = ignore_time
         self.main = main
         self.key = (
-            tuple((p.id for p in self.products)),
+            tuple(p.id for p in self.products),
             tuple(bands)
         )
 
@@ -219,10 +220,7 @@ class DataStacker:
             layer=self._layer,
             geom=geom,
             products=query.products)
-        grpd_result = datacube.Datacube.group_datasets(
-            cast(Iterable[datacube.model.Dataset], result),
-            self.group_by
-        )
+        grpd_result = datacube.Datacube.group_datasets(result, self.group_by)
         return grpd_result
 
     def datasets(self,
@@ -253,10 +251,7 @@ class DataStacker:
                                times=qry_times,
                                geom=geom,
                                products=query.products)
-            grpd_result = datacube.Datacube.group_datasets(
-                cast(Iterable[datacube.model.Dataset], result),
-                self.group_by
-            )
+            grpd_result = datacube.Datacube.group_datasets(result, self.group_by)
             results.append((query, grpd_result))
         return OrderedDict(results)
 

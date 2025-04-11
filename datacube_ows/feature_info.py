@@ -8,7 +8,8 @@ import logging
 import re
 from datetime import datetime
 from itertools import chain
-from typing import cast, Iterable
+from typing import cast
+from collections.abc import Iterable
 
 import numpy
 import xarray
