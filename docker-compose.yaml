@@ -19,8 +19,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REQUEST_PAYER: ${AWS_REQUEST_PAYER}
       AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT}
-      # Hard coded for now.
-      ODC_ENVIRONMENT: default
+      ODC_ENVIRONMENT: ${ODC_ENVIRONMENT:-default}
       ODC_DEFAULT_INDEX_DRIVER: postgres
       ODC_OWSPOSTGIS_INDEX_DRIVER: postgis
       # Please switch to single entry url configuration for postgres url
