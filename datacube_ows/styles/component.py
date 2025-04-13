@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Any, cast
+from typing_extensions import override
 from collections.abc import Callable, Hashable
 
 import numpy as np
@@ -89,6 +90,7 @@ class ComponentStyleDef(StyleDefBase):
                 }
 
     # pylint: disable=attribute-defined-outside-init
+    @override
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
         """
         Second-phase (db aware) initialisation
@@ -137,7 +139,7 @@ class ComponentStyleDef(StyleDefBase):
         normalized = (clipped - sc_min) / (sc_max - sc_min)
         return normalized * 255
 
-
+    @override
     def transform_single_date_data(self, data: Dataset) -> Dataset:
         """
         Apply style to raw data to make an RGBA image xarray (single time slice only)

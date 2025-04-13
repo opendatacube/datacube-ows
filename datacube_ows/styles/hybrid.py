@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import cast
+from typing_extensions import override
 
 from xarray import DataArray, Dataset
 
@@ -44,6 +45,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
         if self.component_ratio < 0.0 or self.component_ratio > 1.0:
             raise ConfigException("Component ratio must be a floating point number between 0 and 1")
 
+    @override
     def transform_single_date_data(self, data: Dataset) -> Dataset:
         """
         Apply style to raw data to make an RGBA image xarray (single time slice only)

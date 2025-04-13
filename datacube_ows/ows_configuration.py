@@ -20,6 +20,7 @@ from collections.abc import Mapping
 from enum import Enum
 from importlib import import_module
 from typing import Any, Optional, Union, cast
+from typing_extensions import override
 from collections.abc import Iterable
 
 import numpy
@@ -100,9 +101,11 @@ class BandIndex(OWSMetadataConfig):
         self.declare_unready("measurements")
         self.declare_unready("_dtypes")
 
+    @override
     def global_config(self) -> "OWSConfig":
         return self.layer.global_config()
 
+    @override
     def get_obj_label(self) -> str:
         return self.layer.get_obj_label() + ".bands"
 
@@ -116,6 +119,7 @@ class BandIndex(OWSMetadataConfig):
                     raise ConfigException(f"Duplicate band name/alias: {a} in layer {self.layer_name}")
                 self._idx[a] = b
 
+    @override
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
         def floatify_nans(inp: float | int | str) -> float | int:
             if isinstance(inp, str) and inp == "nan":
@@ -324,15 +328,18 @@ class OWSLayer(OWSMetadataConfig):
     def ows_index(self) -> OWSAbstractIndex:
         return ows_index(self.dc)
 
+    @override
     def global_config(self) -> "OWSConfig":
         return self.global_cfg
 
+    @override
     def can_inherit_from(self) -> Union["OWSConfig", "OWSLayer"]:
         if self.parent_layer:
             return self.parent_layer
         else:
             return self.global_cfg
 
+    @override
     def get_obj_label(self) -> str:
         return self.object_label
 
@@ -342,6 +349,7 @@ class OWSLayer(OWSMetadataConfig):
     def unready_layer_count(self) -> int:
         return 0
 
+    @override
     def __str__(self):
         return "OWSLayer Config: %s" % self.title
 
@@ -379,12 +387,15 @@ class OWSFolder(OWSLayer):
                 _LOG.error("Non-dictionary where dictionary expected - check for trailing comma? %s...", repr(lyr_cfg)[0:50])
         global_cfg.folder_index[obj_lbl] = self
 
+    @override
     def unready_layer_count(self) -> int:
         return sum([l.layer_count() for l in self.unready_layers])
 
+    @override
     def layer_count(self) -> int:
         return sum([l.layer_count() for l in self.child_layers])
 
+    @override
     def make_ready(self, *args, **kwargs) -> None:
         still_unready = []
         for lyr in self.unready_layers:
@@ -397,6 +408,7 @@ class OWSFolder(OWSLayer):
         self.unready_layers = still_unready
         super().make_ready(*args, **kwargs)
 
+    @override
     def __repr__(self) -> str:
         return f"OWS Folder <{self.title}>"
 
@@ -631,6 +643,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return ""
 
     # pylint: disable=attribute-defined-outside-init
+    @override
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
         self.products: list[Product] = []
         self.low_res_products: list[Product] = []
@@ -1017,6 +1030,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 }
         return bboxes
 
+    @override
     def layer_count(self) -> int:
         return 1
 
@@ -1033,16 +1047,19 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def dataset_groupby(self) -> GroupBy:
         return self.time_resolution.dataset_groupby(is_mosaic=self.mosaic_date_func is not None)
 
+    @override
     def __str__(self):
         return "Named OWSLayer: %s" % self.name
 
     @classmethod
+    @override
     def lookup_impl(cls, cfg: "OWSConfig", keyvals: dict[str, str], subs: CFG_DICT | None = None):
         try:
             return cfg.layer_index[keyvals["layer"]]
         except KeyError:
             raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
 
+    @override
     def __repr__(self) -> str:
         return f"OWS Layer <{self.name}>"
 
@@ -1050,6 +1067,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 class OWSProductLayer(OWSNamedLayer):
     multi_product = False
 
+    @override
     def parse_product_names(self, cfg: CFG_DICT):
         self.product_name = cast(str, cfg["product_name"])
         self.product_names: tuple[str, ...] = (self.product_name,)
@@ -1064,6 +1082,7 @@ class OWSProductLayer(OWSNamedLayer):
         if "low_res_product_names" in cfg:
             raise ConfigException(f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only")
 
+    @override
     def parse_pq_names(self, cfg: CFG_DICT):
         main_product = False
         if "dataset" in cfg:
@@ -1095,6 +1114,7 @@ class OWSProductLayer(OWSNamedLayer):
 class OWSMultiProductLayer(OWSNamedLayer):
     multi_product = True
 
+    @override
     def parse_product_names(self, cfg: CFG_DICT):
         self.product_names = tuple(cast(list[str], cfg["product_names"]))
         self.product_name = self.product_names[0]
@@ -1108,6 +1128,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
         if "low_res_product_name" in cfg:
             raise ConfigException(f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only")
 
+    @override
     def parse_pq_names(self, cfg: CFG_DICT):
         main_products = False
         if "datasets" in cfg:
@@ -1133,6 +1154,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
             "main_products": main_products,
         }
 
+    @override
     def dataset_groupby(self) -> GroupBy:
         return self.time_resolution.dataset_groupby(
             list(self.product_names),
@@ -1250,6 +1272,7 @@ class OWSConfig(OWSMetadataConfig):
     METADATA_ACCESS_CONSTRAINTS = True
     METADATA_CONTACT_INFO = True
 
+    @override
     @property
     def default_abstract(self) -> str | None:
         return ""
@@ -1312,6 +1335,7 @@ class OWSConfig(OWSMetadataConfig):
             self.declare_unready("native_product_index")
 
     #pylint: disable=attribute-defined-outside-init
+    @override
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
         try:
             self.dc: Datacube = Datacube(env=self.default_env, app=self.odc_app)

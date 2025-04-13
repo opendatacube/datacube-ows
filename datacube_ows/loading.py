@@ -8,6 +8,7 @@ import datetime
 import logging
 from collections import OrderedDict
 from typing import cast
+from typing_extensions import override
 from collections.abc import Iterable, Mapping
 from uuid import UUID
 
@@ -46,9 +47,11 @@ class ProductBandQuery:
             tuple(bands)
         )
 
+    @override
     def __str__(self):
         return f"Query bands {self.bands} from products {self.products}"
 
+    @override
     def __hash__(self):
         return hash(self.key)
 

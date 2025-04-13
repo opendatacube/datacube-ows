@@ -9,6 +9,7 @@ import datetime
 
 from threading import Lock
 from typing import Any
+from typing_extensions import override
 from collections.abc import Iterable
 from uuid import UUID
 
@@ -28,16 +29,19 @@ class OWSPostgisIndex(OWSAbstractIndex):
     name: str = "postgis"
 
     # method to delete obsolete schemas etc.
+    @override
     def cleanup_schema(self, dc: Datacube):
         # No obsolete schema for postgis databases to clean up.
         pass
 
     # Schema creation method
+    @override
     def create_schema(self, dc: Datacube):
         click.echo("Creating/updating schema and tables...")
         self._run_sql(dc, "ows_schema/create")
 
     # Permission management method
+    @override
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False):
         if read_only:
             self._run_sql(dc, "ows_schema/grants/read_only", role=role)
@@ -45,13 +49,16 @@ class OWSPostgisIndex(OWSAbstractIndex):
             self._run_sql(dc, "ows_schema/grants/read_write", role=role)
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
+    @override
     def update_geotemporal_index(self, dc: Datacube):
         # Native ODC geotemporal index used in postgis driver.
         pass
 
+    @override
     def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
         create_range_entry_impl(layer, cache)
 
+    @override
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
         return get_ranges_impl(layer)
 
@@ -102,6 +109,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
             query["time"] = time_args[0]
         return query
 
+    @override
     def ds_search(self,
                   layer: OWSNamedLayer,
                   times: Iterable[TimeSearchTerm] | None = None,
@@ -110,6 +118,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                   ) -> Iterable[Dataset]:
         return layer.dc.index.datasets.search(**self._query(layer, times, geom, products))
 
+    @override
     def dsid_search(self,
                     layer: OWSNamedLayer,
                     times: Iterable[TimeSearchTerm] | None = None,
@@ -120,6 +129,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                                                            **self._query(layer, times, geom, products)):
             yield ds.id  # type: ignore[attr-defined]
 
+    @override
     def count(self,
               layer: OWSNamedLayer,
               times: Iterable[TimeSearchTerm] | None = None,
@@ -128,6 +138,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
               ) -> int:
         return layer.dc.index.datasets.count(**self._query(layer, times, geom, products))
 
+    @override
     def extent(self,
                layer: OWSNamedLayer,
                times: Iterable[TimeSearchTerm] | None = None,
@@ -152,10 +163,12 @@ pgisdriverlock = Lock()
 class OWSPostgisIndexDriver(OWSAbstractIndexDriver):
     _driver = None
     @classmethod
+    @override
     def ows_index_class(cls) -> type[OWSAbstractIndex]:
         return OWSPostgisIndex
 
     @classmethod
+    @override
     def ows_index(cls) -> OWSAbstractIndex:
         with pgisdriverlock:
             if cls._driver is None:

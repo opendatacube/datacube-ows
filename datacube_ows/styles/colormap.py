@@ -8,6 +8,7 @@ import io
 import logging
 from datetime import datetime
 from typing import Union, cast
+from typing_extensions import override
 from collections.abc import Callable, MutableMapping
 
 import numpy
@@ -61,6 +62,7 @@ class AbstractValueMapRule(AbstractMaskRule):
         self.parse_color(cfg)
 
     @property
+    @override
     def context(self) -> str:
         return f"style {self.style.name} in layer {self.style.product.name} valuemap rule"
 
@@ -144,6 +146,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         self.values: list[list[int]] = []
         super().__init__(style_def=cast(ColorMapStyleDef.MultiDateHandler, mdh.style), band=band, cfg=cfg)
 
+    @override
     def parse_rule_spec(self, cfg: CFG_DICT):
         if "invert" in cfg:
             self.invert = [bool(b) for b in cast(list, cfg["invert"])]
@@ -181,6 +184,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         if self.flags and self.values:
             raise ConfigException(f"Multi-Date Value map rule in {self.context} has both a 'flags' and a 'values' section - choose one.")
 
+    @override
     def create_mask(self, data: DataArray) -> DataArray | None:
         """
         Create a mask from raw flag band data.
@@ -290,6 +294,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                     self.patches.append(PatchTemplate(idx, rule))
         self.parse_metadata(cast(CFG_DICT, self._raw_cfg))
 
+    @override
     def render(self, bytesio: io.BytesIO) -> None:
         patches = [
             mpatches.Patch(color=pt.colour, label=self.patch_label(pt.idx))
@@ -318,6 +323,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
 
     # For MetadataConfig
     @property
+    @override
     def default_title(self) -> str | None:
         return ""
 
@@ -372,6 +378,7 @@ class ColorMapStyleDef(StyleDefBase):
         masked = target.where(mask).where(numpy.isfinite(data))  # remask
         return masked
 
+    @override
     def transform_single_date_data(self, data: Dataset) -> Dataset:
         """
         Apply style to raw data to make an RGBA image xarray (single time slice only)
@@ -419,6 +426,7 @@ class ColorMapStyleDef(StyleDefBase):
                 self._value_map = self.style.value_map
             return self._value_map
 
+        @override
         def transform_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
             """
             Apply image transformation

@@ -8,6 +8,7 @@ import click
 
 from threading import Lock
 from typing import cast
+from typing_extensions import override
 from collections.abc import Iterable
 from uuid import UUID
 
@@ -26,10 +27,12 @@ class OWSPostgresIndex(OWSAbstractIndex):
     name: str = "postgres"
 
     # method to delete obsolete schemas etc.
+    @override
     def cleanup_schema(self, dc: Datacube):
         self._run_sql(dc, "ows_schema/cleanup")
 
     # Schema creation method
+    @override
     def create_schema(self, dc: Datacube):
         click.echo("Creating/updating schema and tables...")
         self._run_sql(dc, "ows_schema/create")
@@ -39,6 +42,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         self._run_sql(dc, "extent_views/grants/refresh_owner")
 
     # Permission management method
+    @override
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False):
         if read_only:
             self._run_sql(dc, "ows_schema/grants/read_only", role=role)
@@ -48,15 +52,19 @@ class OWSPostgresIndex(OWSAbstractIndex):
             self._run_sql(dc, "extent_views/grants/write_refresh", role=role)
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
+    @override
     def update_geotemporal_index(self, dc: Datacube):
         self._run_sql(dc, "extent_views/refresh")
 
+    @override
     def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
         create_range_entry_impl(layer, cache)
 
+    @override
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
         return get_ranges_impl(layer)
 
+    @override
     def ds_search(self,
                   layer: OWSNamedLayer,
                   times: Iterable[TimeSearchTerm] | None = None,
@@ -66,6 +74,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return cast(Iterable[Dataset], mv_search(layer.dc.index, MVSelectOpts.DATASETS,
                                                  times=times, geom=geom, products=products))
 
+    @override
     def dsid_search(self,
                     layer: OWSNamedLayer,
                     times: Iterable[TimeSearchTerm] | None = None,
@@ -75,6 +84,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return cast(Iterable[UUID], mv_search(layer.dc.index, MVSelectOpts.IDS,
                                               times=times, geom=geom, products=products))
 
+    @override
     def count(self,
               layer: OWSNamedLayer,
               times: Iterable[TimeSearchTerm] | None = None,
@@ -84,6 +94,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return cast(int, mv_search(layer.dc.index, MVSelectOpts.COUNT,
                                    times=times, geom=geom, products=products))
 
+    @override
     def extent(self,
                layer: OWSNamedLayer,
                times: Iterable[TimeSearchTerm] | None = None,
@@ -108,10 +119,12 @@ pgdriverlock = Lock()
 class OWSPostgresIndexDriver(OWSAbstractIndexDriver):
     _driver = None
     @classmethod
+    @override
     def ows_index_class(cls) -> type[OWSAbstractIndex]:
         return OWSPostgresIndex
 
     @classmethod
+    @override
     def ows_index(cls) -> OWSAbstractIndex:
         with pgdriverlock:
             if cls._driver is None:
