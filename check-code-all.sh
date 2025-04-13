@@ -21,6 +21,7 @@ set -ex
 datacube system init
 datacube -E owspostgis system init
 datacube -E owspostgis spindex create 3857
+datacube -E owspostgis spindex update 3857
 
 # Add extended metadata types
 
