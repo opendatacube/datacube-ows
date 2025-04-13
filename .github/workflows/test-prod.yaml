@@ -47,24 +47,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # We build the stage 1 image, then run test on it
-      # These tests require extra files we don't want in
-      # the production image
-      # We build the stage 1 image, then run test on it
-      # These tests require extra files we don't want in
-      # the production image
-      - name: Build dev OWS image (stage 1 - unit test builder)
-        run: |
-          docker build \
-            --tag    ${ORG}/${IMAGE}:_builder \
-            .
-
-      - name: Build and run prod OWS images (stage 2)
+      - name: Build and run prod OWS image
         run: |
           export LOCAL_UID=$(id -u $USER)
           export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up --quiet-pull -d --wait
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up --quiet-pull --build -d --wait
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /src && ./check-code-all.sh --no-test"
 
       # Run some tests on the images
