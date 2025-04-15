@@ -59,7 +59,7 @@ def dummy_product():
 
 
 def test_parse_userbandmath(dummy_product):
-    style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+    _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                           {
                                                               "code": "2*(red-nir)/(red+nir)",
                                                               "colorscheme": "viridis",
@@ -69,7 +69,7 @@ def test_parse_userbandmath(dummy_product):
 
 def test_parse_userbandmath_nobands(dummy_product):
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                               {
                                   "code": "2+(4.0*72)",
                                   "colorscheme": "viridis",
@@ -81,7 +81,7 @@ def test_parse_userbandmath_nobands(dummy_product):
 
 def test_parse_userbandmath_banned_op(dummy_product):
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                   {
                                       "code": "red<green",
                                       "colorscheme": "viridis",
@@ -92,7 +92,7 @@ def test_parse_userbandmath_banned_op(dummy_product):
 
 def test_parse_userbandmath_bad_code(dummy_product):
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                           {
                               "code": "2*(red@nir)/(red#nir)",
                               "colorscheme": "viridis",
@@ -103,7 +103,7 @@ def test_parse_userbandmath_bad_code(dummy_product):
 
 def test_parse_userbandmath_bad_scheme(dummy_product):
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
                                                                   "code": "2*(red-nir)/(red+nir)",
                                                                   "colorscheme": "i_am_not_a_matplotlib_scheme",
@@ -114,7 +114,7 @@ def test_parse_userbandmath_bad_scheme(dummy_product):
 
 def test_parse_no2_colorscalerange(dummy_product):
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
                                                                   "code": "2*(red-nir)/(red+nir)",
                                                                   "colorscheme": "viridis",
@@ -122,7 +122,7 @@ def test_parse_no2_colorscalerange(dummy_product):
                                                               })
     assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
                                                                   "code": "2*(red-nir)/(red+nir)",
                                                                   "colorscheme": "viridis",
@@ -133,7 +133,7 @@ def test_parse_no2_colorscalerange(dummy_product):
 
 def test_parse_nonnumeric_colorscalerange(dummy_product):
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
                                                                   "code": "2*(red-nir)/(red+nir)",
                                                                   "colorscheme": "viridis",
@@ -141,7 +141,7 @@ def test_parse_nonnumeric_colorscalerange(dummy_product):
                                                               })
     assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
                                                                   "code": "2*(red-nir)/(red+nir)",
                                                                   "colorscheme": "viridis",
@@ -152,7 +152,7 @@ def test_parse_nonnumeric_colorscalerange(dummy_product):
 
 def test_parse_unsorted_colorscalerange(dummy_product):
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                           {
                               "code": "2*(red-nir)/(red+nir)",
                               "colorscheme": "viridis",
@@ -160,7 +160,7 @@ def test_parse_unsorted_colorscalerange(dummy_product):
                           })
     assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
     with pytest.raises(WMSException) as e:
-        style = datacube_ows.wms_utils.single_style_from_args(dummy_product,
+        _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                             {
                                 "code": "2*(red-nir)/(red+nir)",
                                 "colorscheme": "viridis",
@@ -185,17 +185,17 @@ def test_parse_item_1(dummy_product):
     assert dt == dummy_product.ranges.times[0]
     dummy_product.regular_time_axis = True
     with pytest.raises(WMSException) as e:
-        dt = datacube_ows.wms_utils.parse_time_item("2010-01-01/2010-01-08", dummy_product)
+        _ = datacube_ows.wms_utils.parse_time_item("2010-01-01/2010-01-08", dummy_product)
     assert "No data available for time dimension range" in str(e.value)
     dummy_product.regular_time_axis = False
     with pytest.raises(WMSException) as e:
-        dt = datacube_ows.wms_utils.parse_time_item("2010-01-01/2010-01-08", dummy_product)
+        _ = datacube_ows.wms_utils.parse_time_item("2010-01-01/2010-01-08", dummy_product)
     assert "Time dimension range" in str(e.value)
     assert "not valid for this layer" in str(e.value)
     dt = datacube_ows.wms_utils.parse_time_item("", dummy_product)
     assert dt == dummy_product.ranges.times[-1]
     with pytest.raises(WMSException) as e:
-        dt = datacube_ows.wms_utils.parse_time_item("this_is_not_a_date, mate", dummy_product)
+        _ = datacube_ows.wms_utils.parse_time_item("this_is_not_a_date, mate", dummy_product)
     assert "Time dimension value" in str(e.value)
     assert "not valid for this layer" in str(e.value)
 
@@ -221,7 +221,7 @@ def test_parse_item_2(dummy_product):
     assert dt == datetime.date(2021, 1, 8)
 
     with pytest.raises(WMSException) as e:
-        dt = datacube_ows.wms_utils.parse_time_item("2021-01-01", dummy_product)
+        _ = datacube_ows.wms_utils.parse_time_item("2021-01-01", dummy_product)
     assert "Time dimension value" in str(e.value)
     assert "not valid for this layer" in str(e.value)
 
@@ -235,19 +235,19 @@ def test_parse_item_2(dummy_product):
     assert dt == datetime.date(2021, 1, 9)
 
     with pytest.raises(WMSException) as e:
-        dt = datacube_ows.wms_utils.parse_time_item("2021-01-01", dummy_product)
+        _ = datacube_ows.wms_utils.parse_time_item("2021-01-01", dummy_product)
     assert "Time dimension value" in str(e.value)
     assert "not valid for this layer" in str(e.value)
 
     with pytest.raises(WMSException) as e:
-        dt = datacube_ows.wms_utils.parse_time_item("2021-01-15", dummy_product)
+        _ = datacube_ows.wms_utils.parse_time_item("2021-01-15", dummy_product)
     assert "Time dimension value" in str(e.value)
     assert "not valid for this layer" in str(e.value)
 
     dummy_product.time_axis_interval = 3
 
     with pytest.raises(WMSException) as e:
-        dt = datacube_ows.wms_utils.parse_time_item("2021-01-07", dummy_product)
+        _ = datacube_ows.wms_utils.parse_time_item("2021-01-07", dummy_product)
     assert "Time dimension value" in str(e.value)
     assert "not valid for this layer" in str(e.value)
 
@@ -268,7 +268,7 @@ def test_get_geobox():
     assert str(gbox.crs) == "EPSG:4326"
 
     with pytest.raises(WMSException) as e:
-        gbox = datacube_ows.wms_utils._get_geobox(
+        _ = datacube_ows.wms_utils._get_geobox(
             args={
                 "width": "256",
                 "height": "256",
@@ -296,7 +296,7 @@ def test_get_arg():
     )
     assert val == "oh yeah"
     with pytest.raises(WMSException) as e:
-        val = datacube_ows.wms_utils.get_arg(
+        _ = datacube_ows.wms_utils.get_arg(
             {
                 "myval": "Oh Yeah",
             },
@@ -312,7 +312,7 @@ def test_get_arg():
     )
     assert val == "Oh Yeah"
     with pytest.raises(WMSException) as e:
-        val = datacube_ows.wms_utils.get_arg(
+        _ = datacube_ows.wms_utils.get_arg(
             {
                 "myval": "Yes and No",
             },

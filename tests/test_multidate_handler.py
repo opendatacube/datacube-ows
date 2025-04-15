@@ -73,26 +73,26 @@ def test_multidate_handler():
     assert isinstance(mdh_equal.range_str(), str)
 
     with pytest.raises(ConfigException) as excinfo:
-        bad_mdh = StyleDefBase.MultiDateHandler(FakeMdhStyle(), {})
+        _ = StyleDefBase.MultiDateHandler(FakeMdhStyle(), {})
 
     assert "must have an allowed_count_range" in str(excinfo.value)
 
     with pytest.raises(ConfigException) as excinfo:
-        bad_mdh = StyleDefBase.MultiDateHandler(
+        _ = StyleDefBase.MultiDateHandler(
             FakeMdhStyle(), {"allowed_count_range": [0, 5, 10], }
         )
 
     assert "allowed_count_range must have 2" in str(excinfo.value)
 
     with pytest.raises(ConfigException) as excinfo:
-        bad_mdh = StyleDefBase.MultiDateHandler(
+        _ = StyleDefBase.MultiDateHandler(
             FakeMdhStyle(), {"allowed_count_range": [10, 5], }
         )
 
     assert "minimum must be less than equal to maximum" in str(excinfo.value)
 
     with pytest.raises(ConfigException) as excinfo:
-        bad_mdh = StyleDefBase.MultiDateHandler(
+        _ = StyleDefBase.MultiDateHandler(
             FakeMdhStyle(), {"allowed_count_range": [0, 10], }
         )
 

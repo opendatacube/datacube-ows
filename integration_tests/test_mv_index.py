@@ -38,8 +38,8 @@ def test_no_products():
 def test_bad_set_opt():
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
-    with pytest.raises(ValueError) as e:
-        sel = MVSelectOpts("INVALID")
+    with pytest.raises(ValueError):
+        _ = MVSelectOpts("INVALID")
 
 
 class MockGeobox:

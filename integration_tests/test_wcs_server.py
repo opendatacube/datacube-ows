@@ -1145,7 +1145,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server):
             layer = cfg.layer_index[lyr_name]
             break
     extent = ODCExtent(layer)
-    subsets = extent.wcs2_subsets(
+    _ = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, "EPSG:4326"
     )
     output = wcs.getCoverage(
@@ -1176,7 +1176,7 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server):
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326"
     )
     try:
-        resp = wcs.getCoverage(
+        _ = wcs.getCoverage(
             identifier=[contents[0]],
             format="image/geotiff",
             subsets=subsets,

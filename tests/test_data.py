@@ -191,8 +191,6 @@ def test_make_band_dict_nan(product_layer): # noqa: F811
         def __getitem__(self, key):
             return fake_data()
 
-    bands = ["fake"]
-
     band_dict = datacube_ows.feature_info._make_band_dict(product_layer, fake_dataset())
     assert band_dict["fake"] == "n/a"
 
@@ -236,8 +234,6 @@ def test_make_band_dict_float(product_layer): # noqa: F811
     class float_dataset(int_dataset):
         def __getitem__(self, key):
             return float_data()
-
-    bands = ["fake"]
 
     band_dict = datacube_ows.feature_info._make_band_dict(product_layer, int_dataset())
     assert isinstance(band_dict["fake"], dict)

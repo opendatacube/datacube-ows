@@ -167,7 +167,7 @@ def test_sentry_before_send():
             self.a = a
 
     try:
-        string = LGEOS380().GEOSGeom_destroy()
+        _ = LGEOS380().GEOSGeom_destroy()
     except Exception:
         hint = {'exc_info': sys.exc_info()}
         assert 'exc_info' in hint
