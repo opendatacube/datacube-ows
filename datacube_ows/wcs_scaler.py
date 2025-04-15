@@ -14,7 +14,7 @@ class WCSScalerException(Exception):
 
 
 class WCSScalerUnknownDimension(WCSScalerException):
-    def __init__(self, dim, *args, **kwargs):
+    def __init__(self, dim, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.dim = dim
 
@@ -28,13 +28,13 @@ class WCSScalarIllegalSize(WCSScalerException):
 
 
 class SpatialParameter:
-    def __init__(self, layer, crs, x=None, y=None):
+    def __init__(self, layer, crs, x=None, y=None) -> None:
         self.layer = layer
         self.crs_def = self.layer.global_cfg.published_CRSs[crs]
         self.x = x
         self.y = y
 
-    def is_x_dim(self, dimension):
+    def is_x_dim(self, dimension) -> bool:
         if dimension == self.crs_def['horizontal_coord'].lower():
             return True
         elif dimension == self.crs_def['vertical_coord'].lower():
@@ -56,7 +56,7 @@ class SpatialParameter:
         else:
             return self.y
 
-    def __setitem__(self, dim, val):
+    def __setitem__(self, dim, val) -> None:
         if self.is_x_dim(dim):
             self.x = val
         else:
@@ -66,7 +66,7 @@ class SpatialParameter:
         return self[dim]
 
     @override
-    def __setattr__(self, dim, val):
+    def __setattr__(self, dim, val) -> None:
         if dim in ("x", "y", "layer", "crs_def"):
             super().__setattr__(dim, val)
         else:
@@ -75,13 +75,13 @@ class SpatialParameter:
             except WCSScalerUnknownDimension:
                 super().__setattr__(dim, val)
 
-    def set(self, x, y):
+    def set(self, x, y) -> None:
         self.x = x
         self.y = y
 
 
 class WCSScaler:
-    def __init__(self, layer, crs=None):
+    def __init__(self, layer, crs=None) -> None:
         self.layer = layer
         self.cfg = self.layer.global_cfg
         if crs:
@@ -98,11 +98,11 @@ class WCSScaler:
         return self._crs
 
     @crs.setter
-    def crs(self, crs):
+    def crs(self, crs) -> None:
         self.crs_def = self.layer.global_cfg.published_CRSs[crs]
         self._crs = crs
 
-    def set_size(self, dim, size):
+    def set_size(self, dim, size) -> None:
         if size <= 0:
             raise WCSScalarIllegalSize()
         if isinstance(size, float):
@@ -112,18 +112,18 @@ class WCSScaler:
         else:
             raise WCSScalerOverspecifiedDimension()
 
-    def slice(self, dimension, value):
+    def slice(self, dimension, value) -> None:
         self.min[dimension] = value
         self.max[dimension] = value
         self.subsetted[dimension] = True
 
-    def is_slice(self, dim):
+    def is_slice(self, dim) -> bool:
         return self.subsetted[dim] and self.min[dim] == self.max[dim]
 
-    def dim(self, dim):
+    def dim(self, dim) -> tuple:
         return self.size[dim], self.min[dim], self.max[dim]
 
-    def trim(self, dimension, lower, higher):
+    def trim(self, dimension, lower, higher) -> None:
         self.min[dimension] = lower
         self.max[dimension] = higher
         self.subsetted[dimension] = True
@@ -207,13 +207,13 @@ class WCSScaler:
         else:
             self.quantise_to_resolution(grid)
 
-    def quantise_to_resolution(self, grid):
+    def quantise_to_resolution(self, grid) -> None:
         for idx, dim in enumerate("xy"):
             if abs(self.max[dim] - self.min[dim]) < abs(grid["resolution"][idx] * 1.5):
                 self.max[dim] = self.min[dim] + grid["resolution"][idx]
                 self.size[dim] = 1
 
-    def scale_axis(self, dimension, factor):
+    def scale_axis(self, dimension, factor) -> None:
         dim_size, dim_min, dim_max = self.dim(dimension)
         if dim_size is not None:
             raise WCSScalerOverspecifiedDimension()
@@ -227,14 +227,14 @@ class WCSScaler:
         )
         self.set_size(dimension, scaled_size)
 
-    def scale_size(self, dimension, size):
+    def scale_size(self, dimension, size) -> None:
         self.set_size(dimension, size)
 
-    def scale_extent(self, dimension, low, high):
+    def scale_extent(self, dimension, low, high) -> None:
         # TODO: What is this actually supposed to mean?
         self.set_size(dimension, high - low)
 
-    def affine(self):
+    def affine(self) -> Affine:
         if self.size.x is None:
             self.scale_axis("x", 1.0)
         if self.size.y is None:

@@ -23,7 +23,7 @@ from datacube_ows.ogc import app  # isort:skip
 application = app
 
 
-def main():
+def main() -> None:
     if "--version" in sys.argv:
         print("Open Data Cube Open Web Services (datacube-ows) version",
               __version__

@@ -33,7 +33,7 @@ class SupportedSvcVersion:
 
 
 class SupportedSvc:
-    def __init__(self, versions: Sequence[SupportedSvcVersion], default_exception_class: type[OGCException] | None = None):
+    def __init__(self, versions: Sequence[SupportedSvcVersion], default_exception_class: type[OGCException] | None = None) -> None:
         self.versions = sorted(versions, key=lambda x: x.version_parts)
         assert len(self.versions) > 0
         self.service = self.versions[0].service
@@ -97,5 +97,5 @@ OWS_SUPPORTED = {
 }
 
 
-def supported_versions():
+def supported_versions() -> dict[str, SupportedSvc]:
     return OWS_SUPPORTED

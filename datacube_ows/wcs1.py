@@ -18,7 +18,7 @@ WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
 
 @log_call
-def handle_wcs1(nocase_args):
+def handle_wcs1(nocase_args) -> tuple:
     operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS1Exception("No operation specified", locator="Request parameter")
@@ -33,7 +33,7 @@ def handle_wcs1(nocase_args):
 
 
 @log_call
-def get_capabilities(args):
+def get_capabilities(args) -> tuple:
     # TODO: Handle updatesequence request parameter for cache consistency.
     section = args.get("section")
     if section:
@@ -75,7 +75,7 @@ def get_capabilities(args):
 
 
 @log_call
-def desc_coverages(args):
+def desc_coverages(args) -> tuple:
     # Extract layer metadata from Datacube.
     cfg = get_config()
 

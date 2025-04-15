@@ -24,7 +24,7 @@ _LOG = logging.getLogger(__name__)
 # a "SERVICE" parameter with every request.
 
 @log_call
-def handle_wmts(nocase_args):
+def handle_wmts(nocase_args) -> tuple:
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
     if not operation:
@@ -41,7 +41,7 @@ def handle_wmts(nocase_args):
 
 
 @log_call
-def get_capabilities(args):
+def get_capabilities(args) -> tuple:
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.0.0 exists at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
@@ -103,7 +103,7 @@ def get_capabilities(args):
 
 
 @log_call
-def wmts_args_to_wms(args, cfg):
+def wmts_args_to_wms(args, cfg) -> dict:
     layer = args.get("layer")
     style = args.get("style")
     format_ = args.get("format")
@@ -169,7 +169,7 @@ def wmts_args_to_wms(args, cfg):
 
 
 @log_call
-def get_tile(args):
+def get_tile(args) -> tuple:
     cfg = get_config()
     wms_args = wmts_args_to_wms(args, cfg)
 
@@ -187,7 +187,7 @@ def get_tile(args):
 
 
 @log_call
-def get_feature_info(args):
+def get_feature_info(args) -> tuple:
     cfg = get_config()
     wms_args = wmts_args_to_wms(args, cfg)
     wms_args["query_layers"] = wms_args["layers"]

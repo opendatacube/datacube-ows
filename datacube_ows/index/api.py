@@ -52,7 +52,7 @@ class CoordRange(NamedTuple):
 
 
 class LayerExtent:
-    def __init__(self, lat: CoordRange, lon: CoordRange, times: list[DateOrDateTime], bboxes: CFG_DICT):
+    def __init__(self, lat: CoordRange, lon: CoordRange, times: list[DateOrDateTime], bboxes: CFG_DICT) -> None:
         self.lat = lat
         self.lon = lon
         self.times = times

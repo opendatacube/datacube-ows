@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import xarray
+from PIL import Image
 
 from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
@@ -29,7 +30,7 @@ def StandaloneStyle(cfg):
     return style
 
 
-def apply_ows_style(style, data, loop_over=None, valid_data_mask=None):
+def apply_ows_style(style, data, loop_over=None, valid_data_mask=None) -> xarray.Dataset:
     """
     Apply an OWS style to an ODC XArray to generate a styled image.
 
@@ -72,7 +73,7 @@ def apply_ows_style(style, data, loop_over=None, valid_data_mask=None):
     return xarray.concat(image_slices, data[loop_over])
 
 
-def apply_ows_style_cfg(cfg, data, loop_over=None, valid_data_mask=None):
+def apply_ows_style_cfg(cfg, data, loop_over=None, valid_data_mask=None) ->  xarray.Dataset:
     """
     Apply an OWS style configuration to an ODC XArray to generate a styled image.
 
@@ -104,7 +105,7 @@ def apply_ows_style_cfg(cfg, data, loop_over=None, valid_data_mask=None):
     )
 
 
-def generate_ows_legend_style(style, ndates=0):
+def generate_ows_legend_style(style, ndates: int = 0) -> Image.Image | None:
     """
     Generate a legend image for a style
 
@@ -115,7 +116,7 @@ def generate_ows_legend_style(style, ndates=0):
     return style.render_legend(ndates)
 
 
-def generate_ows_legend_style_cfg(cfg, ndates=0):
+def generate_ows_legend_style_cfg(cfg, ndates: int = 0) -> Image.Image | None:
     """
     Generate a legend image for a style configuration
 
@@ -130,7 +131,7 @@ def generate_ows_legend_style_cfg(cfg, ndates=0):
     return generate_ows_legend_style(StandaloneStyle(cfg), ndates)
 
 
-def plot_image(xr_image, x="x", y="y", size=10, aspect=None):
+def plot_image(xr_image, x: str = "x", y: str = "y", size: float = 10, aspect=None) -> None:
     """
     Plot an Xarray image with matplotlib. (e.g. for display in JupyterHub)
 
@@ -151,7 +152,7 @@ def plot_image(xr_image, x="x", y="y", size=10, aspect=None):
     rgb.plot.imshow(x=x, y=y, size=size, aspect=aspect)
 
 
-def plot_image_with_style(style, data, x="x", y="y", size=10, aspect=None, valid_data_mask=None):
+def plot_image_with_style(style, data, x: str = "x", y: str = "y", size: float = 10, aspect=None, valid_data_mask=None) -> None:
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 
@@ -173,7 +174,7 @@ def plot_image_with_style(style, data, x="x", y="y", size=10, aspect=None, valid
     plot_image(apply_ows_style(style, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size, aspect=aspect)
 
 
-def plot_image_with_style_cfg(cfg, data, x="x", y="y", size=10, aspect=None, valid_data_mask=None):
+def plot_image_with_style_cfg(cfg, data, x: str = "x", y: str = "y", size: float = 10, aspect=None, valid_data_mask=None) -> None:
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 

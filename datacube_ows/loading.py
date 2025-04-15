@@ -35,7 +35,7 @@ class ProductBandQuery:
                  bands: Iterable[str],
                  main: bool = False, manual_merge: bool = False, ignore_time: bool = False,
                  fuse_func: datacube.api.core.FuserFunction | None = None
-    ):
+    ) -> None:
         self.products = products
         self.bands = set(bands)
         self.manual_merge = manual_merge
@@ -48,11 +48,11 @@ class ProductBandQuery:
         )
 
     @override
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Query bands {self.bands} from products {self.products}"
 
     @override
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.key)
 
     @classmethod
@@ -132,7 +132,7 @@ class DataStacker:
                  times: list[datetime.datetime],
                  resampling: Resampling | None = None,
                  style: StyleDef | None = None,
-                 bands: list[str] | None = None):
+                 bands: list[str] | None = None) -> None:
         self._layer = layer
         self.cfg = layer.global_cfg
         self._geobox = geobox

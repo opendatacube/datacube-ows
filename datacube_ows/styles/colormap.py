@@ -66,7 +66,7 @@ class AbstractValueMapRule(AbstractMaskRule):
     def context(self) -> str:
         return f"style {self.style.name} in layer {self.style.product.name} valuemap rule"
 
-    def parse_color(self, cfg: CFG_DICT):
+    def parse_color(self, cfg: CFG_DICT) -> None:
         self.color_str = cast(str, cfg["color"])
         self.rgb = Color(self.color_str)
         if cfg.get("mask"):
@@ -147,7 +147,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         super().__init__(style_def=cast(ColorMapStyleDef.MultiDateHandler, mdh.style), band=band, cfg=cfg)
 
     @override
-    def parse_rule_spec(self, cfg: CFG_DICT):
+    def parse_rule_spec(self, cfg: CFG_DICT) -> None:
         if "invert" in cfg:
             self.invert = [bool(b) for b in cast(list, cfg["invert"])]
         else:
@@ -234,7 +234,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         return mask
 
 
-def convert_to_uint8(fval):
+def convert_to_uint8(fval) -> int:
     scaled = int(fval * 255.0 + 0.5)
     clipped = min(max(scaled, 0), 255)
     return clipped
