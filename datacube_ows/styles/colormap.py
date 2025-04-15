@@ -16,7 +16,7 @@ import xarray
 from datacube.utils.masking import make_mask
 from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
-from matplotlib.colors import to_rgb, to_hex
+from matplotlib.colors import to_rgba, to_hex
 from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
@@ -68,12 +68,13 @@ class AbstractValueMapRule(AbstractMaskRule):
 
     def parse_color(self, cfg: CFG_DICT):
         self.color_str = cast(str, cfg["color"])
-        # TODO: switch to native RGBA format
-        self.rgb = to_rgb(self.color_str)
         if cfg.get("mask"):
-            self.alpha = 0.0
+            alpha: float | None = 0.0
+        elif "alpha" in cfg:
+            alpha = float(cast(float | int | str, cfg["alpha"]))
         else:
-            self.alpha = float(cast(float | int | str, cfg.get("alpha", 1.0)))
+            alpha = None
+        self.rgba = to_rgba(self.color_str, alpha=alpha)
 
     @classmethod
     def value_map_from_config(cls,
@@ -259,12 +260,8 @@ def apply_value_map(value_map: MutableMapping[str, list[AbstractValueMapRule]],
         for rule in reversed(rules):
             mask = rule.create_mask(bdata)
             if mask is not None and mask.data.any():
-                # TODO: switch to native RGBA
                 for i, channel in enumerate(("red", "green", "blue", "alpha")):
-                    if channel == "alpha":
-                        val = convert_to_uint8(rule.alpha)
-                    else:
-                        val = convert_to_uint8(rule.rgb[i])
+                    val = convert_to_uint8(rule.rgba[i])
                     imgdata[channel] = xarray.where(mask, val, imgdata[channel])
     return imgdata
 
@@ -272,7 +269,7 @@ def apply_value_map(value_map: MutableMapping[str, list[AbstractValueMapRule]],
 class PatchTemplate:
     def __init__(self, idx: int, rule: AbstractValueMapRule) -> None:
         self.idx = idx
-        self.colour = to_hex(rule.rgb)
+        self.colour = to_hex(rule.rgba, keep_alpha=True)
         self.label = rule.label
 
 
@@ -292,7 +289,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         for band in value_map.keys():
             for idx, rule in reversed(list(enumerate(value_map[band]))):
                 # only include values that are not transparent (and that have a non-blank title or abstract)
-                if rule.alpha > 0.001 and rule.label:
+                if rule.rgba[-1] > 0.001 and rule.label:
                     self.patches.append(PatchTemplate(idx, rule))
         self.parse_metadata(cast(CFG_DICT, self._raw_cfg))
 
@@ -367,16 +364,15 @@ class ColorMapStyleDef(StyleDefBase):
             inted.attrs = attrs
         return inted
 
-    # TODO: Use native RGBA format
     @staticmethod
-    def create_colordata(data: DataArray, rgb: tuple[float, float, float], alpha: float, mask: DataArray) -> Dataset:
+    def create_colordata(data: DataArray, rgba: tuple[float, float, float, float], mask: DataArray) -> Dataset:
         """Colour a mask with a given colour/alpha"""
         target = Dataset(coords=data.coords)
-        colors = ["red", "green", "blue", "alpha"]
-        for i, color in enumerate(colors):
-            val = alpha if color == "alpha" else rgb[i]
+        channels = ["red", "green", "blue", "alpha"]
+        for i, channel in enumerate(channels):
+            val = rgba[i]
             c = numpy.full(data.shape, val)
-            target[color] = DataArray(c, dims=data.dims, coords=data.coords)
+            target[channel] = DataArray(c, dims=data.dims, coords=data.coords)
         # pyre-ignore[6]
         masked = target.where(mask).where(numpy.isfinite(data))  # remask
         return masked

@@ -10,7 +10,7 @@ services:
         - opendatacube/ows:_builder
     image: opendatacube/ows:latest
     # Uncomment for use with non-dockerised postgres (for docker-compose 1.x)
-    # network_mode: host
+    network_mode: host
     environment:
       LOCAL_UID: ${LOCAL_UID:-1000}
       LOCAL_GID: ${LOCAL_GID:-1000}

@@ -732,55 +732,55 @@ def test_reint():
 
 
 def test_createcolordata():
-    from matplotlib.colors import to_rgb
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
-    rgb = to_rgb("#FFFFFF")
+    rgba = to_rgba("#FFFFFF")
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 1.0, (band >= 0))
+    data = ColorMapStyleDef.create_colordata(da, rgba, (band >= 0))
     assert (data == 1.0).all()
 
 
 def test_createcolordata_alpha():
-    from matplotlib.colors import to_rgb
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
-    rgb = to_rgb("#FFFFFF")
+    rgba = to_rgba("#FFFFFF", alpha=0.0)
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, (band >= 0))
+    data = ColorMapStyleDef.create_colordata(da, rgba, (band >= 0))
     assert (data["alpha"] == 0).all()
 
 
 def test_createcolordata_mask():
-    from matplotlib.colors import to_rgb
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
-    rgb = to_rgb("#FFFFFF")
+    rgba = to_rgba("#FFFFFF", alpha=0.0)
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, (band > 0))
+    data = ColorMapStyleDef.create_colordata(da, rgba, (band > 0))
     assert (np.isnan(data["red"][0:1:1])).all()
     assert (np.isfinite(data["red"][2:5:1])).all()
 
 
 def test_createcolordata_remask():
-    from matplotlib.colors import to_rgb
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, np.nan, np.nan])
     da = DataArray(band, name='foo')
-    rgb = to_rgb("#FFFFFF")
+    rgba = to_rgba("#FFFFFF", alpha=0.0)
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, np.array([True, True, True, True, True, True]))
+    data = ColorMapStyleDef.create_colordata(da, rgba, np.array([True, True, True, True, True, True]))
     assert (np.isfinite(data["red"][0:3:1])).all()
     assert (np.isnan(data["red"][4:5:1])).all()
 
