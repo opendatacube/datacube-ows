@@ -32,7 +32,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
     def check_db_access(self, dc: Datacube) -> bool:
         db_ok = False
         try:
-            with dc.index._db.give_me_a_connection() as conn:
+            with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
                 results = conn.execute(text("""
                     SELECT *
                     FROM ows.layer_ranges
