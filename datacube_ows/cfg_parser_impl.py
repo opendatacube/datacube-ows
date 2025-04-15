@@ -26,11 +26,11 @@ from datacube_ows.ows_configuration import (OWSConfig, OWSFolder, OWSLayer,
 @click.option(
     "--version", is_flag=True, default=False, help="Show OWS version number and exit"
 )
-def main(version: bool):
+def main(version: bool) -> int:
     # --version
     if version:
         click.echo(f"Open Data Cube Open Web Services (datacube-ows) version {__version__}")
-        return 0
+    return 0
 
 
 @main.command()
@@ -340,7 +340,7 @@ def write_msg_file(msg_file: str, cfg: OWSConfig) -> None:
         write_po(fp, cfg.export_metadata())
 
 
-def layers_report(config_values: dict[str, OWSNamedLayer], input_file: str, output_file: str):
+def layers_report(config_values: dict[str, OWSNamedLayer], input_file: str, output_file: str) -> None:
     report = {"total_layers_count": len(config_values.values()), "layers": []}
     for lyr in config_values.values():
         layer = {
@@ -354,18 +354,15 @@ def layers_report(config_values: dict[str, OWSNamedLayer], input_file: str, outp
         with open(input_file) as f:
             input_file_data = json.load(f)
         ddiff = DeepDiff(input_file_data, report, ignore_order=True)
-        if len(ddiff) == 0:
-            return True
-        else:
+        if len(ddiff) != 0:
             click.echo(ddiff)
             sys.exit(1)
-    if output_file:
+    elif output_file:
         with open(output_file, 'w') as reportfile:
             json.dump(report, reportfile, indent=4)
-        return True
 
 
-def print_layers(layers: list[OWSLayer], styles: bool, depth: int):
+def print_layers(layers: list[OWSLayer], styles: bool, depth: int) -> None:
     for lyr in layers:
         if isinstance(lyr, OWSFolder):
             indent(depth)
@@ -378,13 +375,13 @@ def print_layers(layers: list[OWSLayer], styles: bool, depth: int):
                 click.echo(f"{lyr} {depth}")
 
 
-def print_styles(lyr: OWSNamedLayer, depth: int = 0):
+def print_styles(lyr: OWSNamedLayer, depth: int = 0) -> None:
     for styl in lyr.styles:
         indent(0, for_styles=True)
         print(f". {styl.name}")
 
 
-def indent(depth: int, for_styles: bool = False):
+def indent(depth: int, for_styles: bool = False) -> None:
     for i in range(depth):
         click.echo("  ", nl=False)
     if for_styles:
