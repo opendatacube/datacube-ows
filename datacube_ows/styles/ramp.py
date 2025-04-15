@@ -7,6 +7,7 @@
 import io
 import logging
 from collections import defaultdict
+from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
 from typing import Any, Union, cast
@@ -15,9 +16,8 @@ from collections.abc import Hashable, Iterable, MutableMapping
 
 import matplotlib
 import numpy
-from colour import Color
 from matplotlib import pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap, to_hex
+from matplotlib.colors import LinearSegmentedColormap, to_hex, to_rgba
 from numpy import ubyte
 from xarray import DataArray, Dataset
 
@@ -32,48 +32,58 @@ if TYPE_CHECKING:
 
 _LOG = logging.getLogger(__name__)
 
+@dataclass
+class RampNode:
+    value: int | float
+    color: str
+    alpha: int | float | None = None
+
+    @property
+    def rgba(self):
+        return to_rgba(self.color, self.alpha)
+
+    def with_value(self, value: int | float) -> "RampNode":
+        return RampNode(value, self.color, self.alpha)
+
+
 RAMP_SPEC = list[CFG_DICT]
-
-UNSCALED_DEFAULT_RAMP = cast(RAMP_SPEC,
-                             [
-                                {
-                                    "value": -1e-24,
-                                    "color": "#000080",
-                                    "alpha": 0.0
-                                },
-                                {
-                                    "value": 0.0,
-                                    "color": "#000080",
-                                },
-                                {
-                                    "value": 0.1,
-                                    "color": "#0000FF",
-                                },
-                                {
-                                    "value": 0.3,
-                                    "color": "#00FFFF",
-                                },
-                                {
-                                    "value": 0.5,
-                                    "color": "#00FF00",
-                                },
-                                {
-                                    "value": 0.7,
-                                    "color": "#FFFF00",
-                                },
-                                {
-                                    "value": 0.9,
-                                    "color": "#FF0000",
-                                },
-                                {
-                                    "value": 1.0,
-                                    "color": "#800000",
-                                },
-                             ]
-)
+RampRepr = list[RampNode]
 
 
-def scale_unscaled_ramp(rmin: int | float | str, rmax: int | float | str, unscaled: RAMP_SPEC) -> RAMP_SPEC:
+def make_ramp_representation(ramp_spec: RAMP_SPEC, style_name: str) -> RampRepr:
+    rep = cast(RampRepr, [])
+    for node in ramp_spec:
+        if "value" not in node:
+            raise ConfigException(f'Color ramp element without a value in style {style_name}')
+        if "color" not in node:
+            raise ConfigException(f'Color ramp element without a color in style {style_name}')
+        if "legend" in node:
+                raise ConfigException(
+                    f"Style {style_name} uses a no-longer supported format for legend configuration.  " +
+                    "Please refer to the documentation and update your config")
+        rep.append(
+            RampNode(
+                float(cast(float | str | int, node["value"])),
+                cast(str, node["color"]),
+                alpha=None if node.get("alpha") is None else float(cast(str | int | float, node["alpha"]))
+            )
+        )
+    return rep
+
+
+UNSCALED_DEFAULT_RAMP = [
+        RampNode(-1e-24, "#000080", alpha=0.0),
+        RampNode(0.0, "#000080"),
+        RampNode(0.1, "#0000FF"),
+        RampNode(0.3, "#00FFFF"),
+        RampNode(0.5, "#00FF00"),
+        RampNode(0.7, "#FFFF00"),
+        RampNode(0.9, "#FF0000"),
+        RampNode(1.0, "#800000"),
+]
+
+
+def scale_unscaled_ramp(rmin: int | float | str, rmax: int | float | str, unscaled: RampRepr) -> RampRepr:
     """
     Take a unscaled (normalised) ramp that covers values from 0.0 to 1.0 and scale it linearly to cover the
     provided range.
@@ -92,16 +102,12 @@ def scale_unscaled_ramp(rmin: int | float | str, rmax: int | float | str, unscal
     else:
         nmax = float(rmax)
     return [
-        {
-            # pyre-ignore[6]
-            "value": (nmax - nmin) * cast(float, u["value"]) + nmin,
-            "color": u["color"],
-            "alpha": u.get("alpha", 1.0)
-        } for u in unscaled
+        u.with_value((nmax - nmin) * float(u.value) + nmin)
+        for u in unscaled
     ]
 
 
-def crack_ramp(ramp: RAMP_SPEC) -> tuple[
+def crack_ramp(ramp: RampRepr) -> tuple[
     list[float],
     list[float], list[float],
     list[float], list[float],
@@ -118,48 +124,35 @@ def crack_ramp(ramp: RAMP_SPEC) -> tuple[
     blue = cast(list[float], [])
     alpha = cast(list[float], [])
     for r in ramp:
-        if isinstance(r["value"], float):
-            value: float = r["value"]
-        else:
-            value = float(cast(int | str, r["value"]))
-        values.append(value)
-        color = Color(r["color"])
-        red.append(color.red)
-        green.append(color.green)
-        blue.append(color.blue)
-        alpha.append(float(cast(float | int | str, r.get("alpha", 1.0))))
+        values.append(float(r.value))
+        cr, cg, cb, ca = r.rgba
+        red.append(cr)
+        green.append(cg)
+        blue.append(cb)
+        alpha.append(ca)
 
     return values, red, green, blue, alpha
 
 
-def read_mpl_ramp(mpl_ramp: str) -> RAMP_SPEC:
+def read_mpl_ramp(mpl_ramp: str) -> RampRepr:
     """
     Extract a named colour ramp from Matplotlib as a normalised OWS-compatible ramp specification
 
     :param mpl_ramp: The name of Matplotlib colour ramp
     :return: A normalised ramp specification.
     """
-    unscaled_cmap = cast(RAMP_SPEC, [])
+    unscaled_cmap = cast(RampRepr, [])
     try:
         cmap = plt.get_cmap(mpl_ramp)
     except:
         raise ConfigException(f"Invalid Matplotlib name: {mpl_ramp}")
     val_range = numpy.arange(0.1, 1.1, 0.1)
     rgba_hex = to_hex(cmap(0.0))
-    unscaled_cmap.append(
-        {
-            "value": 0.0,
-            "color": rgba_hex,
-            "alpha": 1.0
-        }
-    )
+    unscaled_cmap.append(RampNode(0.0, rgba_hex))
     for val in val_range:
         rgba_hex = to_hex(cast(tuple[float, float, float, float], cmap(val)))
         unscaled_cmap.append(
-            {
-                "value": float(val),
-                "color": rgba_hex
-            }
+            RampNode(float(val), rgba_hex)
         )
     return unscaled_cmap
 
@@ -177,7 +170,7 @@ class ColorRamp:
         """
         self.style = style
         if "color_ramp" in ramp_cfg:
-            raw_scaled_ramp = cast(list[CFG_DICT], ramp_cfg["color_ramp"])
+            raw_scaled_ramp = make_ramp_representation(cast(list[CFG_DICT], ramp_cfg["color_ramp"]), self.style.name)
         else:
             rmin, rmax = cast(list[float], ramp_cfg["range"])
             unscaled_ramp = UNSCALED_DEFAULT_RAMP
@@ -202,7 +195,7 @@ class ColorRamp:
             leg_begin_before_idx = None
             leg_end_before_idx = None
             for idx, col_point in enumerate(self.ramp):
-                col_val = cast(int | float, col_point["value"])
+                col_val = col_point.value
                 if not leg_begin_in_ramp and leg_begin_before_idx is None:
                     if isclose(col_val, fleg_begin, abs_tol=1e-9):
                         leg_begin_in_ramp = True
@@ -214,12 +207,8 @@ class ColorRamp:
                     elif col_val > fleg_end:
                         end_before_idx = idx
             if not leg_begin_in_ramp:
-                color, alpha = self.color_alpha_at(fleg_begin)
-                begin_col_point = {
-                    "value": fleg_begin,
-                    "color": color.get_hex(),
-                    "alpha": alpha
-                }
+                rgba = self.rgba_at(fleg_begin)
+                begin_col_point = RampNode(fleg_begin, to_hex(rgba))
                 if leg_begin_before_idx is None:
                     self.ramp.append(begin_col_point)
                 else:
@@ -227,12 +216,8 @@ class ColorRamp:
                 if leg_end_before_idx is not None:
                     leg_end_before_idx += 1
             if not leg_end_in_ramp:
-                color, alpha = self.color_alpha_at(fleg_end)
-                end_col_point = {
-                    "value": fleg_end,
-                    "color": color.get_hex(),
-                    "alpha": alpha
-                }
+                rgba = self.rgba_at(fleg_end)
+                end_col_point = RampNode(fleg_end, to_hex(rgba))
                 if leg_end_before_idx is None:
                     self.ramp.append(end_col_point)
                 else:
@@ -266,16 +251,13 @@ class ColorRamp:
         imgdataset = Dataset(imgdata, coords=data.coords)
         return imgdataset
 
-    def color_alpha_at(self, val: float) -> tuple[Color, float]:
-        color = Color(
-            rgb=(
-                float(self.get_value(val, "red")),
-                float(self.get_value(val, "green")),
-                float(self.get_value(val, "blue")),
-            )
+    def rgba_at(self, val: float) -> tuple[float, float, float, float]:
+        return (
+            float(self.get_value(val, "red")),
+            float(self.get_value(val, "green")),
+            float(self.get_value(val, "blue")),
+            float(self.get_value(val, "alpha"))
         )
-        alpha = float(self.get_value(val, "alpha"))
-        return color, alpha
 
 
 class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
@@ -359,18 +341,18 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     def register_ramp(self, ramp: ColorRamp) -> None:
         if self.begin.is_nan():
             for col_def in ramp.ramp:
-                if isclose(cast(float, col_def.get("alpha", 1.0)), 1.0, abs_tol=1e-9):
-                    self.begin = Decimal(cast(int | float, col_def["value"]))
+                if isclose(col_def.rgba[-1], 1.0, abs_tol=1e-9):
+                    self.begin = Decimal(col_def.value)
                     break
             if self.begin.is_nan():
-                self.begin = Decimal(cast(int | float, ramp.ramp[0]["value"]))
+                self.begin = Decimal(ramp.ramp[0].value)
         if self.end.is_nan():
             for col_def in reversed(ramp.ramp):
-                if isclose(cast(int | float, col_def.get("alpha", 1.0)), 1.0, abs_tol=1e-9):
-                    self.end = Decimal(cast(int | float, col_def["value"]))
+                if isclose(col_def.rgba[-1], 1.0, abs_tol=1e-9):
+                    self.end = Decimal(col_def.value)
                     break
             if self.end.is_nan():
-                self.end = Decimal(cast(int | float, ramp.ramp[-1]["value"]))
+                self.end = Decimal(ramp.ramp[-1].value)
         for t in self.ticks:
             if t < self.begin or t > self.end:
                 raise ConfigException("Explicit ticks must all be within legend begin/end range")
@@ -404,12 +386,6 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                 )
         self.parse_metadata(cast(CFG_DICT, self._raw_cfg))
 
-        # Check for legacy legend tips in ramp:
-        for r in ramp.ramp:
-            if "legend" in r:
-                raise ConfigException(
-                    f"Style {self.style.name} uses a no-longer supported format for legend configuration.  " +
-                    "Please refer to the documentation and update your config")
 
     def tick_label(self, tick):
         try:
@@ -432,11 +408,11 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         bands = cast(MutableMapping[str, list[tuple[float, float, float]]], defaultdict(list))
         started = False
         finished = False
-        for index, ramp_point in enumerate(self.style_or_mdh.color_ramp.ramp):
+        for index, ramp_node in enumerate(self.style_or_mdh.color_ramp.ramp):
             if finished:
                 break
 
-            value = cast(float | int, ramp_point.get("value"))
+            value = ramp_node.value
             normalized = (value - float(self.begin)) / float(normalize_factor)
 
             if not started:

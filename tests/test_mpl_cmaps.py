@@ -17,7 +17,5 @@ def test_get_mpl_cmap():
     ows_ramp_dict = read_mpl_ramp(matplotlib_ramp_name)
     assert len(ows_ramp_dict) == 11
     for cmap in ows_ramp_dict:
-        assert "color" in cmap
-        assert "value" in cmap
-        assert cmap["color"].startswith("#")
-        assert isinstance(cmap["value"], float)
+        assert cmap.color.startswith("#")
+        assert isinstance(cmap.value, float)
