@@ -214,8 +214,8 @@ class AttributionCfg(OWSConfigEntry):
             self.logo_url: str | None = None
             self.logo_fmt: str | None = None
         else:
-            self.logo_width = cast(int | None, logo.get("width"))
-            self.logo_height = cast(int | None, logo.get("height"))
+            self.logo_width = None if logo.get("width") is None else int(logo["width"])
+            self.logo_height = None if logo.get("height") is None else int(logo["height"])
             self.logo_url = logo.get("url")
             self.logo_fmt = logo.get("format")
             if not self.logo_url or not self.logo_fmt:
