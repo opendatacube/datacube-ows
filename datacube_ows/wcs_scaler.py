@@ -162,19 +162,19 @@ class WCSScaler:
                 is_point = True
             elif self.is_slice("x") or self.is_slice("y"):
                 geom = odc_geom.line(
-                    (
+                    [
                         (self.min.x, self.min.y),
                         (self.max.x, self.max.y)
-                    ), old_crs_obj)
+                    ], old_crs_obj)
             else:
                 geom = odc_geom.polygon(
-                    (
+                    [
                         (self.min.x, self.min.y),
                         (self.min.x, self.max.y),
                         (self.max.x, self.max.y),
                         (self.max.x, self.min.y),
                         (self.min.x, self.min.y),
-                    ),
+                    ],
                     old_crs_obj
                 )
             new_crs_obj = self.cfg.crs(new_crs)
