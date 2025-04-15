@@ -7,5 +7,13 @@
 <body>
     <h1>PONG!!</h1>
     <p>Database: {{ status }}</p>
+    <ul>
+        {% for env, status in statuses.items() %}
+            <li>
+                {{ env }}:
+                {% if status %}UP{% else %}DOWN{% endif %}
+            </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

@@ -1333,6 +1333,7 @@ class OWSConfig(OWSMetadataConfig):
             self.declare_unready("dc")
             self.declare_unready("crses")
             self.declare_unready("native_product_index")
+            self.declare_unready("all_dcs")
 
     #pylint: disable=attribute-defined-outside-init
     @override
@@ -1353,6 +1354,11 @@ class OWSConfig(OWSMetadataConfig):
         self.crses = {s: self.crs(s) for s in self.published_CRSs}
         self.native_product_index: dict[str, OWSNamedLayer] = {}
         self.root_layer_folder.make_ready(*args, **kwargs)
+        self.all_dcs: dict[str, Datacube] = {}
+        for layer in self.active_products:
+            if layer.local_env._name not in self.all_dcs:
+                self.all_dcs[layer.local_env._name] = layer.dc
+
         super().make_ready(*args, **kwargs)
 
     def export_metadata(self) -> Catalog:
