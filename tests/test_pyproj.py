@@ -18,7 +18,7 @@ SUPPORTED_CRS = [
 ]
 
 
-def test_pyproj_crs():
+def test_pyproj_crs() -> None:
    for crs_string in SUPPORTED_CRS:
       try:
          crs = CRS(crs_string)

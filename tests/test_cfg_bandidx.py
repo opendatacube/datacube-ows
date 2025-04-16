@@ -43,7 +43,7 @@ def minimal_prod(minimal_dc):
     return product
 
 
-def test_bidx_p_minimal(minimal_prod):
+def test_bidx_p_minimal(minimal_prod) -> None:
     bidx = BandIndex(minimal_prod, None)
     assert bidx.layer_name == "foo"
     assert bidx.band_cfg == {}
@@ -51,7 +51,7 @@ def test_bidx_p_minimal(minimal_prod):
     assert not bidx.ready
 
 
-def test_bidx_p_unready(minimal_prod):
+def test_bidx_p_unready(minimal_prod) -> None:
     bidx = BandIndex(minimal_prod, {
         "foo": ["foo"]
     })
@@ -66,7 +66,7 @@ def test_bidx_p_unready(minimal_prod):
     assert "dtypes" in str(excinfo.value)
 
 
-def test_bidx_p_duplicates(minimal_prod):
+def test_bidx_p_duplicates(minimal_prod) -> None:
     with pytest.raises(ConfigException) as excinfo:
         bidx = BandIndex(minimal_prod, {
             "foo": ["bar"],
@@ -83,7 +83,7 @@ def test_bidx_p_duplicates(minimal_prod):
     assert "bar" in str(excinfo.value)
 
 
-def test_bidx_p_band(minimal_prod):
+def test_bidx_p_band(minimal_prod) -> None:
     bidx = BandIndex(minimal_prod, {
         "foo": ["bar", "baz"],
     })
@@ -96,7 +96,7 @@ def test_bidx_p_band(minimal_prod):
     assert "splat" in str(excinfo.value)
 
 
-def test_bidx_p_band_labels(minimal_prod):
+def test_bidx_p_band_labels(minimal_prod) -> None:
     bidx = BandIndex(minimal_prod, {
         "foo": ["bar", "foo", "baz"],
         "zing": ["pow", "splat"],
@@ -109,7 +109,7 @@ def test_bidx_p_band_labels(minimal_prod):
     assert len(bls) == 3
 
 
-def test_bidx_p_label(minimal_prod):
+def test_bidx_p_label(minimal_prod) -> None:
     bidx = BandIndex(minimal_prod, {
         "foo": ["bar", "baz"],
     })
@@ -122,7 +122,7 @@ def test_bidx_p_label(minimal_prod):
     assert "splat" in str(excinfo.value)
 
 
-def test_bidx_makeready(minimal_prod):
+def test_bidx_makeready(minimal_prod) -> None:
     bidx = BandIndex(minimal_prod, {
         "band1": [],
         "band2": ["alias2"],
@@ -137,7 +137,7 @@ def test_bidx_makeready(minimal_prod):
     assert bidx.band("alias4") == "band4"
 
 
-def test_bidx_makeready_default(minimal_prod):
+def test_bidx_makeready_default(minimal_prod) -> None:
     import numpy as np
     bidx = BandIndex(minimal_prod, {})
     bidx.make_ready()
@@ -154,7 +154,7 @@ def test_bidx_makeready_default(minimal_prod):
     assert np.isnan(bidx.nodata_val("band1"))
 
 
-def test_bidx_makeready_invalid_band(minimal_prod):
+def test_bidx_makeready_invalid_band(minimal_prod) -> None:
     bidx = BandIndex(minimal_prod, {
         "band1": ["band1", "valid"],
         "bandx": ["invalid"]

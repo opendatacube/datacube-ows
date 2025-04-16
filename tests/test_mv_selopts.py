@@ -7,19 +7,19 @@
 from datacube_ows.index.postgres.mv_index import MVSelectOpts
 
 
-def test_all():
+def test_all() -> None:
     assert MVSelectOpts.ALL.sel("Ni!!") == ["Ni!!"]
 
 
 class MockSTV:
-    def __init__(self, id):
+    def __init__(self, id) -> None:
         self.id = id
         self.c = self
 
 
-def test_ids_datasets():
+def test_ids_datasets() -> None:
     class MockSTV:
-        def __init__(self, id):
+        def __init__(self, id) -> None:
             self.id = id
             self.c = self
     stv = MockSTV(42)
@@ -27,13 +27,13 @@ def test_ids_datasets():
     assert MVSelectOpts.DATASETS.sel(stv) == [42]
 
 
-def test_extent():
+def test_extent() -> None:
     sel = MVSelectOpts.EXTENT.sel(None)
     assert len(sel) == 1
     assert str(sel[0]) == "ST_AsGeoJSON(ST_Union(spatial_extent))"
 
 
-def test_count():
+def test_count() -> None:
     from sqlalchemy import text
     stv = MockSTV(id=text("foo"))
     sel = MVSelectOpts.COUNT.sel(stv)

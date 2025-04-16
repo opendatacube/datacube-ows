@@ -13,7 +13,7 @@ from owslib.util import ServiceException
 from owslib.wmts import WebMapTileService
 
 
-def get_xsd(name):
+def get_xsd(name: str) -> etree.XMLSchema:
     # since this function is only being called by getcapabilities set to wmts/1.0.0
     # the exception schema is available from http://schemas.opengis.net/ows/1.1.0/
     xsd_f = request.urlopen("http://schemas.opengis.net/wmts/1.0/" + name)
@@ -21,7 +21,7 @@ def get_xsd(name):
     return etree.XMLSchema(schema_doc)
 
 
-def check_wmts_error(url, expected_error_message=None, expected_status_code=400):
+def check_wmts_error(url, expected_error_message=None, expected_status_code: int = 400) -> None:
     try:
         _ = request.urlopen(url, timeout=10)
 
@@ -37,12 +37,12 @@ def check_wmts_error(url, expected_error_message=None, expected_status_code=400)
         assert resp_xml is not None
 
 
-def test_no_request(ows_server):
+def test_no_request(ows_server) -> None:
     # Make empty request to server:
     check_wmts_error(ows_server.url + "/wmts", "No operation specified", 400)
 
 
-def test_invalid_operation(ows_server):
+def test_invalid_operation(ows_server) -> None:
     # Make invalid operation request to server:
     check_wmts_error(
         ows_server.url + "/wmts?request=NoSuchOperation",
@@ -51,7 +51,7 @@ def test_invalid_operation(ows_server):
     )
 
 
-def test_getcap_badsvc(ows_server):
+def test_getcap_badsvc(ows_server) -> None:
     # Make bad service request to server:
     check_wmts_error(
         ows_server.url + "/wmts?request=GetCapabilities&service=NotWMTS",
@@ -61,7 +61,7 @@ def test_getcap_badsvc(ows_server):
 
 
 @pytest.mark.xfail(reason="OWS Getcaps don't pass XSD")
-def test_wmts_getcap(ows_server):
+def test_wmts_getcap(ows_server) -> None:
     resp = request.urlopen(
         ows_server.url + "/wmts?request=GetCapabilities&service=WMTS&version=1.0.0",
         timeout=10,
@@ -77,7 +77,7 @@ def test_wmts_getcap(ows_server):
     assert gc_xds.validate(resp_xml)
 
 
-def test_wmts_getcap_section(ows_server):
+def test_wmts_getcap_section(ows_server) -> None:
     section_options = [
         "all",
         "serviceidentification",
@@ -104,7 +104,7 @@ def test_wmts_getcap_section(ows_server):
     assert resp.status_code == 400
 
 
-def test_wmts_server(ows_server):
+def test_wmts_server(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wmts = WebMapTileService(url=ows_server.url + "/wmts")
 
@@ -116,7 +116,7 @@ def test_wmts_server(ows_server):
     assert contents
 
 
-def test_wmts_gettile(ows_server):
+def test_wmts_gettile(ows_server) -> None:
     wmts = WebMapTileService(url=ows_server.url + "/wmts")
 
     contents = list(wmts.contents)
@@ -134,7 +134,7 @@ def test_wmts_gettile(ows_server):
     assert tile
     assert tile.info()["Content-Type"] == "image/png"
 
-def test_wmts_getfeatinfo(ows_server):
+def test_wmts_getfeatinfo(ows_server) -> None:
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
                             "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
@@ -146,7 +146,7 @@ def test_wmts_getfeatinfo(ows_server):
     assert js
 
 
-def test_wmts_gettile_errwrap(ows_server):
+def test_wmts_gettile_errwrap(ows_server) -> None:
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&" +
                             "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
@@ -155,7 +155,7 @@ def test_wmts_gettile_errwrap(ows_server):
     assert resp.status_code == 400
 
 
-def test_wmts_getfeatinfo_errwrap(ows_server):
+def test_wmts_getfeatinfo_errwrap(ows_server) -> None:
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
                             "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
@@ -164,7 +164,7 @@ def test_wmts_getfeatinfo_errwrap(ows_server):
     assert resp.status_code == 400
 
 
-def test_wmts_arg_errors(ows_server):
+def test_wmts_arg_errors(ows_server) -> None:
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
                             "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=foo&" +
@@ -202,7 +202,7 @@ def test_wmts_arg_errors(ows_server):
     assert "foo" in resp.text
 
 
-def test_wmts_ows_stats(ows_server):
+def test_wmts_ows_stats(ows_server) -> None:
     url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&" +
                             "LAYER=s2_l2a&STYLE=simple_rgb&" +
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
@@ -212,7 +212,7 @@ def test_wmts_ows_stats(ows_server):
     assert json["profile"]
 
 
-def test_wmts_gettile_wkss(ows_server):
+def test_wmts_gettile_wkss(ows_server) -> None:
     wmts = WebMapTileService(url=ows_server.url + "/wmts")
 
     contents = list(wmts.contents)
@@ -231,7 +231,7 @@ def test_wmts_gettile_wkss(ows_server):
     assert tile.info()["Content-Type"] == "image/png"
 
 
-def test_wmts_gettile_exception(ows_server):
+def test_wmts_gettile_exception(ows_server) -> None:
     wmts = WebMapTileService(url=ows_server.url + "/wmts")
 
     contents = list(wmts.contents)

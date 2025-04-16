@@ -236,7 +236,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         return mask
 
 
-def convert_to_uint8(fval) -> int:
+def convert_to_uint8(fval: float) -> int:
     scaled = int(fval * 255.0 + 0.5)
     clipped = min(max(scaled, 0), 255)
     return clipped

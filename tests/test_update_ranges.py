@@ -19,16 +19,16 @@ def runner():
 
 
 @pytest.fixture
-def role_name():
+def role_name() -> str:
     return "role1"
 
 
 @pytest.fixture
-def layer_name():
+def layer_name() -> str:
     return "a_layer"
 
 
-def test_update_ranges_misuse_cases(runner, role_name, layer_name):
+def test_update_ranges_misuse_cases(runner, role_name: str, layer_name: str) -> None:
     result = runner.invoke(main, ["--schema", layer_name])
     assert "Sorry" in result.output
     assert result.exit_code == 1
@@ -66,7 +66,7 @@ def test_update_ranges_misuse_cases(runner, role_name, layer_name):
     assert result.exit_code == 1
 
 
-def test_run_sql(minimal_dc):
+def test_run_sql(minimal_dc) -> None:
     assert not run_sql(minimal_dc, "postgres", "no_such_directory")
 
     assert not run_sql(minimal_dc, "postgres", "templates")

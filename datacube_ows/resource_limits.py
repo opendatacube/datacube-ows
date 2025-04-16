@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     import datacube_ows.ows_configuration.OWSConfig
 
 
-def parse_cache_age(cfg, entry, section, default=0) -> int:
+def parse_cache_age(cfg: dict, entry, section, default: int = 0) -> int:
     try:
         val = int(cfg.get(entry, default))
     except ValueError:
@@ -205,7 +205,7 @@ class CacheControlRules(OWSConfigEntry):
 
 
 class ResourceLimited(Exception):
-    def __init__(self, reasons: list[str], wcs_hard=False) -> None:
+    def __init__(self, reasons: list[str], wcs_hard: bool = False) -> None:
         self.reasons = reasons
         self.wcs_hard = wcs_hard
         super().__init__(f"Resource limit(s) exceeded: {','.join(reasons)}")

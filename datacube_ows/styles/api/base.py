@@ -131,7 +131,7 @@ def generate_ows_legend_style_cfg(cfg, ndates: int = 0) -> Image.Image | None:
     return generate_ows_legend_style(StandaloneStyle(cfg), ndates)
 
 
-def plot_image(xr_image, x: str = "x", y: str = "y", size: float = 10, aspect=None) -> None:
+def plot_image(xr_image: xarray.Dataset, x: str = "x", y: str = "y", size: float = 10, aspect: float | None = None) -> None:
     """
     Plot an Xarray image with matplotlib. (e.g. for display in JupyterHub)
 

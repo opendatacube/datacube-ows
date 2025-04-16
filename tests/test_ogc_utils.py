@@ -20,12 +20,12 @@ from tests.utils import dummy_da
 
 
 class DSCT:
-    def __init__(self, meta):
+    def __init__(self, meta) -> None:
         self.center_time = datetime.datetime(1970, 1, 1, 0, 0, 0)
         self.metadata_doc = meta
 
 
-def test_dataset_center_time():
+def test_dataset_center_time() -> None:
     dct = datacube_ows.time_utils.dataset_center_time
     ds = DSCT({})
     assert dct(ds).year == 1970
@@ -63,17 +63,17 @@ def dummy_ds():
     ds.metadata_doc = {}
     return ds
 
-def test_tz_for_dataset(dummy_ds):
+def test_tz_for_dataset(dummy_ds) -> None:
     ret = datacube_ows.time_utils.tz_for_dataset(dummy_ds)
     assert ret.zone == "Australia/Sydney"
 
 
-def test_tz_bad_coords():
+def test_tz_bad_coords() -> None:
     with pytest.raises(Exception) as e:
         tzinf = datacube_ows.time_utils.tz_for_coord(-88.8, 155.2)
 
 
-def test_local_date(dummy_ds):
+def test_local_date(dummy_ds) -> None:
     ld = datacube_ows.time_utils.local_date(dummy_ds)
     assert ld.year == 2020
     assert ld.day == 26
@@ -83,14 +83,14 @@ def test_local_date(dummy_ds):
     assert ld.day == 26
 
 
-def test_month_date_range_wrap():
+def test_month_date_range_wrap() -> None:
     d = datetime.date(2019, 12, 1)
     a, b = datacube_ows.time_utils.month_date_range(d)
     assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=utc)
     assert b == datetime.datetime(2019, 12, 31, 0, 0, 0, tzinfo=utc)
 
 
-def test_get_service_base_url():
+def test_get_service_base_url() -> None:
 
     # not a list
     allowed_urls = "https://foo.hello.world"
@@ -129,13 +129,13 @@ def test_get_service_base_url():
     assert ret == "https://foo.bar.baz/wms"
 
 
-def test_parse_for_base_url():
+def test_parse_for_base_url() -> None:
     url = "https://hello.world.bar:8000/wms/?CheckSomething"
     ret = datacube_ows.http_utils.parse_for_base_url(url)
     assert ret == "hello.world.bar:8000/wms"
 
 
-def test_create_geobox():
+def test_create_geobox() -> None:
     geobox = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
                                                   140.7184, 145.6924, -16.1144, -13.4938,
                                                   1182, 668)
@@ -160,7 +160,7 @@ coords = [
 ]
 
 
-def test_mask_by_val():
+def test_mask_by_val() -> None:
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
         "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
@@ -175,7 +175,7 @@ def test_mask_by_val():
     assert not mask.values[0]
 
 
-def test_mask_by_val2():
+def test_mask_by_val2() -> None:
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
         "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
@@ -186,7 +186,7 @@ def test_mask_by_val2():
     assert mask.values[0]
 
 
-def test_mask_by_bitflag():
+def test_mask_by_bitflag() -> None:
     data = {
         "match": dummy_da(128, "match", coords, attrs={"nodata": 128}, dtype="uint8"),
         "dont_match": dummy_da(63, "dont_match", coords, attrs={"nodata": 128}, dtype="uint8"),
@@ -197,7 +197,7 @@ def test_mask_by_bitflag():
     assert mask.values[0]
 
 
-def test_mask_by_val_in_band():
+def test_mask_by_val_in_band() -> None:
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
         "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
@@ -209,7 +209,7 @@ def test_mask_by_val_in_band():
     assert not mask.values[0]
 
 
-def test_mask_by_quality():
+def test_mask_by_quality() -> None:
     data = {
         "quality": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
         "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
@@ -218,7 +218,7 @@ def test_mask_by_quality():
     assert not mask.values[0]
 
 
-def test_mask_by_extent_flag():
+def test_mask_by_extent_flag() -> None:
     data = {
         "extent": dummy_da(1, "match", coords, dtype="uint8"),
         "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
@@ -230,7 +230,7 @@ def test_mask_by_extent_flag():
     assert not mask.values[0]
 
 
-def test_mask_by_extent_val():
+def test_mask_by_extent_val() -> None:
     data = {
         "extent": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
         "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
@@ -239,7 +239,7 @@ def test_mask_by_extent_val():
     assert not mask.values[0]
 
 
-def test_mask_by_nan():
+def test_mask_by_nan() -> None:
     data = {
         "match": dummy_da(float("nan"), "match", coords, dtype="float128"),
         "dont_match": dummy_da(67.9, "dont_match", coords, dtype="float128"),
@@ -250,7 +250,7 @@ def test_mask_by_nan():
     assert mask.values[0]
 
 
-def test_rolling_window():
+def test_rolling_window() -> None:
     from datacube_ows.time_utils import rolling_window_ndays
 
     class DummyLayer:
@@ -276,7 +276,7 @@ def test_rolling_window():
     assert end == datetime.datetime(2020, 6, 18)
 
 
-def test_day_summary_date_range():
+def test_day_summary_date_range() -> None:
     start, end = datacube_ows.time_utils.day_summary_date_range(datetime.date(2015, 5, 12))
     assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=utc)
     assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=utc)
@@ -295,7 +295,7 @@ xyt_coords = [
               ])
 ]
 
-def test_png_loop_over():
+def test_png_loop_over() -> None:
     data = xarray.Dataset({
             "red": dummy_da(100, "red", xyt_coords, dtype="uint8"),
             "green": dummy_da(70, "green", xyt_coords, dtype="uint8"),
@@ -307,7 +307,7 @@ def test_png_loop_over():
     assert len(imgs[0]) == 78
     assert imgs[0].find(b"\x89PNG") == 0
 
-def test_png_loop_over_anim():
+def test_png_loop_over_anim() -> None:
     data = xarray.Dataset({
         "red": dummy_da(100, "red", xyt_coords, dtype="uint8"),
         "green": dummy_da(70, "green", xyt_coords, dtype="uint8"),
@@ -319,7 +319,7 @@ def test_png_loop_over_anim():
     assert imgs.find(b"\x89PNG") == 0
 
 
-def test_render_frame():
+def test_render_frame() -> None:
     data = xarray.Dataset({
         "red": dummy_da(100, "red", xy_coords, dtype="uint8"),
         "green": dummy_da(70, "green", xy_coords, dtype="uint8"),
@@ -337,7 +337,7 @@ def test_render_frame():
     assert png.shape == (2, 5, 4)
 
 
-def test_time_call(monkeypatch):
+def test_time_call(monkeypatch) -> None:
     class FakeLogger:
         _instance = None
         slot = None
@@ -347,13 +347,13 @@ def test_time_call(monkeypatch):
                 cls._instance = super().__new__(cls)
             return cls._instance
 
-        def debug(self, template, *args):
+        def debug(self, template, *args) -> None:
             self.slot = template % args
 
-        def addHandler(self, handler):
+        def addHandler(self, handler) -> None:
             pass
 
-        def removeHandler(self, handler):
+        def removeHandler(self, handler) -> None:
             pass
 
     monkeypatch.setattr("logging.getLogger", FakeLogger)
@@ -368,7 +368,7 @@ def test_time_call(monkeypatch):
     assert "ms" in FakeLogger._instance.slot
 
 
-def test_log_call(monkeypatch):
+def test_log_call(monkeypatch) -> None:
     class FakeLogger:
         _instance = None
         slot = None
@@ -378,13 +378,13 @@ def test_log_call(monkeypatch):
                 cls._instance = super().__new__(cls)
             return cls._instance
 
-        def debug(self, template, *args):
+        def debug(self, template, *args) -> None:
             self.slot = template % args
 
-        def addHandler(self, handler):
+        def addHandler(self, handler) -> None:
             pass
 
-        def removeHandler(self, handler):
+        def removeHandler(self, handler) -> None:
             pass
 
     monkeypatch.setattr("logging.getLogger", FakeLogger)

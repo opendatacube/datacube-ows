@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from datetime import datetime, date, timezone
+from datetime import datetime, timezone
 from typing_extensions import override
 
 import numpy
@@ -14,7 +14,7 @@ from affine import Affine
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
-from odc.geo import geom
+from odc.geo import CRS, geom
 from odc.geo.geobox import GeoBox
 from pytz import utc
 from rasterio.warp import Resampling
@@ -24,7 +24,7 @@ from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import create_geobox
 from datacube_ows.ows_configuration import OWSNamedLayer, get_config
 from datacube_ows.resource_limits import RequestScale
-from datacube_ows.styles import StyleDef
+from datacube_ows.styles import StyleDef, StyleDefBase
 from datacube_ows.styles.expression import ExpressionException
 from datacube_ows.utils import default_to_utc, find_matching_date
 
@@ -62,7 +62,7 @@ def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=N
     return minx, miny, maxx, maxy
 
 
-def _get_geobox_xy(args, crs) -> tuple:
+def _get_geobox_xy(args, crs: CRS) -> tuple:
     if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
     else:
@@ -70,7 +70,7 @@ def _get_geobox_xy(args, crs) -> tuple:
     return minx, miny, maxx, maxy
 
 
-def _get_geobox(args, crs) -> GeoBox:
+def _get_geobox(args, crs: CRS) -> GeoBox:
     width = int(args['width'])
     height = int(args['height'])
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
@@ -94,7 +94,7 @@ def _get_geobox(args, crs) -> GeoBox:
     )
 
 
-def _get_polygon(args, crs) -> geom.Geometry:
+def _get_polygon(args, crs: CRS) -> geom.Geometry:
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
     poly = geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
     return poly
@@ -133,7 +133,7 @@ def img_coords_to_geopoint(geobox, i, j) -> geom.Geometry:
                           geobox.crs)
 
 
-def get_layer_from_arg(args, argname="layers") -> OWSNamedLayer:
+def get_layer_from_arg(args, argname: str ="layers") -> OWSNamedLayer:
     layers = args.get(argname, "").split(",")
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
@@ -150,7 +150,7 @@ def get_layer_from_arg(args, argname="layers") -> OWSNamedLayer:
     return layer
 
 
-def get_arg(args, argname, verbose_name, lower=False,
+def get_arg(args, argname: str, verbose_name: str, lower: bool = False,
             errcode=None, permitted_values=None):
     fmt = args.get(argname, "")
     if lower:
@@ -170,11 +170,11 @@ def get_arg(args, argname, verbose_name, lower=False,
     return fmt
 
 
-def get_times_for_layer(layer: OWSNamedLayer) -> list[datetime | date]:
+def get_times_for_layer(layer: OWSNamedLayer) -> list[datetime]:
     return layer.ranges.times
 
 
-def get_times(args, layer: OWSNamedLayer) -> list[datetime | date]:
+def get_times(args, layer: OWSNamedLayer) -> list[datetime]:
     # Time parameter
     times_raw = args.get('time', '')
     times = times_raw.split(',')
@@ -182,7 +182,7 @@ def get_times(args, layer: OWSNamedLayer) -> list[datetime | date]:
     return list([parse_time_item(item, layer) for item in times])
 
 
-def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
+def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
     times = item.split('/')
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
@@ -192,7 +192,7 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
         # TODO WMS Time range selections (/ notation) are poorly and incompletely implemented.
         start, end = parse_wms_time_strings(times, with_tz=layer.time_resolution.is_subday())
         if layer.time_resolution.is_subday():
-            matching_times: list[datetime | date] = [t for t in layer.ranges.times if start <= t <= end]
+            matching_times: list[datetime] = [t for t in layer.ranges.times if start <= t <= end]
         else:
             start, end = start.date(), end.date()
             matching_times = [t for t in layer.ranges.times if start <= t <= end]
@@ -263,7 +263,7 @@ def parse_time_delta(delta_str):
     return relativedelta(**{k: int(v) for k, v in parts.items() if v is not None})
 
 
-def parse_wms_time_string(t, start=True) -> datetime | relativedelta:
+def parse_wms_time_string(t: str, start: bool = True) -> datetime | relativedelta:
     if t.upper() == 'PRESENT':
         return datetime.now(timezone.utc)
     elif t.startswith('P'):
@@ -273,7 +273,7 @@ def parse_wms_time_string(t, start=True) -> datetime | relativedelta:
         return parse(t, default=default)
 
 
-def parse_wms_time_strings(parts, with_tz: bool = False) -> tuple:
+def parse_wms_time_strings(parts: list[str], with_tz: bool = False) -> tuple:
     start = parse_wms_time_string(parts[0])
     end = parse_wms_time_string(parts[-1], start=False)
 
@@ -334,7 +334,7 @@ class GetParameters:
         return get_layer_from_arg(args)
 
 
-def single_style_from_args(layer, args, required: bool = True):
+def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
     # User Band Math (overrides style if present).
     if layer.user_band_math and "code" in args and "colorscheme" in args:
         code = args["code"]
@@ -357,7 +357,7 @@ def single_style_from_args(layer, args, required: bool = True):
             raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
                                locator="Colorscalerange parameter")
         try:
-            style = StyleDef(layer, {
+            style: StyleDefBase | None = StyleDef(layer, {
                 "name": "custom_user_style",
                 "index_expression": code,
                 "mpl_ramp": mpl_ramp,
@@ -481,7 +481,7 @@ def declination_rad(dt) -> float:
     return -1.0 * math.radians(23.44) * math.cos(2 * math.pi / 365 * (day_count + 10))
 
 
-def cosine_of_solar_zenith(lat, lon, utc_dt) -> float:
+def cosine_of_solar_zenith(lat: float, lon: float, utc_dt) -> float:
     # Estimate cosine of solar zenith angle
     # (angle between sun and local zenith) at requested latitude, longitude and datetime.
     # Formula taken from https://en.wikipedia.org/wiki/Solar_zenith_angle

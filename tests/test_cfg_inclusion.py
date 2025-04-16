@@ -16,7 +16,7 @@ src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-def test_get_file_loc(monkeypatch):
+def test_get_file_loc(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     cwd = os.getcwd()
 
@@ -28,7 +28,7 @@ def test_get_file_loc(monkeypatch):
     assert get_file_loc("s3://testbucket/frobnicate/biz/baz.bar") == "s3://testbucket/frobnicate/biz"
 
 
-def test_get_file_loc_s3_disable(monkeypatch):
+def test_get_file_loc_s3_disable(monkeypatch) -> None:
     with pytest.raises(ConfigException) as excinfo:
         _ = get_file_loc("s3://testbucket/foo.bar")
 
@@ -49,7 +49,7 @@ def test_get_file_loc_s3_disable(monkeypatch):
         _ = get_file_loc("s3://testbucket/foo.bar")
 
 
-def test_get_file_loc_s3_enable(monkeypatch):
+def test_get_file_loc_s3_enable(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
 
@@ -63,7 +63,7 @@ def test_get_file_loc_s3_enable(monkeypatch):
     assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
 
 
-def tests_get_file_loc_other_url(monkeypatch):
+def tests_get_file_loc_other_url(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "N")
     with pytest.raises(ConfigException) as excinfo:
         _ = get_file_loc("http://testbucket/directory/foo.bar")
@@ -72,40 +72,40 @@ def tests_get_file_loc_other_url(monkeypatch):
         _ = get_file_loc("http://testbucket/another_directory/bar.foo")
 
 
-def test_cfg_inject():
+def test_cfg_inject() -> None:
     cfg = read_config('{"test": 12345}')
     assert cfg["test"] == 12345
 
 
-def test_cfg_direct(monkeypatch):
+def test_cfg_direct(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "{\"test\": 12345}")
     cfg = read_config()
 
     assert cfg["test"] == 12345
 
 
-def test_cfg_py_simple_0(monkeypatch):
+def test_cfg_py_simple_0(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.simple.simple")
     cfg = read_config()
 
     assert cfg["test"] == 123
 
 
-def test_cfg_py_simple_1(monkeypatch):
+def test_cfg_py_simple_1(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.simple.simple1")
     cfg = read_config()
 
     assert cfg["test"] == 1
 
 
-def test_cfg_py_nested_0(monkeypatch):
+def test_cfg_py_nested_0(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested")
     cfg = read_config()
 
     assert cfg["test"] == 123
 
 
-def test_cfg_py_nested_1(monkeypatch):
+def test_cfg_py_nested_1(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_1")
     cfg = read_config()
 
@@ -114,14 +114,14 @@ def test_cfg_py_nested_1(monkeypatch):
     assert cfg[1]["test"] == 1
 
 
-def test_cfg_py_nested_2(monkeypatch):
+def test_cfg_py_nested_2(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_2")
     cfg = read_config()
 
     assert cfg["subtest"]["test"] == 2
 
 
-def test_cfg_py_nested_3(monkeypatch):
+def test_cfg_py_nested_3(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_3")
     cfg = read_config()
 
@@ -135,7 +135,7 @@ def test_cfg_py_nested_3(monkeypatch):
     assert cfg["things"][2]["thing"]["test"] == 3
 
 
-def test_cfg_py_nested_4(monkeypatch):
+def test_cfg_py_nested_4(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_4")
     cfg = read_config()
 
@@ -158,7 +158,7 @@ def test_cfg_py_nested_4(monkeypatch):
     assert ncfg["things"][2]["thing"]["test"] == 3
 
 
-def test_cfg_py_infinite_1(monkeypatch):
+def test_cfg_py_infinite_1(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_1")
     try:
         _ = read_config()
@@ -167,7 +167,7 @@ def test_cfg_py_infinite_1(monkeypatch):
         assert str(e).startswith("Cyclic inclusion")
 
 
-def test_cfg_py_infinite_2(monkeypatch):
+def test_cfg_py_infinite_2(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_2")
     try:
         _ = read_config()
@@ -176,7 +176,7 @@ def test_cfg_py_infinite_2(monkeypatch):
         assert str(e).startswith("Cyclic inclusion")
 
 
-def test_cfg_json_simple(monkeypatch):
+def test_cfg_json_simple(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_1.json")
     cfg = read_config()
@@ -184,7 +184,7 @@ def test_cfg_json_simple(monkeypatch):
     assert cfg["test"] == 1234
 
 
-def test_cfg_json_nested_2(monkeypatch):
+def test_cfg_json_nested_2(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_2.json")
     cfg = read_config()
@@ -194,7 +194,7 @@ def test_cfg_json_nested_2(monkeypatch):
     assert cfg[1]["test"] == 1234
 
 
-def validated_nested_3(cfg):
+def validated_nested_3(cfg) -> None:
     assert cfg["test"] == 2222
     assert len(cfg["things"]) == 3
     assert cfg["things"][0]["test"] == 22562
@@ -205,14 +205,14 @@ def validated_nested_3(cfg):
     assert cfg["things"][2]["thing"]["test"] == 1234
 
 
-def test_cfg_json_nested_3(monkeypatch):
+def test_cfg_json_nested_3(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_3.json")
     cfg = read_config()
     validated_nested_3(cfg)
 
 
-def test_cfg_json_nested_4(monkeypatch):
+def test_cfg_json_nested_4(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_4.json")
     cfg = read_config()
@@ -227,7 +227,7 @@ def test_cfg_json_nested_4(monkeypatch):
     validated_nested_3(cfg["things"][2]["thing"])
 
 
-def test_cfg_json_infinite_1(monkeypatch):
+def test_cfg_json_infinite_1(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_1.json")
     try:
@@ -237,7 +237,7 @@ def test_cfg_json_infinite_1(monkeypatch):
         assert str(e).startswith("Cyclic inclusion")
 
 
-def test_cfg_json_infinite_2(monkeypatch):
+def test_cfg_json_infinite_2(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_2.json")
     try:
@@ -247,7 +247,7 @@ def test_cfg_json_infinite_2(monkeypatch):
         assert str(e).startswith("Cyclic inclusion")
 
 
-def test_cfg_py_mixed_1(monkeypatch):
+def test_cfg_py_mixed_1(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.mixed_nested.mixed_1")
     cfg = read_config()
@@ -255,7 +255,7 @@ def test_cfg_py_mixed_1(monkeypatch):
     assert cfg["test"] == 1234
 
 
-def test_cfg_py_broken_mixed(monkeypatch):
+def test_cfg_py_broken_mixed(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.broken_nested.mixed_3")
     with pytest.raises(ConfigException) as e:
@@ -264,7 +264,7 @@ def test_cfg_py_broken_mixed(monkeypatch):
     assert "tests.cfg.simple.doesnt_exist" in str(e.value)
 
 
-def test_cfg_py_mixed_2(monkeypatch):
+def test_cfg_py_mixed_2(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.mixed_nested.mixed_2")
     cfg = read_config()
@@ -273,7 +273,7 @@ def test_cfg_py_mixed_2(monkeypatch):
     assert cfg["subtest"]["test"] == 1234
 
 
-def test_cfg_py_mixed_3(monkeypatch):
+def test_cfg_py_mixed_3(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.mixed_nested.mixed_3")
     cfg = read_config()
@@ -283,7 +283,7 @@ def test_cfg_py_mixed_3(monkeypatch):
     assert cfg["subtest"]["test_json"]["test"] == 1234
 
 
-def test_cfg_json_mixed(monkeypatch):
+def test_cfg_json_mixed(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/mixed_nested.json")
     cfg = read_config()

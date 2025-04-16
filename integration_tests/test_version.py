@@ -11,7 +11,7 @@ from datacube_ows.__init__ import __version__
 from datacube_ows.update_ranges_impl import main
 
 
-def test_updates_ranges_version(runner):
+def test_updates_ranges_version(runner) -> None:
     result = runner.invoke(main, ["--version"])
     assert __version__ in result.output
     assert result.exit_code == 0

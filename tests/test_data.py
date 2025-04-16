@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import datetime
+from typing_extensions import override
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -23,7 +24,7 @@ from tests.test_styles import product_layer  # noqa: F401
 @pytest.fixture
 def s3_url_datasets():
     class TestDataset:
-        def __init__(self, uris):
+        def __init__(self, uris) -> None:
             self.uris = uris
 
     datasets = list()
@@ -44,11 +45,11 @@ def s3_url_datasets():
     datasets.append(d3)
 
     class DataSetMock:
-        def __init__(self, datasets):
+        def __init__(self, datasets) -> None:
             self.datasets = datasets
 
             class InnerMock:
-                def __init__(self, datasets):
+                def __init__(self, datasets) -> None:
                     self.datasets = datasets
 
                 def item(self):
@@ -56,7 +57,7 @@ def s3_url_datasets():
             self.values = InnerMock(datasets)
 
     class PBQMock:
-        def __init__(self, main):
+        def __init__(self, main) -> None:
             self.main = main
 
         def __hash__(self):
@@ -68,7 +69,7 @@ def s3_url_datasets():
     }
 
 
-def test_s3_browser_uris(s3_url_datasets):
+def test_s3_browser_uris(s3_url_datasets) -> None:
     uris = get_s3_browser_uris(s3_url_datasets)
 
     assert "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=hello_world" in uris
@@ -119,9 +120,9 @@ def test_s3_browser_uris(s3_url_datasets):
 #         assert solar_day.called
 
 
-def test_make_derived_band_dict_nan():
+def test_make_derived_band_dict_nan() -> None:
     class fake_data:
-        def __init__(self):
+        def __init__(self) -> None:
             self.nodata = np.nan
 
         def item(self):
@@ -134,7 +135,7 @@ def test_make_derived_band_dict_nan():
     class fake_style:
         include_in_feature_info = True
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
 
@@ -146,12 +147,12 @@ def test_make_derived_band_dict_nan():
     assert band_dict["fake"] == "n/a"
 
 
-def test_make_derived_band_dict_not_nan():
+def test_make_derived_band_dict_not_nan() -> None:
     class fake_data:
-        def __init__(self):
+        def __init__(self) -> None:
             self.nodata = -6666
 
-        def item(self):
+        def item(self) -> float:
             return 10.10
 
     class fake_dataset:
@@ -161,7 +162,7 @@ def test_make_derived_band_dict_not_nan():
     class fake_style:
         include_in_feature_info = True
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
 
@@ -173,9 +174,9 @@ def test_make_derived_band_dict_not_nan():
     assert band_dict["fake"] == 10.10
 
 
-def test_make_band_dict_nan(product_layer): # noqa: F811
+def test_make_band_dict_nan(product_layer) -> None: # noqa: F811
     class fake_data:
-        def __init__(self):
+        def __init__(self) -> None:
             self.nodata = np.nan
             self.attrs = {}
 
@@ -183,7 +184,7 @@ def test_make_band_dict_nan(product_layer): # noqa: F811
             return np.nan
 
     class fake_dataset:
-        def __init__(self):
+        def __init__(self) -> None:
             self.data_vars = {
                 "fake": "fake_band"
             }
@@ -195,7 +196,7 @@ def test_make_band_dict_nan(product_layer): # noqa: F811
     assert band_dict["fake"] == "n/a"
 
 
-def test_make_band_dict_float(product_layer): # noqa: F811
+def test_make_band_dict_float(product_layer) -> None: # noqa: F811
     import yaml
     flags_yaml = """
     flags_definition:
@@ -211,27 +212,31 @@ def test_make_band_dict_float(product_layer): # noqa: F811
     """
 
     class int_data:
-        def __init__(self):
+        def __init__(self) -> None:
             self.nodata = np.nan
             self.attrs = yaml.load(flags_yaml, yaml.Loader)
 
-        def item(self):
+        @override
+        def item(self) -> int:
             return 100
 
     class int_dataset:
-        def __init__(self):
+        def __init__(self) -> None:
             self.data_vars = {
                 "fake": "fake_band"
             }
 
+        @override
         def __getitem__(self, key):
             return int_data()
 
     class float_data(int_data):
-        def item(self):
+        @override
+        def item(self) -> float:
             return 100.0
 
     class float_dataset(int_dataset):
+        @override
         def __getitem__(self, key):
             return float_data()
 
@@ -248,7 +253,7 @@ def test_make_band_dict_float(product_layer): # noqa: F811
     }
 
 
-def test_pbq_ctor_simple(product_layer): # noqa: F811
+def test_pbq_ctor_simple(product_layer) -> None: # noqa: F811
     pbq = ProductBandQuery.simple_layer_query(product_layer, set(["red", "green"]))
     assert str(pbq) in (
         "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_product)]",
@@ -261,7 +266,7 @@ def test_pbq_ctor_simple(product_layer): # noqa: F811
     )
 
 
-def test_pbq_ctor_full(product_layer): # noqa: F811
+def test_pbq_ctor_full(product_layer) -> None: # noqa: F811
     pbqs = ProductBandQuery.full_layer_queries(product_layer)
     assert len(pbqs) == 2
     assert "red" in str(pbqs[0])
@@ -276,7 +281,7 @@ def test_pbq_ctor_full(product_layer): # noqa: F811
     )
 
 
-def test_user_date_sorter():
+def test_user_date_sorter() -> None:
     layer = MagicMock()
     layer.time_resolution.is_subday.return_value = False
     minx, maxx = 140, 141
@@ -302,7 +307,7 @@ def test_user_date_sorter():
     assert sorter.values[2] == 0
 
 
-def test_create_nodata(dummy_raw_calc_data):
+def test_create_nodata(dummy_raw_calc_data) -> None:
     ds = DataStacker.__new__(DataStacker)
     data_in = dummy_raw_calc_data
     prod = MagicMock()

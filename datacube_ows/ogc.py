@@ -239,7 +239,7 @@ def legend(layer, style, dates=None):
 # Flask middleware
 
 @app.before_request
-def start_timer():
+def start_timer() -> None:
     # pylint: disable=assigning-non-slot
     g.ogc_start_time = monotonic()
 

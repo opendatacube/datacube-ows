@@ -465,7 +465,7 @@ class TimeRes(Enum):
 
         return times
 
-    def dataset_groupby(self, product_names: list[str] | None = None, is_mosaic=False) -> GroupBy:
+    def dataset_groupby(self, product_names: list[str] | None = None, is_mosaic: bool = False) -> GroupBy:
         if self.is_subday():
             return group_by_begin_datetime(product_names, truncate_dates=False)
         elif is_mosaic:
@@ -1220,7 +1220,7 @@ class ContactInfo(OWSConfigEntry):
         self.person = cfg.get("person")
 
         class Address(OWSConfigEntry):
-            def __init__(self, cfg: dict[str, str]):
+            def __init__(self, cfg: dict[str, str]) -> None:
                 super().__init__(cast(CFG_DICT, cfg))
                 self.type = cfg.get("type")
                 self.address = cfg.get("address")
@@ -1285,8 +1285,8 @@ class OWSConfig(OWSMetadataConfig):
     def active_product_index(self) -> dict[str, OWSNamedLayer]:
         return {prod.name: prod for prod in self.active_products}
 
-    def __init__(self, refresh=False, cfg: CFG_DICT | None = None,
-                 ignore_msgfile=False, called_from_update_ranges=False) -> None:
+    def __init__(self, refresh: bool = False, cfg: CFG_DICT | None = None,
+                 ignore_msgfile: bool = False, called_from_update_ranges: bool = False) -> None:
         self.called_from_update_ranges = called_from_update_ranges
         if not self.initialised or refresh:
             self.msgfile = None
@@ -1606,7 +1606,7 @@ class OWSConfig(OWSMetadataConfig):
         hdrs.update(d)
         return hdrs
 
-def get_config(refresh=False, called_from_update_ranges=False) -> OWSConfig:
+def get_config(refresh: bool = False, called_from_update_ranges: bool = False) -> OWSConfig:
     cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)
     if not cfg.ready:
         try:

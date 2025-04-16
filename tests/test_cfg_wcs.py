@@ -12,7 +12,7 @@ from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import WCSFormat, parse_ows_layer
 
 
-def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range, empty_driver_cache):
+def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range, empty_driver_cache) -> None:
     minimal_global_cfg.wcs = True
     minimal_layer_cfg["native_crs"] = "EPSG:4326"
     minimal_layer_cfg["product_name"] = "foo_nativeres"
@@ -49,7 +49,7 @@ def test_zero_grid(minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
     assert "EPSG:4326" in str(excinfo.value)
 
 
-def test_wcs_renderer_detection():
+def test_wcs_renderer_detection() -> None:
     fmt = WCSFormat(
         "GeoTIFF",
         "image/geotiff",

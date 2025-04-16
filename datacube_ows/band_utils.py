@@ -44,7 +44,7 @@ def band_modulator(undecorated):
         return raw_data
     return decorated
 
-def pre_scaled_band(data, band, scale, offset):
+def pre_scaled_band(data, band, scale: float, offset: float):
     # Pre-scale a band as `data[band] * scale + offset`
     return data[band] * scale + offset
 
@@ -56,8 +56,8 @@ def sum_bands(data, band1, band2, band_mapper=None):
 
 def pre_scaled_sum_bands(
     data, band1, band2,
-    scale1=1.0, offset1=0.0,
-    scale2=1.0, offset2=0.0,
+    scale1: float = 1.0, offset1: float = 0.0,
+    scale2: float = 1.0, offset2: float = 0.0,
     band_mapper=None):
     # Calculate the sum of two bands, after pre-scaling them with a scale and offset
     if band_mapper:
@@ -89,8 +89,8 @@ def delta_bands(data, band1, band2, band_mapper=None):
 
 def pre_scaled_delta_bands(
     data, band1, band2,
-    scale1=1.0, offset1=0.0,
-    scale2=1.0, offset2=0.0,
+    scale1: float = 1.0, offset1: float = 0.0,
+    scale2: float = 1.0, offset2: float = 0.0,
     band_mapper=None):
     # Calculate the difference between two bands, after pre-scaling them with a scale
     # and offset
@@ -123,8 +123,8 @@ def norm_diff(data, band1, band2, band_mapper=None):
 
 @scalable
 def pre_scaled_norm_diff(data, band1, band2,
-                         scale1=1.0, offset1=0.0,
-                         scale2=1.0, offset2=0.0,
+                         scale1: float = 1.0, offset1: float = 0.0,
+                         scale2: float = 1.0, offset2: float = 0.0,
                          band_mapper=None,):
     # Calculate a normalised difference index, after scaling the input bands with a
     # scale and offset
@@ -219,7 +219,7 @@ def single_band_arcsec(data, band, band_mapper=None):
 
 @band_modulator
 @scalable
-def single_band_offset_log(data, band, scale=1.0, offset=None, band_mapper=None):
+def single_band_offset_log(data, band, scale: float = 1.0, offset: int | None = None, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]

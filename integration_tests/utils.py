@@ -28,12 +28,12 @@ class WCS20Extent:
     def subsets(
         self,
         crs=None,
-        xstart=0.3,
-        xwidth=0.02,
-        ystart=0.8,
-        ywidth=0.02,
-        first_time=False,
-        multi_time=False,
+        xstart: float = 0.3,
+        xwidth: float = 0.02,
+        ystart: float = 0.8,
+        ywidth: float = 0.02,
+        first_time: bool = False,
+        multi_time: bool = False,
     ):
         if crs is None or crs == self.native_crs:
             bbox = self.native_bbox()
@@ -80,13 +80,14 @@ class WCS20Extent:
         return diff * start + c_min, diff * end + c_min
 
     @staticmethod
-    def subset_bbox(bbox, xstart=0.3, xwidth=0.02, ystart=0.8, ywidth=0.02) -> tuple:
+    def subset_bbox(bbox, xstart: float = 0.3, xwidth: float = 0.02,
+                    ystart: float = 0.8, ywidth: float = 0.02) -> tuple:
         x = WCS20Extent.subcoord(bbox[0], bbox[2], xstart, xstart + xwidth)
         y = WCS20Extent.subcoord(bbox[1], bbox[3], xstart, xstart + xwidth)
         return x[0], y[0], x[1], y[1]
 
 
-def geom_from_bbox(bbox, crs="EPSG:4326") -> Geometry:
+def geom_from_bbox(bbox, crs: str = "EPSG:4326") -> Geometry:
     geojson = {
         "type": "Polygon",
         "coordinates": [
@@ -102,7 +103,7 @@ def geom_from_bbox(bbox, crs="EPSG:4326") -> Geometry:
     return Geometry(geojson, crs=crs)
 
 
-def simplify_geom(geom_in, crs="EPSG:4326") -> Geometry:
+def simplify_geom(geom_in, crs: str = "EPSG:4326") -> Geometry:
     geom = geom_in
     # Pick biggest polygon from multipolygon
     if geom.geom_type == "MultiPolygon":
@@ -287,7 +288,7 @@ class ODCExtent:
         self,
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
-        crs="EPSG:4326",
+        crs: str = "EPSG:4326",
     ) -> dict:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
@@ -309,7 +310,7 @@ class ODCExtent:
         self,
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
-        crs="EPSG:4326",
+        crs: str = "EPSG:4326",
     ) -> tuple:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
@@ -343,7 +344,7 @@ class ODCExtent:
         self,
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
-        crs="EPSG:4326",
+        crs: str = "EPSG:4326",
     ) -> tuple:
         extent, times = self.subsets(space, time)
         if len(times) == 1:

@@ -19,14 +19,14 @@ from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 @pytest.fixture
 def product_layer():
     class FakeODCProduct:
-        def __init__(self, name):
+        def __init__(self, name: str) -> None:
             self.name = name
             self.id = 7
 
-        def __str__(self):
+        def __str__(self) -> str:
             return self.name
 
-        def __repr__(self):
+        def __repr__(self) -> str:
             return f"FakeODCProduct({self.name})"
 
     class FakeProductBand:
@@ -36,11 +36,11 @@ def product_layer():
         ignore_time = False
         fuse_func = None
 
-        def products_match(self, name):
+        def products_match(self, name: str) -> bool:
             return False
 
     class FakeFlagBand:
-        def __init__(self, pq_name, band):
+        def __init__(self, pq_name: str, band) -> None:
             self.pq_products = [FakeODCProduct(pq_name)]
             self.pq_low_res_products = None
             self.pq_band = band
@@ -279,7 +279,7 @@ def style_cfg_map_alpha_3():
     return cfg
 
 
-def test_valuemap_ctor():
+def test_valuemap_ctor() -> None:
     style = MagicMock()
     style.name = "style_name"
     style.product.name = "layer_name"
@@ -390,7 +390,7 @@ def style_cfg_ramp_mapped():
     return cfg
 
 
-def test_correct_style_hybrid(product_layer, style_cfg_lin):
+def test_correct_style_hybrid(product_layer, style_cfg_lin) -> None:
     style_cfg_lin["component_ratio"] = 1.0
     style_cfg_lin["range"] = [1, 2]
     style_cfg_lin["index_function"] = {
@@ -405,7 +405,7 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin):
     assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
 
 
-def test_correct_style_nonlin_hybrid(product_layer, style_cfg_nonlin):
+def test_correct_style_nonlin_hybrid(product_layer, style_cfg_nonlin) -> None:
     style_cfg_nonlin["component_ratio"] = 1.0
     style_cfg_nonlin["range"] = [1, 2]
     style_cfg_nonlin["index_function"] = {
@@ -419,7 +419,7 @@ def test_correct_style_nonlin_hybrid(product_layer, style_cfg_nonlin):
     assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
 
 
-def test_invalid_component_ratio(product_layer, style_cfg_nonlin):
+def test_invalid_component_ratio(product_layer, style_cfg_nonlin) -> None:
     style_cfg_nonlin["component_ratio"] = 2.0
     style_cfg_nonlin["range"] = [1, 2]
     style_cfg_nonlin["index_function"] = {
@@ -434,13 +434,13 @@ def test_invalid_component_ratio(product_layer, style_cfg_nonlin):
     assert "Component ratio must be a floating point number between 0 and 1" in str(e.value)
 
 
-def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone):
+def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
     product_layer.style_index[style_def.name] = style_def
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
 
 
-def test_unresolvable_style(product_layer):
+def test_unresolvable_style(product_layer) -> None:
     with pytest.raises(ConfigException) as e:
         style_def = datacube_ows.styles.StyleDef(product_layer, {
             "foo": "This is not real",
@@ -451,7 +451,7 @@ def test_unresolvable_style(product_layer):
     assert "could not determine style type" in str(e.value)
 
 
-def test_style_inheritance(product_layer, style_cfg_lin, style_cfg_lin_clone):
+def test_style_inheritance(product_layer, style_cfg_lin, style_cfg_lin_clone) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
     product_layer.style_index[style_def.name] = style_def
     style_def_clone = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
@@ -459,7 +459,7 @@ def test_style_inheritance(product_layer, style_cfg_lin, style_cfg_lin_clone):
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
 
 
-def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone):
+def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
     product_layer.style_index[style_def.name] = style_def
     style_cfg_lin_clone["inherits"]["layer"] = "fake_layer"
@@ -489,14 +489,14 @@ def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone):
         pass
 
 
-def test_style_exceptions(product_layer, style_cfg_map: dict):
+def test_style_exceptions(product_layer, style_cfg_map: dict) -> None:
     style_no_name = dict(style_cfg_map)
     style_no_name.pop('name', None)
     with pytest.raises(KeyError) as excinfo:
         style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
 
 
-def test_correct_style_map(product_layer, style_cfg_map):
+def test_correct_style_map(product_layer, style_cfg_map) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_map)
 
     assert isinstance(style_def, datacube_ows.styles.colormap.ColorMapStyleDef)
@@ -506,7 +506,7 @@ def test_alpha_style_map(
     product_layer_alpha_map,
     style_cfg_map_alpha_1,
     style_cfg_map_alpha_2,
-    style_cfg_map_alpha_3):
+    style_cfg_map_alpha_3) -> None:
 
     def fake_make_mask(data, **kwargs):
         return data
@@ -547,26 +547,26 @@ def test_alpha_style_map(
         assert (alpha_channel == 255).all()
 
 
-def test_correct_style_ramp(product_layer, style_cfg_ramp):
+def test_correct_style_ramp(product_layer, style_cfg_ramp) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
 
 
-def test_inherited_style_ramp(product_layer, style_cfg_ramp_clone):
+def test_inherited_style_ramp(product_layer, style_cfg_ramp_clone) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_clone)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
 
 
-def test_bandmapped_style_ramp(product_layer, style_cfg_ramp_mapped):
+def test_bandmapped_style_ramp(product_layer, style_cfg_ramp_mapped) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_ramp_mapped)
 
     assert isinstance(style_def, datacube_ows.styles.ramp.ColorRampDef)
     assert style_def.local_band("bar") == "red"
 
 
-def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
+def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin) -> None:
     style_cfg_lin["scale_range"] = [-3000, 3000]
 
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
@@ -586,7 +586,7 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin):
     assert compressed[2] == 255
 
 
-def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin):
+def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin) -> None:
     style_cfg_lin["scale_range"] = [-3000, 3000]
 
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
@@ -606,7 +606,7 @@ def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin
     assert compressed[2] == 255
 
 
-def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin):
+def test_dynamic_range_compression_scale_factor(product_layer, style_cfg_lin) -> None:
     style_cfg_lin["scale_factor"] = 2.5
 
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
@@ -678,7 +678,7 @@ def style_cfg_map_mask():
     return cfg
 
 
-def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
+def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask) -> None:
     def fake_make_mask(data, **kwargs):
         val = kwargs["bar"]
         return data == val
@@ -713,7 +713,7 @@ def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask):
         assert (a.values[4] == 255)
 
 
-def test_reint():
+def test_reint() -> None:
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0., 0., 1., 1., 2., 2.])
@@ -731,7 +731,7 @@ def test_reint():
     assert (data.dtype.kind == "i")
 
 
-def test_createcolordata():
+def test_createcolordata() -> None:
     from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
@@ -744,7 +744,7 @@ def test_createcolordata():
     assert (data == 1.0).all()
 
 
-def test_createcolordata_alpha():
+def test_createcolordata_alpha() -> None:
     from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
@@ -757,7 +757,7 @@ def test_createcolordata_alpha():
     assert (data["alpha"] == 0).all()
 
 
-def test_createcolordata_mask():
+def test_createcolordata_mask() -> None:
     from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
@@ -771,7 +771,7 @@ def test_createcolordata_mask():
     assert (np.isfinite(data["red"][2:5:1])).all()
 
 
-def test_createcolordata_remask():
+def test_createcolordata_remask() -> None:
     from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
@@ -785,7 +785,7 @@ def test_createcolordata_remask():
     assert (np.isnan(data["red"][4:5:1])).all()
 
 
-def test_scale_ramp():
+def test_scale_ramp() -> None:
     from datacube_ows.styles.ramp import scale_unscaled_ramp, RampNode
 
     input = [
@@ -805,7 +805,7 @@ def test_scale_ramp():
     assert output[2].value == 100.0
 
 
-def test_bad_mpl_ramp():
+def test_bad_mpl_ramp() -> None:
     from datacube_ows.styles.ramp import read_mpl_ramp
 
     with pytest.raises(ConfigException) as e:
@@ -834,7 +834,7 @@ def style_with_pq_masking():
     }
     return cfg
 
-def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc):
+def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc) -> None:
     def fake_make_mask(data, **kwargs):
         val = kwargs["bar"]
         return data == val
@@ -865,7 +865,7 @@ def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc):
         assert (a.values[2] == 255)
         assert (a.values[4] == 0)
 
-def test_styles_with_invalid_pq_masks(product_layer, style_with_pq_masking):
+def test_styles_with_invalid_pq_masks(product_layer, style_with_pq_masking) -> None:
     style_with_pq_masking["pq_masks"][0]["band"] = "invalid_band"
     with pytest.raises(ConfigException) as e:
         style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)

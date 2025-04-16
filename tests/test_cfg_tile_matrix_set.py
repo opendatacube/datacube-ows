@@ -47,7 +47,7 @@ def tmsmin_global_cfg():
     return gcfg
 
 
-def test_tms_unpublished_crs(wwwm_tms_cfg):
+def test_tms_unpublished_crs(wwwm_tms_cfg) -> None:
     global_cfg = MagicMock()
     global_cfg.published_CRSs = {}
     with pytest.raises(ConfigException) as excinfo:
@@ -57,7 +57,7 @@ def test_tms_unpublished_crs(wwwm_tms_cfg):
     assert "EPSG:3857" in str(excinfo.value)
 
 
-def test_matrix_origin_float_array(wwwm_tms_cfg, tmsmin_global_cfg):
+def test_matrix_origin_float_array(wwwm_tms_cfg, tmsmin_global_cfg) -> None:
     global_cfg = tmsmin_global_cfg
     wwwm_tms_cfg["matrix_origin"] = None
     with pytest.raises(ConfigException) as excinfo:
@@ -83,7 +83,7 @@ def test_matrix_origin_float_array(wwwm_tms_cfg, tmsmin_global_cfg):
     assert "str" in str(excinfo.value)
 
 
-def test_tile_size_int_array(wwwm_tms_cfg, tmsmin_global_cfg):
+def test_tile_size_int_array(wwwm_tms_cfg, tmsmin_global_cfg) -> None:
     global_cfg = tmsmin_global_cfg
     wwwm_tms_cfg["tile_size"] = None
     with pytest.raises(ConfigException) as excinfo:
@@ -109,7 +109,7 @@ def test_tile_size_int_array(wwwm_tms_cfg, tmsmin_global_cfg):
     assert "str" in str(excinfo.value)
 
 
-def test_scale_set_array(wwwm_tms_cfg, tmsmin_global_cfg):
+def test_scale_set_array(wwwm_tms_cfg, tmsmin_global_cfg) -> None:
     global_cfg = tmsmin_global_cfg
     wwwm_tms_cfg["scale_set"] = None
     with pytest.raises(ConfigException) as excinfo:
@@ -125,13 +125,13 @@ def test_scale_set_array(wwwm_tms_cfg, tmsmin_global_cfg):
     assert "no scale denominators" in str(excinfo.value)
 
 
-def test_tms_crs_cfg(wwwm_tms_cfg, tmsmin_global_cfg):
+def test_tms_crs_cfg(wwwm_tms_cfg, tmsmin_global_cfg) -> None:
     global_cfg = tmsmin_global_cfg
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
     assert not tms.crs_cfg["vertical_coord_first"]
 
 
-def test_tms_crs_display(wwwm_tms_cfg, tmsmin_global_cfg):
+def test_tms_crs_display(wwwm_tms_cfg, tmsmin_global_cfg) -> None:
     global_cfg = tmsmin_global_cfg
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
     assert tms.crs_display == "urn:ogc:def:crs:EPSG::3857"
@@ -144,7 +144,7 @@ def test_tms_crs_display(wwwm_tms_cfg, tmsmin_global_cfg):
     assert tms.crs_display == "EPSG:3857"
 
 
-def test_tms_exponent(wwwm_tms_cfg, tmsmin_global_cfg):
+def test_tms_exponent(wwwm_tms_cfg, tmsmin_global_cfg) -> None:
     global_cfg = tmsmin_global_cfg
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
     assert tms.width_exponent(0) == 0
@@ -165,7 +165,7 @@ def test_tms_exponent(wwwm_tms_cfg, tmsmin_global_cfg):
     assert tms.height_exponent(12) == 14
 
 
-def test_tms_wms_bbox(wwwm_tms_cfg, tmsmin_global_cfg):
+def test_tms_wms_bbox(wwwm_tms_cfg, tmsmin_global_cfg) -> None:
     global_cfg = tmsmin_global_cfg
     tms = TileMatrixSet("test", wwwm_tms_cfg, global_cfg)
     a, b, c, d = tms.wms_bbox_coords(7, 32, 24)

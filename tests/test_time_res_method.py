@@ -23,7 +23,7 @@ def simple_geobox():
     return GeoBox((256, 256), aff, 'EPSG:4326')
 
 
-def test_timeres_enum(simple_geobox):
+def test_timeres_enum(simple_geobox) -> None:
     # Make sure no values trigger exceptions.
     for res in TimeRes:
         res.is_subday()
@@ -33,14 +33,14 @@ def test_timeres_enum(simple_geobox):
         res.dataset_groupby()
 
 
-def test_subday():
+def test_subday() -> None:
     res = TimeRes.SUBDAY
     assert res.is_subday()
     assert not res.is_solar()
     assert not res.is_summary()
 
 
-def test_solar(simple_geobox):
+def test_solar(simple_geobox) -> None:
     res = TimeRes.SOLAR
     assert not res.is_subday()
     assert res.is_solar()
@@ -59,7 +59,7 @@ def test_solar(simple_geobox):
     )
 
 
-def test_summary():
+def test_summary() -> None:
     res = TimeRes.SUMMARY
     assert not res.is_subday()
     assert not res.is_solar()
@@ -69,7 +69,7 @@ def test_summary():
     ) == datetime(2020, 6, 7, 0, 0, 0, tzinfo=pytz.utc)
 
 
-def test_legacy_aliases():
+def test_legacy_aliases() -> None:
     assert TimeRes.parse("raw") == TimeRes.SOLAR
     assert TimeRes.parse("day") == TimeRes.SUMMARY
     assert TimeRes.parse("month") == TimeRes.SUMMARY

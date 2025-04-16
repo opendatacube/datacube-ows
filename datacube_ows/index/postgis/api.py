@@ -48,7 +48,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
 
     # method to delete obsolete schemas etc.
     @override
-    def cleanup_schema(self, dc: Datacube):
+    def cleanup_schema(self, dc: Datacube) -> None:
         # No obsolete schema for postgis databases to clean up.
         pass
 
@@ -68,7 +68,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
-    def update_geotemporal_index(self, dc: Datacube):
+    def update_geotemporal_index(self, dc: Datacube) -> None:
         # Native ODC geotemporal index used in postgis driver.
         pass
 

@@ -13,7 +13,7 @@ import flask
 import pytest
 
 
-def test_fake_creds(monkeypatch):
+def test_fake_creds(monkeypatch) -> None:
     from datacube_ows.startup_utils import (CredentialManager,
                                             initialise_aws_credentials)
     CredentialManager._instance = None
@@ -34,7 +34,7 @@ def test_fake_creds(monkeypatch):
         assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
 
 
-def test_renewable_creds(monkeypatch):
+def test_renewable_creds(monkeypatch) -> None:
     from datacube_ows.startup_utils import (CredentialManager,
                                             RefreshableCredentials,
                                             initialise_aws_credentials)
@@ -55,7 +55,7 @@ def test_renewable_creds(monkeypatch):
         CredentialManager.check_cred()
 
 
-def test_s3_endpoint_default(monkeypatch):
+def test_s3_endpoint_default(monkeypatch) -> None:
     from datacube_ows.startup_utils import (CredentialManager,
                                             initialise_aws_credentials)
     CredentialManager._instance = None
@@ -65,31 +65,31 @@ def test_s3_endpoint_default(monkeypatch):
     initialise_aws_credentials(log=log)
     assert "AWS_S3_ENDPOINT" not in os.environ
 
-def test_initialise_logger():
+def test_initialise_logger() -> None:
     from datacube_ows.startup_utils import initialise_logger
     log = initialise_logger("tim.the.testlogger")
     assert log is not None
     log.info("Test")
 
 
-def test_initialise_ign_warn():
+def test_initialise_ign_warn() -> None:
     from datacube_ows.startup_utils import initialise_ignorable_warnings
     initialise_ignorable_warnings()
 
 
-def test_initialise_nodebugging(monkeypatch):
+def test_initialise_nodebugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "")
     from datacube_ows.startup_utils import initialise_debugging
     initialise_debugging()
 
 
-def test_initialise_explicit_nodebugging(monkeypatch):
+def test_initialise_explicit_nodebugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "no")
     from datacube_ows.startup_utils import initialise_debugging
     initialise_debugging()
 
 
-def test_initialise_debugging(monkeypatch):
+def test_initialise_debugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "YES")
     from datacube_ows.startup_utils import initialise_debugging
     fake_mod = MagicMock()
@@ -98,7 +98,7 @@ def test_initialise_debugging(monkeypatch):
         fake_mod.settrace.assert_called()
 
 
-def test_initialise_sentry(monkeypatch):
+def test_initialise_sentry(monkeypatch) -> None:
     monkeypatch.setenv("SENTRY_DSN", "")
     from datacube_ows.startup_utils import initialise_sentry
     initialise_sentry()
@@ -110,13 +110,13 @@ def test_initialise_sentry(monkeypatch):
         pass
 
 
-def test_prometheus_inactive(monkeypatch):
+def test_prometheus_inactive(monkeypatch) -> None:
     monkeypatch.setenv("PROMETHEUS_MULTIPROC_DIR", "")
     from datacube_ows.startup_utils import initialise_prometheus
     initialise_prometheus(None)
 
 
-def test_supported_version():
+def test_supported_version() -> None:
     from datacube_ows.protocol_versions import SupportedSvcVersion
     ver = SupportedSvcVersion("wts", "1.2.3", "a", "b")
     assert ver.service == "wts"
@@ -144,7 +144,7 @@ def flask_app():
     app = flask.Flask("test_flask_app")
     return app
 
-def test_init_babel_on(babel_cfg, flask_app):
+def test_init_babel_on(babel_cfg, flask_app) -> None:
     from datacube_ows.startup_utils import initialise_babel
     with flask_app.app_context():
         bab = initialise_babel(babel_cfg, flask_app)
@@ -152,18 +152,18 @@ def test_init_babel_on(babel_cfg, flask_app):
         assert bab.default_locale.language == "en"
 
 
-def test_init_babel_off(babel_cfg, flask_app):
+def test_init_babel_off(babel_cfg, flask_app) -> None:
     from datacube_ows.startup_utils import initialise_babel
     babel_cfg.internationalised = False
     bab = initialise_babel(babel_cfg, flask_app)
     assert bab is None
 
 
-def test_sentry_before_send():
+def test_sentry_before_send() -> None:
     from datacube_ows.startup_utils import before_send
 
     class LGEOS380:
-        def __init__(self, a=5):
+        def __init__(self, a: int = 5) -> None:
             self.a = a
 
     try:

@@ -11,7 +11,7 @@ import pytest
 import pytz
 
 
-def mock_ds_for_sort(id_: str, st: datetime, ct: datetime, lon: float, prod_name):
+def mock_ds_for_sort(id_: str, st: datetime, ct: datetime, lon: float, prod_name: str):
     ds = MagicMock()
     ds.id = id_
     ds.time.begin = st
@@ -44,7 +44,7 @@ def datasets_for_sorting():
     ]
 
 
-def test_group_by_stat(datasets_for_sorting):
+def test_group_by_stat(datasets_for_sorting) -> None:
     from datacube import Datacube
 
     from datacube_ows.utils import group_by_begin_datetime
@@ -64,7 +64,7 @@ def test_group_by_stat(datasets_for_sorting):
     assert [ds.id for ds in arrays[1]] == ['K', 'L', 'G', 'H', 'C', 'D']
 
 
-def test_group_by_solar(datasets_for_sorting):
+def test_group_by_solar(datasets_for_sorting) -> None:
     from datacube import Datacube
 
     from datacube_ows.utils import group_by_solar
@@ -85,7 +85,7 @@ def test_group_by_solar(datasets_for_sorting):
     assert [ds.id for ds in arrays[1]] == ['L', 'H']
 
 
-def test_group_by_mosaic(datasets_for_sorting):
+def test_group_by_mosaic(datasets_for_sorting) -> None:
     from datacube import Datacube
 
     from datacube_ows.utils import group_by_mosaic
@@ -104,7 +104,7 @@ def test_group_by_mosaic(datasets_for_sorting):
     assert [ds.id for ds in arrays[0]] == ['I', 'J', 'K', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'L', 'H']
 
 
-def test_find_in_dates():
+def test_find_in_dates() -> None:
     from datacube_ows.utils import find_matching_date
     dates = [
         datetime.datetime(1991, 8, 3, 22, 15, 24, 122234, tzinfo=pytz.utc),

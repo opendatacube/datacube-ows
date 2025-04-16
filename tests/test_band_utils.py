@@ -20,6 +20,7 @@ from datacube_ows.band_utils import (band_quotient, band_quotient_sum,
                                      single_band_arcsec, single_band_log,
                                      single_band_offset_log, sum_bands)
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
+from typing import Sequence
 
 
 class MockArray(xr.DataArray):
@@ -29,12 +30,12 @@ class MockArray(xr.DataArray):
         self,
         data,
         coords=None,
-        dims=None,
-        name=None,
+        dims: Sequence[int] | None = None,
+        name: str | None = None,
         attrs=None,
         indexes=None,
         fastpath=None,
-    ):
+    ) -> None:
         super().__init__(data, coords, dims, name, attrs, indexes, fastpath)
         self.nodata = 0
 
@@ -69,15 +70,15 @@ def band_mapper():
     return lambda b: idx[b]
 
 
-def test_scale_data():
+def test_scale_data() -> None:
     assert not scale_data(TEST_ARR_1, [0.0, 1.0], [0.0, 1.0]) is None
 
 
-def test_sum_bands():
+def test_sum_bands() -> None:
     assert not sum_bands(TEST_XARR, "b1", "b2") is None
 
 
-def test_pre_scaled_sum_bands():
+def test_pre_scaled_sum_bands() -> None:
     assert not pre_scaled_sum_bands(TEST_XARR, "b1", "b2", 1.0, 0.0, 1.0, 0.0) is None
     unscaled = sum_bands(TEST_XARR, "b1", "b2")
     assert pre_scaled_sum_bands(TEST_XARR, "b1", "b2").equals(unscaled)
@@ -89,7 +90,7 @@ def test_pre_scaled_sum_bands():
     )
 
 
-def test_pre_scaled_delta_bands():
+def test_pre_scaled_delta_bands() -> None:
     assert (
         not pre_scaled_delta_bands(TEST_XARR2, "b3", "b2", 1.0, 0.0, 1.0, 0.0) is None
     )
@@ -103,12 +104,12 @@ def test_pre_scaled_delta_bands():
     )
 
 
-def test_norm_diff(band_mapper):
+def test_norm_diff(band_mapper) -> None:
     assert not norm_diff(TEST_XARR, "b1", "b2") is None
     assert not norm_diff(TEST_XARR, "b1a", "b2", band_mapper, scale_from=[0, 1]) is None
 
 
-def test_pre_scaled_norm_diff(band_mapper):
+def test_pre_scaled_norm_diff(band_mapper) -> None:
     assert not pre_scaled_norm_diff(TEST_XARR, "b1", "b2") is None
     assert (
         not pre_scaled_norm_diff(
@@ -126,40 +127,40 @@ def test_pre_scaled_norm_diff(band_mapper):
     )
 
 
-def test_constant(band_mapper):
+def test_constant(band_mapper) -> None:
     assert not constant(TEST_XARR, "b1", 10) is None
     assert not constant(TEST_XARR, "b1a", 10, band_mapper) is None
 
 
-def test_band_quotient(band_mapper):
+def test_band_quotient(band_mapper) -> None:
     assert not band_quotient(TEST_XARR, "b1", "b2") is None
     assert not band_quotient(TEST_XARR, "b1", "b2", band_mapper) is None
 
 
-def test_band_quotient_sum():
+def test_band_quotient_sum() -> None:
     assert not band_quotient_sum(TEST_XARR, "b1", "b2", "b1", "b2") is None
 
 
-def test_single_band_log(band_mapper):
+def test_single_band_log(band_mapper) -> None:
     assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0) is None
     assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0, band_mapper) is None
 
 
-def test_single_band(band_mapper):
+def test_single_band(band_mapper) -> None:
     assert not single_band(TEST_XARR, "b1") is None
     assert not single_band(TEST_XARR, "b1", band_mapper) is None
 
 
-def test_multidate():
+def test_multidate() -> None:
     assert not multi_date_delta(TEST_XARR_T) is None
     assert not multi_date_delta(TEST_XARR_T, time_direction=1) is None
 
 
-def test_ndci():
+def test_ndci() -> None:
     assert not sentinel2_ndci(TEST_XARR, "b1", "b2", "b1", "b2") is None
 
 
-def test_single_band_offset_log(band_mapper):
+def test_single_band_offset_log(band_mapper) -> None:
     assert not single_band_offset_log(TEST_XARR, "b1") is None
     assert not single_band_offset_log(TEST_XARR, "b1", offset=0.5) is None
     assert not single_band_offset_log(TEST_XARR, "b1", scale=100) is None
@@ -169,13 +170,13 @@ def test_single_band_offset_log(band_mapper):
     assert not single_band_offset_log(TEST_XARR, "b1", mult_band="b2", band_mapper=band_mapper) is None
 
 
-def test_single_band_arcsec(band_mapper):
+def test_single_band_arcsec(band_mapper) -> None:
     assert not single_band_arcsec(TEST_XARR, "b1") is None
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is None
     assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is None
     assert not single_band_arcsec(TEST_XARR, "b1", band_mapper=band_mapper) is None
 
 
-def test_rvi(band_mapper):
+def test_rvi(band_mapper) -> None:
     assert not radar_vegetation_index(TEST_XARR, "b1", "b2") is None
     assert not radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper) is None
