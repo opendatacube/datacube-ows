@@ -201,15 +201,13 @@ def ping():
         name: ows_index(dc).check_db_access(dc)
         for name, dc in get_config().all_dcs.items()
     }
-    all_ok = all(dbs_ok.values())
-    any_ok = any(dbs_ok.values())
 
-    if all_ok:
+    if all(dbs_ok.values()):
         return render_template("ping.html", status="Up", statuses=dbs_ok), 200, resp_headers({"Content-Type": "text/html"})
-    elif any_ok:
-        return render_template("ping.html", status="Partially Up", statuses=dbs_ok), 500, resp_headers({"Content-Type": "text/html"})
+    elif any(dbs_ok.values()):
+        return render_template("ping.html", status="Partially Up", statuses=dbs_ok), 503, resp_headers({"Content-Type": "text/html"})
     else:
-        return render_template("ping.html", status="Down", statuses=dbs_ok), 500, resp_headers({"Content-Type": "text/html"})
+        return render_template("ping.html", status="Down", statuses=dbs_ok), 503, resp_headers({"Content-Type": "text/html"})
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
