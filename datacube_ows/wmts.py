@@ -138,7 +138,7 @@ def wmts_args_to_wms(args, cfg) -> dict:
         raise WMTSException("Invalid Tile Matrix Set: " + tileMatrixSet)
 
     wms_args["crs"] = tms.crs_name
-    crs_cfg = cfg.published_CRSs[tms.crs_name]
+    _ = cfg.published_CRSs[tms.crs_name]
     try:
         tileMatrix = int(tileMatrix)
         if tileMatrix < 0 or tileMatrix >= len(tms.scale_set):

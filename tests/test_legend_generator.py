@@ -57,7 +57,7 @@ def test_image_from_bad_image_url(bad_image_url):
 
 def test_parse_colorramp_defaults():
     legend = ColorRampDef.Legend(MagicMock(), {})
-    ramp = ColorRamp(MagicMock(),
+    _ = ColorRamp(MagicMock(),
                      {
                         "range": [0.0, 1.0],
                      },

@@ -166,7 +166,7 @@ class CredentialManager:
 def initialise_aws_credentials(log: Logger | None = None) -> None:
     # pylint: disable=protected-access
     if CredentialManager._instance is None:
-        cm = CredentialManager(log)
+        _ = CredentialManager(log)
 
 
 def parse_config_file(log: Logger | None = None) -> OWSConfig | None:

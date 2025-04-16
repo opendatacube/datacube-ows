@@ -23,7 +23,7 @@ def get_xsd(name):
 
 def check_wmts_error(url, expected_error_message=None, expected_status_code=400):
     try:
-        resp = request.urlopen(url, timeout=10)
+        _ = request.urlopen(url, timeout=10)
 
         # Should not get here
         assert False

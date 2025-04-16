@@ -161,7 +161,7 @@ def test_cfg_py_nested_4(monkeypatch):
 def test_cfg_py_infinite_1(monkeypatch):
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_1")
     try:
-        cfg = read_config()
+        _ = read_config()
         assert False
     except ConfigException as e:
         assert str(e).startswith("Cyclic inclusion")
@@ -170,7 +170,7 @@ def test_cfg_py_infinite_1(monkeypatch):
 def test_cfg_py_infinite_2(monkeypatch):
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_2")
     try:
-        cfg = read_config()
+        _ = read_config()
         assert False
     except ConfigException as e:
         assert str(e).startswith("Cyclic inclusion")
@@ -231,7 +231,7 @@ def test_cfg_json_infinite_1(monkeypatch):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_1.json")
     try:
-        cfg = read_config()
+        _ = read_config()
         assert False
     except ConfigException as e:
         assert str(e).startswith("Cyclic inclusion")
@@ -259,7 +259,7 @@ def test_cfg_py_broken_mixed(monkeypatch):
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.broken_nested.mixed_3")
     with pytest.raises(ConfigException) as e:
-        cfg = read_config()
+        _ = read_config()
     assert "Could not import python object" in str(e.value)
     assert "tests.cfg.simple.doesnt_exist" in str(e.value)
 

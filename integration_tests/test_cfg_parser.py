@@ -228,13 +228,11 @@ def test_cfg_parser_compile_no_domain(runner):
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_compile_default_dir(runner):
-    this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["compile", "en"])
     assert result.exit_code == 0
 
 
 def test_cfg_parser_compile_no_dir(runner):
-    this_dir = os.path.dirname(__file__)
     result = runner.invoke(main, ["compile", "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg", "en"])
     assert result.exit_code == 1
 
