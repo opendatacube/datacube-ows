@@ -7,6 +7,23 @@ History
 
 Datacube-ows version 1.9.x indicates that it is designed work with datacube-core versions 1.9.x.
 
+1.9.1 (2025-04-16)
+------------------
+
+* CI fixes and autoupdates (#1101, #1102, #1107, #1106, #1097, #1105, #1117, #1124, #1114, #1121, #1125, #1129, #1136)
+* wsgi: use 1.9 config variable name (#1110)
+* Misc code cleanup and updates (#1118, #1119, #1111, #1115, #1120, #1123, #1128, #1116, #1130, #1131, #1134, #1141,
+  #1142, #1143, #1144, #1145, #1146)
+* Docker cleanups and improvements (#1122)
+* Documentation cleanup (#1113)
+* Properly close db connections in schema mgmt ops (#1133)
+* Refactor styling engine to remove dependency on orphaned colour library (#1140)
+* Make ping multi-db aware (#1139)
+* Update HISTORY.rst and default version number ready for release (#1147)
+
+Featuring contributions from @pjonsson and @SpacemanPaul.  Thanks to supporting organisations Geoscience Australia
+and RISE.
+
 1.9.0 (2024-12-23)
 ------------------
 
