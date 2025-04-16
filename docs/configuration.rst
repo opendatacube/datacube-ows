@@ -74,27 +74,27 @@ alternative applies):
 
    Config loaded as **json** from relative file path.
 
-3. Begins with an open brace "{", e.g. ``{...}``
-
-   Config loaded directly from the environment variable as **json** (not recommended)
-
-4. Ends in ".json", e.g. ``cfg_prod.json``
+3. Ends in ".json", e.g. ``cfg_prod.json``
 
    Config loaded from **json** file in working directory.
 
-5. Has a valid ``s3://`` URL and a ``.json`` extension
+4. Has a valid ``s3://`` URL and a ``.json`` extension
 
    The configuration is fetched from AWS S3 in json format.
 
    N.B. Configuration can only be loaded from S3 if the environment variable ``$DATACUBE_OWS_CFG_ALLOW_S3``
    is set to ``yes``, otherwise a ``ConfigurationException`` will be raised.
 
-6. Contains a dot (.), e.g. ``package.sub_package.module.cfg_object_name``
+5. Contains a dot (.), e.g. ``package.sub_package.module.cfg_object_name``
 
    Imported as python object (expected to be a dictionary).
 
    N.B. It is up to you to ensure that the Python file in question is in your Python path and
    that all package directories have a ``__init__.py`` file, etc.
+
+6. Begins with an open brace "{", e.g. ``{...}``
+
+   Config loaded directly from the environment variable as **json** (not recommended)
 
 7. Valid python object name, e.g. ``cfg_prod``
 

@@ -30,8 +30,7 @@ If you want to use a ``postgis`` based ODC index, you should also specify the in
 setting e.g. ``$ODC_MYENV_INDEX_DRIVER`` to ``postgis``.
 
 Other valid methods for configuring an OpenDatacube instance (e.g. a ``.datacube.conf`` file)
-should also work.  Note that OWS currently only works with legacy/postgres index driver.
-Postgis support is hopefully coming soon.
+should also work.  As of the 1.9.0 release, OWS supports both the postgres and postgis drivers.
 
 The old `$DB_HOSTNAME`, `$DB_DATABASE` etc. environment variables are now STRONGLY DEPRECATED as they
 only work in a single-index environment.

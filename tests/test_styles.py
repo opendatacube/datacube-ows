@@ -732,77 +732,77 @@ def test_reint():
 
 
 def test_createcolordata():
-    from colour import Color
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
-    rgb = Color("#FFFFFF")
+    rgba = to_rgba("#FFFFFF")
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 1.0, (band >= 0))
+    data = ColorMapStyleDef.create_colordata(da, rgba, (band >= 0))
     assert (data == 1.0).all()
 
 
 def test_createcolordata_alpha():
-    from colour import Color
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
-    rgb = Color("#FFFFFF")
+    rgba = to_rgba("#FFFFFF", alpha=0.0)
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, (band >= 0))
+    data = ColorMapStyleDef.create_colordata(da, rgba, (band >= 0))
     assert (data["alpha"] == 0).all()
 
 
 def test_createcolordata_mask():
-    from colour import Color
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
-    rgb = Color("#FFFFFF")
+    rgba = to_rgba("#FFFFFF", alpha=0.0)
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, (band > 0))
+    data = ColorMapStyleDef.create_colordata(da, rgba, (band > 0))
     assert (np.isnan(data["red"][0:1:1])).all()
     assert (np.isfinite(data["red"][2:5:1])).all()
 
 
 def test_createcolordata_remask():
-    from colour import Color
+    from matplotlib.colors import to_rgba
 
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, np.nan, np.nan])
     da = DataArray(band, name='foo')
-    rgb = Color("#FFFFFF")
+    rgba = to_rgba("#FFFFFF", alpha=0.0)
 
-    data = ColorMapStyleDef.create_colordata(da, rgb, 0.0, np.array([True, True, True, True, True, True]))
+    data = ColorMapStyleDef.create_colordata(da, rgba, np.array([True, True, True, True, True, True]))
     assert (np.isfinite(data["red"][0:3:1])).all()
     assert (np.isnan(data["red"][4:5:1])).all()
 
 
 def test_scale_ramp():
-    from datacube_ows.styles.ramp import scale_unscaled_ramp
+    from datacube_ows.styles.ramp import scale_unscaled_ramp, RampNode
 
     input = [
-        {"value": 0.0, "color": "red", "alpha": 0.5},
-        {"value": 0.5, "color": "green"},
-        {"value": 1.0, "color": "blue"},
+        RampNode(0.0, "red", alpha=0.5),
+        RampNode(0.5, "green"),
+        RampNode(1.0, "blue"),
     ]
     output = scale_unscaled_ramp(-100.0, 100.0, input)
-    assert output[0]["color"] == "red"
-    assert output[0]["alpha"] == 0.5
-    assert output[0]["value"] == -100.0
-    assert output[1]["color"] == "green"
-    assert output[1]["alpha"] == 1.0
-    assert output[1]["value"] == 0.0
-    assert output[2]["color"] == "blue"
-    assert output[2]["alpha"] == 1.0
-    assert output[2]["value"] == 100.0
+    assert output[0].color == "red"
+    assert output[0].rgba[-1] == 0.5
+    assert output[0].value == -100.0
+    assert output[1].color == "green"
+    assert output[1].rgba[-1] == 1.0
+    assert output[1].value == 0.0
+    assert output[2].color == "blue"
+    assert output[2].rgba[-1] == 1.0
+    assert output[2].value == 100.0
 
 
 def test_bad_mpl_ramp():

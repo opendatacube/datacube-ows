@@ -14,7 +14,6 @@ install_requirements = [
     'requests',
     'affine',
     'click',
-    'colour',
     'fsspec',
     'lxml',
     'deepdiff',
