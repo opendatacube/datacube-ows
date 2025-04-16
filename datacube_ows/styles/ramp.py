@@ -141,7 +141,7 @@ def read_mpl_ramp(mpl_ramp: str) -> RampRepr:
     :param mpl_ramp: The name of Matplotlib colour ramp
     :return: A normalised ramp specification.
     """
-    unscaled_cmap = cast(RampRepr, [])
+    unscaled_cmap: RampRepr = []
     try:
         cmap = plt.get_cmap(mpl_ramp)
     except:
