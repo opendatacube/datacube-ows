@@ -260,7 +260,7 @@ def parse_time_delta(delta_str):
     pattern = (r'P((?P<years>\d+)Y)?((?P<months>\d+)M)?((?P<days>\d+)D)?'
                r'(T(((?P<hours>\d+)H)?((?P<minutes>\d+)M)?((?P<seconds>\d+)S)?)?)?')
     parts = re.search(pattern, delta_str).groupdict()
-    return relativedelta(**{k: float(v) for k, v in parts.items() if v is not None})
+    return relativedelta(**{k: int(v) for k, v in parts.items() if v is not None})
 
 
 def parse_wms_time_string(t, start=True) -> datetime | relativedelta:
