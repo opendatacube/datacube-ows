@@ -65,6 +65,11 @@ class LayerExtent:
 class OWSAbstractIndex(ABC):
     name: str = ""
 
+    # method to check database access (for ping op)
+    @abstractmethod
+    def check_db_access(self, dc: Datacube) -> bool:
+        ...
+
     # method to delete obsolete schemas etc.
     @abstractmethod
     def cleanup_schema(self, dc: Datacube):
@@ -177,6 +182,7 @@ class OWSAbstractIndex(ABC):
         else:
             # Return polygons and multipolygons as is.
             return any_geom
+
 
 class OWSAbstractIndexDriver(ABC):
     @classmethod

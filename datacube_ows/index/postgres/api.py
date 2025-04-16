@@ -11,6 +11,7 @@ from typing import cast
 from typing_extensions import override
 from collections.abc import Iterable
 from uuid import UUID
+from sqlalchemy import text
 
 from odc.geo import Geometry, CRS
 from datacube import Datacube
@@ -25,6 +26,23 @@ from datacube_ows.index.sql import run_sql
 
 class OWSPostgresIndex(OWSAbstractIndex):
     name: str = "postgres"
+
+    # method to check database access (for ping op)
+    @override
+    def check_db_access(self, dc: Datacube) -> bool:
+        db_ok = False
+        try:
+            with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
+                results = conn.execute(text("""
+                    SELECT *
+                    FROM ows.layer_ranges
+                    LIMIT 1""")
+                )
+                for r in results:
+                    db_ok = True
+        except:
+            pass
+        return db_ok
 
     # method to delete obsolete schemas etc.
     @override
