@@ -51,7 +51,7 @@ RampRepr = list[RampNode]
 
 
 def make_ramp_representation(ramp_spec: RAMP_SPEC, style_name: str) -> RampRepr:
-    rep = cast(RampRepr, [])
+    rep: RampRepr = []
     for node in ramp_spec:
         if "value" not in node:
             raise ConfigException(f'Color ramp element without a value in style {style_name}')
