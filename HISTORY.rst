@@ -19,7 +19,7 @@ Datacube-ows version 1.9.x indicates that it is designed work with datacube-core
 * Properly close db connections in schema mgmt ops (#1133)
 * Refactor styling engine to remove dependency on orphaned colour library (#1140)
 * Make ping multi-db aware (#1139)
-* Update HISTORY.rst and default version number ready for release (#THIS)
+* Update HISTORY.rst and default version number ready for release (#1147)
 
 Featuring contributions from @pjonsson and @SpacemanPaul.  Thanks to supporting organisations Geoscience Australia
 and RISE.
