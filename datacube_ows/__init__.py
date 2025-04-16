@@ -7,4 +7,6 @@
 try:
     from ._version import version as __version__
 except ImportError:
-    __version__ = "1.9.0?"
+    # Default version number.
+    # Will only be used when running datacube-ows direct from source code (not properly installed)
+    __version__ = "1.9.1?"
