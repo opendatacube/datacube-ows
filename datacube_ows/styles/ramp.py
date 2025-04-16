@@ -170,7 +170,7 @@ class ColorRamp:
         """
         self.style = style
         if "color_ramp" in ramp_cfg:
-            raw_scaled_ramp = make_ramp_representation(cast(list[CFG_DICT], ramp_cfg["color_ramp"]), self.style.name)
+            raw_scaled_ramp = make_ramp_representation(cast(RAMP_SPEC, ramp_cfg["color_ramp"]), self.style.name)
         else:
             rmin, rmax = cast(list[float], ramp_cfg["range"])
             unscaled_ramp = UNSCALED_DEFAULT_RAMP
