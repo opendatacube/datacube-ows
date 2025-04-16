@@ -87,7 +87,7 @@ class BandIndex(OWSMetadataConfig):
     METADATA_TITLE = False
     METADATA_ABSTRACT = False
 
-    def __init__(self, layer: "OWSNamedLayer", band_cfg: CFG_DICT):
+    def __init__(self, layer: "OWSNamedLayer", band_cfg: CFG_DICT) -> None:
         if band_cfg is None:
             band_cfg = {}
         super().__init__(band_cfg)
@@ -201,7 +201,7 @@ class BandIndex(OWSMetadataConfig):
 
 
 class AttributionCfg(OWSConfigEntry):
-    def __init__(self, cfg: CFG_DICT, owner: Union["OWSConfig", "OWSLayer"]):
+    def __init__(self, cfg: CFG_DICT, owner: Union["OWSConfig", "OWSLayer"]) -> None:
         super().__init__(cfg)
         self.owner = owner
         self.url = cast(str | None, cfg.get("url"))
@@ -240,7 +240,7 @@ class SuppURL(OWSConfigEntry):
             return []
         return [cls(u) for u in cfg]
 
-    def __init__(self, cfg: dict[str, str]):
+    def __init__(self, cfg: dict[str, str]) -> None:
         super().__init__(cast(RAW_CFG, cfg))
         self.url = cfg["url"]
         self.format = cfg["format"]
@@ -251,7 +251,7 @@ class OWSLayer(OWSMetadataConfig):
     METADATA_ATTRIBUTION = True
 
     named = False
-    def __init__(self, cfg: CFG_DICT, object_label: str, parent_layer: Optional["OWSLayer"]=None, **kwargs):
+    def __init__(self, cfg: CFG_DICT, object_label: str, parent_layer: Optional["OWSLayer"]=None, **kwargs) -> None:
         super().__init__(cfg, **kwargs)
         self.object_label = object_label
         self.global_cfg: OWSConfig = kwargs["global_cfg"]
@@ -350,14 +350,14 @@ class OWSLayer(OWSMetadataConfig):
         return 0
 
     @override
-    def __str__(self):
+    def __str__(self) -> str:
         return "OWSLayer Config: %s" % self.title
 
 
 class OWSFolder(OWSLayer):
     def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig",
                  parent_layer: Optional["OWSFolder"] = None,
-                 sibling: int = 0, **kwargs):
+                 sibling: int = 0, **kwargs) -> None:
         if "label" in cfg:
             obj_lbl = f"folder.{cfg['label']}"
         elif parent_layer:
@@ -484,7 +484,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     named = True
     multi_product: bool = False
 
-    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig", parent_layer: OWSFolder | None = None, **kwargs):
+    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig", parent_layer: OWSFolder | None = None, **kwargs) -> None:
         name = cast(str, cfg["name"])
         super().__init__(cfg, object_label=f"layer.{name}", global_cfg=global_cfg, parent_layer=parent_layer,
                          keyvals={"layer": name},
@@ -689,7 +689,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             super().make_ready(*args, **kwargs)
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_image_processing(self, cfg: CFG_DICT):
+    def parse_image_processing(self, cfg: CFG_DICT) -> None:
         emf_cfg = cfg["extent_mask_func"]
         if isinstance(emf_cfg, dict) or isinstance(emf_cfg, str):
             self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]
@@ -719,7 +719,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.always_fetch_bands = list([self.band_idx.band(b) for b in cast(list[str], self.raw_afb)])
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_feature_info(self, cfg: CFG_DICT):
+    def parse_feature_info(self, cfg: CFG_DICT) -> None:
         self.feature_info_include_utc_dates = bool(cfg.get("include_utc_dates", False))
         custom = cast(dict[str, CFG_DICT | str], cfg.get("include_custom", {}))
         self.legacy_feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
@@ -731,7 +731,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.feature_info_custom_includes = {k: FunctionWrapper(self, v) for k, v in custom.items()}
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_flags(self, cfg: CFG_DICT):
+    def parse_flags(self, cfg: CFG_DICT) -> None:
         self.flag_bands = {}
         if cfg:
             if isinstance(cfg, dict):
@@ -753,12 +753,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.allflag_productbands = FlagProductBands.build_list_from_flagbands(self.flag_bands.values(), self)
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_urls(self, cfg: CFG_DICT):
+    def parse_urls(self, cfg: CFG_DICT) -> None:
         self.feature_list_urls = SuppURL.parse_list(cast(list[dict[str, str]], cfg.get("features", [])))
         self.data_urls = SuppURL.parse_list(cast(list[dict[str, str]], cfg.get("data", [])))
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_styling(self, cfg: CFG_DICT):
+    def parse_styling(self, cfg: CFG_DICT) -> None:
         self.styles = []
         self.style_index = {}
         for scfg in cast(list[CFG_DICT], cfg["styles"]):
@@ -773,7 +773,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.default_style = self.styles[0]
 
     # pylint: disable=attribute-defined-outside-init
-    def parse_wcs(self, cfg: CFG_DICT | bool):
+    def parse_wcs(self, cfg: CFG_DICT | bool) -> None:
         if cfg == False or not self.global_cfg.wcs:
             self.wcs = False
         else:
@@ -887,7 +887,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     self.name, repr(self.cfg_native_resolution), self.resolution_x, self.resolution_y)
 
     # pylint: disable=attribute-defined-outside-init
-    def ready_wcs(self):
+    def ready_wcs(self) -> None:
         if self.global_cfg.wcs and self.wcs:
             # Prepare Rectified Grids
             try:
@@ -1034,7 +1034,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def layer_count(self) -> int:
         return 1
 
-    def search_times(self, t, geobox=None):
+    def search_times(self, t, geobox=None) -> datetime.datetime | tuple:
         if not geobox:
             bbox = self.ranges.bboxes[self.native_CRS]
             geobox = create_geobox(
@@ -1048,7 +1048,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return self.time_resolution.dataset_groupby(is_mosaic=self.mosaic_date_func is not None)
 
     @override
-    def __str__(self):
+    def __str__(self) -> str:
         return "Named OWSLayer: %s" % self.name
 
     @classmethod
@@ -1068,7 +1068,7 @@ class OWSProductLayer(OWSNamedLayer):
     multi_product = False
 
     @override
-    def parse_product_names(self, cfg: CFG_DICT):
+    def parse_product_names(self, cfg: CFG_DICT) -> None:
         self.product_name = cast(str, cfg["product_name"])
         self.product_names: tuple[str, ...] = (self.product_name,)
 
@@ -1083,7 +1083,7 @@ class OWSProductLayer(OWSNamedLayer):
             raise ConfigException(f"'low_res_product_names' entry in non-multi-product layer {self.name} - use 'low_res_product_name' only")
 
     @override
-    def parse_pq_names(self, cfg: CFG_DICT):
+    def parse_pq_names(self, cfg: CFG_DICT) -> dict[str, tuple | bool]:
         main_product = False
         if "dataset" in cfg:
             raise ConfigException(f"The 'dataset' entry in the flags section is no longer supported.  Please refer to the documentation for the correct format (layer {self.name})")
@@ -1115,7 +1115,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
     multi_product = True
 
     @override
-    def parse_product_names(self, cfg: CFG_DICT):
+    def parse_product_names(self, cfg: CFG_DICT) -> None:
         self.product_names = tuple(cast(list[str], cfg["product_names"]))
         self.product_name = self.product_names[0]
         self.low_res_product_names = tuple(cast(list[str], cfg.get("low_res_product_names", [])))
@@ -1129,7 +1129,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
             raise ConfigException(f"'low_res_product_name' entry in multi-product layer {self.name} - use 'low_res_product_names' only")
 
     @override
-    def parse_pq_names(self, cfg: CFG_DICT):
+    def parse_pq_names(self, cfg: CFG_DICT) -> dict[str, tuple | bool]:
         main_products = False
         if "datasets" in cfg:
             raise ConfigException(f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})")
@@ -1191,7 +1191,7 @@ class WCSFormat:
                 )
         return renderers
 
-    def __init__(self, name: str, mime: str, extension: str, renderers: dict[int, CFG_DICT], multi_time: bool):
+    def __init__(self, name: str, mime: str, extension: str, renderers: dict[int, CFG_DICT], multi_time: bool) -> None:
         self.name = name
         self.mime = mime
         self.extension = extension
@@ -1205,7 +1205,7 @@ class WCSFormat:
         if 2 not in self.renderers:
             _LOG.warning("Warning: No renderer supplied for WCS 2.x for format %s", self.name)
 
-    def renderer(self, version):
+    def renderer(self, version: str | int | Version) -> FunctionWrapper:
         if isinstance(version, str):
             version = int(version.split(".")[0])
         elif isinstance(version, Version):
@@ -1214,7 +1214,7 @@ class WCSFormat:
 
 
 class ContactInfo(OWSConfigEntry):
-    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig"):
+    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig") -> None:
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.person = cfg.get("person")
@@ -1261,7 +1261,7 @@ class OWSConfig(OWSMetadataConfig):
     _instance: Optional["OWSConfig"] = None
     initialised = False
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> "OWSConfig":
         if not cls._instance or kwargs.get("refresh"):
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -1286,7 +1286,7 @@ class OWSConfig(OWSMetadataConfig):
         return {prod.name: prod for prod in self.active_products}
 
     def __init__(self, refresh=False, cfg: CFG_DICT | None = None,
-                 ignore_msgfile=False, called_from_update_ranges=False):
+                 ignore_msgfile=False, called_from_update_ranges=False) -> None:
         self.called_from_update_ranges = called_from_update_ranges
         if not self.initialised or refresh:
             self.msgfile = None
@@ -1396,7 +1396,7 @@ class OWSConfig(OWSMetadataConfig):
                 self.catalog.add(id=k, string=v, auto_comments=[v])
         return self.catalog
 
-    def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool):
+    def parse_global(self, cfg: CFG_DICT, ignore_msgfile: bool) -> None:
         default_env = cast(str, cfg.get("env"))
         self.default_env = ODCConfig.get_environment(env=default_env)
         self.odc_app = cast(str, cfg.get("odc_app", "datacube-ows"))
@@ -1421,12 +1421,12 @@ class OWSConfig(OWSMetadataConfig):
         else:
             self.msg_file_name = cast(str | None, cfg.get("message_file"))
         self.parse_metadata(cfg)
-        self.allowed_urls = cfg["allowed_urls"]
+        self.allowed_urls = cast(str | list[str], cfg["allowed_urls"])
         self.info_url = cfg["info_url"]
         self.contact_info = ContactInfo.parse(cfg.get("contact_info"), self)
         self.attribution = AttributionCfg.parse(cast(CFG_DICT | None, cfg.get("attribution")), self)
 
-        def make_gml_name(name):
+        def make_gml_name(name: str) -> str:
             if name.startswith("EPSG:"):
                 return f"http://www.opengis.net/def/crs/EPSG/0/{name[5:]}"
             else:
@@ -1492,7 +1492,7 @@ class OWSConfig(OWSMetadataConfig):
             self.published_CRSs[alias]["gml_name"] = make_gml_name(alias)
             self.published_CRSs[alias]["alias_of"] = target_crs
 
-    def parse_wms(self, cfg: CFG_DICT):
+    def parse_wms(self, cfg: CFG_DICT) -> None:
         if not self.wms and not self.wmts:
             cfg = {}
         self.s3_bucket = cast(str, cfg.get("s3_bucket", ""))
@@ -1515,7 +1515,7 @@ class OWSConfig(OWSMetadataConfig):
         if "attribution" in cfg:
             _LOG.warning("Attribution entry in top level 'wms' section will be ignored. Attribution should be moved to the 'global' section")
 
-    def parse_wcs(self, cfg: CFG_DICT | None):
+    def parse_wcs(self, cfg: CFG_DICT | None) -> None:
         if self.wcs:
             if not isinstance(cfg, Mapping):
                 raise ConfigException("WCS section missing (and WCS is enabled)")
@@ -1546,7 +1546,7 @@ class OWSConfig(OWSMetadataConfig):
             self.wcs_cap_cache_age = 0
             self.wcs_default_descov_age = 0
 
-    def parse_wmts(self, cfg: CFG_DICT):
+    def parse_wmts(self, cfg: CFG_DICT) -> None:
         tms_cfgs = cast(dict[str, CFG_DICT], TileMatrixSet.default_tm_sets.copy())
         if "tile_matrix_sets" in cfg:
             for identifier, tms in cast(dict[str, CFG_DICT], cfg["tile_matrix_sets"]).items():
@@ -1559,7 +1559,7 @@ class OWSConfig(OWSMetadataConfig):
                 raise ConfigException(f"Tile matrix set identifiers must be unique: {identifier}")
             self.tile_matrix_sets[identifier] = TileMatrixSet(identifier, tms, self)
 
-    def parse_layers(self, cfg: list[CFG_DICT]):
+    def parse_layers(self, cfg: list[CFG_DICT]) -> None:
         self.folder_index: dict[str, OWSFolder] = {}
         self.layer_index: dict[str, OWSNamedLayer] = {}
         self.declare_unready("native_product_index")

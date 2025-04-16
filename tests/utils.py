@@ -22,11 +22,11 @@ coords = [
 ]
 
 
-def a_function(a, b=2, c=3, **kwargs):
+def a_function(a, b=2, c=3, **kwargs) -> list:
     return [f"a{a}  b{b}  c{c}", kwargs]
 
 
-def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
+def dummy_da(val, name, coords, attrs=None, dtype=np.float64) -> xr.DataArray:
     if attrs is None:
         attrs = {}
     dims = [n for n, a in coords]
@@ -43,7 +43,7 @@ def dummy_da(val, name, coords, attrs=None, dtype=np.float64):
     return output
 
 
-def dim1_da(name, vals, coords, with_time=True, attrs=None):
+def dim1_da(name, vals, coords, with_time=True, attrs=None) -> xr.DataArray:
     if len(vals) != len(coords):
         raise Exception("vals and coords must match len")
     if attrs is None:
@@ -68,7 +68,7 @@ def dim1_da(name, vals, coords, with_time=True, attrs=None):
     )
     return output
 
-def dim1_da_time(name, vals, dates, coords, attrs=None):
+def dim1_da_time(name, vals, dates, coords, attrs=None) -> xr.DataArray:
     if len(coords) != len(vals):
         raise Exception("vals and coords must match lengths")
     for v in vals:

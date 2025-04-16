@@ -32,7 +32,7 @@ WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
 
 @log_call
-def handle_wcs2(nocase_args):
+def handle_wcs2(nocase_args) -> tuple:
     operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS2Exception("No operation specified", locator="Request parameter")
@@ -150,7 +150,7 @@ def get_capabilities(args):
     )
 
 
-def create_coverage_description(cfg, product):
+def create_coverage_description(cfg, product) -> CoverageDescription:
     axes = [
         RegularAxis(
             label=product.native_CRS_def["horizontal_coord"],
@@ -256,7 +256,7 @@ def create_coverage_description(cfg, product):
 
 
 @log_call
-def desc_coverages(args):
+def desc_coverages(args) -> tuple:
     cfg = get_config()
 
     request_obj = kvp_decode_describe_coverage(args)
@@ -298,7 +298,7 @@ def desc_coverages(args):
 
 
 @log_call
-def get_coverage(args, ows_stats=False, styles=None):
+def get_coverage(args, ows_stats=False, styles=None) -> tuple[str | bytes, int, dict[str, str]]:
     request_obj = kvp_decode_get_coverage(args)
     qprof = QueryProfiler(ows_stats)
     output, headers = get_coverage_data(request_obj, styles, qprof)

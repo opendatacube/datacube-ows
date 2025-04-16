@@ -11,7 +11,7 @@ from shapely.ops import triangulate, unary_union
 
 
 class WCS20Extent:
-    def __init__(self, desc_cov):
+    def __init__(self, desc_cov) -> None:
         env = desc_cov[0].find("{http://www.opengis.net/gml/3.2}boundedBy")[0]
         self.native_crs = env.attrib["srsName"]
         self.time = [
@@ -56,7 +56,7 @@ class WCS20Extent:
         else:
             return [("x", bbox[0], bbox[2]), ("y", bbox[1], bbox[3]), time]
 
-    def native_bbox(self):
+    def native_bbox(self) -> tuple[float, float, float, float]:
         return (
             float(self.lower_corner[0]),
             float(self.lower_corner[1]),
@@ -64,7 +64,7 @@ class WCS20Extent:
             float(self.upper_corner[1]),
         )
 
-    def bbox_crs(self, crs):
+    def bbox_crs(self, crs) -> tuple[float, float, float, float]:
         low = point(*self.lower_corner, crs=self.native_crs).to_crs(crs)
         up = point(*self.upper_corner, crs=self.native_crs).to_crs(crs)
         return (
@@ -80,13 +80,13 @@ class WCS20Extent:
         return diff * start + c_min, diff * end + c_min
 
     @staticmethod
-    def subset_bbox(bbox, xstart=0.3, xwidth=0.02, ystart=0.8, ywidth=0.02):
+    def subset_bbox(bbox, xstart=0.3, xwidth=0.02, ystart=0.8, ywidth=0.02) -> tuple:
         x = WCS20Extent.subcoord(bbox[0], bbox[2], xstart, xstart + xwidth)
         y = WCS20Extent.subcoord(bbox[1], bbox[3], xstart, xstart + xwidth)
         return x[0], y[0], x[1], y[1]
 
 
-def geom_from_bbox(bbox, crs="EPSG:4326"):
+def geom_from_bbox(bbox, crs="EPSG:4326") -> Geometry:
     geojson = {
         "type": "Polygon",
         "coordinates": [
@@ -102,7 +102,7 @@ def geom_from_bbox(bbox, crs="EPSG:4326"):
     return Geometry(geojson, crs=crs)
 
 
-def simplify_geom(geom_in, crs="EPSG:4326"):
+def simplify_geom(geom_in, crs="EPSG:4326") -> Geometry:
     geom = geom_in
     # Pick biggest polygon from multipolygon
     if geom.geom_type == "MultiPolygon":
@@ -150,7 +150,7 @@ class ODCExtent:
             except IndexError:
                 return []
 
-        def is_multi(self):
+        def is_multi(self) -> bool:
             return self in (self.FIRST_TWO, self.LAST_TWO)
 
     FIRST = TimeRequestTypes.FIRST
@@ -170,14 +170,14 @@ class ODCExtent:
         OUTSIDE_OF_FULL_EXTENT = -1
         IN_FULL_BUT_OUTSIDE_OF_TIMES = -2
 
-        def needs_full_extent(self):
+        def needs_full_extent(self) -> bool:
             return self in (
                 self.FULL_LAYER_EXTENT,
                 self.OUTSIDE_OF_FULL_EXTENT,
                 self.IN_FULL_BUT_OUTSIDE_OF_TIMES,
             )
 
-        def needs_time_extent(self):
+        def needs_time_extent(self) -> bool:
             return self not in (self.FULL_LAYER_EXTENT, self.OUTSIDE_OF_FULL_EXTENT)
 
         def subset(self, time_extent, full_extent):
@@ -278,7 +278,7 @@ class ODCExtent:
     OUTSIDE_OF_FULL_EXTENT = SpaceRequestType.OUTSIDE_OF_FULL_EXTENT
     IN_FULL_BUT_OUTSIDE_OF_TIMES = SpaceRequestType.IN_FULL_BUT_OUTSIDE_OF_TIMES
 
-    def __init__(self, layer):
+    def __init__(self, layer) -> None:
         self.layer = layer
         self.native_crs = layer.native_CRS
         self.full_extent = None
@@ -288,7 +288,7 @@ class ODCExtent:
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
         crs="EPSG:4326",
-    ):
+    ) -> dict:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
             time_strs = (times[0].strftime("%Y-%m-%d"),)
@@ -310,7 +310,7 @@ class ODCExtent:
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
         crs="EPSG:4326",
-    ):
+    ) -> tuple:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
             time_sub = ("time", times[0].strftime("%Y-%m-%d"))
@@ -344,7 +344,7 @@ class ODCExtent:
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
         crs="EPSG:4326",
-    ):
+    ) -> tuple:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
             time_sub = f'time("{times[0].strftime("%Y-%m-%d")}")'
@@ -365,7 +365,7 @@ class ODCExtent:
         self,
         space=SpaceRequestType.CENTRAL_SUBSET_FOR_TIMES,
         time=TimeRequestTypes.LAST,
-    ):
+    ) -> tuple:
         ext_times = time.slice(self.layer.ranges.times)
         search_times = [self.layer.search_times(t) for t in ext_times]
         if space.needs_full_extent() and not self.full_extent:

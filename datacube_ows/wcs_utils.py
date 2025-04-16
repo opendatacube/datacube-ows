@@ -7,7 +7,7 @@
 from datacube_ows.ogc_exceptions import WCS1Exception, WCS2Exception
 
 
-def get_bands_from_styles(styles, layer, version=1):
+def get_bands_from_styles(styles, layer, version: int = 1) -> set:
     styles = styles.split(",")
     if len(styles) != 1:
         if version == 1:

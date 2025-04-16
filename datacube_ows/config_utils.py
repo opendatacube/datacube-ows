@@ -184,7 +184,7 @@ class OWSConfigEntry:
         self._raw_cfg: RAW_CFG = cfg
         self.ready: bool = False
 
-    def declare_unready(self, name):
+    def declare_unready(self, name) -> None:
         """
         Declare a parameter that cannot be set in the first (no db) phase of initialisation.
 

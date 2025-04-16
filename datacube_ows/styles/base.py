@@ -76,7 +76,7 @@ class LegendBase(OWSConfigEntry):
                 urls[locale] = str(cfg_d[def_loc])
         return urls
 
-    def parse_common_auto_elements(self, cfg: CFG_DICT):
+    def parse_common_auto_elements(self, cfg: CFG_DICT) -> None:
         self.width = cast(float, cfg.get("width", 4.0))
         self.height = cast(float, cfg.get("height", 1.25))
         self.mpl_rcparams = cast(MutableMapping[str, str], cfg.get("rcParams", {}))

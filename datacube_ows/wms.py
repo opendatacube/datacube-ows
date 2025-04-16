@@ -18,7 +18,7 @@ WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
 
 @log_call
-def handle_wms(nocase_args):
+def handle_wms(nocase_args) -> tuple | None:
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
     if not operation:
@@ -37,7 +37,7 @@ def handle_wms(nocase_args):
 
 
 @log_call
-def get_capabilities(args):
+def get_capabilities(args) -> tuple[str, int, dict[str, str]]:
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.

@@ -46,12 +46,12 @@ class OWSPostgresIndex(OWSAbstractIndex):
 
     # method to delete obsolete schemas etc.
     @override
-    def cleanup_schema(self, dc: Datacube):
+    def cleanup_schema(self, dc: Datacube) -> None:
         self._run_sql(dc, "ows_schema/cleanup")
 
     # Schema creation method
     @override
-    def create_schema(self, dc: Datacube):
+    def create_schema(self, dc: Datacube) -> None:
         click.echo("Creating/updating schema and tables...")
         self._run_sql(dc, "ows_schema/create")
         click.echo("Creating/updating materialised views...")
@@ -61,7 +61,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
 
     # Permission management method
     @override
-    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False):
+    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
         if read_only:
             self._run_sql(dc, "ows_schema/grants/read_only", role=role)
             self._run_sql(dc, "extent_views/grants/read_only", role=role)
@@ -71,7 +71,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
-    def update_geotemporal_index(self, dc: Datacube):
+    def update_geotemporal_index(self, dc: Datacube) -> None:
         self._run_sql(dc, "extent_views/refresh")
 
     @override
@@ -150,5 +150,5 @@ class OWSPostgresIndexDriver(OWSAbstractIndexDriver):
         return cls._driver
 
 
-def ows_index_driver_init():
+def ows_index_driver_init() -> OWSPostgresIndexDriver:
     return OWSPostgresIndexDriver()

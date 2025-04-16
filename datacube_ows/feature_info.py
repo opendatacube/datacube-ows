@@ -273,7 +273,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         for d in all_time_datasets.coords["time"].values:
             dt_datasets = all_time_datasets.sel(time=d)
             for ds in cast(Iterable[Dataset], dt_datasets.values.item()):
-                assert ds is not None  # For type checker
+                assert ds.crs is not None  # For type checker
                 if pt_native is None:
                     pt_native = geo_point.to_crs(ds.crs)
                 elif pt_native.crs != ds.crs:
@@ -314,7 +314,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 "properties": feature_json,
                 "geometry": {
                     "type": "Point",
-                    "coordinates": geo_point.coords[0]
+                    "coordinates": geo_point.coords[0]  # type: ignore[dict-item]
                 }
             }
         ]

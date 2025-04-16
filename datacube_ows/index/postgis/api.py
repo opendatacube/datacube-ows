@@ -54,13 +54,13 @@ class OWSPostgisIndex(OWSAbstractIndex):
 
     # Schema creation method
     @override
-    def create_schema(self, dc: Datacube):
+    def create_schema(self, dc: Datacube) -> None:
         click.echo("Creating/updating schema and tables...")
         self._run_sql(dc, "ows_schema/create")
 
     # Permission management method
     @override
-    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False):
+    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
         if read_only:
             self._run_sql(dc, "ows_schema/grants/read_only", role=role)
         else:
@@ -194,5 +194,5 @@ class OWSPostgisIndexDriver(OWSAbstractIndexDriver):
         return cls._driver
 
 
-def ows_index_driver_init():
+def ows_index_driver_init() -> OWSPostgisIndexDriver:
     return OWSPostgisIndexDriver()

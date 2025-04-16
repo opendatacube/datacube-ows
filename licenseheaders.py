@@ -38,6 +38,7 @@ import stat
 import contextlib
 from shutil import copyfile
 from string import Template
+from typing import Any, Generator, TextIO
 
 import regex as re
 
@@ -51,7 +52,7 @@ LOGGER = logging.getLogger(f"licenseheaders_{__version__}")
 default_dir = "."
 default_encoding = "utf-8"
 
-def update_c_style_comments(extensions):
+def update_c_style_comments(extensions) -> dict:
     return {
         "extensions": extensions,
         "keepFirst": None,
@@ -357,7 +358,7 @@ class DictArgs(argparse.Action):
         setattr(namespace, self.dest, dict_args)
 
 
-def parse_command_line(argv):
+def parse_command_line(argv) -> argparse.Namespace:
     """
     Parse command line argument. See -h option.
     :param argv: the actual program arguments
@@ -453,7 +454,7 @@ def parse_command_line(argv):
     return arguments
 
 
-def read_type_settings(path):
+def read_type_settings(path) -> dict:
     def handle_regex(setting, name):
         if setting[name]:
             setting[name] = re.compile(setting[name])
@@ -466,7 +467,7 @@ def read_type_settings(path):
         else:
             setting[name] = None
 
-    settings = {}
+    settings: dict = {}
 
     import json
     with open(path) as f:
@@ -482,7 +483,7 @@ def read_type_settings(path):
 
     return settings
 
-def get_paths(fnpatterns, start_dir=default_dir):
+def get_paths(fnpatterns, start_dir=default_dir) -> Generator[str, Any, None]:
     """
     Retrieve files that match any of the glob patterns from the start_dir and below.
     :param fnpatterns: the file name patterns
@@ -501,7 +502,7 @@ def get_paths(fnpatterns, start_dir=default_dir):
             seen.add(path)
             yield path
 
-def get_files(fnpatterns, files):
+def get_files(fnpatterns: list, files: list[str]) -> Generator[str, Any, None]:
     seen = set()
     names = []
     for f in files:
@@ -516,7 +517,7 @@ def get_files(fnpatterns, files):
         seen.add(path)
         yield path
 
-def read_template(template_file, vardict, args):
+def read_template(template_file: str, vardict, args) -> list[str]:
     """
     Read a template file replace variables from the dict and return the lines.
     Throws exception if a variable cannot be replaced.
@@ -534,7 +535,7 @@ def read_template(template_file, vardict, args):
     return lines
 
 
-def for_type(templatelines, ftype, settings):
+def for_type(templatelines, ftype, settings) -> list[str]:
     """
     Format the template lines for the given ftype.
     :param templatelines: the lines of the template text
@@ -564,7 +565,7 @@ def for_type(templatelines, ftype, settings):
 
 
 ##
-def read_file(file, args, type_settings):
+def read_file(file, args, type_settings) -> dict[str, Any]:
     """
     Read a file and return a dictionary with the following elements:
     :param file: the file to read
@@ -716,7 +717,7 @@ def read_file(file, args, type_settings):
                 }
 
 
-def make_backup(file, arguments):
+def make_backup(file, arguments) -> None:
     """
     Backup file by copying it to a file with the extension .bak appended to the name.
     :param file: file to back up
@@ -740,7 +741,7 @@ class OpenAsWriteable:
     argument not being set), this contextmanager yields None on __enter__.
     """
 
-    def __init__(self, filename, arguments):
+    def __init__(self, filename, arguments) -> None:
         """
         Initialize an OpenAsWriteable context manager
         :param filename: path to the file to open
@@ -782,7 +783,7 @@ class OpenAsWriteable:
 
         return file_handle
 
-    def __exit__ (self, exc_type, exc_value, traceback):
+    def __exit__ (self, exc_type, exc_value, traceback) -> None:
         """
         Restore back file permissions and close file handle (if any).
         """
@@ -802,7 +803,7 @@ class OpenAsWriteable:
 
 
 @contextlib.contextmanager
-def open_as_writable(file, arguments):
+def open_as_writable(file, arguments) -> Generator[TextIO, Any, None]:
     """
     Wrapper around OpenAsWriteable context manager.
     """
@@ -810,7 +811,7 @@ def open_as_writable(file, arguments):
         yield fw
 
 
-def main():
+def main() -> int:
     """Main function."""
     # LOGGER.addHandler(logging.StreamHandler(stream=sys.stderr))
     # init: create the ext2type mappings

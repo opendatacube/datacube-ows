@@ -15,6 +15,7 @@ from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
 from odc.geo import geom
+from odc.geo.geobox import GeoBox
 from pytz import utc
 from rasterio.warp import Resampling
 
@@ -38,7 +39,7 @@ RESAMPLING_METHODS = {
 }
 
 
-def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=None):
+def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=None) -> tuple[float, float, float, float]:
     # pylint: disable=too-many-locals
     p1 = geom.point(minx, maxy, src_crs)
     p2 = geom.point(minx, miny, src_crs)
@@ -61,7 +62,7 @@ def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=N
     return minx, miny, maxx, maxy
 
 
-def _get_geobox_xy(args, crs):
+def _get_geobox_xy(args, crs) -> tuple:
     if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
     else:
@@ -69,7 +70,7 @@ def _get_geobox_xy(args, crs):
     return minx, miny, maxx, maxy
 
 
-def _get_geobox(args, crs):
+def _get_geobox(args, crs) -> GeoBox:
     width = int(args['width'])
     height = int(args['height'])
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
@@ -93,13 +94,13 @@ def _get_geobox(args, crs):
     )
 
 
-def _get_polygon(args, crs):
+def _get_polygon(args, crs) -> geom.Geometry:
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
     poly = geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
     return poly
 
 
-def zoom_factor(args, crs):
+def zoom_factor(args, crs) -> float:
     # Determine the geographic "zoom factor" for the request.
     # (Larger zoom factor means deeper zoom.  Smaller zoom factor means larger area.)
     # Extract request bbox and crs
@@ -123,7 +124,7 @@ def zoom_factor(args, crs):
     return 1.0 / math.sqrt(affine.determinant)
 
 
-def img_coords_to_geopoint(geobox, i, j):
+def img_coords_to_geopoint(geobox, i, j) -> geom.Geometry:
     cfg = get_config()
     h_coord = cfg.published_CRSs[str(geobox.crs)]["horizontal_coord"]
     v_coord = cfg.published_CRSs[str(geobox.crs)]["vertical_coord"]
@@ -262,7 +263,7 @@ def parse_time_delta(delta_str):
     return relativedelta(**{k: float(v) for k, v in parts.items() if v is not None})
 
 
-def parse_wms_time_string(t, start=True):
+def parse_wms_time_string(t, start=True) -> datetime | relativedelta:
     if t.upper() == 'PRESENT':
         return datetime.now(timezone.utc)
     elif t.startswith('P'):
@@ -272,7 +273,7 @@ def parse_wms_time_string(t, start=True):
         return parse(t, default=default)
 
 
-def parse_wms_time_strings(parts, with_tz=False):
+def parse_wms_time_strings(parts, with_tz: bool = False) -> tuple:
     start = parse_wms_time_string(parts[0])
     end = parse_wms_time_string(parts[-1], start=False)
 
@@ -326,14 +327,14 @@ class GetParameters:
 
         self.method_specific_init(args)
 
-    def method_specific_init(self, args):
+    def method_specific_init(self, args) -> None:
         pass
 
     def get_layer(self, args) -> OWSNamedLayer:
         return get_layer_from_arg(args)
 
 
-def single_style_from_args(layer, args, required=True):
+def single_style_from_args(layer, args, required: bool = True):
     # User Band Math (overrides style if present).
     if layer.user_band_math and "code" in args and "colorscheme" in args:
         code = args["code"]
@@ -393,7 +394,7 @@ def single_style_from_args(layer, args, required=True):
     return style
 
 class GetLegendGraphicParameters:
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         self.layer = get_layer_from_arg(args, 'layer')
 
         # Validate Format parameter
@@ -409,7 +410,7 @@ class GetLegendGraphicParameters:
 
 class GetMapParameters(GetParameters):
     @override
-    def method_specific_init(self, args):
+    def method_specific_init(self, args) -> None:
         # Validate Format parameter
         self.format = get_arg(args, "format", "image format",
                               errcode=WMSException.INVALID_FORMAT,
@@ -448,7 +449,7 @@ class GetFeatureInfoParameters(GetParameters):
         return get_layer_from_arg(args, "query_layers")
 
     @override
-    def method_specific_init(self, args):
+    def method_specific_init(self, args) -> None:
         # Validate Formata parameter
         self.format = get_arg(args, "info_format", "info format", lower=True,
                               errcode=WMSException.INVALID_FORMAT,
@@ -472,7 +473,7 @@ class GetFeatureInfoParameters(GetParameters):
 
 
 # Solar angle correction functions
-def declination_rad(dt):
+def declination_rad(dt) -> float:
     # Estimate solar declination from a datetime.  (value returned in radians).
     # Formula taken from https://en.wikipedia.org/wiki/Position_of_the_Sun#Declination_of_the_Sun_as_seen_from_Earth
     timedel = dt - datetime(dt.year, 1, 1, 0, 0, 0, tzinfo=utc)
@@ -480,7 +481,7 @@ def declination_rad(dt):
     return -1.0 * math.radians(23.44) * math.cos(2 * math.pi / 365 * (day_count + 10))
 
 
-def cosine_of_solar_zenith(lat, lon, utc_dt):
+def cosine_of_solar_zenith(lat, lon, utc_dt) -> float:
     # Estimate cosine of solar zenith angle
     # (angle between sun and local zenith) at requested latitude, longitude and datetime.
     # Formula taken from https://en.wikipedia.org/wiki/Solar_zenith_angle
@@ -495,7 +496,7 @@ def cosine_of_solar_zenith(lat, lon, utc_dt):
     return result
 
 
-def solar_correct_data(data, dataset):
+def solar_correct_data(data, dataset) -> float:
     # Apply solar angle correction to the data for a dataset.
     # See for example http://gsp.humboldt.edu/olm_2015/Courses/GSP_216_Online/lesson4-1/radiometric.html
     native_x = (dataset.bounds.right + dataset.bounds.left) / 2.0

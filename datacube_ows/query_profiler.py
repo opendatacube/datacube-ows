@@ -8,32 +8,32 @@ from time import time
 
 
 class QueryProfiler:
-    def __init__(self, active):
+    def __init__(self, active) -> None:
         self.active = active
-        self._events = {}
-        self._stats = {}
+        self._events: dict = {}
+        self._stats: dict = {}
         if active:
             self.start_event("query")
 
-    def start_event(self, name):
+    def start_event(self, name) -> None:
         if self.active:
             self._events[name] = [time(), None]
 
-    def __setitem__(self, name, val):
+    def __setitem__(self, name, val) -> None:
         self._stats[name] = val
 
     def __getitem__(self, name):
         return self._stats[name]
 
-    def end_event(self, name):
+    def end_event(self, name) -> None:
         if self.active:
             if name in self._events:
                 self._events[name][1] = time()
             else:
                 self._events[name] = [None, time()]
 
-    def profile(self):
-        result = {}
+    def profile(self) -> dict:
+        result: dict = {}
         if self.active:
             self.end_event("query")
             result["profile"] = {}

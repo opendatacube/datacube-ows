@@ -7,13 +7,14 @@
 import logging
 import os
 import warnings
+from logging import Logger
 
 from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
 from flask import Flask, request
 from rasterio.errors import NotGeoreferencedWarning
 
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import OWSConfig, get_config
 
 __all__ = [
     'initialise_babel',
@@ -28,7 +29,7 @@ __all__ = [
     'CredentialManager',
 ]
 
-def initialise_logger(name=None):
+def initialise_logger(name: str | None = None) -> Logger:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s'))
     _LOG = logging.getLogger(name)
@@ -41,12 +42,12 @@ def initialise_logger(name=None):
     return _LOG
 
 
-def initialise_ignorable_warnings():
+def initialise_ignorable_warnings() -> None:
     # Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
     warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
 
 
-def initialise_debugging(log=None):
+def initialise_debugging(log: Logger | None = None) -> None:
     # PYCHARM Debugging
     if os.environ.get("PYDEV_DEBUG"):
         if os.environ["PYDEV_DEBUG"].lower() not in ("no", "false", "f", "n"):
@@ -55,14 +56,14 @@ def initialise_debugging(log=None):
             if log:
                 log.info("PyCharm Debugging enabled")
 
-def before_send(event, hint):
+def before_send(event, hint) -> None:
     if 'exc_info' in hint:
         exc_type, exc_value, tb = hint['exc_info']
         if isinstance(exc_value, AttributeError) and "object has no attribute 'GEOSGeom_destroy'" in str(exc_value):
             return None
     return event
 
-def initialise_sentry(log=None):
+def initialise_sentry(log: Logger | None = None) -> None:
     if os.environ.get("SENTRY_DSN"):
         import sentry_sdk
         from sentry_sdk.integrations.flask import FlaskIntegration
@@ -79,12 +80,12 @@ def initialise_sentry(log=None):
 class CredentialManager:
     _instance = None
 
-    def __new__(cls, log=None):
+    def __new__(cls, log: Logger | None = None) -> "CredentialManager":
         if not cls._instance:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, log=None):
+    def __init__(self, log: Logger | None = None) -> None:
         # Startup initialisation of libraries controlled by environment variables
         self.use_aws = False
         self.unsigned = False
@@ -135,7 +136,7 @@ class CredentialManager:
             log.warning(
                 "Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
 
-    def _check_cred(self):
+    def _check_cred(self) -> None:
         if self.credentials and isinstance(self.credentials, RefreshableCredentials):
             if self.credentials.refresh_needed():
                 self.renew_creds()
@@ -150,7 +151,7 @@ class CredentialManager:
         # pylint: disable=protected-access
         cls._instance._check_cred()
 
-    def renew_creds(self):
+    def renew_creds(self) -> None:
         if self.use_aws:
             if self.log:
                 self.log.info("Establishing/renewing credentials")
@@ -162,13 +163,13 @@ class CredentialManager:
                     self.log.debug("%s seconds remaining", str(self.credentials._seconds_remaining()))
 
 
-def initialise_aws_credentials(log=None):
+def initialise_aws_credentials(log: Logger | None = None) -> None:
     # pylint: disable=protected-access
     if CredentialManager._instance is None:
         cm = CredentialManager(log)
 
 
-def parse_config_file(log=None):
+def parse_config_file(log: Logger | None = None) -> OWSConfig | None:
     # Cache a parsed config file object
     # (unless deferring to first request)
     cfg = None
@@ -177,7 +178,7 @@ def parse_config_file(log=None):
     return cfg
 
 
-def initialise_flask(name):
+def initialise_flask(name) -> Flask:
     app_path = os.path.dirname(os.path.abspath(__file__))
     app = Flask(name.split('.')[0], template_folder=os.path.join(app_path, 'templates'))
     return app
@@ -200,7 +201,8 @@ class FakeMetrics:
     def summary(self, *args, **kwargs):
         return pass_through
 
-def initialise_prometheus(app, log=None):
+
+def initialise_prometheus(app, log: Logger | None = None):
     # Prometheus
     if os.environ.get("PROMETHEUS_MULTIPROC_DIR", False):
         from prometheus_flask_exporter.multiprocess import \
@@ -224,7 +226,7 @@ def request_extractor():
     qreq = request.args.get('request')
     return qreq
 
-def initialise_babel(cfg, app):
+def initialise_babel(cfg, app) -> object | None:
     if cfg and cfg.internationalised:
         from flask_babel import Babel
         app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir

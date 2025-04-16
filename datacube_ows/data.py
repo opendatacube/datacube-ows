@@ -41,9 +41,10 @@ def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
     else:
         tz = None
 
-    def check_date(time_res, user_date, odc_date):
+    def check_date(time_res, user_date, odc_date) -> bool:
         ts = Timestamp(odc_date).tz_localize("UTC")
         if time_res.is_solar():
+            assert tz is not None
             norm_date = solar_date(ts, tz)
             return norm_date == user_date
         elif time_res.is_summary():

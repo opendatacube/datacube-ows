@@ -23,12 +23,12 @@ class OGCException(Exception):
     schema_url: str | None = None
 
     # pylint: disable=super-init-not-called
-    def __init__(self, msg, code=None, locator=None, http_response=400, valid_keys=None):
+    def __init__(self, msg, code=None, locator=None, http_response=400, valid_keys=None) -> None:
         self.http_response = http_response
-        self.errors = []
+        self.errors: list = []
         self.add_error(msg, code, locator, valid_keys)
 
-    def add_error(self, msg, code=None, locator=None, valid_keys=None):
+    def add_error(self, msg, code=None, locator=None, valid_keys=None) -> None:
         self.errors.append({
             "msg": msg,
             "code": code,
@@ -37,7 +37,7 @@ class OGCException(Exception):
         })
 
     # pylint: disable=dangerous-default-value
-    def exception_response(self, traceback=[]):
+    def exception_response(self, traceback=[]) -> tuple[str, int, dict[str, str]]:
         return (render_template("ogc_error.xml",
                                 exception=self,
                                 traceback=traceback,
@@ -102,7 +102,7 @@ class WCS2Exception(OGCException):
 
     # pylint: disable=dangerous-default-value
     @override
-    def exception_response(self, traceback=[]):
+    def exception_response(self, traceback=[]) -> tuple:
         exceptions = [
             OWSException(
                 code=error['code'],

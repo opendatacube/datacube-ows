@@ -37,7 +37,7 @@ webmerc_scale_set = [
 ]
 
 
-def validate_2d_array(array: list, ident: str, label: str, typ: type):
+def validate_2d_array(array: list, ident: str, label: str, typ: type) -> None:
     try:
         if len(array) != 2:
             raise ConfigException(f"In tile matrix set {ident}, {label} must have two values: f{array}")
@@ -46,7 +46,7 @@ def validate_2d_array(array: list, ident: str, label: str, typ: type):
         raise ConfigException(f"In tile matrix set {ident}, {label} must be a list of two values: f{array}")
 
 
-def validate_array_typ(array: list, ident: str, label: str, typ: type):
+def validate_array_typ(array: list, ident: str, label: str, typ: type) -> None:
     for elem in array:
         if not isinstance(elem, typ):
             raise ConfigException(f"In tile matrix set {ident}, {label} has non-{typ.__name__} value of type {elem.__class__.__name__}: {elem}")
@@ -63,7 +63,7 @@ class TileMatrixSet(OWSConfigEntry):
         },
     }
 
-    def __init__(self, identifier: str, cfg: CFG_DICT, global_cfg: "OWSConfig"):
+    def __init__(self, identifier: str, cfg: CFG_DICT, global_cfg: "OWSConfig") -> None:
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.identifier = identifier
@@ -116,20 +116,20 @@ class TileMatrixSet(OWSConfigEntry):
             return f"urn:ogc:def:crs:EPSG::{self.crs_name[5:]}"
         return self.crs_name
 
-    def exponent(self, idx, scale_no):
+    def exponent(self, idx, scale_no) -> int:
         init = self.initial_matrix_exponents[idx]
         exponent = scale_no + init
         if exponent < 0:
             return 0
         return exponent
 
-    def width_exponent(self, scale_no):
+    def width_exponent(self, scale_no) -> int:
         return self.exponent(0, scale_no)
 
-    def height_exponent(self, scale_no):
+    def height_exponent(self, scale_no) -> int:
         return self.exponent(1, scale_no)
 
-    def wms_bbox_coords(self, tile_matrix, row, col):
+    def wms_bbox_coords(self, tile_matrix, row, col) -> tuple:
         # Convert WMTS params to coordinate window for WMS
         pixel = [col, row]
         scale_denominator = self.scale_set[tile_matrix]

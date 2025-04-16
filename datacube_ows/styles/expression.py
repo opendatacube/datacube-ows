@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import operator
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 import lark
 from datacube.virtual.expr import formula_parser
@@ -22,16 +22,15 @@ if TYPE_CHECKING:
 identity = lambda ev, x: x
 
 
-def empty_gen(ev, a):
+def empty_gen(ev, a) -> set:
     return set()
 
 
 def union(ev, a, b):
     return a.union(b)
 
-
-def not_supported(op_name):
-    def impl(ev, a=None, b=None, c=None):
+def not_supported(op_name: object) -> Callable[[object, object], Any]:
+    def impl(ev: object, a: object = None, b: object = None, c: object = None) -> Any:
         raise ConfigException(f"{op_name} not supported")
     return impl
 
@@ -58,7 +57,7 @@ class ExpressionEvaluator(lark.Transformer):
     float_literal = float
     int_literal = int
 
-    def __init__(self, style, *args, **kwargs):
+    def __init__(self, style, *args, **kwargs) -> None:
         self.ows_style = style
         super().__init__(*args, **kwargs)
 
@@ -84,7 +83,7 @@ class BandListEvaluator(ExpressionEvaluator):
     float_literal = empty_gen  # type: ignore[assignment]
     int_literal = empty_gen  # type: ignore[assignment]
 
-    def var_name(self, key):
+    def var_name(self, key) -> set:
         return set([self.ows_style.local_band(key.value)])
 
 
@@ -131,7 +130,7 @@ class Expression:
 
         @lark.v_args(inline=True)
         class ExpressionDataEvaluator(evaluator_cls):  # type: ignore[valid-type, misc]
-            def var_name(self, key):
+            def var_name(self, key) -> str:
                 return data[self.ows_style.local_band(key.value)]
 
         # pyre-ignore[19]

@@ -411,7 +411,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                     f"Style {self.style.name} uses a no-longer supported format for legend configuration.  " +
                     "Please refer to the documentation and update your config")
 
-    def tick_label(self, tick):
+    def tick_label(self, tick: Decimal) -> str | None:
         try:
             tick_idx = self.ticks.index(tick)
             metaval = self.read_local_metadata(f"lbl_{tick}")
@@ -458,17 +458,17 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         for tick in self.ticks:
             value = float(tick)
             normalized = (value - float(self.begin)) / float(normalize_factor)
-            ticks[normalized] = self.tick_label(tick)
+            ticks[normalized] = cast(str, self.tick_label(tick))
 
         return cdict, ticks
 
-    def display_title(self):
+    def display_title(self) -> str:
         if self.units:
             return f"{self.title}({self.units})"
         else:
             return self.title
 
-    def plot_name(self):
+    def plot_name(self) -> str:
         return f"{self.style.product.name}_{self.style.name}"
 
     @override
@@ -564,7 +564,7 @@ class ColorRampDef(StyleDefBase):
 
     class Legend(RampLegendBase):
         @override
-        def plot_name(self):
+        def plot_name(self) -> str:
             return f"{self.style.product.name}_{self.style.name}_{self.style_or_mdh.min_count}"
 
     class MultiDateHandler(StyleDefBase.MultiDateHandler):
