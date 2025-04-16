@@ -45,7 +45,7 @@ def uniform_crs(cfg, crs):
     return crs
 
 
-def get_coverage_data(request, styles, qprof):
+def get_coverage_data(request, styles, qprof) -> tuple:
     # pylint: disable=too-many-locals, protected-access
 
     cfg = get_config()
@@ -230,7 +230,7 @@ def get_coverage_data(request, styles, qprof):
     #
 
     if not request.format:
-        fmt = cfg.wcs_formats_by_name[layer.native_format]
+        fmt = cfg.wcs_formats_by_name[layer.native_format]  # type: ignore[index]
     else:
         try:
             fmt = cfg.wcs_formats_by_mime[request.format]
@@ -289,14 +289,15 @@ def get_coverage_data(request, styles, qprof):
             for q, ids in stacker.dsids().items()
         }
     qprof.start_event("load-data")
+    # FIXME: output can be None.
     output = stacker.data(datasets, skip_corrections=True)
     qprof.end_event("load-data")
 
     # Clean extent flag band from output
     raw_bands = [layer.band_idx.locale_band(b) for b in bands]
-    for k, v in output.data_vars.items():
+    for k, v in output.data_vars.items():  # type: ignore[union-attr]
         if k not in raw_bands:
-            output = output.drop_vars([k])
+            output = output.drop_vars([k])  # type: ignore[union-attr]
 
     #
     # TODO: configurable

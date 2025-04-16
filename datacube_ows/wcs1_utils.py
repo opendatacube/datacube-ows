@@ -25,7 +25,7 @@ from datacube_ows.wcs_utils import get_bands_from_styles
 class WCS1GetCoverageRequest:
     version = Version(1, 0, 0)
     # pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         self.args = args
         cfg = get_config()
 
@@ -174,7 +174,7 @@ class WCS1GetCoverageRequest:
                 )
             elif len(self.times) > 1 and not self.format.multi_time:
                 raise WCS1Exception(
-                    "Cannot select more than one time slice with the %s format" % self.format["name"],
+                    f"Cannot select more than one time slice with the {self.format.name} format",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
                     locator="TIME and FORMAT parameters"
                 )
@@ -206,7 +206,7 @@ class WCS1GetCoverageRequest:
             #
             # As we have correlated WCS and WMS service implementations,
             # we can accept a style from WMS, and return the bands used for it.
-            self.bands = get_bands_from_styles(args["styles"], self.layer)
+            self.bands = list(get_bands_from_styles(args["styles"], self.layer))
             if not self.bands:
                 self.bands = self.layer.band_idx.band_labels()
         else:
@@ -278,10 +278,8 @@ class WCS1GetCoverageRequest:
                 raise WCS1Exception("RESY parameter must be a positive number",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESY parameter")
-            self.width = (self.maxx - self.minx) / self.resx
-            self.height = (self.maxy - self.miny) / self.resy
-            self.width = int(self.width + 0.5)
-            self.height = int(self.height + 0.5)
+            self.width = int(((self.maxx - self.minx) / self.resx) + 0.5)
+            self.height = int(((self.maxy - self.miny) / self.resy) + 0.5)
         elif "height" in args:
             raise WCS1Exception("HEIGHT parameter supplied without WIDTH parameter",
                                 WCS1Exception.MISSING_PARAMETER_VALUE,
@@ -304,7 +302,7 @@ class WCS1GetCoverageRequest:
         self.ows_stats = bool(args.get("ows_stats"))
 
 
-def get_coverage_data(req, qprof):
+def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
     # pylint: disable=too-many-locals, protected-access
     stacker = DataStacker(req.layer,
                           req.geobox,
@@ -392,14 +390,15 @@ def get_coverage_data(req, qprof):
             for q, ids in stacker.dsids().items()
         }
     qprof.start_event("load-data")
+    # FIXME: output can be None.
     output = stacker.data(datasets, skip_corrections=True)
     qprof.end_event("load-data")
 
     # Clean extent flag band from output
     sanitised_bands = [req.layer.band_idx.locale_band(b) for b in req.bands]
-    for k, v in output.data_vars.items():
+    for k, v in output.data_vars.items():  # type: ignore[union-attr]
         if k not in sanitised_bands:
-            output = output.drop_vars([k])
+            output = output.drop_vars([k])  # type: ignore[union-attr]
     qprof["write_action"] = "Write Data"
     return n_datasets, output
 
