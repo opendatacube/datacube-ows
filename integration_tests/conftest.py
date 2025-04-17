@@ -50,7 +50,7 @@ def runner():
 
 
 @pytest.helpers.register
-def enclosed_bbox(bbox, flip=False):
+def enclosed_bbox(bbox, flip: bool = False):
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
@@ -99,7 +99,7 @@ def representative_bbox(bbox):
 
 
 @pytest.fixture
-def product_name():
+def product_name() -> str:
     return "s2_l2a"
 
 
@@ -110,7 +110,7 @@ def write_role_name():
 
 
 @pytest.fixture
-def read_role_name(write_role_name):
+def read_role_name(write_role_name: str):
     if read_role_name := os.environ.get("SERVER_DB_USERNAME"):
         return read_role_name
     else:
@@ -118,5 +118,5 @@ def read_role_name(write_role_name):
 
 
 @pytest.fixture
-def multiproduct_name():
+def multiproduct_name() -> str:
     return "s2_ard_granule_nbar_t"

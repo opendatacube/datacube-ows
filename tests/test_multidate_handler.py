@@ -13,10 +13,10 @@ from datacube_ows.config_utils import ConfigException
 from datacube_ows.styles.base import StyleDefBase
 
 
-def test_multidate_handler():
+def test_multidate_handler() -> None:
     # TODO: Consolidate these into a fixture
     class FakeData:
-        def __init__(self):
+        def __init__(self) -> None:
             self.nodata = np.nan
 
         def item(self):
@@ -29,7 +29,7 @@ def test_multidate_handler():
     class FakeMdhStyle:
         include_in_feature_info = True
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.product = "test"
             self.needed_bands = ["test"]
             self.index_function = lambda x: FakeData()

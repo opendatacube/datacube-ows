@@ -30,32 +30,32 @@ def prelegend_colorramp_style():
     return style
 
 
-def test_create_legend_for_style(dummy_layer): # noqa: F811
+def test_create_legend_for_style(dummy_layer) -> None: # noqa: F811
     from datacube_ows.legend_generator import create_legend_for_style
     assert create_legend_for_style(dummy_layer, "stylish_steve") is None
 
 
 @pytest.fixture
-def image_url():
+def image_url() -> str:
     return "https://github.com/fluidicon.png"
 
 
 @pytest.fixture
-def bad_image_url():
+def bad_image_url() -> str:
     return "https://github.com/not-a-real-github-image-i-hope-asdfgaskjdfghaskjdh.png"
 
 
-def test_image_from_url(image_url):
+def test_image_from_url(image_url) -> None:
     img = get_image_from_url(image_url)
     assert img is not None
     assert img.mode == "RGBA"
 
 
-def test_image_from_bad_image_url(bad_image_url):
+def test_image_from_bad_image_url(bad_image_url) -> None:
     with pytest.raises(WMSException) as e:
         img = get_image_from_url(bad_image_url)
 
-def test_parse_colorramp_defaults():
+def test_parse_colorramp_defaults() -> None:
     legend = ColorRampDef.Legend(MagicMock(), {})
     _ = ColorRamp(MagicMock(),
                      {
@@ -72,7 +72,7 @@ def test_parse_colorramp_defaults():
     assert legend.strip_location == (0.05, 0.5, 0.9, 0.15)
 
 
-def test_parse_colorramp_legend_beginend():
+def test_parse_colorramp_legend_beginend() -> None:
     legend = ColorRampDef.Legend(MagicMock(), {
         "begin": "0.0",
         "end": "2.0"

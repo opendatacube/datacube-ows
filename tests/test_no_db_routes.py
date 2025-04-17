@@ -15,7 +15,7 @@ if src_dir not in sys.path:
     sys.path.append(src_dir)
 
 
-def reset_global_config():
+def reset_global_config() -> None:
     from datacube_ows.ows_configuration import OWSConfig
     OWSConfig._instance = None
 
@@ -28,37 +28,37 @@ def no_db(monkeypatch):
     reset_global_config()
 
 
-def test_db_connect_fail(no_db, flask_client):
+def test_db_connect_fail(no_db, flask_client) -> None:
     """Start with a database connection"""
     rv = flask_client.get('/ping')
     assert rv.status_code == 500
 
 
-def test_wcs_fail(no_db, flask_client):
+def test_wcs_fail(no_db, flask_client) -> None:
     """WCS endpoint fails"""
     rv = flask_client.get('/wcs')
     assert rv.status_code == 400
 
 
-def test_wms_fail(no_db, flask_client):
+def test_wms_fail(no_db, flask_client) -> None:
     """WMS endpoint fails"""
     rv = flask_client.get('/wms')
     assert rv.status_code == 400
 
 
-def test_wmts_fail(no_db, flask_client):
+def test_wmts_fail(no_db, flask_client) -> None:
     """WMTS endpoint fails"""
     rv = flask_client.get('/wmts')
     assert rv.status_code == 400
 
 
-def test_legend_fail(no_db, flask_client):
+def test_legend_fail(no_db, flask_client) -> None:
     """Fail on legend"""
     rv = flask_client.get("/legend/layer/style/legend.png")
     assert rv.status_code == 404
 
 
-def test_index_fail(no_db, flask_client):
+def test_index_fail(no_db, flask_client) -> None:
     """Base index endpoint fails"""
     # Should actually be 200 TODO
     rv = flask_client.get('/')

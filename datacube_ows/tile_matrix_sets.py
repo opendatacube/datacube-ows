@@ -116,7 +116,7 @@ class TileMatrixSet(OWSConfigEntry):
             return f"urn:ogc:def:crs:EPSG::{self.crs_name[5:]}"
         return self.crs_name
 
-    def exponent(self, idx, scale_no) -> int:
+    def exponent(self, idx: int, scale_no) -> int:
         init = self.initial_matrix_exponents[idx]
         exponent = scale_no + init
         if exponent < 0:

@@ -21,27 +21,27 @@ def minimal_cfg():
     return cfg
 
 
-def test_uniform_crs_url(minimal_cfg):
+def test_uniform_crs_url(minimal_cfg) -> None:
     crs = uniform_crs(minimal_cfg, "http://www.opengis.net/def/crs/EPSG/666")
     assert crs == "EPSG:666"
 
 
-def test_uniform_crs_urn(minimal_cfg):
+def test_uniform_crs_urn(minimal_cfg) -> None:
     crs = uniform_crs(minimal_cfg, "urn:ogc:def:crs:EPSG:666")
     assert crs == "EPSG:666"
 
 
-def test_uniform_crs_epsg(minimal_cfg):
+def test_uniform_crs_epsg(minimal_cfg) -> None:
     crs = uniform_crs(minimal_cfg, "EPSG:666")
     assert crs == "EPSG:666"
 
 
-def test_uniform_crs_published(minimal_cfg):
+def test_uniform_crs_published(minimal_cfg) -> None:
     crs = uniform_crs(minimal_cfg, "dummy")
     assert crs == "dummy"
 
 
-def test_uniform_crs_published_with_exception(minimal_cfg):
+def test_uniform_crs_published_with_exception(minimal_cfg) -> None:
     with pytest.raises(WCS2Exception) as e:
         crs = uniform_crs(minimal_cfg, "spam")
     assert "spam" in str(e.value)

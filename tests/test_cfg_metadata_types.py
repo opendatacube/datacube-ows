@@ -12,7 +12,7 @@ from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import AttributionCfg, SuppURL
 
 
-def test_cfg_attrib_empty(minimal_owner):
+def test_cfg_attrib_empty(minimal_owner) -> None:
     attrib = AttributionCfg.parse({}, minimal_owner)
     assert attrib is None
 
@@ -28,13 +28,13 @@ def owner_w_attrib_title():
     owner.attribution_title = "Sir"
     return owner
 
-def test_cfg_attrib_emptyfail(minimal_owner):
+def test_cfg_attrib_emptyfail(minimal_owner) -> None:
     with pytest.raises(ConfigException) as excinfo:
         attrib = AttributionCfg.parse({"foo": "bar"}, minimal_owner)
     assert "At least one" in str(excinfo.value)
 
 
-def test_cfg_attrib_title_only(owner_w_attrib_title):
+def test_cfg_attrib_title_only(owner_w_attrib_title) -> None:
     attrib = AttributionCfg.parse({
         "title": "Sir"
     }, owner_w_attrib_title)
@@ -44,7 +44,7 @@ def test_cfg_attrib_title_only(owner_w_attrib_title):
     assert attrib.url is None
 
 
-def test_cfg_attrib_url_only(minimal_owner):
+def test_cfg_attrib_url_only(minimal_owner) -> None:
     attrib = AttributionCfg.parse({
         "url": "http://test.url/path/name",
     }, minimal_owner)
@@ -53,7 +53,7 @@ def test_cfg_attrib_url_only(minimal_owner):
     assert attrib.url == "http://test.url/path/name"
 
 
-def test_cfg_attrib_minimal_logo_only(minimal_owner):
+def test_cfg_attrib_minimal_logo_only(minimal_owner) -> None:
     attrib = AttributionCfg.parse({
         "logo": {
             "url": "http://test.url/path/img.png",
@@ -67,7 +67,7 @@ def test_cfg_attrib_minimal_logo_only(minimal_owner):
     assert attrib.logo_width is None
 
 
-def test_cfg_attrib_logo_requirements(minimal_owner):
+def test_cfg_attrib_logo_requirements(minimal_owner) -> None:
     with pytest.raises(ConfigException) as excinfo:
         attrib = AttributionCfg.parse({
             "logo": {
@@ -84,7 +84,7 @@ def test_cfg_attrib_logo_requirements(minimal_owner):
     assert "url and format" in str(excinfo.value)
 
 
-def test_cfg_attrib_logo_options(minimal_owner):
+def test_cfg_attrib_logo_options(minimal_owner) -> None:
     attrib = AttributionCfg.parse({
         "logo": {
             "url": "http://test.url/path/img.png",
@@ -107,7 +107,7 @@ def test_cfg_attrib_logo_options(minimal_owner):
     assert attrib.logo_height == 300
 
 
-def test_cfg_attrib_all_flds(minimal_dc, owner_w_attrib_title):
+def test_cfg_attrib_all_flds(minimal_dc, owner_w_attrib_title) -> None:
     attrib = AttributionCfg.parse({
         "title": "Sir",
         "url": "http://test.url/path",
@@ -128,14 +128,14 @@ def test_cfg_attrib_all_flds(minimal_dc, owner_w_attrib_title):
     assert attrib.ready
 
 
-def test_surl_empty():
+def test_surl_empty() -> None:
     supps = SuppURL.parse_list(None)
     assert supps == []
     supps = SuppURL.parse_list([])
     assert supps == []
 
 
-def test_surl_no_url():
+def test_surl_no_url() -> None:
     with pytest.raises(KeyError):
         supps = SuppURL.parse_list([
             {
@@ -144,7 +144,7 @@ def test_surl_no_url():
         ])
 
 
-def test_surl_no_format():
+def test_surl_no_format() -> None:
     with pytest.raises(KeyError):
         supps = SuppURL.parse_list([
             {
@@ -153,7 +153,7 @@ def test_surl_no_format():
         ])
 
 
-def test_surl_full(minimal_dc):
+def test_surl_full(minimal_dc) -> None:
     supps = SuppURL.parse_list([
         {
             "url": "http://test.url/path",

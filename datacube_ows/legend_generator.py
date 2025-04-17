@@ -32,14 +32,14 @@ def legend_graphic(args) -> tuple | None:
     return img
 
 
-def create_legend_for_style(product, style_name, ndates=0) -> tuple | None:
+def create_legend_for_style(product, style_name: str, ndates: int = 0) -> tuple | None:
     if style_name not in product.style_index:
         return None
     style = product.style_index[style_name]
     return create_legends_from_styles([style], ndates)
 
 
-def create_legends_from_styles(styles, ndates=0) -> tuple | None:
+def create_legends_from_styles(styles, ndates: int = 0) -> tuple | None:
     # Run through all values in style cfg and generate
     imgs = []
     for s in styles:

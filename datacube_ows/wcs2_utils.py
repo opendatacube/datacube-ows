@@ -15,7 +15,7 @@ from rasterio import MemoryFile
 
 from datacube_ows.loading import DataStacker
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.utils import default_to_utc
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
@@ -25,7 +25,7 @@ from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 _LOG = logging.getLogger(__name__)
 
 
-def uniform_crs(cfg, crs):
+def uniform_crs(cfg: OWSConfig, crs: str) -> str:
     """Helper function to transform a URL style EPSG definition to an 'EPSG:nnn' one"""
     if crs.startswith('http://www.opengis.net/def/crs/EPSG/'):
         code = crs.rpartition('/')[-1]
@@ -317,7 +317,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     return output, headers
 
 
-def get_tiff(request, data, crs, product, width, height, affine):
+def get_tiff(request, data, crs, product, width: int, height, affine):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Does not support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {

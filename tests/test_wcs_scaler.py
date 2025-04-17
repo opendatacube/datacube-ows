@@ -151,7 +151,7 @@ def layer_crs_geom():
     return product_layer
 
 
-def test_spatial_parameter_defaults(layer_crs_nongeom):
+def test_spatial_parameter_defaults(layer_crs_nongeom) -> None:
     param = SpatialParameter(layer_crs_nongeom, "TEST:CRS")
     assert param.y is None
     assert param.x is None
@@ -159,20 +159,20 @@ def test_spatial_parameter_defaults(layer_crs_nongeom):
     assert param["y"] is None
 
 
-def test_spatial_parameter_set(layer_crs_nongeom):
+def test_spatial_parameter_set(layer_crs_nongeom) -> None:
     param = SpatialParameter(layer_crs_nongeom, "TEST:CRS")
     param.set(7, -13)
     assert param.x == 7
     assert param.y == -13
 
 
-def test_spatial_parameter_init(layer_crs_nongeom):
+def test_spatial_parameter_init(layer_crs_nongeom) -> None:
     param = SpatialParameter(layer_crs_nongeom, "TEST:CRS", 7, -13)
     assert param.x == 7
     assert param.y == -13
 
 
-def test_spatial_parameter_setters(layer_crs_nongeom):
+def test_spatial_parameter_setters(layer_crs_nongeom) -> None:
     param = SpatialParameter(layer_crs_nongeom, "TEST:CRS")
     param.lng = 7
     param.lat = -13
@@ -180,7 +180,7 @@ def test_spatial_parameter_setters(layer_crs_nongeom):
     assert param.y == -13
 
 
-def test_spatial_parameter_isdim_test_crs(layer_crs_nongeom):
+def test_spatial_parameter_isdim_test_crs(layer_crs_nongeom) -> None:
     param = SpatialParameter(layer_crs_nongeom, "TEST:CRS", 7, -13)
     assert param.x == 7
     assert param.y == -13
@@ -197,7 +197,7 @@ def test_spatial_parameter_isdim_test_crs(layer_crs_nongeom):
     assert e.value.dim == "horivertal_calzones"
 
 
-def test_spatial_parameter_isdim_epsg(layer_crs_nongeom):
+def test_spatial_parameter_isdim_epsg(layer_crs_nongeom) -> None:
     param = SpatialParameter(layer_crs_nongeom, "EPSG:3577", 2, 7)
 
     assert param.lat == 7
@@ -212,7 +212,7 @@ def test_spatial_parameter_isdim_epsg(layer_crs_nongeom):
         assert e.dim == "horrible_zonts"
 
 
-def test_scaler_constructor(layer_crs_nongeom):
+def test_scaler_constructor(layer_crs_nongeom) -> None:
     scaler = WCSScaler(layer_crs_nongeom)
     assert scaler.crs == "TEST:NATIVE_CRS"
     assert scaler.crs_def["gml_name"] == "TEST/NATIVE_CRS"
@@ -220,7 +220,7 @@ def test_scaler_constructor(layer_crs_nongeom):
     assert scaler.crs == "EPSG:3577"
 
 
-def test_scalar_trim(layer_crs_nongeom):
+def test_scalar_trim(layer_crs_nongeom) -> None:
     scaler = WCSScaler(layer_crs_nongeom)
     scaler.trim("x", 5, 10)
     assert scaler.dim("x") == (None, 5, 10)
@@ -231,7 +231,7 @@ def test_scalar_trim(layer_crs_nongeom):
     assert not scaler.is_slice("y")
 
 
-def test_scalar_slice(layer_crs_nongeom):
+def test_scalar_slice(layer_crs_nongeom) -> None:
     scaler = WCSScaler(layer_crs_nongeom)
     scaler.slice("y", 5)
     assert scaler.dim("y") == (None, 5, 5)
@@ -242,7 +242,7 @@ def test_scalar_slice(layer_crs_nongeom):
     assert not scaler.is_slice("x")
 
 
-def assert_approx_tuple(a, b):
+def assert_approx_tuple(a, b) -> None:
     assert len(a) == len(b)
     for aa, bb in zip(a, b):
         if aa is None:
@@ -250,7 +250,7 @@ def assert_approx_tuple(a, b):
         else:
             assert aa == pytest.approx(bb, rel=1e-4)
 
-def test_transform_unsubsetted(layer_crs_geom):
+def test_transform_unsubsetted(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
     assert scaler.crs == "EPSG:3577"
@@ -258,7 +258,7 @@ def test_transform_unsubsetted(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (None, -5195512.771063174, -936185.3115191332))
 
 
-def test_transform_one_slice(layer_crs_geom):
+def test_transform_one_slice(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.slice("x", 120.0)
     scaler.to_crs("EPSG:3577")
@@ -267,7 +267,7 @@ def test_transform_one_slice(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (None, -5195512.771063174, -936185.3115191332))
 
 
-def test_transform_one_trim(layer_crs_geom):
+def test_transform_one_trim(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.trim("x", 120.0, 130.0)
     scaler.to_crs("EPSG:3577")
@@ -275,7 +275,7 @@ def test_transform_one_trim(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (None, -5195512.771063174, -936185.3115191332))
 
 
-def test_transform_two_trims(layer_crs_geom):
+def test_transform_two_trims(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.trim("x", 120.0, 130.0)
     scaler.trim("y", -30.0, -20.0)
@@ -284,7 +284,7 @@ def test_transform_two_trims(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (None, -3317050.4161210703, -2145729.370620175))
 
 
-def test_transform_slice_trim(layer_crs_geom):
+def test_transform_slice_trim(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.trim("x", 120.0, 130.0)
     scaler.slice("y", -20.0)
@@ -293,7 +293,7 @@ def test_transform_slice_trim(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (None, -2202762.0236987285, -2145729.370620175))
 
 
-def test_transform_two_slices(layer_crs_geom):
+def test_transform_two_slices(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.slice("x", 120.0)
     scaler.slice("y", -20.0)
@@ -302,7 +302,7 @@ def test_transform_two_slices(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (1, -2202762.0236987285, -2202787.0236987285))
 
 
-def test_scale_axis(layer_crs_geom):
+def test_scale_axis(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
     scaler.scale_axis("x", 2.0)
@@ -311,7 +311,7 @@ def test_scale_axis(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (85187, -5195512.771063174, -936185.3115191332))
 
 
-def test_scale_size(layer_crs_geom):
+def test_scale_size(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
     scaler.scale_size("x", 512)
@@ -320,7 +320,7 @@ def test_scale_size(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (512, -5195512.771063174, -936185.3115191332))
 
 
-def test_scale_extent(layer_crs_geom):
+def test_scale_extent(layer_crs_geom) -> None:
     # N.B. We don't really understand what scale_extent is supposed to do.
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
@@ -330,7 +330,7 @@ def test_scale_extent(layer_crs_geom):
     assert_approx_tuple(scaler.dim("y"), (300, -5195512.771063174, -936185.3115191332))
 
 
-def test_scaler_default(layer_crs_geom):
+def test_scaler_default(layer_crs_geom) -> None:
     scaler = WCSScaler(layer_crs_geom, "EPSG:4326")
     scaler.to_crs("EPSG:3577")
     affine = scaler.affine()

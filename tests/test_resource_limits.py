@@ -11,7 +11,7 @@ import datacube_ows.resource_limits
 from datacube_ows.ogc_utils import create_geobox
 
 
-def test_request_scale():
+def test_request_scale() -> None:
     band = {'dtype': 'float64'}
     stdtile = create_geobox(minx=-20037508.342789, maxx=20037508.342789,
                             miny=-20037508.342789, maxy=20037508.342789,
@@ -40,7 +40,7 @@ def test_request_scale():
     assert pytest.approx(rs3.load_adjusted_zoom_level, 0.1) == -3.0
 
 
-def test_degree_to_metres():
+def test_degree_to_metres() -> None:
     xres, yres = datacube_ows.resource_limits.RequestScale._metre_resolution(
         None,
         CRS("EPSG:4326"),

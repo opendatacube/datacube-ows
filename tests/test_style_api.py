@@ -19,7 +19,7 @@ from datacube_ows.styles.api import ( # noqa: F401 isort:skip
                                      xarray_image_as_png)
 
 
-def test_indirect_imports():
+def test_indirect_imports() -> None:
     assert xarray_image_as_png is not None
     assert create_geobox is not None
 
@@ -56,7 +56,7 @@ def simple_rgb_perband_scaling_style_cfg():
     }
 
 
-def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg):
+def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg) -> None:
     style = StandaloneStyle(simple_rgb_style_cfg)
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
@@ -67,7 +67,7 @@ def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg):
     assert result["blue"].values[0][0] == 2
 
 
-def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_scaling_style_cfg):
+def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_scaling_style_cfg) -> None:
     style = StandaloneStyle(simple_rgb_perband_scaling_style_cfg)
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
@@ -75,7 +75,7 @@ def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_s
         assert channel in result.data_vars.keys()
 
 
-def test_external_legends(simple_rgb_style_cfg):
+def test_external_legends(simple_rgb_style_cfg) -> None:
     simple_rgb_style_cfg["legend"] = {
         "url": "http://fake.com/not/a/real/image_url.png"
     }
@@ -128,7 +128,7 @@ def simple_ramp_style_cfg():
     }
 
 
-def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
+def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg) -> None:
     style = StandaloneStyle(simple_ramp_style_cfg)
     result = apply_ows_style(style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
@@ -162,7 +162,7 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     assert result["red"].values[5] > 0
     assert result["red"].values[5] < 255
 
-def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg):
+def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg) -> None:
     del simple_ramp_style_cfg["index_function"]
     del simple_ramp_style_cfg["needed_bands"]
     simple_ramp_style_cfg["index_expression"] = "(ir-red)/(ir+red)"
@@ -200,14 +200,14 @@ def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_st
     assert result["red"].values[5] < 255
 
 
-def test_ramp_legend_standalone(simple_ramp_style_cfg):
+def test_ramp_legend_standalone(simple_ramp_style_cfg) -> None:
     style = StandaloneStyle(simple_ramp_style_cfg)
     img = generate_ows_legend_style(style, 1)
     assert img.mode == "RGBA"
     assert img.size == (400, 125)
 
 
-def test_ramp_legend_ranges(simple_ramp_style_cfg):
+def test_ramp_legend_ranges(simple_ramp_style_cfg) -> None:
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.2",
         "end": "0.8"
@@ -232,7 +232,7 @@ def test_ramp_legend_ranges(simple_ramp_style_cfg):
     assert style.legend_cfg.end == Decimal("1.7")
 
 
-def test_ramp_legend_parse_errs(simple_ramp_style_cfg):
+def test_ramp_legend_parse_errs(simple_ramp_style_cfg) -> None:
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.15",
         "begin": "0.95",
@@ -243,7 +243,7 @@ def test_ramp_legend_parse_errs(simple_ramp_style_cfg):
     assert "decimal_places cannot be negative" in str(e.value)
 
 
-def test_ramp_ticks_multimethod(simple_ramp_style_cfg):
+def test_ramp_ticks_multimethod(simple_ramp_style_cfg) -> None:
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
@@ -273,7 +273,7 @@ def test_ramp_ticks_multimethod(simple_ramp_style_cfg):
     assert "Cannot use tick count and ticks in the same legend" in str(e.value)
 
 
-def test_ramp_ticks_every(simple_ramp_style_cfg):
+def test_ramp_ticks_every(simple_ramp_style_cfg) -> None:
     # ticks_every
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
@@ -333,7 +333,7 @@ def test_ramp_ticks_every(simple_ramp_style_cfg):
 
 
 
-def test_ramp_tick_count(simple_ramp_style_cfg):
+def test_ramp_tick_count(simple_ramp_style_cfg) -> None:
     # default
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
@@ -387,7 +387,7 @@ def test_ramp_tick_count(simple_ramp_style_cfg):
     assert "tick_count cannot be negative" in str(e.value)
 
 
-def test_explicit_ticks(simple_ramp_style_cfg):
+def test_explicit_ticks(simple_ramp_style_cfg) -> None:
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
@@ -458,7 +458,7 @@ def rgb_style_with_masking_cfg():
     }
 
 
-def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg):
+def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg) -> None:
     result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
@@ -594,7 +594,7 @@ def simple_colormap_style_cfg():
     }
 
 
-def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
+def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg) -> None:
     result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
@@ -626,7 +626,7 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     # point 5 fall through -transparent
     assert result["alpha"].values[5] == 0
 
-def test_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, simple_colormap_style_cfg):
+def test_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, simple_colormap_style_cfg) -> None:
     result = apply_ows_style_cfg(
                         simple_colormap_style_cfg,
                         dummy_col_map_time_data,
@@ -718,7 +718,7 @@ def enum_colormap_style_cfg():
     }
 
 
-def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg):
+def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg) -> None:
     result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars.keys()
@@ -750,7 +750,7 @@ def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colorm
     assert result["green"].values[5] == 0
     assert result["blue"].values[5] == 255
 
-def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, enum_colormap_style_cfg):
+def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, enum_colormap_style_cfg) -> None:
     result = apply_ows_style_cfg(enum_colormap_style_cfg,
                                  dummy_col_map_time_data,
                                  valid_data_mask=timed_raw_calc_null_mask)
@@ -816,7 +816,7 @@ def enum_animated_value_map():
         ]
     }
 
-def test_animated_colour_map(enum_animated_value_map, dummy_col_map_time_data, timed_raw_calc_null_mask):
+def test_animated_colour_map(enum_animated_value_map, dummy_col_map_time_data, timed_raw_calc_null_mask) -> None:
     result = apply_ows_style_cfg(enum_animated_value_map,
                                  dummy_col_map_time_data,
                                  valid_data_mask=timed_raw_calc_null_mask)
@@ -894,7 +894,7 @@ def enum_colormap_aggregate_multidate():
         ]
     }
 
-def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_data, timed_raw_calc_null_mask):
+def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_data, timed_raw_calc_null_mask) -> None:
     result = apply_ows_style_cfg(enum_colormap_aggregate_multidate,
                                  dummy_col_map_time_data,
                                  valid_data_mask=timed_raw_calc_null_mask)
@@ -917,7 +917,7 @@ def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_da
     assert result["blue"].values[4] == 255
 
 
-def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_cfg):
+def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_cfg) -> None:
     simple_colormap_style_cfg["multi_date"][0]["allowed_count_range"] = [2, 4]
     with pytest.raises(ConfigException) as e:
         style = StandaloneStyle(simple_colormap_style_cfg)
@@ -970,14 +970,14 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
     assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
 
 
-def test_map_legend(simple_colormap_style_cfg):
+def test_map_legend(simple_colormap_style_cfg) -> None:
     img = generate_ows_legend_style_cfg(simple_colormap_style_cfg, 1)
 
     assert img.mode == "RGBA"
     assert img.size == (400, 125)
 
 
-def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg):
+def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg) -> None:
     null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     none_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data)
     for i in range(6):
@@ -985,7 +985,7 @@ def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_s
             assert null_mask[c].values[i] == none_mask[c].values[i]
 
 
-def test_landsat_like_configs(dummy_raw_ls_data, configs_for_landsat, null_mask):
+def test_landsat_like_configs(dummy_raw_ls_data, configs_for_landsat, null_mask) -> None:
     for cfg in configs_for_landsat:
         style = StandaloneStyle(cfg)
         mask = style.to_mask(dummy_raw_ls_data, null_mask)
@@ -993,7 +993,7 @@ def test_landsat_like_configs(dummy_raw_ls_data, configs_for_landsat, null_mask)
         assert result
 
 
-def test_wofs_like_configs(dummy_raw_wo_data, configs_for_wofs, null_mask):
+def test_wofs_like_configs(dummy_raw_wo_data, configs_for_wofs, null_mask) -> None:
     for cfg in configs_for_wofs:
         style = StandaloneStyle(cfg)
         mask = style.to_mask(dummy_raw_wo_data, null_mask)
@@ -1001,7 +1001,7 @@ def test_wofs_like_configs(dummy_raw_wo_data, configs_for_wofs, null_mask):
         assert result
 
 
-def test_fc_wofs_like_configs(dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs, null_mask):
+def test_fc_wofs_like_configs(dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs, null_mask) -> None:
     for cfg in configs_for_combined_fc_wofs:
         style = StandaloneStyle(cfg)
         mask = style.to_mask(dummy_raw_fc_plus_wo, null_mask)
@@ -1009,34 +1009,34 @@ def test_fc_wofs_like_configs(dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs
         assert result
 
 
-def test_multidate(xyt_dummydata, multi_date_cfg):
+def test_multidate(xyt_dummydata, multi_date_cfg) -> None:
     image = apply_ows_style_cfg(multi_date_cfg, xyt_dummydata)
     assert len(image.x) == len(xyt_dummydata.x)
     assert len(image.y) == len(xyt_dummydata.y)
     assert "time" not in image
 
 
-def test_loopover(xyt_dummydata, multi_date_cfg):
+def test_loopover(xyt_dummydata, multi_date_cfg) -> None:
     image = apply_ows_style_cfg(multi_date_cfg, xyt_dummydata, loop_over="time")
     assert len(image.x) == len(xyt_dummydata.x)
     assert len(image.y) == len(xyt_dummydata.y)
     assert len(image.time) == len(xyt_dummydata.time)
 
 
-def test_plot_image(dummy_raw_data, simple_rgb_style_cfg):
+def test_plot_image(dummy_raw_data, simple_rgb_style_cfg) -> None:
     image = apply_ows_style_cfg(simple_rgb_style_cfg, dummy_raw_data)
     plot_image(image)
 
 
-def test_plot_image_with_style(dummy_raw_data, simple_rgb_style_cfg):
+def test_plot_image_with_style(dummy_raw_data, simple_rgb_style_cfg) -> None:
     style = StandaloneStyle(simple_rgb_style_cfg)
     plot_image_with_style(style, dummy_raw_data)
 
 
-def test_plot_image_with_style_cfg(dummy_raw_data, simple_rgb_style_cfg):
+def test_plot_image_with_style_cfg(dummy_raw_data, simple_rgb_style_cfg) -> None:
     plot_image_with_style_cfg(simple_rgb_style_cfg, dummy_raw_data)
 
 
-def test_style_count_dates(simple_rgb_style_cfg):
+def test_style_count_dates(simple_rgb_style_cfg) -> None:
     style = StandaloneStyle(simple_rgb_style_cfg)
     assert style.count_dates([None, None, None, None]) == 4

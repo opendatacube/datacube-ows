@@ -12,14 +12,14 @@ from datacube_ows.ows_configuration import get_config
 from datacube_ows.time_utils import local_solar_date_range
 
 
-def test_full_layer():
+def test_full_layer() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     sel = mv_search(lyr.dc.index, MVSelectOpts.COUNT, products=lyr.products)
     assert sel > 0
 
 
-def test_select_all():
+def test_select_all() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     rows = mv_search(lyr.dc.index, MVSelectOpts.ALL, products=lyr.products)
@@ -27,7 +27,7 @@ def test_select_all():
         assert len(row) > 1
 
 
-def test_no_products():
+def test_no_products() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     with pytest.raises(Exception) as e:
@@ -35,7 +35,7 @@ def test_no_products():
     assert "Must filter by product/layer" in str(e.value)
 
 
-def test_bad_set_opt():
+def test_bad_set_opt() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     with pytest.raises(ValueError):
@@ -43,14 +43,14 @@ def test_bad_set_opt():
 
 
 class MockGeobox:
-    def __init__(self, geom):
+    def __init__(self, geom) -> None:
         if geom.crs != "EPSG:4326":
             geom = geom.to_crs("EPSG:4326")
         self.geographic_extent = geom
         self.extent = geom
 
 
-def test_time_search():
+def test_time_search() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     time = lyr.ranges.end_time
@@ -69,7 +69,7 @@ def test_time_search():
     assert sel > 0
 
 
-def test_count():
+def test_count() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     count = mv_search(lyr.dc.index, MVSelectOpts.COUNT, products=lyr.products)
@@ -77,7 +77,7 @@ def test_count():
     assert len(ids) == count
 
 
-def test_datasets():
+def test_datasets() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     dss = mv_search(lyr.dc.index, MVSelectOpts.DATASETS, products=lyr.products)
@@ -87,7 +87,7 @@ def test_datasets():
         assert ds.id in ids
 
 
-def test_extent_and_spatial():
+def test_extent_and_spatial() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     layer_ext_bbx = (

@@ -7,7 +7,7 @@
 from datacube_ows.config_toolkit import deepinherit
 
 
-def test_deepinherit_shallow():
+def test_deepinherit_shallow() -> None:
     parent = {
         "a": 72,
         "b": "eagle",
@@ -23,7 +23,7 @@ def test_deepinherit_shallow():
     assert not child["c"]
 
 
-def test_deepinherit_deep():
+def test_deepinherit_deep() -> None:
     parent = {
         "a": 72,
         "b": {
@@ -59,7 +59,7 @@ def test_deepinherit_deep():
     assert child["b"]["y"] == ["some", "body", "once", "told", "me"]
 
 
-def test_array_inheritance():
+def test_array_inheritance() -> None:
     inherit_from = {
         "foo": "bar",
         "ding": "dong",

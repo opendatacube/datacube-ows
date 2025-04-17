@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+from collections.abc import Mapping
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -123,7 +124,7 @@ def html_json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> F
     return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})
 
 
-def png_response(body: bytes, cfg: Optional["OWSConfig"] = None, extra_headers: dict[str, str] | None = None) -> FlaskResponse:
+def png_response(body: bytes, cfg: Optional["OWSConfig"] = None, extra_headers: Mapping[str, str] | None = None) -> FlaskResponse:
     from datacube_ows.ows_configuration import get_config
     if not cfg:
         cfg = get_config()

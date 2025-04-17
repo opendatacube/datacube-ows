@@ -21,7 +21,7 @@ from datacube_ows.http_utils import (cache_control_headers,
                                      get_service_base_url, json_response,
                                      resp_headers)
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
 from datacube_ows.wcs2_utils import get_coverage_data
@@ -150,7 +150,7 @@ def get_capabilities(args):
     )
 
 
-def create_coverage_description(cfg, product) -> CoverageDescription:
+def create_coverage_description(cfg: OWSConfig, product) -> CoverageDescription:
     axes = [
         RegularAxis(
             label=product.native_CRS_def["horizontal_coord"],
@@ -298,7 +298,7 @@ def desc_coverages(args) -> tuple:
 
 
 @log_call
-def get_coverage(args, ows_stats=False, styles=None) -> tuple[str | bytes, int, dict[str, str]]:
+def get_coverage(args, ows_stats: bool = False, styles=None) -> tuple[str | bytes, int, dict[str, str]]:
     request_obj = kvp_decode_get_coverage(args)
     qprof = QueryProfiler(ows_stats)
     output, headers = get_coverage_data(request_obj, styles, qprof)

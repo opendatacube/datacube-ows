@@ -14,7 +14,7 @@ class WCSScalerException(Exception):
 
 
 class WCSScalerUnknownDimension(WCSScalerException):
-    def __init__(self, dim, *args, **kwargs) -> None:
+    def __init__(self, dim: str, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.dim = dim
 
@@ -28,13 +28,13 @@ class WCSScalarIllegalSize(WCSScalerException):
 
 
 class SpatialParameter:
-    def __init__(self, layer, crs, x=None, y=None) -> None:
+    def __init__(self, layer, crs: str, x=None, y=None) -> None:
         self.layer = layer
         self.crs_def = self.layer.global_cfg.published_CRSs[crs]
         self.x = x
         self.y = y
 
-    def is_x_dim(self, dimension) -> bool:
+    def is_x_dim(self, dimension: str) -> bool:
         if dimension == self.crs_def['horizontal_coord'].lower():
             return True
         elif dimension == self.crs_def['vertical_coord'].lower():
@@ -102,7 +102,7 @@ class WCSScaler:
         self.crs_def = self.layer.global_cfg.published_CRSs[crs]
         self._crs = crs
 
-    def set_size(self, dim, size) -> None:
+    def set_size(self, dim: str, size: int) -> None:
         if size <= 0:
             raise WCSScalarIllegalSize()
         if isinstance(size, float):
@@ -117,18 +117,18 @@ class WCSScaler:
         self.max[dimension] = value
         self.subsetted[dimension] = True
 
-    def is_slice(self, dim) -> bool:
+    def is_slice(self, dim: str) -> bool:
         return self.subsetted[dim] and self.min[dim] == self.max[dim]
 
-    def dim(self, dim) -> tuple:
+    def dim(self, dim: str) -> tuple:
         return self.size[dim], self.min[dim], self.max[dim]
 
-    def trim(self, dimension, lower, higher) -> None:
+    def trim(self, dimension: str, lower, higher) -> None:
         self.min[dimension] = lower
         self.max[dimension] = higher
         self.subsetted[dimension] = True
 
-    def to_crs(self, new_crs):
+    def to_crs(self, new_crs: str) -> None:
         grid = self.layer.grids[new_crs]
         skip_x_xform = False
         skip_y_xform = False
@@ -207,13 +207,13 @@ class WCSScaler:
         else:
             self.quantise_to_resolution(grid)
 
-    def quantise_to_resolution(self, grid) -> None:
+    def quantise_to_resolution(self, grid: dict) -> None:
         for idx, dim in enumerate("xy"):
             if abs(self.max[dim] - self.min[dim]) < abs(grid["resolution"][idx] * 1.5):
                 self.max[dim] = self.min[dim] + grid["resolution"][idx]
                 self.size[dim] = 1
 
-    def scale_axis(self, dimension, factor) -> None:
+    def scale_axis(self, dimension: str, factor: float) -> None:
         dim_size, dim_min, dim_max = self.dim(dimension)
         if dim_size is not None:
             raise WCSScalerOverspecifiedDimension()
@@ -227,10 +227,10 @@ class WCSScaler:
         )
         self.set_size(dimension, scaled_size)
 
-    def scale_size(self, dimension, size) -> None:
+    def scale_size(self, dimension: str, size: int) -> None:
         self.set_size(dimension, size)
 
-    def scale_extent(self, dimension, low, high) -> None:
+    def scale_extent(self, dimension: str, low: int, high: int) -> None:
         # TODO: What is this actually supposed to mean?
         self.set_size(dimension, high - low)
 

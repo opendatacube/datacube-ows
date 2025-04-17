@@ -10,7 +10,7 @@ from datacube_ows.ows_configuration import OWSConfig, get_config, read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def test_metadata_export():
+def test_metadata_export() -> None:
     cfg = get_config(refresh=True)
 
     export = cfg.export_metadata()
@@ -26,7 +26,7 @@ def test_metadata_export():
     #        assert prd.title
 
 
-def test_missing_metadata_file(monkeypatch):
+def test_missing_metadata_file(monkeypatch) -> None:
     cached_cfg = OWSConfig._instance
     cached_reg = OWSConfig._metadata_registry
     cached_inh_reg = OWSConfig._inheritance_registry
@@ -54,7 +54,7 @@ def test_missing_metadata_file(monkeypatch):
         OWSConfig._msg_src = cached_catalog
 
 
-def test_metadata_file_ignore(monkeypatch):
+def test_metadata_file_ignore(monkeypatch) -> None:
     cached_cfg = OWSConfig._instance
     cached_reg = OWSConfig._metadata_registry
     cached_inh_reg = OWSConfig._inheritance_registry
@@ -79,7 +79,7 @@ def test_metadata_file_ignore(monkeypatch):
         OWSConfig._msg_src = cached_catalog
 
 
-def test_metadata_read(monkeypatch, product_name):
+def test_metadata_read(monkeypatch, product_name: str) -> None:
     cached_cfg = OWSConfig._instance
     monkeypatch.chdir(src_dir)
     try:

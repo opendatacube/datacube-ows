@@ -7,7 +7,7 @@
 from datacube_ows.query_profiler import QueryProfiler
 
 
-def test_qpf_inactive():
+def test_qpf_inactive() -> None:
     qp = QueryProfiler(False)
     qp.start_event("foo")
     qp.end_event("foo")
@@ -15,14 +15,14 @@ def test_qpf_inactive():
     assert qp.profile() == {}
 
 
-def test_qpf_active():
+def test_qpf_active() -> None:
     qp = QueryProfiler(True)
     prof = qp.profile()
     assert prof["info"] == {}
     assert prof["profile"]["query"] is not None
 
 
-def test_qpf_events():
+def test_qpf_events() -> None:
     qp = QueryProfiler(True)
     qp.start_event("foo")
     qp.end_event("foo")
@@ -30,7 +30,7 @@ def test_qpf_events():
     assert prof["profile"]["foo"] is not None
 
 
-def test_qpf_info():
+def test_qpf_info() -> None:
     qp = QueryProfiler(True)
     qp["foo"] = "splunge"
     prof = qp.profile()

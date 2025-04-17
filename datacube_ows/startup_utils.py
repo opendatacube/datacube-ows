@@ -178,7 +178,7 @@ def parse_config_file(log: Logger | None = None) -> OWSConfig | None:
     return cfg
 
 
-def initialise_flask(name) -> Flask:
+def initialise_flask(name: str) -> Flask:
     app_path = os.path.dirname(os.path.abspath(__file__))
     app = Flask(name.split('.')[0], template_folder=os.path.join(app_path, 'templates'))
     return app

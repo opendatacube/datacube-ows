@@ -16,7 +16,7 @@ from datacube_ows.ows_configuration import TimeRes
 from datacube_ows.index import LayerExtent, CoordRange
 
 
-def test_parse_time_delta():
+def test_parse_time_delta() -> None:
     from dateutil.relativedelta import relativedelta
 
     tests = {
@@ -29,7 +29,7 @@ def test_parse_time_delta():
             assert td == datacube_ows.wms_utils.parse_time_delta(td_str)
 
 
-def test_parse_wms_time_strings():
+def test_parse_wms_time_strings() -> None:
     import datetime as dt
     tests = {
         '2018-01-10/2019-01-10': (dt.datetime(2018, 1, 10, 0, 0), dt.datetime(2019, 1, 10, 23, 23, 59, 999999)),
@@ -44,7 +44,7 @@ def test_parse_wms_time_strings():
         result = datacube_ows.wms_utils.parse_wms_time_strings(["P1Y", "P1Y"])
     assert "Could not understand time value" in str(e.value)
 
-def test_parse_wms_time_strings_with_present():
+def test_parse_wms_time_strings_with_present() -> None:
     import datetime as dt
     start, end = datacube_ows.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
     assert start == dt.datetime(2018, 1, 10, 0, 0)
@@ -58,7 +58,7 @@ def dummy_product():
     return dummy
 
 
-def test_parse_userbandmath(dummy_product):
+def test_parse_userbandmath(dummy_product) -> None:
     _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                           {
                                                               "code": "2*(red-nir)/(red+nir)",
@@ -67,7 +67,7 @@ def test_parse_userbandmath(dummy_product):
                                                           })
 
 
-def test_parse_userbandmath_nobands(dummy_product):
+def test_parse_userbandmath_nobands(dummy_product) -> None:
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                               {
@@ -79,7 +79,7 @@ def test_parse_userbandmath_nobands(dummy_product):
     assert "Expression references no bands" in str(e.value)
 
 
-def test_parse_userbandmath_banned_op(dummy_product):
+def test_parse_userbandmath_banned_op(dummy_product) -> None:
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                   {
@@ -90,7 +90,7 @@ def test_parse_userbandmath_banned_op(dummy_product):
     assert "not supported" in str(e.value)
     assert "Code expression invalid" in str(e.value)
 
-def test_parse_userbandmath_bad_code(dummy_product):
+def test_parse_userbandmath_bad_code(dummy_product) -> None:
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                           {
@@ -101,7 +101,7 @@ def test_parse_userbandmath_bad_code(dummy_product):
     assert "Code expression invalid" in str(e.value)
 
 
-def test_parse_userbandmath_bad_scheme(dummy_product):
+def test_parse_userbandmath_bad_scheme(dummy_product) -> None:
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
@@ -112,7 +112,7 @@ def test_parse_userbandmath_bad_scheme(dummy_product):
     assert "Invalid Matplotlib ramp name:" in str(e.value)
 
 
-def test_parse_no2_colorscalerange(dummy_product):
+def test_parse_no2_colorscalerange(dummy_product) -> None:
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
@@ -131,7 +131,7 @@ def test_parse_no2_colorscalerange(dummy_product):
     assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
 
 
-def test_parse_nonnumeric_colorscalerange(dummy_product):
+def test_parse_nonnumeric_colorscalerange(dummy_product) -> None:
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                                                               {
@@ -150,7 +150,7 @@ def test_parse_nonnumeric_colorscalerange(dummy_product):
     assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
 
 
-def test_parse_unsorted_colorscalerange(dummy_product):
+def test_parse_unsorted_colorscalerange(dummy_product) -> None:
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils.single_style_from_args(dummy_product,
                           {
@@ -168,7 +168,7 @@ def test_parse_unsorted_colorscalerange(dummy_product):
                             })
     assert "Colorscale range must be two numbers, sorted and separated by a comma." in str(e.value)
 
-def test_parse_item_1(dummy_product):
+def test_parse_item_1(dummy_product) -> None:
     dummy_product.ranges = LayerExtent(
         lat=CoordRange(-0.1, 0.1),
         lon=CoordRange(-0.1, 0.1),
@@ -200,7 +200,7 @@ def test_parse_item_1(dummy_product):
     assert "not valid for this layer" in str(e.value)
 
 
-def test_parse_item_2(dummy_product):
+def test_parse_item_2(dummy_product) -> None:
     dummy_product.ranges = LayerExtent(
         lat=CoordRange(-0.1, 0.1),
         lon=CoordRange(-0.1, 0.1),
@@ -252,7 +252,7 @@ def test_parse_item_2(dummy_product):
     assert "not valid for this layer" in str(e.value)
 
 
-def test_get_geobox():
+def test_get_geobox() -> None:
     from datacube_ows.ows_configuration import OWSConfig
     mock_cfg = MagicMock()
     OWSConfig._instance = mock_cfg
@@ -280,7 +280,7 @@ def test_get_geobox():
     OWSConfig._instance = None
 
 
-def test_get_arg():
+def test_get_arg() -> None:
     val = datacube_ows.wms_utils.get_arg(
         {
             "myval": "Oh Yeah",

@@ -163,7 +163,7 @@ def create_geobox(
     return GeoBox((height, width), affine, crs)
 
 
-def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=1000):
+def xarray_image_as_png(img_data, loop_over=None, animate: bool = False, frame_duration: int = 1000):
     """
     Render an Xarray image as a PNG.
 
@@ -223,7 +223,7 @@ def xarray_image_as_png(img_data, loop_over=None, animate=False, frame_duration=
     return img_io.read()
 
 
-def render_frame(img_data, width, height):
+def render_frame(img_data, width: int, height: int):
     """Render to a 3D numpy array an Xarray RGB(A) input
 
     Args:
@@ -252,6 +252,7 @@ def render_frame(img_data, width, height):
         index += 1
         last_band = band_data
     if not masked:
+        assert last_band is not None # For typechecker.
         alpha_mask = numpy.empty(last_band.shape).astype('uint8')
         alpha_mask.fill(255)
         buffer[3, :, :] = alpha_mask

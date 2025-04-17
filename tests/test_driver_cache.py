@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-def test_index_driver_cache():
+def test_index_driver_cache() -> None:
     from datacube_ows.index.driver import ows_index_drivers
     a = 2
     a = a + 1

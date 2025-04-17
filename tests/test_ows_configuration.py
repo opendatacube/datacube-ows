@@ -14,7 +14,7 @@ import datacube_ows.ows_configuration
 from tests.utils import a_function
 
 
-def test_function_wrapper_lyr():
+def test_function_wrapper_lyr() -> None:
     lyr = MagicMock()
     func_cfg = "tests.utils.a_function"
     f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
@@ -64,7 +64,7 @@ def test_function_wrapper_lyr():
     assert "Could not import python object" in str(e.value)
     assert "so_fake.not_real.not_a_function" in str(e.value)
 
-def test_func_naked():
+def test_func_naked() -> None:
     lyr = MagicMock()
     with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
         f = datacube_ows.config_utils.FunctionWrapper(lyr, {
@@ -82,7 +82,7 @@ def test_func_naked():
     assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"
 
 
-def test_base_class_unready():
+def test_base_class_unready() -> None:
     cfg = datacube_ows.config_utils.OWSConfigEntry({"foo": "bar", "pot": "noodle"})
     cfg.declare_unready("wow")
     cfg.declare_unready("pow")
@@ -101,6 +101,6 @@ def test_base_class_unready():
         cfg.declare_unready("woah")
     assert "Cannot declare woah as unready on a ready object" in str(e.value)
 
-def test_base_class_get():
+def test_base_class_get() -> None:
     cfg = datacube_ows.config_utils.OWSConfigEntry({"foo": "bar", "pot": "noodle"})
     assert cfg.get("wow", "bagger") == "bagger"

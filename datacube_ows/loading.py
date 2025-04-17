@@ -280,7 +280,7 @@ class DataStacker:
     @log_call
     def data(self,
              datasets_by_query: dict[ProductBandQuery, xarray.DataArray],
-             skip_corrections=False) -> xarray.Dataset | None:
+             skip_corrections: bool = False) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, consider-using-enumerate
         # datasets is an XArray DataArray of datasets grouped by time.
         data: xarray.Dataset | None = None

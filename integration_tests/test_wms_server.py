@@ -13,13 +13,13 @@ from lxml import etree
 from owslib.wms import WebMapService
 
 
-def get_xsd(name):
+def get_xsd(name: str) -> etree.XMLSchema:
     xsd_f = open("wms_xsds/" + name)
     schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 
 
-def check_wms_error(url, expected_error_message=None, expected_status_code=400):
+def check_wms_error(url, expected_error_message=None, expected_status_code: int = 400) -> None:
     try:
         _ = request.urlopen(url, timeout=10)
 
@@ -43,12 +43,12 @@ def check_wms_error(url, expected_error_message=None, expected_status_code=400):
             )
 
 
-def test_no_request(ows_server):
+def test_no_request(ows_server) -> None:
     # Make empty request to server:
     check_wms_error(ows_server.url + "/wms", "No operation specified", 400)
 
 
-def test_invalid_operation(ows_server):
+def test_invalid_operation(ows_server) -> None:
     # Make invalid operation request to server:
     check_wms_error(
         ows_server.url + "/wms?request=NoSuchOperation",
@@ -57,7 +57,7 @@ def test_invalid_operation(ows_server):
     )
 
 
-def test_getcap_badsvc(ows_server):
+def test_getcap_badsvc(ows_server) -> None:
     # Make bad service request to server:
     check_wms_error(
         ows_server.url + "/wms?request=GetCapabilities&service=NotWMS",
@@ -66,7 +66,7 @@ def test_getcap_badsvc(ows_server):
     )
 
 
-def test_getcap_xsd(ows_server):
+def test_getcap_xsd(ows_server) -> None:
     resp = requests.get(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
         timeout=10,
@@ -87,7 +87,7 @@ def test_getcap_xsd(ows_server):
     assert result
 
 
-def test_getcap_response(ows_server):
+def test_getcap_response(ows_server) -> None:
     resp = request.urlopen(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
         timeout=10,
@@ -111,7 +111,7 @@ def test_getcap_response(ows_server):
         assert math.isclose(float(wLong.text), float(geo_bbox.attrib["miny"]), rel_tol=1e-8)
 
 
-def test_wms_server(ows_server):
+def test_wms_server(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0")
 
@@ -122,7 +122,7 @@ def test_wms_server(ows_server):
     assert contents
 
 
-def test_wms_getmap(ows_server):
+def test_wms_getmap(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
 
@@ -148,7 +148,7 @@ def test_wms_getmap(ows_server):
         assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_getmap_requests(ows_server, product_name):
+def test_wms_getmap_requests(ows_server, product_name: str) -> None:
     resp = requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
@@ -165,7 +165,7 @@ def test_wms_getmap_requests(ows_server, product_name):
     # Confirm success
     assert resp.status_code == 200
 
-def test_wms_getmap_bad_requests(ows_server):
+def test_wms_getmap_bad_requests(ows_server) -> None:
     resp = requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
@@ -200,7 +200,7 @@ def test_wms_getmap_bad_requests(ows_server):
     assert "Layer not_a_real_layer is not defined" in resp.text
 
 
-def test_wms_getmap_qprof(ows_server, product_name):
+def test_wms_getmap_qprof(ows_server, product_name: str) -> None:
     resp = requests.get(ows_server.url + '/wms', params={
                             "service": "WMS",
                             "version": "1.3.0",
@@ -221,7 +221,7 @@ def test_wms_getmap_qprof(ows_server, product_name):
     assert js["info"]["zoom_factor"] > 0.0
 
 
-def test_wms_multiproduct_getmap(ows_server, multiproduct_name):
+def test_wms_multiproduct_getmap(ows_server, multiproduct_name: str) -> None:
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
 
@@ -244,7 +244,7 @@ def test_wms_multiproduct_getmap(ows_server, multiproduct_name):
     assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_multidate_getmap(ows_server):
+def test_wms_multidate_getmap(ows_server) -> None:
     # This one will only work with specially prepared test data, sorry.
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
 
@@ -262,7 +262,7 @@ def test_wms_multidate_getmap(ows_server):
     assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_style_looping_getmap(ows_server):
+def test_wms_style_looping_getmap(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
 
@@ -292,7 +292,7 @@ def test_wms_style_looping_getmap(ows_server):
             assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_getfeatureinfo(ows_server):
+def test_wms_getfeatureinfo(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
 
@@ -342,7 +342,7 @@ def test_wms_getfeatureinfo(ows_server):
             assert response.info()["Content-Type"] == "text/html"
 
 
-def test_custom_feature_info(ows_server, product_name):
+def test_custom_feature_info(ows_server, product_name: str) -> None:
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
 
     test_layer = wms.contents[product_name]
@@ -379,7 +379,7 @@ def test_custom_feature_info(ows_server, product_name):
             assert time_slice["platform"] in ("sentinel-2a", "sentinel-2b")
 
 
-def test_wms_getlegend(ows_server):
+def test_wms_getlegend(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0")
 
@@ -406,7 +406,7 @@ def test_wms_getlegend(ows_server):
             assert resp.headers.get("content-type") == "image/png"
 
 
-def test_wms_getlegendgraphic(ows_server):
+def test_wms_getlegendgraphic(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WMS service
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0")
 
