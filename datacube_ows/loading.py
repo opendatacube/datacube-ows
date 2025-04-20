@@ -15,8 +15,11 @@ from uuid import UUID
 import datacube
 import numpy
 import xarray
+from datacube.model import Dataset, Measurement, Product
+from datacube.storage._load import FuserFunction
+from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
-from odc.geo.geom import Geometry, CRS
+from odc.geo.geom import Geometry
 from odc.geo.warp import Resampling
 
 from datacube_ows.ogc_exceptions import WMSException
@@ -31,10 +34,10 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 class ProductBandQuery:
     def __init__(self,
-                 products: list[datacube.model.Product],
+                 products: list[Product],
                  bands: Iterable[str],
                  main: bool = False, manual_merge: bool = False, ignore_time: bool = False,
-                 fuse_func: datacube.api.core.FuserFunction | None = None
+                 fuse_func: FuserFunction | None = None
     ) -> None:
         self.products = products
         self.bands = set(bands)
@@ -114,7 +117,7 @@ class ProductBandQuery:
     def simple_layer_query(cls, layer: OWSNamedLayer,
                            bands: Iterable[str],
                            manual_merge: bool = False,
-                           fuse_func: datacube.api.core.FuserFunction | None = None,
+                           fuse_func: FuserFunction | None = None,
                            resource_limited: bool = False) -> "ProductBandQuery":
         if resource_limited:
             main_products = layer.low_res_products
@@ -337,10 +340,10 @@ class DataStacker:
     @log_call
     def manual_data_stack(self,
                           datasets: xarray.DataArray,
-                          measurements: Mapping[str, datacube.model.Measurement],
+                          measurements: Mapping[str, Measurement],
                           bands: set[str],
                           skip_corrections: bool,
-                          fuse_func: datacube.api.core.FuserFunction | None) -> xarray.Dataset | None:
+                          fuse_func: FuserFunction | None) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         if self.style:
@@ -353,7 +356,7 @@ class DataStacker:
         for dt in datasets.time.values:
             tds = datasets.sel(time=dt)
             merged = None
-            for ds in cast(Iterable[datacube.model.Dataset], tds.values.item()):
+            for ds in cast(Iterable[Dataset], tds.values.item()):
                 d = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
                 extent_mask = None
                 for band in non_flag_bands:
@@ -389,11 +392,11 @@ class DataStacker:
     @log_call
     def read_data(self,
                   datasets: xarray.DataArray,
-                  measurements: Mapping[str, datacube.model.Measurement],
+                  measurements: Mapping[str, Measurement],
                   geobox: GeoBox,
                   skip_broken: bool = True,
                   resampling: Resampling = "nearest",
-                  fuse_func: datacube.api.core.FuserFunction | None = None) -> xarray.Dataset:
+                  fuse_func: FuserFunction | None = None) -> xarray.Dataset:
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
@@ -411,12 +414,12 @@ class DataStacker:
     # TODO: Make skip_broken passed in via config
     @log_call
     def read_data_for_single_dataset(self,
-                                     dataset: datacube.model.Dataset,
-                                     measurements: Mapping[str, datacube.model.Measurement],
+                                     dataset: Dataset,
+                                     measurements: Mapping[str, Measurement],
                                      geobox: GeoBox,
                                      skip_broken: bool = True,
                                      resampling: Resampling = "nearest",
-                                     fuse_func: datacube.api.core.FuserFunction | None = None) -> xarray.Dataset:
+                                     fuse_func: FuserFunction | None = None) -> xarray.Dataset:
         datasets = [dataset]
         dc_datasets = datacube.Datacube.group_datasets(datasets, self._layer.time_resolution.dataset_groupby())
         CredentialManager.check_cred()

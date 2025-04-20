@@ -14,7 +14,7 @@ import xarray
 from affine import Affine
 from deprecat import deprecat
 from odc.geo.geobox import GeoBox
-from odc.geo.geom import CRS
+from odc.geo.crs import CRS
 from PIL import Image
 
 TYPE_CHECKING = False

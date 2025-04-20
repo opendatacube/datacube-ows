@@ -14,7 +14,8 @@ from affine import Affine
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
-from odc.geo import CRS, geom
+from odc.geo.crs import CRS
+from odc.geo import geom
 from odc.geo.geobox import GeoBox
 from pytz import utc
 from rasterio.warp import Resampling
@@ -85,7 +86,7 @@ def _get_geobox(args, crs: CRS) -> GeoBox:
             ur = geom.point(x=maxx, y=maxy, crs=crs).to_crs("epsg:3832")
             minx, miny = ll.coords[0]
             maxx, maxy = ur.coords[0]
-            crs = geom.CRS("epsg:3832")
+            crs = CRS("epsg:3832")
 
     return create_geobox(
         crs,
@@ -435,7 +436,7 @@ class GetMapParameters(GetParameters):
         self.resampling = Resampling.nearest
 
         self.resources = RequestScale(
-            native_crs=geom.CRS(self.layer.native_CRS),
+            native_crs=CRS(self.layer.native_CRS),
             native_resolution=(self.layer.resolution_x, self.layer.resolution_y),
             geobox=self.geobox,
             n_dates=len(self.times),

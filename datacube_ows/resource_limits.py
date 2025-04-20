@@ -10,8 +10,9 @@ from collections.abc import Iterable, Mapping
 
 import affine
 import numpy as np
+from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
-from odc.geo.geom import CRS, polygon
+from odc.geo.geom import polygon
 
 from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
                                        OWSConfigEntry)

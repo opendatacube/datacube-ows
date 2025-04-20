@@ -15,6 +15,7 @@ import numpy
 import xarray
 from datacube.model import Dataset
 from datacube.utils.masking import mask_to_dict
+from odc.geo.crs import CRS
 from odc.geo import geom
 from odc.geo.geobox import GeoBox
 from pandas import Timestamp
@@ -196,7 +197,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                     pt = geom.point(x, y, params.crs)
 
                     # Project to EPSG:4326
-                    crs_geo = geom.CRS("EPSG:4326")
+                    crs_geo = CRS("EPSG:4326")
                     ptg = pt.to_crs(crs_geo)
 
                     # Capture lat/long coordinates
