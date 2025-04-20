@@ -11,7 +11,7 @@ from PIL import Image
 
 from datacube_ows.ogc_exceptions import WMSException
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def get_image_from_url(url: str) -> Image.Image | None:

@@ -50,13 +50,13 @@ class SpatialParameter:
         else:
             raise WCSScalerUnknownDimension(dimension)
 
-    def __getitem__(self, dim):
+    def __getitem__(self, dim: str):
         if self.is_x_dim(dim):
             return self.x
         else:
             return self.y
 
-    def __setitem__(self, dim, val) -> None:
+    def __setitem__(self, dim: str, val) -> None:
         if self.is_x_dim(dim):
             self.x = val
         else:
@@ -66,7 +66,7 @@ class SpatialParameter:
         return self[dim]
 
     @override
-    def __setattr__(self, dim, val) -> None:
+    def __setattr__(self, dim: str, val) -> None:
         if dim in ("x", "y", "layer", "crs_def"):
             super().__setattr__(dim, val)
         else:

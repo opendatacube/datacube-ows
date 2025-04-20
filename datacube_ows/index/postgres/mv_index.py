@@ -44,7 +44,7 @@ def get_st_view(meta: MetaData) -> Table:
 
 
 _meta = MetaData()
-st_view = get_st_view(_meta)
+st_view: Table = get_st_view(_meta)
 
 
 class MVSelectOpts(Enum):

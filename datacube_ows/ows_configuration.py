@@ -56,7 +56,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.product_ranges import LayerExtent
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def read_config(path: str | None = None) -> CFG_DICT:
@@ -178,7 +178,7 @@ class BandIndex(OWSMetadataConfig):
                 return b
         raise ConfigException(f"Unknown band: {name_alias} in layer {self.layer_name}")
 
-    def band_label(self, name_alias) -> str:
+    def band_label(self, name_alias: str) -> str:
         canonical_name = self.band(name_alias)
         return cast(str, self.read_local_metadata(canonical_name))
 
@@ -1034,7 +1034,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def layer_count(self) -> int:
         return 1
 
-    def search_times(self, t, geobox=None) -> datetime.datetime | tuple:
+    def search_times(self, t: datetime.datetime,
+                     geobox=None) -> datetime.datetime | tuple[datetime.datetime, datetime.datetime]:
         if not geobox:
             bbox = self.ranges.bboxes[self.native_CRS]
             geobox = create_geobox(
@@ -1053,7 +1054,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     @classmethod
     @override
-    def lookup_impl(cls, cfg: "OWSConfig", keyvals: dict[str, str], subs: CFG_DICT | None = None):
+    def lookup_impl(cls, cfg: "OWSConfig", keyvals: dict[str, str], subs: CFG_DICT | None = None) -> "OWSNamedLayer":
         try:
             return cfg.layer_index[keyvals["layer"]]
         except KeyError:

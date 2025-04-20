@@ -29,7 +29,7 @@ from datacube_ows.time_utils import solar_date, tz_for_geometry
 from datacube_ows.utils import default_to_utc, log_call
 from datacube_ows.wms_utils import GetMapParameters
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],

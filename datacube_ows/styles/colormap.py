@@ -28,7 +28,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.ows_configuration import OWSNamedLayer
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 class AbstractValueMapRule(AbstractMaskRule):
@@ -317,7 +317,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                        frameon=False)
         plt.savefig(bytesio, format='png')
 
-    def patch_label(self, idx: int):
+    def patch_label(self, idx: int) -> str | None:
         return self.read_local_metadata(f"rule_{idx}")
 
     # For MetadataConfig

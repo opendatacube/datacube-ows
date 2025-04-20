@@ -175,7 +175,7 @@ def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, band_mapper=None):
     return red_delta / red_sum.where(mndwi > 0.1)
 
 
-def multi_date_delta(data, time_direction=-1):
+def multi_date_delta(data, time_direction: int = -1):
     data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)
 
 #    data1, data2 = data.values.item(0), data.values.item(1)

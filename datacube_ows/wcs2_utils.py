@@ -22,7 +22,7 @@ from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
 # from datacube_ows.wcs_utils import get_bands_from_styles
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def uniform_crs(cfg: OWSConfig, crs: str) -> str:

@@ -445,7 +445,7 @@ class GetMapParameters(GetParameters):
 
 class GetFeatureInfoParameters(GetParameters):
     @override
-    def get_layer(self, args):
+    def get_layer(self, args) -> OWSNamedLayer:
         return get_layer_from_arg(args, "query_layers")
 
     @override

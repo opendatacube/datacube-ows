@@ -18,7 +18,7 @@ WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
 
 @log_call
-def handle_wms(nocase_args) -> tuple | None:
+def handle_wms(nocase_args: dict[str, str]) -> tuple | None:
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
     if not operation:

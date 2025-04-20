@@ -22,7 +22,7 @@ from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.utils import get_sqlconn
 from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:

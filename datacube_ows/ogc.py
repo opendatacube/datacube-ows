@@ -9,6 +9,7 @@ import traceback
 from time import monotonic
 
 from flask import g, render_template, request
+from logging import Logger
 
 from datacube_ows import __version__
 from datacube_ows.http_utils import (
@@ -20,8 +21,8 @@ from datacube_ows.http_utils import (
 from datacube_ows.index.api import ows_index
 from datacube_ows.legend_generator import create_legend_for_style
 from datacube_ows.ogc_exceptions import OGCException, WMSException
-from datacube_ows.ows_configuration import get_config
-from datacube_ows.protocol_versions import supported_versions
+from datacube_ows.ows_configuration import OWSConfig, get_config
+from datacube_ows.protocol_versions import SupportedSvc, supported_versions
 from datacube_ows.startup_utils import (
     initialise_aws_credentials,
     initialise_babel,
@@ -38,7 +39,7 @@ from datacube_ows.wcs1 import WCS_REQUESTS
 from datacube_ows.wms import WMS_REQUESTS
 
 # Logging intialisation
-_LOG = initialise_logger()
+_LOG: Logger = initialise_logger()
 initialise_ignorable_warnings()
 
 # Initialisation of external libraries - controlled by environment variables.
@@ -47,7 +48,7 @@ initialise_sentry(_LOG)
 initialise_aws_credentials(_LOG)
 
 # Prepare parsed configuration object
-cfg = parse_config_file()
+cfg: OWSConfig | None = parse_config_file()
 
 # Initialise Flask
 app = initialise_flask(__name__)
@@ -62,7 +63,7 @@ metrics = initialise_prometheus(app, _LOG)
 app = proxy_fix(app, _LOG)
 
 # Protocol/Version lookup table
-OWS_SUPPORTED = supported_versions()
+OWS_SUPPORTED: dict[str, SupportedSvc] = supported_versions()
 
 # Prometheus Metrics
 prometheus_ows_ogc_metric = metrics.histogram(
@@ -196,7 +197,7 @@ def ogc_wcs_impl():
 
 @app.route('/ping')
 @metrics.summary('ows_heartbeat_pings', "Ping durations", labels={"status": lambda r: r.status})
-def ping():
+def ping() -> tuple[str, int, dict[str, str]]:
     dbs_ok = {
         name: ows_index(dc).check_db_access(dc)
         for name, dc in get_config().all_dcs.items()
