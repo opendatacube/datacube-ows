@@ -20,7 +20,7 @@ from datacube_ows.wms_utils import GetLegendGraphicParameters
 
 matplotlib.use('Agg')
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def legend_graphic(args) -> tuple | None:

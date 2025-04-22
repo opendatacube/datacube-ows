@@ -26,7 +26,7 @@ from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
 from datacube_ows.wcs2_utils import get_coverage_data
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 

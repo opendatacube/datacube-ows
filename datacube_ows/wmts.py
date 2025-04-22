@@ -15,7 +15,7 @@ from datacube_ows.ogc_exceptions import WMSException, WMTSException
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.utils import log_call
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 

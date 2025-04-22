@@ -24,7 +24,7 @@ from datacube_ows.index.postgres.mv_index import MVSelectOpts, mv_search
 from datacube_ows.utils import get_sqlconn
 from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:

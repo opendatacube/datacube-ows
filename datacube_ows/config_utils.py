@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     import datacube_ows.ows_configuration.OWSNamedLayer
     import datacube_ows.styles.base.StyleMask
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 RAW_CFG = None | str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG"]
 

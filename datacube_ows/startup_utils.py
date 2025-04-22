@@ -222,7 +222,7 @@ def proxy_fix(app, log=None):
             log.info("ProxyFix was enabled")
     return app
 
-def request_extractor():
+def request_extractor() -> str | None:
     qreq = request.args.get('request')
     return qreq
 

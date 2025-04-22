@@ -152,7 +152,8 @@ def plot_image(xr_image: xarray.Dataset, x: str = "x", y: str = "y", size: float
     rgb.plot.imshow(x=x, y=y, size=size, aspect=aspect)
 
 
-def plot_image_with_style(style, data, x: str = "x", y: str = "y", size: float = 10, aspect=None, valid_data_mask=None) -> None:
+def plot_image_with_style(style, data, x: str = "x", y: str = "y", size: float = 10,
+                          aspect: float | None = None, valid_data_mask=None) -> None:
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 
@@ -174,7 +175,8 @@ def plot_image_with_style(style, data, x: str = "x", y: str = "y", size: float =
     plot_image(apply_ows_style(style, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size, aspect=aspect)
 
 
-def plot_image_with_style_cfg(cfg, data, x: str = "x", y: str = "y", size: float = 10, aspect=None, valid_data_mask=None) -> None:
+def plot_image_with_style_cfg(cfg, data, x: str = "x", y: str = "y", size: float = 10,
+                              aspect: float | None = None, valid_data_mask=None) -> None:
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 

@@ -30,7 +30,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.ows_configuration import OWSNamedLayer
 
-_LOG = logging.getLogger(__name__)
+_LOG: logging.Logger = logging.getLogger(__name__)
 
 @dataclass
 class RampNode:
@@ -39,7 +39,7 @@ class RampNode:
     alpha: int | float | None = None
 
     @property
-    def rgba(self):
+    def rgba(self) -> tuple[float, float, float, float]:
         return to_rgba(self.color, self.alpha)
 
     def with_value(self, value: int | float) -> "RampNode":
