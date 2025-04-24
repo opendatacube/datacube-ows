@@ -132,7 +132,7 @@ def main(layers: list[str],
                 dc = Datacube(env=cfg.default_env, app=app)
             else:
                 dc = Datacube(env=env, app=app)
-        except:
+        except Exception:
             click.echo(f"Unable to connect to the {env or cfg.default_env} database.")
             sys.exit(1)
 

@@ -341,7 +341,7 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
         mpl_ramp = args["colorscheme"]
         try:
             plt.get_cmap(mpl_ramp)
-        except:
+        except Exception:
             raise WMSException(f"Invalid Matplotlib ramp name: {mpl_ramp}",
                                locator="Colorscalerange parameter")
         colorscalerange = args.get("colorscalerange", "0,1").split(",")
