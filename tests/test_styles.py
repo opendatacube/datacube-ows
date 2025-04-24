@@ -788,12 +788,12 @@ def test_createcolordata_remask() -> None:
 def test_scale_ramp() -> None:
     from datacube_ows.styles.ramp import scale_unscaled_ramp, RampNode
 
-    input = [
+    input_ = [
         RampNode(0.0, "red", alpha=0.5),
         RampNode(0.5, "green"),
         RampNode(1.0, "blue"),
     ]
-    output = scale_unscaled_ramp(-100.0, 100.0, input)
+    output = scale_unscaled_ramp(-100.0, 100.0, input_)
     assert output[0].color == "red"
     assert output[0].rgba[-1] == 0.5
     assert output[0].value == -100.0
