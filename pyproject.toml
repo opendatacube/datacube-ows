@@ -7,6 +7,31 @@ ignore_missing_imports = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 
+[tool.ruff]
+src = ["datacube_ows", "docs", "tests", "integration_tests"]
+
+[tool.ruff.lint]
+select = [
+    "A",  # Don't shadow built-ins
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "T10", # flake8-debugger
+]
+ignore = [
+    "E501",
+    "F841", # FIXME: disabled to simplify switch to Ruff.
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Stay close to the generated file for readthedocs, so ignore some rules.
+"docs/conf.py" = ["A001", "E402"]
+# Using pytest_namespace requires assignment before importing pytest.
+"integration_tests/conftest.py" = ["E402"]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120
+
 [build-system]
 requires = ["setuptools>=65.5.1", "wheel>=0.38.1", "setuptools_scm[toml]>3.4"]
 

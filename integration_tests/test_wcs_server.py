@@ -1254,14 +1254,14 @@ def test_wcs21_describecoverage(ows_server) -> None:
         ows_server.url + "/wcs",
         params={
             "request": "DescribeCoverage",
-            "coverageid": ",".join(l.name for l in layers[0:-2]),
+            "coverageid": ",".join(l.name for l in layers[0:-2]),  # noqa: E741
             "version": "2.1.0",
             "service": "WCS",
         },
     )
     assert r.status_code == 200
     assert "max-age" in r.headers["Cache-Control"]
-    for l in layers[0:-2]:
+    for l in layers[0:-2]:  # noqa: E741
         assert l.name in r.text
 
 

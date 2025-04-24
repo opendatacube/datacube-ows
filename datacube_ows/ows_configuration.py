@@ -389,11 +389,11 @@ class OWSFolder(OWSLayer):
 
     @override
     def unready_layer_count(self) -> int:
-        return sum([l.layer_count() for l in self.unready_layers])
+        return sum([l.layer_count() for l in self.unready_layers])  # noqa: E741
 
     @override
     def layer_count(self) -> int:
-        return sum([l.layer_count() for l in self.child_layers])
+        return sum([l.layer_count() for l in self.child_layers])  # noqa: E741
 
     @override
     def make_ready(self, *args, **kwargs) -> None:
