@@ -9,6 +9,7 @@ on:
     paths:
       - 'docs/**'
       - '*.md'
+      - '*.rst'
       - '.github/workflows/spellcheck.yaml'
 
 
@@ -19,6 +20,7 @@ on:
     paths:
       - 'docs/**'
       - '*.md'
+      - '*.rst'
       - '.github/workflows/spellcheck.yaml'
 
 # When a PR is updated, cancel the jobs from the previous version. Merges
