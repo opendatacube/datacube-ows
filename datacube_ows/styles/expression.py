@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 # Lark stuff.
 
-identity = lambda ev, x: x
+identity = lambda ev, x: x  # noqa: E731
 
 
 def empty_gen(ev, a) -> set:

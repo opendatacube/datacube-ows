@@ -23,5 +23,5 @@ def test_pyproj_crs() -> None:
       try:
          crs = CRS(crs_string)
          assert crs is not None
-      except:
+      except Exception:
          assert False

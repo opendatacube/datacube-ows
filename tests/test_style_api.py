@@ -80,7 +80,7 @@ def test_external_legends(simple_rgb_style_cfg) -> None:
         "url": "http://fake.com/not/a/real/image_url.png"
     }
     style = StandaloneStyle(simple_rgb_style_cfg)
-    for l in style.legend_cfg.legend_urls:
+    for l in style.legend_cfg.legend_urls:  # noqa: E741
         assert style.legend_cfg.legend_urls[l] == "http://fake.com/not/a/real/image_url.png"
     simple_rgb_style_cfg["legend"] = {
         "url": {
@@ -235,7 +235,7 @@ def test_ramp_legend_ranges(simple_ramp_style_cfg) -> None:
 def test_ramp_legend_parse_errs(simple_ramp_style_cfg) -> None:
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.15",
-        "begin": "0.95",
+        "begin": "0.95",  # noqa: F601
         "decimal_places": -1
     }
     with pytest.raises(ConfigException) as e:

@@ -95,10 +95,7 @@ def _make_band_dict(prod_cfg: OWSNamedLayer, pixel_dataset: xarray.Dataset) -> d
             for flag, val in flag_dict.items():
                 if not val:
                     continue
-                if val == True:
-                    ret_val[flag_def[flag].get('description', flag)] = True
-                else:
-                    ret_val[flag_def[flag].get('description', flag)] = val
+                ret_val[flag_def[flag].get('description', flag)] = val
             band_dict[k] = ret_val
         else:
             try:

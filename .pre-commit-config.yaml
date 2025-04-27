@@ -5,11 +5,11 @@ repos:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.7
     hooks:
-    -   id: flake8
-        args: ["--ignore=E501", "--select=F401,E201,E202,E203,E502,E241,E225,E306,E231,E226,E123,F811"]
+    -   id: ruff
+        args: [--fix, --show-fixes, --output-format, grouped]
 # -   repo: https://github.com/PyCQA/bandit
 #     rev: 1.7.4
 #     hooks:

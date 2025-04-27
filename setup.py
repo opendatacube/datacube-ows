@@ -55,7 +55,7 @@ dev_requirements = [
     'sphinx_click',
     'pre-commit',
     'mypy',
-    'flake8',
+    'ruff',
     'types-pytz',
     'types-python-dateutil',
     'types-requests',

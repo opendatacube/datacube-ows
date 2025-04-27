@@ -144,7 +144,7 @@ def read_mpl_ramp(mpl_ramp: str) -> RampRepr:
     unscaled_cmap: RampRepr = []
     try:
         cmap = plt.get_cmap(mpl_ramp)
-    except:
+    except Exception:
         raise ConfigException(f"Invalid Matplotlib name: {mpl_ramp}")
     val_range = numpy.arange(0.1, 1.1, 0.1)
     rgba_hex = to_hex(cmap(0.0))

@@ -71,15 +71,15 @@ def band_mapper():
 
 
 def test_scale_data() -> None:
-    assert not scale_data(TEST_ARR_1, [0.0, 1.0], [0.0, 1.0]) is None
+    assert scale_data(TEST_ARR_1, [0.0, 1.0], [0.0, 1.0]) is not None
 
 
 def test_sum_bands() -> None:
-    assert not sum_bands(TEST_XARR, "b1", "b2") is None
+    assert sum_bands(TEST_XARR, "b1", "b2") is not None
 
 
 def test_pre_scaled_sum_bands() -> None:
-    assert not pre_scaled_sum_bands(TEST_XARR, "b1", "b2", 1.0, 0.0, 1.0, 0.0) is None
+    assert pre_scaled_sum_bands(TEST_XARR, "b1", "b2", 1.0, 0.0, 1.0, 0.0) is not None
     unscaled = sum_bands(TEST_XARR, "b1", "b2")
     assert pre_scaled_sum_bands(TEST_XARR, "b1", "b2").equals(unscaled)
     assert pre_scaled_sum_bands(TEST_XARR, "b1", "b2", 1.0, 0.0, 1.0, 0.0).equals(
@@ -92,7 +92,7 @@ def test_pre_scaled_sum_bands() -> None:
 
 def test_pre_scaled_delta_bands() -> None:
     assert (
-        not pre_scaled_delta_bands(TEST_XARR2, "b3", "b2", 1.0, 0.0, 1.0, 0.0) is None
+        pre_scaled_delta_bands(TEST_XARR2, "b3", "b2", 1.0, 0.0, 1.0, 0.0) is not None
     )
     unscaled = delta_bands(TEST_XARR2, "b3", "b2")
     assert pre_scaled_delta_bands(TEST_XARR2, "b3", "b2").equals(unscaled)
@@ -105,17 +105,16 @@ def test_pre_scaled_delta_bands() -> None:
 
 
 def test_norm_diff(band_mapper) -> None:
-    assert not norm_diff(TEST_XARR, "b1", "b2") is None
-    assert not norm_diff(TEST_XARR, "b1a", "b2", band_mapper, scale_from=[0, 1]) is None
+    assert norm_diff(TEST_XARR, "b1", "b2") is not None
+    assert norm_diff(TEST_XARR, "b1a", "b2", band_mapper, scale_from=[0, 1]) is not None
 
 
 def test_pre_scaled_norm_diff(band_mapper) -> None:
-    assert not pre_scaled_norm_diff(TEST_XARR, "b1", "b2") is None
+    assert pre_scaled_norm_diff(TEST_XARR, "b1", "b2") is not None
     assert (
-        not pre_scaled_norm_diff(
+        pre_scaled_norm_diff(
             TEST_XARR, "b1a", "b2", band_mapper=band_mapper, scale_from=[0, 1]
-        )
-        is None
+        ) is not None
     )
     assert np.array_equal(
         pre_scaled_norm_diff(TEST_XARR2, "b3", "b2", 2.0, 0.0, 6.0, 0.0).values,
@@ -128,55 +127,55 @@ def test_pre_scaled_norm_diff(band_mapper) -> None:
 
 
 def test_constant(band_mapper) -> None:
-    assert not constant(TEST_XARR, "b1", 10) is None
-    assert not constant(TEST_XARR, "b1a", 10, band_mapper) is None
+    assert constant(TEST_XARR, "b1", 10) is not None
+    assert constant(TEST_XARR, "b1a", 10, band_mapper) is not None
 
 
 def test_band_quotient(band_mapper) -> None:
-    assert not band_quotient(TEST_XARR, "b1", "b2") is None
-    assert not band_quotient(TEST_XARR, "b1", "b2", band_mapper) is None
+    assert band_quotient(TEST_XARR, "b1", "b2") is not None
+    assert band_quotient(TEST_XARR, "b1", "b2", band_mapper) is not None
 
 
 def test_band_quotient_sum() -> None:
-    assert not band_quotient_sum(TEST_XARR, "b1", "b2", "b1", "b2") is None
+    assert band_quotient_sum(TEST_XARR, "b1", "b2", "b1", "b2") is not None
 
 
 def test_single_band_log(band_mapper) -> None:
-    assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0) is None
-    assert not single_band_log(TEST_XARR, "b1", 1.0, 1.0, band_mapper) is None
+    assert single_band_log(TEST_XARR, "b1", 1.0, 1.0) is not None
+    assert single_band_log(TEST_XARR, "b1", 1.0, 1.0, band_mapper) is not None
 
 
 def test_single_band(band_mapper) -> None:
-    assert not single_band(TEST_XARR, "b1") is None
-    assert not single_band(TEST_XARR, "b1", band_mapper) is None
+    assert single_band(TEST_XARR, "b1") is not None
+    assert single_band(TEST_XARR, "b1", band_mapper) is not None
 
 
 def test_multidate() -> None:
-    assert not multi_date_delta(TEST_XARR_T) is None
-    assert not multi_date_delta(TEST_XARR_T, time_direction=1) is None
+    assert multi_date_delta(TEST_XARR_T) is not None
+    assert multi_date_delta(TEST_XARR_T, time_direction=1) is not None
 
 
 def test_ndci() -> None:
-    assert not sentinel2_ndci(TEST_XARR, "b1", "b2", "b1", "b2") is None
+    assert sentinel2_ndci(TEST_XARR, "b1", "b2", "b1", "b2") is not None
 
 
 def test_single_band_offset_log(band_mapper) -> None:
-    assert not single_band_offset_log(TEST_XARR, "b1") is None
-    assert not single_band_offset_log(TEST_XARR, "b1", offset=0.5) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", scale=100) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0]) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", band_mapper=band_mapper) is None
-    assert not single_band_offset_log(TEST_XARR, "b1", mult_band="b2", band_mapper=band_mapper) is None
+    assert single_band_offset_log(TEST_XARR, "b1") is not None
+    assert single_band_offset_log(TEST_XARR, "b1", offset=0.5) is not None
+    assert single_band_offset_log(TEST_XARR, "b1", scale=100) is not None
+    assert single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0]) is not None
+    assert single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]) is not None
+    assert single_band_offset_log(TEST_XARR, "b1", band_mapper=band_mapper) is not None
+    assert single_band_offset_log(TEST_XARR, "b1", mult_band="b2", band_mapper=band_mapper) is not None
 
 
 def test_single_band_arcsec(band_mapper) -> None:
-    assert not single_band_arcsec(TEST_XARR, "b1") is None
-    assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is None
-    assert not single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is None
-    assert not single_band_arcsec(TEST_XARR, "b1", band_mapper=band_mapper) is None
+    assert single_band_arcsec(TEST_XARR, "b1") is not None
+    assert single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is not None
+    assert single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is not None
+    assert single_band_arcsec(TEST_XARR, "b1", band_mapper=band_mapper) is not None
 
 
 def test_rvi(band_mapper) -> None:
-    assert not radar_vegetation_index(TEST_XARR, "b1", "b2") is None
-    assert not radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper) is None
+    assert radar_vegetation_index(TEST_XARR, "b1", "b2") is not None
+    assert radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper) is not None

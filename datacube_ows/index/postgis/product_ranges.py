@@ -137,9 +137,9 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
                   dates.add(dat_ran.lower)
 
         if layer.time_resolution.is_subday():
-          date_formatter = lambda d: d.isoformat()
+          date_formatter = lambda d: d.isoformat()  # noqa: E731
         else:
-          date_formatter = lambda d: d.strftime("%Y-%m-%d")
+          date_formatter = lambda d: d.strftime("%Y-%m-%d")  # noqa: E731
 
         dates = sorted(dates)
         conn.execute(text("""
@@ -266,9 +266,9 @@ def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
     for result in results:
         conn.close()
         if layer.time_resolution.is_subday():
-            dt_parser: Callable[[str], datetime | date] = lambda dts: datetime.fromisoformat(dts)
+            dt_parser: Callable[[str], datetime | date] = lambda dts: datetime.fromisoformat(dts)  # noqa: E731
         else:
-            dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()
+            dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()  # noqa: E731
         times = [dt_parser(d) for d in result.dates if d is not None]
         if not times:
             return None

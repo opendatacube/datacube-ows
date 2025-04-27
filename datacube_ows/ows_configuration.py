@@ -389,11 +389,11 @@ class OWSFolder(OWSLayer):
 
     @override
     def unready_layer_count(self) -> int:
-        return sum([l.layer_count() for l in self.unready_layers])
+        return sum([l.layer_count() for l in self.unready_layers])  # noqa: E741
 
     @override
     def layer_count(self) -> int:
-        return sum([l.layer_count() for l in self.child_layers])
+        return sum([l.layer_count() for l in self.child_layers])  # noqa: E741
 
     @override
     def make_ready(self, *args, **kwargs) -> None:
@@ -774,7 +774,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def parse_wcs(self, cfg: CFG_DICT | bool) -> None:
-        if cfg == False or not self.global_cfg.wcs:
+        if cfg is False or not self.global_cfg.wcs:
             self.wcs = False
         else:
             self.wcs = not cast(CFG_DICT, cfg).get("disable", False)

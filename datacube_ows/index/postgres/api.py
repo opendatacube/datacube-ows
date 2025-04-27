@@ -40,7 +40,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
                 )
                 for r in results:
                     db_ok = True
-        except:
+        except Exception:
             pass
         return db_ok
 

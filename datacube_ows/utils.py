@@ -61,22 +61,22 @@ def group_by_begin_datetime(pnames: list[str] | None = None,
     Returns an ODC GroupBy object, suitable for daily/monthly/yearly/etc statistical/summary data.
     (Or for sub-day time resolution data)
     """
-    base_sort_key = lambda ds: ds.time.begin
+    base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:
         index = {
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
+        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))  # noqa: E731
     else:
         sort_key = base_sort_key
     if truncate_dates:
-        grp_by = lambda ds: npdt64(datetime.datetime(
+        grp_by = lambda ds: npdt64(datetime.datetime(  # noqa: E731
             ds.time.begin.year,
             ds.time.begin.month,
             ds.time.begin.day), "ns")
     else:
-        grp_by = lambda ds: npdt64(datetime.datetime(
+        grp_by = lambda ds: npdt64(datetime.datetime(  # noqa: E731
             ds.time.begin.year,
             ds.time.begin.month,
             ds.time.begin.day,
@@ -92,33 +92,33 @@ def group_by_begin_datetime(pnames: list[str] | None = None,
 
 
 def group_by_solar(pnames: list[str] | None = None) -> GroupBy:
-    base_sort_key = lambda ds: ds.time.begin
+    base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:
         index = {
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))
+        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))  # noqa: E731
     else:
         sort_key = base_sort_key
     return GroupBy(
         dimension='time',
-        group_by_func=lambda x: npdt64(solar_day(x), "ns"),  # type: ignore[call-overload]
+        group_by_func=lambda x: npdt64(solar_day(x), "ns"),  # type: ignore[call-overload]  # noqa: E731
         units='seconds since 1970-01-01 00:00:00',
         sort_key=sort_key
     )
 
 
 def group_by_mosaic(pnames: list[str] | None = None) -> GroupBy:
-    base_sort_key = lambda ds: ds.time.begin
+    base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:
         index = {
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key: Callable[[Dataset], tuple] = lambda ds: (solar_day(ds), index.get(ds.type.name), base_sort_key(ds))
+        sort_key: Callable[[Dataset], tuple] = lambda ds: (solar_day(ds), index.get(ds.type.name), base_sort_key(ds))  # noqa: E731
     else:
-        sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))
+        sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))  # noqa: E731
     return GroupBy(
         dimension='time',
         group_by_func=lambda n: npdt64(datetime.datetime(1970, 1, 1), "ns"),

@@ -99,7 +99,7 @@ class WCS1GetCoverageRequest:
                                 locator="BBOX or TIME parameter")
         try:
             self.minx, self.miny, self.maxx, self.maxy = map(float, args['bbox'].split(','))
-        except:
+        except Exception:
             raise WCS1Exception("Invalid BBOX parameter",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="BBOX parameter")
