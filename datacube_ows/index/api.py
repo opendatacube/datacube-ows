@@ -14,7 +14,8 @@ from uuid import UUID
 from datacube import Datacube
 from datacube.index.abstract import AbstractIndex
 from datacube.model import Product, Dataset
-from odc.geo.geom import Geometry, CRS, polygon
+from odc.geo.crs import CRS
+from odc.geo.geom import Geometry, polygon
 
 from datacube_ows.config_utils import CFG_DICT, ConfigException
 

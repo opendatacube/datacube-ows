@@ -16,7 +16,7 @@ import sqlalchemy.exc
 from psycopg2.extras import Json
 from sqlalchemy import text
 
-from odc.geo.geom import CRS
+from odc.geo.crs import CRS
 
 from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.utils import get_sqlconn

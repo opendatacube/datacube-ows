@@ -17,6 +17,7 @@ import sqlalchemy.exc
 from psycopg2.extras import Json
 from sqlalchemy import text
 
+from odc.geo.crs import CRS
 from odc.geo.geom import Geometry
 
 from datacube_ows.ows_configuration import OWSNamedLayer
@@ -187,7 +188,7 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
     conn.close()
 
 
-def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CRS]) -> dict[str, dict[str, float]]:
+def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, CRS]) -> dict[str, dict[str, float]]:
    result = {}
    for crsid, crs in crses.items():
        if crs.valid_region is not None:
