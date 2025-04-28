@@ -43,7 +43,7 @@ F = Callable[..., Any]
 # If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
 # pylint: disable=dangerous-default-value
 def cfg_expand(cfg_unexpanded: CFG_DICT,
-               cwd: str | None = None, inclusions: list[str] = []) -> CFG_DICT:
+               cwd: str | None = None, inclusions: list[str] | None = None) -> CFG_DICT:
     """
     Recursively expand config inclusions.
 
@@ -52,6 +52,8 @@ def cfg_expand(cfg_unexpanded: CFG_DICT,
     :param inclusions: (optional) inclusions already included (prevents infinite recursion)
     :return: The fully expanded configuration object
     """
+    if inclusions is None:
+        inclusions = []
     if cwd is None:
         cwd = os.getcwd()
 
