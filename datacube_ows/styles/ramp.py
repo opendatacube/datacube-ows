@@ -203,9 +203,9 @@ class ColorRamp:
                         leg_begin_before_idx = idx
                 if not leg_end_in_ramp and leg_end_before_idx is None:
                     if isclose(col_val, fleg_end, abs_tol=1e-9):
-                        end_in_ramp = True
+                        leg_end_in_ramp = True
                     elif col_val > fleg_end:
-                        end_before_idx = idx
+                        leg_end_before_idx = idx
             if not leg_begin_in_ramp:
                 rgba = self.rgba_at(fleg_begin)
                 begin_col_point = RampNode(fleg_begin, to_hex(rgba))
