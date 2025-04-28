@@ -10,7 +10,7 @@ import pytest
 
 from datacube_ows.config_utils import ConfigException
 
-from datacube_ows.styles.api import ( # noqa: F401 isort:skip
+from datacube_ows.styles.api import (
                                      StandaloneStyle, apply_ows_style,
                                      apply_ows_style_cfg, create_geobox,
                                      generate_ows_legend_style,

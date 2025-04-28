@@ -13,7 +13,7 @@ from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.ramp import ColorRamp, ColorRampDef
-from tests.test_band_utils import dummy_layer  # noqa: F401,F811
+from tests.test_band_utils import dummy_layer  # noqa: F401
 
 
 @pytest.fixture
