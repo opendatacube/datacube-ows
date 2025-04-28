@@ -284,7 +284,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
             if prec == 0:
                 return rstr
             rstr += "."
-            for i in range(prec - 1):
+            for _ in range(prec - 1):
                 rstr += "0"
             rstr += "1"
             return rstr

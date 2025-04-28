@@ -60,7 +60,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
         imgdata = Dataset(coords=data)
 
         d: DataArray = data['index_function']
-        for band, intensity in self.rgb_components.items():
+        for band, _ in self.rgb_components.items():
             rampdata = DataArray(self.color_ramp.get_value(d, band),
                                  coords=d.coords,
                                  dims=d.dims)

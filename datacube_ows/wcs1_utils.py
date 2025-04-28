@@ -396,7 +396,7 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
 
     # Clean extent flag band from output
     sanitised_bands = [req.layer.band_idx.locale_band(b) for b in req.bands]
-    for k, v in output.data_vars.items():  # type: ignore[union-attr]
+    for k, _ in output.data_vars.items():  # type: ignore[union-attr]
         if k not in sanitised_bands:
             output = output.drop_vars([k])  # type: ignore[union-attr]
     qprof["write_action"] = "Write Data"
@@ -459,7 +459,7 @@ def get_tiff(req, data):
 def get_netcdf(req, data):
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid
-    for k, v in data.data_vars.items():
+    for _, v in data.data_vars.items():
         v.attrs["crs"] = req.response_crsid
         if "spectral_definition" in v.attrs:
             del v.attrs["spectral_definition"]

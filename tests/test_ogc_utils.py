@@ -145,7 +145,7 @@ def test_create_geobox() -> None:
     geobox_wo = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
                               140.7184, 145.6924, -16.1144, -13.4938,
                               width=1182)
-    for gb in (geobox, geobox_ho, geobox_wo):
+    for _ in (geobox, geobox_ho, geobox_wo):
         assert geobox.width == 1182
         assert geobox.height == 668
     with pytest.raises(Exception) as excinfo:

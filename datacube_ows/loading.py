@@ -321,7 +321,7 @@ class DataStacker:
                             band_data = qry_result[band]
                             timeless_band_data = band_data.sel(time=qry_result.time.values[0])
                             band_time_slices = []
-                            for dt in data.time.values:
+                            for _ in data.time.values:
                                 band_time_slices.append(timeless_band_data)
                             timed_band_data = xarray.concat(band_time_slices, data.time)
                             data_new_bands[band] = timed_band_data

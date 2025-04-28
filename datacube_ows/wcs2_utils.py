@@ -295,7 +295,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
 
     # Clean extent flag band from output
     raw_bands = [layer.band_idx.locale_band(b) for b in bands]
-    for k, v in output.data_vars.items():  # type: ignore[union-attr]
+    for k, _ in output.data_vars.items():  # type: ignore[union-attr]
         if k not in raw_bands:
             output = output.drop_vars([k])  # type: ignore[union-attr]
 

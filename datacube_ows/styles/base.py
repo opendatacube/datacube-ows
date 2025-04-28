@@ -266,7 +266,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                     self.pq_product_bands.append(
                         (fb.pq_names, set([fb.pq_band]))
                     )
-        for pq_names, pq_bands in self.pq_product_bands:
+        for _, pq_bands in self.pq_product_bands:
             for band in pq_bands:
                 if band in self.flag_bands:
                     raise ConfigException(f"Same flag band name {band} appears in different PQ product (sets)")
