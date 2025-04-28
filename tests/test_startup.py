@@ -93,7 +93,7 @@ def test_initialise_debugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "YES")
     from datacube_ows.startup_utils import initialise_debugging
     fake_mod = MagicMock()
-    with patch.dict("sys.modules", pydevd_pycharm=fake_mod) as set_trc:
+    with patch.dict("sys.modules", pydevd_pycharm=fake_mod):
         initialise_debugging()
         fake_mod.settrace.assert_called()
 

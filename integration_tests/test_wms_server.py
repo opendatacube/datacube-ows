@@ -267,7 +267,6 @@ def test_wms_style_looping_getmap(ows_server) -> None:
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=120)
 
     # Ensure that we have at least some layers available
-    contents = list(wms.contents)
     test_layer_names = ["s2_l2a", "s2_l2a_clone"]
     test_time = '2021-12-21T02:01:19'
     for test_layer_name in test_layer_names:

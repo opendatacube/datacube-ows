@@ -54,11 +54,11 @@ class SupportedSvc:
             try:
                 clean.append(int(part))
                 continue
-            except ValueError as e:
+            except ValueError:
                 pass
             try:
                 clean.append(int(re.split(r"[^\d]", part)[0]))
-            except ValueError as e:
+            except ValueError:
                 pass
             break
         return clean

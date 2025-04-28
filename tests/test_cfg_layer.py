@@ -18,7 +18,7 @@ from datacube_ows.index import LayerExtent, CoordRange
 
 def test_missing_title(minimal_global_cfg) -> None:
     with pytest.raises(ConfigException) as excinfo:
-        lyr = OWSFolder({
+        _ = OWSFolder({
             "abstract": "The Abstract"
         },
             global_cfg=minimal_global_cfg)
@@ -78,7 +78,7 @@ def test_minimal_folder(minimal_global_cfg) -> None:
 
 def test_folder_nolayers(minimal_global_cfg) -> None:
     with pytest.raises(ConfigException) as excinfo:
-        lyr = OWSFolder({
+        _ = OWSFolder({
             "title": "The Title",
             "abstract": "The Abstract",
         }, global_cfg=minimal_global_cfg)
@@ -130,7 +130,7 @@ def test_catch_folder_as_list(minimal_global_cfg) -> None:
 
 def test_duplicate_folder_label(minimal_global_cfg) -> None:
     with pytest.raises(ConfigException) as e:
-        lyr = OWSFolder({
+        _ = OWSFolder({
             "title": "The Title",
             "abstract": "The Abstract",
             "label": "existing_folder",
@@ -210,7 +210,7 @@ def test_lowres_named_layer(minimal_layer_cfg, minimal_global_cfg) -> None:
 def test_double_underscore_product_name(minimal_layer_cfg, minimal_global_cfg) -> None:
     minimal_layer_cfg["product_name"] = "no__double__underscores"
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "double underscore" in str(excinfo.value)
 
@@ -218,7 +218,7 @@ def test_double_underscore_product_name(minimal_layer_cfg, minimal_global_cfg) -
 def test_no_product_name(minimal_layer_cfg, minimal_global_cfg) -> None:
     del minimal_layer_cfg["product_name"]
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "product names" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
@@ -250,7 +250,7 @@ def test_bad_lowres_product_name(minimal_layer_cfg, minimal_global_cfg, minimal_
 def test_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg) -> None:
     minimal_layer_cfg["low_res_product_names"] = "smolfoolookupfail"
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "a_layer" in str(excinfo.value)
     assert "'low_res_product_names' entry in non-multi-product layer" in str(excinfo.value)
@@ -258,7 +258,7 @@ def test_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg) -> Non
     del minimal_layer_cfg["low_res_product_names"]
     minimal_layer_cfg["product_names"] = ["foo", "bar"]
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "a_layer" in str(excinfo.value)
     assert "'product_names' entry in non-multi-product layer" in str(excinfo.value)
@@ -271,7 +271,7 @@ def test_flag_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg) -
         "products": ["prod1", "prod2"],
     }
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "a_layer" in str(excinfo.value)
     assert "'products' entry in flags section of non-multi-product layer" in str(excinfo.value)
@@ -279,7 +279,7 @@ def test_flag_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg) -
     del minimal_layer_cfg["flags"]["products"]
     minimal_layer_cfg["flags"]["low_res_products"] = ["smolfoo", "smolbar"]
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "'low_res_products' entry in flags section of non-multi-product layer" in str(excinfo.value)
     assert "use 'low_res_product' only" in str(excinfo.value)
@@ -289,7 +289,7 @@ def test_flag_plural_in_nonmultiproduct(minimal_layer_cfg, minimal_global_cfg) -
 def test_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg) -> None:
     minimal_multiprod_cfg["low_res_product_name"] = "smolfoolookupfail"
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_multiprod_cfg,
+        _ = parse_ows_layer(minimal_multiprod_cfg,
                               global_cfg=minimal_global_cfg)
     assert "'low_res_product_name' entry in multi-product layer" in str(excinfo.value)
     assert "use 'low_res_product_names' only" in str(excinfo.value)
@@ -297,7 +297,7 @@ def test_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg) -> 
     del minimal_multiprod_cfg["low_res_product_name"]
     minimal_multiprod_cfg["product_name"] = "foo"
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_multiprod_cfg,
+        _ = parse_ows_layer(minimal_multiprod_cfg,
                               global_cfg=minimal_global_cfg)
     assert "'product_name' entry in multi-product layer" in str(excinfo.value)
     assert "use 'product_names' only" in str(excinfo.value)
@@ -310,7 +310,7 @@ def test_flag_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg
         "product": "goo",
     }
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_multiprod_cfg,
+        _ = parse_ows_layer(minimal_multiprod_cfg,
                           global_cfg=minimal_global_cfg)
     assert "'product' entry in flags section of multi-product layer" in str(excinfo.value)
     assert "use 'products' only" in str(excinfo.value)
@@ -318,7 +318,7 @@ def test_flag_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg
     del minimal_multiprod_cfg["flags"]["product"]
     minimal_multiprod_cfg["flags"]["low_res_product"] = "smolfoo"
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_multiprod_cfg,
+        _ = parse_ows_layer(minimal_multiprod_cfg,
                               global_cfg=minimal_global_cfg)
     assert "'low_res_product' entry in flags section of multi-product layer" in str(excinfo.value)
     assert "use 'low_res_products' only" in str(excinfo.value)
@@ -328,7 +328,7 @@ def test_flag_singular_in_multiproduct(minimal_multiprod_cfg, minimal_global_cfg
 def test_noprod_multiproduct(minimal_multiprod_cfg, minimal_global_cfg, minimal_dc) -> None:
     minimal_multiprod_cfg["product_names"] = []
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_multiprod_cfg,
+        _ = parse_ows_layer(minimal_multiprod_cfg,
                           global_cfg=minimal_global_cfg)
 
     assert "a_layer" in str(excinfo.value)
@@ -390,7 +390,7 @@ def test_multi_product_lrpq(minimal_multiprod_cfg, minimal_global_cfg, minimal_d
 def test_multi_product_name_mismatch(minimal_multiprod_cfg, minimal_global_cfg) -> None:
     minimal_multiprod_cfg["low_res_product_names"] = ["smol_foo"]
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_multiprod_cfg,
+        _ = parse_ows_layer(minimal_multiprod_cfg,
                               global_cfg=minimal_global_cfg)
     assert "low_res_product_names" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
@@ -406,7 +406,7 @@ def test_resource_limit_zoomfill(minimal_layer_cfg, minimal_global_cfg) -> None:
     assert lyr.resource_limits.zoom_fill[3] == 255
     minimal_layer_cfg["resource_limits"]["wms"]["zoomed_out_fill_colour"] = [13, 254]
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "zoomed_out_fill_colour must have 3 or 4 elements" in str(excinfo.value)
 
@@ -462,7 +462,7 @@ def test_manual_merge(minimal_layer_cfg, minimal_global_cfg) -> None:
 def test_bad_timeres(minimal_layer_cfg, minimal_global_cfg) -> None:
     minimal_layer_cfg["time_resolution"] = "prime_ministers"
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "Invalid time resolution" in str(excinfo.value)
     assert "prime_ministers" in str(excinfo.value)
@@ -476,7 +476,7 @@ def test_flag_no_band(minimal_layer_cfg, minimal_global_cfg) -> None:
     }
 
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "required" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
@@ -533,7 +533,7 @@ def test_flag_info_mask(minimal_layer_cfg, minimal_global_cfg, minimal_dc) -> No
 def test_img_proc_no_extent_func(minimal_layer_cfg, minimal_global_cfg) -> None:
     del minimal_layer_cfg["image_processing"]["extent_mask_func"]
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "required" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
@@ -546,7 +546,7 @@ def test_id_badauth(minimal_layer_cfg, minimal_global_cfg) -> None:
         "authn": "mnnnmnnh"
     }
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "non-declared authority" in str(excinfo.value)
     assert "authn" in str(excinfo.value)
@@ -556,7 +556,7 @@ def test_id_badauth(minimal_layer_cfg, minimal_global_cfg) -> None:
 def test_no_styles(minimal_layer_cfg, minimal_global_cfg) -> None:
     del minimal_layer_cfg["styling"]["styles"]
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "Missing required" in str(excinfo.value)
     assert "styles" in str(excinfo.value)
@@ -566,7 +566,7 @@ def test_no_styles(minimal_layer_cfg, minimal_global_cfg) -> None:
 def test_bad_default_style(minimal_layer_cfg, minimal_global_cfg) -> None:
     minimal_layer_cfg["styling"]["default_style"] = "nonexistent"
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "not in the 'styles'" in str(excinfo.value)
     assert "nonexistent" in str(excinfo.value)
@@ -586,7 +586,7 @@ def test_invalid_native_format(minimal_layer_cfg, minimal_global_cfg) -> None:
         "native_format": "geosplunge"
     }
     with pytest.raises(ConfigException) as excinfo:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                               global_cfg=minimal_global_cfg)
     assert "a_layer" in str(excinfo.value)
     assert "geosplunge" in str(excinfo.value)
@@ -675,15 +675,15 @@ def test_time_axis_representation_reg(minimal_layer_cfg, minimal_global_cfg) -> 
 def test_time_axis_errors(minimal_layer_cfg, minimal_global_cfg) -> None:
     minimal_layer_cfg["time_axis"] = {"start_date": "2010-11-22"}
     with pytest.raises(ConfigException) as e:
-        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+        _ = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert "No time_interval supplied in time_axis" in str(e.value)
     minimal_layer_cfg["time_axis"] = {"time_interval": 0.6}
     with pytest.raises(ConfigException) as e:
-        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+        _ = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert "time_interval must be an integer" in str(e.value)
     minimal_layer_cfg["time_axis"] = {"time_interval": 0}
     with pytest.raises(ConfigException) as e:
-        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+        _ = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert "time_interval must be greater than zero" in str(e.value)
     minimal_layer_cfg["time_axis"] = {
         "time_interval": 7,
@@ -691,7 +691,7 @@ def test_time_axis_errors(minimal_layer_cfg, minimal_global_cfg) -> None:
         "end_date": "2010-11-22",
     }
     with pytest.raises(ConfigException) as e:
-        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+        _ = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert "time_axis start_date is not a valid ISO format date string" in str(e.value)
     minimal_layer_cfg["time_axis"] = {
         "time_interval": 7,
@@ -699,7 +699,7 @@ def test_time_axis_errors(minimal_layer_cfg, minimal_global_cfg) -> None:
         "end_date": "seven fortnights before the last full moon",
     }
     with pytest.raises(ConfigException) as e:
-        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+        _ = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert "time_axis end_date is not a valid ISO format date string" in str(e.value)
     minimal_layer_cfg["time_axis"] = {
         "time_interval": 7,
@@ -707,7 +707,7 @@ def test_time_axis_errors(minimal_layer_cfg, minimal_global_cfg) -> None:
         "end_date": "1999-12-31",
     }
     with pytest.raises(ConfigException) as e:
-        lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+        _ = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert "time_axis end_date must be greater than or equal to the start_date if both are provided" in str(e.value)
 
 
@@ -773,7 +773,7 @@ def test_missing_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc,
 def test_invalid_default_time(minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range) -> None:
     minimal_layer_cfg["default_time"] = "Not-a-date"
     with pytest.raises(ConfigException) as e:
-        lyr = parse_ows_layer(minimal_layer_cfg,
+        _ = parse_ows_layer(minimal_layer_cfg,
                           global_cfg=minimal_global_cfg)
     assert "a_layer" in str(e.value)
     assert "Not-a-date" in str(e.value)

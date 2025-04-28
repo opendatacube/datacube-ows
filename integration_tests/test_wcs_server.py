@@ -789,7 +789,7 @@ def test_wcs1_getcoverage_bigimage(ows_server) -> None:
     bbox = test_layer.boundingBoxWGS84
 
     with pytest.raises(ServiceException) as e:
-        output = wcs.getCoverage(
+        _ = wcs.getCoverage(
             identifier="s2_l2a_clone",
             format="GeoTIFF",
             bbox=pytest.helpers.representative_bbox(bbox),
@@ -1091,7 +1091,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.LAST, "EPSG:4326"
     )
     with pytest.raises(ServiceException) as e:
-        output = wcs.getCoverage(
+        _ = wcs.getCoverage(
             identifier=[layer.name],
             format="image/geotiff",
             subsets=subsets,
@@ -1101,7 +1101,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
     assert "too much data for a single request" in str(e.value)
     # Test default request
     with pytest.raises(ServiceException) as e:
-        output = wcs.getCoverage(
+        _ = wcs.getCoverage(
             identifier=[layer.name],
             format="application/x-netcdf",
         )

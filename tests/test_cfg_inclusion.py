@@ -29,23 +29,23 @@ def test_get_file_loc(monkeypatch) -> None:
 
 
 def test_get_file_loc_s3_disable(monkeypatch) -> None:
-    with pytest.raises(ConfigException) as excinfo:
+    with pytest.raises(ConfigException):
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "NO")
-    with pytest.raises(ConfigException) as excinfo:
+    with pytest.raises(ConfigException):
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "FALSE")
-    with pytest.raises(ConfigException) as excinfo:
+    with pytest.raises(ConfigException):
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "0")
-    with pytest.raises(ConfigException) as excinfo:
+    with pytest.raises(ConfigException):
         _ = get_file_loc("s3://testbucket/foo.bar")
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "N")
-    with pytest.raises(ConfigException) as excinfo:
+    with pytest.raises(ConfigException):
         _ = get_file_loc("s3://testbucket/foo.bar")
 
 
@@ -65,10 +65,10 @@ def test_get_file_loc_s3_enable(monkeypatch) -> None:
 
 def tests_get_file_loc_other_url(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "N")
-    with pytest.raises(ConfigException) as excinfo:
+    with pytest.raises(ConfigException):
         _ = get_file_loc("http://testbucket/directory/foo.bar")
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "Y")
-    with pytest.raises(ConfigException) as excinfo:
+    with pytest.raises(ConfigException):
         _ = get_file_loc("http://testbucket/another_directory/bar.foo")
 
 
@@ -241,7 +241,7 @@ def test_cfg_json_infinite_2(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_2.json")
     try:
-        cfg = read_config()
+        _ = read_config()
         assert False
     except ConfigException as e:
         assert str(e).startswith("Cyclic inclusion")

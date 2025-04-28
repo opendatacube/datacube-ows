@@ -20,7 +20,6 @@ select = [
 ]
 ignore = [
     "E501",
-    "F841", # FIXME: disabled to simplify switch to Ruff.
 ]
 
 [tool.ruff.lint.per-file-ignores]

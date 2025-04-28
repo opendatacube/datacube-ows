@@ -52,8 +52,8 @@ def test_image_from_url(image_url) -> None:
 
 
 def test_image_from_bad_image_url(bad_image_url) -> None:
-    with pytest.raises(WMSException) as e:
-        img = get_image_from_url(bad_image_url)
+    with pytest.raises(WMSException):
+        _ = get_image_from_url(bad_image_url)
 
 def test_parse_colorramp_defaults() -> None:
     legend = ColorRampDef.Legend(MagicMock(), {})

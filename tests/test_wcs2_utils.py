@@ -43,6 +43,6 @@ def test_uniform_crs_published(minimal_cfg) -> None:
 
 def test_uniform_crs_published_with_exception(minimal_cfg) -> None:
     with pytest.raises(WCS2Exception) as e:
-        crs = uniform_crs(minimal_cfg, "spam")
+        _ = uniform_crs(minimal_cfg, "spam")
     assert "spam" in str(e.value)
     assert "Not a CRS" in str(e.value)

@@ -250,7 +250,7 @@ def _write_empty(geobox: GeoBox) -> bytes:
                           count=1,
                           transform=None,
                           nodata=0,
-                          dtype='uint8') as thing:
+                          dtype='uint8'):
             pass
         return memfile.read()
 

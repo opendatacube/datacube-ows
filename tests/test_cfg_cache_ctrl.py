@@ -54,7 +54,7 @@ def test_complex_case(ccr_min_layer) -> None:
 
 def test_no_min_datasets_element() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"max_age": 20000},
         ], "Layer a_layer", 12)
     assert "Dataset cache rule does not contain" in str(e.value)
@@ -64,7 +64,7 @@ def test_no_min_datasets_element() -> None:
 
 def test_no_max_age_element() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": 2},
         ], "layer a_layer", 12)
     assert "Dataset cache rule does not contain" in str(e.value)
@@ -74,7 +74,7 @@ def test_no_max_age_element() -> None:
 
 def test_nonint_min_ds() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": "2", "max_age": 2000},
         ], "layer a_layer", 12)
     assert "Dataset cache rule" in str(e.value)
@@ -85,7 +85,7 @@ def test_nonint_min_ds() -> None:
 
 def test_nonint_max_age() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": 2, "max_age": 2000.5},
         ], "layer a_layer", 12)
     assert "Dataset cache rule" in str(e.value)
@@ -96,7 +96,7 @@ def test_nonint_max_age() -> None:
 
 def test_negative_min_datasets() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": -2, "max_age": 2000},
         ], "layer a_layer", 12)
     assert "Invalid dataset cache rule" in str(e.value)
@@ -107,7 +107,7 @@ def test_negative_min_datasets() -> None:
 
 def test_unsorted_min_datasets() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": 4, "max_age": 2000},
             {"min_datasets": 2, "max_age": 4000},
         ], "layer a_layer", 12)
@@ -119,7 +119,7 @@ def test_unsorted_min_datasets() -> None:
 
 def test_min_datasets_max_datasets() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": 2, "max_age": 2000},
             {"min_datasets": 4, "max_age": 4000},
         ], "layer a_layer", 2)
@@ -131,7 +131,7 @@ def test_min_datasets_max_datasets() -> None:
 
 def test_non_negative_max_age() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": 2, "max_age": -2},
         ], "layer a_layer", 12)
     assert "Dataset cache rule" in str(e.value)
@@ -142,7 +142,7 @@ def test_non_negative_max_age() -> None:
 
 def test_unsorted_max_age() -> None:
     with pytest.raises(ConfigException) as e:
-        ccr = CacheControlRules([
+        _ = CacheControlRules([
             {"min_datasets": 2, "max_age": 4000},
             {"min_datasets": 4, "max_age": 2000},
         ], "layer a_layer", 12)

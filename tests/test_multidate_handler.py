@@ -5,9 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
-import pandas as pd
 import pytest
-import xarray as xr
 
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.styles.base import StyleDefBase
@@ -35,11 +33,6 @@ def test_multidate_handler() -> None:
             self.index_function = lambda x: FakeData()
             self.stand_alone = True
             self.transform_single_date_data = lambda x: x
-
-    data = np.random.randint(0, 255, size=(4, 3), dtype=np.uint8)
-    locs = ["IA", "IL", "IN"]
-    times = pd.date_range("2000-01-01", periods=4)
-    fake_mask = xr.DataArray(data, coords=[times, locs], dims=["time", "space"])
 
     fake_cfg = {
         "allowed_count_range": [0, 10],

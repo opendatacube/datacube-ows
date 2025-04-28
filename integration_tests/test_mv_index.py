@@ -31,13 +31,13 @@ def test_no_products() -> None:
     cfg = get_config()
     lyr = list(cfg.layer_index.values())[0]
     with pytest.raises(Exception) as e:
-        sel = mv_search(lyr.dc.index, MVSelectOpts.COUNT)
+        _ = mv_search(lyr.dc.index, MVSelectOpts.COUNT)
     assert "Must filter by product/layer" in str(e.value)
 
 
 def test_bad_set_opt() -> None:
     cfg = get_config()
-    lyr = list(cfg.layer_index.values())[0]
+    _ = list(cfg.layer_index.values())[0]
     with pytest.raises(ValueError):
         _ = MVSelectOpts("INVALID")
 
