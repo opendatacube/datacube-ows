@@ -113,9 +113,9 @@ class Expression:
             self.tree = parser.parse(self.expr_str)
             self.needed_bands = BandListEvaluator(self.style).transform(self.tree)
         except lark.LarkError as e:
-            raise ExpressionException(f"Invalid expression: {e} {self.expr_str}")
+            raise ExpressionException(f"Invalid expression: {e} {self.expr_str}") from None
         except KeyError as e:
-            raise ExpressionException(f"Unrecognised band '{e}' in {expr_str}")
+            raise ExpressionException(f"Unrecognised band '{e}' in {expr_str}") from None
         if len(self.needed_bands) == 0:
             raise ExpressionException(f"Expression references no bands: {self.expr_str}")
 

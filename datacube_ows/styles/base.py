@@ -608,12 +608,12 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             try:
                 prod = cfg.layer_index[keyvals["layer"]]
             except KeyError:
-                raise OWSEntryNotFound(f"No layer named {keyvals['layer']}")
+                raise OWSEntryNotFound(f"No layer named {keyvals['layer']}") from None
 
         try:
             return prod.style_index[keyvals['style']]
         except KeyError:
-            raise OWSEntryNotFound(f"No style named {keyvals['style']} in layer {keyvals['layer']}")
+            raise OWSEntryNotFound(f"No style named {keyvals['style']} in layer {keyvals['layer']}") from None
 
 
 # Style class registries

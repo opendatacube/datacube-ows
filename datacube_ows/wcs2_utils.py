@@ -142,7 +142,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
             except WCSScalerUnknownDimension:
                 raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
                                 WCS2Exception.INVALID_AXIS_LABEL,
-                                locator=subset.dimension)
+                                locator=subset.dimension) from None
 
     #
     # Transform spatial extent to native CRS.
@@ -238,7 +238,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
             raise WCS2Exception("Unsupported format: %s" % request.format,
                                 WCS2Exception.INVALID_PARAMETER_VALUE,
                                 locator="FORMAT",
-                                valid_keys=list(cfg.wcs_formats_by_mime))
+                                valid_keys=list(cfg.wcs_formats_by_mime)) from None
 
     if len(times) > 1 and not fmt.multi_time:
         raise WCS2Exception(
@@ -271,7 +271,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
         if e.wcs_hard or not layer.low_res_product_names:
             raise WCS2Exception(
                 f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                + "Please reduce the bounds of your request and try again.")
+                + "Please reduce the bounds of your request and try again.") from None
         stacker.resource_limited = True
         qprof["resource_limited"] = str(e)
 

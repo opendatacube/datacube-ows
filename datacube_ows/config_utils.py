@@ -144,7 +144,7 @@ def import_python_obj(path: str) -> CFG_DICT:
         mod = import_module(mod_name)
         obj = getattr(mod, obj_name)
     except (ImportError, ValueError, ModuleNotFoundError, AttributeError):
-        raise ConfigException(f"Could not import python object: {path}")
+        raise ConfigException(f"Could not import python object: {path}") from None
     return cast(CFG_DICT, obj)
 
 
@@ -344,7 +344,7 @@ class OWSMetadataConfig(OWSConfigEntry):
                 try:
                     self.register_metadata(self.get_obj_label(), FLD_TITLE, cast(str, cfg[FLD_TITLE]))
                 except KeyError:
-                    raise ConfigException(f"Entity {self.get_obj_label()} has no title.")
+                    raise ConfigException(f"Entity {self.get_obj_label()} has no title.") from None
         if self.METADATA_ABSTRACT:
             local_abstract = cfg.get("abstract")
             if local_abstract is None and inherit_from is not None:
@@ -731,7 +731,8 @@ class OWSFlagBand(OWSConfigEntry):
             meas = product.lookup_measurements([str(self.canonical_band_name)])[str(self.canonical_band_name)]
         except KeyError:
             raise ConfigException(
-                f"Band {self.pq_band} does not exist in product {product.name} - cannot be used as a flag band for layer {self.layer.name}.")
+                f"Band {self.pq_band} does not exist in product {product.name} - cannot be used as a flag band for layer {self.layer.name}."
+            ) from None
         if "flags_definition" not in meas:
             raise ConfigException(f"Band {self.pq_band} in product {product.name} has no flags_definition in ODC - cannot be used as a flag band for layer {self.layer.name}.")
         # pyre-ignore[16]
@@ -1053,6 +1054,6 @@ def get_function(func: F | str) -> F:
             mod = import_module(mod_name)
             func = getattr(mod, func_name)
         except (ImportError, ModuleNotFoundError, ValueError, AttributeError):
-            raise ConfigException(f"Could not import python object: {func}")
+            raise ConfigException(f"Could not import python object: {func}") from None
         assert callable(func)
     return cast(F, func)

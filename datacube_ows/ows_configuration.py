@@ -159,7 +159,9 @@ class BandIndex(OWSMetadataConfig):
                             raise ConfigException(
                                 f"Data type mismatch between products for band {k} in multiproduct layer {self.layer_name}")
             except KeyError as e:
-                raise ConfigException(f"Product {product.name} in layer {self.layer_name} is missing band {e}")
+                raise ConfigException(
+                    f"Product {product.name} in layer {self.layer_name} is missing band {e}"
+                ) from None
             first_product = False
         super().make_ready(*args, **kwargs)
 
@@ -501,12 +503,12 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     # I think this was for subproducts which are currently broken
                     raise ConfigException("Product names cannot contain a double underscore '__'.")
         except IndexError:
-            raise ConfigException(f"No products declared in layer {self.name}")
+            raise ConfigException(f"No products declared in layer {self.name}") from None
         except KeyError as e:
             raise ConfigException("Required product names entry (%s) missing in named layer %s" % (
                 str(e),
                 self.name
-            ))
+            )) from None
         self.declare_unready("products")
         self.declare_unready("low_res_products")
         self.declare_unready("product")
@@ -538,7 +540,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             except ValueError:
                 raise ConfigException(
                     f"Invalid default_time value in named layer {self.name} ({dtr})"
-                )
+                ) from None
         self.time_axis = cast(CFG_DICT | None, cfg.get("time_axis"))
         if self.time_axis:
             if self.time_resolution.is_subday():
@@ -561,14 +563,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 try:
                     self.time_axis_start = datetime.date.fromisoformat(time_axis_start)
                 except ValueError:
-                    raise ConfigException("time_axis start_date is not a valid ISO format date string")
+                    raise ConfigException("time_axis start_date is not a valid ISO format date string") from None
             if time_axis_end is None:
                 self.time_axis_end: datetime.date | None = None
             else:
                 try:
                     self.time_axis_end = datetime.date.fromisoformat(time_axis_end)
                 except ValueError:
-                    raise ConfigException("time_axis end_date is not a valid ISO format date string")
+                    raise ConfigException("time_axis end_date is not a valid ISO format date string") from None
             if (self.time_axis_end is not None
                     and self.time_axis_start is not None
                     and self.time_axis_end < self.time_axis_start):
@@ -596,11 +598,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.parse_flags(cast(CFG_DICT, cfg.get("flags", {})))
             self.declare_unready("all_flag_band_names")
         except KeyError as e:
-            raise ConfigException(f"Missing required config ({str(e)}) in flags section for layer {self.name}")
+            raise ConfigException(
+                f"Missing required config ({str(e)}) in flags section for layer {self.name}"
+            ) from None
         try:
             self.parse_image_processing(cast(CFG_DICT, cfg["image_processing"]))
         except KeyError as e:
-            raise ConfigException(f"Missing required config ({str(e)}) in image processing section for layer {self.name}")
+            raise ConfigException(
+                f"Missing required config ({str(e)}) in image processing section for layer {self.name}"
+            ) from None
         self.identifiers = cast(dict[str, str], cfg.get("identifiers", {}))
         for auth in self.identifiers.keys():
             if auth not in self.global_cfg.authorities:
@@ -615,13 +621,17 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         try:
             self.parse_styling(cast(CFG_DICT, cfg["styling"]))
         except KeyError as e:
-            raise ConfigException(f"Missing required config item {e} in styling section for layer {self.name}")
+            raise ConfigException(
+                f"Missing required config item {e} in styling section for layer {self.name}"
+            ) from None
 
         if self.global_cfg.wcs:
             try:
                 self.parse_wcs(cast(CFG_DICT | bool, cfg.get("wcs", {})))
             except KeyError as e:
-                raise ConfigException(f"Missing required config item {e} in wcs section for layer {self.name}")
+                raise ConfigException(
+                    f"Missing required config item {e} in wcs section for layer {self.name}"
+                ) from None
 
 #       Sub-products have been broken for some time.
 #        sub_prod_cfg = cfg.get("sub_products", {})
@@ -867,11 +877,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             except KeyError:
                 raise ConfigException(
                     f"No native resolution supplied for layer {self.name} with no product-native resolution defined in ODC."
-                )
+                ) from None
             except ValueError:
-                raise ConfigException(f"Invalid native resolution supplied for layer {self.name}")
+                raise ConfigException(f"Invalid native resolution supplied for layer {self.name}") from None
             except TypeError:
-                raise ConfigException(f"Invalid native resolution supplied for layer {self.name}")
+                raise ConfigException(f"Invalid native resolution supplied for layer {self.name}") from None
         elif self.cfg_native_resolution:
             config_x, config_y = (float(r) for r in self.cfg_native_resolution)
             if (
@@ -1058,7 +1068,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         try:
             return cfg.layer_index[keyvals["layer"]]
         except KeyError:
-            raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found")
+            raise OWSEntryNotFound(f"Layer {keyvals['layer']} not found") from None
 
     @override
     def __repr__(self) -> str:
@@ -1299,7 +1309,7 @@ class OWSConfig(OWSMetadataConfig):
             except KeyError as e:
                 raise ConfigException(
                     "Missing required config entry in 'global' section: %s" % str(e)
-                )
+                ) from None
 
             if self.wms or self.wmts:
                 self.parse_wms(cast(CFG_DICT, cfg.get("wms", {})))
@@ -1312,13 +1322,13 @@ class OWSConfig(OWSMetadataConfig):
                 except KeyError as e:
                     raise ConfigException(
                         "Missing required config entry in 'wcs' section (with WCS enabled): %s" % str(e)
-                    )
+                    ) from None
             else:
                 self.parse_wcs(None)
             try:
                 self.parse_layers(cast(list[CFG_DICT], cfg["layers"]))
             except KeyError:
-                raise ConfigException("Missing required config entry in 'layers' section")
+                raise ConfigException("Missing required config entry in 'layers' section") from None
 
             try:
                 if self.wmts:
@@ -1328,7 +1338,7 @@ class OWSConfig(OWSMetadataConfig):
             except KeyError as e:
                 raise ConfigException(
                     "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
-                )
+                ) from None
             self.catalog: Catalog | None = None
             self.initialised = True
             self.declare_unready("dc")
@@ -1343,7 +1353,7 @@ class OWSConfig(OWSMetadataConfig):
             self.dc: Datacube = Datacube(env=self.default_env, app=self.odc_app)
         except Exception as e:
             _LOG.error("ODC initialisation of env %s failed: %s", self.default_env._name, str(e))
-            raise ODCInitException(e)
+            raise ODCInitException(e) from None
         if self.msg_file_name:
             try:
                 with open(self.msg_file_name, "rb") as fp:
@@ -1505,7 +1515,7 @@ class OWSConfig(OWSMetadataConfig):
         except ValueError:
             raise ConfigException(
                 f"max_width and max_height in wms section must be integers: {cfg.get('max_width', 256)},{cfg.get('max_height', 256)}"
-            )
+            ) from None
         if self.wms_max_width < 1 or self.wms_max_height < 1:
             raise ConfigException(
                 f"max_width and max_height in wms section must be positive integers: {cfg.get('max_width', 256)},{cfg.get('max_height', 256)}"

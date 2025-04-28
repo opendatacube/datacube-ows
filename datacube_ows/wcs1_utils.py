@@ -102,7 +102,7 @@ class WCS1GetCoverageRequest:
         except Exception:
             raise WCS1Exception("Invalid BBOX parameter",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="BBOX parameter")
+                                locator="BBOX parameter") from None
 
         self.specified_search_extent = geom.polygon([(self.minx, self.miny),
                                         (self.minx, self.maxy),
@@ -162,7 +162,7 @@ class WCS1GetCoverageRequest:
                         WCS1Exception.INVALID_PARAMETER_VALUE,
                         locator="TIME parameter",
                         valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
-                    )
+                    ) from None
             self.times.sort()
 
             if len(self.times) == 0:
@@ -194,7 +194,7 @@ class WCS1GetCoverageRequest:
                     raise WCS1Exception(f"Invalid measurement: {b}",
                                         WCS1Exception.INVALID_PARAMETER_VALUE,
                                         locator="MEASUREMENTS parameter",
-                                        valid_keys=self.layer.band_idx.band_labels())
+                                        valid_keys=self.layer.band_idx.band_labels()) from None
             if not bands:
                 raise WCS1Exception("No measurements supplied",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
@@ -241,7 +241,7 @@ class WCS1GetCoverageRequest:
             except ValueError:
                 raise WCS1Exception("HEIGHT parameter must be a positive integer",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="HEIGHT parameter")
+                                    locator="HEIGHT parameter") from None
             try:
                 self.width = int(args["width"])
                 if self.width < 1:
@@ -249,7 +249,7 @@ class WCS1GetCoverageRequest:
             except ValueError:
                 raise WCS1Exception("WIDTH parameter must be a positive integer",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="WIDTH parameter")
+                                    locator="WIDTH parameter") from None
 
             self.resx = (self.maxx - self.minx) / self.width
             self.resy = (self.maxy - self.miny) / self.height
@@ -269,7 +269,7 @@ class WCS1GetCoverageRequest:
             except ValueError:
                 raise WCS1Exception("RESX parameter must be a positive number",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="RESX parameter")
+                                    locator="RESX parameter") from None
             try:
                 self.resy = float(args["resy"])
                 if self.resy <= 0.0:
@@ -277,7 +277,7 @@ class WCS1GetCoverageRequest:
             except ValueError:
                 raise WCS1Exception("RESY parameter must be a positive number",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="RESY parameter")
+                                    locator="RESY parameter") from None
             self.width = int(((self.maxx - self.minx) / self.resx) + 0.5)
             self.height = int(((self.maxy - self.miny) / self.resy) + 0.5)
         elif "height" in args:
@@ -322,7 +322,7 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
         if e.wcs_hard or not req.layer.low_res_product_names:
             raise WCS1Exception(
                 f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                + "Please reduce the bounds of your request and try again.")
+                + "Please reduce the bounds of your request and try again.") from None
         stacker.resource_limited = True
         qprof["resource_limited"] = str(e)
     if n_datasets == 0:
