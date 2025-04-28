@@ -69,7 +69,7 @@ def test_tz_for_dataset(dummy_ds) -> None:
 
 
 def test_tz_bad_coords() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         _ = datacube_ows.time_utils.tz_for_coord(-88.8, 155.2)
 
 
