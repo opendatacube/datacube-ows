@@ -109,7 +109,7 @@ class WCS2Exception(OGCException):
             OWSException(
                 code=error['code'],
                 locator=error['locator'],
-                text=[error['msg']] + tb.format_list(traceback)
+                text=[error['msg'], *tb.format_list(traceback)]
             )
             for error in self.errors
         ]
