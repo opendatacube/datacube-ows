@@ -155,10 +155,10 @@ def create_geobox(
         scale_x = (float(maxx) - float(minx)) / width
     else:
         scale_x = -scale_y  # pylint: disable=possibly-used-before-assignment
-        width = int(round((float(maxx) - float(minx)) / scale_x))
+        width = round((float(maxx) - float(minx)) / scale_x)
     if height is None:
         scale_y = - scale_x
-        height = int(round((float(miny) - float(maxy)) / scale_y))
+        height = round((float(miny) - float(maxy)) / scale_y)
     affine = Affine.translation(minx, maxy) * Affine.scale(scale_x, scale_y)
     return GeoBox((height, width), affine, crs)
 
