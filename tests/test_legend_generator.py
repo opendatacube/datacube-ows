@@ -62,9 +62,9 @@ def test_parse_colorramp_defaults() -> None:
                         "range": [0.0, 1.0],
                      },
                      legend)
-    assert legend.begin == Decimal(0.0)
-    assert legend.end == Decimal(1.0)
-    assert legend.ticks == [Decimal(0.0), Decimal(1.0)]
+    assert legend.begin == Decimal("0.0")
+    assert legend.end == Decimal("1.0")
+    assert legend.ticks == [Decimal("0.0"), Decimal("1.0")]
     assert legend.units is None
     assert legend.tick_labels == ["0.0", "1.0"]
     assert legend.width == 4.0
