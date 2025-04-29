@@ -200,7 +200,7 @@ class WCS1GetCoverageRequest:
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="MEASUREMENTS parameter",
                                     valid_keys = self.layer.band_idx.band_labels())
-        elif "styles" in args and args["styles"]:
+        elif args.get("styles"):
             # Use style bands.
             # Non-standard protocol extension.
             #
