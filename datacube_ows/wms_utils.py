@@ -222,7 +222,7 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
         raise WMSException(
             "Time dimension value '%s' not valid for this layer" % times[0],
             WMSException.INVALID_DIMENSION_VALUE,
-            locator="Time parameter")
+            locator="Time parameter") from None
 
     # Validate time parameter for requested layer.
     if layer.regular_time_axis:
@@ -344,7 +344,7 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
             plt.get_cmap(mpl_ramp)
         except Exception:
             raise WMSException(f"Invalid Matplotlib ramp name: {mpl_ramp}",
-                               locator="Colorscalerange parameter")
+                               locator="Colorscalerange parameter") from None
         colorscalerange = args.get("colorscalerange", "0,1").split(",")
         if len(colorscalerange) != 2:
             raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
@@ -353,7 +353,7 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
             colorscalerange = [float(r) for r in colorscalerange]
         except ValueError:
             raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
-                               locator="Colorscalerange parameter")
+                               locator="Colorscalerange parameter") from None
         if colorscalerange[0] >= colorscalerange[1]:
             raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
                                locator="Colorscalerange parameter")
@@ -372,10 +372,10 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
             }, stand_alone=True, user_defined=True)
         except ExpressionException as e:
             raise WMSException(f"Code expression invalid: {e}",
-                               locator="Code parameter")
+                               locator="Code parameter") from None
         except ConfigException as e:
             raise WMSException(f"Code invalid: {e}",
-                               locator="Code parameter")
+                               locator="Code parameter") from None
     else:
         # Regular WMS Styles
         styles = args.get("styles", "").split(",")

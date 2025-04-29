@@ -160,20 +160,16 @@ def test_cfg_py_nested_4(monkeypatch) -> None:
 
 def test_cfg_py_infinite_1(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_1")
-    try:
+    with pytest.raises(ConfigException) as e:
         _ = read_config()
-        assert False
-    except ConfigException as e:
-        assert str(e).startswith("Cyclic inclusion")
+    assert str(e.value).startswith("Cyclic inclusion")
 
 
 def test_cfg_py_infinite_2(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.infinite_2")
-    try:
+    with pytest.raises(ConfigException) as e:
         _ = read_config()
-        assert False
-    except ConfigException as e:
-        assert str(e).startswith("Cyclic inclusion")
+    assert str(e.value).startswith("Cyclic inclusion")
 
 
 def test_cfg_json_simple(monkeypatch) -> None:
@@ -230,21 +226,17 @@ def test_cfg_json_nested_4(monkeypatch) -> None:
 def test_cfg_json_infinite_1(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_1.json")
-    try:
+    with pytest.raises(ConfigException) as e:
         _ = read_config()
-        assert False
-    except ConfigException as e:
-        assert str(e).startswith("Cyclic inclusion")
+    assert str(e.value).startswith("Cyclic inclusion")
 
 
 def test_cfg_json_infinite_2(monkeypatch) -> None:
     monkeypatch.chdir(src_dir)
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/infinite_2.json")
-    try:
+    with pytest.raises(ConfigException) as e:
         _ = read_config()
-        assert False
-    except ConfigException as e:
-        assert str(e).startswith("Cyclic inclusion")
+    assert str(e.value).startswith("Cyclic inclusion")
 
 
 def test_cfg_py_mixed_1(monkeypatch) -> None:

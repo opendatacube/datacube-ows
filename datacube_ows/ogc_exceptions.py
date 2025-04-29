@@ -37,10 +37,10 @@ class OGCException(Exception):
         })
 
     # pylint: disable=dangerous-default-value
-    def exception_response(self, traceback=[]) -> tuple[str, int, dict[str, str]]:
+    def exception_response(self, traceback: list | None = None) -> tuple[str, int, dict[str, str]]:
         return (render_template("ogc_error.xml",
                                 exception=self,
-                                traceback=traceback,
+                                traceback=[] if traceback is None else traceback,
                                 version=self.version,
                                 schema_url=self.schema_url),
                 self.http_response,
@@ -102,12 +102,14 @@ class WCS2Exception(OGCException):
 
     # pylint: disable=dangerous-default-value
     @override
-    def exception_response(self, traceback=[]) -> tuple:
+    def exception_response(self, traceback: list | None = None) -> tuple:
+        if traceback is None:
+            traceback = []
         exceptions = [
             OWSException(
                 code=error['code'],
                 locator=error['locator'],
-                text=[error['msg']] + tb.format_list(traceback)
+                text=[error['msg'], *tb.format_list(traceback)]
             )
             for error in self.errors
         ]

@@ -263,7 +263,7 @@ class DataStacker:
 
     def create_nodata_filled_flag_bands(self, data: xarray.Dataset, pbq: ProductBandQuery) -> xarray.Dataset:
         var = None
-        for var in data.data_vars.variables.keys():
+        for var in data.data_vars.variables.keys():  # noqa: B007
             break
         if var is None:
             raise WMSException("Cannot add default flag data as there is no non-flag data available")
@@ -321,7 +321,7 @@ class DataStacker:
                             band_data = qry_result[band]
                             timeless_band_data = band_data.sel(time=qry_result.time.values[0])
                             band_time_slices = []
-                            for dt in data.time.values:
+                            for _ in data.time.values:
                                 band_time_slices.append(timeless_band_data)
                             timed_band_data = xarray.concat(band_time_slices, data.time)
                             data_new_bands[band] = timed_band_data

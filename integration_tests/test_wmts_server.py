@@ -22,19 +22,15 @@ def get_xsd(name: str) -> etree.XMLSchema:
 
 
 def check_wmts_error(url, expected_error_message=None, expected_status_code: int = 400) -> None:
-    try:
+    with pytest.raises(Exception) as e:
         _ = request.urlopen(url, timeout=10)
+    # Validate status code
+    assert e.value.getcode() == expected_status_code
 
-        # Should not get here
-        assert False
-    except Exception as e:
-        # Validate status code
-        assert e.getcode() == expected_status_code
-
-        resp_content = e.fp.read()
-        assert expected_error_message in str(resp_content)
-        resp_xml = etree.XML(resp_content)
-        assert resp_xml is not None
+    resp_content = e.value.fp.read()
+    assert expected_error_message in str(resp_content)
+    resp_xml = etree.XML(resp_content)
+    assert resp_xml is not None
 
 
 def test_no_request(ows_server) -> None:
@@ -236,7 +232,7 @@ def test_wmts_gettile_exception(ows_server) -> None:
 
     contents = list(wmts.contents)
     test_layer_name = contents[0]
-    try:
+    with pytest.raises(ServiceException) as e:
         # supplying an unsupported tilematrixset
         wmts.gettile(
             layer=test_layer_name,
@@ -246,7 +242,4 @@ def test_wmts_gettile_exception(ows_server) -> None:
             column=0,
             format="image/png",
         )
-    except ServiceException as e:
-        assert "Invalid Tile Matrix Set:" in str(e)
-    else:
-        assert False
+    assert "Invalid Tile Matrix Set:" in str(e.value)

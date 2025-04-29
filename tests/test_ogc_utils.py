@@ -69,7 +69,7 @@ def test_tz_for_dataset(dummy_ds) -> None:
 
 
 def test_tz_bad_coords() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         _ = datacube_ows.time_utils.tz_for_coord(-88.8, 155.2)
 
 
@@ -145,7 +145,7 @@ def test_create_geobox() -> None:
     geobox_wo = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
                               140.7184, 145.6924, -16.1144, -13.4938,
                               width=1182)
-    for gb in (geobox, geobox_ho, geobox_wo):
+    for _ in (geobox, geobox_ho, geobox_wo):
         assert geobox.width == 1182
         assert geobox.height == 668
     with pytest.raises(Exception) as excinfo:

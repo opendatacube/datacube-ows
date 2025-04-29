@@ -144,15 +144,15 @@ def wmts_args_to_wms(args, cfg) -> dict:
         if tileMatrix < 0 or tileMatrix >= len(tms.scale_set):
             raise WMTSException(f"Invalid Tile Matrix: {tileMatrix}")
     except ValueError:
-        raise WMTSException(f"Invalid Tile Matrix: {tileMatrix}")
+        raise WMTSException(f"Invalid Tile Matrix: {tileMatrix}") from None
     try:
         row = int(row)
     except ValueError:
-        raise WMTSException(f"Invalid Tile Row {row}")
+        raise WMTSException(f"Invalid Tile Row {row}") from None
     try:
         col = int(col)
     except ValueError:
-        raise WMTSException(f"Invalid Tile Col: {col}")
+        raise WMTSException(f"Invalid Tile Col: {col}") from None
     wms_args["bbox"] = "%f,%f,%f,%f" % tms.wms_bbox_coords(tileMatrix, row, col)
 
     # GetFeatureInfo only args
@@ -183,7 +183,7 @@ def get_tile(args) -> tuple:
                             http_response=wmse.http_response)
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
-        raise e
+        raise e from None
 
 
 @log_call
@@ -202,4 +202,4 @@ def get_feature_info(args) -> tuple:
                           http_response=wmse.http_response)
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
-        raise e
+        raise e from None

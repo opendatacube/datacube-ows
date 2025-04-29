@@ -13,13 +13,18 @@ src = ["datacube_ows", "docs", "tests", "integration_tests"]
 [tool.ruff.lint]
 select = [
     "A",  # Don't shadow built-ins
+    "B",  # flake8-bugbear
     "E",  # pycodestyle errors
+    "RUF", # Ruff-specific rules
     "W",  # pycodestyle warnings
     "F",  # pyflakes
     "T10", # flake8-debugger
 ]
 ignore = [
+    "B026",
     "E501",
+    "RUF012",
+    "RUF022",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -27,6 +32,10 @@ ignore = [
 "docs/conf.py" = ["A001", "E402"]
 # Using pytest_namespace requires assignment before importing pytest.
 "integration_tests/conftest.py" = ["E402"]
+# Multiline string, no good place for adding a noqa.
+"integration_tests/cfg/ows_test_cfg.py" = ["RUF001"]
+# Third-party software, keep pristine.
+"licenseheaders.py" = ["B007"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120

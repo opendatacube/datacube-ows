@@ -20,27 +20,23 @@ def get_xsd(name: str) -> etree.XMLSchema:
 
 
 def check_wms_error(url, expected_error_message=None, expected_status_code: int = 400) -> None:
-    try:
+    with pytest.raises(Exception) as e:
         _ = request.urlopen(url, timeout=10)
+    # Validate status code
+    assert e.value.getcode() == expected_status_code
 
-        # Should not get here
-        assert False
-    except Exception as e:
-        # Validate status code
-        assert e.getcode() == expected_status_code
+    resp_content = e.value.fp.read()
+    resp_xml = etree.XML(resp_content)
 
-        resp_content = e.fp.read()
-        resp_xml = etree.XML(resp_content)
+    # Validate response against Schema
+    ex_xsd = get_xsd("exceptions_1_3_0.xsd")
+    assert ex_xsd.validate(resp_xml)
 
-        # Validate response against Schema
-        ex_xsd = get_xsd("exceptions_1_3_0.xsd")
-        assert ex_xsd.validate(resp_xml)
-
-        # Confirm error message is appropriate, ignore case
-        if expected_error_message:
-            assert (
-                resp_xml[0].text.strip().casefold() == expected_error_message.casefold()
-            )
+    # Confirm error message is appropriate, ignore case
+    if expected_error_message:
+        assert (
+            resp_xml[0].text.strip().casefold() == expected_error_message.casefold()
+        )
 
 
 def test_no_request(ows_server) -> None:

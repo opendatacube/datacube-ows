@@ -30,7 +30,7 @@ def parse_cache_age(cfg: dict, entry, section, default: int = 0) -> int:
     except ValueError:
         raise ConfigException(
             f"{entry} in {section} section must be an integer: {cfg[entry]}"
-        )
+        ) from None
     if val < 0:
         raise ConfigException(
             f"{entry} in {section} section cannot be negative: {cfg[entry]}"

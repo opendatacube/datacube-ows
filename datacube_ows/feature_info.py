@@ -82,7 +82,7 @@ def get_s3_browser_uris(datasets: dict[ProductBandQuery, xarray.DataArray],
 @log_call
 def _make_band_dict(prod_cfg: OWSNamedLayer, pixel_dataset: xarray.Dataset) -> dict[str, dict[str, bool | str] | str]:
     band_dict: dict[str, dict[str, bool | str] | str] = {}
-    for k, v in pixel_dataset.data_vars.items():
+    for k, _ in pixel_dataset.data_vars.items():
         band_val = pixel_dataset[k].item()
         flag_def = pixel_dataset[k].attrs.get("flags_definition")
         if flag_def:

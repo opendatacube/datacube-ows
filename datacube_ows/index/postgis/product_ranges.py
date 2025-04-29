@@ -254,7 +254,6 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
 
 
 def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
-    _ = layer.global_cfg
     conn = get_sqlconn(layer.dc)
     results = conn.execute(text("""
         SELECT *

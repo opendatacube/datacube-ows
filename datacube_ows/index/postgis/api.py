@@ -40,7 +40,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                     FROM ows.layer_ranges
                     LIMIT 1""")
                 )
-                for r in results:
+                for _ in results:
                     db_ok = True
         except Exception:
             pass

@@ -43,7 +43,7 @@ def validate_2d_array(array: list, ident: str, label: str, typ: type) -> None:
             raise ConfigException(f"In tile matrix set {ident}, {label} must have two values: f{array}")
         validate_array_typ(array, ident, label, typ)
     except TypeError:
-        raise ConfigException(f"In tile matrix set {ident}, {label} must be a list of two values: f{array}")
+        raise ConfigException(f"In tile matrix set {ident}, {label} must be a list of two values: f{array}") from None
 
 
 def validate_array_typ(array: list, ident: str, label: str, typ: type) -> None:
@@ -85,7 +85,7 @@ class TileMatrixSet(OWSConfigEntry):
         try:
             validate_array_typ(scale_set, identifier, "Scale set", float)
         except TypeError:
-            raise ConfigException(f"In tile matrix set {identifier}, scale_set is not a list")
+            raise ConfigException(f"In tile matrix set {identifier}, scale_set is not a list") from None
         self.scale_set = cast(list[float], scale_set)
         if len(self.scale_set) < 1:
             raise ConfigException(f"Tile matrix set {identifier} has no scale denominators in scale_set")
