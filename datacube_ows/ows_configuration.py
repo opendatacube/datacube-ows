@@ -599,13 +599,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.declare_unready("all_flag_band_names")
         except KeyError as e:
             raise ConfigException(
-                f"Missing required config ({str(e)}) in flags section for layer {self.name}"
+                f"Missing required config ({e!s}) in flags section for layer {self.name}"
             ) from None
         try:
             self.parse_image_processing(cast(CFG_DICT, cfg["image_processing"]))
         except KeyError as e:
             raise ConfigException(
-                f"Missing required config ({str(e)}) in image processing section for layer {self.name}"
+                f"Missing required config ({e!s}) in image processing section for layer {self.name}"
             ) from None
         self.identifiers = cast(dict[str, str], cfg.get("identifiers", {}))
         for auth in self.identifiers.keys():

@@ -102,7 +102,7 @@ def parse_path(path: str | None, parse_only: bool, folders: bool, styles: bool, 
             with Datacube() as dc:
                 cfg.make_ready(dc)
     except ConfigException as e:
-        click.echo(f"Config exception for path {str(e)}")
+        click.echo(f"Config exception for path {e!s}")
         return False
     click.echo("Configuration parsed OK")
     click.echo(f"Configured message file location: {cfg.msg_file_name}")
@@ -154,7 +154,7 @@ def extract(path: str, cfg_only: bool, msg_file: str) -> int:
         with Datacube() as dc:
             cfg.make_ready(dc)
     except ConfigException as e:
-        click.echo(f"Config exception for path {str(e)}")
+        click.echo(f"Config exception for path {e!s}")
         return False
     click.echo("Configuration parsed OK")
     click.echo(f"Configured message file location: {cfg.msg_file_name}")
@@ -212,7 +212,7 @@ def translation(languages: list[str], msg_file: str | None, new: bool,
             raw_cfg = read_config(cfg)
             config = OWSConfig(refresh=True, cfg=raw_cfg)
         except ConfigException as e:
-            click.echo(f"Config exception for path: {str(e)}")
+            click.echo(f"Config exception for path: {e!s}")
             sys.exit(1)
         if domain is None:
             click.echo(f"Using message domain '{config.message_domain}' from configuration")
@@ -304,7 +304,7 @@ def compile_cmd(languages: list[str], domain: str | None, translations_dir: str 
             raw_cfg = read_config(cfg)
             config = OWSConfig(refresh=True, cfg=raw_cfg)
         except ConfigException as e:
-            click.echo(f"Config exception for path: {str(e)}")
+            click.echo(f"Config exception for path: {e!s}")
             sys.exit(1)
         if domain is None:
             click.echo(f"Using message domain '{config.message_domain}' from configuration")
