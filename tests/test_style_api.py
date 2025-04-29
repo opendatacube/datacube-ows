@@ -239,7 +239,7 @@ def test_ramp_legend_parse_errs(simple_ramp_style_cfg) -> None:
         "decimal_places": -1
     }
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_ramp_style_cfg)
+        _ = StandaloneStyle(simple_ramp_style_cfg)
     assert "decimal_places cannot be negative" in str(e.value)
 
 
@@ -251,7 +251,7 @@ def test_ramp_ticks_multimethod(simple_ramp_style_cfg) -> None:
         "tick_count": 5
     }
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_ramp_style_cfg)
+        _ = StandaloneStyle(simple_ramp_style_cfg)
     assert "Cannot use tick count and ticks_every in the same legend" in str(e.value)
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
@@ -260,7 +260,7 @@ def test_ramp_ticks_multimethod(simple_ramp_style_cfg) -> None:
         "ticks": ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]
     }
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_ramp_style_cfg)
+        _ = StandaloneStyle(simple_ramp_style_cfg)
     assert "Cannot use ticks and ticks_every in the same legend" in str(e.value)
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
@@ -269,7 +269,7 @@ def test_ramp_ticks_multimethod(simple_ramp_style_cfg) -> None:
         "tick_count": 5
     }
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_ramp_style_cfg)
+        _ = StandaloneStyle(simple_ramp_style_cfg)
     assert "Cannot use tick count and ticks in the same legend" in str(e.value)
 
 
@@ -920,17 +920,17 @@ def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_da
 def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_cfg) -> None:
     simple_colormap_style_cfg["multi_date"][0]["allowed_count_range"] = [2, 4]
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_colormap_style_cfg)
+        _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "min_count and max_count equal" in str(e.value)
     simple_colormap_style_cfg["multi_date"][0]["allowed_count_range"] = [2, 2]
     simple_colormap_style_cfg["multi_date"][0]["animate"] = True
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_colormap_style_cfg)
+        _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "value maps not supported for animation handlers" in str(e.value)
     simple_colormap_style_cfg["multi_date"][0]["animate"] = False
     simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][3]["invert"] = [True, False, True]
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_colormap_style_cfg)
+        _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "Invert entry has wrong number of rule sets for date count" in str(e.value)
     del simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][3]["invert"]
     orig_flags = simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"]
@@ -946,7 +946,7 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
         },
     ],
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_colormap_style_cfg)
+        _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "Flags entry has wrong number of rule sets for date count" in str(e.value)
     enum_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
         {
@@ -958,15 +958,15 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
         },
     ]
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(enum_colormap_style_cfg)
+        _ = StandaloneStyle(enum_colormap_style_cfg)
     assert "combines 'and' and 'or' rules" in str(e.value)
     del simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"]
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(simple_colormap_style_cfg)
+        _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "must have a non-empty 'flags' or 'values' section" in str(e.value)
     enum_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = orig_flags
     with pytest.raises(ConfigException) as e:
-        style = StandaloneStyle(enum_colormap_style_cfg)
+        _ = StandaloneStyle(enum_colormap_style_cfg)
     assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
 
 

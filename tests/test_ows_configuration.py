@@ -66,13 +66,13 @@ def test_function_wrapper_lyr() -> None:
 
 def test_func_naked() -> None:
     lyr = MagicMock()
-    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
-        f = datacube_ows.config_utils.FunctionWrapper(lyr, {
+    with pytest.raises(datacube_ows.config_utils.ConfigException):
+        _ = datacube_ows.config_utils.FunctionWrapper(lyr, {
             "function": a_function,
         })
     assert "Directly including callable objects in configuration is no longer supported."
-    with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
-        f = datacube_ows.config_utils.FunctionWrapper(lyr, a_function)
+    with pytest.raises(datacube_ows.config_utils.ConfigException):
+        _ = datacube_ows.config_utils.FunctionWrapper(lyr, a_function)
     assert "Directly including callable objects in configuration is no longer supported."
     f = datacube_ows.config_utils.FunctionWrapper(lyr, {
         "function": a_function,

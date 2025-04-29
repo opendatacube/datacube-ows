@@ -26,7 +26,7 @@ from datacube_ows.http_utils import (FlaskResponse, html_json_response,
 from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.ows_configuration import OWSNamedLayer, get_config
 from datacube_ows.styles import StyleDef
-from datacube_ows.time_utils import dataset_center_time, tz_for_geometry
+from datacube_ows.time_utils import dataset_center_time
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import (GetFeatureInfoParameters,
                                     img_coords_to_geopoint)
@@ -88,7 +88,7 @@ def _make_band_dict(prod_cfg: OWSNamedLayer, pixel_dataset: xarray.Dataset) -> d
         if flag_def:
             try:
                 flag_dict = mask_to_dict(flag_def, band_val)
-            except TypeError as te:
+            except TypeError:
                 logging.warning('Working around for float bands')
                 flag_dict = mask_to_dict(flag_def, int(band_val))
             ret_val: dict[str, bool | str] = {}
@@ -155,7 +155,6 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         # Make a 1x1 pixel geobox
         geo_point_geobox = GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
-    tz = tz_for_geometry(geo_point_geobox.geographic_extent)
     stacker = DataStacker(params.layer, geo_point_geobox, params.times)
     # --- Begin code section requiring datacube.
     cfg = get_config()

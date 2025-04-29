@@ -430,7 +430,7 @@ def test_invalid_component_ratio(product_layer, style_cfg_nonlin) -> None:
         }
     }
     with pytest.raises(ConfigException) as e:
-        style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_nonlin)
+        _ = datacube_ows.styles.StyleDef(product_layer, style_cfg_nonlin)
     assert "Component ratio must be a floating point number between 0 and 1" in str(e.value)
 
 
@@ -442,7 +442,7 @@ def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone)
 
 def test_unresolvable_style(product_layer) -> None:
     with pytest.raises(ConfigException) as e:
-        style_def = datacube_ows.styles.StyleDef(product_layer, {
+        _ = datacube_ows.styles.StyleDef(product_layer, {
             "foo": "This is not real",
             "name": "gotaname",
             "abstract": "gotabstract",
@@ -464,7 +464,7 @@ def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone) -
     product_layer.style_index[style_def.name] = style_def
     style_cfg_lin_clone["inherits"]["layer"] = "fake_layer"
     try:
-        style_def_clone = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
+        _ = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin_clone)
         assert "Expected exception not thrown" == False
     except OWSEntryNotFound:
         pass
@@ -492,8 +492,8 @@ def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone) -
 def test_style_exceptions(product_layer, style_cfg_map: dict) -> None:
     style_no_name = dict(style_cfg_map)
     style_no_name.pop('name', None)
-    with pytest.raises(KeyError) as excinfo:
-        style_def = datacube_ows.styles.StyleDef(product_layer, style_no_name)
+    with pytest.raises(KeyError):
+        _ = datacube_ows.styles.StyleDef(product_layer, style_no_name)
 
 
 def test_correct_style_map(product_layer, style_cfg_map) -> None:
@@ -527,7 +527,7 @@ def test_alpha_style_map(
     npmap = np.array([True, True, True])
     damap = DataArray(npmap)
 
-    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask):
         style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
 
         result = style_def.transform_data(ds, damap)
@@ -695,7 +695,7 @@ def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask) -> None:
     npmap = np.array([True, True, True, True, True, True])
     damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
 
-    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask):
         style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask)
         data = style_def.transform_data(ds, damap)
         r = data["red"]
@@ -809,7 +809,7 @@ def test_bad_mpl_ramp() -> None:
     from datacube_ows.styles.ramp import read_mpl_ramp
 
     with pytest.raises(ConfigException) as e:
-        ramp = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
+        _ = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
     assert "Invalid Matplotlib name: " in str(e.value)
 
 @pytest.fixture
@@ -855,7 +855,7 @@ def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc) -
     npmap = np.array([True, True, True, True, True, True])
     damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
 
-    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask) as fmm:
+    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask):
         style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
         style_def.make_ready(minimal_dc)
         mask = style_def.to_mask(ds, damap)
@@ -868,10 +868,10 @@ def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc) -
 def test_styles_with_invalid_pq_masks(product_layer, style_with_pq_masking) -> None:
     style_with_pq_masking["pq_masks"][0]["band"] = "invalid_band"
     with pytest.raises(ConfigException) as e:
-        style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
+        _ = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
     assert "has a mask that references flag band invalid_band which is not defined" in str(e.value)
     product_layer.flag_bands = {}
     product_layer.allflag_productbands = []
     with pytest.raises(ConfigException) as e:
-        style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
+        _ = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
     assert "contains a mask, but the layer has no flag bands" in str(e.value)

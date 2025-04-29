@@ -30,7 +30,7 @@ def owner_w_attrib_title():
 
 def test_cfg_attrib_emptyfail(minimal_owner) -> None:
     with pytest.raises(ConfigException) as excinfo:
-        attrib = AttributionCfg.parse({"foo": "bar"}, minimal_owner)
+        _ = AttributionCfg.parse({"foo": "bar"}, minimal_owner)
     assert "At least one" in str(excinfo.value)
 
 
@@ -69,14 +69,14 @@ def test_cfg_attrib_minimal_logo_only(minimal_owner) -> None:
 
 def test_cfg_attrib_logo_requirements(minimal_owner) -> None:
     with pytest.raises(ConfigException) as excinfo:
-        attrib = AttributionCfg.parse({
+        _ = AttributionCfg.parse({
             "logo": {
                 "url": "http://test.url/path/img.png",
             }
         }, minimal_owner)
     assert "url and format" in str(excinfo.value)
     with pytest.raises(ConfigException) as excinfo:
-        attrib = AttributionCfg.parse({
+        _ = AttributionCfg.parse({
             "logo": {
                 "format": "image/png"
             }
@@ -137,7 +137,7 @@ def test_surl_empty() -> None:
 
 def test_surl_no_url() -> None:
     with pytest.raises(KeyError):
-        supps = SuppURL.parse_list([
+        _ = SuppURL.parse_list([
             {
                 "format": "text/html"
             }
@@ -146,7 +146,7 @@ def test_surl_no_url() -> None:
 
 def test_surl_no_format() -> None:
     with pytest.raises(KeyError):
-        supps = SuppURL.parse_list([
+        _ = SuppURL.parse_list([
             {
                 "url": "http://test.url/path"
             }

@@ -27,7 +27,7 @@ def test_global_no_title(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
     del minimal_global_raw_cfg["global"]["title"]
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "Entity global has no title" in str(excinfo.value)
 
 
@@ -109,7 +109,7 @@ def test_wcs_no_native_format(minimal_global_raw_cfg, wcs_global_cfg) -> None:
     del wcs_global_cfg["native_format"]
     minimal_global_raw_cfg["wcs"] = wcs_global_cfg
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "native_format" in str(excinfo.value)
     assert "Missing required config entry" in str(excinfo.value)
     assert "wcs" in str(excinfo.value)
@@ -122,14 +122,14 @@ def test_no_services(minimal_global_raw_cfg) -> None:
         "wmts": False,
     }
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "At least one service must be active" in str(excinfo.value)
 
 
 def test_no_published_crss(minimal_global_raw_cfg) -> None:
     del minimal_global_raw_cfg["global"]["published_CRSs"]
     with pytest.raises(ConfigException) as e:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "Missing required config entry in 'global' section:" in str(e.value)
     assert "published_CRSs" in str(e.value)
 
@@ -141,7 +141,7 @@ def test_bad_geographic_crs(minimal_global_raw_cfg) -> None:
         "horizontal_coord": "x"
     }
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "is geographic" in str(excinfo.value)
     assert "EPSG:7777" in str(excinfo.value)
     assert "horizontal" in str(excinfo.value)
@@ -152,7 +152,7 @@ def test_bad_geographic_crs(minimal_global_raw_cfg) -> None:
         "vertical_coord": "y"
     }
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "is geographic" in str(excinfo.value)
     assert "EPSG:7777" in str(excinfo.value)
     assert "latitude" in str(excinfo.value)
@@ -172,7 +172,7 @@ def test_no_wcs(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {"wcs": True}
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "WCS section missing" in str(excinfo.value)
     assert "WCS is enabled" in str(excinfo.value)
 
@@ -184,7 +184,7 @@ def test_no_wcs_formats(minimal_global_raw_cfg) -> None:
         "formats": {}
     }
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "Must configure at least one wcs format" in str(excinfo.value)
 
 
@@ -194,7 +194,7 @@ def test_bad_wcs_format(minimal_global_raw_cfg, wcs_global_cfg) -> None:
     minimal_global_raw_cfg["wcs"] = wcs_global_cfg
     minimal_global_raw_cfg["wcs"]["native_format"] = "jpeg2000"
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "Configured native WCS format" in str(excinfo.value)
     assert "jpeg2000" in str(excinfo.value)
     assert "not a supported format" in str(excinfo.value)
@@ -215,7 +215,7 @@ def test_crs_lookup_fail(monkeypatch, minimal_global_raw_cfg, minimal_dc) -> Non
     OWSConfig._instance = None
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     with pytest.raises(ConfigException) as excinfo:
-        crs = cfg.crs("EPSG:111")
+        _ = cfg.crs("EPSG:111")
     assert "EPSG:111" in str(excinfo.value)
     assert "is not published" in str(excinfo.value)
 
@@ -224,7 +224,7 @@ def test_no_langs(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["supported_languages"] = []
     with pytest.raises(ConfigException) as excinfo:
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "at least one language" in str(excinfo.value)
 
 
@@ -252,25 +252,25 @@ def test_bad_integers_in_wms_section(minimal_global_raw_cfg) -> None:
     minimal_global_raw_cfg["wms"]["max_width"] = "very big"
     with pytest.raises(ConfigException) as e:
         OWSConfig._instance = None
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "max_width and max_height in wms section must be integers" in str(e.value)
     assert "very big" in str(e.value)
     minimal_global_raw_cfg["wms"]["max_width"] = 0
     with pytest.raises(ConfigException) as e:
         OWSConfig._instance = None
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "max_width and max_height in wms section must be positive integers" in str(e.value)
     assert "0" in str(e.value)
     minimal_global_raw_cfg["wms"]["max_width"] = 256
     minimal_global_raw_cfg["wms"]["caps_cache_maxage"] = "forever"
     with pytest.raises(ConfigException) as e:
         OWSConfig._instance = None
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "caps_cache_maxage in wms section must be an integer" in str(e.value)
     assert "forever" in str(e.value)
     minimal_global_raw_cfg["wms"]["caps_cache_maxage"] = -100
     with pytest.raises(ConfigException) as e:
         OWSConfig._instance = None
-        cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "caps_cache_maxage in wms section cannot be negative" in str(e.value)
     assert "-100" in str(e.value)

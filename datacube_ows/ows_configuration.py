@@ -1317,7 +1317,7 @@ class OWSConfig(OWSMetadataConfig):
                 self.parse_wcs(None)
             try:
                 self.parse_layers(cast(list[CFG_DICT], cfg["layers"]))
-            except KeyError as e:
+            except KeyError:
                 raise ConfigException("Missing required config entry in 'layers' section")
 
             try:

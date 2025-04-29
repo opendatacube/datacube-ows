@@ -56,26 +56,26 @@ def test_bidx_p_unready(minimal_prod) -> None:
         "foo": ["foo"]
     })
     with pytest.raises(OWSConfigNotReady) as excinfo:
-        x = bidx.measurements
+        _ = bidx.measurements
     assert "measurements" in str(excinfo.value)
     with pytest.raises(OWSConfigNotReady) as excinfo:
-        x = bidx.nodata_val("foo")
+        _ = bidx.nodata_val("foo")
     assert "_nodata_vals" in str(excinfo.value)
     with pytest.raises(OWSConfigNotReady) as excinfo:
-        x = bidx.dtype_val("foo")
+        _ = bidx.dtype_val("foo")
     assert "dtypes" in str(excinfo.value)
 
 
 def test_bidx_p_duplicates(minimal_prod) -> None:
     with pytest.raises(ConfigException) as excinfo:
-        bidx = BandIndex(minimal_prod, {
+        _ = BandIndex(minimal_prod, {
             "foo": ["bar"],
             "bar": ["baz"]
         })
     assert "Duplicate band name/alias" in str(excinfo.value)
     assert "bar" in str(excinfo.value)
     with pytest.raises(ConfigException) as excinfo:
-        bidx = BandIndex(minimal_prod, {
+       _ = BandIndex(minimal_prod, {
             "foo": ["bar"],
             "boo": ["bar"]
         })
