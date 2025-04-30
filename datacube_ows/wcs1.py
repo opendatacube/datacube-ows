@@ -29,7 +29,7 @@ def handle_wcs1(nocase_args) -> tuple:
     elif operation == "GETCOVERAGE":
         return get_coverage(nocase_args)
     else:
-        raise WCS1Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
+        raise WCS1Exception(f"Unrecognised operation: {operation}", locator="Request parameter")
 
 
 @log_call
@@ -52,7 +52,7 @@ def get_capabilities(args) -> tuple:
     elif section == "/wcs_capabilities/contentmetadata":
         show_content_metadata = True
     else:
-        raise WCS1Exception("Invalid section: %s" % section,
+        raise WCS1Exception(f"Invalid section: {section}",
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="Section parameter")
 
@@ -88,7 +88,7 @@ def desc_coverages(args) -> tuple:
             if p and p.wcs:
                 products.append(p)
             else:
-                raise WCS1Exception("Invalid coverage: %s" % c,
+                raise WCS1Exception(f"Invalid coverage: {c}",
                                     WCS1Exception.COVERAGE_NOT_DEFINED,
                                     locator="Coverage parameter")
     else:
@@ -117,7 +117,7 @@ def get_coverage(args):
         return json_response(qprof.profile())
     headers = {
         "Content-Type": req.format.mime,
-        'content-disposition': 'attachment; filename=%s.%s' % (req.layer_name, req.format.extension)
+        'content-disposition': f'attachment; filename={req.layer_name}.{req.format.extension}'
     }
     headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))
     return (
@@ -125,6 +125,6 @@ def get_coverage(args):
         200,
         cfg.response_headers({
             "Content-Type": req.format.mime,
-            'content-disposition': 'attachment; filename=%s.%s' % (req.layer_name, req.format.extension)
+            'content-disposition': f'attachment; filename={req.layer_name}.{req.format.extension}'
         })
     )

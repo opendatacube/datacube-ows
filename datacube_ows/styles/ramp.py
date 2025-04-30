@@ -488,7 +488,7 @@ class ColorRampDef(StyleDefBase):
         """"
         Constructor - refer to StyleDefBase
         """
-        super(ColorRampDef, self).__init__(product, style_cfg,
+        super().__init__(product, style_cfg,
                            stand_alone=stand_alone, defer_multi_date=True, user_defined=user_defined)
         style_cfg = cast(CFG_DICT, self._raw_cfg)
         self.color_ramp = ColorRamp(self, style_cfg, cast(ColorRampDef.Legend, self.legend_cfg))
@@ -509,10 +509,8 @@ class ColorRampDef(StyleDefBase):
                 self.needed_bands = set(self.local_band(b) for b in self.raw_needed_bands)
                 self.flag_bands = set()
         else:
-            raise ConfigException("Index function is required for index and hybrid styles. Style %s in layer %s" % (
-                self.name,
-                self.product.name
-            ))
+            raise ConfigException("Index function is required for index and hybrid styles. "
+                                  f"Style {self.name} in layer {self.product.name}")
         if not defer_multi_date:
             self.parse_multi_date(style_cfg)
 

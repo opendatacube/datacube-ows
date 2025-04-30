@@ -144,7 +144,7 @@ def get_layer_from_arg(args, argname: str ="layers") -> OWSNamedLayer:
     cfg = get_config()
     layer = cfg.layer_index.get(lyr)
     if not layer:
-        raise WMSException("Layer %s is not defined" % lyr,
+        raise WMSException(f"Layer {lyr} is not defined",
                            WMSException.LAYER_NOT_DEFINED,
                            locator="Layer parameter",
                            valid_keys=list(cfg.layer_index))
@@ -157,16 +157,16 @@ def get_arg(args, argname: str, verbose_name: str, lower: bool = False,
     if lower:
         fmt = fmt.lower()
     if not fmt:
-        raise WMSException("No %s specified" % verbose_name,
+        raise WMSException(f"No {verbose_name} specified",
                            errcode,
-                           locator="%s parameter" % argname,
+                           locator=f"{argname} parameter",
                            valid_keys=permitted_values)
 
     if permitted_values:
         if fmt not in permitted_values:
-            raise WMSException("%s %s is not supported" % (verbose_name, fmt),
+            raise WMSException(f"{verbose_name} {fmt} is not supported",
                                errcode,
-                               locator="%s parameter" % argname,
+                               locator=f"{argname} parameter",
                                valid_keys=permitted_values)
     return fmt
 
@@ -202,12 +202,12 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
             return matching_times[0]
         elif layer.regular_time_axis:
             raise WMSException(
-                "No data available for time dimension range '%s'-'%s' for this layer" % (start, end),
+                f"No data available for time dimension range '{start}'-'{end}' for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
         else:
             raise WMSException(
-                "Time dimension range '%s'-'%s' not valid for this layer" % (start, end),
+                f"Time dimension range '{start}'-'{end}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
     elif not times[0]:
@@ -220,7 +220,7 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
             time = time.date()  # type: ignore[assignment]
     except ValueError:
         raise WMSException(
-            "Time dimension value '%s' not valid for this layer" % times[0],
+            f"Time dimension value '{times[0]}' not valid for this layer",
             WMSException.INVALID_DIMENSION_VALUE,
             locator="Time parameter") from None
 
@@ -229,29 +229,29 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
         start, end = layer.time_range()
         if time < start:
             raise WMSException(
-                "Time dimension value '%s' not valid for this layer" % times[0],
+                f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
         if time > end:
             raise WMSException(
-                "Time dimension value '%s' not valid for this layer" % times[0],
+                f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
         if (time - start).days % layer.time_axis_interval != 0:
             raise WMSException(
-                "Time dimension value '%s' not valid for this layer" % times[0],
+                f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
     elif layer.time_resolution.is_subday():
         if not find_matching_date(time, layer.ranges.times):
             raise WMSException(
-                "Time dimension value '%s' not valid for this layer" % times[0],
+                f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
     else:
         if time not in layer.ranges.time_set:
             raise WMSException(
-                "Time dimension value '%s' not valid for this layer" % times[0],
+                f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
     return time
@@ -284,7 +284,7 @@ def parse_wms_time_strings(parts: list[str], with_tz: bool = False) -> tuple:
     if isinstance(start, relativedelta):
         if isinstance(end, relativedelta):
             raise WMSException(
-                "Could not understand time value '%s'" % parts,
+                f"Could not understand time value '{parts}'",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
         fuzzy_end = parse_wms_time_string(parts[-1], start=True)
@@ -388,7 +388,7 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
             style_r = layer.default_style.name
         style = layer.style_index.get(style_r)
         if not style:
-            raise WMSException("Style %s is not defined" % style_r,
+            raise WMSException(f"Style {style_r} is not defined",
                                WMSException.STYLE_NOT_DEFINED,
                                locator="Style parameter",
                                valid_keys=list(layer.style_index))
@@ -464,10 +464,10 @@ class GetFeatureInfoParameters(GetParameters):
         j = args.get(coords[1])
         if i is None:
             raise WMSException("HorizontalCoordinate not supplied", WMSException.INVALID_POINT,
-                               "%s parameter" % coords[0])
+                               f"{coords[0]} parameter")
         if j is None:
             raise WMSException("Vertical coordinate not supplied", WMSException.INVALID_POINT,
-                               "%s parameter" % coords[0])
+                               f"{coords[0]} parameter")
         self.i = int(i)
         self.j = int(j)
         self.style = single_style_from_args(self.layer, args, required=False)

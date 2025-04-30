@@ -29,16 +29,16 @@ def uniform_crs(cfg: OWSConfig, crs: str) -> str:
     """Helper function to transform a URL style EPSG definition to an 'EPSG:nnn' one"""
     if crs.startswith('http://www.opengis.net/def/crs/EPSG/'):
         code = crs.rpartition('/')[-1]
-        crs = 'EPSG:%s' % code
+        crs = f'EPSG:{code}'
     elif crs.startswith('urn:ogc:def:crs:EPSG:'):
         code = crs.rpartition(':')[-1]
-        crs = 'EPSG:%s' % code
+        crs = f'EPSG:{code}'
     elif crs.startswith('EPSG'):
         pass
     elif crs in cfg.published_CRSs:
         pass
     else:
-        raise WCS2Exception("Not a CRS: %s" % crs,
+        raise WCS2Exception(f"Not a CRS: {crs}",
                             WCS2Exception.NOT_A_CRS,
                             locator=crs,
                             valid_keys=list(cfg.published_CRSs))
@@ -53,7 +53,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     layer_name = request.coverage_id
     layer = cfg.layer_index.get(layer_name)
     if not layer or not layer.wcs:
-        raise WCS2Exception("Invalid coverage: %s" % layer_name,
+        raise WCS2Exception(f"Invalid coverage: {layer_name}",
                             WCS2Exception.NO_SUCH_COVERAGE,
                             locator="COVERAGE parameter",
                             valid_keys=list(cfg.layer_index))
@@ -65,7 +65,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     native_crs = layer.native_CRS
     subsetting_crs = uniform_crs(cfg, request.subsetting_crs or native_crs)
     if subsetting_crs not in cfg.published_CRSs:
-        raise WCS2Exception("Invalid subsettingCrs: %s" % subsetting_crs,
+        raise WCS2Exception(f"Invalid subsettingCrs: {subsetting_crs}",
                             WCS2Exception.SUBSETTING_CRS_NOT_SUPPORTED,
                             locator=subsetting_crs,
                             valid_keys=list(cfg.published_CRSs))
@@ -73,7 +73,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     output_crs = uniform_crs(cfg, request.output_crs or subsetting_crs or native_crs)
 
     if output_crs not in cfg.published_CRSs:
-        raise WCS2Exception("Invalid outputCrs: %s" % output_crs,
+        raise WCS2Exception(f"Invalid outputCrs: {output_crs}",
                             WCS2Exception.OUTPUT_CRS_NOT_SUPPORTED,
                             locator=output_crs,
                             valid_keys=list(cfg.published_CRSs))
@@ -95,10 +95,8 @@ def get_coverage_data(request, styles, qprof) -> tuple:
             if count > 1
         ]
 
-        raise WCS2Exception("Duplicate dimension%s: %s" % (
-                                's' if len(duplicate_dimensions) > 1 else '',
-                                ', '.join(duplicate_dimensions)
-                            ),
+        raise WCS2Exception(f"Duplicate dimension{'s' if len(duplicate_dimensions) > 1 else ''}: "
+                            f"{', '.join(duplicate_dimensions)}",
                             WCS2Exception.INVALID_SUBSETTING,
                             locator=','.join(duplicate_dimensions)
                             )
@@ -140,7 +138,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
                 elif isinstance(subset, Slice):
                     scaler.slice(dimension, subset.point)
             except WCSScalerUnknownDimension:
-                raise WCS2Exception('Invalid subsetting axis %s' % subset.dimension,
+                raise WCS2Exception(f'Invalid subsetting axis {subset.dimension}',
                                 WCS2Exception.INVALID_AXIS_LABEL,
                                 locator=subset.dimension) from None
 
@@ -161,10 +159,8 @@ def get_coverage_data(request, styles, qprof) -> tuple:
             for item, count in collections.Counter(axes).items()
             if count > 1
         ]
-        raise WCS2Exception('Duplicate scales for ax%ss: %s' % (
-                                'i' if len(duplicate_axes) == 1 else 'e',
-                                ', '.join(duplicate_axes)
-                            ),
+        raise WCS2Exception(f"Duplicate scales for ax{'i' if len(duplicate_axes) == 1 else 'e'}s: "
+                            f"{', '.join(duplicate_axes)}",
                             WCS2Exception.INVALID_SCALE_FACTOR,
                             locator=','.join(duplicate_axes)
                             )
@@ -173,7 +169,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
         axis = scale.axis.lower()
 
         if axis in ('time', 'k'):
-            raise WCS2Exception('Cannot scale axis %s' % scale.axis,
+            raise WCS2Exception(f'Cannot scale axis {scale.axis}',
                                 WCS2Exception.INVALID_SCALE_FACTOR,
                                 locator=scale.axis
                                 )
@@ -195,7 +191,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
         for range_subset in request.range_subset:
             if isinstance(range_subset, str):
                 if range_subset not in band_labels:
-                    raise WCS2Exception('No such field %s' % range_subset,
+                    raise WCS2Exception(f'No such field {range_subset}',
                                 WCS2Exception.NO_SUCH_FIELD,
                                 locator=range_subset,
                                 valid_keys=band_labels
@@ -203,12 +199,12 @@ def get_coverage_data(request, styles, qprof) -> tuple:
                 bands.append(range_subset)
             else:
                 if range_subset.start not in band_labels:
-                    raise WCS2Exception('No such field %s' % range_subset.start,
+                    raise WCS2Exception(f'No such field {range_subset.start}',
                                         WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
                                         locator=range_subset.start,
                                         valid_keys = band_labels)
                 if range_subset.end not in band_labels:
-                    raise WCS2Exception('No such field %s' % range_subset.end,
+                    raise WCS2Exception(f'No such field {range_subset.end}',
                                         WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
                                         locator=range_subset.end,
                                         valid_keys = band_labels)
@@ -235,7 +231,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
         try:
             fmt = cfg.wcs_formats_by_mime[request.format]
         except KeyError:
-            raise WCS2Exception("Unsupported format: %s" % request.format,
+            raise WCS2Exception(f"Unsupported format: {request.format}",
                                 WCS2Exception.INVALID_PARAMETER_VALUE,
                                 locator="FORMAT",
                                 valid_keys=list(cfg.wcs_formats_by_mime)) from None

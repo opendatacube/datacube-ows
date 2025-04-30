@@ -36,7 +36,7 @@ def handle_wmts(nocase_args) -> tuple:
     elif operation == "GETFEATUREINFO":
         return get_feature_info(nocase_args)
     else:
-        raise WMTSException("Unrecognised operation: %s" % operation, WMTSException.OPERATION_NOT_SUPPORTED,
+        raise WMTSException(f"Unrecognised operation: {operation}", WMTSException.OPERATION_NOT_SUPPORTED,
                            "Request parameter")
 
 
@@ -82,7 +82,7 @@ def get_capabilities(args) -> tuple:
             elif s == "themes":
                 show_themes = True
             else:
-                raise WMTSException("Invalid section: %s" % section,
+                raise WMTSException(f"Invalid section: {section}",
                                 WMTSException.INVALID_PARAMETER_VALUE,
                                 locator="Section parameter")
     headers = cache_control_headers(cfg.wms_cap_cache_age)
@@ -153,7 +153,7 @@ def wmts_args_to_wms(args, cfg) -> dict:
         col = int(col)
     except ValueError:
         raise WMTSException(f"Invalid Tile Col: {col}") from None
-    wms_args["bbox"] = "%f,%f,%f,%f" % tms.wms_bbox_coords(tileMatrix, row, col)
+    wms_args["bbox"] = "{:f},{:f},{:f},{:f}".format(*tms.wms_bbox_coords(tileMatrix, row, col))
 
     # GetFeatureInfo only args
     if "i" in args:

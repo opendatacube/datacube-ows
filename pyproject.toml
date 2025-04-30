@@ -16,6 +16,7 @@ select = [
     "B",  # flake8-bugbear
     "E",  # pycodestyle errors
     "RUF", # Ruff-specific rules
+    "UP", # pyupgrade
     "W",  # pycodestyle warnings
     "F",  # pyflakes
     "T10", # flake8-debugger
@@ -35,7 +36,7 @@ ignore = [
 # Multiline string, no good place for adding a noqa.
 "integration_tests/cfg/ows_test_cfg.py" = ["RUF001"]
 # Third-party software, keep pristine.
-"licenseheaders.py" = ["B007"]
+"licenseheaders.py" = ["B007", "UP031", "UP032", "UP035"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120

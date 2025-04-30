@@ -353,7 +353,7 @@ class OWSLayer(OWSMetadataConfig):
 
     @override
     def __str__(self) -> str:
-        return "OWSLayer Config: %s" % self.title
+        return f"OWSLayer Config: {self.title}"
 
 
 class OWSFolder(OWSLayer):
@@ -373,7 +373,7 @@ class OWSFolder(OWSLayer):
         self.unready_layers: list[OWSLayer] = []
         self.child_layers: list[OWSLayer] = []
         if "layers" not in cfg:
-            raise ConfigException("No layers section in folder layer %s" % self.title)
+            raise ConfigException(f"No layers section in folder layer {self.title}")
         child = 0
         for lyr_cfg in cast(list[RAW_CFG], cfg["layers"]):
             if isinstance(lyr_cfg, dict):
@@ -505,10 +505,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         except IndexError:
             raise ConfigException(f"No products declared in layer {self.name}") from None
         except KeyError as e:
-            raise ConfigException("Required product names entry (%s) missing in named layer %s" % (
-                str(e),
-                self.name
-            )) from None
+            raise ConfigException(f"Required product names entry ({e!s}) missing in named layer {self.name}") from None
         self.declare_unready("products")
         self.declare_unready("low_res_products")
         self.declare_unready("product")
@@ -915,27 +912,19 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
             if abs(native_bounding_box["right"] - native_bounding_box["left"]) < abs(self.resolution_x):
                 raise ConfigException(
-                    "Native (%s) bounding box on layer %s has left %.8f, right %.8f (diff %d), but horizontal resolution is %.8f"
-                    % (
-                        self.native_CRS,
-                        self.name,
-                        native_bounding_box["left"],
-                        native_bounding_box["right"],
-                        native_bounding_box["right"] - native_bounding_box["left"],
-                        self.resolution_x
-                    ))
+                    f"Native ({self.native_CRS}) bounding box on layer {self.name} has "
+                    + ("left {:.8f}, right {:.8f} ".format(native_bounding_box["left"], native_bounding_box["right"]))
+                    + f"(diff {native_bounding_box['right'] - native_bounding_box['left']})"
+                    + f", but horizontal resolution is {self.resolution_x:.8f}"
+                )
             if abs(native_bounding_box["top"] - native_bounding_box["bottom"]) < abs(self.resolution_y):
                 raise ConfigException(
-                    "Native (%s) bounding box on layer %s has bottom %f, top %f (diff %d), but vertical resolution is %f"
-                    % (
-                        self.native_CRS,
-                        self.name,
-                        native_bounding_box["bottom"],
-                        native_bounding_box["top"],
-                        native_bounding_box["top"] - native_bounding_box["bottom"],
-                        self.resolution_y
-
-                    ))
+                    f"Native ({self.native_CRS}) bounding box on layer {self.name} has "
+                    f"bottom {native_bounding_box['bottom']}, top "
+                    f"{native_bounding_box['top']} (diff "
+                    f"{native_bounding_box['top'] - native_bounding_box['bottom']}), "
+                    f"but vertical resolution is {self.resolution_y}"
+                )
             self.grid_high_x = abs(int((native_bounding_box["right"] - native_bounding_box["left"]) / self.resolution_x))
             self.grid_high_y = int((native_bounding_box["bottom"] - native_bounding_box["top"]) / self.resolution_y)
 
@@ -1060,7 +1049,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     @override
     def __str__(self) -> str:
-        return "Named OWSLayer: %s" % self.name
+        return f"Named OWSLayer: {self.name}"
 
     @classmethod
     @override
@@ -1308,7 +1297,7 @@ class OWSConfig(OWSMetadataConfig):
                 self.parse_global(cast(CFG_DICT, cfg["global"]), ignore_msgfile)
             except KeyError as e:
                 raise ConfigException(
-                    "Missing required config entry in 'global' section: %s" % str(e)
+                    f"Missing required config entry in 'global' section: {e!s}"
                 ) from None
 
             if self.wms or self.wmts:
@@ -1321,7 +1310,7 @@ class OWSConfig(OWSMetadataConfig):
                     self.parse_wcs(cast(CFG_DICT, cfg.get("wcs")))
                 except KeyError as e:
                     raise ConfigException(
-                        "Missing required config entry in 'wcs' section (with WCS enabled): %s" % str(e)
+                        f"Missing required config entry in 'wcs' section (with WCS enabled): {e!s}"
                     ) from None
             else:
                 self.parse_wcs(None)
@@ -1337,7 +1326,7 @@ class OWSConfig(OWSMetadataConfig):
                     self.parse_wmts({})
             except KeyError as e:
                 raise ConfigException(
-                    "Missing required config entry in 'wmts' section (with WCS enabled): %s" % str(e)
+                    f"Missing required config entry in 'wmts' section (with WCS enabled): {e!s}"
                 ) from None
             self.catalog: Catalog | None = None
             self.initialised = True
