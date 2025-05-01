@@ -38,7 +38,7 @@ class WCS1GetCoverageRequest:
         self.layer_name = args["coverage"]
         self.layer = cfg.layer_index.get(self.layer_name)
         if not self.layer or not self.layer.wcs:
-            raise WCS1Exception("Invalid coverage: %s" % self.layer_name,
+            raise WCS1Exception(f"Invalid coverage: {self.layer_name}",
                                 WCS1Exception.COVERAGE_NOT_DEFINED,
                                 locator="COVERAGE parameter",
                                 valid_keys=list(cfg.layer_index))
@@ -50,7 +50,7 @@ class WCS1GetCoverageRequest:
                                 locator="FORMAT parameter",
                                 valid_keys=cfg.wcs_formats_by_name)
         if args["format"] not in cfg.wcs_formats_by_name:
-            raise WCS1Exception("Unsupported format: %s" % args["format"],
+            raise WCS1Exception(f"Unsupported format: {args['format']}",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="FORMAT parameter",
                                 valid_keys=cfg.wcs_formats_by_name)
@@ -64,7 +64,7 @@ class WCS1GetCoverageRequest:
                                 valid_keys=list(cfg.published_CRSs))
         self.request_crsid = args["crs"]
         if self.request_crsid not in cfg.published_CRSs:
-            raise WCS1Exception("%s is not a supported CRS" % self.request_crsid,
+            raise WCS1Exception(f"{self.request_crsid} is not a supported CRS",
                                 WCS1Exception.INVALID_PARAMETER_VALUE,
                                 locator="CRS parameter",
                                 valid_keys=list(cfg.published_CRSs))
@@ -74,7 +74,7 @@ class WCS1GetCoverageRequest:
         if "response_crs" in args:
             self.response_crsid = args["response_crs"]
             if self.response_crsid not in cfg.published_CRSs:
-                raise WCS1Exception("%s is not a supported CRS" % self.response_crsid,
+                raise WCS1Exception(f"{self.response_crsid} is not a supported CRS",
                                     WCS1Exception.INVALID_PARAMETER_VALUE,
                                     locator="RESPONSE_CRS parameter",
                                     valid_keys=list(cfg.published_CRSs))
@@ -150,7 +150,7 @@ class WCS1GetCoverageRequest:
                     time = parse(t).date()
                     if time not in self.layer.ranges.time_set:
                         raise WCS1Exception(
-                            "Time value '%s' not a valid date for coverage %s" % (t, self.layer_name),
+                            f"Time value '{t}' not a valid date for coverage {self.layer_name}",
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="TIME parameter",
                             valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
@@ -158,7 +158,7 @@ class WCS1GetCoverageRequest:
                     self.times.append(time)
                 except ValueError:
                     raise WCS1Exception(
-                        "Time value '%s' not a valid ISO-8601 date" % t,
+                        f"Time value '{t}' not a valid ISO-8601 date",
                         WCS1Exception.INVALID_PARAMETER_VALUE,
                         locator="TIME parameter",
                         valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]

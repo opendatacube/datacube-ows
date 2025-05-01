@@ -209,7 +209,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 assert ds is not None
                 if params.layer.multi_product:
                     if "platform" in ds.metadata_doc:
-                        date_info["source_product"] = "%s (%s)" % (ds.product.name, ds.metadata_doc["platform"]["code"])
+                        date_info["source_product"] = f"{ds.product.name} ({ds.metadata_doc['platform']['code']})"
                     else:
                         date_info["source_product"] = ds.product.name
 

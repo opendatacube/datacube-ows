@@ -20,7 +20,7 @@ from datacube_ows.band_utils import (band_quotient, band_quotient_sum,
                                      single_band_arcsec, single_band_log,
                                      single_band_offset_log, sum_bands)
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
-from typing import Sequence
+from collections.abc import Sequence
 
 
 class MockArray(xr.DataArray):

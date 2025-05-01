@@ -32,7 +32,7 @@ def handle_wms(nocase_args: dict[str, str]) -> tuple | None:
     elif operation == "GETLEGENDGRAPHIC":
         return legend_graphic(nocase_args)
     else:
-        raise WMSException("Unrecognised operation: %s" % operation, WMSException.OPERATION_NOT_SUPPORTED,
+        raise WMSException(f"Unrecognised operation: {operation}", WMSException.OPERATION_NOT_SUPPORTED,
                            "Request parameter")
 
 

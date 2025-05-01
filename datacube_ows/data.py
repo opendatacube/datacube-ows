@@ -94,7 +94,8 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
     else:
         mdh = params.style.get_multi_date_handler(n_dates)
         if mdh is None:
-            raise WMSException("Style %s does not support GetMap requests with %d dates" % (params.style.name, n_dates),
+            raise WMSException(f"Style {params.style.name} does not support GetMap "
+                               f"requests with {n_dates} dates",
                                WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
     qprof["n_dates"] = n_dates
     try:

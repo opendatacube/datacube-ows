@@ -57,7 +57,7 @@ def cfg_expand(cfg_unexpanded: CFG_DICT,
     if isinstance(cfg_unexpanded, dict):
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
-                raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
+                raise ConfigException(f"Cyclic inclusion: {cfg_unexpanded['include']}")
             raw_path = cast(str, cfg_unexpanded["include"])
             # Required to pass a copy of the list into recursive invocations,
             # test_cfg_inclusion.py will show how it fails otherwise.
@@ -89,7 +89,7 @@ def cfg_expand(cfg_unexpanded: CFG_DICT,
                 # Python Expansion
                 return cfg_expand(import_python_obj(raw_path), cwd=cwd, inclusions=ninclusions)
             else:
-                raise ConfigException("Unsupported inclusion type: %s" % str(cfg_unexpanded["type"]))
+                raise ConfigException(f"Unsupported inclusion type: {cfg_unexpanded['type']!s}")
         else:
             return {
                 k: cfg_expand(cast(CFG_DICT, v), cwd=cwd, inclusions=inclusions)

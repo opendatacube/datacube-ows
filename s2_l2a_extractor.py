@@ -5,7 +5,7 @@ dc = Datacube()
 
 i = 1
 for ds in dc.index.datasets.search(product="s2_l2a"):
-    filename = "s2_l2a_ds_%02d.yaml" % i
+    filename = "s2_l2a_ds_%02d.yaml" % i  # noqa: UP031
     with open(filename, "w") as fp:
         fp.write(dump(ds.metadata_doc, default_flow_style=False))
     print(filename, ds.uri)

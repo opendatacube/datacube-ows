@@ -43,7 +43,7 @@ def handle_wcs2(nocase_args) -> tuple:
     elif operation == "GETCOVERAGE":
         return get_coverage(request.args.lists(), bool(nocase_args.get("ows_stats")), nocase_args.get("styles"))
     else:
-        raise WCS2Exception("Unrecognised operation: %s" % operation, locator="Request parameter")
+        raise WCS2Exception(f"Unrecognised operation: {operation}", locator="Request parameter")
 
 
 @log_call
@@ -268,7 +268,7 @@ def desc_coverages(args) -> tuple:
         if product and product.wcs:
             products.append(product)
         else:
-            raise WCS2Exception("Invalid coverage: %s" % coverage_id,
+            raise WCS2Exception(f"Invalid coverage: {coverage_id}",
                                 WCS2Exception.NO_SUCH_COVERAGE,
                                 locator=coverage_id)
 
@@ -284,7 +284,7 @@ def desc_coverages(args) -> tuple:
     elif version == (2, 1):
         result = encoders_v21.xml_encode_coverage_descriptions(coverage_descriptions)
     else:
-        raise WCS2Exception("Unsupported version: %s" % version,
+        raise WCS2Exception(f"Unsupported version: {version}",
                             WCS2Exception.INVALID_PARAMETER_VALUE,
                             locator="version")
     min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)
