@@ -119,7 +119,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                 query_res: dict[str, Any] = {
                     "query": str(q),
                     "datasets": [
-                        [f"{ds.id} ({ds.type.name})" for ds in tdss]
+                        [f"{ds.id} ({ds.product.name})" for ds in tdss]
                         for tdss in dsxr.values
                     ]
                 }
