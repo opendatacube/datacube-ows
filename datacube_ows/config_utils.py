@@ -39,9 +39,6 @@ CFG_DICT = dict[str, RAW_CFG]
 F = Callable[..., Any]
 
 
-# inclusions defaulting to an empty list is dangerous, but note that it is never modified.
-# If modification of inclusions is a required, a copy (ninclusions) is made and modified instead.
-# pylint: disable=dangerous-default-value
 def cfg_expand(cfg_unexpanded: CFG_DICT,
                cwd: str | None = None, inclusions: list[str] | None = None) -> CFG_DICT:
     """
@@ -62,6 +59,8 @@ def cfg_expand(cfg_unexpanded: CFG_DICT,
             if cfg_unexpanded["include"] in inclusions:
                 raise ConfigException("Cyclic inclusion: %s" % cfg_unexpanded["include"])
             raw_path = cast(str, cfg_unexpanded["include"])
+            # Required to pass a copy of the list into recursive invocations,
+            # test_cfg_inclusion.py will show how it fails otherwise.
             ninclusions: list[str] = inclusions.copy()
             ninclusions.append(raw_path)
             # Perform expansion
