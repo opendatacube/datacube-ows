@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
+import contextlib
 import re
 from collections.abc import Callable, Mapping, Sequence
 
@@ -56,10 +57,8 @@ class SupportedSvc:
                 continue
             except ValueError:
                 pass
-            try:
+            with contextlib.suppress(ValueError):
                 clean.append(int(re.split(r"[^\d]", part)[0]))
-            except ValueError:
-                pass
             break
         return clean
 

@@ -11,6 +11,7 @@
 #
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
+import contextlib
 import datetime
 import json
 import logging
@@ -1597,8 +1598,6 @@ class OWSConfig(OWSMetadataConfig):
 def get_config(refresh: bool = False, called_from_update_ranges: bool = False) -> OWSConfig:
     cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)
     if not cfg.ready:
-        try:
+        with contextlib.suppress(ODCInitException):
             cfg.make_ready()
-        except ODCInitException:
-            pass
     return cfg

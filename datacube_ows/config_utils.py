@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import contextlib
 import json
 import logging
 import os
@@ -711,10 +712,8 @@ class OWSFlagBand(OWSConfigEntry):
 
         # Resolve band alias if necessary.
         if self.main_products:
-            try:
+            with contextlib.suppress(ConfigException):
                 self.canonical_band_name = self.layer.band_idx.band(self.pq_band)
-            except ConfigException:
-                pass
 
     # pyre-ignore[16]
         self.info_mask: int = ~0
