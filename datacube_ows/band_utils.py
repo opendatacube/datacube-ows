@@ -34,7 +34,7 @@ def scalable(undecorated):
 
 def band_modulator(undecorated):
     def decorated(data, *args, **kwargs):
-        band_mapper = kwargs.get("band_mapper", None)
+        band_mapper = kwargs.get("band_mapper")
         mult_band = kwargs.pop("mult_band", None)
         raw_data = undecorated(data, *args, **kwargs)
         if mult_band and band_mapper:
