@@ -420,9 +420,8 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
                     started = True
                 else:
                     continue
-            if not finished:
-                if isclose(value, float(self.end), abs_tol=1e-9):
-                    finished = True
+            if not finished and isclose(value, float(self.end), abs_tol=1e-9):
+                finished = True
 
             for band, intensity in self.style_or_mdh.color_ramp.components.items():
                 bands[band].append((normalized, intensity[index], intensity[index]))

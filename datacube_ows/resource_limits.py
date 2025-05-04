@@ -260,9 +260,8 @@ class OWSResourceManagementRules(OWSConfigEntry):
         limits_exceeded: list[str] = []
         if self.max_datasets_wms > 0 and n_datasets > self.max_datasets_wms:
             limits_exceeded.append("too many datasets")
-        if self.min_zoom is not None:
-            if zoom_factor < self.min_zoom:
-                limits_exceeded.append("zoomed out too far")
+        if self.min_zoom is not None and zoom_factor < self.min_zoom:
+            limits_exceeded.append("zoomed out too far")
         if self.min_zoom_lvl is not None:
             fuzz_factor = 0.01
             if request_scale.load_adjusted_zoom_level < self.min_zoom_lvl - fuzz_factor:

@@ -162,12 +162,11 @@ def get_arg(args, argname: str, verbose_name: str, lower: bool = False,
                            locator=f"{argname} parameter",
                            valid_keys=permitted_values)
 
-    if permitted_values:
-        if fmt not in permitted_values:
-            raise WMSException(f"{verbose_name} {fmt} is not supported",
-                               errcode,
-                               locator=f"{argname} parameter",
-                               valid_keys=permitted_values)
+    if permitted_values and fmt not in permitted_values:
+        raise WMSException(f"{verbose_name} {fmt} is not supported",
+                           errcode,
+                           locator=f"{argname} parameter",
+                           valid_keys=permitted_values)
     return fmt
 
 

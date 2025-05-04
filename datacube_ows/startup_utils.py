@@ -49,12 +49,12 @@ def initialise_ignorable_warnings() -> None:
 
 def initialise_debugging(log: Logger | None = None) -> None:
     # PYCHARM Debugging
-    if os.environ.get("PYDEV_DEBUG"):
-        if os.environ["PYDEV_DEBUG"].lower() not in ("no", "false", "f", "n"):
-            import pydevd_pycharm
-            pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
-            if log:
-                log.info("PyCharm Debugging enabled")
+    dbg = os.environ.get("PYDEV_DEBUG")
+    if dbg and dbg.lower() not in ("no", "false", "f", "n"):
+        import pydevd_pycharm
+        pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+        if log:
+            log.info("PyCharm Debugging enabled")
 
 def before_send(event, hint) -> None:
     if 'exc_info' in hint:
@@ -157,10 +157,9 @@ class CredentialManager:
                 self.log.info("Establishing/renewing credentials")
             self.credentials = configure_s3_access(aws_unsigned=self.unsigned,
                                                             requester_pays=self.requester_pays)
-            if self.log:
-                if isinstance(self.credentials, RefreshableCredentials):
-                    # pylint: disable=protected-access
-                    self.log.debug("%s seconds remaining", str(self.credentials._seconds_remaining()))
+            if self.log and isinstance(self.credentials, RefreshableCredentials):
+                # pylint: disable=protected-access
+                self.log.debug("%s seconds remaining", str(self.credentials._seconds_remaining()))
 
 
 def initialise_aws_credentials(log: Logger | None = None) -> None:
