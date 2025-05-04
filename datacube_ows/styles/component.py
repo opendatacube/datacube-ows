@@ -60,7 +60,7 @@ class ComponentStyleDef(StyleDefBase):
             else:
                 components = cast(LINEAR_COMP_DICT, components)
                 self.raw_rgb_components[imgband] = components
-                for k in components.keys():
+                for k in components:
                     if k != "scale_range":
                         self.raw_needed_bands.add(k)
         self.rgb_components = cast(dict[str, None | Callable | LINEAR_COMP_DICT], {})

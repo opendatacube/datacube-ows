@@ -175,7 +175,7 @@ class BandIndex(OWSMetadataConfig):
             return self.band(name_alias)
         except ConfigException:
             pass
-        for b in self.band_cfg.keys():
+        for b in self.band_cfg:
             if name_alias == self.band_label(b):
                 return b
         raise ConfigException(f"Unknown band: {name_alias} in layer {self.layer_name}")
@@ -605,7 +605,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 f"Missing required config ({e!s}) in image processing section for layer {self.name}"
             ) from None
         self.identifiers = cast(dict[str, str], cfg.get("identifiers", {}))
-        for auth in self.identifiers.keys():
+        for auth in self.identifiers:
             if auth not in self.global_cfg.authorities:
                 raise ConfigException(f"Identifier with non-declared authority: {auth} in layer {self.name}")
         self.parse_urls(cast(CFG_DICT, cfg.get("urls", {})))

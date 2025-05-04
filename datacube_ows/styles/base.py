@@ -346,7 +346,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         :return: XArray with uint8
         """
 
-        if "alpha" not in img_data.data_vars.keys():
+        if "alpha" not in img_data.data_vars:
             nda_alpha: np.ndarray = np.ndarray(img_data["red"].shape, dtype='uint8')
             nda_alpha.fill(255)
             alpha = xr.DataArray(nda_alpha,

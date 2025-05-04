@@ -100,7 +100,7 @@ def lower_get_args() -> dict[str, str]:
     This function uses the LAST instance.
     """
     d = {}
-    for k in request.args.keys():
+    for k in request.args:
         kl = k.lower()
         for v in request.args.getlist(k):
             d[kl] = v
