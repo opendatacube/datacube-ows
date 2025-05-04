@@ -17,6 +17,7 @@ select = [
     "C4", # flake8-comprehensions
     "E",  # pycodestyle errors
     "RUF", # Ruff-specific rules
+    "SIM", # flake8-simplify
     "UP", # pyupgrade
     "W",  # pycodestyle warnings
     "F",  # pyflakes
@@ -37,7 +38,7 @@ ignore = [
 # Multiline string, no good place for adding a noqa.
 "integration_tests/cfg/ows_test_cfg.py" = ["RUF001"]
 # Third-party software, keep pristine.
-"licenseheaders.py" = ["B007", "C408", "C416", "C419", "UP031", "UP032", "UP035"]
+"licenseheaders.py" = ["B007", "C408", "C416", "C419", "SIM108", "SIM114", "UP031", "UP032", "UP035"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120
