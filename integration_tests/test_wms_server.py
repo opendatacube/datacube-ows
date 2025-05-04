@@ -14,8 +14,8 @@ from owslib.wms import WebMapService
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
-    xsd_f = open("wms_xsds/" + name)
-    schema_doc = etree.parse(xsd_f)
+    with open("wms_xsds/" + name) as xsd_f:
+        schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 
 

@@ -236,8 +236,8 @@ def translation(languages: list[str], msg_file: str | None, new: bool,
     assert domain is not None  # For type checker
     assert translations_dir is not None  # For type checker
     try:
-        fp = open(msg_file, "rb")
-        fp.close()
+        with open(msg_file, "rb"):
+            pass
     except OSError:
         click.echo("Message file {msg_file} does not exist or cannot be read.")
         sys.exit(1)
