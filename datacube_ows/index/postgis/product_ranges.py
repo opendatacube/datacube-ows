@@ -229,11 +229,7 @@ def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CR
 
 def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
     def sanitise_coordinate(coord: float, fallback: float, upper: bool) -> float:
-        if not math.isfinite(coord):
-            return fallback
-        elif upper and coord > fallback:
-            return fallback
-        elif not upper and coord < fallback:
+        if not math.isfinite(coord) or (upper and coord > fallback) or (not upper and coord < fallback):
             return fallback
         else:
             return coord

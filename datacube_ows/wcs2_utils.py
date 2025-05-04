@@ -33,9 +33,7 @@ def uniform_crs(cfg: OWSConfig, crs: str) -> str:
     elif crs.startswith('urn:ogc:def:crs:EPSG:'):
         code = crs.rpartition(':')[-1]
         crs = f'EPSG:{code}'
-    elif crs.startswith('EPSG'):
-        pass
-    elif crs in cfg.published_CRSs:
+    elif crs.startswith('EPSG') or crs in cfg.published_CRSs:
         pass
     else:
         raise WCS2Exception(f"Not a CRS: {crs}",

@@ -271,9 +271,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
             dt_datasets = all_time_datasets.sel(time=d)
             for ds in cast(Iterable[Dataset], dt_datasets.values.item()):
                 assert ds.crs is not None  # For type checker
-                if pt_native is None:
-                    pt_native = geo_point.to_crs(ds.crs)
-                elif pt_native.crs != ds.crs:
+                if pt_native is None or pt_native.crs != ds.crs:
                     pt_native = geo_point.to_crs(ds.crs)
                 if ds.extent and ds.extent.contains(pt_native):
                     # tolist() converts a numpy datetime64 to a python datatime
