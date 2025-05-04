@@ -71,10 +71,7 @@ class ProductBandQuery:
                 for band in fp.bands:
                     assert band in style.needed_bands, "Style band not in needed bands list"
             else:
-                if resource_limited:
-                    pq_products = fp.low_res_products
-                else:
-                    pq_products = fp.products
+                pq_products = fp.low_res_products if resource_limited else fp.products
                 queries.append(cls(
                     pq_products,
                     list(fp.bands),
@@ -119,10 +116,7 @@ class ProductBandQuery:
                            manual_merge: bool = False,
                            fuse_func: FuserFunction | None = None,
                            resource_limited: bool = False) -> "ProductBandQuery":
-        if resource_limited:
-            main_products = layer.low_res_products
-        else:
-            main_products = layer.products
+        main_products = layer.low_res_products if resource_limited else layer.products
         return cls(main_products, bands, manual_merge=manual_merge, main=True, fuse_func=fuse_func)
 
 PerPBQReturnType = xarray.DataArray | Iterable[UUID]
@@ -175,10 +169,7 @@ class DataStacker:
             queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
         geom = self._geobox.extent
         for query in queries:
-            if query.ignore_time:
-                qry_times = None
-            else:
-                qry_times = self._times
+            qry_times = None if query.ignore_time else self._times
             return self._layer.ows_index().count(self._layer, times=qry_times, geom=geom, products=query.products)
         return 0
 
@@ -189,10 +180,7 @@ class DataStacker:
                 self.resource_limited
         )
         geom = self._geobox.extent
-        if query.ignore_time:
-            times = None
-        else:
-            times = self._times
+        times = None if query.ignore_time else self._times
         return self._layer.ows_index().extent(self._layer, times=times, geom=geom, products=query.products, crs=crs)
 
     def dsids(self) -> dict[ProductBandQuery, Iterable[UUID]]:
@@ -204,10 +192,7 @@ class DataStacker:
             queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
         results: list[tuple[ProductBandQuery, Iterable[UUID]]] = []
         for query in queries:
-            if query.ignore_time:
-                qry_times = None
-            else:
-                qry_times = self._times
+            qry_times = None if query.ignore_time else self._times
             result = self._layer.ows_index().dsid_search(self._layer, times=qry_times, geom=self._geobox.extent,
                                                          products=query.products)
             results.append((query, result))
@@ -218,10 +203,7 @@ class DataStacker:
                     self._layer,
                     self.needed_bands(),
                     self.resource_limited)
-        if point:
-            geom = point
-        else:
-            geom = self._geobox.extent
+        geom = point if point else self._geobox.extent
         result = self._layer.ows_index().ds_search(
             layer=self._layer,
             geom=geom,
@@ -242,16 +224,10 @@ class DataStacker:
             # Just take needed bands.
             queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
 
-        if point:
-            geom = point
-        else:
-            geom = self._geobox.extent
+        geom = point if point else self._geobox.extent
         results: list[tuple[ProductBandQuery, xarray.DataArray]] = []
         for query in queries:
-            if query.ignore_time:
-                qry_times = None
-            else:
-                qry_times = self._times
+            qry_times = None if query.ignore_time else self._times
             result = self._layer.ows_index().ds_search(
                                layer=self._layer,
                                times=qry_times,
@@ -370,10 +346,7 @@ class DataStacker:
                 if self._layer.solar_correction and not skip_corrections:
                     for band in non_flag_bands:
                         d[band] = solar_correct_data(d[band], ds)
-                if merged is None:
-                    merged = d
-                else:
-                    merged = merged.combine_first(d)
+                merged = d if merged is None else merged.combine_first(d)
             if merged is None:
                 continue
             for band in flag_bands:

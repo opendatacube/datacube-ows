@@ -147,10 +147,7 @@ class OWSAbstractIndex(ABC):
                     ds_extent: Geometry = ds.extent.to_crs(layer.native_CRS)
                 else:
                     ds_extent = ds.extent
-                if ext is None:
-                    ext = ds_extent
-                else:
-                    ext = ext.union(ds_extent)
+                ext = ds_extent if ext is None else ext.union(ds_extent)
         if ext is not None and crs != CRS(layer.native_CRS):
             # Reproject to requested CRS if necessary
             return ext.to_crs(crs)
@@ -198,16 +195,10 @@ class OWSAbstractIndexDriver(ABC):
 
 
 def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
-    if isinstance(odc, AbstractIndex):
-        index = odc
-    else:
-        index = odc.index
+    index = odc if isinstance(odc, AbstractIndex) else odc.index
     env = index.environment
     from datacube_ows.index.driver import ows_index_driver_by_name
-    if env.index_driver in ('default', 'legacy'):
-        idx_drv_name = "postgres"
-    else:
-        idx_drv_name = env.index_driver
+    idx_drv_name = "postgres" if env.index_driver in ('default', 'legacy') else env.index_driver
     ows_index_driver = ows_index_driver_by_name(idx_drv_name)
     if ows_index_driver is None:
         raise ConfigException(f"ODC Environment {env._name} uses ODC index driver {env.index_driver} which is "

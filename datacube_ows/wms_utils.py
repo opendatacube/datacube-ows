@@ -304,10 +304,7 @@ class GetParameters:
         self.version = get_arg(args, "version", "WMS version",
                                permitted_values=['1.1.1', '1.3.0'])
         # CRS
-        if self.version == '1.1.1':
-            crs_arg = "srs"
-        else:
-            crs_arg = "crs"
+        crs_arg = "srs" if self.version == '1.1.1' else "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                              errcode=WMSException.INVALID_CRS,
                              permitted_values=list(self.cfg.published_CRSs))
@@ -456,10 +453,7 @@ class GetFeatureInfoParameters(GetParameters):
                               errcode=WMSException.INVALID_FORMAT,
                               permitted_values=["application/json", "text/html"])
         # Point coords
-        if self.version == "1.1.1":
-            coords = ["x", "y"]
-        else:
-            coords = ["i", "j"]
+        coords = ["x", "y"] if self.version == "1.1.1" else ["i", "j"]
         i = args.get(coords[0])
         j = args.get(coords[1])
         if i is None:

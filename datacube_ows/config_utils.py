@@ -357,10 +357,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         if self.METADATA_KEYWORDS:
             local_keyword_set = set(cast(list[str], cfg.get("keywords", [])))
             self.register_metadata(self.get_obj_label(), FLD_KEYWORDS, ",".join(local_keyword_set))
-            if inherit_from:
-                keyword_set = inherit_from.keywords
-            else:
-                keyword_set = set()
+            keyword_set = inherit_from.keywords if inherit_from else set()
             self._keywords = keyword_set.union(local_keyword_set)
         if self.METADATA_ATTRIBUTION:
             inheriting = False
@@ -368,10 +365,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if attrib is None and inherit_from is not None:
                 attrib = inherit_from.attribution
                 inheriting = True
-            if attrib:
-                attrib_title = attrib.get("title")
-            else:
-                attrib_title = None
+            attrib_title = attrib.get("title") if attrib else None
             if attrib_title:
                 self.register_metadata(self.get_obj_label(), FLD_ATTRIBUTION, attrib_title, inheriting)
         if self.METADATA_FEES:

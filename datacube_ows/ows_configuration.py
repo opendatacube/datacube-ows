@@ -655,10 +655,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.products: list[Product] = []
         self.low_res_products: list[Product] = []
         for i, prod_name in enumerate(self.product_names):
-            if self.low_res_product_names:
-                low_res_prod_name = self.low_res_product_names[i]
-            else:
-                low_res_prod_name = None
+            low_res_prod_name = self.low_res_product_names[i] if self.low_res_product_names else None
             product = self.dc.index.products.get_by_name(prod_name)
             if not product:
                 raise ConfigException(f"Could not find product {prod_name} in datacube for layer {self.name}")
@@ -995,14 +992,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                    ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
         if ranges is None:
             ranges = self.ranges
-        if self.regular_time_axis and self.time_axis_start:
-            start = self.time_axis_start
-        else:
-            start = ranges.start_time
-        if self.regular_time_axis and self.time_axis_end:
-            end = self.time_axis_end
-        else:
-            end = ranges.end_time
+        start = self.time_axis_start if self.regular_time_axis and self.time_axis_start else ranges.start_time
+        end = self.time_axis_end if self.regular_time_axis and self.time_axis_end else ranges.end_time
         return start, end
 
     @property
@@ -1595,10 +1586,7 @@ class OWSConfig(OWSMetadataConfig):
             raise ConfigException(f"CRS {crsid} is not published")
         crs_def = self.published_CRSs[crsid]
         crs_alias = crs_def["alias_of"]
-        if crs_alias:
-            use_crs = crs_alias
-        else:
-            use_crs = crsid
+        use_crs = crs_alias if crs_alias else crsid
         return CRS(use_crs)
 
     def response_headers(self, d: dict[str, str]) -> dict[str, str]:

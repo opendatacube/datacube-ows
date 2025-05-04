@@ -212,10 +212,7 @@ def extent_for_layer(layer: OWSNamedLayer, crs: CRS) -> odc.geo.Geometry | None:
     ext = None
     for product in layer.products:
         prod_extent = layer.dc.index.products.spatial_extent(product, crs)
-        if ext is None:
-            ext = prod_extent
-        else:
-            ext = ext | prod_extent
+        ext = prod_extent if ext is None else ext | prod_extent
     return ext
 
 
