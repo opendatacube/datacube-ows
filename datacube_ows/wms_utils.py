@@ -180,7 +180,7 @@ def get_times(args, layer: OWSNamedLayer) -> list[datetime]:
     times_raw = args.get('time', '')
     times = times_raw.split(',')
 
-    return list([parse_time_item(item, layer) for item in times])
+    return [parse_time_item(item, layer) for item in times]
 
 
 def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:

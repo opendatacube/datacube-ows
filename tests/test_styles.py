@@ -30,7 +30,7 @@ def product_layer():
             return f"FakeODCProduct({self.name})"
 
     class FakeProductBand:
-        bands = set(["pq", "wongle"])
+        bands = {"pq", "wongle"}
         products = [FakeODCProduct("test_masking_product")]
         manual_merge = False
         ignore_time = False

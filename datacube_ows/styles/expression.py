@@ -84,7 +84,7 @@ class BandListEvaluator(ExpressionEvaluator):
     int_literal = empty_gen  # type: ignore[assignment]
 
     def var_name(self, key) -> set:
-        return set([self.ows_style.local_band(key.value)])
+        return {self.ows_style.local_band(key.value)}
 
 
 ### Expression wrapper - callable wrapper for a configurable expression

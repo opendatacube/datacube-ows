@@ -404,7 +404,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         MutableMapping[float, str],
     ]:
         normalize_factor = float(self.end) - float(self.begin)
-        cdict = cast(MutableMapping[str, list[tuple[float, float, float]]], dict())
+        cdict = cast(MutableMapping[str, list[tuple[float, float, float]]], {})
         bands = cast(MutableMapping[str, list[tuple[float, float, float]]], defaultdict(list))
         started = False
         finished = False
@@ -430,7 +430,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         for band, blist in bands.items():
             cdict[band] = blist
 
-        ticks = cast(MutableMapping[float, str], dict())
+        ticks = cast(MutableMapping[float, str], {})
         for tick in self.ticks:
             value = float(tick)
             normalized = (value - float(self.begin)) / float(normalize_factor)
@@ -506,7 +506,7 @@ class ColorRampDef(StyleDefBase):
             for band in self.index_function.needed_bands:
                 self.raw_needed_bands.add(band)
             if self.stand_alone:
-                self.needed_bands = set(self.local_band(b) for b in self.raw_needed_bands)
+                self.needed_bands = {self.local_band(b) for b in self.raw_needed_bands}
                 self.flag_bands = set()
         else:
             raise ConfigException("Index function is required for index and hybrid styles. "

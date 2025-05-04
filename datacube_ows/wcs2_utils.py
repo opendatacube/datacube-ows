@@ -87,7 +87,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
 
     subsets = request.subsets
 
-    if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
+    if len(subsets) != len({subset.dimension.lower() for subset in subsets}):
         dimensions = [subset.dimension.lower() for subset in subsets]
         duplicate_dimensions = [
             item
@@ -152,7 +152,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     #
 
     scales = request.scales
-    if len(scales) != len(set(subset.axis.lower() for subset in scales)):
+    if len(scales) != len({subset.axis.lower() for subset in scales}):
         axes = [subset.axis.lower() for subset in scales]
         duplicate_axes = [
             item

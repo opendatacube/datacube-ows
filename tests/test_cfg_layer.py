@@ -62,7 +62,7 @@ def test_override_parent(minimal_global_cfg, minimal_parent) -> None:
     assert "global" in lyr.keywords
     assert "parent" in lyr.keywords
     assert "merged" in lyr.keywords
-    assert lyr.local_keywords == set(["merged"])
+    assert lyr.local_keywords == {"merged"}
 
 
 def test_minimal_folder(minimal_global_cfg) -> None:

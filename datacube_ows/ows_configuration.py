@@ -723,7 +723,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_image_processing(self) -> None:
-        self.always_fetch_bands = list([self.band_idx.band(b) for b in cast(list[str], self.raw_afb)])
+        self.always_fetch_bands = [self.band_idx.band(b) for b in cast(list[str], self.raw_afb)]
 
     # pylint: disable=attribute-defined-outside-init
     def parse_feature_info(self, cfg: CFG_DICT) -> None:
@@ -1076,7 +1076,7 @@ class OWSProductLayer(OWSNamedLayer):
         if self.low_res_product_name:
             self.low_res_product_names: tuple[str, ...] = (self.low_res_product_name,)
         else:
-            self.low_res_product_names = tuple()
+            self.low_res_product_names = ()
         if "product_names" in cfg:
             raise ConfigException(f"'product_names' entry in non-multi-product layer {self.name} - use 'product_name' only")
         if "low_res_product_names" in cfg:

@@ -818,7 +818,7 @@ class FlagProductBands(OWSConfigEntry):
             self.low_res_products: list[Product] = fb.pq_low_res_products
             break
         if self.main_product:
-            self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
+            self.bands = {self.layer.band_idx.band(b) for b in self.bands}
         super().make_ready(*args, **kwargs)
 
     @classmethod

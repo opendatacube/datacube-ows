@@ -126,7 +126,7 @@ class OWSAbstractIndex(ABC):
               geom: Geometry | None = None,
               products: Iterable[Product] | None = None
               ) -> int:
-        return len([dsid for dsid in self.dsid_search(layer, times, geom, products)])
+        return len(list(self.dsid_search(layer, times, geom, products)))
 
     def extent(self,
                layer: "OWSNamedLayer",

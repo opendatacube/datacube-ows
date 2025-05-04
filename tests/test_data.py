@@ -27,7 +27,7 @@ def s3_url_datasets():
         def __init__(self, uris) -> None:
             self.uris = uris
 
-    datasets = list()
+    datasets = []
     d1 = TestDataset([
             "s3://test-bucket/hello_world/data.yaml",
             "s3://test-bucket/hello_world/data.yaml"
@@ -254,12 +254,12 @@ def test_make_band_dict_float(product_layer) -> None: # noqa: F811
 
 
 def test_pbq_ctor_simple(product_layer) -> None: # noqa: F811
-    pbq = ProductBandQuery.simple_layer_query(product_layer, set(["red", "green"]))
+    pbq = ProductBandQuery.simple_layer_query(product_layer, {"red", "green"})
     assert str(pbq) in (
         "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_product)]",
         "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_product)]"
     )
-    pbq = ProductBandQuery.simple_layer_query(product_layer, set(["red", "green"]), resource_limited=True)
+    pbq = ProductBandQuery.simple_layer_query(product_layer, {"red", "green"}, resource_limited=True)
     assert str(pbq) in (
         "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_summary_product)]",
         "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_summary_product)]"

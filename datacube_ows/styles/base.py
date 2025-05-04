@@ -264,7 +264,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                         continue
                 if not handled:
                     self.pq_product_bands.append(
-                        (fb.pq_names, set([fb.pq_band]))
+                        (fb.pq_names, {fb.pq_band})
                     )
         for _, pq_bands in self.pq_product_bands:
             for band in pq_bands:
