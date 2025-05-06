@@ -126,10 +126,7 @@ def get_capabilities(args):
             for fmt in cfg.wcs_formats
             if 2 in fmt.renderers
         ],
-        crss_supported=[
-            crs  # TODO: conversion to URL format
-            for crs in cfg.published_CRSs
-        ],
+        crss_supported=list(cfg.published_CRSs),  # TODO: conversion to URL format
         interpolations_supported=None,  # TODO: find out interpolations
     )
     result = encoders_v20.xml_encode_capabilities(
@@ -239,10 +236,7 @@ def create_coverage_description(cfg: OWSConfig, product) -> CoverageDescription:
                 name=band_label,
                 description=band_label,
                 uom=band_label,
-                nil_values={
-                    nv: 'invalid'
-                    for nv in product.band_idx.band_nodata_vals()
-                }
+                nil_values=dict.fromkeys(product.band_idx.band_nodata_vals(), 'invalid')
             )
             for band_label in product.band_idx.band_labels()
         ],

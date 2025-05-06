@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import contextlib
 import json
 import logging
 import os
@@ -357,10 +358,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         if self.METADATA_KEYWORDS:
             local_keyword_set = set(cast(list[str], cfg.get("keywords", [])))
             self.register_metadata(self.get_obj_label(), FLD_KEYWORDS, ",".join(local_keyword_set))
-            if inherit_from:
-                keyword_set = inherit_from.keywords
-            else:
-                keyword_set = set()
+            keyword_set = inherit_from.keywords if inherit_from else set()
             self._keywords = keyword_set.union(local_keyword_set)
         if self.METADATA_ATTRIBUTION:
             inheriting = False
@@ -368,10 +366,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if attrib is None and inherit_from is not None:
                 attrib = inherit_from.attribution
                 inheriting = True
-            if attrib:
-                attrib_title = attrib.get("title")
-            else:
-                attrib_title = None
+            attrib_title = attrib.get("title") if attrib else None
             if attrib_title:
                 self.register_metadata(self.get_obj_label(), FLD_ATTRIBUTION, attrib_title, inheriting)
         if self.METADATA_FEES:
@@ -717,10 +712,8 @@ class OWSFlagBand(OWSConfigEntry):
 
         # Resolve band alias if necessary.
         if self.main_products:
-            try:
+            with contextlib.suppress(ConfigException):
                 self.canonical_band_name = self.layer.band_idx.band(self.pq_band)
-            except ConfigException:
-                pass
 
     # pyre-ignore[16]
         self.info_mask: int = ~0
@@ -818,7 +811,7 @@ class FlagProductBands(OWSConfigEntry):
             self.low_res_products: list[Product] = fb.pq_low_res_products
             break
         if self.main_product:
-            self.bands = set(self.layer.band_idx.band(b) for b in self.bands)
+            self.bands = {self.layer.band_idx.band(b) for b in self.bands}
         super().make_ready(*args, **kwargs)
 
     @classmethod

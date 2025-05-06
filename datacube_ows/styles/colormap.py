@@ -286,7 +286,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         self.patches: list[PatchTemplate] = []
 
     def register_value_map(self, value_map: MutableMapping[str, list["AbstractValueMapRule"]]) -> None:
-        for band in value_map.keys():
+        for band in value_map:
             for idx, rule in reversed(list(enumerate(value_map[band]))):
                 # only include values that are not transparent (and that have a non-blank title or abstract)
                 if rule.rgba[-1] > 0.001 and rule.label:
@@ -347,7 +347,7 @@ class ColorMapStyleDef(StyleDefBase):
         self.legend_cfg.register_value_map(self.value_map)
         for mdh in self.multi_date_handlers:
             mdh.legend_cfg.register_value_map(mdh.value_map)
-        for band in self.value_map.keys():
+        for band in self.value_map:
             self.raw_needed_bands.add(band)
 
     @staticmethod

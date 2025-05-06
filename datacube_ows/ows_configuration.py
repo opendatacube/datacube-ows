@@ -11,6 +11,7 @@
 #
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
+import contextlib
 import datetime
 import json
 import logging
@@ -175,7 +176,7 @@ class BandIndex(OWSMetadataConfig):
             return self.band(name_alias)
         except ConfigException:
             pass
-        for b in self.band_cfg.keys():
+        for b in self.band_cfg:
             if name_alias == self.band_label(b):
                 return b
         raise ConfigException(f"Unknown band: {name_alias} in layer {self.layer_name}")
@@ -605,7 +606,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 f"Missing required config ({e!s}) in image processing section for layer {self.name}"
             ) from None
         self.identifiers = cast(dict[str, str], cfg.get("identifiers", {}))
-        for auth in self.identifiers.keys():
+        for auth in self.identifiers:
             if auth not in self.global_cfg.authorities:
                 raise ConfigException(f"Identifier with non-declared authority: {auth} in layer {self.name}")
         self.parse_urls(cast(CFG_DICT, cfg.get("urls", {})))
@@ -655,10 +656,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.products: list[Product] = []
         self.low_res_products: list[Product] = []
         for i, prod_name in enumerate(self.product_names):
-            if self.low_res_product_names:
-                low_res_prod_name = self.low_res_product_names[i]
-            else:
-                low_res_prod_name = None
+            low_res_prod_name = self.low_res_product_names[i] if self.low_res_product_names else None
             product = self.dc.index.products.get_by_name(prod_name)
             if not product:
                 raise ConfigException(f"Could not find product {prod_name} in datacube for layer {self.name}")
@@ -698,7 +696,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     # pylint: disable=attribute-defined-outside-init
     def parse_image_processing(self, cfg: CFG_DICT) -> None:
         emf_cfg = cfg["extent_mask_func"]
-        if isinstance(emf_cfg, dict) or isinstance(emf_cfg, str):
+        if isinstance(emf_cfg, (dict, str)):
             self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]
         else:
             self.extent_mask_func = [
@@ -723,7 +721,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_image_processing(self) -> None:
-        self.always_fetch_bands = list([self.band_idx.band(b) for b in cast(list[str], self.raw_afb)])
+        self.always_fetch_bands = [self.band_idx.band(b) for b in cast(list[str], self.raw_afb)]
 
     # pylint: disable=attribute-defined-outside-init
     def parse_feature_info(self, cfg: CFG_DICT) -> None:
@@ -995,14 +993,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                    ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
         if ranges is None:
             ranges = self.ranges
-        if self.regular_time_axis and self.time_axis_start:
-            start = self.time_axis_start
-        else:
-            start = ranges.start_time
-        if self.regular_time_axis and self.time_axis_end:
-            end = self.time_axis_end
-        else:
-            end = ranges.end_time
+        start = self.time_axis_start if self.regular_time_axis and self.time_axis_start else ranges.start_time
+        end = self.time_axis_end if self.regular_time_axis and self.time_axis_end else ranges.end_time
         return start, end
 
     @property
@@ -1076,7 +1068,7 @@ class OWSProductLayer(OWSNamedLayer):
         if self.low_res_product_name:
             self.low_res_product_names: tuple[str, ...] = (self.low_res_product_name,)
         else:
-            self.low_res_product_names = tuple()
+            self.low_res_product_names = ()
         if "product_names" in cfg:
             raise ConfigException(f"'product_names' entry in non-multi-product layer {self.name} - use 'product_name' only")
         if "low_res_product_names" in cfg:
@@ -1595,10 +1587,7 @@ class OWSConfig(OWSMetadataConfig):
             raise ConfigException(f"CRS {crsid} is not published")
         crs_def = self.published_CRSs[crsid]
         crs_alias = crs_def["alias_of"]
-        if crs_alias:
-            use_crs = crs_alias
-        else:
-            use_crs = crsid
+        use_crs = crs_alias if crs_alias else crsid
         return CRS(use_crs)
 
     def response_headers(self, d: dict[str, str]) -> dict[str, str]:
@@ -1609,8 +1598,6 @@ class OWSConfig(OWSMetadataConfig):
 def get_config(refresh: bool = False, called_from_update_ranges: bool = False) -> OWSConfig:
     cfg = OWSConfig(refresh=refresh, called_from_update_ranges=called_from_update_ranges)
     if not cfg.ready:
-        try:
+        with contextlib.suppress(ODCInitException):
             cfg.make_ready()
-        except ODCInitException:
-            pass
     return cfg

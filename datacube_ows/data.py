@@ -36,10 +36,7 @@ def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
                      geometry: geom.Geometry, user_dates: list[datetime]) -> xarray.DataArray:
     # TODO: Make more elegant.  Just a little bit elegant would do.
     result = []
-    if layer.time_resolution.is_solar():
-        tz = tz_for_geometry(geometry)
-    else:
-        tz = None
+    tz = tz_for_geometry(geometry) if layer.time_resolution.is_solar() else None
 
     def check_date(time_res, user_date, odc_date) -> bool:
         ts = Timestamp(odc_date).tz_localize("UTC")

@@ -46,7 +46,7 @@ def test_parse_wms_time_strings() -> None:
 
 def test_parse_wms_time_strings_with_present() -> None:
     import datetime as dt
-    start, end = datacube_ows.wms_utils.parse_wms_time_strings('2018-01-10/PRESENT'.split('/'))
+    start, end = datacube_ows.wms_utils.parse_wms_time_strings(['2018-01-10', 'PRESENT'])
     assert start == dt.datetime(2018, 1, 10, 0, 0)
     assert (dt.datetime.now(dt.timezone.utc) - end).total_seconds() < 60
 

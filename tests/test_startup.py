@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-
+import contextlib
 import os
 import sys
 from unittest.mock import MagicMock, patch
@@ -104,10 +104,8 @@ def test_initialise_sentry(monkeypatch) -> None:
     initialise_sentry()
     monkeypatch.setenv("SENTRY_DSN", "https://key@sentry.local/projid")
     log = MagicMock()
-    try:
+    with contextlib.suppress(Exception):
         initialise_sentry(log)
-    except Exception:
-        pass
 
 
 def test_prometheus_inactive(monkeypatch) -> None:

@@ -218,10 +218,7 @@ class WCSScaler:
         if dim_size is not None:
             raise WCSScalerOverspecifiedDimension()
         grid = self.layer.grids[self.crs]
-        if self.min.is_x_dim(dimension):
-            res = grid["resolution"][0]
-        else:
-            res = grid["resolution"][1]
+        res = grid["resolution"][0 if self.min.is_x_dim(dimension) else 1]
         scaled_size = abs(
             (dim_max - dim_min) * factor / res
         )

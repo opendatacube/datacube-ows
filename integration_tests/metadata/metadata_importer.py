@@ -12,7 +12,7 @@ dc_pgis = Datacube(env="owspostgis")
 doc2ds = Doc2Dataset(dc.index, products=["s2_l2a", "geodata_coast_100k"], skip_lineage=True, verify_lineage=False)
 doc2ds_pgis = Doc2Dataset(dc_pgis.index, products=["s2_l2a", "geodata_coast_100k"], skip_lineage=True, verify_lineage=False)
 
-for line in fileinput.input():
+for line in fileinput.input():  # noqa: SIM115
     filename, uri = line.split()
     with open(filename) as fp:
         doc = yaml.safe_load(fp)

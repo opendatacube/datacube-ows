@@ -61,7 +61,7 @@ def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg) -> Non
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
     for channel in ("red", "green", "blue"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     assert result["red"].values[0][0] == 5
     assert result["green"].values[0][0] == 7
     assert result["blue"].values[0][0] == 2
@@ -72,7 +72,7 @@ def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_s
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
     for channel in ("red", "green", "blue"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
 
 
 def test_external_legends(simple_rgb_style_cfg) -> None:
@@ -132,7 +132,7 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     style = StandaloneStyle(simple_ramp_style_cfg)
     result = apply_ows_style(style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     # point 0 800, 200 (idx=0.6)maps to blue
     assert result["alpha"].values[0] == 255
     assert result["red"].values[0] == 0
@@ -169,7 +169,7 @@ def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_st
     style = StandaloneStyle(simple_ramp_style_cfg)
     result = apply_ows_style(style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     # point 0 800, 200 (idx=0.6)maps to blue
     assert result["alpha"].values[0] == 255
     assert result["red"].values[0] == 0
@@ -461,7 +461,7 @@ def rgb_style_with_masking_cfg():
 def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg) -> None:
     result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     alphas = result["alpha"].values
     assert alphas[0][0] == 255
     assert alphas[1][0] == 255
@@ -597,7 +597,7 @@ def simple_colormap_style_cfg():
 def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg) -> None:
     result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     # point 0 tasy and possible: green
     assert result["alpha"].values[0] == 255
     assert result["red"].values[0] == 0
@@ -721,7 +721,7 @@ def enum_colormap_style_cfg():
 def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg) -> None:
     result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     # point 0 (8) Blah - red
     assert result["alpha"].values[0] == 255
     assert result["red"].values[0] == 255
@@ -755,7 +755,7 @@ def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_ma
                                  dummy_col_map_time_data,
                                  valid_data_mask=timed_raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     # point 0 (8->30) Blah Blah - red
     assert result["alpha"].values[0] == 255
     assert result["red"].values[0] == 255
@@ -821,7 +821,7 @@ def test_animated_colour_map(enum_animated_value_map, dummy_col_map_time_data, t
                                  dummy_col_map_time_data,
                                  valid_data_mask=timed_raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     # point 0 (8) Blah - red, green
     assert result["alpha"].values[0][0] == 255
     assert result["red"].values[0][0] == 255
@@ -899,7 +899,7 @@ def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_da
                                  dummy_col_map_time_data,
                                  valid_data_mask=timed_raw_calc_null_mask)
     for channel in ("red", "green", "blue", "alpha"):
-        assert channel in result.data_vars.keys()
+        assert channel in result.data_vars
     # point 0 (8->30) no
     assert result["alpha"].values[0] == 0
     # point 1 (25->17) no

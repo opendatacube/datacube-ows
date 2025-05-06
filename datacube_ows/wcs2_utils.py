@@ -33,9 +33,7 @@ def uniform_crs(cfg: OWSConfig, crs: str) -> str:
     elif crs.startswith('urn:ogc:def:crs:EPSG:'):
         code = crs.rpartition(':')[-1]
         crs = f'EPSG:{code}'
-    elif crs.startswith('EPSG'):
-        pass
-    elif crs in cfg.published_CRSs:
+    elif crs.startswith('EPSG') or crs in cfg.published_CRSs:
         pass
     else:
         raise WCS2Exception(f"Not a CRS: {crs}",
@@ -87,7 +85,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
 
     subsets = request.subsets
 
-    if len(subsets) != len(set(subset.dimension.lower() for subset in subsets)):
+    if len(subsets) != len({subset.dimension.lower() for subset in subsets}):
         dimensions = [subset.dimension.lower() for subset in subsets]
         duplicate_dimensions = [
             item
@@ -152,7 +150,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     #
 
     scales = request.scales
-    if len(scales) != len(set(subset.axis.lower() for subset in scales)):
+    if len(scales) != len({subset.axis.lower() for subset in scales}):
         axes = [subset.axis.lower() for subset in scales]
         duplicate_axes = [
             item

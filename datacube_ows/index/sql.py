@@ -48,10 +48,7 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
                 all_ok = False
                 continue
             req_match = filename_req_pattern.fullmatch(fname)
-            if req_match:
-                reqs = req_match.group("reqs").split("_")
-            else:
-                reqs = []
+            reqs = req_match.group("reqs").split("_") if req_match else []
             if reqs:
                 try:
                     kwargs = {v: params[v] for v in reqs}

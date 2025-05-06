@@ -264,7 +264,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                         continue
                 if not handled:
                     self.pq_product_bands.append(
-                        (fb.pq_names, set([fb.pq_band]))
+                        (fb.pq_names, {fb.pq_band})
                     )
         for _, pq_bands in self.pq_product_bands:
             for band in pq_bands:
@@ -346,7 +346,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         :return: XArray with uint8
         """
 
-        if "alpha" not in img_data.data_vars.keys():
+        if "alpha" not in img_data.data_vars:
             nda_alpha: np.ndarray = np.ndarray(img_data["red"].shape, dtype='uint8')
             nda_alpha.fill(255)
             alpha = xr.DataArray(nda_alpha,
@@ -380,10 +380,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         """
         input_date_count = self.count_dates(data)
         mdh = self.get_multi_date_handler(input_date_count)
-        if mdh is None:
-            img_data = self.transform_single_date_data(data)
-        else:
-            img_data = mdh.transform_data(data)
+        img_data = self.transform_single_date_data(data) if mdh is None else mdh.transform_data(data)
         if "time" not in img_data.coords or not img_data.time.shape:
             output_date_count = 1
         else:

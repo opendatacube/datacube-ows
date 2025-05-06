@@ -1031,7 +1031,7 @@ def test_wcs1_describecov_multi(ows_server) -> None:
         ows_server.url + "/wcs",
         params={
             "request": "DescribeCoverage",
-            "coverageid": ",".join(list(p.name for p in cfg.active_products)[0:2]),
+            "coverageid": ",".join([p.name for p in cfg.active_products][0:2]),
             "version": "1.0.0",
         },
     )

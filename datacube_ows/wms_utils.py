@@ -162,12 +162,11 @@ def get_arg(args, argname: str, verbose_name: str, lower: bool = False,
                            locator=f"{argname} parameter",
                            valid_keys=permitted_values)
 
-    if permitted_values:
-        if fmt not in permitted_values:
-            raise WMSException(f"{verbose_name} {fmt} is not supported",
-                               errcode,
-                               locator=f"{argname} parameter",
-                               valid_keys=permitted_values)
+    if permitted_values and fmt not in permitted_values:
+        raise WMSException(f"{verbose_name} {fmt} is not supported",
+                           errcode,
+                           locator=f"{argname} parameter",
+                           valid_keys=permitted_values)
     return fmt
 
 
@@ -180,7 +179,7 @@ def get_times(args, layer: OWSNamedLayer) -> list[datetime]:
     times_raw = args.get('time', '')
     times = times_raw.split(',')
 
-    return list([parse_time_item(item, layer) for item in times])
+    return [parse_time_item(item, layer) for item in times]
 
 
 def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
@@ -304,10 +303,7 @@ class GetParameters:
         self.version = get_arg(args, "version", "WMS version",
                                permitted_values=['1.1.1', '1.3.0'])
         # CRS
-        if self.version == '1.1.1':
-            crs_arg = "srs"
-        else:
-            crs_arg = "crs"
+        crs_arg = "srs" if self.version == '1.1.1' else "crs"
         self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
                              errcode=WMSException.INVALID_CRS,
                              permitted_values=list(self.cfg.published_CRSs))
@@ -456,10 +452,7 @@ class GetFeatureInfoParameters(GetParameters):
                               errcode=WMSException.INVALID_FORMAT,
                               permitted_values=["application/json", "text/html"])
         # Point coords
-        if self.version == "1.1.1":
-            coords = ["x", "y"]
-        else:
-            coords = ["i", "j"]
+        coords = ["x", "y"] if self.version == "1.1.1" else ["i", "j"]
         i = args.get(coords[0])
         j = args.get(coords[1])
         if i is None:

@@ -38,7 +38,7 @@ def deepupdate(target: dict[str, Any], src: dict[str, Any]) -> None:
                 if not src[k]:
                     # Empty list - replace target list
                     target[k] = []
-                elif isinstance(src[k][0], int) or isinstance(src[k][0], float):
+                elif isinstance(src[k][0], (int, float)):
                     # Array of numbers or floats - replace target list
                     target[k] = src[k]
                 else:

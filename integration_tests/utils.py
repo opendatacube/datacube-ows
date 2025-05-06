@@ -35,10 +35,7 @@ class WCS20Extent:
         first_time: bool = False,
         multi_time: bool = False,
     ):
-        if crs is None or crs == self.native_crs:
-            bbox = self.native_bbox()
-        else:
-            bbox = self.bbox_crs(crs)
+        bbox = self.native_bbox() if crs is None or crs == self.native_crs else self.bbox_crs(crs)
 
         bbox = self.subset_bbox(
             bbox, xstart=xstart, xwidth=xwidth, ystart=ystart, ywidth=ywidth
@@ -106,10 +103,7 @@ def geom_from_bbox(bbox, crs: str = "EPSG:4326") -> Geometry:
 def simplify_geom(geom_in, crs: str = "EPSG:4326") -> Geometry:
     geom = geom_in
     # Pick biggest polygon from multipolygon
-    if geom.geom_type == "MultiPolygon":
-        geom = max(geom.geom.geoms, key=lambda x: x.area)
-    else:
-        geom = geom.geom
+    geom = max(geom.geom.geoms, key=lambda x: x.area) if geom.geom_type == "MultiPolygon" else geom.geom
     # Triangulate
     rawtriangles = list(triangulate(geom))
     triangles = list(
@@ -295,10 +289,7 @@ class ODCExtent:
             time_strs = (times[0].strftime("%Y-%m-%d"),)
         else:
             time_strs = (times[0].strftime("%Y-%m-%d"), times[-1].strftime("%Y-%m-%d"))
-        if crs == "EPSG:4326":
-            crs_extent = extent
-        else:
-            crs_extent = extent.to_crs(crs)
+        crs_extent = extent if crs == "EPSG:4326" else extent.to_crs(crs)
         crs_bbox = crs_extent.boundingbox
         return {
             "bbox": f"{min(crs_bbox.left, crs_bbox.right)},{min(crs_bbox.top, crs_bbox.bottom)},"
@@ -321,10 +312,7 @@ class ODCExtent:
                 times[0].strftime("%Y-%m-%d"),
                 times[-1].strftime("%Y-%m-%d"),
             )
-        if crs == "EPSG:4326":
-            crs_extent = extent
-        else:
-            crs_extent = extent.to_crs(crs)
+        crs_extent = extent if crs == "EPSG:4326" else extent.to_crs(crs)
         crs_bbox = crs_extent.boundingbox
         return (
             (
@@ -351,10 +339,7 @@ class ODCExtent:
             time_sub = f'time("{times[0].strftime("%Y-%m-%d")}")'
         else:
             time_sub = f'time("{times[0].strftime("%Y-%m-%d")}","{times[-1].strftime("%Y-%m-%d")}")'
-        if crs == "EPSG:4326":
-            crs_extent = extent
-        else:
-            crs_extent = extent.to_crs(crs)
+        crs_extent = extent if crs == "EPSG:4326" else extent.to_crs(crs)
         crs_bbox = crs_extent.boundingbox
         return (
             f"x({min(crs_bbox.left, crs_bbox.right)},{max(crs_bbox.left, crs_bbox.right)})",
