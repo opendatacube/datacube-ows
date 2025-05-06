@@ -44,7 +44,7 @@ install_requirements = [
 test_requirements = [
     'pytest', 'pytest_cov', 'pytest_localserver',
     'owslib>0.29.2',
-    'pytest_mock', 'pep8',
+    'pytest_mock',
     'pytest-helpers-namespace', 'flask-cors',
     'fsspec',
 ]
