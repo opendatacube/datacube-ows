@@ -80,7 +80,6 @@ Linting
 
     ruff check
     isort --check --diff **/*.py
-    autopep8  -r  --diff . --select F401,E201,E202,E203,E502,E241,E225,E306,E231,E226,E123,F811
 
 
 Configuration and Environment
