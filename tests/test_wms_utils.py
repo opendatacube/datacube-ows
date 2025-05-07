@@ -7,13 +7,12 @@
 import datetime
 from unittest.mock import MagicMock
 
-import pytest
-from odc.geo import CRS
-
 import datacube_ows.wms_utils
+import pytest
+from datacube_ows.index import CoordRange, LayerExtent
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import TimeRes
-from datacube_ows.index import LayerExtent, CoordRange
+from odc.geo import CRS
 
 
 def test_parse_time_delta() -> None:

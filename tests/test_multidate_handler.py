@@ -6,7 +6,6 @@
 
 import numpy as np
 import pytest
-
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.styles.base import StyleDefBase
 

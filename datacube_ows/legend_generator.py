@@ -9,6 +9,7 @@ import logging
 
 import matplotlib
 import numpy as np
+
 # from flask import make_response
 from PIL import Image
 

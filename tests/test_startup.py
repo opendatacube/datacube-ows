@@ -14,8 +14,7 @@ import pytest
 
 
 def test_fake_creds(monkeypatch) -> None:
-    from datacube_ows.startup_utils import (CredentialManager,
-                                            initialise_aws_credentials)
+    from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "")
@@ -35,9 +34,11 @@ def test_fake_creds(monkeypatch) -> None:
 
 
 def test_renewable_creds(monkeypatch) -> None:
-    from datacube_ows.startup_utils import (CredentialManager,
-                                            RefreshableCredentials,
-                                            initialise_aws_credentials)
+    from datacube_ows.startup_utils import (
+        CredentialManager,
+        RefreshableCredentials,
+        initialise_aws_credentials,
+    )
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "")
@@ -56,8 +57,7 @@ def test_renewable_creds(monkeypatch) -> None:
 
 
 def test_s3_endpoint_default(monkeypatch) -> None:
-    from datacube_ows.startup_utils import (CredentialManager,
-                                            initialise_aws_credentials)
+    from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")

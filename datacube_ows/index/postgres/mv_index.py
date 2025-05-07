@@ -6,10 +6,10 @@
 
 import datetime
 import json
+from collections.abc import Iterable
 from enum import Enum
 from types import UnionType
 from typing import cast
-from collections.abc import Iterable
 from uuid import UUID as UUID_
 
 import pytz
@@ -18,8 +18,7 @@ from datacube.model import Dataset, Product
 from geoalchemy2 import Geometry
 from odc.geo.geom import Geometry as ODCGeom
 from psycopg2.extras import DateTimeTZRange
-from sqlalchemy import (SMALLINT, Column, MetaData, Table, and_, or_, select,
-                        text)
+from sqlalchemy import SMALLINT, Column, MetaData, Table, and_, or_, select, text
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.engine import Row
 from sqlalchemy.engine.base import Engine

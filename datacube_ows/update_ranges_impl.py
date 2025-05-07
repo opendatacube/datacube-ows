@@ -14,9 +14,8 @@ import sqlalchemy
 from datacube import Datacube
 
 from datacube_ows import __version__
-from datacube_ows.ows_configuration import get_config
-from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.index import AbortRun, LayerSignature, ows_index
+from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.startup_utils import initialise_debugging
 
 

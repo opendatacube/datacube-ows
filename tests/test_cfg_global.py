@@ -5,9 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-
 from datacube_ows.config_utils import ConfigException
-from datacube_ows.ows_configuration import OWSConfig, ContactInfo
+from datacube_ows.ows_configuration import ContactInfo, OWSConfig
 
 
 def test_minimal_global(monkeypatch, minimal_global_raw_cfg, minimal_dc) -> None:

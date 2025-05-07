@@ -13,8 +13,8 @@ import numpy
 import xarray
 from affine import Affine
 from deprecat import deprecat
-from odc.geo.geobox import GeoBox
 from odc.geo.crs import CRS
+from odc.geo.geobox import GeoBox
 from PIL import Image
 
 TYPE_CHECKING = False

@@ -7,7 +7,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.ows_configuration import AttributionCfg, SuppURL
 

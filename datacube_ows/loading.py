@@ -7,9 +7,8 @@
 import datetime
 import logging
 from collections import OrderedDict
-from typing import cast
-from typing_extensions import override
 from collections.abc import Iterable, Mapping
+from typing import cast
 from uuid import UUID
 
 import datacube
@@ -21,6 +20,7 @@ from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import Geometry
 from odc.geo.warp import Resampling
+from typing_extensions import override
 
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import OWSNamedLayer

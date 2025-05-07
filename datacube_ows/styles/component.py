@@ -4,15 +4,14 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, cast
-from typing_extensions import override
 from collections.abc import Callable, Hashable
+from typing import Any, cast
 
 import numpy as np
+from typing_extensions import override
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import (CFG_DICT, ConfigException,
-                                       FunctionWrapper)
+from datacube_ows.config_utils import CFG_DICT, ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 
 TYPE_CHECKING = False

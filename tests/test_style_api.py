@@ -7,16 +7,19 @@
 from decimal import Decimal
 
 import pytest
-
 from datacube_ows.config_utils import ConfigException
-
 from datacube_ows.styles.api import (
-                                     StandaloneStyle, apply_ows_style,
-                                     apply_ows_style_cfg, create_geobox,
-                                     generate_ows_legend_style,
-                                     generate_ows_legend_style_cfg,
-                                     plot_image, plot_image_with_style, plot_image_with_style_cfg,
-                                     xarray_image_as_png)
+    StandaloneStyle,
+    apply_ows_style,
+    apply_ows_style_cfg,
+    create_geobox,
+    generate_ows_legend_style,
+    generate_ows_legend_style_cfg,
+    plot_image,
+    plot_image_with_style,
+    plot_image_with_style_cfg,
+    xarray_image_as_png,
+)
 
 
 def test_indirect_imports() -> None:

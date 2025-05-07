@@ -4,11 +4,11 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import math
 from urllib import request
 
 import pytest
 import requests
-import math
 from lxml import etree
 from owslib.wms import WebMapService
 

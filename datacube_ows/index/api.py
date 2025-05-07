@@ -6,14 +6,14 @@
 
 import dataclasses
 from abc import ABC, abstractmethod
-from datetime import datetime, date
-from typing import NamedTuple
 from collections.abc import Iterable
+from datetime import date, datetime
+from typing import NamedTuple
 from uuid import UUID
 
 from datacube import Datacube
 from datacube.index.abstract import AbstractIndex
-from datacube.model import Product, Dataset
+from datacube.model import Dataset, Product
 from odc.geo.crs import CRS
 from odc.geo.geom import Geometry, polygon
 

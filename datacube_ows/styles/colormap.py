@@ -6,22 +6,26 @@
 
 import io
 import logging
+from collections.abc import Callable, MutableMapping
 from datetime import datetime
 from typing import Union, cast
-from typing_extensions import override
-from collections.abc import Callable, MutableMapping
 
 import numpy
 import xarray
 from datacube.utils.masking import make_mask
 from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
-from matplotlib.colors import to_rgba, to_hex
+from matplotlib.colors import to_hex, to_rgba
+from typing_extensions import override
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import (CFG_DICT, AbstractMaskRule,
-                                       ConfigException, FlagSpec,
-                                       OWSMetadataConfig)
+from datacube_ows.config_utils import (
+    CFG_DICT,
+    AbstractMaskRule,
+    ConfigException,
+    FlagSpec,
+    OWSMetadataConfig,
+)
 from datacube_ows.styles.base import StyleDefBase
 
 TYPE_CHECKING = False

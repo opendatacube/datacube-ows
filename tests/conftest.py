@@ -6,11 +6,11 @@
 
 import datetime
 from unittest.mock import MagicMock
-from datacube.cfg import ODCConfig
 
 import numpy as np
 import pytest
 import xarray as xr
+from datacube.cfg import ODCConfig
 
 from tests.utils import coords, dim1_da, dim1_da_time, dummy_da
 
@@ -249,7 +249,7 @@ def minimal_multiprod_cfg():
 
 @pytest.fixture
 def mock_range():
-    from datacube_ows.index import LayerExtent, CoordRange
+    from datacube_ows.index import CoordRange, LayerExtent
     times = [datetime.date(2010, 1, 1), datetime.date(2010, 1, 2), datetime.date(2010, 1, 3)]
     return LayerExtent(
         lat=CoordRange(-0.1, 0.1),

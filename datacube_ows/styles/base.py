@@ -6,25 +6,33 @@
 
 import io
 import logging
-from typing import Any, Optional, Union, cast
-from typing_extensions import override
 from collections.abc import Iterable, Mapping, MutableMapping, Sized
+from typing import Any, Optional, Union, cast
 
 import datacube.model
 import numpy as np
 import xarray as xr
 from flask_babel import get_locale
 from PIL import Image
+from typing_extensions import override
 
 import datacube_ows.band_utils
-from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, AbstractMaskRule,
-                                       ConfigException, FlagBand, F,
-                                       FlagProductBands, FunctionWrapper,
-                                       OWSConfigEntry, OWSEntryNotFound,
-                                       OWSExtensibleConfigEntry,
-                                       OWSFlagBandStandalone,
-                                       OWSIndexedConfigEntry,
-                                       OWSMetadataConfig)
+from datacube_ows.config_utils import (
+    CFG_DICT,
+    RAW_CFG,
+    AbstractMaskRule,
+    ConfigException,
+    F,
+    FlagBand,
+    FlagProductBands,
+    FunctionWrapper,
+    OWSConfigEntry,
+    OWSEntryNotFound,
+    OWSExtensibleConfigEntry,
+    OWSFlagBandStandalone,
+    OWSIndexedConfigEntry,
+    OWSMetadataConfig,
+)
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 

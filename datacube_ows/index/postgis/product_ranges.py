@@ -6,21 +6,20 @@
 
 import logging
 import math
-from datetime import date, datetime, timezone
 from collections.abc import Callable
-import click
+from datetime import date, datetime, timezone
 
+import click
 import datacube
 import odc.geo
 import sqlalchemy.exc
+from odc.geo.crs import CRS
 from psycopg2.extras import Json
 from sqlalchemy import text
 
-from odc.geo.crs import CRS
-
+from datacube_ows.index.api import CoordRange, LayerExtent, LayerSignature
 from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.utils import get_sqlconn
-from datacube_ows.index.api import CoordRange, LayerSignature, LayerExtent
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 

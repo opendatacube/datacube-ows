@@ -2,6 +2,7 @@
 #
 # TODO: Would ideally use stac-to-dc but it hasn't been migrated to datacube-1.9 yet.
 import fileinput
+
 import yaml
 from datacube import Datacube
 from datacube.index.hl import Doc2Dataset

@@ -6,8 +6,7 @@
 
 from typing import cast
 
-from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
-                                       OWSConfigEntry)
+from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException, OWSConfigEntry
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:

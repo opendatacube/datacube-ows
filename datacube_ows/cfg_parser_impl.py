@@ -18,8 +18,13 @@ from deepdiff import DeepDiff
 
 from datacube_ows import __version__
 from datacube_ows.config_utils import ConfigException
-from datacube_ows.ows_configuration import (OWSConfig, OWSFolder, OWSLayer,
-                                            OWSNamedLayer, read_config)
+from datacube_ows.ows_configuration import (
+    OWSConfig,
+    OWSFolder,
+    OWSLayer,
+    OWSNamedLayer,
+    read_config,
+)
 
 
 @click.group(invoke_without_command=True)
