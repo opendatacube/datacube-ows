@@ -6,8 +6,11 @@
 
 from flask import render_template
 
-from datacube_ows.http_utils import (cache_control_headers,
-                                     get_service_base_url, json_response)
+from datacube_ows.http_utils import (
+    cache_control_headers,
+    get_service_base_url,
+    json_response,
+)
 from datacube_ows.ogc_exceptions import WCS1Exception
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.query_profiler import QueryProfiler

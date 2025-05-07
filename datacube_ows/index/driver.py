@@ -9,7 +9,6 @@ from typing import Optional
 
 from datacube.drivers.driver_cache import load_drivers
 
-
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.index.api import OWSAbstractIndexDriver

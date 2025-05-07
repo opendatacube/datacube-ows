@@ -8,7 +8,6 @@ from datetime import datetime
 
 import pytest
 import pytz
-
 from datacube_ows.ows_configuration import TimeRes
 
 

@@ -7,22 +7,26 @@
 import io
 import logging
 from collections import defaultdict
+from collections.abc import Hashable, Iterable, MutableMapping
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
 from typing import Any, Union, cast
-from typing_extensions import override
-from collections.abc import Hashable, Iterable, MutableMapping
 
 import matplotlib
 import numpy
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, to_rgba
 from numpy import ubyte
+from typing_extensions import override
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import (CFG_DICT, ConfigException,
-                                       FunctionWrapper, OWSMetadataConfig)
+from datacube_ows.config_utils import (
+    CFG_DICT,
+    ConfigException,
+    FunctionWrapper,
+    OWSMetadataConfig,
+)
 from datacube_ows.styles.base import StyleDefBase
 from datacube_ows.styles.expression import Expression
 

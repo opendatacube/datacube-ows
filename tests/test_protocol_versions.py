@@ -4,9 +4,8 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import pytest
-
 import datacube_ows.protocol_versions
+import pytest
 
 
 class DummyException1(Exception):

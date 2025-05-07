@@ -8,11 +8,11 @@ from urllib import request
 
 import pytest
 import requests
+from datacube_ows.ows_configuration import OWSConfig, get_config
 from lxml import etree
 from owslib.util import ServiceException
 from owslib.wcs import WebCoverageService
 
-from datacube_ows.ows_configuration import OWSConfig, get_config
 from integration_tests.utils import ODCExtent
 
 

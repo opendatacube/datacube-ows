@@ -46,7 +46,6 @@ def datasets_for_sorting():
 
 def test_group_by_stat(datasets_for_sorting) -> None:
     from datacube import Datacube
-
     from datacube_ows.utils import group_by_begin_datetime
 
     gby = group_by_begin_datetime()
@@ -66,7 +65,6 @@ def test_group_by_stat(datasets_for_sorting) -> None:
 
 def test_group_by_solar(datasets_for_sorting) -> None:
     from datacube import Datacube
-
     from datacube_ows.utils import group_by_solar
 
     gby = group_by_solar()
@@ -87,7 +85,6 @@ def test_group_by_solar(datasets_for_sorting) -> None:
 
 def test_group_by_mosaic(datasets_for_sorting) -> None:
     from datacube import Datacube
-
     from datacube_ows.utils import group_by_mosaic
 
     gby = group_by_mosaic()

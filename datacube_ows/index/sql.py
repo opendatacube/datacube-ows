@@ -5,13 +5,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import importlib
+import re
+
 import click
 import datacube.cfg
 import psycopg2
-import re
 import sqlalchemy
-
 from datacube import Datacube
+
 from datacube_ows.index import AbortRun
 
 

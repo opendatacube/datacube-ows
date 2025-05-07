@@ -8,7 +8,6 @@ import os
 import sys
 
 import pytest
-
 from datacube_ows.config_utils import ConfigException, get_file_loc
 from datacube_ows.ows_configuration import read_config
 

@@ -4,7 +4,6 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-from .api import ows_index, AbortRun, CoordRange, LayerSignature, LayerExtent
-
+from .api import AbortRun, CoordRange, LayerExtent, LayerSignature, ows_index
 
 __all__ = ["ows_index", "AbortRun", "CoordRange", "LayerSignature", "LayerExtent"]

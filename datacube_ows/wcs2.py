@@ -13,13 +13,15 @@ from ows.gml import Grid, IrregularAxis, RegularAxis, SpatioTemporalType
 from ows.swe import Field
 from ows.wcs import CoverageDescription, CoverageSummary, ServiceCapabilities
 from ows.wcs.v20 import encoders as encoders_v20
-from ows.wcs.v20.decoders import (kvp_decode_describe_coverage,
-                                  kvp_decode_get_coverage)
+from ows.wcs.v20.decoders import kvp_decode_describe_coverage, kvp_decode_get_coverage
 from ows.wcs.v21 import encoders as encoders_v21
 
-from datacube_ows.http_utils import (cache_control_headers,
-                                     get_service_base_url, json_response,
-                                     resp_headers)
+from datacube_ows.http_utils import (
+    cache_control_headers,
+    get_service_base_url,
+    json_response,
+    resp_headers,
+)
 from datacube_ows.ogc_exceptions import WCS2Exception
 from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.query_profiler import QueryProfiler

@@ -6,7 +6,6 @@
 
 import math
 from datetime import datetime, timezone
-from typing_extensions import override
 
 import numpy
 import regex as re
@@ -14,11 +13,12 @@ from affine import Affine
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
-from odc.geo.crs import CRS
 from odc.geo import geom
+from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from pytz import utc
 from rasterio.warp import Resampling
+from typing_extensions import override
 
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.ogc_exceptions import WMSException
@@ -28,7 +28,6 @@ from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef, StyleDefBase
 from datacube_ows.styles.expression import ExpressionException
 from datacube_ows.utils import default_to_utc, find_matching_date
-
 
 RESAMPLING_METHODS = {
     'nearest': Resampling.nearest,

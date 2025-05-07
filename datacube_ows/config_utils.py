@@ -8,11 +8,10 @@ import contextlib
 import json
 import logging
 import os
+from collections.abc import Callable, Iterable, Sequence
 from importlib import import_module
 from itertools import chain
 from typing import Any, Optional, cast
-from typing_extensions import override
-from collections.abc import Callable, Iterable, Sequence
 from urllib.parse import urlparse
 
 import fsspec
@@ -20,6 +19,7 @@ from babel.messages import Catalog, Message
 from datacube.model import Product
 from datacube.utils.masking import make_mask
 from flask_babel import gettext as _
+from typing_extensions import override
 from xarray import DataArray
 
 from datacube_ows.config_toolkit import deepinherit

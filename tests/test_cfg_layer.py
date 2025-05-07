@@ -9,11 +9,10 @@ import math
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from datacube_ows.config_utils import ConfigException
+from datacube_ows.index import CoordRange, LayerExtent
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer
 from datacube_ows.resource_limits import ResourceLimited
-from datacube_ows.index import LayerExtent, CoordRange
 
 
 def test_missing_title(minimal_global_cfg) -> None:

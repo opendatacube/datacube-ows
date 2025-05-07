@@ -4,11 +4,10 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import pytest
-from odc.geo import CRS
-
 import datacube_ows.resource_limits
+import pytest
 from datacube_ows.ogc_utils import create_geobox
+from odc.geo import CRS
 
 
 def test_request_scale() -> None:

@@ -17,41 +17,49 @@ import json
 import logging
 import math
 import os
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from enum import Enum
 from importlib import import_module
 from typing import Any, Optional, Union, cast
-from typing_extensions import override
-from collections.abc import Iterable
 
 import numpy
 from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po
 from datacube import Datacube
 from datacube.api.query import GroupBy
-from datacube.model import Measurement, Product
 from datacube.cfg import ODCConfig, ODCEnvironment
+from datacube.model import Measurement, Product
 from odc.geo import CRS
 from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
+from typing_extensions import override
 
-from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
-                                       F, FlagProductBands, FunctionWrapper,
-                                       ODCInitException, OWSConfigEntry,
-                                       OWSEntryNotFound, OWSExtensibleConfigEntry,
-                                       OWSFlagBand, OWSMetadataConfig,
-                                       cfg_expand, get_file_loc,
-                                       import_python_obj, load_json_obj)
+from datacube_ows.config_utils import (
+    CFG_DICT,
+    RAW_CFG,
+    ConfigException,
+    F,
+    FlagProductBands,
+    FunctionWrapper,
+    ODCInitException,
+    OWSConfigEntry,
+    OWSEntryNotFound,
+    OWSExtensibleConfigEntry,
+    OWSFlagBand,
+    OWSMetadataConfig,
+    cfg_expand,
+    get_file_loc,
+    import_python_obj,
+    load_json_obj,
+)
 from datacube_ows.index.api import OWSAbstractIndex, ows_index
 from datacube_ows.ogc_utils import create_geobox
-from datacube_ows.resource_limits import (OWSResourceManagementRules,
-                                          parse_cache_age)
+from datacube_ows.resource_limits import OWSResourceManagementRules, parse_cache_age
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.time_utils import local_solar_date_range
-from datacube_ows.utils import (group_by_begin_datetime, group_by_mosaic,
-                                group_by_solar)
+from datacube_ows.utils import group_by_begin_datetime, group_by_mosaic, group_by_solar
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:

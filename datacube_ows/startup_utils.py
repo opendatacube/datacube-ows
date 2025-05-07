@@ -204,8 +204,9 @@ class FakeMetrics:
 def initialise_prometheus(app, log: Logger | None = None):
     # Prometheus
     if os.environ.get("PROMETHEUS_MULTIPROC_DIR", False):
-        from prometheus_flask_exporter.multiprocess import \
-            GunicornInternalPrometheusMetrics
+        from prometheus_flask_exporter.multiprocess import (
+            GunicornInternalPrometheusMetrics,
+        )
         metrics = GunicornInternalPrometheusMetrics(app, group_by="endpoint")
         if log:
             log.info("Prometheus metrics enabled")

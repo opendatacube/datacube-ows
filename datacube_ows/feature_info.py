@@ -6,30 +6,28 @@
 
 import logging
 import re
+from collections.abc import Iterable
 from datetime import datetime
 from itertools import chain
 from typing import cast
-from collections.abc import Iterable
 
 import numpy
 import xarray
 from datacube.model import Dataset
 from datacube.utils.masking import mask_to_dict
-from odc.geo.crs import CRS
 from odc.geo import geom
+from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException
-from datacube_ows.http_utils import (FlaskResponse, html_json_response,
-                                     json_response)
+from datacube_ows.http_utils import FlaskResponse, html_json_response, json_response
 from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.ows_configuration import OWSNamedLayer, get_config
 from datacube_ows.styles import StyleDef
 from datacube_ows.time_utils import dataset_center_time
 from datacube_ows.utils import log_call
-from datacube_ows.wms_utils import (GetFeatureInfoParameters,
-                                    img_coords_to_geopoint)
+from datacube_ows.wms_utils import GetFeatureInfoParameters, img_coords_to_geopoint
 
 
 @log_call

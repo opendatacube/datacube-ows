@@ -5,8 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from typing import Any, cast
 from collections.abc import Iterable, Mapping
+from typing import Any, cast
 
 import affine
 import numpy as np
@@ -14,8 +14,7 @@ from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import polygon
 
-from datacube_ows.config_utils import (CFG_DICT, RAW_CFG, ConfigException,
-                                       OWSConfigEntry)
+from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException, OWSConfigEntry
 from datacube_ows.http_utils import cache_control_headers
 from datacube_ows.ogc_utils import create_geobox
 
