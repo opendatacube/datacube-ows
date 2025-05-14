@@ -1,5 +1,5 @@
 # Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3 AS builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.11.0 AS builder
 
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
@@ -26,7 +26,7 @@ RUN python3 -m pip --disable-pip-version-check -q wheel --no-binary psycopg2 psy
           python3 -m pip --disable-pip-version-check -q wheel --no-binary pyproj pyproj)
 
 # Should match builder base.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.11.0
 
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
