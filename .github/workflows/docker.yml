@@ -1,11 +1,10 @@
 ---
-name: Build Docker Image
+name: Build Docker Image and push to GHCR
 
 on:
   push:
     branches:
       - develop
-      - develop-1.9
     paths:
       - "**"
       - '!docs/**'
@@ -14,47 +13,44 @@ on:
       - '!datacube_ows/__init__.py'
 
   release:
-    types: [created, edited, published]
+    types: [published]
 
 env:
-  ORG: opendatacube
-  IMAGE: ows
+  REGISTRY: ghcr.io
+  IMAGE_NAME: opendatacube/ows
 
-# When a PR is updated, cancel the jobs from the previous version. Merges
-# do not define head_ref, so use run_id to never cancel those jobs.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 
 jobs:
-  docker:
+  build-and-push-image:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' || github.event_name == 'release'
+
+    permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: read    # This is required for actions/checkout
+      packages: write  # This is required for pushing to ghcr
 
     steps:
-      - name: Login to DockerHub
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
         with:
-          fetch-depth: 0
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Export Secrets to enviroment
-        run: |
-          echo "${{ secrets.DockerPassword }}" | docker login -u "${{ secrets.DockerUser }}" --password-stdin
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      # Tag image if this is a tagged build
-      # if not use a pseudo tag based on current tag,
-      # number of commits since last tag and git hash
-      - name: Push to DockerHub (master branch or tagged release only)
-        if: github.ref == 'refs/heads/master' || github.event_name == 'release'
-        run: |
-
-          # build local docker image
-          docker build -t ${ORG}/${IMAGE}:latest .
-
-          # get version tag
-          tag="$(docker run ${ORG}/${IMAGE}:latest datacube-ows-update --version | grep 'version' | sed 's/Open Data Cube Open Web Services (datacube-ows) version //' | sed 's/+/\_/g')"
-
-          # tag and push images
-          docker tag ${ORG}/${IMAGE}:latest ${ORG}/${IMAGE}:${tag}
-          docker push ${ORG}/${IMAGE}:latest
-          docker push ${ORG}/${IMAGE}:${tag}
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
