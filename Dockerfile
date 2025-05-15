@@ -1,6 +1,10 @@
 # Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3 AS builder
 
+LABEL org.opencontainers.image.soure=https://github.com/opendatacube/datacube-ows
+LABEL org.opencontainers.image.description="Datacube OWS"
+LABEL org.opencontainers.image.licences="Apache-2.0"
+
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
 
