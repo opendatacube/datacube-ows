@@ -52,7 +52,15 @@ Known CRS Limitations
    cause issues with the legacy postgres driver.
 
 These are fundamental limitation of the way OWS works with the postgres ODC index driver.
-These limitations will be addressed in v1.9.0, but only for the new ODC postgis index driver.
+These limitations are addressed in v1.9.0, but only for the new ODC postgis index driver.
+
+Note for Developers
+-------------------
+
+This repository is currently running the TypeChangeBot as part of an academic research project.  Developers making
+changes to type hints will be prompted to fill out a short survey about the reasons for the annotation
+changes. Participation is voluntary. More information about the project can be found
+`here <https://cse-rdyer-05.unl.edu/tcbot/>`__
 
 Community
 ---------
