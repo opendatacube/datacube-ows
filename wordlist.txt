@@ -390,6 +390,7 @@ toctree
 toolchain
 tox
 txt
+TypeChangeBot
 ubuntu
 uint
 unhandled
@@ -402,7 +403,7 @@ urls
 usgs
 utc
 utf
-util
+utilZZ
 utils
 ux
 vaguries
