@@ -403,7 +403,7 @@ urls
 usgs
 utc
 utf
-utilZZ
+util
 utils
 ux
 vaguries
