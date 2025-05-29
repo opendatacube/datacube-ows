@@ -9,7 +9,7 @@
 from setuptools import find_packages, setup
 
 install_requirements = [
-    'datacube[performance,s3]>=1.9.2',
+    'datacube[performance,s3]>=1.9.4',
     'flask',
     'requests',
     'affine',
