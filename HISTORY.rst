@@ -7,6 +7,16 @@ History
 
 Datacube-ows version 1.9.x indicates that it is designed work with datacube-core versions 1.9.x.
 
+1.9.2 (2025-05-29)
+------------------
+
+* Type-hint cleanups (#1148, #1149, #1151)
+* CI improvements (#1152, #1153, #1156, #1162, #1161, #1167)
+* dependency updates and cleanups (#1154, #1163, #1169, #1166, #1165, #1168, #1172, #1173, #1174)
+* Replace dockerhub push with GHCR. (#1170)
+* Other misc cleanup (#1150, #1155, #1157, #1160, #1159, #1164)
+* Prepare for 1.9.2 release (#1175)
+
 1.9.1 (2025-04-16)
 ------------------
 

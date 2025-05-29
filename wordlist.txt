@@ -138,6 +138,7 @@ dir
 dns
 docstrings
 dockerfile
+dockerhub
 dsn
 dtype
 eae
@@ -203,6 +204,7 @@ gettile
 GetTile
 gh
 GHA
+GHCR
 github
 githubusercontent
 googlemap
