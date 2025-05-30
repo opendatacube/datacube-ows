@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone
 
 import numpy
 import regex as re
@@ -169,11 +169,11 @@ def get_arg(args, argname: str, verbose_name: str, lower: bool = False,
     return fmt
 
 
-def get_times_for_layer(layer: OWSNamedLayer) -> list[datetime]:
+def get_times_for_layer(layer: OWSNamedLayer) -> list[datetime | date]:
     return layer.ranges.times
 
 
-def get_times(args, layer: OWSNamedLayer) -> list[datetime]:
+def get_times(args, layer: OWSNamedLayer) -> list[datetime | date]:
     # Time parameter
     times_raw = args.get('time', '')
     times = times_raw.split(',')
@@ -181,7 +181,7 @@ def get_times(args, layer: OWSNamedLayer) -> list[datetime]:
     return [parse_time_item(item, layer) for item in times]
 
 
-def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
+def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
     times = item.split('/')
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
@@ -214,8 +214,7 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
         return product_times[-1]
     try:
         time = parse(times[0])
-        if not layer.time_resolution.is_subday():
-            time = time.date()  # type: ignore[assignment]
+        day = time.date()
     except ValueError:
         raise WMSException(
             f"Time dimension value '{times[0]}' not valid for this layer",
@@ -224,35 +223,38 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime:
 
     # Validate time parameter for requested layer.
     if layer.regular_time_axis:
+        # Note regular time axis and time resolution are effectively exclusive
         start, end = layer.time_range()
-        if time < start:
+        if day < start:
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-        if time > end:
+        if day > end:
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-        if (time - start).days % layer.time_axis_interval != 0:
+        if (day - start).days % layer.time_axis_interval != 0:
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
+        return day
     elif layer.time_resolution.is_subday():
         if not find_matching_date(time, layer.ranges.times):
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
+        return time
     else:
-        if time not in layer.ranges.time_set:
+        if day not in layer.ranges.time_set:
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-    return time
+        return day
 
 
 def parse_time_delta(delta_str):
