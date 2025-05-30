@@ -1048,4 +1048,4 @@ def get_function(func: F | str) -> F:
         except (ImportError, ModuleNotFoundError, ValueError, AttributeError):
             raise ConfigException(f"Could not import python object: {func}") from None
         assert callable(func)
-    return cast(F, func)
+    return func
