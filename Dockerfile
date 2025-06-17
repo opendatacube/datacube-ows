@@ -1,5 +1,7 @@
 # Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3 AS builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3 AS base
+
+FROM base AS builder
 
 LABEL org.opencontainers.image.source=https://github.com/opendatacube/datacube-ows
 LABEL org.opencontainers.image.description="Datacube OWS"
@@ -29,8 +31,7 @@ RUN python3 -m pip --disable-pip-version-check -q wheel --no-binary psycopg2 psy
     && ([ "$ENVIRONMENT" = "deployment" ] || \
           python3 -m pip --disable-pip-version-check -q wheel --no-binary pyproj pyproj)
 
-# Should match builder base.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3
+FROM base
 
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
