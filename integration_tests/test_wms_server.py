@@ -115,9 +115,10 @@ def test_wms_server(ows_server) -> None:
 
     assert wms.identification.type == "WMS"
 
-    # Ensure that we have at least some layers available
-    contents = list(wms.contents)
-    assert contents
+    # Ensure that we have expected layers
+    assert "s2_ard_granule_nbar_t" in wms.contents
+    # Ensure that bad layers are hidden
+    assert 'spaghetti_gateaux' not in wms.contents
 
 
 def test_wms_getmap(ows_server) -> None:

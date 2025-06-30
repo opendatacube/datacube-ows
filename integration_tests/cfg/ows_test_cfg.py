@@ -928,6 +928,41 @@ ows_cfg = {
                             "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
                         },
                         {
+                            "title": "A Broken Layer",
+                            "name": "broken_layer",
+                            "abstract": """Deliberately broken layer - should be silently ignored
+                                        """,
+                            "product_name": "spaghetti_gateaux",
+                            "low_res_product_name": "spaghetti_geteaux_mosaic",
+                            "bands": bands_sentinel2_ard_nbart,
+                            "resource_limits": reslim_for_sentinel2,
+                            "native_crs": "EPSG:3577",
+                            "native_resolution": [10.0, -10.0],
+                            "image_processing": {
+                                "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
+                                "always_fetch_bands": [],
+                                "manual_merge": False,
+                            },
+                            "flags": [
+                                {
+                                    "band": "fmask_alias",
+                                    "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                                    "ignore_time": False,
+                                    "ignore_info_flags": []
+                                },
+                                {
+                                    "band": "land",
+                                    "products": ["geodata_coast_100k", "geodata_coast_100k"],
+                                    "ignore_time": True,
+                                    "ignore_info_flags": []
+                                },
+                            ],
+                            "time_axis": {
+                                "time_interval": 1
+                            },
+                            "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
+                        },
+                        {
                             "inherits": {
                                 "layer": "s2_ard_granule_nbar_t",
                             },
