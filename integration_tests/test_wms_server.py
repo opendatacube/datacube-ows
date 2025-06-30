@@ -5,13 +5,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
+from pathlib import Path
 from urllib import request
 
 import pytest
 import requests
 from lxml import etree
 from owslib.wms import WebMapService
-from pathlib import Path
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
