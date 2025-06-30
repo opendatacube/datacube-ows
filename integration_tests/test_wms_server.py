@@ -11,10 +11,12 @@ import pytest
 import requests
 from lxml import etree
 from owslib.wms import WebMapService
+from pathlib import Path
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
-    with open("wms_xsds/" + name) as xsd_f:
+    path = Path(__file__).resolve().parent.parent / 'wms_xsds' / name
+    with open(path) as xsd_f:
         schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 
