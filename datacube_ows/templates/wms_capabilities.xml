@@ -35,8 +35,8 @@
     {%  endif %}
 {%- endmacro %}
 {% macro render_named_layer(lyr, depth=0) -%}
-    {% if not lyr.hide %}
     {% set lyr_ranges = lyr.ranges %}
+    {% if not lyr.hide %}
     <Layer queryable="1">
         <Name>{{ lyr.name }}</Name>
         <Title>{{ lyr.title }}</Title>

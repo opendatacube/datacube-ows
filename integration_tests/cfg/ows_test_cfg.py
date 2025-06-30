@@ -946,13 +946,13 @@ ows_cfg = {
                             "flags": [
                                 {
                                     "band": "fmask_alias",
-                                    "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
+                                    "product": "spaghetti_gateaux",
                                     "ignore_time": False,
                                     "ignore_info_flags": []
                                 },
                                 {
                                     "band": "land",
-                                    "products": ["geodata_coast_100k", "geodata_coast_100k"],
+                                    "product": "spaghetti_gateaux",
                                     "ignore_time": True,
                                     "ignore_info_flags": []
                                 },
