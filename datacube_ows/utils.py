@@ -98,7 +98,7 @@ def group_by_solar(pnames: list[str] | None = None) -> GroupBy:
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))  # noqa: E731
+        sort_key = lambda ds: (index.get(ds.product.name), base_sort_key(ds))  # noqa: E731
     else:
         sort_key = base_sort_key
     return GroupBy(
@@ -116,7 +116,7 @@ def group_by_mosaic(pnames: list[str] | None = None) -> GroupBy:
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key: Callable[[Dataset], tuple] = lambda ds: (solar_day(ds), index.get(ds.type.name), base_sort_key(ds))  # noqa: E731
+        sort_key: Callable[[Dataset], tuple] = lambda ds: (solar_day(ds), index.get(ds.product.name), base_sort_key(ds))  # noqa: E731
     else:
         sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))  # noqa: E731
     return GroupBy(
