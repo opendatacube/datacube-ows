@@ -35,5 +35,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: igsekor/pyspelling-any@v1.0.4
+      - uses: igsekor/pyspelling-any@v1.0.5
         name: Spellcheck
