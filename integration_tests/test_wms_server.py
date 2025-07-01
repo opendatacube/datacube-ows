@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
+from pathlib import Path
 from urllib import request
 
 import pytest
@@ -14,7 +15,8 @@ from owslib.wms import WebMapService
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
-    with open("wms_xsds/" + name) as xsd_f:
+    path = Path(__file__).resolve().parent.parent / 'wms_xsds' / name
+    with open(path) as xsd_f:
         schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 
@@ -113,9 +115,10 @@ def test_wms_server(ows_server) -> None:
 
     assert wms.identification.type == "WMS"
 
-    # Ensure that we have at least some layers available
-    contents = list(wms.contents)
-    assert contents
+    # Ensure that we have expected layers
+    assert "s2_ard_granule_nbar_t" in wms.contents
+    # Ensure that bad layers are hidden
+    assert 'spaghetti_gateaux' not in wms.contents
 
 
 def test_wms_getmap(ows_server) -> None:
