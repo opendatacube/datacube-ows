@@ -15,7 +15,7 @@ install_requirements = [
     'affine',
     'click',
     'fsspec',
-    'lxml',
+    'lxml<6',
     'deepdiff',
     'importlib_metadata',
     'matplotlib',
