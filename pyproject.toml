@@ -7,6 +7,9 @@ ignore_missing_imports = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 
+[tool.pytest.ini_options]
+console_output_style = "times"
+
 [tool.ruff]
 src = ["datacube_ows", "docs", "tests", "integration_tests"]
 
