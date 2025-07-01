@@ -21,7 +21,7 @@ def minimal_cfg():
 
 
 def test_uniform_crs_url(minimal_cfg) -> None:
-    crs = uniform_crs(minimal_cfg, "http://www.opengis.net/def/crs/EPSG/666")
+    crs = uniform_crs(minimal_cfg, "https://www.opengis.net/def/crs/EPSG/666")
     assert crs == "EPSG:666"
 
 

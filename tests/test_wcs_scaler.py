@@ -28,7 +28,7 @@ def layer_crs_nongeom():
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/3857",
             "alias_of": None,
         },
         "EPSG:4326": {  # WGS-84
@@ -36,7 +36,7 @@ def layer_crs_nongeom():
             "vertical_coord_first": True,
             "horizontal_coord": "longitude",
             "vertical_coord": "latitude",
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/4326",
             "alias_of": None,
         },
         "EPSG:3577": {
@@ -44,7 +44,7 @@ def layer_crs_nongeom():
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/3577",
             "alias_of": None,
         },
         "TEST:CRS": {
@@ -84,7 +84,7 @@ def layer_crs_geom():
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/3857",
             "alias_of": False
         },
         "EPSG:4326": {  # WGS-84
@@ -92,7 +92,7 @@ def layer_crs_geom():
             "vertical_coord_first": True,
             "horizontal_coord": "longitude",
             "vertical_coord": "latitude",
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/4326",
             "alias_of": False
         },
         "EPSG:3577": {
@@ -100,7 +100,7 @@ def layer_crs_geom():
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/3577",
             "alias_of": False
         },
     }

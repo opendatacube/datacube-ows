@@ -18,7 +18,7 @@ from integration_tests.utils import ODCExtent
 
 def get_xsd(name: str) -> etree.XMLSchema:
     # TODO: Get XSD's for different versions
-    xsd_f = request.urlopen("http://schemas.opengis.net/wcs/" + name)
+    xsd_f = request.urlopen("https://schemas.opengis.net/wcs/" + name)
     schema_doc = etree.parse(xsd_f)
 
     return etree.XMLSchema(schema_doc)

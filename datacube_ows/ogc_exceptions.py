@@ -59,13 +59,13 @@ class WMSException(OGCException):
     OPERATION_NOT_SUPPORTED = "OperationNotSupported"
 
     version = "1.3.0"
-    schema_url = "http://schemas.opengis.net/wms/1.3.0/exceptions_1_3_0.xsd"
+    schema_url = "https://schemas.opengis.net/wms/1.3.0/exceptions_1_3_0.xsd"
 
 
 class WMTSException(WMSException):
     INVALID_PARAMETER_VALUE = "InvalidParameterValue"
     version = "1.0.0"
-    schema_url = "http://schemas.opengis.net/ows/1.1.0/owsExceptionReport.xsd"
+    schema_url = "https://schemas.opengis.net/ows/1.1.0/owsExceptionReport.xsd"
 
 
 class WCS1Exception(OGCException):
@@ -74,7 +74,7 @@ class WCS1Exception(OGCException):
     INVALID_PARAMETER_VALUE = "InvalidParameterValue"
 
     version = "1.2.0"
-    schema_url = "http://schemas.opengis.net/wcs/1.0.0/OGC-exception.xsd"
+    schema_url = "https://schemas.opengis.net/wcs/1.0.0/OGC-exception.xsd"
 
 
 class WCS2Exception(OGCException):
@@ -98,7 +98,7 @@ class WCS2Exception(OGCException):
     INVALID_PARAMETER_VALUE = "InvalidParameterValue"
 
     version = "2.0.1"
-    schema_url = "http://schemas.opengis.net/wcs/2.0/wcsAll.xsd"
+    schema_url = "https://schemas.opengis.net/wcs/2.0/wcsAll.xsd"
 
     # pylint: disable=dangerous-default-value
     @override

@@ -27,7 +27,7 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 def uniform_crs(cfg: OWSConfig, crs: str) -> str:
     """Helper function to transform a URL style EPSG definition to an 'EPSG:nnn' one"""
-    if crs.startswith('http://www.opengis.net/def/crs/EPSG/'):
+    if crs.startswith('https://www.opengis.net/def/crs/EPSG/'):
         code = crs.rpartition('/')[-1]
         crs = f'EPSG:{code}'
     elif crs.startswith('urn:ogc:def:crs:EPSG:'):

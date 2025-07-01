@@ -15,8 +15,8 @@ from owslib.wmts import WebMapTileService
 
 def get_xsd(name: str) -> etree.XMLSchema:
     # since this function is only being called by getcapabilities set to wmts/1.0.0
-    # the exception schema is available from http://schemas.opengis.net/ows/1.1.0/
-    xsd_f = request.urlopen("http://schemas.opengis.net/wmts/1.0/" + name)
+    # the exception schema is available from https://schemas.opengis.net/ows/1.1.0/
+    xsd_f = request.urlopen("https://schemas.opengis.net/wmts/1.0/" + name)
     schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 

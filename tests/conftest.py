@@ -130,7 +130,7 @@ def minimal_global_cfg(minimal_dc):
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3857",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/3857",
             "alias_of": None,
         },
         "EPSG:4326": {  # WGS-84
@@ -138,7 +138,7 @@ def minimal_global_cfg(minimal_dc):
             "vertical_coord_first": True,
             "horizontal_coord": "longitude",
             "vertical_coord": "latitude",
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/4326",
             "alias_of": None,
         },
         "EPSG:3577": {
@@ -146,7 +146,7 @@ def minimal_global_cfg(minimal_dc):
             "horizontal_coord": "x",
             "vertical_coord": "y",
             "vertical_coord_first": False,
-            "gml_name": "http://www.opengis.net/def/crs/EPSG/0/3577",
+            "gml_name": "https://www.opengis.net/def/crs/EPSG/0/3577",
             "alias_of": None,
         },
         "TEST:CRS": {

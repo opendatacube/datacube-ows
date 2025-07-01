@@ -1427,7 +1427,7 @@ class OWSConfig(OWSMetadataConfig):
 
         def make_gml_name(name: str) -> str:
             if name.startswith("EPSG:"):
-                return f"http://www.opengis.net/def/crs/EPSG/0/{name[5:]}"
+                return f"https://www.opengis.net/def/crs/EPSG/0/{name[5:]}"
             else:
                 return name
 
