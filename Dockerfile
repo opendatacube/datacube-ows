@@ -1,5 +1,5 @@
 # Note that this is now pinned to a fixed version.  Remember to check for new versions periodically.
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3 AS base
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.11.1 AS base
 
 FROM base AS builder
 
