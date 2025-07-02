@@ -46,8 +46,8 @@ def get_s3_browser_uris(datasets: dict[ProductBandQuery, xarray.DataArray],
                             last_crs = ds.crs
                         else:
                             pt_native = pt
-                        if ds.extent.contains(pt_native):
-                            uris.append(ds.uris)
+                        if ds.uri is not None and ds.extent.contains(pt_native):
+                            uris.append(ds.uris if ds.has_multiple_uris() else [ds.uri])
                     else:
                         uris.append(ds.uris)
             break
