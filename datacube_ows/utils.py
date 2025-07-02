@@ -67,7 +67,7 @@ def group_by_begin_datetime(pnames: list[str] | None = None,
             pn: i
             for i, pn in enumerate(pnames)
         }
-        sort_key = lambda ds: (index.get(ds.type.name), base_sort_key(ds))  # noqa: E731
+        sort_key = lambda ds: (index.get(ds.product.name), base_sort_key(ds))  # noqa: E731
     else:
         sort_key = base_sort_key
     if truncate_dates:
