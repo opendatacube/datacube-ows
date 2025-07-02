@@ -18,7 +18,7 @@ def mock_ds_for_sort(id_: str, st: datetime, ct: datetime, lon: float, prod_name
     ds.center_time = ct
     ds.metadata.lon.begin = lon - 5.0
     ds.metadata.lon.end = lon + 5.0
-    ds.type.name = prod_name
+    ds.product.name = prod_name
     return ds
 
 
