@@ -26,7 +26,6 @@ install_requirements = [
     'Pillow>=10.2.0',
     'Babel',
     'Flask-Babel>3.0.0',   # New API in 3.x, bug in 3.0.0
-    'psycopg2',
     'python_dateutil',
     'pytz',
     'rasterio>=1.3.2',
@@ -47,6 +46,7 @@ test_requirements = [
     'pytest_mock',
     'pytest-helpers-namespace', 'flask-cors',
     'fsspec',
+    'psycopg2',
 ]
 
 dev_requirements = [
@@ -59,11 +59,12 @@ dev_requirements = [
     'types-pytz',
     'types-python-dateutil',
     'types-requests',
+    'psycopg2',
 ]
 
 operational_requirements = [
     "gunicorn>=22.0.0", "gunicorn[gevent]", "gevent", "prometheus_client", "sentry_sdk",
-    "prometheus_flask_exporter", "blinker"
+    "prometheus_flask_exporter", "blinker", 'psycopg2',
 ]
 setup_requirements = ['setuptools_scm', 'setuptools']
 
@@ -72,6 +73,7 @@ extras = {
     "test": test_requirements,
     "ops": operational_requirements,
     "setup": setup_requirements,
+    "postgres": ["psycopg2"],
     "all": dev_requirements + test_requirements + operational_requirements,
 }
 
