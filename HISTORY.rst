@@ -5,7 +5,41 @@ History
 1.9.x Releases
 ==============
 
-Datacube-ows version 1.9.x indicates that it is designed work with datacube-core versions 1.9.x.
+Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
+
+1.9.3 (2025-07-11)
+------------------
+
+Includes bug-fixes and cleanup.
+
+This version of OWS can be installed without psycopg2 (e.g. for installations that only use the rendering API).
+Operational web services will still require psycopg2, which can be installed with e.g. ``pip install datacube-ows[ops]``
+
+## What's Changed
+
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1177
+* build(deps): bump mambaorg/micromamba from 2.1.1 to 2.2.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1179
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1180
+* Update pypi action runner to ubuntu 24.04. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1181
+* Dockerfile: use a single base image by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1182
+* build(deps): bump mambaorg/micromamba from 2.2.0 to 2.3.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1183
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1184
+* Fix GetCaps when some layers are broken by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1185
+* Pin lxml<6 as 6.0.0 seems buggy by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1187
+* build(deps): bump igsekor/pyspelling-any from 1.0.4 to 1.0.5 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1188
+* pytest: output test runtimes by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1186
+* feature_info: fix deprecation warning by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1194
+* CI: mount source directory by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1195
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1191
+* utils: fix deprecation warnings by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1192
+* CI: pin actions by hash by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1197
+* build(deps): bump aquasecurity/trivy-action from 0.31.0 to 0.32.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1198
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1199
+* Make psycopg2 an optional dependency. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1200
+
+Includes contributions from @pjonsson and @SpacemanPaul, with thanks to supporting organisations Geoscience Australia and RISE.
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.2...1.9.3
 
 1.9.2 (2025-05-29)
 ------------------
