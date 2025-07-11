@@ -262,6 +262,7 @@ localhost
 lxml
 micromamba
 mamba
+mambaorg
 matplotlib
 MatPlotLib
 matplotlibrc
