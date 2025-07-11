@@ -59,7 +59,6 @@ dev_requirements = [
     'types-pytz',
     'types-python-dateutil',
     'types-requests',
-    'psycopg2',
 ]
 
 operational_requirements = [
