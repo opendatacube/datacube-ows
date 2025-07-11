@@ -30,6 +30,7 @@ api
 apis
 APIs
 apng
+aquasecurity
 arcgis
 ArcGIS
 arcsec
@@ -78,6 +79,7 @@ ce
 cfb
 cfg
 ci
+Changelog
 christophfriedrich
 cli
 cloudfront
@@ -127,6 +129,7 @@ de
 dea
 deafrica
 dependabot
+deps
 desc
 describecoverage
 DescribeCoverage
@@ -191,6 +194,7 @@ geotiff
 GeoTIFF
 GEOTiff
 getcapabilities
+GetCaps
 GetCapabilities
 getcoverage
 GetCoverage
@@ -224,6 +228,7 @@ howto
 html
 http
 https
+igsekor
 img
 impl
 incrementing
@@ -254,6 +259,10 @@ licenseheaders
 lingually
 ln
 localhost
+lxml
+micromamba
+mamba
+mambaorg
 matplotlib
 MatPlotLib
 matplotlibrc
@@ -328,6 +337,8 @@ prometheus
 proxied
 proxying
 psql
+psycopg
+psycopg2
 pv
 pwd
 py
@@ -341,6 +352,7 @@ pypi
 PyPI
 pyspelling
 pyspy
+pytest
 pythonpath
 qgis
 queryable
@@ -358,6 +370,7 @@ rgba
 rst
 rtaib
 runtime
+runtimes
 satisifies
 scalable
 schemas
@@ -391,6 +404,7 @@ tmp
 toctree
 toolchain
 tox
+trivy
 txt
 TypeChangeBot
 ubuntu
