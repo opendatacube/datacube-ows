@@ -36,6 +36,7 @@ Operational web services will still require psycopg2, which can be installed wit
 * build(deps): bump aquasecurity/trivy-action from 0.31.0 to 0.32.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1198
 * [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1199
 * Make psycopg2 an optional dependency. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1200
+* Update fallback version number and HISTORY.rst for 1.9.3 release. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1201
 
 Includes contributions from @pjonsson and @SpacemanPaul, with thanks to supporting organisations Geoscience Australia and RISE.
 
