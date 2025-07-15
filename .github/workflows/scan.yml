@@ -57,7 +57,7 @@ jobs:
 
       - name: Run vulnerability scanner
         if: github.event_name != 'release'
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # master
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # 0.32.0
         with:
           image-ref: "${{ env.IMAGE_NAME }}:${{ env.UNSTABLE_TAG }}"
           format: "sarif"
