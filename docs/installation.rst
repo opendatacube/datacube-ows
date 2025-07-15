@@ -115,7 +115,7 @@ parameters noted previously are forwarded to the docker image entrypoint.
 
 .. code-block:: console
 
-    $ docker-compose up
+    $ docker compose up
 
 Update_range via docker
 -----------------------

@@ -109,7 +109,7 @@ setting a NEW db dump
 .. code-block:: console
 
     # bring up indexing and db container
-    docker-compose -f docker-compose.index.yaml -f docker-compose.cleandb.yaml up
+    docker compose -f docker-compose.index.yaml -f docker-compose.cleandb.yaml up
 
 
 building on top of existing db dump
@@ -117,7 +117,7 @@ building on top of existing db dump
 
 .. code-block:: console
 
-  docker-compose -f docker-compose.yaml -f docker-compose.index.yaml -f docker-compose.db.yaml up
+  docker compose -f docker-compose.yaml -f docker-compose.index.yaml -f docker-compose.db.yaml up
 
 checkpoint
 ~~~~~~~~~~
@@ -150,7 +150,7 @@ indexing and create db dump
   exit
 
   # return to index container
-  docker exec -it index_index_1 bash # if using chained docker-compose the container name is datacube-ows_index_1
+  docker exec -it index_index_1 bash # if using chained docker compose the container name is datacube-ows_index_1
   pg_dump -U localhost -p 5432 -h localhost odc > dump.sql
   # enter password on prompt: mysecretpassword or check .env file
   exit
