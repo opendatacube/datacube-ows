@@ -105,6 +105,8 @@ be kept fairly short (e.g. a few hours at most).
 
 E.g.
 
+::
+
     "wms": {
         "caps_cache_maxage": 3600,   # 3600 seconds = 1 hour
         ...

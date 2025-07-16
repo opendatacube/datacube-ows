@@ -74,7 +74,7 @@ output image.
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`_
+<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`__
 
 Example: Greyscale single band
 ++++++++++++++++++++++++++++++
@@ -144,7 +144,7 @@ bands to make the blue channel:
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png>`_
+<https://user-images.githubusercontent.com/4548530/112124842-e8553700-8c16-11eb-9d60-a5a964d3a9ab.png>`__
 
 Example: Unused channels
 ++++++++++++++++++++++++
@@ -170,7 +170,7 @@ just leave it empty:
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112239767-357aec80-8c9b-11eb-9827-6696a1d03a17.png>`_
+<https://user-images.githubusercontent.com/4548530/112239767-357aec80-8c9b-11eb-9827-6696a1d03a17.png>`__
 
 Scale Ranges: Controlling dynamic range
 ---------------------------------------
@@ -196,7 +196,7 @@ Firstly, let's remind ourselves of our original RGB configuration and image:
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
+<https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`__
 
 In this image, band values between 50 and 3000 get scaled to the image values 0 to 255.  (Values less than zero
 are clipped to 0 and values greater than 3000 are clipped to 255.)
@@ -222,7 +222,7 @@ Let's start by pulling the scale_range down a bit:
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112252356-15562800-8cb1-11eb-961a-8c10c38167d7.png>`_
+<https://user-images.githubusercontent.com/4548530/112252356-15562800-8cb1-11eb-961a-8c10c38167d7.png>`__
 
 As you can see, the resulting image looks saturated, washed out and overly bright.  So if your first
 guess at scale_range values produced an image like this, you probably want to increase your
@@ -246,7 +246,7 @@ Example: High Scale Range
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png>`_
+<https://user-images.githubusercontent.com/4548530/112252569-75e56500-8cb1-11eb-89ae-fde23ea3df58.png>`__
 
 Whoops too far!  Now it's almost pure black!  If your image looks like this, you
 need to pull your scale_range down:
@@ -269,7 +269,7 @@ Example: Narrow Scale Range
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png>`_
+<https://user-images.githubusercontent.com/4548530/112252764-c230a500-8cb1-11eb-873a-68527e786f69.png>`__
 
 This is getting better, the brightest parts are nice and bright, but the lower end of the scale range is too high,
 leaving too much image clipped to black. If you keep adjusting back and forth,
@@ -288,7 +288,7 @@ saturated, especially in the red and green channels (red+green makes yellow).
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`_
+<https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png>`__
 
 Let's see what we can do with some judicious tweaking of the scale_ranges
 on a per-band basis:
@@ -321,7 +321,7 @@ The "blue" channel does not have a custom scale_range, so it takes the default s
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png>`_
+<https://user-images.githubusercontent.com/4548530/112267141-1f842080-8cc9-11eb-92c8-d66fba3a43ac.png>`__
 
 Wow! That looks much better!
 

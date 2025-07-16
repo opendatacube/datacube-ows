@@ -100,7 +100,7 @@ vegetation (npv)" band mapped to blue.
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.png>`_
+<https://user-images.githubusercontent.com/4548530/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.png>`__
 
 As you can clearly see from comparing this image to the colour map examples in the last chapter,
 areas of cloud and water give false positives as npv.
@@ -142,7 +142,7 @@ keep in the image - pixels that fail any of the pq_mask rules will be transparen
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113673585-89a2b980-96fc-11eb-9b73-cfb222c7c621.png>`_
+<https://user-images.githubusercontent.com/4548530/113673585-89a2b980-96fc-11eb-9b73-cfb222c7c621.png>`__
 
 Example: Enumeration masking
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -171,7 +171,7 @@ can be done using ``enum`` masking rules:
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.png>`_
+<https://user-images.githubusercontent.com/4548530/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.png>`__
 
 What happened here?  Remember pq_masking rules specify the values to keep, so setting enum to 1 means that we
 only keep pixels which are marked nodata in WOFS - everything else becomes transparent.
@@ -204,7 +204,7 @@ match the rule and make pixels that do transparent:
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113792888-59096100-978a-11eb-9781-b266dc8f40ee.png>`_
+<https://user-images.githubusercontent.com/4548530/113792888-59096100-978a-11eb-9781-b266dc8f40ee.png>`__
 
 Example: Complex logic
 &&&&&&&&&&&&&&&&&&&&&&
@@ -256,7 +256,7 @@ when building up mask logic.
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113793657-29f3ef00-978c-11eb-951a-c9c7488631de.png>`_
+<https://user-images.githubusercontent.com/4548530/113793657-29f3ef00-978c-11eb-951a-c9c7488631de.png>`__
 
 Alpha Masking in Component Styles
 +++++++++++++++++++++++++++++++++
