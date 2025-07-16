@@ -7,7 +7,7 @@ while [[ $# -gt 0 ]]; do
       NO_TEST=1
       shift
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $1"
       exit 1
       ;;
