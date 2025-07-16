@@ -9,7 +9,6 @@
 import sys
 
 import click
-import psycopg2
 import sqlalchemy
 from datacube import Datacube
 
@@ -165,6 +164,7 @@ def main(layers: list[str],
         errors = add_ranges(cfg, layers)
         click.echo("Done.")
     except sqlalchemy.exc.ProgrammingError as e:
+        import psycopg2.errors
         if isinstance(e.orig, psycopg2.errors.UndefinedColumn):
             click.echo("ERROR: OWS schema or extent materialised views appear to be missing")
             click.echo("")
