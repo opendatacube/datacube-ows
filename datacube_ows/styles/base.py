@@ -457,7 +457,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         """
         Get the appropriate multidate handler.
 
-        :param count: The number of dates in the query
+        :param count_or_sized_or_ds: The number of dates in the query
         :return: A multidate handler object, or None, for the default single-date case.
         """
         count = self.count_dates(count_or_sized_or_ds)

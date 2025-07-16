@@ -846,7 +846,7 @@ class FlagProductBands(OWSConfigEntry):
 
         Bands from the same product (or multi-product collection) will be grouped into the same FlagProductBand
 
-        :param masks: A list of OWSFlagBand objects.
+        :param flagbands: A list of OWSFlagBand objects.
         :param layer: A named layer object
         :return: A list of FlagProductBands objects
         """

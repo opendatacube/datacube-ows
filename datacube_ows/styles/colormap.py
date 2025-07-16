@@ -88,7 +88,7 @@ class AbstractValueMapRule(AbstractMaskRule):
         """
         Create a multi-date value map rule set from a config specification
 
-        :param style: The parent style definition object
+        :param style_or_mdh: The parent style definition object
         :param cfg: The specification for the multi-date value map.
 
         :return: A value map ruleset dictionary.
