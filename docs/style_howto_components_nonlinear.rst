@@ -83,7 +83,7 @@ scaling, discussed later in this chapter.
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png>`_
+<https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png>`__
 
 Meh, it's *very* green, and kind of saturated.  This is because we are
 scaling (-1, +1) to (0, 255) and negative values of NDVI
@@ -138,7 +138,7 @@ clipped to the minimum or maximum "scale_to" value.
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.png>`_
+<https://user-images.githubusercontent.com/4548530/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.png>`__
 
 Non-Linear Components: OWS Function Syntax and Scalable
 -------------------------------------------------------
@@ -189,7 +189,7 @@ Note that utility functions are referenced by name, rather than importing the na
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png>`_
+<https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png>`__
 
-:doc:`Next up <style_howto_colour_ramp>`
+:doc:`Next up <style_howto_color_ramp>`
 we will look at colour ramp styles.

@@ -168,8 +168,8 @@ can be supplied in any of the following ways:
 
    The path must be fully qualified.  Relative Python imports are not supported.
 
-   .. note:: It is up to you to ensure that the Python file in question is in your Python path and
-   that all package directories have a ``__init__.py`` file, etc.
+   .. note:: It is up to you to ensure that the Python file in question is in your Python
+      path and that all package directories have a ``__init__.py`` file, etc.
 
 
 3. Include a JSON file (by absolute or relative file path):

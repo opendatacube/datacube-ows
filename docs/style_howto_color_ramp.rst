@@ -46,7 +46,7 @@ same as "RdYlGn" except green is the low end of the scale and red the high end.)
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png>`_
+<https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png>`__
 
 The green (positive) bits looks pretty good, but the zero/negative (yellow/red) bits aren't that interesting.
 
@@ -81,7 +81,7 @@ arithmetic operators like `+ - / *` and parentheses for precedence.
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png>`_
+<https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png>`__
 
 That's a more informative visualisation of NDVI, but the choice of colour ramp doesn't look particularly
 appropriate, in my opinion.
@@ -167,7 +167,7 @@ at the results.
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113971225-b6c9a600-987b-11eb-9ba8-c046728aedee.png>`_
+<https://user-images.githubusercontent.com/4548530/113971225-b6c9a600-987b-11eb-9ba8-c046728aedee.png>`__
 
 Oh well, looks like there's nothing much interesting in that close-to-zero region.  In fact, it would be
 nice if we could get rid of those bits all together, just leave those bits transparent, to show the next
@@ -237,12 +237,12 @@ where 0.0 is totally transparent and 1.0 (the default) is opaque.  Note that you
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png>`_
+<https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png>`__
 
 (The image is displayed here against a white background.  When displayed on a webmap, those white pixels would
 show the next layer down on the map.  The full size view shows the image against a grey background on most
 browsers, which may help to convey the sense of transparency.)
 
 :doc:`Next up, colour-map styles
-<style_howto_color_map`
+<style_howto_color_map>`
 , which are useful for visualising discrete measurement bands.

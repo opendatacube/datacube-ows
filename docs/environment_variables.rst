@@ -155,10 +155,14 @@ PYTHONPATH:
     PYTHONPATH to ows config file
 
 POSTGRES_DB:
-POSTGRES_USER:
-POSTGRES_PASSWORD:
-    The db superuser name and password for the postgis database container.
+    The database to use.
     If multiple databases are required, use a comma-separated list of database names
+
+POSTGRES_USER:
+    The db superuser name for the postgis database container.
+
+POSTGRES_PASSWORD:
+    The db superuser password for the postgis database container.
 
 POSTGRES_HOSTNAME:
     The name of the database server/container.
