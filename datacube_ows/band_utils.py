@@ -219,7 +219,7 @@ def single_band_arcsec(data, band, band_mapper=None):
 
 @band_modulator
 @scalable
-def single_band_offset_log(data, band, scale: float = 1.0, offset: int | None = None, band_mapper=None):
+def single_band_offset_log(data, band, scale: float = 1.0, offset: int | float | None = None, band_mapper=None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
