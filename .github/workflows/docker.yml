@@ -28,6 +28,7 @@ jobs:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
       packages: write  # This is required for pushing to ghcr
+      attestations: write # This is required for pushing the attestation
 
     steps:
       - name: Checkout repository
