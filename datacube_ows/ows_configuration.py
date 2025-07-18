@@ -96,7 +96,7 @@ class BandIndex(OWSMetadataConfig):
     METADATA_TITLE = False
     METADATA_ABSTRACT = False
 
-    def __init__(self, layer: "OWSNamedLayer", band_cfg: CFG_DICT) -> None:
+    def __init__(self, layer: "OWSNamedLayer", band_cfg: CFG_DICT | None) -> None:
         if band_cfg is None:
             band_cfg = {}
         super().__init__(band_cfg)
