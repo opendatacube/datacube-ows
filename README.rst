@@ -107,25 +107,25 @@ Docker-Compose
 setup env by export
 ^^^^^^^^^^^^^^^^^^^
 
-We use docker-compose to make development and testing of the containerised ows images easier.
+We use docker compose to make development and testing of the containerised ows images easier.
 
 Set up your environment by creating a `.env` file (see below).
 
 To start OWS with flask connected to a pre-existing database on your local machine::
 
-  docker-compose up
+  docker compose up
 
 The first time you run docker-compose, you will need to add the `--build` option::
 
-  docker-compose up --build
+  docker compose up --build
 
 To start ows with a pre-indexed database::
 
-  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up
+  docker compose -f docker-compose.yaml -f docker-compose.db.yaml up
 
 To start ows with db and gunicorn instead of flask (production)::
 
-  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up
+  docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up
 
 The default environment variables (in .env file) can be overriden by setting local environment variables::
 
@@ -133,7 +133,7 @@ The default environment variables (in .env file) can be overriden by setting loc
   # hot reload is not supported, so we need to set FLASK_DEV to production
   export PYDEV_DEBUG=yes
   export FLASK_DEV=production
-  docker-compose -f docker-compose.yaml -f docker-compose.db.yaml up --build
+  docker compose -f docker-compose.yaml -f docker-compose.db.yaml up --build
 
 setup env with .env file
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -142,7 +142,7 @@ setup env with .env file
 
     cp .env_simple .env # for a single ows config file setup
     cp .env_ows_root .env # for multi-file ows config with ows_root_cfg.py
-    docker-compose up
+    docker compose up
 
 Docker
 ------
