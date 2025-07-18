@@ -107,7 +107,7 @@ Dev-ops Tools
 The following deployment tools are configured via environment variables:
 
 SENTRY_DSN:
-    The `Sentry application monitoring and error tracking system`_
+    The `Sentry application monitoring and error tracking system <https://sentry.io>`_
     system is activated and configured with the ``$SENTRY_DSN``
     environment variables.
 

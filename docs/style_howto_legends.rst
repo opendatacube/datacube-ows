@@ -122,7 +122,7 @@ Setting legend range
 The start and end of the legend strip can be over-ridden with the "begin" and "end" elements. These elements can
 be integers, floats or numeric strings - however floats are strongly discouraged as they can result in unexpected
 behaviour.  For more information refer to
-`Floating Point Arithmetic: Issues and Limitations<https://docs.python.org/3/tutorial/floatingpoint.html>`_
+`Floating Point Arithmetic: Issues and Limitations <https://docs.python.org/3/tutorial/floatingpoint.html>`_
 in the official Python tutorial.
 
 E.g.

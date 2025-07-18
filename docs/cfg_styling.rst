@@ -284,7 +284,7 @@ E.g.::
      }
 
 If your instance of OWS
-`supports multiple languages<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_
+`supports multiple languages <https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_
 then you may supply separate urls pointing to different versions of the legend image for each of the configured
 ``supported_languages``.  In this case you MUST supply a legend image url for the default language
 (the first language listed in the global ``supported_languages`` entry), and this url will be used for
@@ -408,7 +408,7 @@ Feature Info Multi-Date Custom Includes (custom_includes)
 
 In addition to the custom includes defined `at the layer level
 <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#custom-layer-includes-custom-includes>`_, and
-`at the style level, as described above<#feature-info-custom-style-includes-custom-includes>`_,
+`at the style level, as described above <#feature-info-custom-style-includes-custom-includes>`_,
 If the GetFeatureInfo requests a style AND multiple dates, then the multi-date handler
 can define additional custom feature info.
 

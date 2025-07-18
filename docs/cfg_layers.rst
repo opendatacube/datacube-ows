@@ -384,8 +384,8 @@ are mapped to user-accessible dates. The acceptable values are:
 Any time component in the request will be ignored, except for layers that explicitly
 have "subday" time resolution.
 
-Note that it will usually be necessary to rerun `datacube-ows-update
-<https://datacube-ows.readthedocs.io/en/latest/database.html#updating-range-tables-for-individual-layers>`_
+Note that it will usually be necessary to rerun
+`datacube-ows-update <https://datacube-ows.readthedocs.io/en/latest/database.html#updating-range-tables-for-individual-layers>`_
 for a layer after changing the time resolution.
 
 -------------------------------------

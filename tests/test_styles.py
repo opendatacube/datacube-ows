@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 from datacube_ows.config_utils import ConfigException, OWSEntryNotFound
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
+from typing_extensions import override
 from xarray import DataArray, Dataset, concat
 
 
@@ -22,9 +23,11 @@ def product_layer():
             self.name = name
             self.id = 7
 
+        @override
         def __str__(self) -> str:
             return self.name
 
+        @override
         def __repr__(self) -> str:
             return f"FakeODCProduct({self.name})"
 

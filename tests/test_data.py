@@ -60,6 +60,7 @@ def s3_url_datasets():
         def __init__(self, main) -> None:
             self.main = main
 
+        @override
         def __hash__(self):
             return hash(self.main)
 
@@ -216,7 +217,6 @@ def test_make_band_dict_float(product_layer) -> None: # noqa: F811
             self.nodata = np.nan
             self.attrs = yaml.load(flags_yaml, yaml.Loader)
 
-        @override
         def item(self) -> int:
             return 100
 
@@ -226,7 +226,6 @@ def test_make_band_dict_float(product_layer) -> None: # noqa: F811
                 "fake": "fake_band"
             }
 
-        @override
         def __getitem__(self, key):
             return int_data()
 

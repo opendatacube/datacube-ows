@@ -121,5 +121,5 @@ Behaviour is identical to the ``caps_cache_maxage`` entry discussed above and
 
 Note however, that the default DescribeCoverage cache rule for can
 be over-ridden at the layer/coverage level using the
-`describe_cache_maxage entry<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#cache-control-dataset-cache-rules-and-describe-cache-maxage>`_
+`describe_cache_maxage entry <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#cache-control-dataset-cache-rules-and-describe-cache-maxage>`_
 in the ``resource_limits`` section for the layer.
