@@ -57,7 +57,7 @@ jobs:
 
       - name: Run vulnerability scanner
         if: github.event_name != 'release'
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # master
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # 0.32.0
         with:
           image-ref: "${{ env.IMAGE_NAME }}:${{ env.UNSTABLE_TAG }}"
           format: "sarif"
@@ -69,15 +69,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
         with:
           sarif_file: 'trivy-results.sarif'
-
-      # - name: Notify Slack for Failures
-      #   uses: rtCamp/action-slack-notify@v2.1.0
-      #   if: failure()
-      #   env:
-      #     SLACK_CHANNEL: ga-wms-ops
-      #     SLACK_ICON: "https://github.com/docker.png?size=48"
-      #     SLACK_COLOR: "#482de1"
-      #     SLACK_MESSAGE: ""
-      #     SLACK_TITLE: CVE Scan alert
-      #     SLACK_USERNAME: OWS Scanner
-      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
