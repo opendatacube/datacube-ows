@@ -21,6 +21,7 @@ select = [
     "E",  # pycodestyle errors
     "EXE", # flake8-executable
     "FLY", # flynt
+    "FURB", # refurb
     "I",  # isort
     "RUF", # Ruff-specific rules
     "SIM", # flake8-simplify
