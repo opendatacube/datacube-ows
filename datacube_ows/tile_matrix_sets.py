@@ -133,10 +133,10 @@ class TileMatrixSet(OWSConfigEntry):
         pixel = [col, row]
         scale_denominator = self.scale_set[tile_matrix]
         pixel_span = [scale_denominator * 0.00028 * u for u in self.unit_coefficients]
-        tile_span = [ps * ts for ps, ts in zip(pixel_span, self.tile_size)]
+        tile_span = [ps * ts for ps, ts in zip(pixel_span, self.tile_size, strict=False)]
 
-        mins = [mo + p * ts for mo, p, ts in zip(self.matrix_origin, pixel, tile_span)]
-        maxs = [m + ts for m, ts in zip(mins, tile_span)]
+        mins = [mo + p * ts for mo, p, ts in zip(self.matrix_origin, pixel, tile_span, strict=False)]
+        maxs = [m + ts for m, ts in zip(mins, tile_span, strict=False)]
 
         if self.crs_cfg["vertical_coord_first"]:
             return (

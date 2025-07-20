@@ -401,7 +401,7 @@ class OWSMetadataConfig(OWSConfigEntry):
                 self.register_metadata(self.get_obj_label(), FLD_UNITS, units)
         if self.METADATA_TICK_LABELS:
             # Note that parse_metadata must be called after legend ticks are parsed.
-            for tick, lbl in zip(self.ticks, self.tick_labels):
+            for tick, lbl in zip(self.ticks, self.tick_labels, strict=False):
                 if any(c.isalpha() for c in lbl):
                     self.register_metadata(self.get_obj_label(), f"lbl_{tick}", lbl)
 

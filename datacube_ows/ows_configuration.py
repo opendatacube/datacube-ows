@@ -699,7 +699,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     # pylint: disable=attribute-defined-outside-init
     def parse_image_processing(self, cfg: CFG_DICT) -> None:
         emf_cfg = cfg["extent_mask_func"]
-        if isinstance(emf_cfg, (dict, str)):
+        if isinstance(emf_cfg, dict | str):
             self.extent_mask_func = [FunctionWrapper(self, emf_cfg)]
         else:
             self.extent_mask_func = [

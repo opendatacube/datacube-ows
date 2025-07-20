@@ -1,4 +1,101 @@
-# pyproject.toml
+[project]
+name = "datacube_ows"
+dynamic = ["version"]
+description = "Open Data Cube Open Web Services"
+authors = [
+    {name = "Open Data Cube", email = "earth.observation@ga.gov.au"},
+]
+dependencies = [
+    "Babel",
+    "Flask-Babel>3.0.0",
+    "Pillow>=10.2.0",
+    "affine",
+    "antimeridian",
+    "click",
+    "datacube[performance,s3]>=1.9.4",
+    "deepdiff",
+    "flask",
+    "fsspec",
+    "geoalchemy2",
+    "importlib_metadata",
+    "lark",
+    "lxml<6",
+    "matplotlib",
+    "numpy>=1.22",
+    "prometheus_flask_exporter",
+    "pyows",
+    "pyparsing",
+    "python_dateutil",
+    "python_slugify",
+    "pytz",
+    "rasterio>=1.3.2",
+    "regex",
+    "requests",
+    "scipy",
+    "setuptools_scm",
+    "timezonefinder!=6.6.0",
+    "xarray",
+]
+requires-python = ">=3.10.0"
+readme = "README.md"
+license = "Apache-2.0"
+keywords = ["datacube", "wms", "wcs"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/opendatacube/datacube-ows"
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "pydevd-pycharm~=243.26053.29",
+    "pylint",
+    "ruff",
+    "sphinx_click",
+    "types-python-dateutil",
+    "types-pytz",
+    "types-requests",
+]
+ops = [
+    "blinker",
+    "gevent",
+    "gunicorn>=22.0.0",
+    "gunicorn[gevent]",
+    "prometheus_client",
+    "psycopg2",
+    "sentry_sdk",
+]
+postgres = ["psycopg2"]
+setup = ["setuptools", "setuptools_scm"]
+test = [
+    "flask-cors",
+    "fsspec",
+    "owslib>0.29.2",
+    "psycopg2",
+    "pytest",
+    "pytest-helpers-namespace",
+    "pytest_cov",
+    "pytest_localserver",
+    "pytest_mock",
+]
+all = ["datacube_ows[dev,ops,test]"]
+
+[project.scripts]
+datacube-ows = "datacube_ows.wsgi:main"
+datacube-ows-cfg = "datacube_ows.cfg_parser_impl:main"
+datacube-ows-update = "datacube_ows.update_ranges_impl:main"
+
+[project.entry-points."datacube_ows.plugins.index"]
+postgis = "datacube_ows.index.postgis.api:ows_index_driver_init"
+postgres = "datacube_ows.index.postgres.api:ows_index_driver_init"
+
 [tool.mypy]
 python_version = "3.10"
 allow_redefinition = true
@@ -52,8 +149,14 @@ ignore = [
 max-line-length = 120
 
 [build-system]
-requires = ["setuptools>=65.5.1", "wheel>=0.38.1", "setuptools_scm[toml]>3.4"]
+requires = ["setuptools>=69", "setuptools_scm[toml]>3.4"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+exclude = ["integration_tests", "tests"]
+include = ["datacube*"]
 
 [tool.setuptools_scm]
 write_to = "datacube_ows/_version.py"
 fallback_version = "1.9.3"
+version_scheme = "post-release"
