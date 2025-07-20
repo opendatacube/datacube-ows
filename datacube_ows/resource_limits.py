@@ -103,7 +103,7 @@ class RequestScale:
 
     @property
     def base_zoom_level(self) -> float:
-        return math.log(559082264.0287178 / self.scale_denominator, 2)
+        return math.log2(559082264.0287178 / self.scale_denominator)
 
     @property
     def load_adjusted_zoom_level(self) -> float:
