@@ -185,7 +185,7 @@ def create_coverage_description(cfg: OWSConfig, product) -> CoverageDescription:
 
     # swap axes if necessary
     if product.native_CRS_def.get("vertical_coord_first"):
-        axes = list(reversed(axes))
+        axes.reverse()
 
     if product.regular_time_axis:
         start, end = product.time_range()
