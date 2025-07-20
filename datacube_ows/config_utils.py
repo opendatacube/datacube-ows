@@ -437,7 +437,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         :param fld: Metadata type label
         :return: Displayable metadata.
         """
-        lookup = ".".join([lbl, fld])
+        lookup = f"{lbl}.{fld}"
         if self.global_config().internationalised:
             trans = _(lookup)
             if trans != lookup:
@@ -458,7 +458,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         :param fld: Metadata type label
         :return: True if the metadata is inherited from a parent object, False otherwise.
         """
-        lookup = ".".join([lbl, fld])
+        lookup = f"{lbl}.{fld}"
         return self._inheritance_registry.get(lookup, False)
 
     def register_metadata(self, lbl: str, fld: str, val: str, inherited: bool = False) -> None:
@@ -470,7 +470,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         :param val: The default value, as recorded in the raw config.
         :param inherited: If true, metadata is considered inherited and is not handled independently.
         """
-        lookup = ".".join([lbl, fld])
+        lookup = f"{lbl}.{fld}"
         self._metadata_registry[lookup] = val
         self._inheritance_registry[lookup] = inherited
 
