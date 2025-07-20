@@ -29,15 +29,14 @@ def handle_wmts(nocase_args) -> tuple:
     # WMS operation Map
     if not operation:
         raise WMTSException("No operation specified", locator="Request parameter")
-    elif operation == "GETCAPABILITIES":
+    if operation == "GETCAPABILITIES":
         return get_capabilities(nocase_args)
-    elif operation == "GETTILE":
+    if operation == "GETTILE":
         return get_tile(nocase_args)
-    elif operation == "GETFEATUREINFO":
+    if operation == "GETFEATUREINFO":
         return get_feature_info(nocase_args)
-    else:
-        raise WMTSException(f"Unrecognised operation: {operation}", WMTSException.OPERATION_NOT_SUPPORTED,
-                           "Request parameter")
+    raise WMTSException(f"Unrecognised operation: {operation}", WMTSException.OPERATION_NOT_SUPPORTED,
+                       "Request parameter")
 
 
 @log_call

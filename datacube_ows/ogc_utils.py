@@ -49,8 +49,7 @@ def mask_by_val(data: xarray.Dataset, band: str, val: Any = None) -> xarray.Data
     """
     if val is None:
         return data[band] != data[band].attrs['nodata']
-    else:
-        return data[band] != val
+    return data[band] != val
 
 
 def mask_by_val2(data: xarray.Dataset, band: str) -> xarray.DataArray:

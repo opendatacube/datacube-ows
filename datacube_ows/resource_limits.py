@@ -103,7 +103,7 @@ class RequestScale:
 
     @property
     def base_zoom_level(self) -> float:
-        return math.log(559082264.0287178 / self.scale_denominator, 2)
+        return math.log2(559082264.0287178 / self.scale_denominator)
 
     @property
     def load_adjusted_zoom_level(self) -> float:
@@ -118,8 +118,7 @@ class RequestScale:
         for i in range(2):
             ratio = ratio * self.pixel_size[i] / other.pixel_size[i]
         ratio = ratio * self.total_band_size / other.total_band_size
-        ratio = ratio * other.res_xy() / self.res_xy()
-        return ratio
+        return ratio * other.res_xy() / self.res_xy()
 
     @property
     def load_factor(self) -> float:
@@ -200,8 +199,7 @@ class CacheControlRules(OWSConfigEntry):
             rule = r
         if rule:
             return cache_control_headers(cast(int, rule['max_age']))
-        else:
-            return cache_control_headers(0)
+        return cache_control_headers(0)
 
 
 class ResourceLimited(Exception):

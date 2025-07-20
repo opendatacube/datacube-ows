@@ -323,14 +323,13 @@ def wcs_global_cfg():
 
 @pytest.fixture
 def dummy_raw_data():
-    output = xr.Dataset({
+    return xr.Dataset({
         "ir": dummy_da(3, "ir", coords),
         "red": dummy_da(5, "red", coords),
         "green": dummy_da(7, "green", coords),
         "blue": dummy_da(2, "blue", coords),
         "uv": dummy_da(-1, "uv", coords),
     })
-    return output
 
 
 @pytest.fixture
@@ -341,7 +340,7 @@ def null_mask():
 @pytest.fixture
 def dummy_raw_calc_data():
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
-    output = xr.Dataset({
+    return xr.Dataset({
         "ir": dim1_da("ir", [800, 100, 1000, 600, 200, 1000], dim_coords),
         "red": dim1_da("red", [200, 500, 0, 200, 200, 700], dim_coords),
         "green": dim1_da("green", [100, 500, 0, 400, 300, 200], dim_coords),
@@ -377,7 +376,6 @@ def dummy_raw_calc_data():
                                 }
                             })
     })
-    return output
 
 
 def dim1_null_mask(coords):
@@ -443,19 +441,18 @@ flags_def = {
 @pytest.fixture
 def dummy_col_map_data():
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
-    output = xr.Dataset({
+    return xr.Dataset({
         "pq": dim1_da("pq", [0b01000, 0b11001, 0b00010, 0b10011, 0b00100, 0b10001], dim_coords,
                       attrs={
                           "flags_definition": flags_def
                       })
     })
-    return output
 
 @pytest.fixture
 def dummy_col_map_time_data():
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     dates = [datetime.datetime(2000, 1, 1), datetime.datetime(2020, 1, 1)]
-    output = xr.Dataset({
+    return xr.Dataset({
         "pq": dim1_da_time("pq", [
                 [0b01000, 0b11110],
                 [0b11001, 0b10001],
@@ -469,12 +466,11 @@ def dummy_col_map_time_data():
                       "flags_definition": flags_def
                   })
     })
-    return output
 
 
 @pytest.fixture
 def dummy_raw_ls_data():
-    output = xr.Dataset({
+    return xr.Dataset({
         "red": dummy_da(5, "red", coords, dtype=np.int16),
         "green": dummy_da(7, "green", coords, dtype=np.int16),
         "blue": dummy_da(2, "blue", coords, dtype=np.int16),
@@ -482,12 +478,11 @@ def dummy_raw_ls_data():
         "swir1": dummy_da(1051, "swir1", coords, dtype=np.int16),
         "swir2": dummy_da(1051, "swir2", coords, dtype=np.int16),
     })
-    return output
 
 
 @pytest.fixture
 def dummy_raw_wo_data():
-    output = xr.Dataset({
+    return xr.Dataset({
         "water": dummy_da(0b101,
                         "red",
                         coords,
@@ -561,17 +556,15 @@ def dummy_raw_wo_data():
                                 }
                             })
     })
-    return output
 
 
 @pytest.fixture
 def dummy_raw_fc_data():
-    output = xr.Dataset({
+    return xr.Dataset({
         "bs": dummy_da(546, "bs", coords, dtype=np.int16),
         "pv": dummy_da(723, "pv", coords, dtype=np.int16),
         "npv": dummy_da(209, "npv", coords, dtype=np.int16),
     })
-    return output
 
 
 @pytest.fixture
@@ -587,8 +580,7 @@ def configs_for_landsat():
         # Calculate NDVI (-1.0 to 1.0)
         unscaled = (data["nir"] - data["red"]) / (data["nir"] + data["red"])
         # Scale to [-1.0 - 1.0] to [0 - 255]
-        scaled = ((unscaled + 1.0) * 255 / 2).clip(0, 255)
-        return scaled
+        return ((unscaled + 1.0) * 255 / 2).clip(0, 255)
 
     from datacube_ows.styles.api import scalable
 
@@ -1156,7 +1148,6 @@ def xyt_dummydata():
 
 
 @pytest.fixture
-def empty_driver_cache():
+def empty_driver_cache() -> None:
     from datacube_ows.index.driver import OWSIndexDriverCache
     OWSIndexDriverCache._instance = None
-    return None

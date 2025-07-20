@@ -38,14 +38,13 @@ def handle_wcs2(nocase_args) -> tuple:
     operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS2Exception("No operation specified", locator="Request parameter")
-    elif operation == "GETCAPABILITIES":
+    if operation == "GETCAPABILITIES":
         return get_capabilities(nocase_args)
-    elif operation == "DESCRIBECOVERAGE":
+    if operation == "DESCRIBECOVERAGE":
         return desc_coverages(nocase_args)
-    elif operation == "GETCOVERAGE":
+    if operation == "GETCOVERAGE":
         return get_coverage(request.args.lists(), bool(nocase_args.get("ows_stats")), nocase_args.get("styles"))
-    else:
-        raise WCS2Exception(f"Unrecognised operation: {operation}", locator="Request parameter")
+    raise WCS2Exception(f"Unrecognised operation: {operation}", locator="Request parameter")
 
 
 @log_call
@@ -185,7 +184,7 @@ def create_coverage_description(cfg: OWSConfig, product) -> CoverageDescription:
 
     # swap axes if necessary
     if product.native_CRS_def.get("vertical_coord_first"):
-        axes = list(reversed(axes))
+        axes.reverse()
 
     if product.regular_time_axis:
         start, end = product.time_range()

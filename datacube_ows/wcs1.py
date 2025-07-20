@@ -25,14 +25,13 @@ def handle_wcs1(nocase_args) -> tuple:
     operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS1Exception("No operation specified", locator="Request parameter")
-    elif operation == "GETCAPABILITIES":
+    if operation == "GETCAPABILITIES":
         return get_capabilities(nocase_args)
-    elif operation == "DESCRIBECOVERAGE":
+    if operation == "DESCRIBECOVERAGE":
         return desc_coverages(nocase_args)
-    elif operation == "GETCOVERAGE":
+    if operation == "GETCOVERAGE":
         return get_coverage(nocase_args)
-    else:
-        raise WCS1Exception(f"Unrecognised operation: {operation}", locator="Request parameter")
+    raise WCS1Exception(f"Unrecognised operation: {operation}", locator="Request parameter")
 
 
 @log_call

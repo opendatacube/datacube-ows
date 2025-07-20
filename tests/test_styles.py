@@ -104,7 +104,7 @@ def product_layer():
 
 @pytest.fixture
 def style_cfg_lin():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -116,12 +116,11 @@ def style_cfg_lin():
             "blue": {"blue": 1.0}
         }
     }
-    return cfg
 
 
 @pytest.fixture
 def style_cfg_lin_clone():
-    cfg = {
+    return {
         "inherits": {
             "style": "test_style",
         },
@@ -130,12 +129,11 @@ def style_cfg_lin_clone():
         "scale_factor": None,
         "scale_range": [0, 12000],
     }
-    return cfg
 
 
 @pytest.fixture
 def style_cfg_nonlin():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -154,12 +152,11 @@ def style_cfg_nonlin():
         },
         "additional_bands": [],
     }
-    return cfg
 
 
 @pytest.fixture
 def style_cfg_map():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -189,7 +186,6 @@ def style_cfg_map():
             ]
         }
     }
-    return cfg
 
 
 @pytest.fixture
@@ -212,7 +208,7 @@ def product_layer_alpha_map():
 
 @pytest.fixture
 def style_cfg_map_alpha_1():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -231,12 +227,11 @@ def style_cfg_map_alpha_1():
             ]
         }
     }
-    return cfg
 
 
 @pytest.fixture
 def style_cfg_map_alpha_2():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -255,12 +250,11 @@ def style_cfg_map_alpha_2():
             ]
         }
     }
-    return cfg
 
 
 @pytest.fixture
 def style_cfg_map_alpha_3():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -278,7 +272,6 @@ def style_cfg_map_alpha_3():
             ]
         }
     }
-    return cfg
 
 
 def test_valuemap_ctor() -> None:
@@ -338,7 +331,7 @@ def test_valuemap_ctor() -> None:
 
 @pytest.fixture
 def style_cfg_ramp():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -355,23 +348,21 @@ def style_cfg_ramp():
             {"value": 1.0, "color": "#000000", "alpha": 1.0}
         ]
     }
-    return cfg
 
 
 @pytest.fixture
 def style_cfg_ramp_clone(style_cfg_ramp):
-    cfg = {
+    return {
         "inherits": style_cfg_ramp,
         "name": "test_style2",
         "title": "Test Style 2",
         "needed_bands": ["bar"],
     }
-    return cfg
 
 
 @pytest.fixture
 def style_cfg_ramp_mapped():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -389,7 +380,6 @@ def style_cfg_ramp_mapped():
             {"value": 1.0, "color": "#000000", "alpha": 1.0}
         ]
     }
-    return cfg
 
 
 def test_correct_style_hybrid(product_layer, style_cfg_lin) -> None:
@@ -642,7 +632,7 @@ def product_layer_mask_map():
 
 @pytest.fixture
 def style_cfg_map_mask():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -677,7 +667,6 @@ def style_cfg_map_mask():
             ]
         }
     }
-    return cfg
 
 
 def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask) -> None:
@@ -812,7 +801,7 @@ def test_bad_mpl_ramp() -> None:
 
 @pytest.fixture
 def style_with_pq_masking():
-    cfg = {
+    return {
         "name": "test_style",
         "title": "Test Style",
         "abstract": "This is a Test Style for Datacube WMS",
@@ -830,7 +819,6 @@ def style_with_pq_masking():
             }
         ]
     }
-    return cfg
 
 def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc) -> None:
     def fake_make_mask(data, **kwargs):

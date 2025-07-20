@@ -330,8 +330,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             :return: A DataArray boolean mask with no time dimension
             """
             pq_data = getattr(data, mask.band)
-            odc_mask = mask.create_mask(pq_data)
-            return odc_mask
+            return mask.create_mask(pq_data)
 
         result: xr.DataArray | None = extra_mask
         for mask in self.masks:
@@ -375,8 +374,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                         flat_mask &= mask_slice
                 mask = cast(xr.DataArray, flat_mask)
             alpha = alpha.where(mask, other=0)
-        img_data = img_data.assign({"alpha": alpha})
-        return img_data
+        return img_data.assign({"alpha": alpha})
 
     def transform_data(self, data: xr.Dataset, mask: xr.DataArray | None) -> xr.Dataset:
         """
@@ -395,8 +393,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             output_date_count = len(data.coords["time"])
             if output_date_count == 1:
                 img_data = img_data.squeeze(dim="time", drop=True)
-        img_data = self.apply_mask_to_image(img_data, mask, input_date_count, output_date_count)
-        return img_data
+        return self.apply_mask_to_image(img_data, mask, input_date_count, output_date_count)
 
     def transform_single_date_data(self, data: xr.Dataset) -> xr.Dataset:
         """
@@ -437,14 +434,12 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     def count_dates(count_or_sized_or_ds: int | Sized | xr.Dataset) -> int:
         if isinstance(count_or_sized_or_ds, int):
             return count_or_sized_or_ds
-        elif isinstance(count_or_sized_or_ds, xr.Dataset):
+        if isinstance(count_or_sized_or_ds, xr.Dataset):
             data = count_or_sized_or_ds
             if not data.time.shape:
                 return 1
-            else:
-                return len(data.coords["time"])
-        else:
-            return len(count_or_sized_or_ds)
+            return len(data.coords["time"])
+        return len(count_or_sized_or_ds)
 
     def get_legend_cfg(self, count_or_sized_or_ds: int | Sized | xr.Dataset) -> LegendBase:
         mdh = self.get_multi_date_handler(count_or_sized_or_ds)
@@ -647,8 +642,7 @@ class StyleMask(AbstractMaskRule):
 
     @override
     def create_mask(self, data: xr.DataArray) -> xr.DataArray | None:
-        mask = super().create_mask(data)
-        return mask
+        return super().create_mask(data)
 
 # Minimum Viable Proxy Objects, for standalone API
 

@@ -227,8 +227,7 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
     def sanitise_coordinate(coord: float, fallback: float, upper: bool) -> float:
         if not math.isfinite(coord) or (upper and coord > fallback) or (not upper and coord < fallback):
             return fallback
-        else:
-            return coord
+        return coord
     if bbox.crs == CRS("epsg:4326"):
         return {
             "top": sanitise_coordinate(bbox.top, float("90.0"), True),
@@ -236,13 +235,12 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
             "left": sanitise_coordinate(bbox.left, float("-180"), False),
             "right": sanitise_coordinate(bbox.right, float("9.999999999e99"), True),
         }
-    else:
-        return {
-            "top": sanitise_coordinate(bbox.top, float("9.999999999e99"), True),
-            "bottom": sanitise_coordinate(bbox.bottom, float("-9.999999999e99"), False),
-            "left": sanitise_coordinate(bbox.left, float("-9.999999999e99"), False),
-            "right": sanitise_coordinate(bbox.right, float("9.999999999e99"), True),
-        }
+    return {
+        "top": sanitise_coordinate(bbox.top, float("9.999999999e99"), True),
+        "bottom": sanitise_coordinate(bbox.bottom, float("-9.999999999e99"), False),
+        "left": sanitise_coordinate(bbox.left, float("-9.999999999e99"), False),
+        "right": sanitise_coordinate(bbox.right, float("9.999999999e99"), True),
+    }
 
 
 def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:

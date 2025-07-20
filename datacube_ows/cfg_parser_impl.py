@@ -88,8 +88,7 @@ def check(parse_only: bool, folders: bool, styles: bool, input_file: str, output
     if not paths:
         if parse_path(None, parse_only, folders, styles, input_file, output_file):
             return 0
-        else:
-            sys.exit(1)
+        sys.exit(1)
     for path in paths:
         if not parse_path(path, parse_only, folders, styles, input_file, output_file):
             all_ok = False

@@ -40,8 +40,7 @@ def parse_for_base_url(url: str) -> str:
     :return: The base URL (path and parameters stripped)
     """
     parsed = urlparse(url)
-    parsed = (parsed.netloc + parsed.path).rstrip("/")
-    return parsed
+    return (parsed.netloc + parsed.path).rstrip("/")
 
 
 def get_service_base_url(allowed_urls: list[str] | str, request_url: str) -> str:
@@ -62,8 +61,7 @@ def get_service_base_url(allowed_urls: list[str] | str, request_url: str) -> str
         idx = None
     url = allowed_urls[idx] if idx is not None else allowed_urls[0]
     # template includes tailing /, strip any trail slash here to avoid duplicates
-    url = url.rstrip("/")
-    return url
+    return url.rstrip("/")
 
 
 def capture_headers(req: Request,
@@ -87,8 +85,7 @@ def capture_headers(req: Request,
 def cache_control_headers(max_age: int) -> dict[str, str]:
     if max_age <= 0:
         return {"cache-control": "no-cache"}
-    else:
-        return {"cache-control": f"max-age={max_age}"}
+    return {"cache-control": f"max-age={max_age}"}
 
 
 def lower_get_args() -> dict[str, str]:

@@ -159,10 +159,7 @@ def find_matching_date(dt, dates) -> bool:
         start, end = range_of(region[splitter])
         if dt >= start and dt < end:
             return True
-        elif dt < start:
-            region = region[0:splitter]
-        else:
-            region = region[splitter + 1:]
+        region = region[0:splitter] if dt < start else region[splitter + 1:]
 
     return False
 

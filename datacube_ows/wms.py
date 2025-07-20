@@ -23,17 +23,16 @@ def handle_wms(nocase_args: dict[str, str]) -> tuple | None:
     # WMS operation Map
     if not operation:
         raise WMSException("No operation specified", locator="Request parameter")
-    elif operation == "GETCAPABILITIES":
+    if operation == "GETCAPABILITIES":
         return get_capabilities(nocase_args)
-    elif operation == "GETMAP":
+    if operation == "GETMAP":
         return get_map(nocase_args)
-    elif operation == "GETFEATUREINFO":
+    if operation == "GETFEATUREINFO":
         return feature_info(nocase_args)
-    elif operation == "GETLEGENDGRAPHIC":
+    if operation == "GETLEGENDGRAPHIC":
         return legend_graphic(nocase_args)
-    else:
-        raise WMSException(f"Unrecognised operation: {operation}", WMSException.OPERATION_NOT_SUPPORTED,
-                           "Request parameter")
+    raise WMSException(f"Unrecognised operation: {operation}", WMSException.OPERATION_NOT_SUPPORTED,
+                       "Request parameter")
 
 
 @log_call

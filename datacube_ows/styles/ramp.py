@@ -252,8 +252,7 @@ class ColorRamp:
         imgdata = cast(MutableMapping[Hashable, Any], {})
         for band in self.components:
             imgdata[band] = (data.dims, self.get_8bit_value(data, band))
-        imgdataset = Dataset(imgdata, coords=data.coords)
-        return imgdataset
+        return Dataset(imgdata, coords=data.coords)
 
     def rgba_at(self, val: float) -> tuple[float, float, float, float]:
         return (
@@ -397,8 +396,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
             metaval = self.read_local_metadata(f"lbl_{tick}")
             if metaval:
                 return metaval
-            else:
-                return self.tick_labels[tick_idx]
+            return self.tick_labels[tick_idx]
         except ValueError:
             _LOG.error("'%s' is a not a valid tick", tick)
             return None
@@ -444,8 +442,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     def display_title(self) -> str:
         if self.units:
             return f"{self.title}({self.units})"
-        else:
-            return self.title
+        return self.title
 
     def plot_name(self) -> str:
         return f"{self.style.product.name}_{self.style.name}"

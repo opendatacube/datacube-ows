@@ -96,8 +96,7 @@ def _get_geobox(args, crs: CRS) -> GeoBox:
 
 def _get_polygon(args, crs: CRS) -> geom.Geometry:
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
-    poly = geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
-    return poly
+    return geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
 
 
 def zoom_factor(args, crs) -> float:
@@ -198,17 +197,16 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
         if matching_times:
             # default to the first matching time
             return matching_times[0]
-        elif layer.regular_time_axis:
+        if layer.regular_time_axis:
             raise WMSException(
                 f"No data available for time dimension range '{start}'-'{end}' for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
-        else:
-            raise WMSException(
-                f"Time dimension range '{start}'-'{end}' not valid for this layer",
-                WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
-    elif not times[0]:
+        raise WMSException(
+            f"Time dimension range '{start}'-'{end}' not valid for this layer",
+            WMSException.INVALID_DIMENSION_VALUE,
+            locator="Time parameter")
+    if not times[0]:
         # default to last available time if not supplied.
         product_times = get_times_for_layer(layer)
         return product_times[-1]
@@ -241,20 +239,19 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
         return day
-    elif layer.time_resolution.is_subday():
+    if layer.time_resolution.is_subday():
         if not find_matching_date(time, layer.ranges.times):
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
                 locator="Time parameter")
         return time
-    else:
-        if day not in layer.ranges.time_set:
-            raise WMSException(
-                f"Time dimension value '{times[0]}' not valid for this layer",
-                WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
-        return day
+    if day not in layer.ranges.time_set:
+        raise WMSException(
+            f"Time dimension value '{times[0]}' not valid for this layer",
+            WMSException.INVALID_DIMENSION_VALUE,
+            locator="Time parameter")
+    return day
 
 
 def parse_time_delta(delta_str):
@@ -267,11 +264,10 @@ def parse_time_delta(delta_str):
 def parse_wms_time_string(t: str, start: bool = True) -> datetime | relativedelta:
     if t.upper() == 'PRESENT':
         return datetime.now(timezone.utc)
-    elif t.startswith('P'):
+    if t.startswith('P'):
         return parse_time_delta(t)
-    else:
-        default = datetime(1970, 1, 1) if start else datetime(1970, 12, 31, 23, 23, 59, 999999)  # default year ignored
-        return parse(t, default=default)
+    default = datetime(1970, 1, 1) if start else datetime(1970, 12, 31, 23, 23, 59, 999999)  # default year ignored
+    return parse(t, default=default)
 
 
 def parse_wms_time_strings(parts: list[str], with_tz: bool = False) -> tuple:
@@ -486,9 +482,8 @@ def cosine_of_solar_zenith(lat: float, lon: float, utc_dt) -> float:
     local_hour_angle_rad = math.radians(local_hour_deg_angle)
     latitude_rad = math.radians(lat)
     solar_decl_rad = declination_rad(utc_dt)
-    result = math.sin(latitude_rad) * math.sin(solar_decl_rad) \
+    return math.sin(latitude_rad) * math.sin(solar_decl_rad) \
              + math.cos(latitude_rad) * math.cos(solar_decl_rad) * math.cos(local_hour_angle_rad)
-    return result
 
 
 def solar_correct_data(data, dataset) -> float:

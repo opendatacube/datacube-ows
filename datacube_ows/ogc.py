@@ -109,27 +109,26 @@ def ogc_impl():
         op = nocase_args.get("request", "").upper()
         if op in WMS_REQUESTS:
             return ogc_svc_impl("wms")
-        elif op in WCS_REQUESTS:
+        if op in WCS_REQUESTS:
             return ogc_svc_impl("wcs")
-        elif op:
+        if op:
             # Should we return a WMS or WCS exception if there is no service specified?
             # Defaulting to WMS because that's what we already have.
             raise WMSException(
                 "Invalid service and/or request",
                 locator="Service and request parameters")
-        else:
-            cfg = get_config()   # pylint: disable=redefined-outer-name
-            url = nocase_args.get('Host', nocase_args['url_root'])
-            base_url = get_service_base_url(cfg.allowed_urls, url)
-            return (render_template(
-                            "index.html",
-                            cfg=cfg,
-                            supported=OWS_SUPPORTED,
-                            base_url=base_url,
-                            version=__version__,
-                    ),
-                    200,
-                    resp_headers({"Content-Type": "text/html"}))
+        cfg = get_config()   # pylint: disable=redefined-outer-name
+        url = nocase_args.get('Host', nocase_args['url_root'])
+        base_url = get_service_base_url(cfg.allowed_urls, url)
+        return (render_template(
+                        "index.html",
+                        cfg=cfg,
+                        supported=OWS_SUPPORTED,
+                        base_url=base_url,
+                        version=__version__,
+                ),
+                200,
+                resp_headers({"Content-Type": "text/html"}))
     except OGCException as e:
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
@@ -205,10 +204,9 @@ def ping() -> tuple[str, int, dict[str, str]]:
 
     if all(dbs_ok.values()):
         return render_template("ping.html", status="Up", statuses=dbs_ok), 200, resp_headers({"Content-Type": "text/html"})
-    elif any(dbs_ok.values()):
+    if any(dbs_ok.values()):
         return render_template("ping.html", status="Partially Up", statuses=dbs_ok), 503, resp_headers({"Content-Type": "text/html"})
-    else:
-        return render_template("ping.html", status="Down", statuses=dbs_ok), 503, resp_headers({"Content-Type": "text/html"})
+    return render_template("ping.html", status="Down", statuses=dbs_ok), 503, resp_headers({"Content-Type": "text/html"})
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")

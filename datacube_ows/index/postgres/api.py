@@ -131,8 +131,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
                                                  times=times, geom=geom, products=products))
         if extent is None or crs is None or crs == extent.crs:
             return extent
-        else:
-            return extent.to_crs(crs)
+        return extent.to_crs(crs)
 
     def _run_sql(self, dc: Datacube, path: str, **params: str) -> bool:
         return run_sql(dc, self.name, path, **params)

@@ -12,8 +12,7 @@ def get_bands_from_styles(styles, layer, version: int = 1) -> set:
     if len(styles) != 1:
         if version == 1:
             raise WCS1Exception("Multiple style parameters not supported")
-        else:
-            raise WCS2Exception("Multiple style parameters not supported")
+        raise WCS2Exception("Multiple style parameters not supported")
     style = layer.style_index.get(styles[0])
     bands = set()
     if style:
