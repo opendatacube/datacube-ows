@@ -1148,7 +1148,6 @@ def xyt_dummydata():
 
 
 @pytest.fixture
-def empty_driver_cache():
+def empty_driver_cache() -> None:
     from datacube_ows.index.driver import OWSIndexDriverCache
     OWSIndexDriverCache._instance = None
-    return None
