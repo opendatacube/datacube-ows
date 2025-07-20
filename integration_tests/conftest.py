@@ -61,13 +61,12 @@ def enclosed_bbox(bbox, flip: bool = False):
             lat_max - 0.45 * lat_range,
             lon_max - 0.45 * lon_range,
         )
-    else:
-        return (
-            lon_min + 0.45 * lon_range,
-            lat_min + 0.45 * lat_range,
-            lon_max - 0.45 * lon_range,
-            lat_max - 0.45 * lat_range,
-        )
+    return (
+        lon_min + 0.45 * lon_range,
+        lat_min + 0.45 * lat_range,
+        lon_max - 0.45 * lon_range,
+        lat_max - 0.45 * lat_range,
+    )
 
 
 @pytest.helpers.register
@@ -112,8 +111,7 @@ def write_role_name():
 def read_role_name(write_role_name: str):
     if read_role_name := os.environ.get("SERVER_DB_USERNAME"):
         return read_role_name
-    else:
-        return write_role_name
+    return write_role_name
 
 
 @pytest.fixture

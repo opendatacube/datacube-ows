@@ -171,13 +171,12 @@ def get_coverage_data(request, styles, qprof) -> tuple:
                                 WCS2Exception.INVALID_SCALE_FACTOR,
                                 locator=scale.axis
                                 )
-        else:
-            if isinstance(scale, ScaleAxis):
-                scaler.scale_axis(axis, scale.factor)
-            elif isinstance(scale, ScaleSize):
-                scaler.scale_size(axis, scale.size)
-            elif isinstance(scale, ScaleExtent):
-                scaler.scale_extent(axis, scale.low, scale.high)
+        if isinstance(scale, ScaleAxis):
+            scaler.scale_axis(axis, scale.factor)
+        elif isinstance(scale, ScaleSize):
+            scaler.scale_size(axis, scale.size)
+        elif isinstance(scale, ScaleExtent):
+            scaler.scale_extent(axis, scale.low, scale.high)
 
     #
     # Rangesubset

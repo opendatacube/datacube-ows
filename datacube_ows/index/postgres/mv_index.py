@@ -152,26 +152,26 @@ def mv_search(index: Index,
     with engine.connect() as conn:
         if sel == MVSelectOpts.ALL:
             return conn.execute(s)
-        elif sel == MVSelectOpts.IDS:
+        if sel == MVSelectOpts.IDS:
             return [r[0] for r in conn.execute(s)]
-        elif sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
+        if sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
             for r in conn.execute(s):
                 if sel == MVSelectOpts.COUNT:
                     return cast(int, r[0])
-                else:  # MVSelectOpts.EXTENT
-                    geojson = r[0]
-                    if geojson is None:
+                # MVSelectOpts.EXTENT
+                geojson = r[0]
+                if geojson is None:
+                    return None
+                uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
+                if geom:
+                    intersect = uniongeom.intersection(geom)
+                    if intersect.wkt == 'POLYGON EMPTY':
                         return None
-                    uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
-                    if geom:
-                        intersect = uniongeom.intersection(geom)
-                        if intersect.wkt == 'POLYGON EMPTY':
-                            return None
-                        if orig_crs and orig_crs != "EPSG:4326":
-                            intersect = intersect.to_crs(orig_crs)
-                    else:
-                        intersect = uniongeom
-                    return intersect
+                    if orig_crs and orig_crs != "EPSG:4326":
+                        intersect = intersect.to_crs(orig_crs)
+                else:
+                    intersect = uniongeom
+                return intersect
         elif sel == MVSelectOpts.DATASETS:
             ids = [r[0] for r in conn.execute(s)]
             return index.datasets.bulk_get(ids)

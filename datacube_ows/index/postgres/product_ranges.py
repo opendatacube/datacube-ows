@@ -30,13 +30,12 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
     if isinstance(bbox, dict):
         return bbox
-    else:
-        return {
-            "top": bbox.top,
-            "bottom": bbox.bottom,
-            "left": bbox.left,
-            "right": bbox.right,
-        }
+    return {
+        "top": bbox.top,
+        "bottom": bbox.bottom,
+        "left": bbox.left,
+        "right": bbox.right,
+    }
 
 
 def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:

@@ -168,7 +168,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                 or_flag: bool = False
                 if "or" in flags and "and" in flags:
                     raise ConfigException(f"MultiDateValueMap rule in {self.mdh.style.name} of layer {self.mdh.style.product.name} combines 'and' and 'or' rules")
-                elif "or" in flags:
+                if "or" in flags:
                     or_flag = True
                     sflags = cast(FlagSpec, flags["or"])
                 elif "and" in flags:
@@ -437,9 +437,8 @@ class ColorMapStyleDef(StyleDefBase):
             """
             if self.aggregator is None:
                 return apply_value_map(self.value_map, data, self.style.product.band_idx.band)
-            else:
-                agg = self.aggregator(data)
-                return apply_value_map(self.value_map, agg, self.style.product.band_idx.band)
+            agg = self.aggregator(data)
+            return apply_value_map(self.value_map, agg, self.style.product.band_idx.band)
 
         class Legend(ColorMapLegendBase):
             pass

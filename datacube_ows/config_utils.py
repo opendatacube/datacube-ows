@@ -86,20 +86,17 @@ def cfg_expand(cfg_unexpanded: CFG_DICT,
                 if json_obj is None:
                     raise ConfigException(f"Could not find json file {raw_path}")
                 return cfg_expand(json_obj, cwd=cwd, inclusions=ninclusions)
-            elif cfg_unexpanded["type"] == "python":
+            if cfg_unexpanded["type"] == "python":
                 # Python Expansion
                 return cfg_expand(import_python_obj(raw_path), cwd=cwd, inclusions=ninclusions)
-            else:
-                raise ConfigException(f"Unsupported inclusion type: {cfg_unexpanded['type']!s}")
-        else:
-            return {
-                k: cfg_expand(cast(CFG_DICT, v), cwd=cwd, inclusions=inclusions)
-                for k, v in cfg_unexpanded.items()
-            }
-    elif isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
+            raise ConfigException(f"Unsupported inclusion type: {cfg_unexpanded['type']!s}")
+        return {
+            k: cfg_expand(cast(CFG_DICT, v), cwd=cwd, inclusions=inclusions)
+            for k, v in cfg_unexpanded.items()
+        }
+    if isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
         return [cfg_expand(elem, cwd=cwd, inclusions=inclusions) for elem in cfg_unexpanded]
-    else:
-        return cfg_unexpanded
+    return cfg_unexpanded
 
 
 def get_file_loc(x: str) -> str:
@@ -515,16 +512,14 @@ class OWSMetadataConfig(OWSConfigEntry):
                     FLD_ACCESS_CONSTRAINTS, FLD_CONTACT_POSITION, FLD_CONTACT_ORGANISATION,
                     FLD_UNITS):
             return self.read_local_metadata(name)
-        elif name == FLD_KEYWORDS:
+        if name == FLD_KEYWORDS:
             kw = self.read_local_metadata(FLD_KEYWORDS)
             if kw:
                 return set(kw.split(","))
-            else:
-                return set()
-        elif name == FLD_ATTRIBUTION:
+            return set()
+        if name == FLD_ATTRIBUTION:
             return self.read_local_metadata(FLD_ATTRIBUTION)
-        else:
-            return super().__getattribute__(name)
+        return super().__getattribute__(name)
 
 ###########################
 # Inheritable configuration
@@ -790,7 +785,7 @@ class FlagProductBands(OWSConfigEntry):
             raise ConfigException(f"Fuse functions for flag bands in product set {self.product_names} do not match")
         if fb.pq_ignore_time != self.ignore_time:
             raise ConfigException(f"ignore_time option for flag bands in product set {self.product_names} do not match")
-        elif fb.pq_fuse_func and not self.fuse_func:
+        if fb.pq_fuse_func and not self.fuse_func:
             self.fuse_func = fb.pq_fuse_func
         self.declare_unready("products")
         self.declare_unready("low_res_products")
@@ -887,7 +882,7 @@ class AbstractMaskRule(OWSConfigEntry):
             if "or" in flags and "and" in flags:
                 raise ConfigException(
                     f"ValueMap rule in {self.context} combines 'and' and 'or' rules")
-            elif "or" in flags:
+            if "or" in flags:
                 self.or_flags = True
                 flags = cast(FlagSpec, flags["or"])
             elif "and" in flags:

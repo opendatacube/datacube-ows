@@ -133,10 +133,9 @@ class BandIndex(OWSMetadataConfig):
         def floatify_nans(inp: float | int | str) -> float | int:
             if isinstance(inp, str) and inp == "nan":
                 return float(inp)
-            elif isinstance(inp, str):
+            if isinstance(inp, str):
                 raise ValueError("Invalid nodata value: {inp}")
-            else:
-                return inp
+            return inp
         default_to_all = not bool(self._raw_cfg)
         # pylint: disable=attribute-defined-outside-init
         self.measurements: dict[str, Measurement] = {}
@@ -240,8 +239,7 @@ class AttributionCfg(OWSConfigEntry):
     def parse(cls, cfg: CFG_DICT | None, owner: Union["OWSConfig", "OWSLayer"]) -> Optional["AttributionCfg"]:
         if not cfg:
             return None
-        else:
-            return cls(cfg, owner)
+        return cls(cfg, owner)
 
 
 class SuppURL(OWSConfigEntry):
@@ -347,8 +345,7 @@ class OWSLayer(OWSMetadataConfig):
     def can_inherit_from(self) -> Union["OWSConfig", "OWSLayer"]:
         if self.parent_layer:
             return self.parent_layer
-        else:
-            return self.global_cfg
+        return self.global_cfg
 
     @override
     def get_obj_label(self) -> str:
@@ -479,12 +476,11 @@ class TimeRes(Enum):
     def dataset_groupby(self, product_names: list[str] | None = None, is_mosaic: bool = False) -> GroupBy:
         if self.is_subday():
             return group_by_begin_datetime(product_names, truncate_dates=False)
-        elif is_mosaic:
+        if is_mosaic:
             return group_by_mosaic(product_names)
-        elif self.is_solar():
+        if self.is_solar():
             return group_by_solar(product_names)
-        else:
-            return group_by_begin_datetime(product_names)
+        return group_by_begin_datetime(product_names)
 
 DEF_TIME_LATEST = "latest"
 DEF_TIME_EARLIEST = "earliest"
@@ -527,8 +523,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         tr = TimeRes.parse(cast(str | None, cfg.get("time_resolution")))
         if not tr:
             raise ConfigException(f"Invalid time resolution value {cfg['time_resolution']} in named layer {self.name}")
-        else:
-            self.time_resolution: TimeRes = tr
+        self.time_resolution: TimeRes = tr
         self.mosaic_date_func: FunctionWrapper | None = None
         if "mosaic_date_func" in cfg:
             self.mosaic_date_func = FunctionWrapper(self, cast(CFG_DICT, cfg["mosaic_date_func"]))
@@ -1167,10 +1162,8 @@ def parse_ows_layer(cfg: CFG_DICT,
     if cfg.get("name", None):
         if cfg.get("multi_product", False):
             return OWSMultiProductLayer(cfg, global_cfg, parent_layer)
-        else:
-            return OWSProductLayer(cfg, global_cfg, parent_layer)
-    else:
-        return OWSFolder(cfg, global_cfg, parent_layer=parent_layer, sibling=sibling)
+        return OWSProductLayer(cfg, global_cfg, parent_layer)
+    return OWSFolder(cfg, global_cfg, parent_layer=parent_layer, sibling=sibling)
 
 
 class WCSFormat:
@@ -1232,8 +1225,7 @@ class ContactInfo(OWSConfigEntry):
             def parse(cls, cfg: dict[str, str] | None) -> Optional["Address"]:
                 if not cfg:
                     return None
-                else:
-                    return cls(cfg)
+                return cls(cfg)
 
         self.address = Address.parse(cast(dict[str, str] | None, cfg.get("address")))
         self.telephone = cast(str | None, cfg.get("telephone"))
@@ -1252,8 +1244,7 @@ class ContactInfo(OWSConfigEntry):
     def parse(cls, cfg, global_cfg) -> Optional["ContactInfo"]:
         if cfg:
             return cls(cfg, global_cfg)
-        else:
-            return None
+        return None
 
 
 class OWSConfig(OWSMetadataConfig):
@@ -1428,8 +1419,7 @@ class OWSConfig(OWSMetadataConfig):
         def make_gml_name(name: str) -> str:
             if name.startswith("EPSG:"):
                 return f"http://www.opengis.net/def/crs/EPSG/0/{name[5:]}"
-            else:
-                return name
+            return name
 
         self.published_CRSs: dict[str, CFG_DICT] = {}
         self.internal_CRSs: dict[str, CFG_DICT] = {}

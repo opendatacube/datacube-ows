@@ -98,7 +98,7 @@ def run_sql_statement(sql: str, fname: str, conn: sqlalchemy.Connection, env: da
                 f"Insufficient Privileges (user {env.db_username}). Schema altering actions should be run by a role with admin privileges"
             )
             raise AbortRun() from None
-        elif isinstance(e.orig, psycopg2.errors.DuplicateObject):
+        if isinstance(e.orig, psycopg2.errors.DuplicateObject):
             if fname.endswith('_ignore_duplicates.sql'):
                 click.echo("Ignoring 'already exists' error")
             else:

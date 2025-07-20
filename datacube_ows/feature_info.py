@@ -313,5 +313,4 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
     }
     if params.format == "text/html":
         return html_json_response(result, cfg)
-    else:
-        return json_response(result, cfg)
+    return json_response(result, cfg)

@@ -44,21 +44,20 @@ def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
             assert tz is not None
             norm_date = solar_date(ts, tz)
             return norm_date == user_date
-        elif time_res.is_summary():
+        if time_res.is_summary():
             norm_date = date(ts.year,
                              ts.month,
                              ts.day)
             return norm_date == user_date
-        else:
-            norm_date = datetime(ts.year,
-                                 ts.month,
-                                 ts.day,
-                                 ts.hour,
-                                 ts.minute,
-                                 ts.second,
-                                 tzinfo=ts.tzinfo)
-            user_date = default_to_utc(user_date)
-            return user_date >= norm_date and user_date < norm_date + timedelta(hours=23, minutes=59, seconds=59)
+        norm_date = datetime(ts.year,
+                             ts.month,
+                             ts.day,
+                             ts.hour,
+                             ts.minute,
+                             ts.second,
+                             tzinfo=ts.tzinfo)
+        user_date = default_to_utc(user_date)
+        return user_date >= norm_date and user_date < norm_date + timedelta(hours=23, minutes=59, seconds=59)
 
     for odc_date in odc_dates:
         for idx, user_date in enumerate(user_dates):
@@ -128,15 +127,14 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
             if extent is None:
                 qprof["write_action"] = "No extent: Write Empty"
                 raise EmptyResponse()
-            else:
-                qprof["write_action"] = "Polygon"
-                qprof.start_event("write")
-                body = _write_polygon(
-                    params.geobox,
-                    extent,
-                    params.layer.resource_limits.zoom_fill,
-                    params.layer)
-                qprof.end_event("write")
+            qprof["write_action"] = "Polygon"
+            qprof.start_event("write")
+            body = _write_polygon(
+                params.geobox,
+                extent,
+                params.layer.resource_limits.zoom_fill,
+                params.layer)
+            qprof.end_event("write")
         elif n_datasets == 0:
             qprof["write_action"] = "No datasets: Write Empty"
             raise EmptyResponse()
@@ -213,8 +211,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
 
     if params.ows_stats:
         return json_response(qprof.profile())
-    else:
-        return png_response(body, extra_headers=params.layer.resource_limits.wms_cache_rules.cache_headers(n_datasets))
+    return png_response(body, extra_headers=params.layer.resource_limits.wms_cache_rules.cache_headers(n_datasets))
 
 
 @log_call

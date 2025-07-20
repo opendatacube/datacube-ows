@@ -85,8 +85,7 @@ def capture_headers(req: Request,
 def cache_control_headers(max_age: int) -> dict[str, str]:
     if max_age <= 0:
         return {"cache-control": "no-cache"}
-    else:
-        return {"cache-control": f"max-age={max_age}"}
+    return {"cache-control": f"max-age={max_age}"}
 
 
 def lower_get_args() -> dict[str, str]:

@@ -174,12 +174,11 @@ class OWSAbstractIndex(ABC):
                 ),
                 crs=layer.native_CRS
             )
-        elif any_geom.geom_type in ("MultiPoint", "LineString", "MultiLineString"):
+        if any_geom.geom_type in ("MultiPoint", "LineString", "MultiLineString"):
             # Not a point, but not a polygon or multipolygon?  Expand to polygon by taking convex hull
             return any_geom.convex_hull
-        else:
-            # Return polygons and multipolygons as is.
-            return any_geom
+        # Return polygons and multipolygons as is.
+        return any_geom
 
 
 class OWSAbstractIndexDriver(ABC):

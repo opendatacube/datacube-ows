@@ -46,9 +46,8 @@ class ComponentStyleDef(StyleDefBase):
             if components is None:
                 if imgband == "alpha":
                     continue
-                else:
-                    raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
-            elif callable(components) or "function" in components:
+                raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
+            if callable(components) or "function" in components:
                 self.raw_rgb_components[imgband] = FunctionWrapper(self.product, cast(CFG_DICT | Callable, components),
                                                                    stand_alone=self.stand_alone)
                 if not self.stand_alone:
@@ -116,13 +115,12 @@ class ComponentStyleDef(StyleDefBase):
         """
         if self.stand_alone:
             return comp_in
-        elif comp_in is None:
+        if comp_in is None:
             return None
-        else:
-            return {
-                self.product.band_idx.band(self.local_band(band_alias)): value
-                for band_alias, value in comp_in.items() if band_alias not in ['scale_range']
-            }
+        return {
+            self.product.band_idx.band(self.local_band(band_alias)): value
+            for band_alias, value in comp_in.items() if band_alias not in ['scale_range']
+        }
 
     def compress_band(self, component_name: str, imgband_data: DataArray) -> DataArray:
         """

@@ -181,8 +181,7 @@ def multi_date_delta(data, time_direction: int = -1):
 #    data1, data2 = data.values.item(0), data.values.item(1)
     if time_direction >= 0:
         return data1 - data2
-    else:
-        return data2 - data1
+    return data2 - data1
 
 def multi_date_pass(data):
     return data

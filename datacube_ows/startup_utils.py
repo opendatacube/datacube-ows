@@ -237,5 +237,4 @@ def initialise_babel(cfg, app) -> object | None:
                       default_domain=cfg.message_domain,
                       configure_jinja=False
                       )
-    else:
-        return None
+    return None

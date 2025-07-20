@@ -37,24 +37,22 @@ class SpatialParameter:
     def is_x_dim(self, dimension: str) -> bool:
         if dimension == self.crs_def['horizontal_coord'].lower():
             return True
-        elif dimension == self.crs_def['vertical_coord'].lower():
+        if dimension == self.crs_def['vertical_coord'].lower():
             return False
-        elif dimension == self.layer.native_CRS_def['horizontal_coord'].lower():
+        if dimension == self.layer.native_CRS_def['horizontal_coord'].lower():
             return True
-        elif dimension == self.layer.native_CRS_def['vertical_coord'].lower():
+        if dimension == self.layer.native_CRS_def['vertical_coord'].lower():
             return False
-        elif dimension in ("x", "i", "lon", "long", "lng", "longitude"):
+        if dimension in ("x", "i", "lon", "long", "lng", "longitude"):
             return True
-        elif dimension in ("y", "j", "lat", "latitude"):
+        if dimension in ("y", "j", "lat", "latitude"):
             return False
-        else:
-            raise WCSScalerUnknownDimension(dimension)
+        raise WCSScalerUnknownDimension(dimension)
 
     def __getitem__(self, dim: str):
         if self.is_x_dim(dim):
             return self.x
-        else:
-            return self.y
+        return self.y
 
     def __setitem__(self, dim: str, val) -> None:
         if self.is_x_dim(dim):

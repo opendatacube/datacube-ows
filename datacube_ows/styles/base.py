@@ -434,14 +434,12 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     def count_dates(count_or_sized_or_ds: int | Sized | xr.Dataset) -> int:
         if isinstance(count_or_sized_or_ds, int):
             return count_or_sized_or_ds
-        elif isinstance(count_or_sized_or_ds, xr.Dataset):
+        if isinstance(count_or_sized_or_ds, xr.Dataset):
             data = count_or_sized_or_ds
             if not data.time.shape:
                 return 1
-            else:
-                return len(data.coords["time"])
-        else:
-            return len(count_or_sized_or_ds)
+            return len(data.coords["time"])
+        return len(count_or_sized_or_ds)
 
     def get_legend_cfg(self, count_or_sized_or_ds: int | Sized | xr.Dataset) -> LegendBase:
         mdh = self.get_multi_date_handler(count_or_sized_or_ds)

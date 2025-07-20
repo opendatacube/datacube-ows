@@ -199,8 +199,7 @@ class CacheControlRules(OWSConfigEntry):
             rule = r
         if rule:
             return cache_control_headers(cast(int, rule['max_age']))
-        else:
-            return cache_control_headers(0)
+        return cache_control_headers(0)
 
 
 class ResourceLimited(Exception):

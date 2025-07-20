@@ -50,8 +50,7 @@ class WCS20Extent:
         if crs in ["EPSG:4326"]:
             # Vertical coordinate First
             return [("x", bbox[1], bbox[3]), ("y", bbox[0], bbox[2]), time]
-        else:
-            return [("x", bbox[0], bbox[2]), ("y", bbox[1], bbox[3]), time]
+        return [("x", bbox[0], bbox[2]), ("y", bbox[1], bbox[3]), time]
 
     def native_bbox(self) -> tuple[float, float, float, float]:
         return (
@@ -134,14 +133,13 @@ class ODCExtent:
                 if self == self.MIDDLE:
                     i = len(ls) // 2
                     return ls[i: i + 1]
-                elif self == self.FIRST_TWO:
+                if self == self.FIRST_TWO:
                     return ls[0:1]
-                elif self == self.LAST_TWO:
+                if self == self.LAST_TWO:
                     return ls[-2:]
-                elif self == self.LAST:
+                if self == self.LAST:
                     return ls[-1:]
-                else:
-                    return ls[self.value: self.value + 1]
+                return ls[self.value: self.value + 1]
             except IndexError:
                 return []
 

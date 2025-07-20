@@ -284,22 +284,21 @@ class DataStacker:
                 # regularise time dimension:
                 if len(qry_result.time) > 1:
                     raise WMSException("Cannot ignore time on PQ (flag) bands from a time-aware product")
-                elif len(qry_result.time) == len(data.time):
+                if len(qry_result.time) == len(data.time):
                     qry_result["time"] = data.time
                 else:
                     if len(qry_result.time) == 0:
                         data = self.create_nodata_filled_flag_bands(data, pbq)
                         continue
-                    else:
-                        data_new_bands = {}
-                        for band in pbq.bands:
-                            band_data = qry_result[band]
-                            timeless_band_data = band_data.sel(time=qry_result.time.values[0])
-                            band_time_slices = []
-                            for _ in data.time.values:
-                                band_time_slices.append(timeless_band_data)
-                            timed_band_data = xarray.concat(band_time_slices, data.time)
-                            data_new_bands[band] = timed_band_data
+                    data_new_bands = {}
+                    for band in pbq.bands:
+                        band_data = qry_result[band]
+                        timeless_band_data = band_data.sel(time=qry_result.time.values[0])
+                        band_time_slices = []
+                        for _ in data.time.values:
+                            band_time_slices.append(timeless_band_data)
+                        timed_band_data = xarray.concat(band_time_slices, data.time)
+                        data_new_bands[band] = timed_band_data
                     data = data.assign(data_new_bands)
                     continue
             elif len(qry_result.time) == 0:
