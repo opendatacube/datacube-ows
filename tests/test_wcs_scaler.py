@@ -246,7 +246,7 @@ def test_scalar_slice(layer_crs_nongeom) -> None:
 
 def assert_approx_tuple(a, b) -> None:
     assert len(a) == len(b)
-    for aa, bb in zip(a, b):
+    for aa, bb in zip(a, b, strict=True):
         if aa is None:
             assert bb is None
         else:

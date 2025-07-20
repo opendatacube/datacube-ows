@@ -201,7 +201,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
         date_slices = (data.sel(time=dt) for dt in data.coords["time"].values)
         mask: DataArray | None = None
         if self.values:
-            for d_slice, vals, invert in zip(date_slices, self.values, self.invert):
+            for d_slice, vals, invert in zip(date_slices, self.values, self.invert, strict=False):
                 d_mask: DataArray | None = None
                 if len(vals) == 0:
                     d_mask = d_slice == d_slice
@@ -219,7 +219,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
                 elif d_mask is not None:
                     mask &= d_mask
         else:
-            for d_slice, flags, or_flags, invert in zip(date_slices, self.flags, self.or_flags, self.invert):
+            for d_slice, flags, or_flags, invert in zip(date_slices, self.flags, self.or_flags, self.invert, strict=False):
                 d_mask = None
                 if not flags:
                     d_mask = d_slice == d_slice
