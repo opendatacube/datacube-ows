@@ -5,7 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import operator
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import lark
 from datacube.virtual.expr import formula_parser
