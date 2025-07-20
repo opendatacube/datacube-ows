@@ -194,8 +194,7 @@ class ODCExtent:
             if self == self.IN_FULL_BUT_OUTSIDE_OF_TIMES:
                 outside_times = full_extent.difference(time_extent)
                 outside_times = simplify_geom(outside_times)
-                sub = self.CENTRAL_SUBSET_FOR_TIMES.subset(outside_times, full_extent)
-                return sub
+                return self.CENTRAL_SUBSET_FOR_TIMES.subset(outside_times, full_extent)
 
             bbox = time_extent.boundingbox
             width = bbox.right - bbox.left

@@ -179,8 +179,7 @@ def parse_config_file(log: Logger | None = None) -> OWSConfig | None:
 
 def initialise_flask(name: str) -> Flask:
     app_path = os.path.dirname(os.path.abspath(__file__))
-    app = Flask(name.split('.')[0], template_folder=os.path.join(app_path, 'templates'))
-    return app
+    return Flask(name.split('.')[0], template_folder=os.path.join(app_path, 'templates'))
 
 def pass_through(undecorated):
     def decorator(*args, **kwargs):
@@ -223,8 +222,7 @@ def proxy_fix(app, log=None):
     return app
 
 def request_extractor() -> str | None:
-    qreq = request.args.get('request')
-    return qreq
+    return request.args.get('request')
 
 def initialise_babel(cfg, app) -> object | None:
     if cfg and cfg.internationalised:
@@ -234,11 +232,10 @@ def initialise_babel(cfg, app) -> object | None:
         def get_locale():
             return request.accept_languages.best_match(cfg.locales, default=cfg.locales[0])
 
-        babel = Babel(app,
+        return Babel(app,
                       locale_selector=get_locale,
                       default_domain=cfg.message_domain,
                       configure_jinja=False
                       )
-        return babel
     else:
         return None

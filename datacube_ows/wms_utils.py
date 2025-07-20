@@ -96,8 +96,7 @@ def _get_geobox(args, crs: CRS) -> GeoBox:
 
 def _get_polygon(args, crs: CRS) -> geom.Geometry:
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
-    poly = geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
-    return poly
+    return geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
 
 
 def zoom_factor(args, crs) -> float:
@@ -486,9 +485,8 @@ def cosine_of_solar_zenith(lat: float, lon: float, utc_dt) -> float:
     local_hour_angle_rad = math.radians(local_hour_deg_angle)
     latitude_rad = math.radians(lat)
     solar_decl_rad = declination_rad(utc_dt)
-    result = math.sin(latitude_rad) * math.sin(solar_decl_rad) \
+    return math.sin(latitude_rad) * math.sin(solar_decl_rad) \
              + math.cos(latitude_rad) * math.cos(solar_decl_rad) * math.cos(local_hour_angle_rad)
-    return result
 
 
 def solar_correct_data(data, dataset) -> float:

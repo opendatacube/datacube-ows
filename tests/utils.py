@@ -33,14 +33,13 @@ def dummy_da(val, name: str, coords, attrs=None, dtype=np.float64) -> xr.DataArr
     data = np.ndarray([len(a) for n, a in coords], dtype=dtype)
     coords = dict(coords)
     data.fill(val)
-    output = xr.DataArray(
+    return xr.DataArray(
         data,
         coords=coords,
         dims=dims,
         attrs=attrs,
         name=name,
     )
-    return output
 
 
 def dim1_da(name: str, vals: list, coords: list, with_time: bool = True, attrs=None) -> xr.DataArray:
@@ -59,14 +58,13 @@ def dim1_da(name: str, vals: list, coords: list, with_time: bool = True, attrs=N
         shape.append(1)
     buff_arr = np.array(vals)
     data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
-    output = xr.DataArray(
+    return xr.DataArray(
         data,
         coords=coords,
         dims=dims,
         attrs=attrs,
         name=name,
     )
-    return output
 
 def dim1_da_time(name: str, vals, dates, coords, attrs=None) -> xr.DataArray:
     if len(coords) != len(vals):
@@ -82,11 +80,10 @@ def dim1_da_time(name: str, vals, dates, coords, attrs=None) -> xr.DataArray:
     }
     buff_arr = np.array(vals)
     data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
-    output = xr.DataArray(
+    return xr.DataArray(
         data,
         coords=coords,
         dims=dims,
         attrs=attrs,
         name=name,
     )
-    return output

@@ -173,8 +173,7 @@ class ComponentStyleDef(StyleDefBase):
                     imgband_data = self.compress_band(imgband, imgband_data)
                 imgdata[imgband] = imgband_data.astype("uint8")
 
-        image_dataset = Dataset(imgdata)
-        return image_dataset
+        return Dataset(imgdata)
 
 
 # Register ComponentStyleDef as a Style subclass.

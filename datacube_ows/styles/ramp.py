@@ -252,8 +252,7 @@ class ColorRamp:
         imgdata = cast(MutableMapping[Hashable, Any], {})
         for band in self.components:
             imgdata[band] = (data.dims, self.get_8bit_value(data, band))
-        imgdataset = Dataset(imgdata, coords=data.coords)
-        return imgdataset
+        return Dataset(imgdata, coords=data.coords)
 
     def rgba_at(self, val: float) -> tuple[float, float, float, float]:
         return (

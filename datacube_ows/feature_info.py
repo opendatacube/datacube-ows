@@ -72,9 +72,8 @@ def get_s3_browser_uris(datasets: dict[ProductBandQuery, xarray.DataArray],
             new_uri = uri
         return new_uri
 
-    formatted = {convert(uri) for uri in unique_uris}
+    return {convert(uri) for uri in unique_uris}
 
-    return formatted
 
 
 @log_call

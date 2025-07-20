@@ -208,8 +208,7 @@ class DataStacker:
             layer=self._layer,
             geom=geom,
             products=query.products)
-        grpd_result = datacube.Datacube.group_datasets(result, self.group_by)
-        return grpd_result
+        return datacube.Datacube.group_datasets(result, self.group_by)
 
     def datasets(self,
                  all_flag_bands: bool = False,
@@ -357,8 +356,7 @@ class DataStacker:
 
         if not time_slices:
             return None
-        result = xarray.concat(time_slices, datasets.time)
-        return result
+        return xarray.concat(time_slices, datasets.time)
 
     # Read data for given datasets and measurements per the output_geobox
     # TODO: Make skip_broken passed in via config

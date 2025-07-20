@@ -66,13 +66,12 @@ def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
                 result.append(idx)
                 break
     npresult = numpy.array(result, dtype="uint8")
-    xrresult = xarray.DataArray(
+    return xarray.DataArray(
         npresult,
         coords={"time": odc_dates},
         dims=["time"],
         name="user_date_sorter"
     )
-    return xrresult
 
 
 class EmptyResponse(Exception):

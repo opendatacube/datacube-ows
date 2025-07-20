@@ -242,8 +242,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
 
 def convert_to_uint8(fval: float) -> int:
     scaled = int(fval * 255.0 + 0.5)
-    clipped = min(max(scaled, 0), 255)
-    return clipped
+    return min(max(scaled, 0), 255)
 
 
 def apply_value_map(value_map: MutableMapping[str, list[AbstractValueMapRule]],
@@ -378,8 +377,7 @@ class ColorMapStyleDef(StyleDefBase):
             c = numpy.full(data.shape, val)
             target[channel] = DataArray(c, dims=data.dims, coords=data.coords)
         # pyre-ignore[6]
-        masked = target.where(mask).where(numpy.isfinite(data))  # remask
-        return masked
+        return target.where(mask).where(numpy.isfinite(data))  # remask
 
     @override
     def transform_single_date_data(self, data: Dataset) -> Dataset:

@@ -139,8 +139,7 @@ def babel_cfg():
 
 @pytest.fixture
 def flask_app():
-    app = flask.Flask("test_flask_app")
-    return app
+    return flask.Flask("test_flask_app")
 
 def test_init_babel_on(babel_cfg, flask_app) -> None:
     from datacube_ows.startup_utils import initialise_babel

@@ -118,8 +118,7 @@ class RequestScale:
         for i in range(2):
             ratio = ratio * self.pixel_size[i] / other.pixel_size[i]
         ratio = ratio * self.total_band_size / other.total_band_size
-        ratio = ratio * other.res_xy() / self.res_xy()
-        return ratio
+        return ratio * other.res_xy() / self.res_xy()
 
     @property
     def load_factor(self) -> float:
