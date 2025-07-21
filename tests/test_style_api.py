@@ -7,6 +7,7 @@
 from decimal import Decimal
 
 import pytest
+
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.styles.api import (
     StandaloneStyle,

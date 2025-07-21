@@ -7,6 +7,7 @@
 import os
 
 import pytest
+
 from datacube_ows.cfg_parser_impl import main
 
 

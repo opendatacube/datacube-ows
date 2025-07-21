@@ -5,10 +5,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+from odc.geo.geom import box
+
 from datacube_ows.index.postgres.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.time_utils import local_solar_date_range
-from odc.geo.geom import box
 
 
 def test_full_layer() -> None:

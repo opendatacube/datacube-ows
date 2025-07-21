@@ -11,6 +11,7 @@ from collections.abc import Sequence
 import numpy as np
 import pytest
 import xarray as xr
+
 from datacube_ows.band_utils import (
     band_quotient,
     band_quotient_sum,

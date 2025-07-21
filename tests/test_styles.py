@@ -7,13 +7,14 @@
 import datetime
 from unittest.mock import MagicMock, patch
 
-import datacube_ows.styles
 import numpy as np
 import pytest
-from datacube_ows.config_utils import ConfigException, OWSEntryNotFound
-from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 from typing_extensions import override
 from xarray import DataArray, Dataset, concat
+
+import datacube_ows.styles
+from datacube_ows.config_utils import ConfigException, OWSEntryNotFound
+from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 
 @pytest.fixture
@@ -723,8 +724,9 @@ def test_reint() -> None:
 
 
 def test_createcolordata() -> None:
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from matplotlib.colors import to_rgba
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
@@ -735,8 +737,9 @@ def test_createcolordata() -> None:
 
 
 def test_createcolordata_alpha() -> None:
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from matplotlib.colors import to_rgba
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
@@ -747,8 +750,9 @@ def test_createcolordata_alpha() -> None:
 
 
 def test_createcolordata_mask() -> None:
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from matplotlib.colors import to_rgba
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
     da = DataArray(band, name='foo')
@@ -760,8 +764,9 @@ def test_createcolordata_mask() -> None:
 
 
 def test_createcolordata_remask() -> None:
-    from datacube_ows.styles.colormap import ColorMapStyleDef
     from matplotlib.colors import to_rgba
+
+    from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, np.nan, np.nan])
     da = DataArray(band, name='foo')

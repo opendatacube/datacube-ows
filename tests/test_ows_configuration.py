@@ -6,11 +6,11 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 import datacube_ows.config_utils
 import datacube_ows.ogc_utils
 import datacube_ows.ows_configuration
-import pytest
-
 from tests.utils import a_function
 
 
