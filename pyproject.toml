@@ -149,7 +149,7 @@ ignore = [
 max-line-length = 120
 
 [build-system]
-requires = ["setuptools>=69", "setuptools_scm[toml]>3.4"]
+requires = ["setuptools>=69", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
