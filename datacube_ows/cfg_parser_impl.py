@@ -323,20 +323,23 @@ def compile_cmd(languages: list[str], domain: str | None, translations_dir: str 
     else:
         all_langs = []
     assert translations_dir is not None
+    rv = 0
     for language in languages:
         if language == "all":
             for supp_lang in all_langs:
-                compile_translation(translations_dir, domain, supp_lang)
+                rv += compile_translation(translations_dir, domain, supp_lang)
         else:
-            compile_translation(translations_dir, domain, language)
-    click.echo("Language templates created.")
-    return 0
+            rv += compile_translation(translations_dir, domain, language)
+    if rv == 0:
+        click.echo("Language templates created.")
+    else:
+        click.echo("Failed to create language templates.")
+    return rv
 
 
-def compile_translation(translations_dir: str, domain: str, language: str) -> bool:
+def compile_translation(translations_dir: str, domain: str, language: str) -> int:
     click.echo(f"Compiling template for language: {language}")
-    os.system(f"pybabel compile -d {translations_dir} -D {domain} -l {language}")
-    return True
+    return os.system(f"pybabel compile -d {translations_dir} -D {domain} -l {language}")
 
 
 def write_msg_file(msg_file: str, cfg: OWSConfig) -> None:
