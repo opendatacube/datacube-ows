@@ -1124,7 +1124,6 @@ class OWSMultiProductLayer(OWSNamedLayer):
 
     @override
     def parse_pq_names(self, cfg: CFG_DICT) -> dict[str, tuple | bool]:
-        main_products = False
         if "datasets" in cfg:
             raise ConfigException(f"The 'datasets' entry in the flags section is no longer supported. Please refer to the documentation for the correct format (layer {self.name})")
         if "products" in cfg:
