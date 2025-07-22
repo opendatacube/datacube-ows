@@ -6,6 +6,7 @@
 
 import collections
 import logging
+from datetime import date, datetime
 
 import numpy
 from dateutil.parser import parse
@@ -109,10 +110,8 @@ def get_coverage_data(request, styles, qprof) -> tuple:
                         WCS2Exception.INVALID_SUBSETTING,
                         locator="time")
                 if layer.time_resolution.is_subday():
-                    low = parse(subset.low) if subset.low is not None else None
-                    low = default_to_utc(low)
-                    high = parse(subset.high) if subset.high is not None else None
-                    high = default_to_utc(high)
+                    low: date | datetime | None = default_to_utc(parse(subset.low)) if subset.low is not None else None
+                    high: date | datetime | None = default_to_utc(parse(subset.high)) if subset.high is not None else None
                 else:
                     low = parse(subset.low).date() if subset.low is not None else None
                     high = parse(subset.high).date() if subset.high is not None else None

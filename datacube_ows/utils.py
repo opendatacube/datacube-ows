@@ -146,7 +146,7 @@ def find_matching_date(dt, dates) -> bool:
     :param dates: List of sorted date-times
     :return: True if match found
     """
-    def range_of(dt) -> tuple[datetime.datetime, datetime.datetime]:
+    def range_of(dt: datetime.datetime) -> tuple[datetime.datetime, datetime.datetime]:
         start = datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo)
         end = start + datetime.timedelta(seconds=1)
         return start, end
@@ -164,7 +164,7 @@ def find_matching_date(dt, dates) -> bool:
     return False
 
 
-def default_to_utc(dt):
+def default_to_utc(dt: datetime.datetime) -> datetime.datetime:
     if not dt.tzinfo:
         dt = dt.replace(tzinfo=pytz.utc)
     return dt
