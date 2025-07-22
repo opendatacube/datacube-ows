@@ -9,6 +9,7 @@ import math
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.index import CoordRange, LayerExtent
 from datacube_ows.ows_configuration import OWSFolder, OWSLayer, parse_ows_layer

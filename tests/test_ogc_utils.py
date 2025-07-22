@@ -7,15 +7,15 @@
 import datetime
 from unittest.mock import MagicMock
 
-import datacube_ows.http_utils
-import datacube_ows.ogc_utils
-import datacube_ows.time_utils
-import datacube_ows.utils
 import pytest
 import xarray
 from odc.geo.geom import polygon
 from pytz import utc
 
+import datacube_ows.http_utils
+import datacube_ows.ogc_utils
+import datacube_ows.time_utils
+import datacube_ows.utils
 from tests.utils import dummy_da
 
 

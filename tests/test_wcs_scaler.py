@@ -8,6 +8,7 @@ import datetime
 
 import pytest
 from affine import Affine
+
 from datacube_ows.index.api import CoordRange, LayerExtent
 from datacube_ows.ows_configuration import OWSConfig, OWSProductLayer
 from datacube_ows.wcs_scaler import (

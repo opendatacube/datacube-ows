@@ -7,17 +7,17 @@
 import datetime
 from unittest.mock import MagicMock
 
-import datacube_ows.data
-import datacube_ows.feature_info
 import numpy as np
 import pytest
-from datacube_ows.feature_info import get_s3_browser_uris
-from datacube_ows.loading import DataStacker, ProductBandQuery
-from datacube_ows.ogc_exceptions import WMSException
 from odc.geo.geom import polygon
 from typing_extensions import override
 from xarray import Dataset
 
+import datacube_ows.data
+import datacube_ows.feature_info
+from datacube_ows.feature_info import get_s3_browser_uris
+from datacube_ows.loading import DataStacker, ProductBandQuery
+from datacube_ows.ogc_exceptions import WMSException
 from tests.test_styles import product_layer  # noqa: F401
 
 
