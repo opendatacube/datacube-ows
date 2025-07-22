@@ -382,7 +382,7 @@ def print_layers(layers: list[OWSLayer], styles: bool, depth: int) -> None:
 def print_styles(lyr: OWSNamedLayer, depth: int = 0) -> None:
     for styl in lyr.styles:
         indent(depth, for_styles=True)
-        print(f". {styl.name}")
+        click.echo(f". {styl.name}")
 
 
 def indent(depth: int, for_styles: bool = False) -> None:
