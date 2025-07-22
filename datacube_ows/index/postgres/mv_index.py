@@ -116,10 +116,7 @@ def mv_search(index: Index,
         or_clauses = []
         for t in times:
             if isinstance(t, datetime.datetime):
-                st: datetime.datetime = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
                 st = default_to_utc(t)
-                if not st.tzinfo:
-                    st = st.replace(tzinfo=pytz.utc)
                 tmax = st + datetime.timedelta(seconds=1)
                 or_clauses.append(
                     and_(
