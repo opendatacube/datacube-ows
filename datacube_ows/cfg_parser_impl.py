@@ -368,12 +368,11 @@ def layers_report(config_values: dict[str, OWSNamedLayer], input_file: str, outp
 
 def print_layers(layers: list[OWSLayer], styles: bool, depth: int) -> None:
     for lyr in layers:
+        indent(depth)
         if isinstance(lyr, OWSFolder):
-            indent(depth)
             click.echo(f"* {lyr.title}")
             click.echo(f"{lyr.child_layers} {styles} {depth + 1}")
         else:
-            indent(depth)
             click.echo(f"{lyr.name} [{','.join(lyr.product_names)}]")
             if styles:
                 click.echo(f"{lyr} {depth}")
@@ -381,8 +380,8 @@ def print_layers(layers: list[OWSLayer], styles: bool, depth: int) -> None:
 
 def print_styles(lyr: OWSNamedLayer, depth: int = 0) -> None:
     for styl in lyr.styles:
-        indent(0, for_styles=True)
-        print(f". {styl.name}")
+        indent(depth, for_styles=True)
+        click.echo(f". {styl.name}")
 
 
 def indent(depth: int, for_styles: bool = False) -> None:
