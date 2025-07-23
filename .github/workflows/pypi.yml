@@ -7,6 +7,7 @@ on:
 
 jobs:
   build-n-publish:
+    timeout-minutes: 15
     name: Build and publish datacube-ows distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-24.04
     if: github.event_name == 'release'

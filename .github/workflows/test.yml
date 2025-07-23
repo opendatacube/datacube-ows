@@ -40,6 +40,7 @@ concurrency:
 
 jobs:
   unit-integration-performance-tests:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
     steps:

@@ -40,6 +40,7 @@ concurrency:
 
 jobs:
   prod-docker-compose-tests:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
 
     steps:

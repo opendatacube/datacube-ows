@@ -22,6 +22,7 @@ env:
 
 jobs:
   build-and-push-image:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
 
     permissions:
