@@ -236,7 +236,8 @@ class DataStacker:
             results.append((query, grpd_result))
         return OrderedDict(results)
 
-    def create_nodata_filled_flag_bands(self, data: xarray.Dataset, pbq: ProductBandQuery) -> xarray.Dataset:
+    @staticmethod
+    def create_nodata_filled_flag_bands(data: xarray.Dataset, pbq: ProductBandQuery) -> xarray.Dataset:
         var = None
         for var in data.data_vars.variables:  # noqa: B007
             break

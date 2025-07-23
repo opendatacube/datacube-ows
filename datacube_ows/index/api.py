@@ -153,7 +153,8 @@ class OWSAbstractIndex(ABC):
             return ext.to_crs(crs)
         return ext
 
-    def _prep_geom(self, layer: "OWSNamedLayer", any_geom: Geometry | None) -> Geometry | None:
+    @staticmethod
+    def _prep_geom(layer: "OWSNamedLayer", any_geom: Geometry | None) -> Geometry | None:
         # Prepare a Geometry for geospatial search
         # Perhaps Core can be updated so this is not needed?
         if any_geom is None:

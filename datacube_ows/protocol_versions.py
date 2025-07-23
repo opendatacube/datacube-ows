@@ -53,7 +53,8 @@ class SupportedSvc:
         else:
             self.default_exception_class = self.versions[0].exception_class
 
-    def _clean_version_parts(self, unclean: list[str]) -> list[int]:
+    @staticmethod
+    def _clean_version_parts(unclean: list[str]) -> list[int]:
         clean = []
         for part in unclean:
             try:
