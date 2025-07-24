@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   dockerfile-lint:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
 
     steps:

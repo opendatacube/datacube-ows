@@ -36,6 +36,7 @@ concurrency:
 
 jobs:
   lint:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     strategy:
       matrix:

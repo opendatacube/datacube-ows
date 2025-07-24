@@ -32,6 +32,7 @@ concurrency:
 
 jobs:
   cve-scanner:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - name: Checkout git

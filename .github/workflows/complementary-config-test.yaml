@@ -40,6 +40,7 @@ concurrency:
 
 jobs:
   dea-config:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
 
     steps:
