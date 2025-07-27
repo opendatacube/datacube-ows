@@ -781,7 +781,6 @@ all = [
     { name = "pytest-mock" },
     { name = "ruff" },
     { name = "sentry-sdk" },
-    { name = "sphinx-click" },
     { name = "types-python-dateutil" },
     { name = "types-pytz" },
     { name = "types-requests" },
@@ -791,7 +790,6 @@ dev = [
     { name = "pydevd-pycharm" },
     { name = "pylint" },
     { name = "ruff" },
-    { name = "sphinx-click" },
     { name = "types-python-dateutil" },
     { name = "types-pytz" },
     { name = "types-requests" },
@@ -821,6 +819,13 @@ test = [
     { name = "pytest-helpers-namespace" },
     { name = "pytest-localserver" },
     { name = "pytest-mock" },
+]
+
+[package.dev-dependencies]
+doc = [
+    { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sphinx-click" },
 ]
 
 [package.metadata]
@@ -876,7 +881,6 @@ requires-dist = [
     { name = "setuptools", marker = "extra == 'setup'" },
     { name = "setuptools-scm" },
     { name = "setuptools-scm", marker = "extra == 'setup'" },
-    { name = "sphinx-click", marker = "extra == 'dev'" },
     { name = "timezonefinder", specifier = "!=6.6.0" },
     { name = "types-python-dateutil", marker = "extra == 'dev'" },
     { name = "types-pytz", marker = "extra == 'dev'" },
@@ -884,6 +888,12 @@ requires-dist = [
     { name = "xarray" },
 ]
 provides-extras = ["dev", "ops", "postgres", "setup", "test", "all"]
+
+[package.metadata.requires-dev]
+doc = [
+    { name = "sphinx" },
+    { name = "sphinx-click" },
+]
 
 [[package]]
 name = "deepdiff"

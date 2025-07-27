@@ -52,13 +52,18 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/opendatacube/datacube-ows"
 
+[dependency-groups]
+doc = [
+    "Sphinx",
+    "sphinx-click",
+]
+
 [project.optional-dependencies]
 dev = [
     "mypy",
     "pydevd-pycharm~=243.26053.29",
     "pylint",
     "ruff",
-    "sphinx_click",
     "types-python-dateutil",
     "types-pytz",
     "types-requests",
