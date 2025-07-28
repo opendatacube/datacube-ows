@@ -6,12 +6,12 @@ repos:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.4
+    rev: v0.12.5
     hooks:
     -   id: ruff
         args: [--fix, --show-fixes, --output-format, grouped]
 -   repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.0
+    rev: 0.8.3
     hooks:
     # Ensure uv.lock is up-to-date if pyproject.toml has changed.
     -   id: uv-lock
