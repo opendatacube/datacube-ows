@@ -22,7 +22,7 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  IMAGE_NAME: opendatacube/ows
+  IMAGE_NAME: ghcr.io/opendatacube/ows
 
 # When a PR is updated, cancel the jobs from the previous version. Merges
 # do not define head_ref, so use run_id to never cancel those jobs.
@@ -34,30 +34,33 @@ jobs:
   cve-scanner:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    if: github.event_name != 'release'
     steps:
       - name: Checkout git
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
-      - name: Get unstable git tag
-        run: >
-          echo "UNSTABLE_TAG=$(git describe --tags)" >> $GITHUB_ENV
+      - name: Get and log unstable git tag
+        run: |
+          set -ex
+          UNSTABLE_TAG=$(git describe --tags)
+          echo "UNSTABLE_TAG=$UNSTABLE_TAG" >> $GITHUB_ENV
 
-      - name: Log the unstable tag
-        run: echo $UNSTABLE_TAG
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
-      - name: Build unstable + latest Docker image tag
-        if: github.event_name != 'release'
-        uses: whoan/docker-build-with-cache-action@d8d3ad518e7ac382b880720d0751815e656fe032 # v8.1.0
+      - name: Build Docker
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          image_name: ${{ env.IMAGE_NAME }}
-          image_tag: ${{ env.UNSTABLE_TAG }},latest
-          build_extra_args: "--build-arg=ENVIRONMENT=deployment"
-          push_image_and_stages: false
+          file: Dockerfile
+          context: .
+          tags: ${{ env.IMAGE_NAME }}:${{ env.UNSTABLE_TAG }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Run vulnerability scanner
-        if: github.event_name != 'release'
         uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # 0.32.0
         with:
           image-ref: "${{ env.IMAGE_NAME }}:${{ env.UNSTABLE_TAG }}"

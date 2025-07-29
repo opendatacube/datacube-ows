@@ -29,8 +29,7 @@ on:
       - '.github/workflows/complementary-config-test.yaml'
 
 env:
-  ORG: opendatacube
-  IMAGE: ows
+  DOCKER_IMAGE: ghcr.io/opendatacube/ows:tests
 
 # When a PR is updated, cancel the jobs from the previous version. Merges
 # do not define head_ref, so use run_id to never cancel those jobs.
@@ -56,12 +55,18 @@ jobs:
           repository: GeoscienceAustralia/dea-config
           path: dea-config
 
-      - name: Build dev OWS image
-        run: |
-          cd ./datacube-ows
-          docker build \
-            --tag    ${ORG}/${IMAGE}:_builder \
-            .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Build Docker
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          file: datacube-ows/Dockerfile
+          context: datacube-ows
+          tags: ${{ env.DOCKER_IMAGE }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Config parser check
         run: |
