@@ -7,9 +7,6 @@ LABEL org.opencontainers.image.licences="Apache-2.0"
 
 FROM base AS builder
 
-# Environment is test or deployment.
-ARG ENVIRONMENT=deployment
-
 # Setup build env for postgresql-client-16
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -28,14 +25,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 WORKDIR /build
 
+# Environment is test or deployment.
+ARG ENVIRONMENT=deployment
+
 RUN python3 -m pip --disable-pip-version-check -q wheel --no-binary psycopg2 psycopg2 \
     && ([ "$ENVIRONMENT" = "deployment" ] || \
           python3 -m pip --disable-pip-version-check -q wheel --no-binary pyproj pyproj)
 
 FROM base
 
-# Environment is test or deployment.
-ARG ENVIRONMENT=deployment
+# Add login-script for UID/GID-remapping.
+COPY --chown=root:root --link docker/files/remap-user.sh /usr/local/bin/remap-user.sh
+
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     export DEBIAN_FRONTEND=noninteractive \
@@ -45,13 +46,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
             git \
             gosu \
             python3-pip \
-            tini \
+            tini
+
+# Environment is test or deployment.
+ARG ENVIRONMENT=deployment
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    export DEBIAN_FRONTEND=noninteractive \
     && ([ "$ENVIRONMENT" = "deployment" ] || \
           apt-get install -y --no-install-recommends \
             proj-bin)
-
-# Add login-script for UID/GID-remapping.
-COPY --chown=root:root --link docker/files/remap-user.sh /usr/local/bin/remap-user.sh
 
 # Copy source code and install it
 WORKDIR /src
