@@ -5,6 +5,11 @@ LABEL org.opencontainers.image.source=https://github.com/opendatacube/datacube-o
 LABEL org.opencontainers.image.description="Datacube OWS"
 LABEL org.opencontainers.image.licences="Apache-2.0"
 
+ENV LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 FROM base AS builder
 
 # Setup build env for postgresql-client-16
