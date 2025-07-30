@@ -18,7 +18,7 @@ project_root = os.path.dirname(cwd)
 # version is used.
 sys.path.insert(0, project_root)
 
-import datacube_ows  # isort:skip
+from datacube_ows._version import __version__, __version_tuple__
 
 # -- General configuration ---------------------------------------------
 
@@ -53,9 +53,9 @@ copyright = "2017-2024, Open Data Cube Steering Council and contributors (Open S
 # the built documents.
 #
 # The short X.Y version.
-version = datacube_ows.__version__
+version = f"{__version_tuple__[0]}.{__version_tuple__[1]}"
 # The full version, including alpha/beta/rc tags.
-release = datacube_ows.__version__
+release = __version__
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
