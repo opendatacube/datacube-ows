@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3@sha256:dab45abca3ca83695d442018692f4f8a0f41955871c57e6101d7f89a92375caa AS base
 
 LABEL org.opencontainers.image.source=https://github.com/opendatacube/datacube-ows
@@ -10,9 +11,12 @@ FROM base AS builder
 ARG ENVIRONMENT=deployment
 
 # Setup build env for postgresql-client-16
-USER root
-RUN apt-get update -y \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
             git \
             # For Psycopg2
             libpq-dev python3-dev \
@@ -20,9 +24,7 @@ RUN apt-get update -y \
             python3-pip \
             postgresql-client-16 \
             # For Pyproj build \
-            proj-bin libproj-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
+            proj-bin libproj-dev
 
 WORKDIR /build
 
@@ -34,8 +36,11 @@ FROM base
 
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
-RUN export DEBIAN_FRONTEND=noninteractive \
-    && apt-get update -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
             git \
             gosu \
@@ -43,10 +48,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
             tini \
     && ([ "$ENVIRONMENT" = "deployment" ] || \
           apt-get install -y --no-install-recommends \
-            proj-bin) \
-    && apt-get upgrade -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/dpkg/* /var/tmp/* /var/log/dpkg.log
+            proj-bin)
 
 # Add login-script for UID/GID-remapping.
 COPY --chown=root:root --link docker/files/remap-user.sh /usr/local/bin/remap-user.sh
