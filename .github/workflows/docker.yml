@@ -19,6 +19,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: opendatacube/ows
 
+permissions: {}
 
 jobs:
   build-and-push-image:
