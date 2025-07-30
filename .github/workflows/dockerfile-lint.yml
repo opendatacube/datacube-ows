@@ -33,6 +33,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      # Hadolint does not support all modern constructs in Dockerfile. Edit Dockerfile
+      # in place to remove them before linting.
+      - name: Remove unsupported parts of Dockerfile
+        run: |
+          perl -pi -e 's# --checksum=sha256:\S+##g' Dockerfile
+
       - name: lint Dockerfile
         uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
         with:

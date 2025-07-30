@@ -12,30 +12,66 @@ ENV LC_ALL=C.UTF-8 \
 
 FROM base AS builder
 
-# Setup build env for postgresql-client-16
+ARG UV=https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-unknown-linux-gnu.tar.gz
+
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
-            git \
-            # For Psycopg2
-            libpq-dev python3-dev \
-            gcc \
-            python3-pip \
-            postgresql-client-16 \
-            # For Pyproj build \
-            proj-bin libproj-dev
+        gcc \
+        g++ \
+        git \
+        # For shapely with --no-binary.
+        libgeos-dev \
+        libhdf5-dev \
+        libnetcdf-dev \
+        libudunits2-dev \
+        libproj-dev \
+        # For psycopg2.
+        libpq-dev \
+        proj-bin \
+        python3-dev
+
+ENV UV_COMPILE_BYTECODE=0 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/app \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=python3.12
 
 WORKDIR /build
 
-# Environment is test or deployment.
-ARG ENVIRONMENT=deployment
+# False alarm, next line is pointing to a https link.
+# hadolint ignore=DL3020
+ADD --checksum=sha256:eb61d39fdc6ea21a6d00a24b50376102168240849c5022d3eba331f972ba3934 --chown=root:root --chmod=644 --link $UV uv.tar.gz
 
-RUN python3 -m pip --disable-pip-version-check -q wheel --no-binary psycopg2 psycopg2 \
-    && ([ "$ENVIRONMENT" = "deployment" ] || \
-          python3 -m pip --disable-pip-version-check -q wheel --no-binary pyproj pyproj)
+RUN tar xf uv.tar.gz -C /usr/local/bin --strip-components=1 --no-same-owner
+
+COPY --link pyproject.toml uv.lock /build/
+
+# Use a separate cache volume for uv on opendatacube projects, so it is
+# not inseparable from pip/poetry/npm/etc. cache stored in /root/.cache.
+RUN --mount=type=cache,id=opendatacube-uv-cache,target=/root/.cache \
+    uv sync --frozen --extra=ops --no-install-project \
+      --no-binary-package fiona \
+      --no-binary-package netcdf4 \
+      --no-binary-package pyproj \
+      --no-binary-package psycopg2 \
+      --no-binary-package rasterio \
+      --no-binary-package shapely
+
+COPY --link . /build/
+
+## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
+ARG PYDEV_DEBUG="no"
+ARG ENVIRONMENT=deployment
+# hadolint ignore=SC2086
+RUN --mount=type=cache,id=opendatacube-uv-cache,target=/root/.cache \
+    EXTRAS=$( ([ "$ENVIRONMENT" = "deployment" ] && echo "--extra=ops --no-dev") || \
+               ( ([ "$PYDEV_DEBUG" != "no" ] && echo "--extra=ops --extra=test --extra=dev") || \
+                 echo "--extra=ops --extra=test") ) \
+    && uv sync --frozen $EXTRAS --no-editable
 
 FROM base
 
@@ -48,10 +84,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
-            git \
             gosu \
-            python3-pip \
-            tini
+            tini \
+    && mkdir /app \
+    && chown ubuntu:ubuntu /app
+
+COPY --from=builder --link /usr/local/bin/uv* /usr/local/bin/
 
 # Environment is test or deployment.
 ARG ENVIRONMENT=deployment
@@ -59,30 +97,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     export DEBIAN_FRONTEND=noninteractive \
     && ([ "$ENVIRONMENT" = "deployment" ] || \
-          apt-get install -y --no-install-recommends \
-            proj-bin)
+          (apt-get update && apt-get install -y --no-install-recommends \
+            proj-bin)) \
+    && ([ "$ENVIRONMENT" != "deployment" ] || \
+           rm -f /usr/local/bin/uv*)
 
-# Copy source code and install it
-WORKDIR /src
-COPY . /src
-
-## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
-ARG PYDEV_DEBUG="no"
-COPY --from=builder --link /build/*.whl ./
-RUN EXTRAS=$([ "$ENVIRONMENT" = "deployment" ] || echo ",test") && \
-    python3 -m pip --disable-pip-version-check install ./*.whl --break-system-packages && \
-    rm ./*.whl && \
-    echo "version=\"$(python3 setup.py --version)\"" > datacube_ows/_version.py  && \
-    python3 -m pip --disable-pip-version-check install --no-cache-dir ".[ops$EXTRAS]" --break-system-packages && \
-    ([ "$PYDEV_DEBUG" != "yes" ] || \
-       python3 -m pip --disable-pip-version-check install --no-cache-dir .[dev] --break-system-packages) && \
-    python3 -m pip freeze && \
-    ([ "$ENVIRONMENT" != "deployment" ] || \
-       (rm -rf /src/* /src/.git* && \
-        apt-get purge -y \
-           git \
-           git-man \
-           python3-pip))
+COPY --from=builder --link --chown=1000:1000 /app /app
 
 # Configure user
 WORKDIR "/home/ubuntu"
@@ -90,7 +110,8 @@ WORKDIR "/home/ubuntu"
 ENV GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR" \
     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif, .tiff" \
     GDAL_HTTP_MAX_RETRY="10" \
-    GDAL_HTTP_RETRY_DELAY="1"
+    GDAL_HTTP_RETRY_DELAY="1" \
+    PATH=/app/bin:$PATH
 
 ENTRYPOINT ["/usr/local/bin/remap-user.sh"]
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers=3", "-k", "gevent", "--timeout", "121", "--pid", "/home/ubuntu/gunicorn.pid", "--log-level", "info", "--worker-tmp-dir", "/dev/shm", "--config", "python:datacube_ows.gunicorn_config", "datacube_ows.wsgi"]
