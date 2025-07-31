@@ -17,10 +17,10 @@
 <script>
     function formatDate(date) {
       return date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate();
-    };
+    }
     function formatDateRange(start, end) {
         return formatDate(start) + "/" + formatDate(end);
-    };
+    }
 
     let start = new Date(2006, 1, 1);
     let end = new Date(2006, 3, 1);
@@ -72,7 +72,7 @@
         start = properties.data[0].start;
         end = properties.data[0].end;
         cube.setParams({time: formatDateRange(start, end)});
-    };
+    }
     items.on('update', onUpdate);
 
     options = {
