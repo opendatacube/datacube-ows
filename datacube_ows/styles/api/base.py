@@ -7,13 +7,14 @@
 import xarray
 from PIL import Image
 
+from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
 
 initialise_ignorable_warnings()
 
 
-def StandaloneStyle(cfg):
+def StandaloneStyle(cfg: CFG_DICT) -> StyleDefBase:
     """
     Construct a OWS style object that stands alone, independent of a complete OWS configuration environment.
 
@@ -25,7 +26,7 @@ def StandaloneStyle(cfg):
 
     :return: A OWS Style Definition object, prepared to work in standalone mode.
     """
-    style = StyleDefBase(StandaloneProductProxy(), cfg, stand_alone=True)
+    style = StyleDefBase(StandaloneProductProxy(), cfg, stand_alone=True)  # type: ignore[arg-type]
     style.make_ready(None)
     return style
 

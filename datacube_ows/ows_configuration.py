@@ -587,7 +587,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("default_time")
         self.declare_unready("_ranges")
         self.declare_unready("bboxes")
-        self.band_idx: BandIndex = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
+        self.band_idx = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
         self.cfg_native_crs = cfg.get("native_crs")
         self.declare_unready("resolution_x")
@@ -837,7 +837,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.native_format = self.global_cfg.native_wcs_format
 
     # pylint: disable=attribute-defined-outside-init
-    def ready_native_specs(self):
+    def ready_native_specs(self) -> None:
         # Native CRS
         try:
             self.native_CRS = self.product.definition["storage"]["crs"]
@@ -871,7 +871,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             try:
                 if self.cfg_native_resolution is None:
                     raise KeyError
-                self.resolution_x, self.resolution_y = self.cfg_native_resolution
+                self.resolution_x, self.resolution_y = self.cfg_native_resolution  # type: ignore[misc]
             except KeyError:
                 raise ConfigException(
                     f"No native resolution supplied for layer {self.name} with no product-native resolution defined in ODC."
@@ -881,7 +881,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             except TypeError:
                 raise ConfigException(f"Invalid native resolution supplied for layer {self.name}") from None
         elif self.cfg_native_resolution:
-            config_x, config_y = (float(r) for r in self.cfg_native_resolution)
+            config_x, config_y = (float(r) for r in self.cfg_native_resolution)  # type: ignore[arg-type, union-attr]
             if (
                     math.isclose(config_x, float(self.resolution_x), rel_tol=1e-8)
                     and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8)

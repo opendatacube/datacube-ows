@@ -8,13 +8,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from datacube_ows.config_utils import ConfigException
+from datacube_ows.config_utils import CFG_DICT, ConfigException
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 
 
 @pytest.fixture
-def wwwm_tms_cfg():
-    return TileMatrixSet.default_tm_sets["WholeWorld_WebMercator"].copy()
+def wwwm_tms_cfg() -> CFG_DICT:
+    return TileMatrixSet.default_tm_sets["WholeWorld_WebMercator"].copy()  # type: ignore[return-value,union-attr]
 
 
 @pytest.fixture

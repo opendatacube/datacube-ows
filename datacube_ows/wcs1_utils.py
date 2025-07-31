@@ -7,7 +7,9 @@
 import numpy
 import pytz
 import xarray
+import xarray as xr
 from affine import Affine
+from dask.delayed import Delayed
 from dateutil.parser import parse
 from odc.geo import geom
 from odc.geo.geobox import GeoBox
@@ -403,7 +405,7 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
     return n_datasets, output
 
 
-def get_tiff(req, data):
+def get_tiff(req, data: xr.Dataset) -> bytes:
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Does not support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {
@@ -426,8 +428,8 @@ def get_tiff(req, data):
     data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
     cfg = get_config()
-    xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
-    yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
+    xname = str(cfg.published_CRSs[req.response_crsid]["horizontal_coord"])
+    yname = str(cfg.published_CRSs[req.response_crsid]["vertical_coord"])
     nodata = 0
     for band in data.data_vars:
         nodata = req.layer.band_idx.nodata_val(band)
@@ -456,7 +458,7 @@ def get_tiff(req, data):
         return memfile.read()
 
 
-def get_netcdf(req, data):
+def get_netcdf(req, data: xr.Dataset) -> bytes | Delayed | None:
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid
     for _, v in data.data_vars.items():

@@ -7,7 +7,7 @@
 import numpy as np
 import pytest
 
-from datacube_ows.config_utils import ConfigException
+from datacube_ows.config_utils import CFG_DICT, ConfigException
 from datacube_ows.styles.base import StyleDefBase
 
 
@@ -17,7 +17,7 @@ def test_multidate_handler() -> None:
         def __init__(self) -> None:
             self.nodata = np.nan
 
-        def item(self):
+        def item(self) -> float:
             return np.nan
 
     class FakeDataset:
@@ -34,24 +34,23 @@ def test_multidate_handler() -> None:
             self.stand_alone = True
             self.transform_single_date_data = lambda x: x
 
-    fake_cfg = {
+    fake_cfg: CFG_DICT = {
         "allowed_count_range": [0, 10],
         "aggregator_function": "datacube_ows.band_utils.multi_date_delta",
     }
 
-    fake_cfg_anim = {
+    fake_cfg_anim: CFG_DICT = {
         "allowed_count_range": [2, 10],
         "aggregator_function": "datacube_ows.band_utils.multi_date_pass",
         "animate": True,
     }
 
-    fake_cfg_equal = {
+    fake_cfg_equal: CFG_DICT = {
         "allowed_count_range": [1, 1],
         "aggregator_function": "datacube_ows.band_utils.multi_date_delta",
     }
 
     mdh = StyleDefBase.MultiDateHandler(FakeMdhStyle(), fake_cfg)
-    assert mdh is not None
     with pytest.raises(NotImplementedError):
         mdh.legend_cfg.render(None)
     assert isinstance(mdh.range_str(), str)

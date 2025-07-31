@@ -15,7 +15,7 @@ from datacube_ows.update_ranges_impl import main
 
 
 @pytest.fixture
-def runner():
+def runner() -> CliRunner:
     return CliRunner()
 
 

@@ -71,12 +71,12 @@ class WCS20Extent:
         )
 
     @staticmethod
-    def subcoord(c_min, c_max, start, end):
+    def subcoord(c_min: float, c_max: float, start: float, end: float) -> tuple[float, float]:
         diff = c_max - c_min
         return diff * start + c_min, diff * end + c_min
 
     @staticmethod
-    def subset_bbox(bbox, xstart: float = 0.3, xwidth: float = 0.02,
+    def subset_bbox(bbox: tuple[float, float, float, float], xstart: float = 0.3, xwidth: float = 0.02,
                     ystart: float = 0.8, ywidth: float = 0.02) -> tuple:
         x = WCS20Extent.subcoord(bbox[0], bbox[2], xstart, xstart + xwidth)
         y = WCS20Extent.subcoord(bbox[1], bbox[3], xstart, xstart + xwidth)
@@ -128,7 +128,7 @@ class ODCExtent:
         FIRST_TWO = 200
         LAST_TWO = -200
 
-        def slice(self, ls):
+        def slice(self, ls: list) -> list:
             try:
                 if self == self.MIDDLE:
                     i = len(ls) // 2
@@ -173,7 +173,7 @@ class ODCExtent:
         def needs_time_extent(self) -> bool:
             return self not in (self.FULL_LAYER_EXTENT, self.OUTSIDE_OF_FULL_EXTENT)
 
-        def subset(self, time_extent, full_extent):
+        def subset(self, time_extent, full_extent) -> Geometry:
             if self == self.FULL_LAYER_EXTENT:
                 return full_extent
             if self == self.FULL_EXTENT_FOR_TIMES:

@@ -158,6 +158,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             return super().__new__(subclass)
         return super().__new__(cls)
 
+    # FIXME: product type should also include StandaloneProductProxy.
     def __init__(self, product: "datacube_ows.ows_configuration.OWSNamedLayer",
                  style_cfg: CFG_DICT,
                  stand_alone: bool = False,
@@ -168,7 +169,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
         :param product: A named layer
         :param style_cfg: The configuration of the style.
-        :param stand_alone: If true, style is dynamically created independent from the global layer/style hierarchy.
+        :param stand_alone: If true, style is dynamically created independent of the global layer/style hierarchy.
         :param defer_multi_date: If True, defer certain aspects of configuration - mostly used for testing.
         :param user_defined: True if elements of the style were provided by the user in an extended request.
         """

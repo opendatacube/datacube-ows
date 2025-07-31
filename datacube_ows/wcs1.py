@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from typing import Any
 
 from flask import render_template
 
@@ -110,7 +111,7 @@ def desc_coverages(args) -> tuple:
 
 
 @log_call
-def get_coverage(args):
+def get_coverage(args: dict) -> tuple[Any, int, dict]:
     cfg = get_config()
     req = WCS1GetCoverageRequest(args)
     qprof = QueryProfiler(req.ows_stats)
@@ -121,7 +122,7 @@ def get_coverage(args):
         "Content-Type": req.format.mime,
         'content-disposition': f'attachment; filename={req.layer_name}.{req.format.extension}'
     }
-    headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))
+    headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))  # type: ignore[union-attr]
     return (
         req.format.renderer(req.version)(req, data),
         200,

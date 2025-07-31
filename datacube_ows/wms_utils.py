@@ -254,11 +254,11 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
     return day
 
 
-def parse_time_delta(delta_str):
+def parse_time_delta(delta_str) -> relativedelta:
     pattern = (r'P((?P<years>\d+)Y)?((?P<months>\d+)M)?((?P<days>\d+)D)?'
                r'(T(((?P<hours>\d+)H)?((?P<minutes>\d+)M)?((?P<seconds>\d+)S)?)?)?')
     parts = re.search(pattern, delta_str).groupdict()
-    return relativedelta(**{k: int(v) for k, v in parts.items() if v is not None})
+    return relativedelta(**{k: int(v) for k, v in parts.items() if v is not None})  # type: ignore[arg-type]
 
 
 def parse_wms_time_string(t: str, start: bool = True) -> datetime | relativedelta:
@@ -294,7 +294,7 @@ def parse_wms_time_strings(parts: list[str], with_tz: bool = False) -> tuple:
 
 
 class GetParameters:
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         self.cfg = get_config()
         # Version
         self.version = get_arg(args, "version", "WMS version",
@@ -313,7 +313,7 @@ class GetParameters:
         self.geobox = _get_geobox(args, self.crs)
         # Web-merc antimeridian hack:
         if self.geobox.crs != self.crs:
-            self.crs = self.geobox.crs
+            self.crs = self.geobox.crs  # type: ignore[assignment]
             self.geometry = self.geometry.to_crs(self.crs)
 
         # Time parameter
@@ -501,13 +501,13 @@ def solar_correct_data(data, dataset) -> float:
     return data / csz
 
 
-def wofls_fuser(dest, src):
+def wofls_fuser(dest: numpy.ndarray, src: numpy.ndarray) -> numpy.ndarray:
     where_nodata = (src & 1) == 0
     numpy.copyto(dest, src, where=where_nodata)
     return dest
 
 
-def item_fuser(dest, src):
+def item_fuser(dest: numpy.ndarray, src: numpy.ndarray) -> numpy.ndarray:
     where_combined = numpy.isnan(dest) | (dest == -6666.)
     numpy.copyto(dest, src, where=where_combined)
     return dest

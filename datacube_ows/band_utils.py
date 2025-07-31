@@ -3,13 +3,17 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Callable
+from typing import Literal
 
 import numpy
+import xarray as xr
 
 # Style index functions
 
 
-def scale_data(imgband_data, scale_from, scale_to):
+def scale_data(imgband_data: numpy.ndarray, scale_from: list[float],
+               scale_to: list[float]) -> numpy.ndarray:
     sc_min, sc_max = scale_from
     tc_min, tc_max = scale_to
     clipped = imgband_data.clip(sc_min, sc_max)
@@ -44,7 +48,7 @@ def band_modulator(undecorated):
         return raw_data
     return decorated
 
-def pre_scaled_band(data, band, scale: float, offset: float):
+def pre_scaled_band(data: xr.Dataset, band, scale: float, offset: float):
     # Pre-scale a band as `data[band] * scale + offset`
     return data[band] * scale + offset
 
@@ -55,10 +59,10 @@ def sum_bands(data, band1, band2, band_mapper=None):
     return data[band1] + data[band2]
 
 def pre_scaled_sum_bands(
-    data, band1, band2,
+    data: xr.Dataset, band1, band2,
     scale1: float = 1.0, offset1: float = 0.0,
     scale2: float = 1.0, offset2: float = 0.0,
-    band_mapper=None):
+    band_mapper: Callable | None = None):
     # Calculate the sum of two bands, after pre-scaling them with a scale and offset
     if band_mapper:
         band1 = band_mapper(band1)
@@ -69,7 +73,7 @@ def pre_scaled_sum_bands(
     return data1 + data2
 
 
-def delta_bands(data, band1, band2, band_mapper=None):
+def delta_bands(data: xr.Dataset, band1, band2, band_mapper: Callable | None = None):
     if band_mapper:
         band1 = band_mapper(band1)
         band2 = band_mapper(band2)
@@ -88,10 +92,10 @@ def delta_bands(data, band1, band2, band_mapper=None):
     return data[band1] - data[band2]
 
 def pre_scaled_delta_bands(
-    data, band1, band2,
+    data: xr.Dataset, band1, band2,
     scale1: float = 1.0, offset1: float = 0.0,
     scale2: float = 1.0, offset2: float = 0.0,
-    band_mapper=None):
+    band_mapper: Callable | None = None):
     # Calculate the difference between two bands, after pre-scaling them with a scale
     # and offset
     if band_mapper:
@@ -117,15 +121,15 @@ def pre_scaled_delta_bands(
 # N.B. Modifying scale_to would be dangerous - don't do it.
 # pylint: disable=dangerous-default-value
 @scalable
-def norm_diff(data, band1, band2, band_mapper=None):
+def norm_diff(data: xr.Dataset, band1, band2, band_mapper: Callable | None = None):
     # Calculate a normalised difference index.
     return delta_bands(data, band1, band2, band_mapper) / sum_bands(data, band1, band2, band_mapper)
 
 @scalable
-def pre_scaled_norm_diff(data, band1, band2,
+def pre_scaled_norm_diff(data: xr.Dataset, band1, band2,
                          scale1: float = 1.0, offset1: float = 0.0,
                          scale2: float = 1.0, offset2: float = 0.0,
-                         band_mapper=None,):
+                         band_mapper: Callable | None = None):
     # Calculate a normalised difference index, after scaling the input bands with a
     # scale and offset
     return (pre_scaled_delta_bands(
@@ -134,7 +138,7 @@ def pre_scaled_norm_diff(data, band1, band2,
             data, band1, band2, scale1, offset1, scale2, offset2, band_mapper)
     )
 @scalable
-def constant(data, band, const, band_mapper=None):
+def constant(data: xr.Dataset, band, const, band_mapper: Callable | None = None):
     # Covert an xarray for a flat constant.
     # Useful for displaying mask extents as a flat colour and debugging.
     # params is assumed to be a tuple containing a constant value and a band name/alias.
@@ -145,7 +149,7 @@ def constant(data, band, const, band_mapper=None):
 
 
 @scalable
-def single_band(data, band, band_mapper=None):
+def single_band(data: xr.Dataset, band, band_mapper: Callable | None = None):
     # Use the raw value of a band directly as the index function.
 
     if band_mapper:
@@ -154,7 +158,7 @@ def single_band(data, band, band_mapper=None):
 
 
 @scalable
-def band_quotient(data, band1, band2, band_mapper=None):
+def band_quotient(data: xr.Dataset, band1, band2, band_mapper: Callable | None = None):
     if band_mapper:
         band1 = band_mapper(band1)
         band2 = band_mapper(band2)
@@ -162,12 +166,12 @@ def band_quotient(data, band1, band2, band_mapper=None):
 
 
 @scalable
-def band_quotient_sum(data, band1a, band1b, band2a, band2b, band_mapper=None):
+def band_quotient_sum(data: xr.Dataset, band1a, band1b, band2a, band2b, band_mapper: Callable | None = None):
     return band_quotient(data, band1a, band1b, band_mapper) + band_quotient(data, band2a, band2b, band_mapper)
 
 
 @scalable
-def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, band_mapper=None):
+def sentinel2_ndci(data: xr.Dataset, b_red_edge, b_red, b_green, b_swir, band_mapper: Callable | None = None):
     red_delta = delta_bands(data, b_red_edge, b_red, band_mapper)
     red_sum = sum_bands(data, b_red_edge, b_red, band_mapper)
     mndwi = norm_diff(data, b_green, b_swir, band_mapper)
@@ -175,7 +179,7 @@ def sentinel2_ndci(data, b_red_edge, b_red, b_green, b_swir, band_mapper=None):
     return red_delta / red_sum.where(mndwi > 0.1)
 
 
-def multi_date_delta(data, time_direction: int = -1):
+def multi_date_delta(data: xr.Dataset, time_direction: Literal[-1, 0, 1] = -1):
     data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)
 
 #    data1, data2 = data.values.item(0), data.values.item(1)
@@ -183,10 +187,10 @@ def multi_date_delta(data, time_direction: int = -1):
         return data1 - data2
     return data2 - data1
 
-def multi_date_pass(data):
+def multi_date_pass(data: xr.Dataset) -> xr.Dataset:
     return data
 
-def multi_date_raw_example(data, band1, band2, band_mapper=None):
+def multi_date_raw_example(data: xr.Dataset, band1, band2, band_mapper: Callable | None = None):
     if band_mapper:
         band1 = band_mapper(band1)
         band2 = band_mapper(band2)
@@ -200,7 +204,7 @@ def multi_date_raw_example(data, band1, band2, band_mapper=None):
 
 @band_modulator
 @scalable
-def single_band_log(data, band, scale_factor, exponent, band_mapper=None):
+def single_band_log(data: xr.Dataset, band, scale_factor, exponent, band_mapper: Callable | None = None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
@@ -209,7 +213,7 @@ def single_band_log(data, band, scale_factor, exponent, band_mapper=None):
 
 @band_modulator
 @scalable
-def single_band_arcsec(data, band, band_mapper=None):
+def single_band_arcsec(data: xr.Dataset, band, band_mapper: Callable | None = None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
@@ -218,7 +222,7 @@ def single_band_arcsec(data, band, band_mapper=None):
 
 @band_modulator
 @scalable
-def single_band_offset_log(data, band, scale: float = 1.0, offset: int | float | None = None, band_mapper=None):
+def single_band_offset_log(data: xr.Dataset, band, scale: float = 1.0, offset: int | float | None = None, band_mapper: Callable | None = None):
     if band_mapper:
         band = band_mapper(band)
     d = data[band]
@@ -231,7 +235,7 @@ def single_band_offset_log(data, band, scale: float = 1.0, offset: int | float |
 
 
 @scalable
-def radar_vegetation_index(data, band_hv, band_hh, band_mapper=None):
+def radar_vegetation_index(data: xr.Dataset, band_hv, band_hh, band_mapper: Callable | None = None) -> xr.Dataset:
     if band_mapper:
         band_hv = band_mapper(band_hv)
         band_hh = band_mapper(band_hh)

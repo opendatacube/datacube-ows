@@ -79,7 +79,7 @@ class SpatialParameter:
 
 
 class WCSScaler:
-    def __init__(self, layer, crs=None) -> None:
+    def __init__(self, layer, crs: str | None = None) -> None:
         self.layer = layer
         self.cfg = self.layer.global_cfg
         if crs:
@@ -92,11 +92,11 @@ class WCSScaler:
         self.subsetted = SpatialParameter(self.layer, self.crs, False, False)
 
     @property
-    def crs(self):
+    def crs(self) -> str:
         return self._crs
 
     @crs.setter
-    def crs(self, crs) -> None:
+    def crs(self, crs: str) -> None:
         self.crs_def = self.layer.global_cfg.published_CRSs[crs]
         self._crs = crs
 

@@ -9,6 +9,7 @@ import logging
 from datetime import date, datetime
 
 import numpy
+import xarray as xr
 from dateutil.parser import parse
 from odc.geo.geobox import GeoBox
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
@@ -383,7 +384,7 @@ def get_tiff(request, data, crs, product, width: int, height, affine):
         return memfile.read()
 
 
-def get_netcdf(request, data, crs):
+def get_netcdf(request, data: xr.Dataset, crs) -> bytes:
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = crs
     for v in data.data_vars.values():

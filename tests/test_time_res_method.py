@@ -8,14 +8,14 @@ from datetime import datetime
 
 import pytest
 import pytz
+from odc.geo.geobox import GeoBox
 
 from datacube_ows.ows_configuration import TimeRes
 
 
 @pytest.fixture
-def simple_geobox():
+def simple_geobox() -> GeoBox:
     from affine import Affine
-    from odc.geo.geobox import GeoBox
 
     aff = Affine.translation(145.0, -35.0) * Affine.scale(
         1.0 / 256, 2.0 / 256

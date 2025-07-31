@@ -162,7 +162,7 @@ def create_geobox(
     return GeoBox((height, width), affine, crs)
 
 
-def xarray_image_as_png(img_data, loop_over=None, animate: bool = False, frame_duration: int = 1000):
+def xarray_image_as_png(img_data: xarray.Dataset, loop_over=None, animate: bool = False, frame_duration: int = 1000):
     """
     Render an Xarray image as a PNG.
 
@@ -222,8 +222,8 @@ def xarray_image_as_png(img_data, loop_over=None, animate: bool = False, frame_d
     return img_io.read()
 
 
-def render_frame(img_data, width: int, height: int):
-    """Render to a 3D numpy array an Xarray RGB(A) input
+def render_frame(img_data: xarray.Dataset, width: int, height: int) -> numpy.ndarray:
+    """Render to a 3D numpy array an Xarray RGB(A) Dataset input
 
     Args:
         img_data ([type]): Input 3D XArray
@@ -242,7 +242,8 @@ def render_frame(img_data, width: int, height: int):
         "blue": 2,
         "alpha": 3,
     }
-    for band in img_data.data_vars:
+    for band_var in img_data.data_vars:
+        band = str(band_var)
         index = band_index[band]
         band_data = img_data[band].values
         if band == "alpha":

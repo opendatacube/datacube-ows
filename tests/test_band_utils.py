@@ -6,7 +6,8 @@
 
 """Test band math utilities
 """
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -61,7 +62,7 @@ TEST_XARR_T = xr.Dataset({"b1": (["x", "y", "time"], np.ones((100, 100, 2)))})
 
 
 @pytest.fixture
-def dummy_layer():
+def dummy_layer() -> OWSProductLayer:
     product_layer = OWSProductLayer.__new__(OWSProductLayer)
     product_layer.name = "test_product"
     product_layer.band_idx = BandIndex.__new__(BandIndex)
@@ -71,7 +72,7 @@ def dummy_layer():
 
 
 @pytest.fixture
-def band_mapper():
+def band_mapper() -> Callable[[Literal["b1", "b2", "b1a", "b2a"]], str]:
     idx = {
         "b1": "b1",
         "b2": "b2",

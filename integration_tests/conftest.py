@@ -6,6 +6,7 @@
 
 
 import os
+from collections.abc import Generator
 
 pytest_plugins = ["helpers_namespace"]
 import pytest
@@ -18,7 +19,7 @@ from datacube_ows.ogc import app
 
 
 @pytest.fixture
-def flask_client():
+def flask_client() -> Generator[WSGIServer]:
     with app.test_client() as client:
         yield client
 
@@ -28,7 +29,7 @@ class generic_obj:
 
 
 @pytest.fixture(scope="session")
-def ows_server(request):
+def ows_server(request) -> WSGIServer:
     """
     Run the OWS server for the duration of these tests
     """
@@ -45,12 +46,12 @@ def ows_server(request):
 
 
 @pytest.fixture
-def runner():
+def runner() -> CliRunner:
     return CliRunner()
 
 
 @pytest.helpers.register
-def enclosed_bbox(bbox, flip: bool = False):
+def enclosed_bbox(bbox: tuple[float, float, float, float], flip: bool = False) -> tuple[float, float, float, float]:
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
@@ -71,7 +72,7 @@ def enclosed_bbox(bbox, flip: bool = False):
 
 
 @pytest.helpers.register
-def disjoint_bbox(bbox):
+def disjoint_bbox(bbox: tuple[float, float, float, float]) -> tuple[float, float, float, float]:
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
@@ -84,7 +85,7 @@ def disjoint_bbox(bbox):
     )
 
 @pytest.helpers.register
-def representative_bbox(bbox):
+def representative_bbox(bbox: tuple[float, float, float, float]) -> tuple[float, float, float, float]:
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
@@ -103,13 +104,13 @@ def product_name() -> str:
 
 
 @pytest.fixture
-def write_role_name():
+def write_role_name() -> str:
     odc_env = ODCConfig.get_environment()
     return odc_env.db_username
 
 
 @pytest.fixture
-def read_role_name(write_role_name: str):
+def read_role_name(write_role_name: str) -> str:
     if read_role_name := os.environ.get("SERVER_DB_USERNAME"):
         return read_role_name
     return write_role_name

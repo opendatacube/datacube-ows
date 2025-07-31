@@ -95,7 +95,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
     qprof["n_dates"] = n_dates
     try:
         # Tiling.
-        stacker = DataStacker(params.layer, params.geobox, params.times, params.resampling, style=params.style)
+        stacker = DataStacker(params.layer, params.geobox, params.times, params.resampling, style=params.style)  # type: ignore[arg-type]
         qprof["zoom_factor"] = params.zf
         qprof.start_event("count-datasets")
         n_datasets = stacker.n_datasets()
@@ -199,7 +199,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                                           params.layer,
                                           data.time.values,
                                           params.geobox.geographic_extent,
-                                          params.times)
+                                          params.times)  # type: ignore[arg-type]
                 data = data.sortby(sorter)
                 extent_mask = extent_mask.sortby(sorter)
 

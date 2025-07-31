@@ -422,7 +422,7 @@ class ColorMapStyleDef(StyleDefBase):
                 self._value_map = AbstractValueMapRule.value_map_from_config(self, cast(CFG_DICT, tcfg["value_map"]))
 
         @property
-        def value_map(self):
+        def value_map(self) -> dict[str, list["AbstractValueMapRule"]]:
             if self._value_map is None:
                 self._value_map = self.style.value_map
             return self._value_map
