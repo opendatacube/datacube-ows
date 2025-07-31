@@ -248,7 +248,6 @@ def render_frame(img_data, width: int, height: int):
         if band == "alpha":
             masked = True
         buffer[index, :, :] = band_data
-        index += 1
         last_band = band_data
     if not masked:
         assert last_band is not None # For typechecker.
