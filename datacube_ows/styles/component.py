@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable, Hashable
-from typing import Any, cast
+from typing import Any, TypeAlias, cast
 
 import numpy as np
 from typing_extensions import override
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 # pylint: disable=abstract-method
 
-LINEAR_COMP_DICT = dict[str, float | list[float]]
+LINEAR_COMP_DICT: TypeAlias = dict[str, float | list[float]]
 
 
 class ComponentStyleDef(StyleDefBase):

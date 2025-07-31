@@ -11,7 +11,7 @@ import os
 from collections.abc import Callable, Iterable, Sequence
 from importlib import import_module
 from itertools import chain
-from typing import Any, Optional, cast
+from typing import Any, Optional, TypeAlias, cast
 from urllib.parse import urlparse
 
 import fsspec
@@ -33,11 +33,11 @@ if TYPE_CHECKING:
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
-RAW_CFG = None | str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG"]
+RAW_CFG: TypeAlias = None | str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG"]
 
-CFG_DICT = dict[str, RAW_CFG]
+CFG_DICT: TypeAlias = dict[str, RAW_CFG]
 
-F = Callable[..., Any]
+F: TypeAlias = Callable[..., Any]
 
 
 def cfg_expand(cfg_unexpanded: CFG_DICT,
@@ -733,7 +733,7 @@ class OWSFlagBand(OWSConfigEntry):
         super().make_ready(*args, **kwargs)
 
 
-FlagBand = OWSFlagBand | OWSFlagBandStandalone
+FlagBand: TypeAlias = OWSFlagBand | OWSFlagBandStandalone
 
 
 class FlagProductBands(OWSConfigEntry):
@@ -858,7 +858,7 @@ class FlagProductBands(OWSConfigEntry):
         return flag_products
 
 
-FlagSpec = dict[str, bool | str]
+FlagSpec: TypeAlias = dict[str, bool | str]
 
 
 class AbstractMaskRule(OWSConfigEntry):
