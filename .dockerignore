@@ -1,10 +1,85 @@
-datacube_wms/wms_cfg_local.py
-**/.pytest_cache
+# Files that are only used by docker/docker compose.
+docker-compose.yaml
+docker-compose.*.yaml
+docker-compose.yml
+docker-compose.*.yml
+.docker
+.dockerignore
+env.micromamba.yaml
+
+# Byte-compiled / optimized / DLL files
 **/__pycache__
-.hypothesis
+**/*.py[cod]
 
-venv
+# CI / distribution / packaging
+**/*.egg-info
+.github
+.gitignore
+.mergify.yml
+.pre-commit-config.yaml
+.readthedocs.yaml
+.stylelintrc
 .venv
+.yamllint
+build
+dist
+dive-ci.yml
+licenseheaders.py
+license-template.txt
+load_test.sh
+Makefile
+update_ranges.py
+pylintrc
+test_urls.sh
 
-**/.pixi
-.git
+# Test and coverage reports
+**/htmlcov
+**/.tox
+**/.coverage
+**/.coveragerc
+**/.coverage.*
+**/.cache
+**/nosetests.xml
+**/coverage.xml
+**/*.cover
+**/.hypothesis
+.env_simple
+.env_ows_root
+.mypy_cache
+.pytest_cache
+.ruff_cache
+check-code.sh
+check-code-all.sh
+cfg_parser.py
+compare-cfg.sh
+complementary_config_test
+conftest.py
+integration_tests
+ows_cfg_report.json
+s2_l2a_extractor.py
+tests
+
+# Django stuff:
+**/*.log
+
+# Documentation
+*.md
+*.png
+*.rst
+docs
+LICENSE
+spellcheck.yaml
+wordlist.txt
+
+# PyBuilder
+**/target
+
+# iPython Notebook
+**/.ipynb_checkpoints
+
+# Mac OS X
+**/.DS_Store
+
+# IDE settings
+.idea
+.vscode
