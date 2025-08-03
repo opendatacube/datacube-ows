@@ -15,10 +15,6 @@ repos:
     hooks:
     # Ensure uv.lock is up-to-date if pyproject.toml has changed.
     -   id: uv-lock
-# -   repo: https://github.com/PyCQA/bandit
-#     rev: 1.7.4
-#     hooks:
-#     -   id: bandit
 -   repo: https://github.com/PyCQA/pylint
     rev: v3.3.7
     hooks:
