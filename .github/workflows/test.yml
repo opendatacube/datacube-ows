@@ -43,7 +43,8 @@ jobs:
   unit-integration-performance-tests:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -84,5 +85,4 @@ jobs:
         with:
           directory: ./artifacts/
           fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
