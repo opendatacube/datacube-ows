@@ -28,10 +28,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libhdf5-dev \
         libnetcdf-dev \
         libudunits2-dev \
-        libproj-dev \
         # For psycopg2.
         libpq-dev \
-        proj-bin \
         python3-dev
 
 ENV UV_COMPILE_BYTECODE=0 \
@@ -56,7 +54,6 @@ RUN --mount=type=cache,id=opendatacube-uv-cache,target=/root/.cache \
     uv sync --frozen --extra=ops --no-install-project \
       --no-binary-package fiona \
       --no-binary-package netcdf4 \
-      --no-binary-package pyproj \
       --no-binary-package psycopg2 \
       --no-binary-package rasterio \
       --no-binary-package shapely
@@ -66,12 +63,20 @@ COPY --link . /build/
 ## Only install pydev requirements if arg PYDEV_DEBUG is set to 'yes'
 ARG PYDEV_DEBUG="no"
 ARG ENVIRONMENT=deployment
+# The deployment image should not have binaries that aid an attacker to get their
+# rootkit in place, and uv downloads over the network. There is no conditional
+# copy in Docker, so truncate the uv binaries to 0 bytes to render them harmless
+# in the resulting deployment image.
 # hadolint ignore=SC2086
 RUN --mount=type=cache,id=opendatacube-uv-cache,target=/root/.cache \
     EXTRAS=$( ([ "$ENVIRONMENT" = "deployment" ] && echo "--extra=ops --no-dev") || \
                ( ([ "$PYDEV_DEBUG" != "no" ] && echo "--extra=ops --extra=test --extra=dev") || \
                  echo "--extra=ops --extra=test") ) \
-    && uv sync --frozen $EXTRAS --no-editable
+    && uv sync --frozen $EXTRAS --no-editable \
+    && ([ "$ENVIRONMENT" != "deployment" ] || \
+        (chmod 644 /usr/local/bin/uv* && \
+         echo "" > /usr/local/bin/uv && \
+         echo "" > /usr/local/bin/uvx))
 
 FROM base
 
@@ -90,17 +95,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && chown ubuntu:ubuntu /app
 
 COPY --from=builder --link /usr/local/bin/uv* /usr/local/bin/
-
-# Environment is test or deployment.
-ARG ENVIRONMENT=deployment
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    export DEBIAN_FRONTEND=noninteractive \
-    && ([ "$ENVIRONMENT" = "deployment" ] || \
-          (apt-get update && apt-get install -y --no-install-recommends \
-            proj-bin)) \
-    && ([ "$ENVIRONMENT" != "deployment" ] || \
-           rm -f /usr/local/bin/uv*)
 
 COPY --from=builder --link --chown=1000:1000 /app /app
 
