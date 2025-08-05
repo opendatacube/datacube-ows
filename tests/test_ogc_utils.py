@@ -5,12 +5,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import datetime
+from datetime import timezone
 from unittest.mock import MagicMock
+from zoneinfo import ZoneInfo
 
 import pytest
 import xarray
 from odc.geo.geom import polygon
-from pytz import utc
 
 import datacube_ows.http_utils
 import datacube_ows.ogc_utils
@@ -59,13 +60,13 @@ def dummy_ds():
         ],
         crs="EPSG:4326"
     )
-    ds.center_time = datetime.datetime(2020, 12, 25, 15, 11, 11, tzinfo=utc)
+    ds.center_time = datetime.datetime(2020, 12, 25, 15, 11, 11, tzinfo=timezone.utc)
     ds.metadata_doc = {}
     return ds
 
 def test_tz_for_dataset(dummy_ds) -> None:
     ret = datacube_ows.time_utils.tz_for_dataset(dummy_ds)
-    assert ret.zone == "Australia/Sydney"
+    assert ret == ZoneInfo("Australia/Sydney")
 
 
 def test_tz_bad_coords() -> None:
@@ -86,8 +87,8 @@ def test_local_date(dummy_ds) -> None:
 def test_month_date_range_wrap() -> None:
     d = datetime.date(2019, 12, 1)
     a, b = datacube_ows.time_utils.month_date_range(d)
-    assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=utc)
-    assert b == datetime.datetime(2019, 12, 31, 0, 0, 0, tzinfo=utc)
+    assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=timezone.utc)
+    assert b == datetime.datetime(2019, 12, 31, 0, 0, 0, tzinfo=timezone.utc)
 
 
 def test_get_service_base_url() -> None:
@@ -278,8 +279,8 @@ def test_rolling_window() -> None:
 
 def test_day_summary_date_range() -> None:
     start, end = datacube_ows.time_utils.day_summary_date_range(datetime.date(2015, 5, 12))
-    assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=utc)
-    assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=utc)
+    assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=timezone.utc)
+    assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=timezone.utc)
 
 xy_coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),

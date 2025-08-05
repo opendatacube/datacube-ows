@@ -6,12 +6,13 @@
 
 import datetime
 import logging
+from datetime import timezone
+from zoneinfo import ZoneInfo
 
 from datacube.model import Dataset
 from dateutil.parser import parse
 from odc.geo import CRS, Geometry
 from odc.geo.geobox import GeoBox
-from pytz import timezone, utc
 from timezonefinder import TimezoneFinder
 
 from datacube_ows.config_utils import OWSExtensibleConfigEntry
@@ -100,7 +101,7 @@ def tz_for_coord(lon: float | int, lat: float | int) -> datetime.tzinfo:
         raise
     if not tzn:
         raise NoTimezoneException("tz find failed.")
-    return timezone(tzn)
+    return ZoneInfo(tzn)
 
 
 def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
@@ -114,7 +115,7 @@ def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetim
     tz: datetime.tzinfo = tz_for_geometry(geobox.extent)
     start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
     end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
-    return start.astimezone(utc), end.astimezone(utc)
+    return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
 
 
 def month_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
@@ -126,13 +127,13 @@ def month_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.d
     :param date: A date or datetime object to take the month and year from
     :return: A tuple of two UTC datetime objects, delimiting an entire calendar month.
     """
-    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=utc)
+    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=timezone.utc)
     y: int = date.year
     m: int = date.month + 1
     if m == 13:
         m = 1
         y = y + 1
-    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=utc) - datetime.timedelta(days=1)
+    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.utc) - datetime.timedelta(days=1)
     return start, end
 
 
@@ -145,8 +146,8 @@ def year_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.da
     :param date: A date or datetime object to take the year from
     :return: A tuple of two UTC datetime objects, delimiting an entire calendar year.
     """
-    start = datetime.datetime(date.year, 1, 1, 0, 0, 0, tzinfo=utc)
-    end = datetime.datetime(date.year, 12, 31, 23, 59, 59, tzinfo=utc)
+    start = datetime.datetime(date.year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    end = datetime.datetime(date.year, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
     return start, end
 
 
@@ -159,8 +160,8 @@ def day_summary_date_range(date: datetime.date) -> tuple[datetime.datetime, date
     :param date: A date or datetime object to take the day, month and year from
     :return: A tuple of two UTC datetime objects, delimiting a calendar day.
     """
-    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=utc)
-    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=utc)
+    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=timezone.utc)
+    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=timezone.utc)
     return start, end
 
 

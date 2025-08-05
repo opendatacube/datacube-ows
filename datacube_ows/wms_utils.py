@@ -16,7 +16,6 @@ from matplotlib import pyplot as plt
 from odc.geo import geom
 from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
-from pytz import utc
 from rasterio.warp import Resampling
 from typing_extensions import override
 
@@ -467,7 +466,7 @@ class GetFeatureInfoParameters(GetParameters):
 def declination_rad(dt) -> float:
     # Estimate solar declination from a datetime.  (value returned in radians).
     # Formula taken from https://en.wikipedia.org/wiki/Position_of_the_Sun#Declination_of_the_Sun_as_seen_from_Earth
-    timedel = dt - datetime(dt.year, 1, 1, 0, 0, 0, tzinfo=utc)
+    timedel = dt - datetime(dt.year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
     day_count = timedel.days + timedel.seconds / (60.0 * 60.0 * 24.0)
     return -1.0 * math.radians(23.44) * math.cos(2 * math.pi / 365 * (day_count + 10))
 
@@ -493,7 +492,7 @@ def solar_correct_data(data, dataset) -> float:
     native_y = (dataset.bounds.top + dataset.bounds.bottom) / 2.0
     pt = geom.point(native_x, native_y, dataset.crs)
     geo_pt = pt.to_crs("epsg:4326")
-    data_time = dataset.center_time.astimezone(utc)
+    data_time = dataset.center_time.astimezone(timezone.utc)
     data_lon, data_lat = geo_pt.coords[0]
 
     csz = cosine_of_solar_zenith(data_lat, data_lon, data_time)

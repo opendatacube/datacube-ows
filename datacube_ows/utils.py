@@ -7,11 +7,11 @@
 import datetime
 import logging
 from collections.abc import Callable
+from datetime import timezone
 from functools import wraps
 from time import monotonic
 from typing import Any, TypeVar, cast
 
-import pytz
 from datacube import Datacube
 from datacube.api.query import GroupBy, solar_day
 from datacube.model import Dataset
@@ -166,5 +166,5 @@ def find_matching_date(dt, dates) -> bool:
 
 def default_to_utc(dt: datetime.datetime) -> datetime.datetime:
     if not dt.tzinfo:
-        dt = dt.replace(tzinfo=pytz.utc)
+        dt = dt.replace(tzinfo=timezone.utc)
     return dt

@@ -4,8 +4,9 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+from datetime import timezone
+
 import numpy
-import pytz
 import xarray
 import xarray as xr
 from affine import Affine
@@ -347,7 +348,7 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
         )
         if req.layer.time_resolution.is_subday():
             timevals = [
-                numpy.datetime64(dt.astimezone(pytz.utc).isoformat(), "ns")
+                numpy.datetime64(dt.astimezone(timezone.utc).isoformat(), "ns")
                 for dt in req.times
             ]
         else:
