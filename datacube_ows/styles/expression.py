@@ -23,11 +23,11 @@ if TYPE_CHECKING:
 identity = lambda ev, x: x  # noqa: E731
 
 
-def empty_gen(ev, a) -> set:
+def empty_gen(ev, a: set) -> set:
     return set()
 
 
-def union(ev, a, b):
+def union(ev, a: set, b: set) -> set:
     return a.union(b)
 
 def not_supported(op_name: object) -> Callable[[object, object], Any]:

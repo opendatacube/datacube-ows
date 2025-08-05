@@ -138,7 +138,7 @@ def babel_cfg():
     return cfg
 
 @pytest.fixture
-def flask_app():
+def flask_app() -> flask.Flask:
     return flask.Flask("test_flask_app")
 
 def test_init_babel_on(babel_cfg, flask_app) -> None:

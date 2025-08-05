@@ -5,18 +5,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import datetime
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock
 
+import flask
 import numpy as np
 import pytest
 import xarray as xr
 from datacube.cfg import ODCConfig
 
+from datacube_ows.config_utils import CFG_DICT
 from tests.utils import coords, dim1_da, dim1_da_time, dummy_da
 
 
 @pytest.fixture
-def flask_client(monkeypatch):
+def flask_client(monkeypatch) -> Generator[flask.Flask]:
     monkeypatch.setenv("DEFER_CFG_PARSE", "yes")
     from datacube_ows.ogc import app
     with app.test_client() as client:
@@ -81,7 +85,7 @@ def minimal_dc():
                 "longitude": 0.001,
             }
 
-        def lookup_measurements(ls):
+        def lookup_measurements(ls: str | list[str]) -> dict[str, Any]:
             from datacube.model import Measurement
             if isinstance(ls, str):
                 ls = [ls]
@@ -183,7 +187,7 @@ def minimal_parent(minimal_global_cfg):
 
 
 @pytest.fixture
-def minimal_layer_cfg():
+def minimal_layer_cfg() -> CFG_DICT:
     return {
         "title": "The Title",
         "abstract": "The Abstract",
@@ -264,7 +268,7 @@ def mock_range():
 
 
 @pytest.fixture
-def minimal_global_raw_cfg():
+def minimal_global_raw_cfg() -> CFG_DICT:
     return {
         "global": {
             "title": "Test Title",
@@ -291,7 +295,7 @@ def minimal_global_raw_cfg():
 
 
 @pytest.fixture
-def wcs_global_cfg():
+def wcs_global_cfg() -> CFG_DICT:
     return {
         "formats": {
             # Key is the format name, as used in DescribeCoverage XML
@@ -322,7 +326,7 @@ def wcs_global_cfg():
 
 
 @pytest.fixture
-def dummy_raw_data():
+def dummy_raw_data() -> xr.Dataset:
     return xr.Dataset({
         "ir": dummy_da(3, "ir", coords),
         "red": dummy_da(5, "red", coords),
@@ -333,12 +337,12 @@ def dummy_raw_data():
 
 
 @pytest.fixture
-def null_mask():
+def null_mask() -> xr.DataArray:
     return dummy_da(True, "mask", coords, dtype=bool)
 
 
 @pytest.fixture
-def dummy_raw_calc_data():
+def dummy_raw_calc_data() -> xr.Dataset:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     return xr.Dataset({
         "ir": dim1_da("ir", [800, 100, 1000, 600, 200, 1000], dim_coords),
@@ -378,12 +382,12 @@ def dummy_raw_calc_data():
     })
 
 
-def dim1_null_mask(coords):
+def dim1_null_mask(coords) -> xr.DataArray:
     return dim1_da("mask", [True] * len(coords), coords)
 
 
 @pytest.fixture
-def raw_calc_null_mask():
+def raw_calc_null_mask() -> xr.DataArray:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     return dim1_da("mask", [True] * len(dim_coords), dim_coords)
 
@@ -394,7 +398,7 @@ def timed_raw_calc_null_mask():
     return dim1_da_time("mask", [[True] * len(dates)] * len(dim_coords), dates, dim_coords)
 
 
-flags_def = {
+flags_def: CFG_DICT = {
     "joviality": {
         "bits": 4,
         "values": {
@@ -439,7 +443,7 @@ flags_def = {
 
 
 @pytest.fixture
-def dummy_col_map_data():
+def dummy_col_map_data() -> xr.Dataset:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     return xr.Dataset({
         "pq": dim1_da("pq", [0b01000, 0b11001, 0b00010, 0b10011, 0b00100, 0b10001], dim_coords,
@@ -449,7 +453,7 @@ def dummy_col_map_data():
     })
 
 @pytest.fixture
-def dummy_col_map_time_data():
+def dummy_col_map_time_data() -> xr.Dataset:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     dates = [datetime.datetime(2000, 1, 1), datetime.datetime(2020, 1, 1)]
     return xr.Dataset({
@@ -469,7 +473,7 @@ def dummy_col_map_time_data():
 
 
 @pytest.fixture
-def dummy_raw_ls_data():
+def dummy_raw_ls_data() -> xr.Dataset:
     return xr.Dataset({
         "red": dummy_da(5, "red", coords, dtype=np.int16),
         "green": dummy_da(7, "green", coords, dtype=np.int16),
@@ -481,7 +485,7 @@ def dummy_raw_ls_data():
 
 
 @pytest.fixture
-def dummy_raw_wo_data():
+def dummy_raw_wo_data() -> xr.Dataset:
     return xr.Dataset({
         "water": dummy_da(0b101,
                         "red",
@@ -559,7 +563,7 @@ def dummy_raw_wo_data():
 
 
 @pytest.fixture
-def dummy_raw_fc_data():
+def dummy_raw_fc_data() -> xr.Dataset:
     return xr.Dataset({
         "bs": dummy_da(546, "bs", coords, dtype=np.int16),
         "pv": dummy_da(723, "pv", coords, dtype=np.int16),
@@ -568,15 +572,15 @@ def dummy_raw_fc_data():
 
 
 @pytest.fixture
-def dummy_raw_fc_plus_wo(dummy_raw_fc_data, dummy_raw_wo_data):
+def dummy_raw_fc_plus_wo(dummy_raw_fc_data, dummy_raw_wo_data) -> xr.DataArray | xr.Dataset:
     return xr.combine_by_coords(
             [dummy_raw_fc_data, dummy_raw_wo_data],
             join="exact")
 
 
 @pytest.fixture
-def configs_for_landsat():
-    def ndvi(data):
+def configs_for_landsat() -> list:
+    def ndvi(data: xr.DataArray) -> xr.DataArray:
         # Calculate NDVI (-1.0 to 1.0)
         unscaled = (data["nir"] - data["red"]) / (data["nir"] + data["red"])
         # Scale to [-1.0 - 1.0] to [0 - 255]
@@ -585,7 +589,7 @@ def configs_for_landsat():
     from datacube_ows.styles.api import scalable
 
     @scalable
-    def scaled_ndvi(data):
+    def scaled_ndvi(data: xr.DataArray) -> xr.DataArray:
         # Calculate NDVI (-1.0 to 1.0)
         return (data["nir"] - data["red"]) / (data["nir"] + data["red"])
 
@@ -810,7 +814,7 @@ def configs_for_landsat():
 
 
 @pytest.fixture
-def configs_for_wofs():
+def configs_for_wofs() -> list:
     return [
         {
             "name": "observations",
@@ -1000,7 +1004,7 @@ def configs_for_wofs():
 
 
 @pytest.fixture
-def configs_for_combined_fc_wofs():
+def configs_for_combined_fc_wofs() -> list:
     return [
         {
             "components": {
@@ -1099,7 +1103,7 @@ def configs_for_combined_fc_wofs():
     ]
 
 @pytest.fixture
-def multi_date_cfg():
+def multi_date_cfg() -> CFG_DICT:
    return  {
        "index_function": {
            "function": "datacube_ows.band_utils.norm_diff",
@@ -1138,7 +1142,7 @@ xyt_coords = [
 ]
 
 @pytest.fixture
-def xyt_dummydata():
+def xyt_dummydata() -> xr.Dataset:
     return xr.Dataset({
             "red": dummy_da(1400, "red", xyt_coords, dtype="int16"),
             "green": dummy_da(700, "green", xyt_coords, dtype="int16"),

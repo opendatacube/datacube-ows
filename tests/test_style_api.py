@@ -7,8 +7,9 @@
 from decimal import Decimal
 
 import pytest
+import xarray as xr
 
-from datacube_ows.config_utils import ConfigException
+from datacube_ows.config_utils import CFG_DICT, ConfigException
 from datacube_ows.styles.api import (
     StandaloneStyle,
     apply_ows_style,
@@ -29,7 +30,7 @@ def test_indirect_imports() -> None:
 
 
 @pytest.fixture
-def simple_rgb_style_cfg():
+def simple_rgb_style_cfg() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -45,7 +46,7 @@ def simple_rgb_style_cfg():
 
 
 @pytest.fixture
-def simple_rgb_perband_scaling_style_cfg():
+def simple_rgb_perband_scaling_style_cfg() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -97,7 +98,7 @@ def test_external_legends(simple_rgb_style_cfg) -> None:
 
 
 @pytest.fixture
-def simple_ramp_style_cfg():
+def simple_ramp_style_cfg() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -207,6 +208,7 @@ def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_st
 def test_ramp_legend_standalone(simple_ramp_style_cfg) -> None:
     style = StandaloneStyle(simple_ramp_style_cfg)
     img = generate_ows_legend_style(style, 1)
+    assert img is not None
     assert img.mode == "RGBA"
     assert img.size == (400, 125)
 
@@ -431,7 +433,7 @@ def test_explicit_ticks(simple_ramp_style_cfg) -> None:
 
 
 @pytest.fixture
-def rgb_style_with_masking_cfg():
+def rgb_style_with_masking_cfg() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -476,7 +478,7 @@ def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, r
 
 
 @pytest.fixture
-def simple_colormap_style_cfg():
+def simple_colormap_style_cfg() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -667,7 +669,7 @@ def test_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, s
     assert result["blue"].values[5] == 255
 
 @pytest.fixture
-def enum_colormap_style_cfg():
+def enum_colormap_style_cfg() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -787,7 +789,7 @@ def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_ma
 
 
 @pytest.fixture
-def enum_animated_value_map():
+def enum_animated_value_map() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -839,8 +841,8 @@ def test_animated_colour_map(enum_animated_value_map, dummy_col_map_time_data, t
 
 
 @pytest.fixture
-def enum_colormap_aggregate_multidate():
-    def test_agg(data):
+def enum_colormap_aggregate_multidate() -> CFG_DICT:
+    def test_agg(data: xr.DataArray) -> xr.DataArray:
         # Split data in two date slices
         data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)
 
@@ -976,7 +978,7 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
 
 def test_map_legend(simple_colormap_style_cfg) -> None:
     img = generate_ows_legend_style_cfg(simple_colormap_style_cfg, 1)
-
+    assert img is not None
     assert img.mode == "RGBA"
     assert img.size == (400, 125)
 

@@ -152,7 +152,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         # Make a 1x1 pixel geobox
         geo_point_geobox = GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs)
-    stacker = DataStacker(params.layer, geo_point_geobox, params.times)
+    stacker = DataStacker(params.layer, geo_point_geobox, params.times)  # type: ignore[arg-type]
     # --- Begin code section requiring datacube.
     cfg = get_config()
     all_time_datasets = stacker.datasets_all_time(point=geo_point_geobox.extent)

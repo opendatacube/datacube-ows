@@ -13,7 +13,7 @@ from typing_extensions import override
 from xarray import DataArray, Dataset, concat
 
 import datacube_ows.styles
-from datacube_ows.config_utils import ConfigException, OWSEntryNotFound
+from datacube_ows.config_utils import CFG_DICT, ConfigException, OWSEntryNotFound
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
 
 
@@ -104,7 +104,7 @@ def product_layer():
 
 
 @pytest.fixture
-def style_cfg_lin():
+def style_cfg_lin() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -120,7 +120,7 @@ def style_cfg_lin():
 
 
 @pytest.fixture
-def style_cfg_lin_clone():
+def style_cfg_lin_clone() -> CFG_DICT:
     return {
         "inherits": {
             "style": "test_style",
@@ -133,7 +133,7 @@ def style_cfg_lin_clone():
 
 
 @pytest.fixture
-def style_cfg_nonlin():
+def style_cfg_nonlin() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -156,7 +156,7 @@ def style_cfg_nonlin():
 
 
 @pytest.fixture
-def style_cfg_map():
+def style_cfg_map() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -208,7 +208,7 @@ def product_layer_alpha_map():
 
 
 @pytest.fixture
-def style_cfg_map_alpha_1():
+def style_cfg_map_alpha_1() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -231,7 +231,7 @@ def style_cfg_map_alpha_1():
 
 
 @pytest.fixture
-def style_cfg_map_alpha_2():
+def style_cfg_map_alpha_2() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -254,7 +254,7 @@ def style_cfg_map_alpha_2():
 
 
 @pytest.fixture
-def style_cfg_map_alpha_3():
+def style_cfg_map_alpha_3() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -331,7 +331,7 @@ def test_valuemap_ctor() -> None:
 
 
 @pytest.fixture
-def style_cfg_ramp():
+def style_cfg_ramp() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -352,7 +352,7 @@ def style_cfg_ramp():
 
 
 @pytest.fixture
-def style_cfg_ramp_clone(style_cfg_ramp):
+def style_cfg_ramp_clone(style_cfg_ramp) -> CFG_DICT:
     return {
         "inherits": style_cfg_ramp,
         "name": "test_style2",
@@ -362,7 +362,7 @@ def style_cfg_ramp_clone(style_cfg_ramp):
 
 
 @pytest.fixture
-def style_cfg_ramp_mapped():
+def style_cfg_ramp_mapped() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -501,7 +501,7 @@ def test_alpha_style_map(
     style_cfg_map_alpha_2,
     style_cfg_map_alpha_3) -> None:
 
-    def fake_make_mask(data, **kwargs):
+    def fake_make_mask(data: DataArray, **kwargs) -> DataArray:
         return data
 
 
@@ -632,7 +632,7 @@ def product_layer_mask_map():
 
 
 @pytest.fixture
-def style_cfg_map_mask():
+def style_cfg_map_mask() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",
@@ -671,7 +671,7 @@ def style_cfg_map_mask():
 
 
 def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask) -> None:
-    def fake_make_mask(data, **kwargs):
+    def fake_make_mask(data, **kwargs) -> np.ndarray:
         val = kwargs["bar"]
         return data == val
 
@@ -805,7 +805,7 @@ def test_bad_mpl_ramp() -> None:
     assert "Invalid Matplotlib name: " in str(e.value)
 
 @pytest.fixture
-def style_with_pq_masking():
+def style_with_pq_masking() -> CFG_DICT:
     return {
         "name": "test_style",
         "title": "Test Style",

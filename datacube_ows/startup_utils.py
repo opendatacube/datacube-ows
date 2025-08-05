@@ -7,7 +7,9 @@
 import logging
 import os
 import warnings
+from collections.abc import Callable
 from logging import Logger
+from typing import Any
 
 from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
@@ -56,7 +58,7 @@ def initialise_debugging(log: Logger | None = None) -> None:
         if log:
             log.info("PyCharm Debugging enabled")
 
-def before_send(event, hint) -> None:
+def before_send(event: str, hint: dict[str, Any]) -> str | None:
     if 'exc_info' in hint:
         exc_type, exc_value, tb = hint['exc_info']
         if isinstance(exc_value, AttributeError) and "object has no attribute 'GEOSGeom_destroy'" in str(exc_value):
@@ -147,8 +149,9 @@ class CredentialManager:
             self.log.debug("Credentials of type %s - NOT RENEWING", self.credentials.__class__.__name__)
 
     @classmethod
-    def check_cred(cls):
+    def check_cred(cls) -> None:
         # pylint: disable=protected-access
+        assert cls._instance is not None
         cls._instance._check_cred()
 
     def renew_creds(self) -> None:
@@ -181,26 +184,26 @@ def initialise_flask(name: str) -> Flask:
     app_path = os.path.dirname(os.path.abspath(__file__))
     return Flask(name.split('.')[0], template_folder=os.path.join(app_path, 'templates'))
 
-def pass_through(undecorated):
+def pass_through(undecorated: Callable) -> Callable:
     def decorator(*args, **kwargs):
         return undecorated(*args, **kwargs)
     decorator.__name__ = undecorated.__name__
     return decorator
 
 class FakeMetrics:
-    def do_not_track(self):
+    def do_not_track(self) -> Callable:
         return pass_through
-    def counter(self, *args, **kwargs):
+    def counter(self, *args, **kwargs) -> Callable:
         return pass_through
-    def histogram(self, *args, **kwargs):
+    def histogram(self, *args, **kwargs) -> Callable:
         return pass_through
-    def gauge(self, *args, **kwargs):
+    def gauge(self, *args, **kwargs) -> Callable:
         return pass_through
-    def summary(self, *args, **kwargs):
+    def summary(self, *args, **kwargs) -> Callable:
         return pass_through
 
 
-def initialise_prometheus(app, log: Logger | None = None):
+def initialise_prometheus(app: Flask, log: Logger | None = None):
     # Prometheus
     if os.environ.get("PROMETHEUS_MULTIPROC_DIR", False):
         from prometheus_flask_exporter.multiprocess import (
@@ -212,11 +215,11 @@ def initialise_prometheus(app, log: Logger | None = None):
         return metrics
     return FakeMetrics()
 
-def proxy_fix(app, log=None):
+def proxy_fix(app: Flask, log: Logger | None = None):
     # Proxy Fix, to respect X-Forwarded-For headers
     if os.environ.get("PROXY_FIX", False):
         from werkzeug.middleware.proxy_fix import ProxyFix
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)  # type: ignore[method-assign]
         if log is not None:
             log.info("ProxyFix was enabled")
     return app
@@ -224,12 +227,12 @@ def proxy_fix(app, log=None):
 def request_extractor() -> str | None:
     return request.args.get('request')
 
-def initialise_babel(cfg, app) -> object | None:
+def initialise_babel(cfg, app: Flask) -> object | None:
     if cfg and cfg.internationalised:
         from flask_babel import Babel
         app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
 
-        def get_locale():
+        def get_locale() -> str | None:
             return request.accept_languages.best_match(cfg.locales, default=cfg.locales[0])
 
         return Babel(app,

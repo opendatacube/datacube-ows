@@ -8,7 +8,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import NamedTuple
+from typing import NamedTuple, TypeAlias
 from uuid import UUID
 
 from datacube import Datacube
@@ -43,8 +43,8 @@ class LayerSignature:
         }
 
 
-DateOrDateTime = datetime | date
-TimeSearchTerm = tuple[datetime, datetime] | tuple[date, date] | DateOrDateTime
+DateOrDateTime: TypeAlias = datetime | date
+TimeSearchTerm: TypeAlias = tuple[datetime, datetime] | tuple[date, date] | DateOrDateTime
 
 
 class CoordRange(NamedTuple):

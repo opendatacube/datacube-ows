@@ -66,6 +66,7 @@ dev = [
     "ruff",
     "types-python-dateutil",
     "types-pytz",
+    "types-PyYAML",  # Used by metadata_importer.py.
     "types-requests",
 ]
 ops = [

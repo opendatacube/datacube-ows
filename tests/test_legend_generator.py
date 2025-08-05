@@ -17,16 +17,16 @@ from tests.test_band_utils import dummy_layer  # noqa: F401
 
 
 @pytest.fixture
-def prelegend_style():
+def prelegend_style() -> StyleDefBase:
     style = StyleDefBase.__new__(StyleDefBase)
-    style._unready_attributes = []
+    style._unready_attributes = set()
     return style
 
 
 @pytest.fixture
-def prelegend_colorramp_style():
+def prelegend_colorramp_style() -> StyleDefBase:
     style = ColorRampDef.__new__(ColorRampDef)
-    style._unready_attributes = []
+    style._unready_attributes = set()
     return style
 
 

@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+from typing import Any
 
 from flask import request
 from ows.common import WGS84BoundingBox
@@ -48,7 +49,7 @@ def handle_wcs2(nocase_args) -> tuple:
 
 
 @log_call
-def get_capabilities(args):
+def get_capabilities(args: dict) -> tuple[Any, int, dict]:
     # Extract layer metadata from Datacube.
     cfg = get_config()
     url = args.get('Host', args['url_root'])
@@ -81,6 +82,8 @@ def get_capabilities(args):
     if 'coveragesummary' in sections:
         include_coverage_summary = True
 
+    assert cfg.contact_info is not None
+    assert cfg.contact_info.address is not None
     capabilities = ServiceCapabilities.with_defaults_v20(
         service_url =base_url + '/wcs',
         allowed_operations=[

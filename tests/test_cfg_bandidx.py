@@ -3,7 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -27,7 +27,7 @@ def minimal_prod(minimal_dc):
     odc_prod.name = "foo"
     product.products = [odc_prod]
 
-    def lookup_measurements(ls):
+    def lookup_measurements(ls: str | list[str]) -> dict[str, Any]:
         if isinstance(ls, str):
             ls = [ls]
         out = {}

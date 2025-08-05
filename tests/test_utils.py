@@ -23,7 +23,7 @@ def mock_ds_for_sort(id_: str, st: datetime, ct: datetime, lon: float, prod_name
 
 
 @pytest.fixture
-def datasets_for_sorting():
+def datasets_for_sorting() -> list:
     utc = datetime.timezone.utc
     DT = datetime.datetime
     return [

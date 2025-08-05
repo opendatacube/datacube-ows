@@ -28,7 +28,7 @@ def log_call(func: F) -> F:
     being logged at debug level.
     """
     @wraps(func)
-    def log_wrapper(*args, **kwargs):
+    def log_wrapper(*args, **kwargs) -> F:
         _LOG = logging.getLogger()
         _LOG.debug("%s args: %s kwargs: %s", func.__name__, args, kwargs)
         return func(*args, **kwargs)
