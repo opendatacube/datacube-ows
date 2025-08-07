@@ -9,7 +9,7 @@ import os
 import warnings
 from collections.abc import Callable
 from logging import Logger
-from typing import Any
+from typing import Any, TypeVar
 
 from botocore.credentials import RefreshableCredentials
 from datacube.utils.aws import configure_s3_access
@@ -58,7 +58,9 @@ def initialise_debugging(log: Logger | None = None) -> None:
         if log:
             log.info("PyCharm Debugging enabled")
 
-def before_send(event: str, hint: dict[str, Any]) -> str | None:
+SentryEvent = TypeVar("SentryEvent")
+
+def before_send(event: SentryEvent, hint: dict[str, Any]) -> SentryEvent | None:
     if 'exc_info' in hint:
         exc_type, exc_value, tb = hint['exc_info']
         if isinstance(exc_value, AttributeError) and "object has no attribute 'GEOSGeom_destroy'" in str(exc_value):
