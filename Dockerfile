@@ -12,7 +12,7 @@ ENV LC_ALL=C.UTF-8 \
 
 FROM base AS builder
 
-ARG UV=https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-unknown-linux-gnu.tar.gz
+ARG UV=https://github.com/astral-sh/uv/releases/download/0.8.6/uv-x86_64-unknown-linux-gnu.tar.gz
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -42,7 +42,7 @@ WORKDIR /build
 
 # False alarm, next line is pointing to a https link.
 # hadolint ignore=DL3020
-ADD --checksum=sha256:eb61d39fdc6ea21a6d00a24b50376102168240849c5022d3eba331f972ba3934 --chown=root:root --chmod=644 --link $UV uv.tar.gz
+ADD --checksum=sha256:5429c9b96cab65198c2e5bfe83e933329aa16303a0369d5beedc71785a4a2f36 --chown=root:root --chmod=644 --link $UV uv.tar.gz
 
 RUN tar xf uv.tar.gz -C /usr/local/bin --strip-components=1 --no-same-owner
 
