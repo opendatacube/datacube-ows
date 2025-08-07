@@ -88,7 +88,10 @@ def read_config(path: str | None = None) -> CFG_DICT:
     else:
         mod = import_module("datacube_ows.ows_cfg")
         cfg = getattr(mod, cfg_env)
-    return cfg_expand(cfg, cwd=cwd)
+    expansion = cfg_expand(cfg, cwd=cwd)
+    if isinstance(expansion, dict):
+        return expansion
+    raise ConfigException("Top level config must be a dict")
 
 
 class BandIndex(OWSMetadataConfig):
