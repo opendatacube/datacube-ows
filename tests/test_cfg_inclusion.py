@@ -79,7 +79,7 @@ def test_cfg_inject() -> None:
 
 def test_cfg_not_a_dict(monkeypatch) -> None:
     with pytest.raises(ConfigException):
-        cfg = read_config('nested.not_a_dict')
+        read_config('nested.not_a_dict')
 
 
 def test_cfg_direct(monkeypatch) -> None:
