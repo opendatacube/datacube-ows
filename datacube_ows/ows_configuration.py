@@ -845,14 +845,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         product_native_specs = self.product.definition.get("load", self.product.definition.get("storage"))
         # Native CRS
         if product_native_specs is not None and "crs" in product_native_specs:
-                self.native_CRS = product_native_specs["crs"]
-                if self.cfg_native_crs == self.native_CRS:
-                    _LOG.debug(
-                        "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
-                        self.name)
-                else:
-                    _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
-                                 self.name, self.cfg_native_crs, self.native_CRS)
+            self.native_CRS = product_native_specs["crs"]
+            if self.cfg_native_crs == self.native_CRS:
+                _LOG.debug(
+                    "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
+                    self.name)
+            else:
+                _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
+                             self.name, self.cfg_native_crs, self.native_CRS)
         else:
             self.native_CRS = self.cfg_native_crs
 
