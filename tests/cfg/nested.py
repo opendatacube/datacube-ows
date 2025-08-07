@@ -11,15 +11,17 @@ nested = {
     "type": "python",
 }
 
-nested_1 = [
-    {
-        "test": 8888,
-    },
-    {
-        "include": "tests.cfg.simple.simple1",
-        "type": "python"
-    }
-]
+nested_1 = {
+    "this_test": [
+        {
+            "test": 8888,
+        },
+        {
+            "include": "tests.cfg.simple.simple1",
+            "type": "python"
+        }
+    ]
+}
 
 nested_2 = {
     "test": 3424,
@@ -108,3 +110,5 @@ infinite_2b = {
         "type": "python"
     }
 }
+
+not_a_dict = ["flash", "bang", "whallop"]
