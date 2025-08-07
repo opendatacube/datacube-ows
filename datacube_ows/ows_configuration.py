@@ -91,7 +91,8 @@ def read_config(path: str | None = None) -> CFG_DICT:
     expansion = cfg_expand(cfg, cwd=cwd)
     if isinstance(expansion, dict):
         return expansion
-    raise ConfigException("Top level config must be a dict")
+    raise ConfigException(
+        f"Top level config must be a dict: {expansion!r} ({expansion.__class__.__name__})")
 
 
 class BandIndex(OWSMetadataConfig):

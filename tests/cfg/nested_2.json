@@ -1,9 +1,11 @@
-[
-  {
-    "test": 88888
-  },
-  {
+{
+  "this_test": [
+    {
+      "test": 88888
+    },
+    {
       "include": "simple.json",
       "type": "json"
-  }
-]
+    }
+  ]
+}

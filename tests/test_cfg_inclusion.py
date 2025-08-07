@@ -77,6 +77,11 @@ def test_cfg_inject() -> None:
     assert cfg["test"] == 12345
 
 
+def test_cfg_not_a_dict(monkeypatch) -> None:
+    with pytest.raises(ConfigException):
+        cfg = read_config('nested.not_a_dict')
+
+
 def test_cfg_direct(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "{\"test\": 12345}")
     cfg = read_config()
@@ -109,9 +114,10 @@ def test_cfg_py_nested_1(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_1")
     cfg = read_config()
 
-    assert len(cfg) == 2
-    assert cfg[0]["test"] == 8888
-    assert cfg[1]["test"] == 1
+    assert "this_test" in cfg
+    assert len(cfg["this_test"]) == 2
+    assert cfg["this_test"][0]["test"] == 8888
+    assert cfg["this_test"][1]["test"] == 1
 
 
 def test_cfg_py_nested_2(monkeypatch) -> None:
@@ -185,9 +191,10 @@ def test_cfg_json_nested_2(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_2.json")
     cfg = read_config()
 
-    assert len(cfg) == 2
-    assert cfg[0]["test"] == 88888
-    assert cfg[1]["test"] == 1234
+    assert "this_test" in cfg
+    assert len(cfg["this_test"]) == 2
+    assert cfg["this_test"][0]["test"] == 88888
+    assert cfg["this_test"][1]["test"] == 1234
 
 
 def validated_nested_3(cfg) -> None:
