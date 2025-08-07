@@ -41,7 +41,7 @@ F: TypeAlias = Callable[..., Any]
 
 
 def cfg_expand(cfg_unexpanded: CFG_DICT,
-               cwd: str | None = None, inclusions: list[str] | None = None) -> CFG_DICT:
+               cwd: str | None = None, inclusions: list[str] | None = None) -> RAW_CFG:
     """
     Recursively expand config inclusions.
 
