@@ -47,7 +47,7 @@ What's Changed
 * readthedocs: use uv for building by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1236
 * Dockerfile: use uv for build by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1238
 * conf: autogenerate version by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1237
-* CI: cache in pyspy worfklow by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1239
+* CI: cache in pyspy workflow by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1239
 * HTML and JavaScript updates by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1242
 * CI: reduce workflow permissions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1240
 * dockerignore: update with more patterns by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1245
@@ -66,7 +66,7 @@ What's Changed
 * Dockerfile: upgrade to uv 0.8.6 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1259
 * Remove pytz by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1255
 * Read native product specs from load section in preference to storage section by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1256
-* Update fallback version numbers and HISTORY.rst for release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1257
+* Update fallback version numbers and HISTORY.rst for release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1260
 
 Includes contributions from @pjonsson and @SpacemanPaul
 
