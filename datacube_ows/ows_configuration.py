@@ -842,9 +842,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
     # pylint: disable=attribute-defined-outside-init
     def ready_native_specs(self) -> None:
+        product_native_specs = self.product.definition.get("load", self.product.definition.get("storage"))
         # Native CRS
-        try:
-            self.native_CRS = self.product.definition["storage"]["crs"]
+        if product_native_specs is not None and "crs" in product_native_specs:
+            self.native_CRS = product_native_specs["crs"]
             if self.cfg_native_crs == self.native_CRS:
                 _LOG.debug(
                     "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
@@ -852,7 +853,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             else:
                 _LOG.warning("Native crs for layer %s is specified in config as %s - overridden to %s by ODC metadata",
                              self.name, self.cfg_native_crs, self.native_CRS)
-        except KeyError:
+        else:
             self.native_CRS = self.cfg_native_crs
 
         if not self.native_CRS:
@@ -862,12 +863,15 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 f"Native CRS for product {self.product_name} in layer {self.name} ({self.native_CRS}) not in published CRSs")
         self.native_CRS_def = self.global_cfg.published_CRSs[self.native_CRS]
 
-        try:
-            # Native CRS
-            self.resolution_x = self.product.definition["storage"]["resolution"][
-                self.native_CRS_def["horizontal_coord"]]
-            self.resolution_y = self.product.definition["storage"]["resolution"][self.native_CRS_def["vertical_coord"]]
-        except KeyError:
+        if product_native_specs is not None and "resolution" in product_native_specs:
+            # Native Resolution
+            self.resolution_x = product_native_specs["resolution"][
+                self.native_CRS_def["horizontal_coord"]
+            ]
+            self.resolution_y = product_native_specs["resolution"][
+                self.native_CRS_def["vertical_coord"]
+            ]
+        else:
             self.resolution_x = None
             self.resolution_y = None
 
