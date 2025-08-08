@@ -85,6 +85,8 @@ cli
 cloudfront
 codebase
 codecov
+CodeCov
+codeql
 cogs
 COGs
 colourmap
@@ -142,6 +144,8 @@ dns
 docstrings
 dockerfile
 dockerhub
+dockerignore
+docutils
 dsn
 dtype
 eae
@@ -178,6 +182,7 @@ FeatureInfo
 featurelisturls
 FeatureListURLs
 fqn
+fromarray
 fs
 func
 fuser
@@ -304,6 +309,7 @@ npv
 numpy
 odc
 ogc
+OIDC
 opendatacube
 OpenDataCube
 OpenDatacube
@@ -350,10 +356,12 @@ pylint
 pypackage
 pypi
 PyPI
+pyproject
 pyspelling
 pyspy
 pytest
 pythonpath
+pytz
 qgis
 queryable
 rasterio
@@ -398,10 +406,12 @@ svg
 sw
 terria
 th
+timezonefinder
 tls
 tlt
 tmp
 toctree
+toml
 toolchain
 tox
 trivy
@@ -421,6 +431,7 @@ utc
 utf
 util
 utils
+uv
 ux
 vaguries
 valpesendorfer
@@ -443,6 +454,7 @@ wmts
 wofs
 WOfS
 woodcockr
+workflow
 wsgi
 www
 xargs

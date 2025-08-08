@@ -7,6 +7,74 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.4 (2025-08-08)
+------------------
+
+What's Changed
+++++++++++++++
+
+* Fix PyPI push on release automation by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1202
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1204
+* docs: fix docker compose name by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1205
+* CI: pin remaining actions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1206
+* CI: attest docker image by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1207
+* Assorted lint fixes by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1209
+* Fix some type signatures by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1210
+* update_ranges_impl: import psycopg2 locally by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1211
+* docs: unpin docutils version by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1212
+* Avoid timezonefinder 6.6.0 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1213
+* CI: fix attestation permissions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1214
+* Enable some more Ruff rules by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1215
+* Convert setup.py to pyproject.toml by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1216
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1218
+* Fix Ruff configuration by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1217
+* CI: use uv for lint jobs by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1219
+* Require setuptools_scm >= 8 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1220
+* cfg_parser_impl: respect depth parameter by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1221
+* cfg_parser_impl: report error on failure by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1222
+* mv_index: remove dead code by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1223
+* wcs2_utils: fix type error by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1224
+* Make methods static by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1226
+* CI: make curl retry more by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1227
+* CI: shorten job timeout by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1228
+* docs: fix doc build by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1229
+* build(deps): bump astral-sh/setup-uv from 6.4.1 to 6.4.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1230
+* build(deps): bump github/codeql-action from 3.29.2 to 3.29.4 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1231
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1232
+* docs: fix some warnings by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1208
+* build(deps): bump mambaorg/micromamba from 2.3.0 to 2.3.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1233
+* CI: cache docker layers by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1234
+* readthedocs: use uv for building by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1236
+* Dockerfile: use uv for build by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1238
+* conf: autogenerate version by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1237
+* CI: cache in pyspy workflow by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1239
+* HTML and JavaScript updates by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1242
+* CI: reduce workflow permissions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1240
+* dockerignore: update with more patterns by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1245
+* pre-commit: update ruff hook name by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1247
+* build(deps): bump github/codeql-action from 3.29.4 to 3.29.5 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1248
+* build(deps): bump docker/metadata-action from 5.7.0 to 5.8.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1249
+* CI: use OIDC for CodeCov by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1250
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1251
+* CI: build Docker with full history by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1252
+* CI: fixate time stamp for image layers (towards reproducible docker builds) by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1253
+* Add more type signatures by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1241
+* uv.lock: update dependencies by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1254
+* Dockerfile: remove proj specials by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1246
+* Drop deprecated Image.fromarray() mode parameter. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1257
+* Check top level config is a dictionary. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1258
+* Dockerfile: upgrade to uv 0.8.6 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1259
+* Remove pytz by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1255
+* Read native product specs from load section in preference to storage section by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1256
+* Update fallback version numbers and HISTORY.rst for release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1260
+
+Includes contributions from @pjonsson and @SpacemanPaul
+
+The ODC Steering Council recognises the ongoing support of Geoscience Australia and RISE.
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.3...1.9.4
+
+
 1.9.3 (2025-07-11)
 ------------------
 
@@ -15,7 +83,8 @@ Includes bug-fixes and cleanup.
 This version of OWS can be installed without psycopg2 (e.g. for installations that only use the rendering API).
 Operational web services will still require psycopg2, which can be installed with e.g. ``pip install datacube-ows[ops]``
 
-## What's Changed
+What's Changed
+++++++++++++++
 
 * [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1177
 * build(deps): bump mambaorg/micromamba from 2.1.1 to 2.2.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1179
