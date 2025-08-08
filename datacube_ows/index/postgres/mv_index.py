@@ -12,7 +12,6 @@ from types import UnionType
 from typing import cast
 from uuid import UUID as UUID_
 
-import pytz
 from datacube.index import Index
 from datacube.model import Dataset, Product
 from geoalchemy2 import Geometry
@@ -125,7 +124,7 @@ def mv_search(index: Index,
                     )
                 )
             elif isinstance(t, datetime.date):
-                st = datetime.datetime(t.year, t.month, t.day, tzinfo=pytz.utc)
+                st = datetime.datetime(t.year, t.month, t.day, tzinfo=datetime.timezone.utc)
                 tmax = st + datetime.timedelta(days=1)
                 or_clauses.append(
                     and_(

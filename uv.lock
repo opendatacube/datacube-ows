@@ -749,7 +749,6 @@ dependencies = [
     { name = "pyparsing" },
     { name = "python-dateutil" },
     { name = "python-slugify" },
-    { name = "pytz" },
     { name = "rasterio" },
     { name = "regex" },
     { name = "requests" },
@@ -782,7 +781,6 @@ all = [
     { name = "ruff" },
     { name = "sentry-sdk" },
     { name = "types-python-dateutil" },
-    { name = "types-pytz" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
 ]
@@ -792,7 +790,6 @@ dev = [
     { name = "pylint" },
     { name = "ruff" },
     { name = "types-python-dateutil" },
-    { name = "types-pytz" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
 ]
@@ -873,7 +870,6 @@ requires-dist = [
     { name = "pytest-mock", marker = "extra == 'test'" },
     { name = "python-dateutil" },
     { name = "python-slugify" },
-    { name = "pytz" },
     { name = "rasterio", specifier = ">=1.3.2" },
     { name = "regex" },
     { name = "requests" },
@@ -885,7 +881,6 @@ requires-dist = [
     { name = "setuptools-scm", marker = "extra == 'setup'" },
     { name = "timezonefinder", specifier = "!=6.6.0" },
     { name = "types-python-dateutil", marker = "extra == 'dev'" },
-    { name = "types-pytz", marker = "extra == 'dev'" },
     { name = "types-pyyaml", marker = "extra == 'dev'" },
     { name = "types-requests", marker = "extra == 'dev'" },
     { name = "xarray" },
@@ -3465,15 +3460,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c9/95/6bdde7607da2e1e99ec1c1672a759d42f26644bbacf939916e086db34870/types_python_dateutil-2.9.0.20250708.tar.gz", hash = "sha256:ccdbd75dab2d6c9696c350579f34cffe2c281e4c5f27a585b2a2438dd1d5c8ab", size = 15834, upload-time = "2025-07-08T03:14:03.382Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/72/52/43e70a8e57fefb172c22a21000b03ebcc15e47e97f5cb8495b9c2832efb4/types_python_dateutil-2.9.0.20250708-py3-none-any.whl", hash = "sha256:4d6d0cc1cc4d24a2dc3816024e502564094497b713f7befda4d5bc7a8e3fd21f", size = 17724, upload-time = "2025-07-08T03:14:02.593Z" },
-]
-
-[[package]]
-name = "types-pytz"
-version = "2025.2.0.20250516"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bd/72/b0e711fd90409f5a76c75349055d3eb19992c110f0d2d6aabbd6cfbc14bf/types_pytz-2025.2.0.20250516.tar.gz", hash = "sha256:e1216306f8c0d5da6dafd6492e72eb080c9a166171fa80dd7a1990fd8be7a7b3", size = 10940, upload-time = "2025-05-16T03:07:01.91Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c1/ba/e205cd11c1c7183b23c97e4bcd1de7bc0633e2e867601c32ecfc6ad42675/types_pytz-2025.2.0.20250516-py3-none-any.whl", hash = "sha256:e0e0c8a57e2791c19f718ed99ab2ba623856b11620cb6b637e5f62ce285a7451", size = 10136, upload-time = "2025-05-16T03:07:01.075Z" },
 ]
 
 [[package]]

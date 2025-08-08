@@ -27,7 +27,6 @@ dependencies = [
     "pyparsing",
     "python_dateutil",
     "python_slugify",
-    "pytz",
     "rasterio>=1.3.2",
     "regex",
     "requests",
@@ -65,7 +64,6 @@ dev = [
     "pylint",
     "ruff",
     "types-python-dateutil",
-    "types-pytz",
     "types-PyYAML",  # Used by metadata_importer.py.
     "types-requests",
 ]
