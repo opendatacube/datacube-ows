@@ -485,7 +485,7 @@ class ColorRampDef(StyleDefBase):
                  stand_alone: bool = False,
                  defer_multi_date: bool = False,
                  user_defined: bool = False) -> None:
-        """"
+        """
         Constructor - refer to StyleDefBase
         """
         super().__init__(product, style_cfg,

@@ -341,7 +341,7 @@ class ColorMapStyleDef(StyleDefBase):
                  style_cfg: CFG_DICT,
                  stand_alone: bool = False,
                  user_defined: bool = False) -> None:
-        """"
+        """
         Constructor - refer to StyleDefBase
         """
         super().__init__(product, style_cfg, stand_alone=stand_alone, user_defined=user_defined)

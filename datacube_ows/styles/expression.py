@@ -121,7 +121,7 @@ class Expression:
             raise ExpressionException(f"Expression references no bands: {self.expr_str}")
 
     def eval_cls(self, data: Dataset) -> ExpressionEvaluator:
-        """"
+        """
         Return an appropriate Expression Evaluator for a given Dataset
         """
         if self.style.user_defined:

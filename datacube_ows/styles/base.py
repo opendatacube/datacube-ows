@@ -107,7 +107,7 @@ class LegendBase(OWSConfigEntry):
 
 
 class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
-    """"
+    """
     Base Class from which all style classes are extended.
 
     The base class also holds a register of subclasses.  Instantiating the base
@@ -139,7 +139,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                 stand_alone: bool = False,
                 defer_multi_date: bool = False,
                 user_defined: bool = False) -> "StyleDefBase":
-        """"
+        """
         Determine appropriate subclass to instantiate and initialise.
         """
         if product and style_cfg:
@@ -230,7 +230,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     @override
     def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
-        """"Global config object"""
+        """Global config object"""
         return self.product.global_cfg
 
     @override

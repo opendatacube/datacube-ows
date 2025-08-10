@@ -505,7 +505,7 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     @override
     def __getattribute__(self, name: str) -> Any:
-        """"
+        """
         Expose separated or internationalised metadata as attributes
         """
         if name in (FLD_TITLE, FLD_ABSTRACT, FLD_FEES,
@@ -636,7 +636,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
 # Managing multiproduct flag-bands
 
 class OWSFlagBandStandalone:
-    """"
+    """
     Minimal proxy for OWSFlagBand, for use in StandAlone API which doesn't need anything more than the band name.
     """
     def __init__(self, band: str) -> None:
