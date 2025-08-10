@@ -135,11 +135,7 @@ def test_wcs1_server(ows_server) -> None:
 def test_wcs1_getcov_nocov(ows_server) -> None:
     check_wcs_error(
         ows_server.url + "/wcs",
-        params={
-            "request": "GetCoverage",
-            "service": "WCS",
-            "version": "1.0.0",
-        },
+        params={"request": "GetCoverage", "service": "WCS", "version": "1.0.0"},
         expected_error_message="No coverage specified",
         expected_status_code=400,
     )
@@ -283,7 +279,7 @@ def test_wcs1_multi_time_exceptions(ows_server) -> None:
             "crs": "EPSG:4326",
             "format": "GeoTIFF",
             "bbox": extents["bbox"],
-            "time": extents['times'],
+            "time": extents["times"],
             "resx": 0.01,
             "resy": 0.01,
         },
@@ -608,6 +604,7 @@ def test_wcs1_style(ows_server) -> None:
     )
     assert r.status_code == 200
 
+
 def test_wcs1_ows_stats(ows_server) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
@@ -633,7 +630,7 @@ def test_wcs1_ows_stats(ows_server) -> None:
             "styles": "simple_rgb",
             "resx": "0.01",
             "resy": "0.01",
-            "ows_stats": "y"
+            "ows_stats": "y",
         },
     )
     assert r.status_code == 200
@@ -1014,10 +1011,7 @@ def test_wcs1_describecov_badcov(ows_server) -> None:
 def test_wcs1_describecov_all(ows_server) -> None:
     r = retrying_requests.get(
         ows_server.url + "/wcs",
-        params={
-            "request": "DescribeCoverage",
-            "version": "1.0.0",
-        },
+        params={"request": "DescribeCoverage", "version": "1.0.0"},
     )
     assert r.status_code == 200
 
@@ -1101,10 +1095,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
     assert "too much data for a single request" in str(e.value)
     # Test default request
     with pytest.raises(ServiceException) as e:
-        _ = wcs.getCoverage(
-            identifier=[layer.name],
-            format="application/x-netcdf",
-        )
+        _ = wcs.getCoverage(identifier=[layer.name], format="application/x-netcdf")
     assert "too much data for a single request" in str(e.value)
 
 
@@ -1141,7 +1132,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server) -> None:
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     for lyr_name in contents:
-        if not lyr_name.startswith('s2_l'):
+        if not lyr_name.startswith("s2_l"):
             layer = cfg.layer_index[lyr_name]
             break
     extent = ODCExtent(layer)
@@ -1153,7 +1144,11 @@ def test_wcs20_getcoverage_crs_alias(ows_server) -> None:
         format="application/x-netcdf",
         # to select the subset, find one valid coordination and replace the
         # number and keep the .3 and .4
-        subsets=[("x", 131.0, 131.2), ("y", -12.1, -11.9), ("time", "2017-08-03", "2017-08-08")],
+        subsets=[
+            ("x", 131.0, 131.2),
+            ("y", -12.1, -11.9),
+            ("time", "2017-08-03", "2017-08-08"),
+        ],
         subsettingcrs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         scalesize="x(400),y(300)",
         timeout=90,
@@ -1211,9 +1206,10 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server) -> None:
             subsets=subsets,
             subsettingcrs="EPSG:4326",
             scalesize="x(400),y(300)",
-            timeout=90
+            timeout=90,
         )
         assert resp
+
 
 def test_wcs21_server(ows_server) -> None:
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
@@ -1293,6 +1289,7 @@ def test_wcs21_getcoverage(ows_server) -> None:
     )
     assert r.status_code == 200
 
+
 def test_wcs21_ows_stats(ows_server) -> None:
     cfg = get_config(refresh=True)
     layer = None
@@ -1317,7 +1314,7 @@ def test_wcs21_ows_stats(ows_server) -> None:
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
             "subset": subsets,
-            "ows_stats": "y"
+            "ows_stats": "y",
         },
     )
     assert r.status_code == 200
@@ -1426,11 +1423,7 @@ def test_wcs2_getcov_trim_time(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
     if len(subsets[2].split(",")) == 1:
-        subsets = [
-            subsets[0],
-            subsets[1],
-            'time("2021-12-30","2022-01-01")'
-        ]
+        subsets = [subsets[0], subsets[1], 'time("2021-12-30","2022-01-01")']
 
     r = retrying_requests.get(
         ows_server.url + "/wcs",
@@ -1447,6 +1440,7 @@ def test_wcs2_getcov_trim_time(ows_server) -> None:
     )
     assert r.status_code == 200
 
+
 def test_wcs2_getcov_badtrim_time(ows_server) -> None:
     cfg = get_config(refresh=True)
     layer = None
@@ -1459,11 +1453,7 @@ def test_wcs2_getcov_badtrim_time(ows_server) -> None:
     subsets = extent.raw_wcs2_subsets(
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
-    subsets = [
-        subsets[0],
-        subsets[1],
-        'time("2021-12-30","2021-12-31","2022-01-01")'
-    ]
+    subsets = [subsets[0], subsets[1], 'time("2021-12-30","2021-12-31","2022-01-01")']
 
     check_wcs_error(
         ows_server.url + "/wcs",
@@ -1661,6 +1651,8 @@ def test_wcs2_getcov_styles(ows_server) -> None:
         },
     )
     assert r.status_code == 200
+
+
 # WCS2 style parameter disabled.
 #    r = retrying_requests.get(
 #       ows_server.url + "/wcs",
@@ -1853,7 +1845,7 @@ def test_wcs2_getcov_native_format(ows_server) -> None:
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.layer_index.values():
-        if lyr.ready and not lyr.hide and not lyr.name.startswith('s2_l'):
+        if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
     assert layer

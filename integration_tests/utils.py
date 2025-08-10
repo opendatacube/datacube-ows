@@ -35,7 +35,11 @@ class WCS20Extent:
         first_time: bool = False,
         multi_time: bool = False,
     ):
-        bbox = self.native_bbox() if crs is None or crs == self.native_crs else self.bbox_crs(crs)
+        bbox = (
+            self.native_bbox()
+            if crs is None or crs == self.native_crs
+            else self.bbox_crs(crs)
+        )
 
         bbox = self.subset_bbox(
             bbox, xstart=xstart, xwidth=xwidth, ystart=ystart, ywidth=ywidth
@@ -71,13 +75,20 @@ class WCS20Extent:
         )
 
     @staticmethod
-    def subcoord(c_min: float, c_max: float, start: float, end: float) -> tuple[float, float]:
+    def subcoord(
+        c_min: float, c_max: float, start: float, end: float
+    ) -> tuple[float, float]:
         diff = c_max - c_min
         return diff * start + c_min, diff * end + c_min
 
     @staticmethod
-    def subset_bbox(bbox: tuple[float, float, float, float], xstart: float = 0.3, xwidth: float = 0.02,
-                    ystart: float = 0.8, ywidth: float = 0.02) -> tuple:
+    def subset_bbox(
+        bbox: tuple[float, float, float, float],
+        xstart: float = 0.3,
+        xwidth: float = 0.02,
+        ystart: float = 0.8,
+        ywidth: float = 0.02,
+    ) -> tuple:
         x = WCS20Extent.subcoord(bbox[0], bbox[2], xstart, xstart + xwidth)
         y = WCS20Extent.subcoord(bbox[1], bbox[3], xstart, xstart + xwidth)
         return x[0], y[0], x[1], y[1]
@@ -102,7 +113,11 @@ def geom_from_bbox(bbox, crs: str = "EPSG:4326") -> Geometry:
 def simplify_geom(geom_in, crs: str = "EPSG:4326") -> Geometry:
     geom = geom_in
     # Pick biggest polygon from multipolygon
-    geom = max(geom.geom.geoms, key=lambda x: x.area) if geom.geom_type == "MultiPolygon" else geom.geom
+    geom = (
+        max(geom.geom.geoms, key=lambda x: x.area)
+        if geom.geom_type == "MultiPolygon"
+        else geom.geom
+    )
     # Triangulate
     rawtriangles = list(triangulate(geom))
     triangles = list(
@@ -132,14 +147,14 @@ class ODCExtent:
             try:
                 if self == self.MIDDLE:
                     i = len(ls) // 2
-                    return ls[i: i + 1]
+                    return ls[i : i + 1]
                 if self == self.FIRST_TWO:
                     return ls[0:1]
                 if self == self.LAST_TWO:
                     return ls[-2:]
                 if self == self.LAST:
                     return ls[-1:]
-                return ls[self.value: self.value + 1]
+                return ls[self.value : self.value + 1]
             except IndexError:
                 return []
 
@@ -290,7 +305,7 @@ class ODCExtent:
         crs_bbox = crs_extent.boundingbox
         return {
             "bbox": f"{min(crs_bbox.left, crs_bbox.right)},{min(crs_bbox.top, crs_bbox.bottom)},"
-                    f"{max(crs_bbox.left, crs_bbox.right)},{max(crs_bbox.top, crs_bbox.bottom)}",
+            f"{max(crs_bbox.left, crs_bbox.right)},{max(crs_bbox.top, crs_bbox.bottom)}",
             "times": ",".join(time_strs),
         }
 
@@ -352,12 +367,12 @@ class ODCExtent:
         ext_times = time.slice(self.layer.ranges.times)
         search_times = [self.layer.search_times(t) for t in ext_times]
         if space.needs_full_extent() and not self.full_extent:
-            self.full_extent = self.layer.ows_index().extent(layer=self.layer, products=self.layer.products)
+            self.full_extent = self.layer.ows_index().extent(
+                layer=self.layer, products=self.layer.products
+            )
         if space.needs_time_extent():
             time_extent = self.layer.ows_index().extent(
-                layer=self.layer,
-                products=self.layer.products,
-                times=search_times,
+                layer=self.layer, products=self.layer.products, times=search_times
             )
         else:
             time_extent = None

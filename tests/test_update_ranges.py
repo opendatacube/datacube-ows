@@ -7,6 +7,7 @@
 """Test update ranges on DB using Click testing
 https://click.palletsprojects.com/en/7.x/testing/
 """
+
 import pytest
 from click.testing import CliRunner
 

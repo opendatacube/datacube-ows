@@ -19,27 +19,54 @@ from datacube_ows.startup_utils import initialise_debugging
 
 
 @click.command()
-@click.option("--views", is_flag=True, default=False,
-              help="Refresh the ODC spatio-temporal materialised views.")
-@click.option("--schema", is_flag=True, default=False,
-              help="Create or update the OWS database schema, including the spatio-temporal materialised views.")
-@click.option("--read-role", multiple=True,
-              help="(Only valid with --schema) Role(s) to grant read-only database permissions to")
-@click.option("--write-role", multiple=True,
-              help="(Only valid with --schema) Role(s) to grant both read and write/update database permissions to")
-@click.option("--cleanup", is_flag=True, default=False,
-              help="Cleanup up any datacube-ows 1.8.x tables/views")
-@click.option("-E", "--env", default=None,
-              help="(Only valid with --schema or --read-role or --write-role or --cleanup) environment to write to.")
-@click.option("--version", is_flag=True, default=False,
-              help="Print version string and exit")
+@click.option(
+    "--views",
+    is_flag=True,
+    default=False,
+    help="Refresh the ODC spatio-temporal materialised views.",
+)
+@click.option(
+    "--schema",
+    is_flag=True,
+    default=False,
+    help="Create or update the OWS database schema, including the spatio-temporal materialised views.",
+)
+@click.option(
+    "--read-role",
+    multiple=True,
+    help="(Only valid with --schema) Role(s) to grant read-only database permissions to",
+)
+@click.option(
+    "--write-role",
+    multiple=True,
+    help="(Only valid with --schema) Role(s) to grant both read and write/update database permissions to",
+)
+@click.option(
+    "--cleanup",
+    is_flag=True,
+    default=False,
+    help="Cleanup up any datacube-ows 1.8.x tables/views",
+)
+@click.option(
+    "-E",
+    "--env",
+    default=None,
+    help="(Only valid with --schema or --read-role or --write-role or --cleanup) environment to write to.",
+)
+@click.option(
+    "--version", is_flag=True, default=False, help="Print version string and exit"
+)
 @click.argument("layers", nargs=-1)
-def main(layers: list[str],
-         env: str | None,
-         schema: bool,
-         read_role: list[str],
-         write_role: list[str],
-         cleanup: bool, views: bool, version: bool) -> int:
+def main(
+    layers: list[str],
+    env: str | None,
+    schema: bool,
+    read_role: list[str],
+    write_role: list[str],
+    cleanup: bool,
+    views: bool,
+    version: bool,
+) -> int:
     """Manage datacube-ows range tables.  Exposed on setup as datacube-ows-update
 
     Valid invocations:
@@ -92,7 +119,9 @@ def main(layers: list[str],
     """
     # --version
     if version:
-        click.echo(f"Open Data Cube Open Web Services (datacube-ows) version {__version__}")
+        click.echo(
+            f"Open Data Cube Open Web Services (datacube-ows) version {__version__}"
+        )
         sys.exit(0)
     # Handle old-style calls
     if not layers:
@@ -101,16 +130,24 @@ def main(layers: list[str],
         click.echo("Sorry, cannot update the schema and ranges in the same invocation.")
         sys.exit(1)
     if schema and views:
-        click.echo("Sorry, No point in updating materialised views and updating the schema in the same invocation.")
+        click.echo(
+            "Sorry, No point in updating materialised views and updating the schema in the same invocation."
+        )
         sys.exit(1)
     elif cleanup and layers:
-        click.echo("Sorry, cannot cleanup 1.8.x database entities and update ranges in the same invocation.")
+        click.echo(
+            "Sorry, cannot cleanup 1.8.x database entities and update ranges in the same invocation."
+        )
         sys.exit(1)
     elif views and cleanup:
-        click.echo("Sorry, cannot update the materialised views and cleanup the database in the same invocation.")
+        click.echo(
+            "Sorry, cannot update the materialised views and cleanup the database in the same invocation."
+        )
         sys.exit(1)
     elif views and layers:
-        click.echo("Sorry, cannot update the materialised views and ranges in the same invocation.")
+        click.echo(
+            "Sorry, cannot update the materialised views and ranges in the same invocation."
+        )
         sys.exit(1)
     elif read_role and (views or layers):
         click.echo("Sorry, read-role can't be granted with view or range updates")
@@ -134,7 +171,9 @@ def main(layers: list[str],
             click.echo(f"Unable to connect to the {env or cfg.default_env} database.")
             sys.exit(1)
 
-        click.echo(f"Applying database schema updates to the {dc.index.environment.db_database} database:...")
+        click.echo(
+            f"Applying database schema updates to the {dc.index.environment.db_database} database:..."
+        )
         try:
             if schema:
                 click.echo("Creating or replacing OWS database schema:...")
@@ -165,13 +204,18 @@ def main(layers: list[str],
         click.echo("Done.")
     except sqlalchemy.exc.ProgrammingError as e:
         import psycopg2.errors
+
         if isinstance(e.orig, psycopg2.errors.UndefinedColumn):
-            click.echo("ERROR: OWS schema or extent materialised views appear to be missing")
+            click.echo(
+                "ERROR: OWS schema or extent materialised views appear to be missing"
+            )
             click.echo("")
             click.echo("       Try running with the --schema options first.")
             sys.exit(1)
         elif isinstance(e.orig, psycopg2.errors.NotNullViolation):
-            click.echo("ERROR: OWS materialised views are most likely missing a newly indexed product")
+            click.echo(
+                "ERROR: OWS materialised views are most likely missing a newly indexed product"
+            )
             click.echo("")
             click.echo("       Try running with the --views options first.")
             sys.exit(1)
@@ -190,7 +234,9 @@ def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
     cache: dict[LayerSignature, list[str]] = {}
     for name in layer_names:
         if name not in cfg.layer_index:
-            click.echo(f"Layer '{name}' does not exist in the OWS configuration - skipping")
+            click.echo(
+                f"Layer '{name}' does not exist in the OWS configuration - skipping"
+            )
             errors = True
             continue
         layer = cfg.layer_index[name]

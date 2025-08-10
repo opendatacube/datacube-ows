@@ -30,9 +30,11 @@ def empty_gen(ev, a: set) -> set:
 def union(ev, a: set, b: set) -> set:
     return a.union(b)
 
+
 def not_supported(op_name: object) -> Callable[[object, object], Any]:
     def impl(ev: object, a: object = None, b: object = None, c: object = None) -> Any:
         raise ConfigException(f"{op_name} not supported")
+
     return impl
 
 
@@ -41,6 +43,7 @@ class ExpressionEvaluator(lark.Transformer):
     """
     Standard expression evaluator
     """
+
     add = operator.add
     floordiv = operator.floordiv
     mod = operator.mod
@@ -70,6 +73,7 @@ class UserDefinedExpressionEvaluator(ExpressionEvaluator):
 
     (Doesn't support exponent operator)
     """
+
     pow = not_supported("Exponent operator")
 
 
@@ -78,6 +82,7 @@ class BandListEvaluator(ExpressionEvaluator):
     """
     Expression evaluator that returns a list of needed bands for the expression.
     """
+
     neg = pos = identity  # type: ignore[assignment]
     add = sub = mul = truediv = floordiv = mod = pow = union  # type: ignore[assignment]
 
@@ -90,6 +95,7 @@ class BandListEvaluator(ExpressionEvaluator):
 
 ### Expression wrapper - callable wrapper for a configurable expression
 
+
 class ExpressionException(ConfigException):
     """
     Exception for invalid expressions
@@ -100,6 +106,7 @@ class Expression:
     """
     Expression wrapper for configurable expression elements
     """
+
     def __init__(self, style: "datacube_ows.styles.StyleDef", expr_str: str) -> None:
         """
         Class constructor
@@ -114,11 +121,17 @@ class Expression:
             self.tree = parser.parse(self.expr_str)
             self.needed_bands = BandListEvaluator(self.style).transform(self.tree)
         except lark.LarkError as e:
-            raise ExpressionException(f"Invalid expression: {e} {self.expr_str}") from None
+            raise ExpressionException(
+                f"Invalid expression: {e} {self.expr_str}"
+            ) from None
         except KeyError as e:
-            raise ExpressionException(f"Unrecognised band '{e}' in {expr_str}") from None
+            raise ExpressionException(
+                f"Unrecognised band '{e}' in {expr_str}"
+            ) from None
         if len(self.needed_bands) == 0:
-            raise ExpressionException(f"Expression references no bands: {self.expr_str}")
+            raise ExpressionException(
+                f"Expression references no bands: {self.expr_str}"
+            )
 
     def eval_cls(self, data: Dataset) -> ExpressionEvaluator:
         """

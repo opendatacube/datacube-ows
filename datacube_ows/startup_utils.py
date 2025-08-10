@@ -19,28 +19,29 @@ from rasterio.errors import NotGeoreferencedWarning
 from datacube_ows.ows_configuration import OWSConfig, get_config
 
 __all__ = [
-    'initialise_babel',
-    'initialise_logger',
-    'initialise_ignorable_warnings',
-    'initialise_debugging',
-    'initialise_sentry',
-    'initialise_aws_credentials',
-    'parse_config_file',
-    'initialise_flask',
-    'initialise_prometheus',
-    'CredentialManager',
+    "initialise_babel",
+    "initialise_logger",
+    "initialise_ignorable_warnings",
+    "initialise_debugging",
+    "initialise_sentry",
+    "initialise_aws_credentials",
+    "parse_config_file",
+    "initialise_flask",
+    "initialise_prometheus",
+    "CredentialManager",
 ]
+
 
 def initialise_logger(name: str | None = None) -> Logger:
     handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s'))
+    handler.setFormatter(logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s"))
     _LOG = logging.getLogger(name)
     _LOG.addHandler(handler)
     # If invoked using Gunicorn, link our root logger to the gunicorn logger
     # this will mean the root logs will be captured and managed by the gunicorn logger
     # allowing you to set the gunicorn log directories and levels for logs
     # produced by this application
-    _LOG.setLevel(logging.getLogger('gunicorn.error').getEffectiveLevel())
+    _LOG.setLevel(logging.getLogger("gunicorn.error").getEffectiveLevel())
     return _LOG
 
 
@@ -54,32 +55,46 @@ def initialise_debugging(log: Logger | None = None) -> None:
     dbg = os.environ.get("PYDEV_DEBUG")
     if dbg and dbg.lower() not in ("no", "false", "f", "n"):
         import pydevd_pycharm
-        pydevd_pycharm.settrace('172.17.0.1', port=12321, stdoutToServer=True, stderrToServer=True)
+
+        pydevd_pycharm.settrace(
+            "172.17.0.1", port=12321, stdoutToServer=True, stderrToServer=True
+        )
         if log:
             log.info("PyCharm Debugging enabled")
 
+
 SentryEvent = TypeVar("SentryEvent")
 
+
 def before_send(event: SentryEvent, hint: dict[str, Any]) -> SentryEvent | None:
-    if 'exc_info' in hint:
-        exc_type, exc_value, tb = hint['exc_info']
-        if isinstance(exc_value, AttributeError) and "object has no attribute 'GEOSGeom_destroy'" in str(exc_value):
+    if "exc_info" in hint:
+        exc_type, exc_value, tb = hint["exc_info"]
+        if isinstance(
+            exc_value, AttributeError
+        ) and "object has no attribute 'GEOSGeom_destroy'" in str(exc_value):
             return None
     return event
+
 
 def initialise_sentry(log: Logger | None = None) -> None:
     if os.environ.get("SENTRY_DSN"):
         import sentry_sdk
         from sentry_sdk.integrations.flask import FlaskIntegration
-        SENTRY_ENV_TAG = os.environ.get("SENTRY_ENV_TAG") if os.environ.get("SENTRY_ENV_TAG") else "dev"
+
+        SENTRY_ENV_TAG = (
+            os.environ.get("SENTRY_ENV_TAG")
+            if os.environ.get("SENTRY_ENV_TAG")
+            else "dev"
+        )
         sentry_sdk.init(
             dsn=os.environ["SENTRY_DSN"],
             environment=SENTRY_ENV_TAG,
-            integrations = [FlaskIntegration()],
+            integrations=[FlaskIntegration()],
             before_send=before_send,
         )
         if log:
             log.info("Sentry initialised")
+
 
 class CredentialManager:
     _instance = None
@@ -117,9 +132,11 @@ class CredentialManager:
             else:
                 unsigned = False
                 if log:
-                    log.warning("AWS_NO_SIGN_REQUEST is not set. " +
-                                "The default behaviour has recently changed to False (i.e. signed requests) " +
-                                "Please explicitly set $AWS_NO_SIGN_REQUEST to 'no' for unsigned requests.")
+                    log.warning(
+                        "AWS_NO_SIGN_REQUEST is not set. "
+                        + "The default behaviour has recently changed to False (i.e. signed requests) "
+                        + "Please explicitly set $AWS_NO_SIGN_REQUEST to 'no' for unsigned requests."
+                    )
             env_requester_pays = os.environ.get("AWS_REQUEST_PAYER", "")
             requester_pays = False
             if env_requester_pays.lower() == "requester":
@@ -138,7 +155,8 @@ class CredentialManager:
                 del os.environ["AWS_S3_ENDPOINT"]
         elif log:
             log.warning(
-                "Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)")
+                "Environment variable $AWS_DEFAULT_REGION not set.  (This warning can be ignored if all data is stored locally.)"
+            )
 
     def _check_cred(self) -> None:
         if self.credentials and isinstance(self.credentials, RefreshableCredentials):
@@ -146,9 +164,15 @@ class CredentialManager:
                 self.renew_creds()
             elif self.log:
                 # pylint: disable=protected-access
-                self.log.info("Credentials look OK: %s seconds remaining", str(self.credentials._seconds_remaining()))
+                self.log.info(
+                    "Credentials look OK: %s seconds remaining",
+                    str(self.credentials._seconds_remaining()),
+                )
         elif self.log:
-            self.log.debug("Credentials of type %s - NOT RENEWING", self.credentials.__class__.__name__)
+            self.log.debug(
+                "Credentials of type %s - NOT RENEWING",
+                self.credentials.__class__.__name__,
+            )
 
     @classmethod
     def check_cred(cls) -> None:
@@ -160,11 +184,14 @@ class CredentialManager:
         if self.use_aws:
             if self.log:
                 self.log.info("Establishing/renewing credentials")
-            self.credentials = configure_s3_access(aws_unsigned=self.unsigned,
-                                                            requester_pays=self.requester_pays)
+            self.credentials = configure_s3_access(
+                aws_unsigned=self.unsigned, requester_pays=self.requester_pays
+            )
             if self.log and isinstance(self.credentials, RefreshableCredentials):
                 # pylint: disable=protected-access
-                self.log.debug("%s seconds remaining", str(self.credentials._seconds_remaining()))
+                self.log.debug(
+                    "%s seconds remaining", str(self.credentials._seconds_remaining())
+                )
 
 
 def initialise_aws_credentials(log: Logger | None = None) -> None:
@@ -184,23 +211,32 @@ def parse_config_file(log: Logger | None = None) -> OWSConfig | None:
 
 def initialise_flask(name: str) -> Flask:
     app_path = os.path.dirname(os.path.abspath(__file__))
-    return Flask(name.split('.')[0], template_folder=os.path.join(app_path, 'templates'))
+    return Flask(
+        name.split(".")[0], template_folder=os.path.join(app_path, "templates")
+    )
+
 
 def pass_through(undecorated: Callable) -> Callable:
     def decorator(*args, **kwargs):
         return undecorated(*args, **kwargs)
+
     decorator.__name__ = undecorated.__name__
     return decorator
+
 
 class FakeMetrics:
     def do_not_track(self) -> Callable:
         return pass_through
+
     def counter(self, *args, **kwargs) -> Callable:
         return pass_through
+
     def histogram(self, *args, **kwargs) -> Callable:
         return pass_through
+
     def gauge(self, *args, **kwargs) -> Callable:
         return pass_through
+
     def summary(self, *args, **kwargs) -> Callable:
         return pass_through
 
@@ -211,35 +247,44 @@ def initialise_prometheus(app: Flask, log: Logger | None = None):
         from prometheus_flask_exporter.multiprocess import (
             GunicornInternalPrometheusMetrics,
         )
+
         metrics = GunicornInternalPrometheusMetrics(app, group_by="endpoint")
         if log:
             log.info("Prometheus metrics enabled")
         return metrics
     return FakeMetrics()
 
+
 def proxy_fix(app: Flask, log: Logger | None = None):
     # Proxy Fix, to respect X-Forwarded-For headers
     if os.environ.get("PROXY_FIX", False):
         from werkzeug.middleware.proxy_fix import ProxyFix
+
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)  # type: ignore[method-assign]
         if log is not None:
             log.info("ProxyFix was enabled")
     return app
 
+
 def request_extractor() -> str | None:
-    return request.args.get('request')
+    return request.args.get("request")
+
 
 def initialise_babel(cfg, app: Flask) -> object | None:
     if cfg and cfg.internationalised:
         from flask_babel import Babel
+
         app.config["BABEL_TRANSLATION_DIRECTORIES"] = cfg.translations_dir
 
         def get_locale() -> str | None:
-            return request.accept_languages.best_match(cfg.locales, default=cfg.locales[0])
+            return request.accept_languages.best_match(
+                cfg.locales, default=cfg.locales[0]
+            )
 
-        return Babel(app,
-                      locale_selector=get_locale,
-                      default_domain=cfg.message_domain,
-                      configure_jinja=False
-                      )
+        return Babel(
+            app,
+            locale_selector=get_locale,
+            default_domain=cfg.message_domain,
+            configure_jinja=False,
+        )
     return None

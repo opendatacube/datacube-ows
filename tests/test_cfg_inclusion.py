@@ -16,6 +16,7 @@ src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
+
 def test_get_file_loc(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "YES")
     cwd = os.getcwd()
@@ -25,7 +26,10 @@ def test_get_file_loc(monkeypatch) -> None:
     assert get_file_loc("baz/foo.bar") == os.path.join(cwd, "baz")
     assert get_file_loc("/etc/conf/foo.bar") == "/etc/conf"
     assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
-    assert get_file_loc("s3://testbucket/frobnicate/biz/baz.bar") == "s3://testbucket/frobnicate/biz"
+    assert (
+        get_file_loc("s3://testbucket/frobnicate/biz/baz.bar")
+        == "s3://testbucket/frobnicate/biz"
+    )
 
 
 def test_get_file_loc_s3_disable(monkeypatch) -> None:
@@ -57,7 +61,10 @@ def test_get_file_loc_s3_enable(monkeypatch) -> None:
     assert get_file_loc("s3://testbucket/dir/foo.bar") == "s3://testbucket/dir"
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "1")
-    assert get_file_loc("s3://testbucket/nested/dir/foo.bar") == "s3://testbucket/nested/dir"
+    assert (
+        get_file_loc("s3://testbucket/nested/dir/foo.bar")
+        == "s3://testbucket/nested/dir"
+    )
 
     monkeypatch.setenv("DATACUBE_OWS_CFG_ALLOW_S3", "Y")
     assert get_file_loc("s3://testbucket/foo.bar") == "s3://testbucket"
@@ -79,11 +86,11 @@ def test_cfg_inject() -> None:
 
 def test_cfg_not_a_dict(monkeypatch) -> None:
     with pytest.raises(ConfigException):
-        read_config('nested.not_a_dict')
+        read_config("nested.not_a_dict")
 
 
 def test_cfg_direct(monkeypatch) -> None:
-    monkeypatch.setenv("DATACUBE_OWS_CFG", "{\"test\": 12345}")
+    monkeypatch.setenv("DATACUBE_OWS_CFG", '{"test": 12345}')
     cfg = read_config()
 
     assert cfg["test"] == 12345

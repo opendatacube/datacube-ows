@@ -40,7 +40,8 @@ class OWSPostgresIndex(OWSAbstractIndex):
         db_ok = False
         try:
             with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
-                results = conn.execute(text("""
+                results = conn.execute(
+                    text("""
                     SELECT *
                     FROM ows.layer_ranges
                     LIMIT 1""")
@@ -82,7 +83,9 @@ class OWSPostgresIndex(OWSAbstractIndex):
         self._run_sql(dc, "extent_views/refresh")
 
     @override
-    def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
+    def create_range_entry(
+        self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
+    ) -> None:
         create_range_entry_impl(layer, cache)
 
     @override
@@ -90,45 +93,81 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return get_ranges_impl(layer)
 
     @override
-    def ds_search(self,
-                  layer: OWSNamedLayer,
-                  times: Iterable[TimeSearchTerm] | None = None,
-                  geom: Geometry | None = None,
-                  products: Iterable[Product] | None = None
-                  ) -> Iterable[Dataset]:
-        return cast(Iterable[Dataset], mv_search(layer.dc.index, MVSelectOpts.DATASETS,
-                                                 times=times, geom=geom, products=products))
+    def ds_search(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> Iterable[Dataset]:
+        return cast(
+            Iterable[Dataset],
+            mv_search(
+                layer.dc.index,
+                MVSelectOpts.DATASETS,
+                times=times,
+                geom=geom,
+                products=products,
+            ),
+        )
 
     @override
-    def dsid_search(self,
-                    layer: OWSNamedLayer,
-                    times: Iterable[TimeSearchTerm] | None = None,
-                    geom: Geometry | None = None,
-                    products: Iterable[Product] | None = None
-                    ) -> Iterable[UUID]:
-        return cast(Iterable[UUID], mv_search(layer.dc.index, MVSelectOpts.IDS,
-                                              times=times, geom=geom, products=products))
+    def dsid_search(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> Iterable[UUID]:
+        return cast(
+            Iterable[UUID],
+            mv_search(
+                layer.dc.index,
+                MVSelectOpts.IDS,
+                times=times,
+                geom=geom,
+                products=products,
+            ),
+        )
 
     @override
-    def count(self,
-              layer: OWSNamedLayer,
-              times: Iterable[TimeSearchTerm] | None = None,
-              geom: Geometry | None = None,
-              products: Iterable[Product] | None = None
-              ) -> int:
-        return cast(int, mv_search(layer.dc.index, MVSelectOpts.COUNT,
-                                   times=times, geom=geom, products=products))
+    def count(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> int:
+        return cast(
+            int,
+            mv_search(
+                layer.dc.index,
+                MVSelectOpts.COUNT,
+                times=times,
+                geom=geom,
+                products=products,
+            ),
+        )
 
     @override
-    def extent(self,
-               layer: OWSNamedLayer,
-               times: Iterable[TimeSearchTerm] | None = None,
-               geom: Geometry | None = None,
-               products: Iterable[Product] | None = None,
-               crs: CRS | None = None
-               ) -> Geometry | None:
-        extent = cast(Geometry | None, mv_search(layer.dc.index, MVSelectOpts.EXTENT,
-                                                 times=times, geom=geom, products=products))
+    def extent(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+        crs: CRS | None = None,
+    ) -> Geometry | None:
+        extent = cast(
+            Geometry | None,
+            mv_search(
+                layer.dc.index,
+                MVSelectOpts.EXTENT,
+                times=times,
+                geom=geom,
+                products=products,
+            ),
+        )
         if extent is None or crs is None or crs == extent.crs:
             return extent
         return extent.to_crs(crs)
@@ -142,6 +181,7 @@ pgdriverlock = Lock()
 
 class OWSPostgresIndexDriver(OWSAbstractIndexDriver):
     _driver = None
+
     @classmethod
     @override
     def ows_index_class(cls) -> type[OWSAbstractIndex]:

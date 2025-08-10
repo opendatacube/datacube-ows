@@ -31,7 +31,9 @@ def StandaloneStyle(cfg: CFG_DICT) -> StyleDefBase:
     return style
 
 
-def apply_ows_style(style, data, loop_over=None, valid_data_mask=None) -> xarray.Dataset:
+def apply_ows_style(
+    style, data, loop_over=None, valid_data_mask=None
+) -> xarray.Dataset:
     """
     Apply an OWS style to an ODC XArray to generate a styled image.
 
@@ -52,29 +54,19 @@ def apply_ows_style(style, data, loop_over=None, valid_data_mask=None) -> xarray
             8 bit signed integer data named red, green, blue and alpha, representing an 24bit RGBA image.
     """
     if loop_over is None:
-        return style.transform_data(
-                data,
-                style.to_mask(
-                        data,
-                        valid_data_mask
-                )
-        )
+        return style.transform_data(data, style.to_mask(data, valid_data_mask))
     image_slices = []
     for coord in data[loop_over].values:
         d_slice = data.sel(**{loop_over: coord})
         image_slices.append(
-            style.transform_data(
-                d_slice,
-                style.to_mask(
-                    d_slice,
-                    valid_data_mask
-                )
-            )
+            style.transform_data(d_slice, style.to_mask(d_slice, valid_data_mask))
         )
     return xarray.concat(image_slices, data[loop_over])
 
 
-def apply_ows_style_cfg(cfg, data, loop_over=None, valid_data_mask=None) ->  xarray.Dataset:
+def apply_ows_style_cfg(
+    cfg, data, loop_over=None, valid_data_mask=None
+) -> xarray.Dataset:
     """
     Apply an OWS style configuration to an ODC XArray to generate a styled image.
 
@@ -99,10 +91,7 @@ def apply_ows_style_cfg(cfg, data, loop_over=None, valid_data_mask=None) ->  xar
             8 bit signed integer data named red, green, blue and alpha, representing an 24bit RGBA image.
     """
     return apply_ows_style(
-        StandaloneStyle(cfg),
-        data,
-        loop_over=loop_over,
-        valid_data_mask=valid_data_mask
+        StandaloneStyle(cfg), data, loop_over=loop_over, valid_data_mask=valid_data_mask
     )
 
 
@@ -132,7 +121,13 @@ def generate_ows_legend_style_cfg(cfg, ndates: int = 0) -> Image.Image | None:
     return generate_ows_legend_style(StandaloneStyle(cfg), ndates)
 
 
-def plot_image(xr_image: xarray.Dataset, x: str = "x", y: str = "y", size: float = 10, aspect: float | None = None) -> None:
+def plot_image(
+    xr_image: xarray.Dataset,
+    x: str = "x",
+    y: str = "y",
+    size: float = 10,
+    aspect: float | None = None,
+) -> None:
     """
     Plot an Xarray image with matplotlib. (e.g. for display in JupyterHub)
 
@@ -153,8 +148,15 @@ def plot_image(xr_image: xarray.Dataset, x: str = "x", y: str = "y", size: float
     rgb.plot.imshow(x=x, y=y, size=size, aspect=aspect)
 
 
-def plot_image_with_style(style, data, x: str = "x", y: str = "y", size: float = 10,
-                          aspect: float | None = None, valid_data_mask=None) -> None:
+def plot_image_with_style(
+    style,
+    data,
+    x: str = "x",
+    y: str = "y",
+    size: float = 10,
+    aspect: float | None = None,
+    valid_data_mask=None,
+) -> None:
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 
@@ -173,11 +175,24 @@ def plot_image_with_style(style, data, x: str = "x", y: str = "y", size: float =
                 (defaults to None, which means use the aspect ratio of the data.)
     :param valid_data_mask: (optional) An xarray DataArray mask, with dimensions and coordinates matching data.
     """
-    plot_image(apply_ows_style(style, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size, aspect=aspect)
+    plot_image(
+        apply_ows_style(style, data, valid_data_mask=valid_data_mask),
+        x=x,
+        y=y,
+        size=size,
+        aspect=aspect,
+    )
 
 
-def plot_image_with_style_cfg(cfg, data, x: str = "x", y: str = "y", size: float = 10,
-                              aspect: float | None = None, valid_data_mask=None) -> None:
+def plot_image_with_style_cfg(
+    cfg,
+    data,
+    x: str = "x",
+    y: str = "y",
+    size: float = 10,
+    aspect: float | None = None,
+    valid_data_mask=None,
+) -> None:
     """
     Apply an OWS style to some data, and display with matplotlib. (e.g. for display in JupyterHub)
 
@@ -200,4 +215,10 @@ def plot_image_with_style_cfg(cfg, data, x: str = "x", y: str = "y", size: float
                 (defaults to None, which means use the aspect ratio of the data.)
     :param valid_data_mask: (optional) An xarray DataArray mask, with dimensions and coordinates matching data.
     """
-    plot_image(apply_ows_style_cfg(cfg, data, valid_data_mask=valid_data_mask), x=x, y=y, size=size, aspect=aspect)
+    plot_image(
+        apply_ows_style_cfg(cfg, data, valid_data_mask=valid_data_mask),
+        x=x,
+        y=y,
+        size=size,
+        aspect=aspect,
+    )

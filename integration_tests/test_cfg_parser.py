@@ -62,7 +62,15 @@ def test_cfg_parser_msg_file_null(runner) -> None:
 
 
 def test_cfg_parser_msg_file_null_badcfg(runner) -> None:
-    result = runner.invoke(main, ["extract", "-m", "/dev/null", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
+    result = runner.invoke(
+        main,
+        [
+            "extract",
+            "-m",
+            "/dev/null",
+            "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
+        ],
+    )
     assert result.exit_code == 0
 
 
@@ -85,144 +93,296 @@ def test_cfg_parser_version(runner) -> None:
 
 
 def test_cfg_parser_bad_cfgenv(runner) -> None:
-    result = runner.invoke(main, ["check"], env={"DATACUBE_OWS_CFG": "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"})
+    result = runner.invoke(
+        main,
+        ["check"],
+        env={"DATACUBE_OWS_CFG": "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"},
+    )
     assert result.exit_code == 1
 
 
 def test_cfg_parser_good_cfgarg(runner) -> None:
-    result = runner.invoke(main, ["check", "integration_tests.cfg.ows_test_cfg.ows_cfg"])
+    result = runner.invoke(
+        main, ["check", "integration_tests.cfg.ows_test_cfg.ows_cfg"]
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_parser_bad_cfgarg(runner) -> None:
-    result = runner.invoke(main, ["check", "integration_tests.cfg.ows_test_cfg.ows_cfg", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"])
+    result = runner.invoke(
+        main,
+        [
+            "check",
+            "integration_tests.cfg.ows_test_cfg.ows_cfg",
+            "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
+        ],
+    )
     assert result.exit_code == 1
 
 
 def test_cfg_write_new_translation_directory(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "de"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+            "de",
+        ],
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_write_update_translation_directory(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "de"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+            "de",
+        ],
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_write_new_translation_directory_cfg(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n",
-                                  "-d", f"{this_dir}/cfg/test_translations",
-                                  "-D", "ows_cfg",
-                                  "-c", "integration_tests.cfg.ows_test_cfg.ows_cfg",
-                                  "de"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+            "-c",
+            "integration_tests.cfg.ows_test_cfg.ows_cfg",
+            "de",
+        ],
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_write_new_translation_directory_all_langs(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+            "all",
+        ],
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_write_update_translation_directory_all_langs(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+            "all",
+        ],
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_write_new_translation_directory_all_bad_cfg(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n",
-                                  "-m", f"{this_dir}/cfg/message.po",
-                                  "-d", f"{this_dir}/cfg/test_translations",
-                                  "-D", "ows_cfg",
-                                  "-c", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
-                                  "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+            "-c",
+            "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
+            "all",
+        ],
+    )
     assert result.exit_code == 1
 
 
 def test_cfg_write_new_translation_directory_no_domain(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n",
-                                  "-m", f"{this_dir}/cfg/message.po",
-                                  "-d", f"{this_dir}/cfg/test_translations",
-                                  "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "all",
+        ],
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_write_new_translation_directory_no_msg_file(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n",
-                                  "-d", f"{this_dir}/cfg/test_translations",
-                                  "-D", "ows_cfg",
-                                  "-c", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
-                                  "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+            "-c",
+            "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
+            "all",
+        ],
+    )
     assert result.exit_code == 1
+
 
 def test_cfg_write_new_translation_directory_missing_msg_file(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n",
-                                  "-d", f"{this_dir}/cfg/test_translations",
-                                  "-m", f"{this_dir}/cfg/non_existent_file.po",
-                                  "-D", "ows_cfg",
-                                  "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-m",
+            f"{this_dir}/cfg/non_existent_file.po",
+            "-D",
+            "ows_cfg",
+            "all",
+        ],
+    )
     assert result.exit_code == 1
+
 
 def test_cfg_write_translation_directory_cfg_directory(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation",
-                                  "-m", f"{this_dir}/cfg/message.po",
-                                  "-D", "ows_cfg",
-                                  "all"])
+    result = runner.invoke(
+        main,
+        ["translation", "-m", f"{this_dir}/cfg/message.po", "-D", "ows_cfg", "all"],
+    )
     assert result.exit_code == 0
+
 
 def test_cfg_write_new_translation_directory_no_directory(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n",
-                                  "-m", f"{this_dir}/cfg/message.po",
-                                  "-D", "ows_cfg",
-                                  "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg",
-                                  "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-D",
+            "ows_cfg",
+            "-c",
+            "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg",
+            "all",
+        ],
+    )
     assert result.exit_code == 1
-    result = runner.invoke(main, ["translation", "-n",
-                                  "-D", "ows_cfg",
-                                  "-d", f"{this_dir}/cfg/test_translations",
-                                  "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg",
-                                  "all"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-D",
+            "ows_cfg",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-c",
+            "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg",
+            "all",
+        ],
+    )
     assert result.exit_code == 1
 
 
 def test_cfg_new_translation_no_language(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["translation", "-n", "-m", f"{this_dir}/cfg/message.po", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg"])
+    result = runner.invoke(
+        main,
+        [
+            "translation",
+            "-n",
+            "-m",
+            f"{this_dir}/cfg/message.po",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "-D",
+            "ows_cfg",
+        ],
+    )
     assert result.exit_code == 1
 
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_compile(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "en"])
+    result = runner.invoke(
+        main,
+        ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "en"],
+    )
     assert result.exit_code == 0
+
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_compile_all(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"])
+    result = runner.invoke(
+        main,
+        ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"],
+    )
     assert result.exit_code == 0
 
 
 def test_cfg_parser_compile_no_lang(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg"])
+    result = runner.invoke(
+        main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg"]
+    )
     assert result.exit_code == 1
 
 
 def test_cfg_parser_compile_no_domain(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "en"])
+    result = runner.invoke(
+        main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "en"]
+    )
     assert result.exit_code == 0
 
 
@@ -233,13 +393,24 @@ def test_cfg_parser_compile_default_dir(runner) -> None:
 
 
 def test_cfg_parser_compile_no_dir(runner) -> None:
-    result = runner.invoke(main, ["compile", "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg", "en"])
+    result = runner.invoke(
+        main,
+        ["compile", "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg", "en"],
+    )
     assert result.exit_code == 1
+
 
 def test_cfg_parser_compile_bad_cfg(runner) -> None:
     this_dir = os.path.dirname(__file__)
-    result = runner.invoke(main, ["compile",
-                                  "-c", "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
-                                  "-d", f"{this_dir}/cfg/test_translations",
-                                  "en"])
+    result = runner.invoke(
+        main,
+        [
+            "compile",
+            "-c",
+            "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
+            "-d",
+            f"{this_dir}/cfg/test_translations",
+            "en",
+        ],
+    )
     assert result.exit_code == 1

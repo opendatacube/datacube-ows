@@ -21,17 +21,12 @@ def test_function_wrapper_lyr() -> None:
     assert f(7)[0] == "a7  b2  c3"
     assert f(5, c=4)[0] == "a5  b2  c4"
     assert f.band_mapper is None
-    func_cfg = {
-        "function": "tests.utils.a_function",
-    }
+    func_cfg = {"function": "tests.utils.a_function"}
     f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     assert f(7, 8)[0] == "a7  b8  c3"
     func_cfg = {
         "function": "tests.utils.a_function",
-        "kwargs": {
-            "foo": "bar",
-            "c": "ouple"
-        }
+        "kwargs": {"foo": "bar", "c": "ouple"},
     }
     f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     result = f("pple", "eagle")
@@ -43,10 +38,7 @@ def test_function_wrapper_lyr() -> None:
     assert result[0] == "apple  beagle  couple"
     assert result[1]["foo"] == "bar"
     assert "a" not in f._kwargs
-    func_cfg = {
-        "function": "tests.utils.a_function",
-        "args": ["bar", "ouple"]
-    }
+    func_cfg = {"function": "tests.utils.a_function", "args": ["bar", "ouple"]}
     f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     result = f("pple")
     assert result[0] == "apple  bbar  couple"
@@ -55,28 +47,28 @@ def test_function_wrapper_lyr() -> None:
     result = f()
     assert result[0] == "abar  bouple  c3"
     assert f.band_mapper is None
-    func_cfg = {
-        "function": "so_fake.not_real.not_a_function",
-        "args": ["bar", "ouple"]
-    }
+    func_cfg = {"function": "so_fake.not_real.not_a_function", "args": ["bar", "ouple"]}
     with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
         f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     assert "Could not import python object" in str(e.value)
     assert "so_fake.not_real.not_a_function" in str(e.value)
 
+
 def test_func_naked() -> None:
     lyr = MagicMock()
     with pytest.raises(datacube_ows.config_utils.ConfigException):
-        _ = datacube_ows.config_utils.FunctionWrapper(lyr, {
-            "function": a_function,
-        })
-    assert "Directly including callable objects in configuration is no longer supported."
+        _ = datacube_ows.config_utils.FunctionWrapper(lyr, {"function": a_function})
+    assert (
+        "Directly including callable objects in configuration is no longer supported."
+    )
     with pytest.raises(datacube_ows.config_utils.ConfigException):
         _ = datacube_ows.config_utils.FunctionWrapper(lyr, a_function)
-    assert "Directly including callable objects in configuration is no longer supported."
-    f = datacube_ows.config_utils.FunctionWrapper(lyr, {
-        "function": a_function,
-    }, stand_alone=True)
+    assert (
+        "Directly including callable objects in configuration is no longer supported."
+    )
+    f = datacube_ows.config_utils.FunctionWrapper(
+        lyr, {"function": a_function}, stand_alone=True
+    )
     assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"
     f = datacube_ows.config_utils.FunctionWrapper(lyr, a_function, stand_alone=True)
     assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"
@@ -100,6 +92,7 @@ def test_base_class_unready() -> None:
     with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
         cfg.declare_unready("woah")
     assert "Cannot declare woah as unready on a ready object" in str(e.value)
+
 
 def test_base_class_get() -> None:
     cfg = datacube_ows.config_utils.OWSConfigEntry({"foo": "bar", "pot": "noodle"})

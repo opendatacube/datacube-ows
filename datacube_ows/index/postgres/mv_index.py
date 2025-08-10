@@ -33,12 +33,17 @@ def get_sqlalc_engine(index: Index) -> Engine:
 
 
 def get_st_view(meta: MetaData) -> Table:
-    return Table('space_time_view', meta,
-                 Column('id', UUID()),
-                 Column('dataset_type_ref', SMALLINT()),
-                 Column('spatial_extent', Geometry(from_text='ST_GeomFromGeoJSON', name='geometry')),
-                 Column('temporal_extent', TSTZRANGE()),
-                 schema="ows")
+    return Table(
+        "space_time_view",
+        meta,
+        Column("id", UUID()),
+        Column("dataset_type_ref", SMALLINT()),
+        Column(
+            "spatial_extent", Geometry(from_text="ST_GeomFromGeoJSON", name="geometry")
+        ),
+        Column("temporal_extent", TSTZRANGE()),
+        schema="ows",
+    )
 
 
 _meta = MetaData()
@@ -55,6 +60,7 @@ class MVSelectOpts(Enum):
     COUNT: return a count of matching datasets
     EXTENT: return full extent of query result as a Geometry
     """
+
     ALL = 0
     IDS = 1
     COUNT = 2
@@ -84,14 +90,20 @@ selection_return_types: dict[MVSelectOpts, type | UnionType] = {
 
 SelectOut = Iterable[Row] | Iterable[UUID_] | Iterable[Dataset] | int | ODCGeom | None
 DateOrDateTime = datetime.datetime | datetime.date
-TimeSearchTerm = tuple[datetime.datetime, datetime.datetime] | tuple[datetime.date, datetime.date] | DateOrDateTime
+TimeSearchTerm = (
+    tuple[datetime.datetime, datetime.datetime]
+    | tuple[datetime.date, datetime.date]
+    | DateOrDateTime
+)
 
 
-def mv_search(index: Index,
-              sel: MVSelectOpts = MVSelectOpts.IDS,
-              times: Iterable[TimeSearchTerm] | None = None,
-              geom: ODCGeom | None = None,
-              products: Iterable[Product] | None = None) -> SelectOut:
+def mv_search(
+    index: Index,
+    sel: MVSelectOpts = MVSelectOpts.IDS,
+    times: Iterable[TimeSearchTerm] | None = None,
+    geom: ODCGeom | None = None,
+    products: Iterable[Product] | None = None,
+) -> SelectOut:
     """
     Perform a dataset query via the space_time_view
 
@@ -124,7 +136,9 @@ def mv_search(index: Index,
                     )
                 )
             elif isinstance(t, datetime.date):
-                st = datetime.datetime(t.year, t.month, t.day, tzinfo=datetime.timezone.utc)
+                st = datetime.datetime(
+                    t.year, t.month, t.day, tzinfo=datetime.timezone.utc
+                )
                 tmax = st + datetime.timedelta(days=1)
                 or_clauses.append(
                     and_(
@@ -133,9 +147,7 @@ def mv_search(index: Index,
                     )
                 )
             else:
-                or_clauses.append(
-                    stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t))
-                )
+                or_clauses.append(stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t)))
         s = s.where(or_(*or_clauses))
     orig_crs = None
     if geom is not None:
@@ -161,7 +173,7 @@ def mv_search(index: Index,
                 uniongeom = ODCGeom(json.loads(geojson), crs="EPSG:4326")
                 if geom:
                     intersect = uniongeom.intersection(geom)
-                    if intersect.wkt == 'POLYGON EMPTY':
+                    if intersect.wkt == "POLYGON EMPTY":
                         return None
                     if orig_crs and orig_crs != "EPSG:4326":
                         intersect = intersect.to_crs(orig_crs)

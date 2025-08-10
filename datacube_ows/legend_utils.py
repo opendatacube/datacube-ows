@@ -45,10 +45,14 @@ def get_image_from_url(url: str) -> Image.Image | None:
     """
     r = retrying_requests.get(url)
     if r.status_code != 200:
-        raise WMSException(f"Could not retrieve legend - external URL is failing with http code {r.status_code}")
-    if r.headers['content-type'] != 'image/png':
-        _LOG.warning("External legend has MIME type %s. OWS strongly recommends PNG format for legend images.",
-                     r.headers['content-type'])
+        raise WMSException(
+            f"Could not retrieve legend - external URL is failing with http code {r.status_code}"
+        )
+    if r.headers["content-type"] != "image/png":
+        _LOG.warning(
+            "External legend has MIME type %s. OWS strongly recommends PNG format for legend images.",
+            r.headers["content-type"],
+        )
     bytesio = io.BytesIO()
     bytesio.write(r.content)
     bytesio.seek(0)

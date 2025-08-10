@@ -15,6 +15,7 @@ import pytest
 
 def test_fake_creds(monkeypatch) -> None:
     from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
+
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "")
@@ -39,6 +40,7 @@ def test_renewable_creds(monkeypatch) -> None:
         RefreshableCredentials,
         initialise_aws_credentials,
     )
+
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "")
@@ -58,6 +60,7 @@ def test_renewable_creds(monkeypatch) -> None:
 
 def test_s3_endpoint_default(monkeypatch) -> None:
     from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
+
     CredentialManager._instance = None
     log = MagicMock()
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
@@ -65,8 +68,10 @@ def test_s3_endpoint_default(monkeypatch) -> None:
     initialise_aws_credentials(log=log)
     assert "AWS_S3_ENDPOINT" not in os.environ
 
+
 def test_initialise_logger() -> None:
     from datacube_ows.startup_utils import initialise_logger
+
     log = initialise_logger("tim.the.testlogger")
     assert log is not None
     log.info("Test")
@@ -74,24 +79,28 @@ def test_initialise_logger() -> None:
 
 def test_initialise_ign_warn() -> None:
     from datacube_ows.startup_utils import initialise_ignorable_warnings
+
     initialise_ignorable_warnings()
 
 
 def test_initialise_nodebugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "")
     from datacube_ows.startup_utils import initialise_debugging
+
     initialise_debugging()
 
 
 def test_initialise_explicit_nodebugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "no")
     from datacube_ows.startup_utils import initialise_debugging
+
     initialise_debugging()
 
 
 def test_initialise_debugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "YES")
     from datacube_ows.startup_utils import initialise_debugging
+
     fake_mod = MagicMock()
     with patch.dict("sys.modules", pydevd_pycharm=fake_mod):
         initialise_debugging()
@@ -101,6 +110,7 @@ def test_initialise_debugging(monkeypatch) -> None:
 def test_initialise_sentry(monkeypatch) -> None:
     monkeypatch.setenv("SENTRY_DSN", "")
     from datacube_ows.startup_utils import initialise_sentry
+
     initialise_sentry()
     monkeypatch.setenv("SENTRY_DSN", "https://key@sentry.local/projid")
     log = MagicMock()
@@ -111,11 +121,13 @@ def test_initialise_sentry(monkeypatch) -> None:
 def test_prometheus_inactive(monkeypatch) -> None:
     monkeypatch.setenv("PROMETHEUS_MULTIPROC_DIR", "")
     from datacube_ows.startup_utils import initialise_prometheus
+
     initialise_prometheus(None)
 
 
 def test_supported_version() -> None:
     from datacube_ows.protocol_versions import SupportedSvcVersion
+
     ver = SupportedSvcVersion("wts", "1.2.3", "a", "b")
     assert ver.service == "wts"
     assert ver.service_upper == "WTS"
@@ -124,6 +136,7 @@ def test_supported_version() -> None:
     assert ver.router == "a"
     assert ver.exception_class == "b"
     from datacube_ows.protocol_versions import supported_versions
+
     supported = supported_versions()
     assert supported["wms"].versions[0].service == "wms"
 
@@ -137,12 +150,15 @@ def babel_cfg():
     cfg.message_domain = "ows_cfg"
     return cfg
 
+
 @pytest.fixture
 def flask_app() -> flask.Flask:
     return flask.Flask("test_flask_app")
 
+
 def test_init_babel_on(babel_cfg, flask_app) -> None:
     from datacube_ows.startup_utils import initialise_babel
+
     with flask_app.app_context():
         bab = initialise_babel(babel_cfg, flask_app)
         assert bab is not None
@@ -151,6 +167,7 @@ def test_init_babel_on(babel_cfg, flask_app) -> None:
 
 def test_init_babel_off(babel_cfg, flask_app) -> None:
     from datacube_ows.startup_utils import initialise_babel
+
     babel_cfg.internationalised = False
     bab = initialise_babel(babel_cfg, flask_app)
     assert bab is None
@@ -166,6 +183,6 @@ def test_sentry_before_send() -> None:
     try:
         _ = LGEOS380().GEOSGeom_destroy()
     except Exception:
-        hint = {'exc_info': sys.exc_info()}
-        assert 'exc_info' in hint
+        hint = {"exc_info": sys.exc_info()}
+        assert "exc_info" in hint
         assert before_send("event", hint) is None

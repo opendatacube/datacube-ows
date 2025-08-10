@@ -32,7 +32,9 @@ def handle_wcs1(nocase_args) -> tuple:
         return desc_coverages(nocase_args)
     if operation == "GETCOVERAGE":
         return get_coverage(nocase_args)
-    raise WCS1Exception(f"Unrecognised operation: {operation}", locator="Request parameter")
+    raise WCS1Exception(
+        f"Unrecognised operation: {operation}", locator="Request parameter"
+    )
 
 
 @log_call
@@ -55,25 +57,29 @@ def get_capabilities(args) -> tuple:
     elif section == "/wcs_capabilities/contentmetadata":
         show_content_metadata = True
     else:
-        raise WCS1Exception(f"Invalid section: {section}",
-                            WCS1Exception.INVALID_PARAMETER_VALUE,
-                            locator="Section parameter")
+        raise WCS1Exception(
+            f"Invalid section: {section}",
+            WCS1Exception.INVALID_PARAMETER_VALUE,
+            locator="Section parameter",
+        )
 
     # Extract layer metadata from Datacube.
     cfg = get_config()
-    url = args.get('Host', args['url_root'])
+    url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
     headers = cache_control_headers(cfg.wms_cap_cache_age)
     headers["Content-Type"] = "application/xml"
     return (
-        render_template("wcs_capabilities.xml",
-                        show_service=show_service,
-                        show_capability=show_capability,
-                        show_content_metadata=show_content_metadata,
-                        cfg=cfg,
-                        base_url=base_url),
+        render_template(
+            "wcs_capabilities.xml",
+            show_service=show_service,
+            show_capability=show_capability,
+            show_content_metadata=show_content_metadata,
+            cfg=cfg,
+            base_url=base_url,
+        ),
         200,
-        cfg.response_headers(headers)
+        cfg.response_headers(headers),
     )
 
 
@@ -91,9 +97,11 @@ def desc_coverages(args) -> tuple:
             if p and p.wcs:
                 products.append(p)
             else:
-                raise WCS1Exception(f"Invalid coverage: {c}",
-                                    WCS1Exception.COVERAGE_NOT_DEFINED,
-                                    locator="Coverage parameter")
+                raise WCS1Exception(
+                    f"Invalid coverage: {c}",
+                    WCS1Exception.COVERAGE_NOT_DEFINED,
+                    locator="Coverage parameter",
+                )
     else:
         for p in cfg.layer_index.values():
             if p.ready and p.wcs:
@@ -102,11 +110,9 @@ def desc_coverages(args) -> tuple:
     headers = cache_control_headers(min_cache_age)
     headers["Content-Type"] = "application/xml"
     return (
-        render_template("wcs_desc_coverage.xml",
-                        cfg=cfg,
-                        products=products),
+        render_template("wcs_desc_coverage.xml", cfg=cfg, products=products),
         200,
-        cfg.response_headers(headers)
+        cfg.response_headers(headers),
     )
 
 
@@ -120,14 +126,16 @@ def get_coverage(args: dict) -> tuple[Any, int, dict]:
         return json_response(qprof.profile())
     headers = {
         "Content-Type": req.format.mime,
-        'content-disposition': f'attachment; filename={req.layer_name}.{req.format.extension}'
+        "content-disposition": f"attachment; filename={req.layer_name}.{req.format.extension}",
     }
     headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))  # type: ignore[union-attr]
     return (
         req.format.renderer(req.version)(req, data),
         200,
-        cfg.response_headers({
-            "Content-Type": req.format.mime,
-            'content-disposition': f'attachment; filename={req.layer_name}.{req.format.extension}'
-        })
+        cfg.response_headers(
+            {
+                "Content-Type": req.format.mime,
+                "content-disposition": f"attachment; filename={req.layer_name}.{req.format.extension}",
+            }
+        ),
     )

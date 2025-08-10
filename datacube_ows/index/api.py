@@ -23,6 +23,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.ows_configuration import OWSNamedLayer
 
+
 class AbortRun(Exception):
     pass
 
@@ -44,7 +45,9 @@ class LayerSignature:
 
 
 DateOrDateTime: TypeAlias = datetime | date
-TimeSearchTerm: TypeAlias = tuple[datetime, datetime] | tuple[date, date] | DateOrDateTime
+TimeSearchTerm: TypeAlias = (
+    tuple[datetime, datetime] | tuple[date, date] | DateOrDateTime
+)
 
 
 class CoordRange(NamedTuple):
@@ -53,7 +56,13 @@ class CoordRange(NamedTuple):
 
 
 class LayerExtent:
-    def __init__(self, lat: CoordRange, lon: CoordRange, times: list[DateOrDateTime], bboxes: CFG_DICT) -> None:
+    def __init__(
+        self,
+        lat: CoordRange,
+        lon: CoordRange,
+        times: list[DateOrDateTime],
+        bboxes: CFG_DICT,
+    ) -> None:
         self.lat = lat
         self.lon = lon
         self.times = times
@@ -68,73 +77,71 @@ class OWSAbstractIndex(ABC):
 
     # method to check database access (for ping op)
     @abstractmethod
-    def check_db_access(self, dc: Datacube) -> bool:
-        ...
+    def check_db_access(self, dc: Datacube) -> bool: ...
 
     # method to delete obsolete schemas etc.
     @abstractmethod
-    def cleanup_schema(self, dc: Datacube):
-        ...
+    def cleanup_schema(self, dc: Datacube): ...
 
     # Schema creation method
     @abstractmethod
-    def create_schema(self, dc: Datacube):
-        ...
+    def create_schema(self, dc: Datacube): ...
 
     # Permission management method
     @abstractmethod
-    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False):
-        ...
+    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False): ...
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @abstractmethod
-    def update_geotemporal_index(self, dc: Datacube):
-        ...
+    def update_geotemporal_index(self, dc: Datacube): ...
 
     # Range table update method
     @abstractmethod
-    def create_range_entry(self, layer: "OWSNamedLayer", cache: dict[LayerSignature, list[str]]) -> None:
-        ...
+    def create_range_entry(
+        self, layer: "OWSNamedLayer", cache: dict[LayerSignature, list[str]]
+    ) -> None: ...
 
     # Range table read method
     @abstractmethod
-    def get_ranges(self, layer: "OWSNamedLayer") -> LayerExtent | None:
-        ...
+    def get_ranges(self, layer: "OWSNamedLayer") -> LayerExtent | None: ...
 
     # Spatiotemporal search methods
     @abstractmethod
-    def ds_search(self,
-                  layer: "OWSNamedLayer",
-                  times: Iterable[TimeSearchTerm] | None = None,
-                  geom: Geometry | None = None,
-                  products: Iterable[Product] | None = None
-                  ) -> Iterable[Dataset]:
-        ...
+    def ds_search(
+        self,
+        layer: "OWSNamedLayer",
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> Iterable[Dataset]: ...
 
-    def dsid_search(self,
-                    layer: "OWSNamedLayer",
-                    times: Iterable[TimeSearchTerm] | None = None,
-                    geom: Geometry | None = None,
-                    products: Iterable[Product] | None = None
-                    ) -> Iterable[UUID]:
+    def dsid_search(
+        self,
+        layer: "OWSNamedLayer",
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> Iterable[UUID]:
         for ds in self.ds_search(layer, times, geom, products):
             yield ds.id
 
-    def count(self,
-              layer: "OWSNamedLayer",
-              times: Iterable[TimeSearchTerm] | None = None,
-              geom: Geometry | None = None,
-              products: Iterable[Product] | None = None
-              ) -> int:
+    def count(
+        self,
+        layer: "OWSNamedLayer",
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> int:
         return len(list(self.dsid_search(layer, times, geom, products)))
 
-    def extent(self,
-               layer: "OWSNamedLayer",
-               times: Iterable[TimeSearchTerm] | None = None,
-               geom: Geometry | None = None,
-               products: Iterable[Product] | None = None,
-               crs: CRS | None = None
-               ) -> Geometry | None:
+    def extent(
+        self,
+        layer: "OWSNamedLayer",
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+        crs: CRS | None = None,
+    ) -> Geometry | None:
         geom = self._prep_geom(layer, geom)
         if crs is None:
             crs = CRS("epsg:4326")
@@ -154,7 +161,9 @@ class OWSAbstractIndex(ABC):
         return ext
 
     @staticmethod
-    def _prep_geom(layer: "OWSNamedLayer", any_geom: Geometry | None) -> Geometry | None:
+    def _prep_geom(
+        layer: "OWSNamedLayer", any_geom: Geometry | None
+    ) -> Geometry | None:
         # Prepare a Geometry for geospatial search
         # Perhaps Core can be updated so this is not needed?
         if any_geom is None:
@@ -173,7 +182,7 @@ class OWSAbstractIndex(ABC):
                     (x, y + delta_y),
                     (x, y),
                 ),
-                crs=layer.native_CRS
+                crs=layer.native_CRS,
             )
         if any_geom.geom_type in ("MultiPoint", "LineString", "MultiLineString"):
             # Not a point, but not a polygon or multipolygon?  Expand to polygon by taking convex hull
@@ -185,22 +194,25 @@ class OWSAbstractIndex(ABC):
 class OWSAbstractIndexDriver(ABC):
     @classmethod
     @abstractmethod
-    def ows_index_class(cls) -> type[OWSAbstractIndex]:
-        ...
+    def ows_index_class(cls) -> type[OWSAbstractIndex]: ...
 
     @classmethod
     @abstractmethod
-    def ows_index(cls) -> OWSAbstractIndex:
-        ...
+    def ows_index(cls) -> OWSAbstractIndex: ...
 
 
 def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
     index = odc if isinstance(odc, AbstractIndex) else odc.index
     env = index.environment
     from datacube_ows.index.driver import ows_index_driver_by_name
-    idx_drv_name = "postgres" if env.index_driver in ('default', 'legacy') else env.index_driver
+
+    idx_drv_name = (
+        "postgres" if env.index_driver in ("default", "legacy") else env.index_driver
+    )
     ows_index_driver = ows_index_driver_by_name(idx_drv_name)
     if ows_index_driver is None:
-        raise ConfigException(f"ODC Environment {env._name} uses ODC index driver {env.index_driver} which is "
-                              f"not (yet) supported by OWS.")
+        raise ConfigException(
+            f"ODC Environment {env._name} uses ODC index driver {env.index_driver} which is "
+            f"not (yet) supported by OWS."
+        )
     return ows_index_driver.ows_index()

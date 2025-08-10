@@ -38,11 +38,11 @@ def dataset_center_time(dataset: Dataset) -> datetime.datetime:
     """
     center_time: datetime.datetime = dataset.center_time
     try:
-        metadata_time: str = dataset.metadata_doc['extent']['center_dt']
+        metadata_time: str = dataset.metadata_doc["extent"]["center_dt"]
         center_time = parse(metadata_time)
     except KeyError:
         try:
-            metadata_time = dataset.metadata_doc['properties']['dtr:start_datetime']
+            metadata_time = dataset.metadata_doc["properties"]["dtr:start_datetime"]
             center_time = parse(metadata_time)
         except KeyError:
             pass
@@ -60,7 +60,7 @@ def solar_date(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.date:
     return dt.astimezone(tz).date()
 
 
-def local_date(ds: Dataset, tz: datetime.tzinfo | None =  None) -> datetime.date:
+def local_date(ds: Dataset, tz: datetime.tzinfo | None = None) -> datetime.date:
     """
     Calculate the local (solar) date for a dataset.
 
@@ -97,14 +97,18 @@ def tz_for_coord(lon: float | int, lat: float | int) -> datetime.tzinfo:
         tzn: str | None = tf.timezone_at(lng=lon, lat=lat)
     except Exception as e:
         # Generally shouldn't happen - a common symptom of various geographic and timezone related bugs
-        _LOG.warning("Timezone detection failed for lat %f, lon %s (%s)", lat, lon, str(e))
+        _LOG.warning(
+            "Timezone detection failed for lat %f, lon %s (%s)", lat, lon, str(e)
+        )
         raise
     if not tzn:
         raise NoTimezoneException("tz find failed.")
     return ZoneInfo(tzn)
 
 
-def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
+def local_solar_date_range(
+    geobox: GeoBox, date: datetime.date
+) -> tuple[datetime.datetime, datetime.datetime]:
     """
     Converts a date to a local solar date datetime range.
 
@@ -118,7 +122,9 @@ def local_solar_date_range(geobox: GeoBox, date: datetime.date) -> tuple[datetim
     return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
 
 
-def month_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
+def month_date_range(
+    date: datetime.date,
+) -> tuple[datetime.datetime, datetime.datetime]:
     """
     Take a month from a date and convert to a one month long UTC datetime range encompassing the month.
 
@@ -133,7 +139,9 @@ def month_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.d
     if m == 13:
         m = 1
         y = y + 1
-    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.utc) - datetime.timedelta(days=1)
+    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.utc) - datetime.timedelta(
+        days=1
+    )
     return start, end
 
 
@@ -151,7 +159,9 @@ def year_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.da
     return start, end
 
 
-def day_summary_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
+def day_summary_date_range(
+    date: datetime.date,
+) -> tuple[datetime.datetime, datetime.datetime]:
     """
     Convert a date to a UTC datetime range encompassing the calendar date.
 
@@ -160,8 +170,12 @@ def day_summary_date_range(date: datetime.date) -> tuple[datetime.datetime, date
     :param date: A date or datetime object to take the day, month and year from
     :return: A tuple of two UTC datetime objects, delimiting a calendar day.
     """
-    start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=timezone.utc)
-    end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=timezone.utc)
+    start = datetime.datetime(
+        date.year, date.month, date.day, 0, 0, 0, tzinfo=timezone.utc
+    )
+    end = datetime.datetime(
+        date.year, date.month, date.day, 23, 59, 59, tzinfo=timezone.utc
+    )
     return start, end
 
 
@@ -187,9 +201,10 @@ def tz_for_geometry(geom: Geometry) -> datetime.tzinfo:
 
 
 def rolling_window_ndays(
-        available_dates: list[datetime.datetime],
-        layer_cfg: OWSExtensibleConfigEntry,
-        ndays: int = 6) -> tuple[datetime.datetime, datetime.datetime]:
+    available_dates: list[datetime.datetime],
+    layer_cfg: OWSExtensibleConfigEntry,
+    ndays: int = 6,
+) -> tuple[datetime.datetime, datetime.datetime]:
     idx = -ndays
     days = available_dates[idx:]
     start, _ = layer_cfg.search_times(days[idx])

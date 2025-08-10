@@ -19,15 +19,14 @@ from datacube_ows.wms_utils import GetLegendGraphicParameters
 
 # Do not use X Server backend
 
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def legend_graphic(args) -> tuple | None:
     params = GetLegendGraphicParameters(args)
-    img = create_legends_from_styles(params.styles,
-                        ndates=len(params.times))
+    img = create_legends_from_styles(params.styles, ndates=len(params.times))
     if img is None:
         raise WMSException("No legend is available for this request", http_response=404)
     return img
@@ -54,7 +53,7 @@ def create_legends_from_styles(styles, ndates: int = 0) -> tuple | None:
     imgs_comb = np.vstack([np.asarray(i.resize(min_shape)) for i in imgs])
     imgs_comb = Image.fromarray(imgs_comb)
     b = io.BytesIO()
-    imgs_comb.save(b, 'png')
+    imgs_comb.save(b, "png")
     # legend = make_response(b.getvalue())
     # legend.mimetype = 'image/png'
     # b.close()

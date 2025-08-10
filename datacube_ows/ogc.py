@@ -70,27 +70,28 @@ prometheus_ows_ogc_metric = metrics.histogram(
     "ows_ogc",
     "Summary by OGC request protocol, version, operation, layer, and HTTP Status",
     labels={
-        'query_request': lambda: request.args.get('request', "NONE").upper(),
-        'query_service': lambda: request.args.get('service', "NONE").upper(),
-        'query_version': lambda: request.args.get('version'),
-        'query_layer': lambda: (request.args.get('query_layers') # WMS GetFeatureInfo
-                                or request.args.get('layers')  # WMS
-                                or request.args.get('layer')  # WMTS
-                                or request.args.get('coverage')  # WCS 1.x
-                                or request.args.get('coverageid')  # WCS 2.x
-                                ),
-        'status': lambda r: r.status_code,
-    }
+        "query_request": lambda: request.args.get("request", "NONE").upper(),
+        "query_service": lambda: request.args.get("service", "NONE").upper(),
+        "query_version": lambda: request.args.get("version"),
+        "query_layer": lambda: (
+            request.args.get("query_layers")  # WMS GetFeatureInfo
+            or request.args.get("layers")  # WMS
+            or request.args.get("layer")  # WMTS
+            or request.args.get("coverage")  # WCS 1.x
+            or request.args.get("coverageid")  # WCS 2.x
+        ),
+        "status": lambda r: r.status_code,
+    },
 )
 
 
 # Flask Routes
 
 
-@app.route('/')
+@app.route("/")
 @prometheus_ows_ogc_metric
 def ogc_impl():
-    #pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches
     nocase_args = lower_get_args()
     nocase_args = capture_headers(request, nocase_args)
     service = nocase_args.get("service", "").upper()
@@ -116,23 +117,26 @@ def ogc_impl():
             # Defaulting to WMS because that's what we already have.
             raise WMSException(
                 "Invalid service and/or request",
-                locator="Service and request parameters")
-        cfg = get_config()   # pylint: disable=redefined-outer-name
-        url = nocase_args.get('Host', nocase_args['url_root'])
+                locator="Service and request parameters",
+            )
+        cfg = get_config()  # pylint: disable=redefined-outer-name
+        url = nocase_args.get("Host", nocase_args["url_root"])
         base_url = get_service_base_url(cfg.allowed_urls, url)
-        return (render_template(
-                        "index.html",
-                        cfg=cfg,
-                        supported=OWS_SUPPORTED,
-                        base_url=base_url,
-                        version=__version__,
-                ),
-                200,
-                resp_headers({"Content-Type": "text/html"}))
+        return (
+            render_template(
+                "index.html",
+                cfg=cfg,
+                supported=OWS_SUPPORTED,
+                base_url=base_url,
+                version=__version__,
+            ),
+            200,
+            resp_headers({"Content-Type": "text/html"}),
+        )
     except OGCException as e:
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         tb = sys.exc_info()[2]
         ogc_e = WMSException(f"Unexpected server error: {e!s}", http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
@@ -147,20 +151,27 @@ def ogc_svc_impl(svc):
     # Is service activated in config?
     try:
         if not svc_support:
-            raise WMSException(f"Invalid service: {svc}",
-                               valid_keys=[
-                                       service.service
-                                       for service in OWS_SUPPORTED.values()
-                                       if service.activated()
-                               ],
-                               code=WMSException.OPERATION_NOT_SUPPORTED,
-                               locator="service parameter")
+            raise WMSException(
+                f"Invalid service: {svc}",
+                valid_keys=[
+                    service.service
+                    for service in OWS_SUPPORTED.values()
+                    if service.activated()
+                ],
+                code=WMSException.OPERATION_NOT_SUPPORTED,
+                locator="service parameter",
+            )
         if not svc_support.activated():
-            raise svc_support.default_exception_class("Invalid service and/or request", locator="Service and request parameters")
+            raise svc_support.default_exception_class(
+                "Invalid service and/or request",
+                locator="Service and request parameters",
+            )
 
         # Does service match path (if supplied)
         if service != svc_support.service_upper:
-            raise svc_support.default_exception_class("Invalid service", locator="Service parameter")
+            raise svc_support.default_exception_class(
+                "Invalid service", locator="Service parameter"
+            )
 
         version = nocase_args.get("version")
         version_support = svc_support.negotiated_version(version)
@@ -171,31 +182,36 @@ def ogc_svc_impl(svc):
         return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
-    except Exception as e: #pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         tb = sys.exc_info()[2]
-        ogc_e = version_support.exception_class(f"Unexpected server error: {e!s}", http_response=500)
+        ogc_e = version_support.exception_class(
+            f"Unexpected server error: {e!s}", http_response=500
+        )
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
-@app.route('/wms')
+@app.route("/wms")
 @prometheus_ows_ogc_metric
 def ogc_wms_impl():
     return ogc_svc_impl("wms")
 
 
-@app.route('/wmts')
+@app.route("/wmts")
 @prometheus_ows_ogc_metric
 def ogc_wmts_impl():
     return ogc_svc_impl("wmts")
 
 
-@app.route('/wcs')
+@app.route("/wcs")
 @prometheus_ows_ogc_metric
 def ogc_wcs_impl():
     return ogc_svc_impl("wcs")
 
-@app.route('/ping')
-@metrics.summary('ows_heartbeat_pings', "Ping durations", labels={"status": lambda r: r.status})
+
+@app.route("/ping")
+@metrics.summary(
+    "ows_heartbeat_pings", "Ping durations", labels={"status": lambda r: r.status}
+)
 def ping() -> tuple[str, int, dict[str, str]]:
     dbs_ok = {
         name: ows_index(dc).check_db_access(dc)
@@ -203,18 +219,34 @@ def ping() -> tuple[str, int, dict[str, str]]:
     }
 
     if all(dbs_ok.values()):
-        return render_template("ping.html", status="Up", statuses=dbs_ok), 200, resp_headers({"Content-Type": "text/html"})
+        return (
+            render_template("ping.html", status="Up", statuses=dbs_ok),
+            200,
+            resp_headers({"Content-Type": "text/html"}),
+        )
     if any(dbs_ok.values()):
-        return render_template("ping.html", status="Partially Up", statuses=dbs_ok), 503, resp_headers({"Content-Type": "text/html"})
-    return render_template("ping.html", status="Down", statuses=dbs_ok), 503, resp_headers({"Content-Type": "text/html"})
+        return (
+            render_template("ping.html", status="Partially Up", statuses=dbs_ok),
+            503,
+            resp_headers({"Content-Type": "text/html"}),
+        )
+    return (
+        render_template("ping.html", status="Down", statuses=dbs_ok),
+        503,
+        resp_headers({"Content-Type": "text/html"}),
+    )
 
 
 @app.route("/legend/<string:layer>/<string:style>/legend.png")
-@metrics.histogram('ows_legends', "Legend query durations", labels={
-    "layer": lambda: request.path.split("/")[2],
-    "style": lambda: request.path.split("/")[3],
-    "status": lambda r: r.status,
-})
+@metrics.histogram(
+    "ows_legends",
+    "Legend query durations",
+    labels={
+        "layer": lambda: request.path.split("/")[2],
+        "style": lambda: request.path.split("/")[3],
+        "status": lambda r: r.status,
+    },
+)
 def legend(layer, style, dates=None):
     # pylint: disable=redefined-outer-name
     cfg = get_config()
@@ -235,7 +267,9 @@ def legend(layer, style, dates=None):
         return "Unknown Style", 404, resp_headers({"Content-Type": "text/plain"})
     return img
 
+
 # Flask middleware
+
 
 @app.before_request
 def start_timer() -> None:
@@ -247,15 +281,21 @@ def start_timer() -> None:
 def log_time_and_request_response(response):
     time_taken = int((monotonic() - g.ogc_start_time) * 1000)
     # request.environ.get('HTTP_X_REAL_IP') captures requester ip on a local docker container via gunicorn
-    if request.environ.get('HTTP_X_REAL_IP'):
-        ip = request.environ.get('HTTP_X_REAL_IP')
+    if request.environ.get("HTTP_X_REAL_IP"):
+        ip = request.environ.get("HTTP_X_REAL_IP")
     # request.environ.get('HTTP_X_FORWARDED_FOR') captures request IP forwarded by ingress/loadbalancer
-    elif request.environ.get('HTTP_X_FORWARDED_FOR'):
-        ip = request.environ.get('HTTP_X_FORWARDED_FOR')
+    elif request.environ.get("HTTP_X_FORWARDED_FOR"):
+        ip = request.environ.get("HTTP_X_FORWARDED_FOR")
     # request.environ.get('REMOTE_ADDR') is standard internal IP address
-    elif request.environ.get('REMOTE_ADDR'):
-        ip = request.environ.get('REMOTE_ADDR')
+    elif request.environ.get("REMOTE_ADDR"):
+        ip = request.environ.get("REMOTE_ADDR")
     else:
-        ip = 'Not found'
-    _LOG.info("ip: %s request: %s returned status: %d and took: %d ms", ip, request.url, response.status_code, time_taken)
+        ip = "Not found"
+    _LOG.info(
+        "ip: %s request: %s returned status: %d and took: %d ms",
+        ip,
+        request.url,
+        response.status_code,
+        time_taken,
+    )
     return response

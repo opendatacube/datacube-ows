@@ -33,11 +33,15 @@ def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
     }
 
 
-def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
-    meta = LayerSignature(time_res=layer.time_resolution.value,
-                          products=tuple(layer.product_names),
-                          env=layer.local_env._name,
-                          datasets=layer.dc.index.datasets.count(product=layer.product_names))
+def create_range_entry(
+    layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
+) -> None:
+    meta = LayerSignature(
+        time_res=layer.time_resolution.value,
+        products=tuple(layer.product_names),
+        env=layer.local_env._name,
+        datasets=layer.dc.index.datasets.count(product=layer.product_names),
+    )
 
     click.echo(f"Postgis Updating range for layer {layer.name}")
     click.echo(f"(signature: {meta.as_json()!r})")
@@ -48,18 +52,18 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         click.echo(f"Layer {template} has same signature - reusing")
         cache[meta].append(layer.name)
         try:
-            conn.execute(text("""
+            conn.execute(
+                text("""
             INSERT INTO ows.layer_ranges
                 (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
             SELECT :layer_id, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated
             FROM ows.layer_ranges lr2
             WHERE lr2.layer = :template_id"""),
-                         {
-                                      "layer_id": layer.name,
-                                      "template_id": template
-                                   })
+                {"layer_id": layer.name, "template_id": template},
+            )
         except sqlalchemy.exc.IntegrityError:
-            conn.execute(text("""
+            conn.execute(
+                text("""
             UPDATE ows.layer_ranges lr1
             SET lat_min = lr2.lat_min,
                 lat_max = lr2.lat_max,
@@ -72,23 +76,25 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
             FROM ows.layer_ranges lr2
             WHERE lr1.layer = :layer_id
             AND   lr2.layer = :template_id"""),
-                         {
-                             "layer_id": layer.name,
-                             "template_id": template
-                         })
+                {"layer_id": layer.name, "template_id": template},
+            )
     else:
         # insert empty row if one does not already exist
-        conn.execute(text("""
+        conn.execute(
+            text("""
         INSERT INTO ows.layer_ranges
         (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
         VALUES
         (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
         ON CONFLICT (layer) DO NOTHING
         """),
-        {
-            "p_layer": layer.name, "empty": Json(""),
-            "meta": Json(meta.as_json()), "now": datetime.now(tz=timezone.utc)
-        })
+            {
+                "p_layer": layer.name,
+                "empty": Json(""),
+                "meta": Json(meta.as_json()),
+                "now": datetime.now(tz=timezone.utc),
+            },
+        )
 
         prodids = [p.id for p in layer.products]
 
@@ -98,8 +104,9 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         # Loop over dates
         dates = set()  # Should get to here!
         if layer.time_resolution.is_solar():
-          results = conn.execute(text(
-              """
+            results = conn.execute(
+                text(
+                    """
               select lower(dt.search_val), upper(dt.search_val),
                      lower(lon.search_val), upper(lon.search_val)
               from odc.dataset ds, odc.dataset_search_datetime dt, odc.dataset_search_num lon
@@ -108,19 +115,22 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
               AND ds.id = lon.dataset_ref
               AND dt.search_key = :time
               AND lon.search_key = :lon
-              """),
-              {"prodids": prodids, "time": "time", "lon": "lon"})
-          for result in results:
-              dt1, dt2, ll, lu = result
-              lon = (ll + lu) / 2
-              dt = dt1 + (dt2 - dt1) / 2
-              dt = dt.astimezone(timezone.utc)
-
-              solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
-              dates.add(solar_day)
-        else:
-          results = conn.execute(text(
               """
+                ),
+                {"prodids": prodids, "time": "time", "lon": "lon"},
+            )
+            for result in results:
+                dt1, dt2, ll, lu = result
+                lon = (ll + lu) / 2
+                dt = dt1 + (dt2 - dt1) / 2
+                dt = dt.astimezone(timezone.utc)
+
+                solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
+                dates.add(solar_day)
+        else:
+            results = conn.execute(
+                text(
+                    """
               select
                     array_agg(dt.search_val)
               from odc.dataset_search_datetime dt,
@@ -128,28 +138,27 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
               WHERE ds.product_ref = ANY(:prodids)
               AND   ds.id = dt.dataset_ref
               AND   dt.search_key = 'time'
-              """),
-              {"prodids": prodids}
-          )
-          for result in results:
-              for dat_ran in result[0]:
-                  dates.add(dat_ran.lower)
+              """
+                ),
+                {"prodids": prodids},
+            )
+            for result in results:
+                for dat_ran in result[0]:
+                    dates.add(dat_ran.lower)
 
         if layer.time_resolution.is_subday():
-          date_formatter = lambda d: d.isoformat()  # noqa: E731
+            date_formatter = lambda d: d.isoformat()  # noqa: E731
         else:
-          date_formatter = lambda d: d.strftime("%Y-%m-%d")  # noqa: E731
+            date_formatter = lambda d: d.strftime("%Y-%m-%d")  # noqa: E731
 
         dates = sorted(dates)
-        conn.execute(text("""
+        conn.execute(
+            text("""
            UPDATE ows.layer_ranges
            SET dates = :dates
            WHERE layer= :layer_id
         """),
-                   {
-                       "dates": Json(list(map(date_formatter, dates))),
-                       "layer_id": layer.name
-                   }
+            {"dates": Json(list(map(date_formatter, dates))), "layer_id": layer.name},
         )
         # calculate bounding boxes
         # Get extent polygon from materialised views
@@ -158,7 +167,8 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
         if not all_bboxes:
             return
 
-        conn.execute(text("""
+        conn.execute(
+            text("""
         UPDATE ows.layer_ranges
         SET bboxes = :bbox,
             lat_min = :lat_min,
@@ -166,14 +176,16 @@ def create_range_entry(layer: OWSNamedLayer, cache: dict[LayerSignature, list[st
             lon_min = :lon_min,
             lon_max = :lon_max
         WHERE layer = :layer_id
-        """), {
-            "bbox": Json(all_bboxes),
-            "layer_id": layer.name,
-            "lat_min": all_bboxes['EPSG:4326']['bottom'],
-            "lat_max": all_bboxes['EPSG:4326']['top'],
-            "lon_min": all_bboxes['EPSG:4326']['left'],
-            "lon_max": all_bboxes['EPSG:4326']['right']
-        })
+        """),
+            {
+                "bbox": Json(all_bboxes),
+                "layer_id": layer.name,
+                "lat_min": all_bboxes["EPSG:4326"]["bottom"],
+                "lat_max": all_bboxes["EPSG:4326"]["top"],
+                "lon_min": all_bboxes["EPSG:4326"]["left"],
+                "lon_max": all_bboxes["EPSG:4326"]["right"],
+            },
+        )
 
         cache[meta] = [layer.name]
 
@@ -215,19 +227,26 @@ def extent_for_layer(layer: OWSNamedLayer, crs: CRS) -> odc.geo.Geometry | None:
     return ext
 
 
-def bbox_projections(starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CRS]) -> dict[str, dict[str, float]]:
-   result = {}
-   for crsid, crs in crses.items():
+def bbox_projections(
+    starting_box: odc.geo.Geometry, crses: dict[str, odc.geo.CRS]
+) -> dict[str, dict[str, float]]:
+    result = {}
+    for crsid, crs in crses.items():
         projbbox = starting_box.to_crs(crs).boundingbox
         result[crsid] = sanitise_bbox(projbbox)
-   return result
+    return result
 
 
 def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
     def sanitise_coordinate(coord: float, fallback: float, upper: bool) -> float:
-        if not math.isfinite(coord) or (upper and coord > fallback) or (not upper and coord < fallback):
+        if (
+            not math.isfinite(coord)
+            or (upper and coord > fallback)
+            or (not upper and coord < fallback)
+        ):
             return fallback
         return coord
+
     if bbox.crs == CRS("epsg:4326"):
         return {
             "top": sanitise_coordinate(bbox.top, float("90.0"), True),
@@ -245,17 +264,20 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
 
 def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
     conn = get_sqlconn(layer.dc)
-    results = conn.execute(text("""
+    results = conn.execute(
+        text("""
         SELECT *
         FROM ows.layer_ranges
         WHERE layer=:pname"""),
-                           {"pname": layer.name}
-                          )
+        {"pname": layer.name},
+    )
 
     for result in results:
         conn.close()
         if layer.time_resolution.is_subday():
-            dt_parser: Callable[[str], datetime | date] = lambda dts: datetime.fromisoformat(dts)  # noqa: E731
+            dt_parser: Callable[[str], datetime | date] = (  # noqa: E731
+                lambda dts: datetime.fromisoformat(dts)
+            )
         else:
             dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()  # noqa: E731
         times = [dt_parser(d) for d in result.dates if d is not None]
@@ -265,6 +287,6 @@ def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
             lat=CoordRange(min=float(result.lat_min), max=float(result.lat_max)),
             lon=CoordRange(min=float(result.lon_min), max=float(result.lon_max)),
             times=times,
-            bboxes=result.bboxes
+            bboxes=result.bboxes,
         )
     return None

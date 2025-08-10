@@ -27,20 +27,90 @@ def datasets_for_sorting() -> list:
     utc = timezone.utc
     DT = datetime.datetime
     return [
-        mock_ds_for_sort("A", DT(2022, 7, 15, 0, 0, tzinfo=utc), DT(2022, 7, 15, 9, 45, tzinfo=utc), 148.0, "prod_a"),
-        mock_ds_for_sort("B", DT(2022, 7, 15, 0, 0, tzinfo=utc), DT(2022, 7, 15, 10, 45, tzinfo=utc), 148.0, "prod_a"),
-        mock_ds_for_sort("C", DT(2022, 7, 15, 5, 0, tzinfo=utc), DT(2022, 7, 15, 0, 5, tzinfo=utc), 128.0, "prod_a"),
-        mock_ds_for_sort("D", DT(2022, 7, 15, 5, 0, tzinfo=utc), DT(2022, 7, 15, 14, 45, tzinfo=utc), 128.0, "prod_a"),
-
-        mock_ds_for_sort("E", DT(2022, 7, 15, 0, 0, tzinfo=utc), DT(2022, 7, 15, 9, 45, tzinfo=utc), 128.0, "prod_b"),
-        mock_ds_for_sort("F", DT(2022, 7, 15, 0, 0, tzinfo=utc), DT(2022, 7, 15, 10, 45, tzinfo=utc), 128.0, "prod_b"),
-        mock_ds_for_sort("G", DT(2022, 7, 15, 5, 0, tzinfo=utc), DT(2022, 7, 15, 0, 5, tzinfo=utc), 148.0, "prod_b"),
-        mock_ds_for_sort("H", DT(2022, 7, 15, 5, 0, tzinfo=utc), DT(2022, 7, 15, 14, 45, tzinfo=utc), 148.0, "prod_b"),
-
-        mock_ds_for_sort("I", DT(2022, 7, 15, 0, 0, tzinfo=utc), DT(2022, 7, 15, 9, 45, tzinfo=utc), 128.0, "prod_c"),
-        mock_ds_for_sort("J", DT(2022, 7, 15, 0, 0, tzinfo=utc), DT(2022, 7, 15, 10, 45, tzinfo=utc), 128.0, "prod_c"),
-        mock_ds_for_sort("K", DT(2022, 7, 15, 5, 0, tzinfo=utc), DT(2022, 7, 15, 0, 45, tzinfo=utc), 148.0, "prod_c"),
-        mock_ds_for_sort("L", DT(2022, 7, 15, 5, 0, tzinfo=utc), DT(2022, 7, 15, 14, 45, tzinfo=utc), 148.0, "prod_c"),
+        mock_ds_for_sort(
+            "A",
+            DT(2022, 7, 15, 0, 0, tzinfo=utc),
+            DT(2022, 7, 15, 9, 45, tzinfo=utc),
+            148.0,
+            "prod_a",
+        ),
+        mock_ds_for_sort(
+            "B",
+            DT(2022, 7, 15, 0, 0, tzinfo=utc),
+            DT(2022, 7, 15, 10, 45, tzinfo=utc),
+            148.0,
+            "prod_a",
+        ),
+        mock_ds_for_sort(
+            "C",
+            DT(2022, 7, 15, 5, 0, tzinfo=utc),
+            DT(2022, 7, 15, 0, 5, tzinfo=utc),
+            128.0,
+            "prod_a",
+        ),
+        mock_ds_for_sort(
+            "D",
+            DT(2022, 7, 15, 5, 0, tzinfo=utc),
+            DT(2022, 7, 15, 14, 45, tzinfo=utc),
+            128.0,
+            "prod_a",
+        ),
+        mock_ds_for_sort(
+            "E",
+            DT(2022, 7, 15, 0, 0, tzinfo=utc),
+            DT(2022, 7, 15, 9, 45, tzinfo=utc),
+            128.0,
+            "prod_b",
+        ),
+        mock_ds_for_sort(
+            "F",
+            DT(2022, 7, 15, 0, 0, tzinfo=utc),
+            DT(2022, 7, 15, 10, 45, tzinfo=utc),
+            128.0,
+            "prod_b",
+        ),
+        mock_ds_for_sort(
+            "G",
+            DT(2022, 7, 15, 5, 0, tzinfo=utc),
+            DT(2022, 7, 15, 0, 5, tzinfo=utc),
+            148.0,
+            "prod_b",
+        ),
+        mock_ds_for_sort(
+            "H",
+            DT(2022, 7, 15, 5, 0, tzinfo=utc),
+            DT(2022, 7, 15, 14, 45, tzinfo=utc),
+            148.0,
+            "prod_b",
+        ),
+        mock_ds_for_sort(
+            "I",
+            DT(2022, 7, 15, 0, 0, tzinfo=utc),
+            DT(2022, 7, 15, 9, 45, tzinfo=utc),
+            128.0,
+            "prod_c",
+        ),
+        mock_ds_for_sort(
+            "J",
+            DT(2022, 7, 15, 0, 0, tzinfo=utc),
+            DT(2022, 7, 15, 10, 45, tzinfo=utc),
+            128.0,
+            "prod_c",
+        ),
+        mock_ds_for_sort(
+            "K",
+            DT(2022, 7, 15, 5, 0, tzinfo=utc),
+            DT(2022, 7, 15, 0, 45, tzinfo=utc),
+            148.0,
+            "prod_c",
+        ),
+        mock_ds_for_sort(
+            "L",
+            DT(2022, 7, 15, 5, 0, tzinfo=utc),
+            DT(2022, 7, 15, 14, 45, tzinfo=utc),
+            148.0,
+            "prod_c",
+        ),
     ]
 
 
@@ -53,15 +123,27 @@ def test_group_by_stat(datasets_for_sorting) -> None:
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 1
     arrays = date_only.values
-    assert [ds.id for ds in arrays[0]] == ['A', 'B', 'E', 'F', 'I', 'J', 'C', 'D', 'G', 'H', 'K', 'L']
-
+    assert [ds.id for ds in arrays[0]] == [
+        "A",
+        "B",
+        "E",
+        "F",
+        "I",
+        "J",
+        "C",
+        "D",
+        "G",
+        "H",
+        "K",
+        "L",
+    ]
 
     gby = group_by_begin_datetime(["prod_c", "prod_b", "prod_a"], truncate_dates=False)
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 2
     arrays = date_only.values
-    assert [ds.id for ds in arrays[0]] == ['I', 'J', 'E', 'F', 'A', 'B']
-    assert [ds.id for ds in arrays[1]] == ['K', 'L', 'G', 'H', 'C', 'D']
+    assert [ds.id for ds in arrays[0]] == ["I", "J", "E", "F", "A", "B"]
+    assert [ds.id for ds in arrays[1]] == ["K", "L", "G", "H", "C", "D"]
 
 
 def test_group_by_solar(datasets_for_sorting) -> None:
@@ -73,16 +155,37 @@ def test_group_by_solar(datasets_for_sorting) -> None:
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 2
     arrays = date_only.values
-    assert [ds.id for ds in arrays[0]] == ['A', 'B', 'E', 'F', 'I', 'J', 'C', 'D', 'G', 'K']
-    assert [ds.id for ds in arrays[1]] == ['H', 'L']
-
+    assert [ds.id for ds in arrays[0]] == [
+        "A",
+        "B",
+        "E",
+        "F",
+        "I",
+        "J",
+        "C",
+        "D",
+        "G",
+        "K",
+    ]
+    assert [ds.id for ds in arrays[1]] == ["H", "L"]
 
     gby = group_by_solar(["prod_c", "prod_b", "prod_a"])
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 2
     arrays = date_only.values
-    assert [ds.id for ds in arrays[0]] == ['I', 'J', 'K', 'E', 'F', 'G', 'A', 'B', 'C', 'D']
-    assert [ds.id for ds in arrays[1]] == ['L', 'H']
+    assert [ds.id for ds in arrays[0]] == [
+        "I",
+        "J",
+        "K",
+        "E",
+        "F",
+        "G",
+        "A",
+        "B",
+        "C",
+        "D",
+    ]
+    assert [ds.id for ds in arrays[1]] == ["L", "H"]
 
 
 def test_group_by_mosaic(datasets_for_sorting) -> None:
@@ -94,18 +197,44 @@ def test_group_by_mosaic(datasets_for_sorting) -> None:
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 1
     arrays = date_only.values
-    assert [ds.id for ds in arrays[0]] == ['A', 'B', 'E', 'F', 'I', 'J', 'C', 'D', 'G', 'K', 'H', 'L']
-
+    assert [ds.id for ds in arrays[0]] == [
+        "A",
+        "B",
+        "E",
+        "F",
+        "I",
+        "J",
+        "C",
+        "D",
+        "G",
+        "K",
+        "H",
+        "L",
+    ]
 
     gby = group_by_mosaic(["prod_c", "prod_b", "prod_a"])
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 1
     arrays = date_only.values
-    assert [ds.id for ds in arrays[0]] == ['I', 'J', 'K', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'L', 'H']
+    assert [ds.id for ds in arrays[0]] == [
+        "I",
+        "J",
+        "K",
+        "E",
+        "F",
+        "G",
+        "A",
+        "B",
+        "C",
+        "D",
+        "L",
+        "H",
+    ]
 
 
 def test_find_in_dates() -> None:
     from datacube_ows.utils import find_matching_date
+
     dates = [
         datetime.datetime(1991, 8, 3, 22, 15, 24, 122234, tzinfo=timezone.utc),
         datetime.datetime(1991, 8, 5, 14, 6, 12, 156238, tzinfo=timezone.utc),
@@ -117,12 +246,30 @@ def test_find_in_dates() -> None:
         datetime.datetime(1999, 12, 31, 22, 22, 22, 222222, tzinfo=timezone.utc),
         datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=timezone.utc),
     ]
-    assert find_matching_date(datetime.datetime(1991, 8, 3, 22, 15, 24, 122234, tzinfo=timezone.utc), dates)
-    assert find_matching_date(datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=timezone.utc), dates)
-    assert find_matching_date(datetime.datetime(1992, 2, 5, 15, 45, 11, 234110, tzinfo=timezone.utc), dates)
-    assert find_matching_date(datetime.datetime(1996, 1, 23, 12, 15, 25, 723411, tzinfo=timezone.utc), dates)
-    assert not find_matching_date(datetime.datetime(1996, 1, 23, 12, 15, 26, 723411, tzinfo=timezone.utc), dates)
-    assert find_matching_date(datetime.datetime(1996, 1, 23, 12, 15, 27, 723411, tzinfo=timezone.utc), dates)
-    assert not find_matching_date(datetime.datetime(1896, 1, 23, 12, 15, 26, 723411, tzinfo=timezone.utc), dates)
-    assert not find_matching_date(datetime.datetime(2016, 1, 23, 12, 15, 26, 723411, tzinfo=timezone.utc), dates)
-    assert not find_matching_date(datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=timezone.utc), [])
+    assert find_matching_date(
+        datetime.datetime(1991, 8, 3, 22, 15, 24, 122234, tzinfo=timezone.utc), dates
+    )
+    assert find_matching_date(
+        datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=timezone.utc), dates
+    )
+    assert find_matching_date(
+        datetime.datetime(1992, 2, 5, 15, 45, 11, 234110, tzinfo=timezone.utc), dates
+    )
+    assert find_matching_date(
+        datetime.datetime(1996, 1, 23, 12, 15, 25, 723411, tzinfo=timezone.utc), dates
+    )
+    assert not find_matching_date(
+        datetime.datetime(1996, 1, 23, 12, 15, 26, 723411, tzinfo=timezone.utc), dates
+    )
+    assert find_matching_date(
+        datetime.datetime(1996, 1, 23, 12, 15, 27, 723411, tzinfo=timezone.utc), dates
+    )
+    assert not find_matching_date(
+        datetime.datetime(1896, 1, 23, 12, 15, 26, 723411, tzinfo=timezone.utc), dates
+    )
+    assert not find_matching_date(
+        datetime.datetime(2016, 1, 23, 12, 15, 26, 723411, tzinfo=timezone.utc), dates
+    )
+    assert not find_matching_date(
+        datetime.datetime(2011, 7, 23, 12, 4, 12, 723494, tzinfo=timezone.utc), []
+    )

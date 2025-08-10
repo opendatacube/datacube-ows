@@ -18,18 +18,12 @@ ows_cfg = {
             },
             "EPSG:4326": {  # WGS-84
                 "geographic": True,
-                "vertical_coord_first": True
+                "vertical_coord_first": True,
             },
         },
-        "services": {
-            "wms": True,
-            "wmts": True,
-            "wcs": True
-        },
+        "services": {"wms": True, "wmts": True, "wcs": True},
     },
-
     "wms": {},
-
     "wcs": {
         "formats": {
             "GeoTIFF": {
@@ -39,7 +33,7 @@ ows_cfg = {
                 },
                 "mime": "image/geotiff",
                 "extension": "tif",
-                "multi-time": False
+                "multi-time": False,
             },
             "netCDF": {
                 "renderers": {
@@ -49,10 +43,9 @@ ows_cfg = {
                 "mime": "application/x-netcdf",
                 "extension": "nc",
                 "multi-time": True,
-            }
+            },
         },
         "native_format": "GeoTIFF",
     },
-
     "layers": [],
 }

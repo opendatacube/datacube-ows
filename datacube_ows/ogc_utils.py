@@ -27,17 +27,19 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 @deprecat(
     reason="The 'rolling_windows_ndays' mosaicing function has moved to 'datacube.time_utils' - "
-           "please import it from there.",
-    version="1.9.0"
+    "please import it from there.",
+    version="1.9.0",
 )
 def rolling_window_ndays(
-        available_dates: list[datetime.datetime],
-        layer_cfg: "OWSExtensibleConfigEntry",
-        ndays: int = 6) -> tuple[datetime.datetime, datetime.datetime]:
+    available_dates: list[datetime.datetime],
+    layer_cfg: "OWSExtensibleConfigEntry",
+    ndays: int = 6,
+) -> tuple[datetime.datetime, datetime.datetime]:
     from datacube_ows.time_utils import rolling_window_ndays
-    return rolling_window_ndays(available_dates=available_dates,
-                                layer_cfg=layer_cfg,
-                                ndays=ndays)
+
+    return rolling_window_ndays(
+        available_dates=available_dates, layer_cfg=layer_cfg, ndays=ndays
+    )
 
 
 def mask_by_val(data: xarray.Dataset, band: str, val: Any = None) -> xarray.DataArray:
@@ -48,7 +50,7 @@ def mask_by_val(data: xarray.Dataset, band: str, val: Any = None) -> xarray.Data
     :param val: The value to mask by, defaults to None, which means use the 'nodata' value in ODC metadata
     """
     if val is None:
-        return data[band] != data[band].attrs['nodata']
+        return data[band] != data[band].attrs["nodata"]
     return data[band] != val
 
 
@@ -65,10 +67,12 @@ def mask_by_bitflag(data: xarray.Dataset, band: str) -> xarray.DataArray:
     """
     Mask by ODC metadata nodata value, as a bitflag
     """
-    return ~data[band] & data[band].attrs['nodata']
+    return ~data[band] & data[band].attrs["nodata"]
 
 
-def mask_by_val_in_band(data: xarray.Dataset, band: str, mask_band: str, val: Any = None) -> xarray.DataArray:
+def mask_by_val_in_band(
+    data: xarray.Dataset, band: str, mask_band: str, val: Any = None
+) -> xarray.DataArray:
     """
     Mask all bands by a value in a particular band
 
@@ -129,10 +133,13 @@ def mask_by_nan(data: xarray.Dataset, band: str) -> numpy.ndarray:
 
 
 def create_geobox(
-        crs: CRS,
-        minx: float | int, miny: float | int,
-        maxx: float | int, maxy: float | int,
-        width: int | None = None, height: int | None = None,
+    crs: CRS,
+    minx: float | int,
+    miny: float | int,
+    maxx: float | int,
+    maxy: float | int,
+    width: int | None = None,
+    height: int | None = None,
 ) -> GeoBox:
     """
     Create an ODC Geobox.
@@ -156,13 +163,18 @@ def create_geobox(
         scale_x = -scale_y  # pylint: disable=possibly-used-before-assignment
         width = round((float(maxx) - float(minx)) / scale_x)
     if height is None:
-        scale_y = - scale_x
+        scale_y = -scale_x
         height = round((float(miny) - float(maxy)) / scale_y)
     affine = Affine.translation(minx, maxy) * Affine.scale(scale_x, scale_y)
     return GeoBox((height, width), affine, crs)
 
 
-def xarray_image_as_png(img_data: xarray.Dataset, loop_over=None, animate: bool = False, frame_duration: int = 1000):
+def xarray_image_as_png(
+    img_data: xarray.Dataset,
+    loop_over=None,
+    animate: bool = False,
+    frame_duration: int = 1000,
+):
     """
     Render an Xarray image as a PNG.
 
@@ -204,7 +216,15 @@ def xarray_image_as_png(img_data: xarray.Dataset, loop_over=None, animate: bool 
         for t_slice in time_slices_array:
             im = Image.fromarray(t_slice)
             images.append(im)
-        images[0].save(img_io, "PNG", save_all=True, default_image=True, loop=0, duration=frame_duration, append_images=images)
+        images[0].save(
+            img_io,
+            "PNG",
+            save_all=True,
+            default_image=True,
+            loop=0,
+            duration=frame_duration,
+            append_images=images,
+        )
         img_io.seek(0)
         return img_io.read()
 
@@ -236,12 +256,7 @@ def render_frame(img_data: xarray.Dataset, width: int, height: int) -> numpy.nda
     masked = False
     last_band = None
     buffer = numpy.zeros((4, width, height), numpy.uint8)
-    band_index = {
-        "red": 0,
-        "green": 1,
-        "blue": 2,
-        "alpha": 3,
-    }
+    band_index = {"red": 0, "green": 1, "blue": 2, "alpha": 3}
     for band_var in img_data.data_vars:
         band = str(band_var)
         index = band_index[band]
@@ -251,8 +266,8 @@ def render_frame(img_data: xarray.Dataset, width: int, height: int) -> numpy.nda
         buffer[index, :, :] = band_data
         last_band = band_data
     if not masked:
-        assert last_band is not None # For typechecker.
-        alpha_mask = numpy.empty(last_band.shape).astype('uint8')
+        assert last_band is not None  # For typechecker.
+        alpha_mask = numpy.empty(last_band.shape).astype("uint8")
         alpha_mask.fill(255)
         buffer[3, :, :] = alpha_mask
     return buffer.transpose()

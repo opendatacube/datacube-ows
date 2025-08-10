@@ -21,28 +21,28 @@ def wwwm_tms_cfg() -> CFG_DICT:
 def tmsmin_global_cfg():
     gcfg = MagicMock()
     gcfg.published_CRSs = {
-            "EPSG:3857": {  # Web Mercator
-                "geographic": False,
-                "horizontal_coord": "x",
-                "vertical_coord": "y",
-                "vertical_coord_first": False
-            },
-            "I:CANT:BELIEVE:ITS:NOT:EPSG:3857": {  # I Can't Believe It's Not Web Mercator
-                "geographic": False,
-                "horizontal_coord": "x",
-                "vertical_coord": "y",
-                "vertical_coord_first": True
-            },
-            "EPSG:4326": {  # WGS-84
-                "geographic": True,
-                "vertical_coord_first": True
-            },
-            "EPSG:3111": {  # VicGrid94 for delwp.vic.gov.au
-                "geographic": False,
-                "horizontal_coord": "x",
-                "vertical_coord": "y",
-                "vertical_coord_first": False
-            },
+        "EPSG:3857": {  # Web Mercator
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+            "vertical_coord_first": False,
+        },
+        "I:CANT:BELIEVE:ITS:NOT:EPSG:3857": {  # I Can't Believe It's Not Web Mercator
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+            "vertical_coord_first": True,
+        },
+        "EPSG:4326": {  # WGS-84
+            "geographic": True,
+            "vertical_coord_first": True,
+        },
+        "EPSG:3111": {  # VicGrid94 for delwp.vic.gov.au
+            "geographic": False,
+            "horizontal_coord": "x",
+            "vertical_coord": "y",
+            "vertical_coord_first": False,
+        },
     }
     return gcfg
 

@@ -168,9 +168,8 @@ style_ls_simple_rgb = {
         "show_legend": True,
         "url": {
             "en": "https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png"
-        }
-    }
-
+        },
+    },
 }
 
 style_fc_c3_rgb_unmasked = {
@@ -305,9 +304,9 @@ style_ndvi = {
             },
             "1.0": {
                 "label": "high",
-            }
-        }
-    }
+            },
+        },
+    },
 }
 
 style_ndvi_expr = {
@@ -405,7 +404,7 @@ style_ls_ndvi_delta = {
                 "kwargs": {
                     "band1": "nir",
                     "band2": "red",
-                }
+                },
             },
             "mpl_ramp": "RdYlBu",
             "range": [-1.0, 1.0],
@@ -416,22 +415,18 @@ style_ls_ndvi_delta = {
                     "-1.0",
                     "0.0",
                     "1.0",
-                ]
+                ],
             },
             "custom_includes": {
                 "red_diff": {
                     "function": f"{cfgbase}utils.new_twodate_finfo",
                     "mapped_bands": True,
-                    "kwargs": {
-                        "band": "red"
-                    }
+                    "kwargs": {"band": "red"},
                 },
                 "nir_diff": {
                     "function": f"{cfgbase}utils.new_twodate_finfo",
                     "mapped_bands": True,
-                    "kwargs": {
-                        "band": "nir"
-                    }
+                    "kwargs": {"band": "nir"},
                 },
             },
             "feature_info_label": "ndvi_delta",
@@ -599,7 +594,6 @@ ows_cfg = {
         "message_file": f"{trans_dir}/integration_tests/cfg/message.po",
         "translations_directory": f"{trans_dir}/integration_tests/cfg/translations",
         "supported_languages": ["en", "de"],
-
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",
@@ -701,7 +695,6 @@ ows_cfg = {
         # Optional, defaults to 256x256
         "max_width": 512,
         "max_height": 512,
-
         "caps_cache_maxage": 5,
         # These define the AuthorityURLs.
         # They represent the authorities that define the "Identifiers" defined layer by layer below.
@@ -752,7 +745,7 @@ ows_cfg = {
         },
         # The wcs:native_format must be declared in wcs:formats dict above.
         "native_format": "GeoTIFF",
-        "default_desc_cache_maxage": 300, # 5 minutes
+        "default_desc_cache_maxage": 300,  # 5 minutes
     },  ###### End of "wcs" section
     # Products published by this datacube_ows instance.
     # The layers section is a list of layer definitions.  Each layer may be either:
@@ -871,7 +864,7 @@ ows_cfg = {
                             },
                             "patch_url_function": f"{cfgbase}utils.trivial_identity",
                         },
-                    ]
+                    ],
                 },
                 {
                     "title": "DEA Config Samples",
@@ -913,19 +906,23 @@ ows_cfg = {
                                     "band": "fmask_alias",
                                     "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
                                     "ignore_time": False,
-                                    "ignore_info_flags": []
+                                    "ignore_info_flags": [],
                                 },
                                 {
                                     "band": "land",
-                                    "products": ["geodata_coast_100k", "geodata_coast_100k"],
+                                    "products": [
+                                        "geodata_coast_100k",
+                                        "geodata_coast_100k",
+                                    ],
                                     "ignore_time": True,
-                                    "ignore_info_flags": []
+                                    "ignore_info_flags": [],
                                 },
                             ],
-                            "time_axis": {
-                                "time_interval": 1
+                            "time_axis": {"time_interval": 1},
+                            "styling": {
+                                "default_style": "ndci",
+                                "styles": styles_s2_ga_list,
                             },
-                            "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
                         },
                         {
                             "title": "A Broken Layer",
@@ -948,19 +945,20 @@ ows_cfg = {
                                     "band": "fmask_alias",
                                     "product": "spaghetti_gateaux",
                                     "ignore_time": False,
-                                    "ignore_info_flags": []
+                                    "ignore_info_flags": [],
                                 },
                                 {
                                     "band": "land",
                                     "product": "spaghetti_gateaux",
                                     "ignore_time": True,
-                                    "ignore_info_flags": []
+                                    "ignore_info_flags": [],
                                 },
                             ],
-                            "time_axis": {
-                                "time_interval": 1
+                            "time_axis": {"time_interval": 1},
+                            "styling": {
+                                "default_style": "ndci",
+                                "styles": styles_s2_ga_list,
                             },
-                            "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
                         },
                         {
                             "inherits": {
@@ -978,8 +976,8 @@ ows_cfg = {
                                 "pass_layer_cfg": True,
                                 "kwargs": {
                                     "ndays": 6,
-                                }
-                            }
+                                },
+                            },
                         },
                         {
                             "title": "DEA Fractional Cover (Landsat)",
@@ -1023,8 +1021,8 @@ ows_cfg = {
                                 "default_style": "fc_rgb_unmasked",
                                 "styles": [style_fc_c3_rgb_unmasked],
                             },
-                        }
-                    ]
+                        },
+                    ],
                 },
                 {
                     "title": "Landsat-8 Geomedian",
@@ -1046,8 +1044,8 @@ ows_cfg = {
                         "default_style": "simple_rgb",
                         "styles": styles_ls_list,
                     },
-                }
-            ] ####### End of "postgres" layers
+                },
+            ],  ####### End of "postgres" layers
         },
         {
             "title": "Postgis Data",
@@ -1133,7 +1131,7 @@ ows_cfg = {
                             },
                             "patch_url_function": f"{cfgbase}utils.trivial_identity",
                         },
-                    ]
+                    ],
                 },
                 {
                     "title": "DEA Config Samples",
@@ -1176,19 +1174,23 @@ ows_cfg = {
                                     "band": "fmask_alias",
                                     "products": ["ga_s2am_ard_3", "ga_s2bm_ard_3"],
                                     "ignore_time": False,
-                                    "ignore_info_flags": []
+                                    "ignore_info_flags": [],
                                 },
                                 {
                                     "band": "land",
-                                    "products": ["geodata_coast_100k", "geodata_coast_100k"],
+                                    "products": [
+                                        "geodata_coast_100k",
+                                        "geodata_coast_100k",
+                                    ],
                                     "ignore_time": True,
-                                    "ignore_info_flags": []
+                                    "ignore_info_flags": [],
                                 },
                             ],
-                            "time_axis": {
-                                "time_interval": 1
+                            "time_axis": {"time_interval": 1},
+                            "styling": {
+                                "default_style": "ndci",
+                                "styles": styles_s2_ga_list,
                             },
-                            "styling": {"default_style": "ndci", "styles": styles_s2_ga_list},
                         },
                         {
                             "inherits": {
@@ -1206,8 +1208,8 @@ ows_cfg = {
                                 "pass_layer_cfg": True,
                                 "kwargs": {
                                     "ndays": 6,
-                                }
-                            }
+                                },
+                            },
                         },
                         {
                             "title": "DEA Fractional Cover (Landsat) (postgis db)",
@@ -1252,8 +1254,8 @@ ows_cfg = {
                                 "default_style": "fc_rgb_unmasked",
                                 "styles": [style_fc_c3_rgb_unmasked],
                             },
-                        }
-                    ]
+                        },
+                    ],
                 },
                 {
                     "title": "Landsat-8 Geomedian (postgis db)",
@@ -1276,8 +1278,8 @@ ows_cfg = {
                         "default_style": "simple_rgb",
                         "styles": styles_ls_list,
                     },
-                }
-            ]  ####### End of "postgis" layers
+                },
+            ],  ####### End of "postgis" layers
         },
-    ]  ##### End of "layers" list.
+    ],  ##### End of "layers" list.
 }  #### End of test configuration object

@@ -22,7 +22,9 @@ def get_xsd(name: str) -> etree.XMLSchema:
     return etree.XMLSchema(schema_doc)
 
 
-def check_wmts_error(url, expected_error_message=None, expected_status_code: int = 400) -> None:
+def check_wmts_error(
+    url, expected_error_message=None, expected_status_code: int = 400
+) -> None:
     with pytest.raises(Exception) as e:
         _ = request.urlopen(url, timeout=10)
     # Validate status code
@@ -131,11 +133,14 @@ def test_wmts_gettile(ows_server) -> None:
     assert tile
     assert tile.info()["Content-Type"] == "image/png"
 
+
 def test_wmts_getfeatinfo(ows_server) -> None:
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
-                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&"
+        + "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
@@ -144,55 +149,67 @@ def test_wmts_getfeatinfo(ows_server) -> None:
 
 
 def test_wmts_gettile_errwrap(ows_server) -> None:
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
-                            "TILEROW=5171&TILECOL=7458FORMAT=image%2Fjpg")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&"
+        + "TILEROW=5171&TILECOL=7458FORMAT=image%2Fjpg"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 400
 
 
 def test_wmts_getfeatinfo_errwrap(ows_server) -> None:
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
-                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fpdf")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&"
+        + "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fpdf"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 400
 
 
 def test_wmts_arg_errors(ows_server) -> None:
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=foo&" +
-                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=foo&"
+        + "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 400
     assert "Invalid Tile Matrix" in resp.text
     assert "foo" in resp.text
 
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=666&" +
-                            "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=666&"
+        + "TILEROW=5171&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 400
     assert "Invalid Tile Matrix" in resp.text
     assert "666" in resp.text
 
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
-                            "TILEROW=foo&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&"
+        + "TILEROW=foo&TILECOL=7458&I=102&J=204&INFOFORMAT=application%2Fjson"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 400
     assert "Invalid Tile Row" in resp.text
     assert "foo" in resp.text
 
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
-                            "TILEROW=5171&TILECOL=foo&I=102&J=204&INFOFORMAT=application%2Fjson")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetFeatureInfo&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&"
+        + "TILEROW=5171&TILECOL=foo&I=102&J=204&INFOFORMAT=application%2Fjson"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 400
     assert "Invalid Tile Col" in resp.text
@@ -200,10 +217,12 @@ def test_wmts_arg_errors(ows_server) -> None:
 
 
 def test_wmts_ows_stats(ows_server) -> None:
-    url = ows_server.url + ("/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&" +
-                            "LAYER=s2_l2a&STYLE=simple_rgb&" +
-                            "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
-                            "TILEROW=5171&TILECOL=7458&I=102&J=204&FORMAT=image/png&ows_stats=y")
+    url = ows_server.url + (
+        "/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&"
+        + "LAYER=s2_l2a&STYLE=simple_rgb&"
+        + "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&"
+        + "TILEROW=5171&TILECOL=7458&I=102&J=204&FORMAT=image/png&ows_stats=y"
+    )
     resp = retrying_requests.get(url)
     assert resp.status_code == 200
     json = resp.json()

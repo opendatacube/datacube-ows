@@ -29,16 +29,18 @@ from datacube_ows.styles.expression import ExpressionException
 from datacube_ows.utils import default_to_utc, find_matching_date
 
 RESAMPLING_METHODS = {
-    'nearest': Resampling.nearest,
-    'cubic': Resampling.cubic,
-    'bilinear': Resampling.bilinear,
-    'cubic_spline': Resampling.cubic_spline,
-    'lanczos': Resampling.lanczos,
-    'average': Resampling.average,
+    "nearest": Resampling.nearest,
+    "cubic": Resampling.cubic,
+    "bilinear": Resampling.bilinear,
+    "cubic_spline": Resampling.cubic_spline,
+    "lanczos": Resampling.lanczos,
+    "average": Resampling.average,
 }
 
 
-def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=None) -> tuple[float, float, float, float]:
+def _bounding_pts(
+    minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=None
+) -> tuple[float, float, float, float]:
     # pylint: disable=too-many-locals
     p1 = geom.point(minx, maxy, src_crs)
     p2 = geom.point(minx, miny, src_crs)
@@ -63,47 +65,45 @@ def _bounding_pts(minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=N
 
 def _get_geobox_xy(args, crs: CRS) -> tuple:
     if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
-        miny, minx, maxy, maxx = map(float, args['bbox'].split(','))
+        miny, minx, maxy, maxx = map(float, args["bbox"].split(","))
     else:
-        minx, miny, maxx, maxy = map(float, args['bbox'].split(','))
+        minx, miny, maxx, maxy = map(float, args["bbox"].split(","))
     return minx, miny, maxx, maxy
 
 
 def _get_geobox(args, crs: CRS) -> GeoBox:
-    width = int(args['width'])
-    height = int(args['height'])
+    width = int(args["width"])
+    height = int(args["height"])
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
 
     if minx == maxx or miny == maxy:
         raise WMSException("Bounding box must enclose a non-zero area")
 
     if crs.epsg == 3857 and (maxx < -13_000_000 or minx > 13_000_000):
-            # EPSG:3857 query AND closer to the anti-meridian than the prime meridian:
-            # re-project to epsg:3832 (Pacific Web-Mercator)
-            ll = geom.point(x=minx, y=miny, crs=crs).to_crs("epsg:3832")
-            ur = geom.point(x=maxx, y=maxy, crs=crs).to_crs("epsg:3832")
-            minx, miny = ll.coords[0]
-            maxx, maxy = ur.coords[0]
-            crs = CRS("epsg:3832")
+        # EPSG:3857 query AND closer to the anti-meridian than the prime meridian:
+        # re-project to epsg:3832 (Pacific Web-Mercator)
+        ll = geom.point(x=minx, y=miny, crs=crs).to_crs("epsg:3832")
+        ur = geom.point(x=maxx, y=maxy, crs=crs).to_crs("epsg:3832")
+        minx, miny = ll.coords[0]
+        maxx, maxy = ur.coords[0]
+        crs = CRS("epsg:3832")
 
-    return create_geobox(
-        crs,
-        minx, miny, maxx, maxy,
-        width, height
-    )
+    return create_geobox(crs, minx, miny, maxx, maxy, width, height)
 
 
 def _get_polygon(args, crs: CRS) -> geom.Geometry:
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
-    return geom.polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
+    return geom.polygon(
+        [(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs
+    )
 
 
 def zoom_factor(args, crs) -> float:
     # Determine the geographic "zoom factor" for the request.
     # (Larger zoom factor means deeper zoom.  Smaller zoom factor means larger area.)
     # Extract request bbox and crs
-    width = int(args['width'])
-    height = int(args['height'])
+    width = int(args["width"])
+    height = int(args["height"])
     minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
 
     # Project to a geographic coordinate system
@@ -111,12 +111,12 @@ def zoom_factor(args, crs) -> float:
     # "standardised" in some sense, not dependent on the CRS of the request.
     # TODO: can we do better in polar regions?
     minx, miny, maxx, maxy = _bounding_pts(
-        minx, miny,
-        maxx, maxy,
-        crs, dst_crs="epsg:4326"
+        minx, miny, maxx, maxy, crs, dst_crs="epsg:4326"
     )
     # Create geobox affine transformation (N.B. Don't need an actual Geobox)
-    affine = Affine.translation(minx, miny) * Affine.scale((maxx - minx) / width, (maxy - miny) / height)
+    affine = Affine.translation(minx, miny) * Affine.scale(
+        (maxx - minx) / width, (maxy - miny) / height
+    )
     # Zoom factor is the reciprocal of the square root of the transform determinant
     # (The determinant is x scale factor multiplied by the y scale factor)
     return 1.0 / math.sqrt(affine.determinant)
@@ -126,12 +126,14 @@ def img_coords_to_geopoint(geobox, i, j) -> geom.Geometry:
     cfg = get_config()
     h_coord = cfg.published_CRSs[str(geobox.crs)]["horizontal_coord"]
     v_coord = cfg.published_CRSs[str(geobox.crs)]["vertical_coord"]
-    return geom.point(geobox.coordinates[h_coord].values[int(i)],
-                          geobox.coordinates[v_coord].values[int(j)],
-                          geobox.crs)
+    return geom.point(
+        geobox.coordinates[h_coord].values[int(i)],
+        geobox.coordinates[v_coord].values[int(j)],
+        geobox.crs,
+    )
 
 
-def get_layer_from_arg(args, argname: str ="layers") -> OWSNamedLayer:
+def get_layer_from_arg(args, argname: str = "layers") -> OWSNamedLayer:
     layers = args.get(argname, "").split(",")
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
@@ -141,29 +143,41 @@ def get_layer_from_arg(args, argname: str ="layers") -> OWSNamedLayer:
     cfg = get_config()
     layer = cfg.layer_index.get(lyr)
     if not layer:
-        raise WMSException(f"Layer {lyr} is not defined",
-                           WMSException.LAYER_NOT_DEFINED,
-                           locator="Layer parameter",
-                           valid_keys=list(cfg.layer_index))
+        raise WMSException(
+            f"Layer {lyr} is not defined",
+            WMSException.LAYER_NOT_DEFINED,
+            locator="Layer parameter",
+            valid_keys=list(cfg.layer_index),
+        )
     return layer
 
 
-def get_arg(args, argname: str, verbose_name: str, lower: bool = False,
-            errcode=None, permitted_values=None):
+def get_arg(
+    args,
+    argname: str,
+    verbose_name: str,
+    lower: bool = False,
+    errcode=None,
+    permitted_values=None,
+):
     fmt = args.get(argname, "")
     if lower:
         fmt = fmt.lower()
     if not fmt:
-        raise WMSException(f"No {verbose_name} specified",
-                           errcode,
-                           locator=f"{argname} parameter",
-                           valid_keys=permitted_values)
+        raise WMSException(
+            f"No {verbose_name} specified",
+            errcode,
+            locator=f"{argname} parameter",
+            valid_keys=permitted_values,
+        )
 
     if permitted_values and fmt not in permitted_values:
-        raise WMSException(f"{verbose_name} {fmt} is not supported",
-                           errcode,
-                           locator=f"{argname} parameter",
-                           valid_keys=permitted_values)
+        raise WMSException(
+            f"{verbose_name} {fmt} is not supported",
+            errcode,
+            locator=f"{argname} parameter",
+            valid_keys=permitted_values,
+        )
     return fmt
 
 
@@ -173,23 +187,27 @@ def get_times_for_layer(layer: OWSNamedLayer) -> list[datetime | date]:
 
 def get_times(args, layer: OWSNamedLayer) -> list[datetime | date]:
     # Time parameter
-    times_raw = args.get('time', '')
-    times = times_raw.split(',')
+    times_raw = args.get("time", "")
+    times = times_raw.split(",")
 
     return [parse_time_item(item, layer) for item in times]
 
 
 def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
-    times = item.split('/')
+    times = item.split("/")
     # Time range handling follows the implementation described by GeoServer
     # https://docs.geoserver.org/stable/en/user/services/wms/time.html
 
     # If all times are equal we can proceed
     if len(times) > 1:
         # TODO WMS Time range selections (/ notation) are poorly and incompletely implemented.
-        start, end = parse_wms_time_strings(times, with_tz=layer.time_resolution.is_subday())
+        start, end = parse_wms_time_strings(
+            times, with_tz=layer.time_resolution.is_subday()
+        )
         if layer.time_resolution.is_subday():
-            matching_times: list[datetime] = [t for t in layer.ranges.times if start <= t <= end]
+            matching_times: list[datetime] = [
+                t for t in layer.ranges.times if start <= t <= end
+            ]
         else:
             start, end = start.date(), end.date()
             matching_times = [t for t in layer.ranges.times if start <= t <= end]
@@ -200,11 +218,13 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
             raise WMSException(
                 f"No data available for time dimension range '{start}'-'{end}' for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
+                locator="Time parameter",
+            )
         raise WMSException(
             f"Time dimension range '{start}'-'{end}' not valid for this layer",
             WMSException.INVALID_DIMENSION_VALUE,
-            locator="Time parameter")
+            locator="Time parameter",
+        )
     if not times[0]:
         # default to last available time if not supplied.
         product_times = get_times_for_layer(layer)
@@ -216,7 +236,8 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
         raise WMSException(
             f"Time dimension value '{times[0]}' not valid for this layer",
             WMSException.INVALID_DIMENSION_VALUE,
-            locator="Time parameter") from None
+            locator="Time parameter",
+        ) from None
 
     # Validate time parameter for requested layer.
     if layer.regular_time_axis:
@@ -226,46 +247,55 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
+                locator="Time parameter",
+            )
         if day > end:
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
+                locator="Time parameter",
+            )
         if (day - start).days % layer.time_axis_interval != 0:
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
+                locator="Time parameter",
+            )
         return day
     if layer.time_resolution.is_subday():
         if not find_matching_date(time, layer.ranges.times):
             raise WMSException(
                 f"Time dimension value '{times[0]}' not valid for this layer",
                 WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
+                locator="Time parameter",
+            )
         return time
     if day not in layer.ranges.time_set:
         raise WMSException(
             f"Time dimension value '{times[0]}' not valid for this layer",
             WMSException.INVALID_DIMENSION_VALUE,
-            locator="Time parameter")
+            locator="Time parameter",
+        )
     return day
 
 
 def parse_time_delta(delta_str) -> relativedelta:
-    pattern = (r'P((?P<years>\d+)Y)?((?P<months>\d+)M)?((?P<days>\d+)D)?'
-               r'(T(((?P<hours>\d+)H)?((?P<minutes>\d+)M)?((?P<seconds>\d+)S)?)?)?')
+    pattern = (
+        r"P((?P<years>\d+)Y)?((?P<months>\d+)M)?((?P<days>\d+)D)?"
+        r"(T(((?P<hours>\d+)H)?((?P<minutes>\d+)M)?((?P<seconds>\d+)S)?)?)?"
+    )
     parts = re.search(pattern, delta_str).groupdict()
     return relativedelta(**{k: int(v) for k, v in parts.items() if v is not None})  # type: ignore[arg-type]
 
 
 def parse_wms_time_string(t: str, start: bool = True) -> datetime | relativedelta:
-    if t.upper() == 'PRESENT':
+    if t.upper() == "PRESENT":
         return datetime.now(timezone.utc)
-    if t.startswith('P'):
+    if t.startswith("P"):
         return parse_time_delta(t)
-    default = datetime(1970, 1, 1) if start else datetime(1970, 12, 31, 23, 23, 59, 999999)  # default year ignored
+    default = (
+        datetime(1970, 1, 1) if start else datetime(1970, 12, 31, 23, 23, 59, 999999)
+    )  # default year ignored
     return parse(t, default=default)
 
 
@@ -281,7 +311,8 @@ def parse_wms_time_strings(parts: list[str], with_tz: bool = False) -> tuple:
             raise WMSException(
                 f"Could not understand time value '{parts}'",
                 WMSException.INVALID_DIMENSION_VALUE,
-                locator="Time parameter")
+                locator="Time parameter",
+            )
         fuzzy_end = parse_wms_time_string(parts[-1], start=True)
         return fuzzy_end - start + a_tiny_bit, end
     if isinstance(end, relativedelta):
@@ -296,13 +327,18 @@ class GetParameters:
     def __init__(self, args) -> None:
         self.cfg = get_config()
         # Version
-        self.version = get_arg(args, "version", "WMS version",
-                               permitted_values=['1.1.1', '1.3.0'])
+        self.version = get_arg(
+            args, "version", "WMS version", permitted_values=["1.1.1", "1.3.0"]
+        )
         # CRS
-        crs_arg = "srs" if self.version == '1.1.1' else "crs"
-        self.crsid = get_arg(args, crs_arg, "Coordinate Reference System",
-                             errcode=WMSException.INVALID_CRS,
-                             permitted_values=list(self.cfg.published_CRSs))
+        crs_arg = "srs" if self.version == "1.1.1" else "crs"
+        self.crsid = get_arg(
+            args,
+            crs_arg,
+            "Coordinate Reference System",
+            errcode=WMSException.INVALID_CRS,
+            permitted_values=list(self.cfg.published_CRSs),
+        )
         self.crs = self.cfg.crs(self.crsid)
         # Layers
         self.layer = self.get_layer(args)
@@ -335,39 +371,52 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
         try:
             plt.get_cmap(mpl_ramp)
         except Exception:
-            raise WMSException(f"Invalid Matplotlib ramp name: {mpl_ramp}",
-                               locator="Colorscalerange parameter") from None
+            raise WMSException(
+                f"Invalid Matplotlib ramp name: {mpl_ramp}",
+                locator="Colorscalerange parameter",
+            ) from None
         colorscalerange = args.get("colorscalerange", "0,1").split(",")
         if len(colorscalerange) != 2:
-            raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
-                               locator="Colorscalerange parameter")
+            raise WMSException(
+                "Colorscale range must be two numbers, sorted and separated by a comma.",
+                locator="Colorscalerange parameter",
+            )
         try:
             colorscalerange = [float(r) for r in colorscalerange]
         except ValueError:
-            raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
-                               locator="Colorscalerange parameter") from None
+            raise WMSException(
+                "Colorscale range must be two numbers, sorted and separated by a comma.",
+                locator="Colorscalerange parameter",
+            ) from None
         if colorscalerange[0] >= colorscalerange[1]:
-            raise WMSException("Colorscale range must be two numbers, sorted and separated by a comma.",
-                               locator="Colorscalerange parameter")
+            raise WMSException(
+                "Colorscale range must be two numbers, sorted and separated by a comma.",
+                locator="Colorscalerange parameter",
+            )
         try:
-            style: StyleDefBase | None = StyleDef(layer, {
-                "name": "custom_user_style",
-                "index_expression": code,
-                "mpl_ramp": mpl_ramp,
-                "range": colorscalerange,
-                "legend": {
-                    "title": "User-Custom Index",
-                    "show_legend": True,
-                    "begin": str(colorscalerange[0]),
-                    "end": str(colorscalerange[1]),
-                }
-            }, stand_alone=True, user_defined=True)
+            style: StyleDefBase | None = StyleDef(
+                layer,
+                {
+                    "name": "custom_user_style",
+                    "index_expression": code,
+                    "mpl_ramp": mpl_ramp,
+                    "range": colorscalerange,
+                    "legend": {
+                        "title": "User-Custom Index",
+                        "show_legend": True,
+                        "begin": str(colorscalerange[0]),
+                        "end": str(colorscalerange[1]),
+                    },
+                },
+                stand_alone=True,
+                user_defined=True,
+            )
         except ExpressionException as e:
-            raise WMSException(f"Code expression invalid: {e}",
-                               locator="Code parameter") from None
+            raise WMSException(
+                f"Code expression invalid: {e}", locator="Code parameter"
+            ) from None
         except ConfigException as e:
-            raise WMSException(f"Code invalid: {e}",
-                               locator="Code parameter") from None
+            raise WMSException(f"Code invalid: {e}", locator="Code parameter") from None
     else:
         # Regular WMS Styles
         styles = args.get("styles", "").split(",")
@@ -380,21 +429,28 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
             style_r = layer.default_style.name
         style = layer.style_index.get(style_r)
         if not style:
-            raise WMSException(f"Style {style_r} is not defined",
-                               WMSException.STYLE_NOT_DEFINED,
-                               locator="Style parameter",
-                               valid_keys=list(layer.style_index))
+            raise WMSException(
+                f"Style {style_r} is not defined",
+                WMSException.STYLE_NOT_DEFINED,
+                locator="Style parameter",
+                valid_keys=list(layer.style_index),
+            )
     return style
+
 
 class GetLegendGraphicParameters:
     def __init__(self, args) -> None:
-        self.layer = get_layer_from_arg(args, 'layer')
+        self.layer = get_layer_from_arg(args, "layer")
 
         # Validate Format parameter
-        self.format = get_arg(args, "format", "image format",
-                              errcode=WMSException.INVALID_FORMAT,
-                              lower=True,
-                              permitted_values=["image/png"])
+        self.format = get_arg(
+            args,
+            "format",
+            "image format",
+            errcode=WMSException.INVALID_FORMAT,
+            lower=True,
+            permitted_values=["image/png"],
+        )
         self.style = single_style_from_args(self.layer, args)
         self.styles = [self.style]
         # Time parameter
@@ -405,19 +461,27 @@ class GetMapParameters(GetParameters):
     @override
     def method_specific_init(self, args) -> None:
         # Validate Format parameter
-        self.format = get_arg(args, "format", "image format",
-                              errcode=WMSException.INVALID_FORMAT,
-                              lower=True,
-                              permitted_values=["image/png"])
+        self.format = get_arg(
+            args,
+            "format",
+            "image format",
+            errcode=WMSException.INVALID_FORMAT,
+            lower=True,
+            permitted_values=["image/png"],
+        )
 
         self.style = single_style_from_args(self.layer, args)
         cfg = get_config()
         if self.geobox.width > cfg.wms_max_width:
-            raise WMSException(f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",
-                               locator="Width parameter")
+            raise WMSException(
+                f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",
+                locator="Width parameter",
+            )
         if self.geobox.height > cfg.wms_max_height:
-            raise WMSException(f"Width {self.geobox.height} exceeds supported maximum {self.cfg.wms_max_height}.",
-                               locator="Height parameter")
+            raise WMSException(
+                f"Width {self.geobox.height} exceeds supported maximum {self.cfg.wms_max_height}.",
+                locator="Height parameter",
+            )
 
         # Zoom factor
         self.zf = zoom_factor(args, self.crs)
@@ -444,19 +508,30 @@ class GetFeatureInfoParameters(GetParameters):
     @override
     def method_specific_init(self, args) -> None:
         # Validate Formata parameter
-        self.format = get_arg(args, "info_format", "info format", lower=True,
-                              errcode=WMSException.INVALID_FORMAT,
-                              permitted_values=["application/json", "text/html"])
+        self.format = get_arg(
+            args,
+            "info_format",
+            "info format",
+            lower=True,
+            errcode=WMSException.INVALID_FORMAT,
+            permitted_values=["application/json", "text/html"],
+        )
         # Point coords
         coords = ["x", "y"] if self.version == "1.1.1" else ["i", "j"]
         i = args.get(coords[0])
         j = args.get(coords[1])
         if i is None:
-            raise WMSException("HorizontalCoordinate not supplied", WMSException.INVALID_POINT,
-                               f"{coords[0]} parameter")
+            raise WMSException(
+                "HorizontalCoordinate not supplied",
+                WMSException.INVALID_POINT,
+                f"{coords[0]} parameter",
+            )
         if j is None:
-            raise WMSException("Vertical coordinate not supplied", WMSException.INVALID_POINT,
-                               f"{coords[0]} parameter")
+            raise WMSException(
+                "Vertical coordinate not supplied",
+                WMSException.INVALID_POINT,
+                f"{coords[0]} parameter",
+            )
         self.i = int(i)
         self.j = int(j)
         self.style = single_style_from_args(self.layer, args, required=False)
@@ -475,14 +550,17 @@ def cosine_of_solar_zenith(lat: float, lon: float, utc_dt) -> float:
     # Estimate cosine of solar zenith angle
     # (angle between sun and local zenith) at requested latitude, longitude and datetime.
     # Formula taken from https://en.wikipedia.org/wiki/Solar_zenith_angle
-    utc_seconds_since_midnight = ((utc_dt.hour * 60) + utc_dt.minute) * 60 + utc_dt.second
+    utc_seconds_since_midnight = (
+        (utc_dt.hour * 60) + utc_dt.minute
+    ) * 60 + utc_dt.second
     utc_hour_deg_angle = (utc_seconds_since_midnight / (60 * 60 * 24) * 360.0) - 180.0
     local_hour_deg_angle = utc_hour_deg_angle + lon
     local_hour_angle_rad = math.radians(local_hour_deg_angle)
     latitude_rad = math.radians(lat)
     solar_decl_rad = declination_rad(utc_dt)
-    return math.sin(latitude_rad) * math.sin(solar_decl_rad) \
-             + math.cos(latitude_rad) * math.cos(solar_decl_rad) * math.cos(local_hour_angle_rad)
+    return math.sin(latitude_rad) * math.sin(solar_decl_rad) + math.cos(
+        latitude_rad
+    ) * math.cos(solar_decl_rad) * math.cos(local_hour_angle_rad)
 
 
 def solar_correct_data(data, dataset) -> float:
@@ -507,6 +585,6 @@ def wofls_fuser(dest: numpy.ndarray, src: numpy.ndarray) -> numpy.ndarray:
 
 
 def item_fuser(dest: numpy.ndarray, src: numpy.ndarray) -> numpy.ndarray:
-    where_combined = numpy.isnan(dest) | (dest == -6666.)
+    where_combined = numpy.isnan(dest) | (dest == -6666.0)
     numpy.copyto(dest, src, where=where_combined)
     return dest

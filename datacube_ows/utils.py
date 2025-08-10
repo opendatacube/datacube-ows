@@ -18,7 +18,8 @@ from datacube.model import Dataset
 from numpy import datetime64 as npdt64
 from sqlalchemy.engine.base import Connection
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
+
 
 def log_call(func: F) -> F:
     """
@@ -27,11 +28,13 @@ def log_call(func: F) -> F:
     Placing @log_call at the top of a function or method, results in all calls to that function or method
     being logged at debug level.
     """
+
     @wraps(func)
     def log_wrapper(*args, **kwargs) -> F:
         _LOG = logging.getLogger()
         _LOG.debug("%s args: %s kwargs: %s", func.__name__, args, kwargs)
         return func(*args, **kwargs)
+
     return cast(F, log_wrapper)
 
 
@@ -44,6 +47,7 @@ def time_call(func: F) -> F:
 
     For debugging or optimisation research only.  Should not occur in mainline code.
     """
+
     @wraps(func)
     def timing_wrapper(*args, **kwargs) -> Any:
         start: float = monotonic()
@@ -52,78 +56,81 @@ def time_call(func: F) -> F:
         _LOG = logging.getLogger()
         _LOG.debug("%s took: %d ms", func.__name__, int((stop - start) * 1000))
         return result
+
     return cast(F, timing_wrapper)
 
 
-def group_by_begin_datetime(pnames: list[str] | None = None,
-                            truncate_dates: bool = True) -> GroupBy:
+def group_by_begin_datetime(
+    pnames: list[str] | None = None, truncate_dates: bool = True
+) -> GroupBy:
     """
     Returns an ODC GroupBy object, suitable for daily/monthly/yearly/etc statistical/summary data.
     (Or for sub-day time resolution data)
     """
     base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:
-        index = {
-            pn: i
-            for i, pn in enumerate(pnames)
-        }
+        index = {pn: i for i, pn in enumerate(pnames)}
         sort_key = lambda ds: (index.get(ds.product.name), base_sort_key(ds))  # noqa: E731
     else:
         sort_key = base_sort_key
     if truncate_dates:
-        grp_by = lambda ds: npdt64(datetime.datetime(  # noqa: E731
-            ds.time.begin.year,
-            ds.time.begin.month,
-            ds.time.begin.day), "ns")
+        grp_by = lambda ds: npdt64(  # noqa: E731
+            datetime.datetime(
+                ds.time.begin.year, ds.time.begin.month, ds.time.begin.day
+            ),
+            "ns",
+        )
     else:
-        grp_by = lambda ds: npdt64(datetime.datetime(  # noqa: E731
-            ds.time.begin.year,
-            ds.time.begin.month,
-            ds.time.begin.day,
-            ds.time.begin.hour,
-            ds.time.begin.minute,
-            ds.time.begin.second), "ns")
+        grp_by = lambda ds: npdt64(  # noqa: E731
+            datetime.datetime(
+                ds.time.begin.year,
+                ds.time.begin.month,
+                ds.time.begin.day,
+                ds.time.begin.hour,
+                ds.time.begin.minute,
+                ds.time.begin.second,
+            ),
+            "ns",
+        )
     return GroupBy(
-        dimension='time',
+        dimension="time",
         group_by_func=grp_by,
-        units='seconds since 1970-01-01 00:00:00',
-        sort_key=sort_key
+        units="seconds since 1970-01-01 00:00:00",
+        sort_key=sort_key,
     )
 
 
 def group_by_solar(pnames: list[str] | None = None) -> GroupBy:
     base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:
-        index = {
-            pn: i
-            for i, pn in enumerate(pnames)
-        }
+        index = {pn: i for i, pn in enumerate(pnames)}
         sort_key = lambda ds: (index.get(ds.product.name), base_sort_key(ds))  # noqa: E731
     else:
         sort_key = base_sort_key
     return GroupBy(
-        dimension='time',
+        dimension="time",
         group_by_func=lambda x: npdt64(solar_day(x), "ns"),  # type: ignore[call-overload]
-        units='seconds since 1970-01-01 00:00:00',
-        sort_key=sort_key
+        units="seconds since 1970-01-01 00:00:00",
+        sort_key=sort_key,
     )
 
 
 def group_by_mosaic(pnames: list[str] | None = None) -> GroupBy:
     base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:
-        index = {
-            pn: i
-            for i, pn in enumerate(pnames)
-        }
-        sort_key: Callable[[Dataset], tuple] = lambda ds: (solar_day(ds), index.get(ds.product.name), base_sort_key(ds))  # noqa: E731
+        index = {pn: i for i, pn in enumerate(pnames)}
+        sort_key: Callable[[Dataset], tuple] = lambda ds: (  # noqa: E731
+            solar_day(ds),
+            index.get(ds.product.name),
+            base_sort_key(ds),
+        )
     else:
         sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))  # noqa: E731
     return GroupBy(
-        dimension='time',
+        dimension="time",
         group_by_func=lambda n: npdt64(datetime.datetime(1970, 1, 1), "ns"),
-        units='seconds since 1970-01-01 00:00:00',
-        sort_key=sort_key
+        units="seconds since 1970-01-01 00:00:00",
+        sort_key=sort_key,
     )
 
 
@@ -146,8 +153,11 @@ def find_matching_date(dt, dates) -> bool:
     :param dates: List of sorted date-times
     :return: True if match found
     """
+
     def range_of(dt: datetime.datetime) -> tuple[datetime.datetime, datetime.datetime]:
-        start = datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo)
+        start = datetime.datetime(
+            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo
+        )
         end = start + datetime.timedelta(seconds=1)
         return start, end
 
@@ -159,7 +169,7 @@ def find_matching_date(dt, dates) -> bool:
         start, end = range_of(region[splitter])
         if dt >= start and dt < end:
             return True
-        region = region[0:splitter] if dt < start else region[splitter + 1:]
+        region = region[0:splitter] if dt < start else region[splitter + 1 :]
 
     return False
 

@@ -42,7 +42,8 @@ class OWSPostgisIndex(OWSAbstractIndex):
         db_ok = False
         try:
             with dc.index._db._give_me_a_connection() as conn:  # type: ignore[attr-defined]
-                results = conn.execute(text("""
+                results = conn.execute(
+                    text("""
                     SELECT *
                     FROM ows.layer_ranges
                     LIMIT 1""")
@@ -80,19 +81,22 @@ class OWSPostgisIndex(OWSAbstractIndex):
         pass
 
     @override
-    def create_range_entry(self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]) -> None:
+    def create_range_entry(
+        self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
+    ) -> None:
         create_range_entry_impl(layer, cache)
 
     @override
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
         return get_ranges_impl(layer)
 
-    def _query(self,
-               layer: OWSNamedLayer,
-               times: Iterable[TimeSearchTerm] | None = None,
-               geom: Geometry | None = None,
-               products: Iterable[Product] | None = None
-               ) -> dict[str, Any]:
+    def _query(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> dict[str, Any]:
         query: dict[str, Any] = {}
         if geom:
             if geom.crs and geom.crs in layer.dc.index.spatial_indexes():
@@ -108,12 +112,19 @@ class OWSPostgisIndex(OWSAbstractIndex):
             query["product"] = [p.name for p in products]
         if times is not None:
 
-            def normalise_to_dtr(unnorm: datetime.datetime | datetime.date) -> tuple[datetime.datetime, datetime.datetime]:
+            def normalise_to_dtr(
+                unnorm: datetime.datetime | datetime.date,
+            ) -> tuple[datetime.datetime, datetime.datetime]:
                 if isinstance(unnorm, datetime.datetime):
                     st: datetime.datetime = default_to_utc(unnorm)
                     tmax = st + datetime.timedelta(seconds=1)
                 elif isinstance(t, datetime.date):
-                    st = datetime.datetime(unnorm.year, unnorm.month, unnorm.day, tzinfo=datetime.timezone.utc)
+                    st = datetime.datetime(
+                        unnorm.year,
+                        unnorm.month,
+                        unnorm.day,
+                        tzinfo=datetime.timezone.utc,
+                    )
                     tmax = st + datetime.timedelta(days=1)
                 else:
                     raise ValueError("Not a datetime object")
@@ -135,47 +146,55 @@ class OWSPostgisIndex(OWSAbstractIndex):
         return query
 
     @override
-    def ds_search(self,
-                  layer: OWSNamedLayer,
-                  times: Iterable[TimeSearchTerm] | None = None,
-                  geom: Geometry | None = None,
-                  products: Iterable[Product] | None = None
-                  ) -> Iterable[Dataset]:
-        return layer.dc.index.datasets.search(**self._query(layer, times, geom, products))
+    def ds_search(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> Iterable[Dataset]:
+        return layer.dc.index.datasets.search(
+            **self._query(layer, times, geom, products)
+        )
 
     @override
-    def dsid_search(self,
-                    layer: OWSNamedLayer,
-                    times: Iterable[TimeSearchTerm] | None = None,
-                    geom: Geometry | None = None,
-                    products: Iterable[Product] | None = None
-                    ) -> Iterable[UUID]:
-        for ds in layer.dc.index.datasets.search_returning(field_names=["id"],
-                                                           **self._query(layer, times, geom, products)):
+    def dsid_search(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> Iterable[UUID]:
+        for ds in layer.dc.index.datasets.search_returning(
+            field_names=["id"], **self._query(layer, times, geom, products)
+        ):
             yield ds.id  # type: ignore[attr-defined]
 
     @override
-    def count(self,
-              layer: OWSNamedLayer,
-              times: Iterable[TimeSearchTerm] | None = None,
-              geom: Geometry | None = None,
-              products: Iterable[Product] | None = None
-              ) -> int:
-        return layer.dc.index.datasets.count(**self._query(layer, times, geom, products))
+    def count(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+    ) -> int:
+        return layer.dc.index.datasets.count(
+            **self._query(layer, times, geom, products)
+        )
 
     @override
-    def extent(self,
-               layer: OWSNamedLayer,
-               times: Iterable[TimeSearchTerm] | None = None,
-               geom: Geometry | None = None,
-               products: Iterable[Product] | None = None,
-               crs: CRS | None = None
-               ) -> Geometry | None:
+    def extent(
+        self,
+        layer: OWSNamedLayer,
+        times: Iterable[TimeSearchTerm] | None = None,
+        geom: Geometry | None = None,
+        products: Iterable[Product] | None = None,
+        crs: CRS | None = None,
+    ) -> Geometry | None:
         if crs is None:
             crs = CRS("epsg:4326")
         return layer.dc.index.datasets.spatial_extent(
-            self.dsid_search(layer, times=times, geom=geom, products=products),
-            crs=crs
+            self.dsid_search(layer, times=times, geom=geom, products=products), crs=crs
         )
 
     def _run_sql(self, dc: Datacube, path: str, **params: str) -> bool:
@@ -187,6 +206,7 @@ pgisdriverlock = Lock()
 
 class OWSPostgisIndexDriver(OWSAbstractIndexDriver):
     _driver = None
+
     @classmethod
     @override
     def ows_index_class(cls) -> type[OWSAbstractIndex]:

@@ -51,7 +51,9 @@ def runner() -> CliRunner:
 
 
 @pytest.helpers.register
-def enclosed_bbox(bbox: tuple[float, float, float, float], flip: bool = False) -> tuple[float, float, float, float]:
+def enclosed_bbox(
+    bbox: tuple[float, float, float, float], flip: bool = False
+) -> tuple[float, float, float, float]:
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
@@ -72,7 +74,9 @@ def enclosed_bbox(bbox: tuple[float, float, float, float], flip: bool = False) -
 
 
 @pytest.helpers.register
-def disjoint_bbox(bbox: tuple[float, float, float, float]) -> tuple[float, float, float, float]:
+def disjoint_bbox(
+    bbox: tuple[float, float, float, float],
+) -> tuple[float, float, float, float]:
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min
@@ -84,8 +88,11 @@ def disjoint_bbox(bbox: tuple[float, float, float, float]) -> tuple[float, float
         lat_min - 0.2 * lat_range,
     )
 
+
 @pytest.helpers.register
-def representative_bbox(bbox: tuple[float, float, float, float]) -> tuple[float, float, float, float]:
+def representative_bbox(
+    bbox: tuple[float, float, float, float],
+) -> tuple[float, float, float, float]:
     lon_min, lat_min, lon_max, lat_max = bbox
     lon_range = lon_max - lon_min
     lat_range = lat_max - lat_min

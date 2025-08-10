@@ -13,6 +13,7 @@ from datacube_ows.ows_configuration import ContactInfo, OWSConfig
 def test_minimal_global(monkeypatch, minimal_global_raw_cfg, minimal_dc) -> None:
     def fake_dc(*args, **kwargs):
         return minimal_dc
+
     monkeypatch.setattr("datacube_ows.ows_configuration.Datacube", fake_dc)
     OWSConfig._instance = None
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
@@ -20,7 +21,7 @@ def test_minimal_global(monkeypatch, minimal_global_raw_cfg, minimal_dc) -> None
     assert cfg.ready
     assert cfg.initialised
     assert not cfg.wcs_tiff_statistics
-    assert cfg.default_geographic_CRS == "" # No WCS
+    assert cfg.default_geographic_CRS == ""  # No WCS
 
 
 def test_global_no_title(minimal_global_raw_cfg) -> None:
@@ -31,9 +32,12 @@ def test_global_no_title(minimal_global_raw_cfg) -> None:
     assert "Entity global has no title" in str(excinfo.value)
 
 
-def test_wcs_only(monkeypatch, minimal_global_raw_cfg, wcs_global_cfg, minimal_dc) -> None:
+def test_wcs_only(
+    monkeypatch, minimal_global_raw_cfg, wcs_global_cfg, minimal_dc
+) -> None:
     def fake_dc(*args, **kwargs):
         return minimal_dc
+
     monkeypatch.setattr("datacube_ows.ows_configuration.Datacube", fake_dc)
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {
@@ -51,9 +55,13 @@ def test_wcs_only(monkeypatch, minimal_global_raw_cfg, wcs_global_cfg, minimal_d
     assert cfg.wcs_tiff_statistics
     assert cfg.default_geographic_CRS == "urn:ogc:def:crs:OGC:1.3:CRS84"
 
-def test_geog_crs(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc, monkeypatch) -> None:
+
+def test_geog_crs(
+    minimal_global_raw_cfg, wcs_global_cfg, minimal_dc, monkeypatch
+) -> None:
     def fake_dc(*args, **kwargs):
         return minimal_dc
+
     monkeypatch.setattr("datacube_ows.ows_configuration.Datacube", fake_dc)
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {
@@ -67,7 +75,7 @@ def test_geog_crs(minimal_global_raw_cfg, wcs_global_cfg, minimal_dc, monkeypatc
             "geographic": False,
             "horizontal_coord": "x",
             "vertical_coord": "y",
-        },
+        }
     }
     with pytest.raises(ConfigException) as e:
         cfg = OWSConfig(cfg=minimal_global_raw_cfg)
@@ -117,10 +125,7 @@ def test_wcs_no_native_format(minimal_global_raw_cfg, wcs_global_cfg) -> None:
 
 def test_no_services(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
-    minimal_global_raw_cfg["global"]["services"] = {
-        "wms": False,
-        "wmts": False,
-    }
+    minimal_global_raw_cfg["global"]["services"] = {"wms": False, "wmts": False}
     with pytest.raises(ConfigException) as excinfo:
         _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "At least one service must be active" in str(excinfo.value)
@@ -138,7 +143,7 @@ def test_bad_geographic_crs(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["published_CRSs"]["EPSG:7777"] = {
         "geographic": True,
-        "horizontal_coord": "x"
+        "horizontal_coord": "x",
     }
     with pytest.raises(ConfigException) as excinfo:
         _ = OWSConfig(cfg=minimal_global_raw_cfg)
@@ -149,7 +154,7 @@ def test_bad_geographic_crs(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["published_CRSs"]["EPSG:7777"] = {
         "geographic": True,
-        "vertical_coord": "y"
+        "vertical_coord": "y",
     }
     with pytest.raises(ConfigException) as excinfo:
         _ = OWSConfig(cfg=minimal_global_raw_cfg)
@@ -162,7 +167,7 @@ def test_bad_geographic_crs(minimal_global_raw_cfg) -> None:
 def test_bad_crs_alias(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["published_CRSs"]["EPSG:7777"] = {
-        "alias": "EPSG:6666",
+        "alias": "EPSG:6666"
     }
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "EPSG:7777" not in cfg.published_CRSs
@@ -180,9 +185,7 @@ def test_no_wcs(minimal_global_raw_cfg) -> None:
 def test_no_wcs_formats(minimal_global_raw_cfg) -> None:
     OWSConfig._instance = None
     minimal_global_raw_cfg["global"]["services"] = {"wcs": True}
-    minimal_global_raw_cfg["wcs"] = {
-        "formats": {}
-    }
+    minimal_global_raw_cfg["wcs"] = {"formats": {}}
     with pytest.raises(ConfigException) as excinfo:
         _ = OWSConfig(cfg=minimal_global_raw_cfg)
     assert "Must configure at least one wcs format" in str(excinfo.value)
@@ -208,9 +211,11 @@ def test_tiff_stats(minimal_global_raw_cfg, wcs_global_cfg) -> None:
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert not cfg.wcs_tiff_statistics
 
+
 def test_crs_lookup_fail(monkeypatch, minimal_global_raw_cfg, minimal_dc) -> None:
     def fake_dc(*args, **kwargs):
         return minimal_dc
+
     monkeypatch.setattr("datacube_ows.ows_configuration.Datacube", fake_dc)
     OWSConfig._instance = None
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
@@ -233,7 +238,7 @@ def test_two_langs(minimal_global_raw_cfg, minimal_dc) -> None:
     minimal_global_raw_cfg["global"]["supported_languages"] = ["fr", "en"]
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
 
-    assert cfg.global_config().default_locale == 'fr'
+    assert cfg.global_config().default_locale == "fr"
     assert len(cfg.global_config().locales) == 2
     assert not cfg.global_config().internationalised
 
@@ -242,7 +247,9 @@ def test_internationalised(minimal_global_raw_cfg, minimal_dc) -> None:
     OWSConfig._instance = None
 
     minimal_global_raw_cfg["global"]["supported_languages"] = ["fr", "en"]
-    minimal_global_raw_cfg["global"]["translations_directory"] = "/integration_tests/cfg/translations" # no need to be valid
+    minimal_global_raw_cfg["global"]["translations_directory"] = (
+        "/integration_tests/cfg/translations"  # no need to be valid
+    )
     cfg = OWSConfig(cfg=minimal_global_raw_cfg)
     assert cfg.global_config().internationalised
 
@@ -259,7 +266,9 @@ def test_bad_integers_in_wms_section(minimal_global_raw_cfg) -> None:
     with pytest.raises(ConfigException) as e:
         OWSConfig._instance = None
         _ = OWSConfig(cfg=minimal_global_raw_cfg)
-    assert "max_width and max_height in wms section must be positive integers" in str(e.value)
+    assert "max_width and max_height in wms section must be positive integers" in str(
+        e.value
+    )
     assert "0" in str(e.value)
     minimal_global_raw_cfg["wms"]["max_width"] = 256
     minimal_global_raw_cfg["wms"]["caps_cache_maxage"] = "forever"
