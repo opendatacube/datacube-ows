@@ -33,6 +33,7 @@ dependencies = [
     "scipy",
     "setuptools_scm",
     "timezonefinder!=6.6.0",
+    "urllib3",
     "xarray",
 ]
 requires-python = ">=3.10.0"

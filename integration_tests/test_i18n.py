@@ -4,11 +4,11 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import requests
+from datacube_ows.legend_utils import retrying_requests
 
 
 def test_wms_i18n(ows_server) -> None:
-    resp = requests.get(
+    resp = retrying_requests.get(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
         timeout=10,
         headers={"Accept-Language": "de"}
@@ -17,7 +17,7 @@ def test_wms_i18n(ows_server) -> None:
     assert "German translation" in resp.text
 
 def test_wcs1_i18n(ows_server) -> None:
-    resp = requests.get(
+    resp = retrying_requests.get(
         ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=1.0.0",
         timeout=10,
         headers={"Accept-Language": "de"}
@@ -27,7 +27,7 @@ def test_wcs1_i18n(ows_server) -> None:
 
 
 def test_wcs1_bands_i18n(ows_server, product_name: str) -> None:
-    resp = requests.get(
+    resp = retrying_requests.get(
         ows_server.url + "/wcs?request=DescribeCoverage&service=WCS&version=1.0.0&coverageid=" + product_name,
         timeout=10,
         headers={"Accept-Language": "de"}
@@ -37,7 +37,7 @@ def test_wcs1_bands_i18n(ows_server, product_name: str) -> None:
 
 
 def test_wcs2_i18n(ows_server) -> None:
-    resp = requests.get(
+    resp = retrying_requests.get(
         ows_server.url + "/wcs?request=GetCapabilities&service=WCS&version=2.0.1",
         timeout=10,
         headers={"Accept-Language": "de"}
@@ -47,7 +47,7 @@ def test_wcs2_i18n(ows_server) -> None:
 
 
 def test_wcs2_bands_i18n(ows_server, product_name: str) -> None:
-    resp = requests.get(
+    resp = retrying_requests.get(
         ows_server.url + "/wcs?request=DescribeCoverage&service=WCS&version=2.0.1&coverageid=" + product_name,
         timeout=10,
         headers={"Accept-Language": "de"}
