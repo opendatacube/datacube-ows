@@ -31,7 +31,6 @@ dependencies = [
     "regex",
     "requests",
     "scipy",
-    "setuptools_scm",
     "timezonefinder!=6.6.0",
     "urllib3",
     "xarray",
