@@ -13,7 +13,7 @@ def test_wms_i18n(ows_server) -> None:
         timeout=10,
         headers={"Accept-Language": "de"}
     )
-    # Confirm successf
+    assert resp.status_code == 200
     assert "German translation" in resp.text
 
 def test_wcs1_i18n(ows_server) -> None:
@@ -22,7 +22,7 @@ def test_wcs1_i18n(ows_server) -> None:
         timeout=10,
         headers={"Accept-Language": "de"}
     )
-    # Confirm success
+    assert resp.status_code == 200
     assert "German translation" in resp.text
 
 
@@ -32,7 +32,7 @@ def test_wcs1_bands_i18n(ows_server, product_name: str) -> None:
         timeout=10,
         headers={"Accept-Language": "de"}
     )
-    # Confirm success
+    assert resp.status_code == 200
     assert "gruen" in resp.text
 
 
@@ -42,7 +42,7 @@ def test_wcs2_i18n(ows_server) -> None:
         timeout=10,
         headers={"Accept-Language": "de"}
     )
-    # Confirm success
+    assert resp.status_code == 200
     assert "German translation" in resp.text
 
 
@@ -52,5 +52,5 @@ def test_wcs2_bands_i18n(ows_server, product_name: str) -> None:
         timeout=10,
         headers={"Accept-Language": "de"}
     )
-    # Confirm success
+    assert resp.status_code == 200
     assert "gruen" in resp.text

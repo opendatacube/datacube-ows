@@ -1035,8 +1035,8 @@ def test_wcs1_describecov_multi(ows_server) -> None:
             "version": "1.0.0",
         },
     )
-    assert "max-age=" in r.headers["Cache-Control"]
     assert r.status_code == 200
+    assert "max-age=" in r.headers["Cache-Control"]
     for p in prods:
         assert p.name in r.text
 

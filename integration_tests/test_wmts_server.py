@@ -205,6 +205,7 @@ def test_wmts_ows_stats(ows_server) -> None:
                             "TILEMATRIXSET=WholeWorld_WebMercator&TILEMATRIX=13&" +
                             "TILEROW=5171&TILECOL=7458&I=102&J=204&FORMAT=image/png&ows_stats=y")
     resp = retrying_requests.get(url)
+    assert resp.status_code == 200
     json = resp.json()
     assert json["profile"]
 

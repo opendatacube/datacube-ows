@@ -363,6 +363,7 @@ def test_custom_feature_info(ows_server, product_name: str) -> None:
         "i": "250",
         "j": "250",
     })
+    assert response.status_code == 200
     js = response.json()
     feature = js["features"][0]
     data = feature["properties"]["data"]
@@ -396,12 +397,14 @@ def test_wms_getlegend(ows_server) -> None:
                             },
                             allow_redirects=False
             )
+            assert resp.status_code == 200
             assert resp.headers.get("content-type") == "image/png"
             resp = retrying_requests.head(legend_url, headers={
                                 "Accept-Language": "sw,sw,q=0.7"
                             },
                         allow_redirects=False
             )
+            assert resp.status_code == 200
             assert resp.headers.get("content-type") == "image/png"
 
 
@@ -431,7 +434,7 @@ def test_wms_getlegendgraphic(ows_server) -> None:
             },
         )
         if legend_url:
-            assert resp.headers.get("content-type") == "image/png"
             assert resp.status_code == 200
+            assert resp.headers.get("content-type") == "image/png"
         else:
             assert resp.status_code == 404
