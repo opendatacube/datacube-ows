@@ -7,11 +7,11 @@
 from urllib import request
 
 import pytest
-import requests
 from lxml import etree
 from owslib.util import ServiceException
 from owslib.wcs import WebCoverageService
 
+from datacube_ows.legend_utils import retrying_requests
 from datacube_ows.ows_configuration import OWSConfig, get_config
 from integration_tests.utils import ODCExtent
 
@@ -29,7 +29,7 @@ def check_wcs_error(
 ) -> None:
     if params is None:
         params = {}
-    resp = requests.get(url, params=params, timeout=10.0)
+    resp = retrying_requests.get(url, params=params, timeout=10.0)
     assert resp.status_code == expected_status_code
 
     assert expected_error_message in resp.text
@@ -555,7 +555,7 @@ def test_wcs1_style(ows_server) -> None:
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -572,7 +572,7 @@ def test_wcs1_style(ows_server) -> None:
         },
     )
     assert r.status_code == 200
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -589,7 +589,7 @@ def test_wcs1_style(ows_server) -> None:
         },
     )
     assert r.status_code == 200
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -619,7 +619,7 @@ def test_wcs1_ows_stats(ows_server) -> None:
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1012,7 +1012,7 @@ def test_wcs1_describecov_badcov(ows_server) -> None:
 
 
 def test_wcs1_describecov_all(ows_server) -> None:
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "DescribeCoverage",
@@ -1027,7 +1027,7 @@ def test_wcs1_describecov_multi(ows_server) -> None:
     prods = list(cfg.active_products)
     prod_names = sorted(p.name for p in prods)
     prod_names = prod_names[0:-2]
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "DescribeCoverage",
@@ -1035,8 +1035,8 @@ def test_wcs1_describecov_multi(ows_server) -> None:
             "version": "1.0.0",
         },
     )
-    assert "max-age=" in r.headers["Cache-Control"]
     assert r.status_code == 200
+    assert "max-age=" in r.headers["Cache-Control"]
     for p in prods:
         assert p.name in r.text
 
@@ -1217,7 +1217,7 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server) -> None:
 
 def test_wcs21_server(ows_server) -> None:
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={"request": "GetCapabilities", "version": "2.1.0", "service": "WCS"},
     )
@@ -1237,7 +1237,7 @@ def test_wcs21_describecoverage(ows_server) -> None:
     layers = list(cfg.active_product_index.values())
     layer = layers[0]
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "DescribeCoverage",
@@ -1250,7 +1250,7 @@ def test_wcs21_describecoverage(ows_server) -> None:
     assert "max-age" in r.headers["Cache-Control"]
     assert layer.name in r.text
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "DescribeCoverage",
@@ -1278,7 +1278,7 @@ def test_wcs21_getcoverage(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, crs="EPSG:4326"
     )
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1306,7 +1306,7 @@ def test_wcs21_ows_stats(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, crs="EPSG:4326"
     )
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1432,7 +1432,7 @@ def test_wcs2_getcov_trim_time(ows_server) -> None:
             'time("2021-12-30","2022-01-01")'
         ]
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1496,7 +1496,7 @@ def test_wcs2_getcov_slice_space(ows_server) -> None:
     )
     subsets[0] = subsets[0].split(",")[0] + ")"
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1616,7 +1616,7 @@ def test_wcs2_getcov_styles(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND
     )
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1631,7 +1631,7 @@ def test_wcs2_getcov_styles(ows_server) -> None:
         },
     )
     assert r.status_code == 200
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1646,7 +1646,7 @@ def test_wcs2_getcov_styles(ows_server) -> None:
         },
     )
     assert r.status_code == 200
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1662,7 +1662,7 @@ def test_wcs2_getcov_styles(ows_server) -> None:
     )
     assert r.status_code == 200
 # WCS2 style parameter disabled.
-#    r = requests.get(
+#    r = retrying_requests.get(
 #       ows_server.url + "/wcs",
 #        params={
 #            "request": "GetCoverage",
@@ -1692,7 +1692,7 @@ def test_wcs2_tiff_multidate(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND
     )
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1723,7 +1723,7 @@ def test_wcs2_getcov_bands(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND
     )
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1753,7 +1753,7 @@ def test_wcs2_getcov_band_range(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST
     )
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1862,7 +1862,7 @@ def test_wcs2_getcov_native_format(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST
     )
 
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",

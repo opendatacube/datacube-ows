@@ -9,9 +9,10 @@ from pathlib import Path
 from urllib import request
 
 import pytest
-import requests
 from lxml import etree
 from owslib.wms import WebMapService
+
+from datacube_ows.legend_utils import retrying_requests
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
@@ -65,7 +66,7 @@ def test_getcap_badsvc(ows_server) -> None:
 
 
 def test_getcap_xsd(ows_server) -> None:
-    resp = requests.get(
+    resp = retrying_requests.get(
         ows_server.url + "/wms?request=GetCapabilities&service=WMS&version=1.3.0",
         timeout=10,
     )
@@ -148,7 +149,7 @@ def test_wms_getmap(ows_server) -> None:
 
 
 def test_wms_getmap_requests(ows_server, product_name: str) -> None:
-    resp = requests.get(ows_server.url + '/wms', params={
+    resp = retrying_requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
@@ -165,7 +166,7 @@ def test_wms_getmap_requests(ows_server, product_name: str) -> None:
     assert resp.status_code == 200
 
 def test_wms_getmap_bad_requests(ows_server) -> None:
-    resp = requests.get(ows_server.url + '/wms', params={
+    resp = retrying_requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
@@ -181,7 +182,7 @@ def test_wms_getmap_bad_requests(ows_server) -> None:
     # Confirm success
     assert resp.status_code == 400
     assert "Multi-layer requests not supported" in resp.text
-    resp = requests.get(ows_server.url + '/wms', params={
+    resp = retrying_requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetMap",
@@ -200,7 +201,7 @@ def test_wms_getmap_bad_requests(ows_server) -> None:
 
 
 def test_wms_getmap_qprof(ows_server, product_name: str) -> None:
-    resp = requests.get(ows_server.url + '/wms', params={
+    resp = retrying_requests.get(ows_server.url + '/wms', params={
                             "service": "WMS",
                             "version": "1.3.0",
                             "request": "GetMap",
@@ -346,7 +347,7 @@ def test_custom_feature_info(ows_server, product_name: str) -> None:
     test_layer = wms.contents[product_name]
     query_times = ['2021-12-21T02:01:19', '2021-12-26T02:01:29']
     bbox = test_layer.boundingBoxWGS84
-    response = requests.get(ows_server.url + '/wms', params={
+    response = retrying_requests.get(ows_server.url + '/wms', params={
         "service": "WMS",
         "version": "1.3.0",
         "request": "GetFeatureInfo",
@@ -362,6 +363,7 @@ def test_custom_feature_info(ows_server, product_name: str) -> None:
         "i": "250",
         "j": "250",
     })
+    assert response.status_code == 200
     js = response.json()
     feature = js["features"][0]
     data = feature["properties"]["data"]
@@ -390,17 +392,19 @@ def test_wms_getlegend(ows_server) -> None:
         # check if this layer has a legend
         legend_url = test_layer_styles[style].get("legend")
         if legend_url:
-            resp = requests.head(legend_url, headers={
+            resp = retrying_requests.head(legend_url, headers={
                                 "Accept-Language": "en-US,en,q=0.7"
                             },
                             allow_redirects=False
             )
+            assert resp.status_code == 200
             assert resp.headers.get("content-type") == "image/png"
-            resp = requests.head(legend_url, headers={
+            resp = retrying_requests.head(legend_url, headers={
                                 "Accept-Language": "sw,sw,q=0.7"
                             },
                         allow_redirects=False
             )
+            assert resp.status_code == 200
             assert resp.headers.get("content-type") == "image/png"
 
 
@@ -417,7 +421,7 @@ def test_wms_getlegendgraphic(ows_server) -> None:
         # check if this layer has a legend
         legend_url = test_layer_styles[style].get("legend")
         url = ows_server.url + "/wms"
-        resp = requests.get(
+        resp = retrying_requests.get(
             url,
             allow_redirects=False,
             params={
@@ -430,7 +434,7 @@ def test_wms_getlegendgraphic(ows_server) -> None:
             },
         )
         if legend_url:
-            assert resp.headers.get("content-type") == "image/png"
             assert resp.status_code == 200
+            assert resp.headers.get("content-type") == "image/png"
         else:
             assert resp.status_code == 404
