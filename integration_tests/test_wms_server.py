@@ -16,13 +16,15 @@ from datacube_ows.legend_utils import retrying_requests
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
-    path = Path(__file__).resolve().parent.parent / 'wms_xsds' / name
+    path = Path(__file__).resolve().parent.parent / "wms_xsds" / name
     with open(path) as xsd_f:
         schema_doc = etree.parse(xsd_f)
     return etree.XMLSchema(schema_doc)
 
 
-def check_wms_error(url, expected_error_message=None, expected_status_code: int = 400) -> None:
+def check_wms_error(
+    url, expected_error_message=None, expected_status_code: int = 400
+) -> None:
     with pytest.raises(Exception) as e:
         _ = request.urlopen(url, timeout=10)
     # Validate status code
@@ -37,9 +39,7 @@ def check_wms_error(url, expected_error_message=None, expected_status_code: int 
 
     # Confirm error message is appropriate, ignore case
     if expected_error_message:
-        assert (
-            resp_xml[0].text.strip().casefold() == expected_error_message.casefold()
-        )
+        assert resp_xml[0].text.strip().casefold() == expected_error_message.casefold()
 
 
 def test_no_request(ows_server) -> None:
@@ -107,7 +107,9 @@ def test_getcap_response(ows_server) -> None:
         geo_bbox = layer.findall(
             "./{http://www.opengis.net/wms}BoundingBox[@CRS='EPSG:4326']"
         )[0]
-        assert math.isclose(float(wLong.text), float(geo_bbox.attrib["miny"]), rel_tol=1e-8)
+        assert math.isclose(
+            float(wLong.text), float(geo_bbox.attrib["miny"]), rel_tol=1e-8
+        )
 
 
 def test_wms_server(ows_server) -> None:
@@ -119,7 +121,7 @@ def test_wms_server(ows_server) -> None:
     # Ensure that we have expected layers
     assert "s2_ard_granule_nbar_t" in wms.contents
     # Ensure that bad layers are hidden
-    assert 'spaghetti_gateaux' not in wms.contents
+    assert "spaghetti_gateaux" not in wms.contents
 
 
 def test_wms_getmap(ows_server) -> None:
@@ -149,72 +151,85 @@ def test_wms_getmap(ows_server) -> None:
 
 
 def test_wms_getmap_requests(ows_server, product_name: str) -> None:
-    resp = retrying_requests.get(ows_server.url + '/wms', params={
-        "service": "WMS",
-        "version": "1.3.0",
-        "request": "GetMap",
-        "layers": product_name,
-        "width": "150",
-        "height": "150",
-        "crs": "EPSG:4326",
-        "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
-        "format": "image/png",
-        "exceptions": "XML",
-        "time": "2021-12-31 02:01:38"
-    })
+    resp = retrying_requests.get(
+        ows_server.url + "/wms",
+        params={
+            "service": "WMS",
+            "version": "1.3.0",
+            "request": "GetMap",
+            "layers": product_name,
+            "width": "150",
+            "height": "150",
+            "crs": "EPSG:4326",
+            "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
+            "format": "image/png",
+            "exceptions": "XML",
+            "time": "2021-12-31 02:01:38",
+        },
+    )
     # Confirm success
     assert resp.status_code == 200
 
+
 def test_wms_getmap_bad_requests(ows_server) -> None:
-    resp = retrying_requests.get(ows_server.url + '/wms', params={
-        "service": "WMS",
-        "version": "1.3.0",
-        "request": "GetMap",
-        "layers": "s2_l2a,some_other_layer",
-        "width": "150",
-        "height": "150",
-        "crs": "EPSG:4326",
-        "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
-        "format": "image/png",
-        "exceptions": "XML",
-        "time": "2019-07-09"
-    })
+    resp = retrying_requests.get(
+        ows_server.url + "/wms",
+        params={
+            "service": "WMS",
+            "version": "1.3.0",
+            "request": "GetMap",
+            "layers": "s2_l2a,some_other_layer",
+            "width": "150",
+            "height": "150",
+            "crs": "EPSG:4326",
+            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+            "format": "image/png",
+            "exceptions": "XML",
+            "time": "2019-07-09",
+        },
+    )
     # Confirm success
     assert resp.status_code == 400
     assert "Multi-layer requests not supported" in resp.text
-    resp = retrying_requests.get(ows_server.url + '/wms', params={
-        "service": "WMS",
-        "version": "1.3.0",
-        "request": "GetMap",
-        "layers": "not_a_real_layer",
-        "width": "150",
-        "height": "150",
-        "crs": "EPSG:4326",
-        "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
-        "format": "image/png",
-        "exceptions": "XML",
-        "time": "2019-07-09"
-    })
+    resp = retrying_requests.get(
+        ows_server.url + "/wms",
+        params={
+            "service": "WMS",
+            "version": "1.3.0",
+            "request": "GetMap",
+            "layers": "not_a_real_layer",
+            "width": "150",
+            "height": "150",
+            "crs": "EPSG:4326",
+            "bbox": "-43.28507087113431,146.18504300790977,-43.07072582535469,146.64289867785524",
+            "format": "image/png",
+            "exceptions": "XML",
+            "time": "2019-07-09",
+        },
+    )
     # Confirm success
     assert resp.status_code == 400
     assert "Layer not_a_real_layer is not defined" in resp.text
 
 
 def test_wms_getmap_qprof(ows_server, product_name: str) -> None:
-    resp = retrying_requests.get(ows_server.url + '/wms', params={
-                            "service": "WMS",
-                            "version": "1.3.0",
-                            "request": "GetMap",
-                            "layers": product_name,
-                            "width": "150",
-                            "height": "150",
-                            "crs": "EPSG:4326",
-                            "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
-                            "format": "image/png",
-                            "exceptions": "XML",
-                            "time": "2021-12-31 02:01:38",
-                            "ows_stats": "yes"
-    })
+    resp = retrying_requests.get(
+        ows_server.url + "/wms",
+        params={
+            "service": "WMS",
+            "version": "1.3.0",
+            "request": "GetMap",
+            "layers": product_name,
+            "width": "150",
+            "height": "150",
+            "crs": "EPSG:4326",
+            "bbox": "-15.28507087113431,123.98504300790977,-14.27072582535469,124.64289867785524",
+            "format": "image/png",
+            "exceptions": "XML",
+            "time": "2021-12-31 02:01:38",
+            "ows_stats": "yes",
+        },
+    )
     # Confirm success
     assert resp.status_code == 200
     js = resp.json()
@@ -252,8 +267,7 @@ def test_wms_multidate_getmap(ows_server) -> None:
         layers=["s2_l2a"],
         styles=["ndvi_delta"],
         srs="EPSG:4326",
-        bbox=(122.32, -15.25,
-              124.64, -12.66),
+        bbox=(122.32, -15.25, 124.64, -12.66),
         size=(150, 150),
         format="image/png",
         transparent=True,
@@ -268,7 +282,7 @@ def test_wms_style_looping_getmap(ows_server) -> None:
 
     # Ensure that we have at least some layers available
     test_layer_names = ["s2_l2a", "s2_l2a_clone"]
-    test_time = '2021-12-21T02:01:19'
+    test_time = "2021-12-21T02:01:19"
     for test_layer_name in test_layer_names:
         test_layer = wms.contents[test_layer_name]
 
@@ -305,8 +319,8 @@ def test_wms_getfeatureinfo(ows_server) -> None:
             test_times = [None]
         elif len(test_times) > 8:
             test_times = [test_times[0], test_times[6], test_times[-1]]
-        elif len(test_times) == 1 and '/' in test_times[0]:
-            test_times = test_times[0].split('/')
+        elif len(test_times) == 1 and "/" in test_times[0]:
+            test_times = test_times[0].split("/")
             test_times = list(test_times[0:2])
         for test_time in test_times:
             bbox = test_layer.boundingBoxWGS84
@@ -345,24 +359,29 @@ def test_custom_feature_info(ows_server, product_name: str) -> None:
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
 
     test_layer = wms.contents[product_name]
-    query_times = ['2021-12-21T02:01:19', '2021-12-26T02:01:29']
+    query_times = ["2021-12-21T02:01:19", "2021-12-26T02:01:29"]
     bbox = test_layer.boundingBoxWGS84
-    response = retrying_requests.get(ows_server.url + '/wms', params={
-        "service": "WMS",
-        "version": "1.3.0",
-        "request": "GetFeatureInfo",
-        "query_layers": product_name,
-        "width": "256",
-        "height": "256",
-        "crs": "EPSG:4326",
-        "bbox": ",".join(str(f) for f in pytest.helpers.enclosed_bbox(bbox, flip=True)),
-        "info_format": "application/json",
-        "feature_count": "20",
-        "styles": "ndvi_delta",
-        "time": ",".join(query_times),
-        "i": "250",
-        "j": "250",
-    })
+    response = retrying_requests.get(
+        ows_server.url + "/wms",
+        params={
+            "service": "WMS",
+            "version": "1.3.0",
+            "request": "GetFeatureInfo",
+            "query_layers": product_name,
+            "width": "256",
+            "height": "256",
+            "crs": "EPSG:4326",
+            "bbox": ",".join(
+                str(f) for f in pytest.helpers.enclosed_bbox(bbox, flip=True)
+            ),
+            "info_format": "application/json",
+            "feature_count": "20",
+            "styles": "ndvi_delta",
+            "time": ",".join(query_times),
+            "i": "250",
+            "j": "250",
+        },
+    )
     assert response.status_code == 200
     js = response.json()
     feature = js["features"][0]
@@ -392,17 +411,17 @@ def test_wms_getlegend(ows_server) -> None:
         # check if this layer has a legend
         legend_url = test_layer_styles[style].get("legend")
         if legend_url:
-            resp = retrying_requests.head(legend_url, headers={
-                                "Accept-Language": "en-US,en,q=0.7"
-                            },
-                            allow_redirects=False
+            resp = retrying_requests.head(
+                legend_url,
+                headers={"Accept-Language": "en-US,en,q=0.7"},
+                allow_redirects=False,
             )
             assert resp.status_code == 200
             assert resp.headers.get("content-type") == "image/png"
-            resp = retrying_requests.head(legend_url, headers={
-                                "Accept-Language": "sw,sw,q=0.7"
-                            },
-                        allow_redirects=False
+            resp = retrying_requests.head(
+                legend_url,
+                headers={"Accept-Language": "sw,sw,q=0.7"},
+                allow_redirects=False,
             )
             assert resp.status_code == 200
             assert resp.headers.get("content-type") == "image/png"

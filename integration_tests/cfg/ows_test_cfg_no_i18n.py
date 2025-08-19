@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-
 # THIS IS A TESTING FILE
 # Please refer to datacube_ows/ows_cfg_example.py for EXAMPLE CONFIG
 
@@ -32,9 +31,7 @@ bands_fc = {
     "NPV": ["non_photosynthetic_vegetation", "brown_vegetation"],
 }
 
-bands_wofs_obs = {
-    "water": [],
-}
+bands_wofs_obs = {"water": []}
 
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions
@@ -83,14 +80,8 @@ style_infrared_false_colour = {
             # by defining a band alias.)
             "scale_range": [5.0, 4000.0],
         },
-        "green": {
-            "swir2": 1.0,
-            "scale_range": [25.0, 4000.0],
-        },
-        "blue": {
-            "nir": 1.0,
-            "scale_range": [0.0, 3000.0],
-        },
+        "green": {"swir2": 1.0, "scale_range": [25.0, 4000.0]},
+        "blue": {"nir": 1.0, "scale_range": [0.0, 3000.0]},
     },
     # The style scale_range can be omitted if all components have a component-specific scale_range defined.
     # "scale_range": [0.0, 3000.0]
@@ -176,9 +167,7 @@ style_ndvi_delta = {
         {"value": 1.0, "color": "#114D04"},
     ],
     "include_in_feature_info": True,
-    "legend": {
-        "show_legend": True,
-    },
+    "legend": {"show_legend": True},
     # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
     "multi_date": [
         # A multi-date handler.  Different handlers can be declared for different numbers of dates in a request.
@@ -245,10 +234,7 @@ style_fc_simple = {
     "components": {"red": {"BS": 1.0}, "green": {"PV": 1.0}, "blue": {"NPV": 1.0}},
     "scale_range": [0.0, 100.0],
     "pq_masks": [
-        {
-            "band": "water",
-            "flags": {"dry": True},
-        },
+        {"band": "water", "flags": {"dry": True}},
         {
             "band": "water",
             "flags": {
@@ -375,10 +361,7 @@ style_wofs_obs_wet_only = {
             {
                 "title": "Dry",
                 "abstract": "Dry",
-                "flags": {
-                    "dry": True,
-                    "sea": False,
-                },
+                "flags": {"dry": True, "sea": False},
                 "color": "#D99694",
                 "alpha": 0.0,
             },
@@ -429,7 +412,7 @@ ows_cfg = {
         # These HTML headers are added to all responses
         # Optional, default {} - no added headers
         "response_headers": {
-            "Access-Control-Allow-Origin": "*",  # CORS header (strongly recommended)
+            "Access-Control-Allow-Origin": "*"  # CORS header (strongly recommended)
         },
         # Which web service(s) should be implemented by this instance
         # Optional, defaults: wms,wmts: True, wcs: False
@@ -454,11 +437,7 @@ ows_cfg = {
         "abstract": """This web-service serves georectified raster data from our very own special Open Datacube instance.""",
         # Keywords included for all services and products
         # Optional - defaults to empty list.
-        "keywords": [
-            "satellite",
-            "australia",
-            "time-series",
-        ],
+        "keywords": ["satellite", "australia", "time-series"],
         # Contact info.
         # Optional but strongly recommended - defaults to blank.
         "contact_info": {
@@ -542,7 +521,6 @@ ows_cfg = {
         # Optional, defaults to 256x256
         "max_width": 512,
         "max_height": 512,
-
         # These define the AuthorityURLs.
         # They represent the authorities that define the "Identifiers" defined layer by layer below.
         # The spec allows AuthorityURLs to be defined anywhere on the Layer heirarchy, but datacube_ows treats them
@@ -639,7 +617,7 @@ ows_cfg = {
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "manual_merge": True,
-                        },
+                        }
                     ],
                     "image_processing": {
                         # Extent mask function
@@ -678,9 +656,7 @@ ows_cfg = {
                     },
                 },  ##### End of ls8_level1_pds product definition.
                 {
-                    "inherits": {
-                        "layer": "ls8_usgs_level1_scene_layer",
-                    },
+                    "inherits": {"layer": "ls8_usgs_level1_scene_layer"},
                     "title": "Level 1 USGS Landsat-8 Public Data Set Clone",
                     "abstract": "Imagery from the Level 1 Landsat-8 USGS Public Data Set Clone",
                     "name": "ls8_usgs_level1_scene_layer_clone",
@@ -722,7 +698,7 @@ For service status information, see https://status.dea.ga.gov.au
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
+                        }
                     ],
                     "wcs": {
                         "native_crs": "EPSG:3577",
@@ -731,9 +707,7 @@ For service status information, see https://status.dea.ga.gov.au
                     },
                     "styling": {
                         "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
+                        "styles": [style_fc_simple],
                     },
                 },
                 {
@@ -791,7 +765,7 @@ For service status information, see https://status.dea.ga.gov.au
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
+                        }
                     ],
                     "wcs": {
                         "native_crs": "EPSG:3577",
@@ -800,9 +774,7 @@ For service status information, see https://status.dea.ga.gov.au
                     },
                     "styling": {
                         "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
+                        "styles": [style_fc_simple],
                     },
                 },
                 {
@@ -831,7 +803,7 @@ For service status information, see https://status.dea.ga.gov.au
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
+                        }
                     ],
                     "wcs": {
                         "native_crs": "EPSG:3577",
@@ -840,9 +812,7 @@ For service status information, see https://status.dea.ga.gov.au
                     },
                     "styling": {
                         "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
+                        "styles": [style_fc_simple],
                     },
                 },
                 {
@@ -872,7 +842,7 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                             "ignore_time": False,
                             "ignore_info_flags": [],
                             "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
-                        },
+                        }
                     ],
                     "wcs": {
                         "native_crs": "EPSG:3577",
@@ -881,9 +851,7 @@ Fractional Cover version 2.2.1, 25 metre, 100km tile, Australian Albers Equal Ar
                     },
                     "styling": {
                         "default_style": "simple_fc",
-                        "styles": [
-                            style_fc_simple,
-                        ],
+                        "styles": [style_fc_simple],
                     },
                 },
             ],

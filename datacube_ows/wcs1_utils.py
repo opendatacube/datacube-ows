@@ -27,6 +27,7 @@ from datacube_ows.wcs_utils import get_bands_from_styles
 
 class WCS1GetCoverageRequest:
     version = Version(1, 0, 0)
+
     # pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
     def __init__(self, args) -> None:
         self.args = args
@@ -34,53 +35,67 @@ class WCS1GetCoverageRequest:
 
         # Argument: Coverage (required)  -> product/layer
         if "coverage" not in args:
-            raise WCS1Exception("No coverage specified",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="COVERAGE parameter",
-                                valid_keys=list(cfg.layer_index))
+            raise WCS1Exception(
+                "No coverage specified",
+                WCS1Exception.MISSING_PARAMETER_VALUE,
+                locator="COVERAGE parameter",
+                valid_keys=list(cfg.layer_index),
+            )
         self.layer_name = args["coverage"]
         self.layer = cfg.layer_index.get(self.layer_name)
         if not self.layer or not self.layer.wcs:
-            raise WCS1Exception(f"Invalid coverage: {self.layer_name}",
-                                WCS1Exception.COVERAGE_NOT_DEFINED,
-                                locator="COVERAGE parameter",
-                                valid_keys=list(cfg.layer_index))
+            raise WCS1Exception(
+                f"Invalid coverage: {self.layer_name}",
+                WCS1Exception.COVERAGE_NOT_DEFINED,
+                locator="COVERAGE parameter",
+                valid_keys=list(cfg.layer_index),
+            )
 
         # Argument: FORMAT (required) -> a supported format
         if "format" not in args:
-            raise WCS1Exception("No FORMAT parameter supplied",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="FORMAT parameter",
-                                valid_keys=cfg.wcs_formats_by_name)
+            raise WCS1Exception(
+                "No FORMAT parameter supplied",
+                WCS1Exception.MISSING_PARAMETER_VALUE,
+                locator="FORMAT parameter",
+                valid_keys=cfg.wcs_formats_by_name,
+            )
         if args["format"] not in cfg.wcs_formats_by_name:
-            raise WCS1Exception(f"Unsupported format: {args['format']}",
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="FORMAT parameter",
-                                valid_keys=cfg.wcs_formats_by_name)
+            raise WCS1Exception(
+                f"Unsupported format: {args['format']}",
+                WCS1Exception.INVALID_PARAMETER_VALUE,
+                locator="FORMAT parameter",
+                valid_keys=cfg.wcs_formats_by_name,
+            )
         self.format = cfg.wcs_formats_by_name[args["format"]]
 
         # Argument: (request) CRS (required)
         if "crs" not in args:
-            raise WCS1Exception("No request CRS specified",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="CRS parameter",
-                                valid_keys=list(cfg.published_CRSs))
+            raise WCS1Exception(
+                "No request CRS specified",
+                WCS1Exception.MISSING_PARAMETER_VALUE,
+                locator="CRS parameter",
+                valid_keys=list(cfg.published_CRSs),
+            )
         self.request_crsid = args["crs"]
         if self.request_crsid not in cfg.published_CRSs:
-            raise WCS1Exception(f"{self.request_crsid} is not a supported CRS",
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="CRS parameter",
-                                valid_keys=list(cfg.published_CRSs))
+            raise WCS1Exception(
+                f"{self.request_crsid} is not a supported CRS",
+                WCS1Exception.INVALID_PARAMETER_VALUE,
+                locator="CRS parameter",
+                valid_keys=list(cfg.published_CRSs),
+            )
         self.request_crs = cfg.crs(self.request_crsid)
 
         # Argument: response_crs (optional)
         if "response_crs" in args:
             self.response_crsid = args["response_crs"]
             if self.response_crsid not in cfg.published_CRSs:
-                raise WCS1Exception(f"{self.response_crsid} is not a supported CRS",
-                                    WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="RESPONSE_CRS parameter",
-                                    valid_keys=list(cfg.published_CRSs))
+                raise WCS1Exception(
+                    f"{self.response_crsid} is not a supported CRS",
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="RESPONSE_CRS parameter",
+                    valid_keys=list(cfg.published_CRSs),
+                )
             self.response_crs = cfg.crs(self.response_crsid)
         else:
             self.response_crsid = self.request_crsid
@@ -97,24 +112,32 @@ class WCS1GetCoverageRequest:
         #       it's not clear to me what that would mean.)
         # For WCS 1.0.0 all bboxes will be specified as minx, miny, maxx, maxy
         if "bbox" not in args:
-            raise WCS1Exception("No BBOX parameter supplied",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="BBOX or TIME parameter")
+            raise WCS1Exception(
+                "No BBOX parameter supplied",
+                WCS1Exception.MISSING_PARAMETER_VALUE,
+                locator="BBOX or TIME parameter",
+            )
         try:
-            self.minx, self.miny, self.maxx, self.maxy = map(float, args['bbox'].split(','))
+            self.minx, self.miny, self.maxx, self.maxy = map(
+                float, args["bbox"].split(",")
+            )
         except Exception:
-            raise WCS1Exception("Invalid BBOX parameter",
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="BBOX parameter") from None
+            raise WCS1Exception(
+                "Invalid BBOX parameter",
+                WCS1Exception.INVALID_PARAMETER_VALUE,
+                locator="BBOX parameter",
+            ) from None
 
-        self.specified_search_extent = geom.polygon([(self.minx, self.miny),
-                                        (self.minx, self.maxy),
-                                        (self.maxx, self.maxy),
-                                        (self.maxx, self.miny),
-                                        (self.minx, self.miny)
-                                       ],
-                                       crs=self.request_crs
-                                      )
+        self.specified_search_extent = geom.polygon(
+            [
+                (self.minx, self.miny),
+                (self.minx, self.maxy),
+                (self.maxx, self.maxy),
+                (self.maxx, self.miny),
+                (self.minx, self.miny),
+            ],
+            crs=self.request_crs,
+        )
         if self.request_crs == self.response_crs:
             self.extent = self.specified_search_extent
         else:
@@ -126,11 +149,13 @@ class WCS1GetCoverageRequest:
             self.maxy = bbox.top
             self.extent = geom.polygon(
                 [
-                    (self.minx, self.miny), (self.minx, self.maxy),
-                    (self.maxx, self.maxy), (self.maxx, self.miny),
-                    (self.minx, self.miny)
-               ],
-               crs=self.response_crs
+                    (self.minx, self.miny),
+                    (self.minx, self.maxy),
+                    (self.maxx, self.maxy),
+                    (self.maxx, self.miny),
+                    (self.minx, self.miny),
+                ],
+                crs=self.response_crs,
             )
 
         # Argument: TIME
@@ -156,7 +181,10 @@ class WCS1GetCoverageRequest:
                             f"Time value '{t}' not a valid date for coverage {self.layer_name}",
                             WCS1Exception.INVALID_PARAMETER_VALUE,
                             locator="TIME parameter",
-                            valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
+                            valid_keys=[
+                                d.strftime("%Y-%m-%d")
+                                for d in self.layer.ranges.time_set
+                            ],
                         )
                     self.times.append(time)
                 except ValueError:
@@ -164,7 +192,9 @@ class WCS1GetCoverageRequest:
                         f"Time value '{t}' not a valid ISO-8601 date",
                         WCS1Exception.INVALID_PARAMETER_VALUE,
                         locator="TIME parameter",
-                        valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
+                        valid_keys=[
+                            d.strftime("%Y-%m-%d") for d in self.layer.ranges.time_set
+                        ],
                     ) from None
             self.times.sort()
 
@@ -173,13 +203,15 @@ class WCS1GetCoverageRequest:
                     "No valid ISO-8601 dates",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
                     locator="TIME parameter",
-                    valid_keys=[d.strftime('%Y-%m-%d') for d in self.layer.ranges.time_set]
+                    valid_keys=[
+                        d.strftime("%Y-%m-%d") for d in self.layer.ranges.time_set
+                    ],
                 )
             if len(self.times) > 1 and not self.format.multi_time:
                 raise WCS1Exception(
                     f"Cannot select more than one time slice with the {self.format.name} format",
                     WCS1Exception.INVALID_PARAMETER_VALUE,
-                    locator="TIME and FORMAT parameters"
+                    locator="TIME and FORMAT parameters",
                 )
 
         # Range constraint parameter: MEASUREMENTS
@@ -194,15 +226,19 @@ class WCS1GetCoverageRequest:
                 try:
                     self.bands.append(self.layer.band_idx.locale_band(b))
                 except ConfigException:
-                    raise WCS1Exception(f"Invalid measurement: {b}",
-                                        WCS1Exception.INVALID_PARAMETER_VALUE,
-                                        locator="MEASUREMENTS parameter",
-                                        valid_keys=self.layer.band_idx.band_labels()) from None
+                    raise WCS1Exception(
+                        f"Invalid measurement: {b}",
+                        WCS1Exception.INVALID_PARAMETER_VALUE,
+                        locator="MEASUREMENTS parameter",
+                        valid_keys=self.layer.band_idx.band_labels(),
+                    ) from None
             if not bands:
-                raise WCS1Exception("No measurements supplied",
-                                    WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="MEASUREMENTS parameter",
-                                    valid_keys = self.layer.band_idx.band_labels())
+                raise WCS1Exception(
+                    "No measurements supplied",
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="MEASUREMENTS parameter",
+                    valid_keys=self.layer.band_idx.band_labels(),
+                )
         elif args.get("styles"):
             # Use style bands.
             # Non-standard protocol extension.
@@ -217,84 +253,110 @@ class WCS1GetCoverageRequest:
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":
-            raise WCS1Exception(f"Unsupported exception format: {args['exceptions']}",
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="EXCEPTIONS parameter")
+            raise WCS1Exception(
+                f"Unsupported exception format: {args['exceptions']}",
+                WCS1Exception.INVALID_PARAMETER_VALUE,
+                locator="EXCEPTIONS parameter",
+            )
 
         # Argument: INTERPOLATION (optional only nearest-neighbour currently supported.)
         #      If 'none' is supported in future, validation of width/height/res will need to change.
         if "interpolation" in args and args["interpolation"] != "nearest neighbor":
-            raise WCS1Exception(f'Unsupported interpolation method: {args["interpolation"]}',
-                                WCS1Exception.INVALID_PARAMETER_VALUE,
-                                locator="INTERPOLATION parameter")
+            raise WCS1Exception(
+                f"Unsupported interpolation method: {args['interpolation']}",
+                WCS1Exception.INVALID_PARAMETER_VALUE,
+                locator="INTERPOLATION parameter",
+            )
 
         if "width" in args:
             if "resx" in args or "resy" in args:
-                raise WCS1Exception("Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
-                                    WCS1Exception.MISSING_PARAMETER_VALUE,
-                                    locator="RESX/RESY/WIDTH/HEIGHT parameters")
+                raise WCS1Exception(
+                    "Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
+                    WCS1Exception.MISSING_PARAMETER_VALUE,
+                    locator="RESX/RESY/WIDTH/HEIGHT parameters",
+                )
             if "height" not in args:
-                raise WCS1Exception("WIDTH parameter supplied without HEIGHT parameter",
-                                    WCS1Exception.MISSING_PARAMETER_VALUE,
-                                    locator="WIDTH/HEIGHT parameters")
+                raise WCS1Exception(
+                    "WIDTH parameter supplied without HEIGHT parameter",
+                    WCS1Exception.MISSING_PARAMETER_VALUE,
+                    locator="WIDTH/HEIGHT parameters",
+                )
             try:
                 self.height = int(args["height"])
                 if self.height < 1:
                     raise ValueError()
             except ValueError:
-                raise WCS1Exception("HEIGHT parameter must be a positive integer",
-                                    WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="HEIGHT parameter") from None
+                raise WCS1Exception(
+                    "HEIGHT parameter must be a positive integer",
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="HEIGHT parameter",
+                ) from None
             try:
                 self.width = int(args["width"])
                 if self.width < 1:
                     raise ValueError()
             except ValueError:
-                raise WCS1Exception("WIDTH parameter must be a positive integer",
-                                    WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="WIDTH parameter") from None
+                raise WCS1Exception(
+                    "WIDTH parameter must be a positive integer",
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="WIDTH parameter",
+                ) from None
 
             self.resx = (self.maxx - self.minx) / self.width
             self.resy = (self.maxy - self.miny) / self.height
         elif "resx" in args:
             if "height" in args:
-                raise WCS1Exception("Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
-                                    WCS1Exception.MISSING_PARAMETER_VALUE,
-                                    locator="RESX/RESY/WIDTH/HEIGHT parameters")
+                raise WCS1Exception(
+                    "Specify WIDTH/HEIGHT parameters OR RESX/RESY parameters - not both",
+                    WCS1Exception.MISSING_PARAMETER_VALUE,
+                    locator="RESX/RESY/WIDTH/HEIGHT parameters",
+                )
             if "resy" not in args:
-                raise WCS1Exception("RESX parameter supplied without RESY parameter",
-                                    WCS1Exception.MISSING_PARAMETER_VALUE,
-                                    locator="RESX/RESY parameters")
+                raise WCS1Exception(
+                    "RESX parameter supplied without RESY parameter",
+                    WCS1Exception.MISSING_PARAMETER_VALUE,
+                    locator="RESX/RESY parameters",
+                )
             try:
                 self.resx = float(args["resx"])
                 if self.resx <= 0.0:
                     raise ValueError(0)
             except ValueError:
-                raise WCS1Exception("RESX parameter must be a positive number",
-                                    WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="RESX parameter") from None
+                raise WCS1Exception(
+                    "RESX parameter must be a positive number",
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="RESX parameter",
+                ) from None
             try:
                 self.resy = float(args["resy"])
                 if self.resy <= 0.0:
                     raise ValueError(0)
             except ValueError:
-                raise WCS1Exception("RESY parameter must be a positive number",
-                                    WCS1Exception.INVALID_PARAMETER_VALUE,
-                                    locator="RESY parameter") from None
+                raise WCS1Exception(
+                    "RESY parameter must be a positive number",
+                    WCS1Exception.INVALID_PARAMETER_VALUE,
+                    locator="RESY parameter",
+                ) from None
             self.width = int(((self.maxx - self.minx) / self.resx) + 0.5)
             self.height = int(((self.maxy - self.miny) / self.resy) + 0.5)
         elif "height" in args:
-            raise WCS1Exception("HEIGHT parameter supplied without WIDTH parameter",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="WIDTH/HEIGHT parameters")
+            raise WCS1Exception(
+                "HEIGHT parameter supplied without WIDTH parameter",
+                WCS1Exception.MISSING_PARAMETER_VALUE,
+                locator="WIDTH/HEIGHT parameters",
+            )
         elif "resy" in args:
-            raise WCS1Exception("RESY parameter supplied without RESX parameter",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="RESX/RESY parameters")
+            raise WCS1Exception(
+                "RESY parameter supplied without RESX parameter",
+                WCS1Exception.MISSING_PARAMETER_VALUE,
+                locator="RESX/RESY parameters",
+            )
         else:
-            raise WCS1Exception("You must specify either the WIDTH/HEIGHT parameters or RESX/RESY",
-                                WCS1Exception.MISSING_PARAMETER_VALUE,
-                                locator="RESX/RESY/WIDTH/HEIGHT parameters")
+            raise WCS1Exception(
+                "You must specify either the WIDTH/HEIGHT parameters or RESX/RESY",
+                WCS1Exception.MISSING_PARAMETER_VALUE,
+                locator="RESX/RESY/WIDTH/HEIGHT parameters",
+            )
 
         xscale = (self.maxx - self.minx) / self.width
         yscale = (self.miny - self.maxy) / self.height
@@ -307,25 +369,26 @@ class WCS1GetCoverageRequest:
 
 def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
     # pylint: disable=too-many-locals, protected-access
-    stacker = DataStacker(req.layer,
-                          req.geobox,
-                          req.times,
-                          bands=req.bands)
+    stacker = DataStacker(req.layer, req.geobox, req.times, bands=req.bands)
     qprof.start_event("count-datasets")
     n_datasets = stacker.n_datasets()
     qprof.end_event("count-datasets")
     qprof["n_datasets"] = n_datasets
 
     try:
-        req.layer.resource_limits.check_wcs(n_datasets,
-                                            req.geobox.height, req.geobox.width,
-                                            sum(req.layer.band_idx.dtype_size(b) for b in req.bands),
-                                            len(req.times))
+        req.layer.resource_limits.check_wcs(
+            n_datasets,
+            req.geobox.height,
+            req.geobox.width,
+            sum(req.layer.band_idx.dtype_size(b) for b in req.bands),
+            len(req.times),
+        )
     except ResourceLimited as e:
         if e.wcs_hard or not req.layer.low_res_product_names:
             raise WCS1Exception(
                 f"This request processes too much data to be served in a reasonable amount of time. ({e}) "
-                + "Please reduce the bounds of your request and try again.") from None
+                + "Please reduce the bounds of your request and try again."
+            ) from None
         stacker.resource_limited = True
         qprof["resource_limited"] = str(e)
     if n_datasets == 0:
@@ -336,16 +399,8 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
         y_range = (req.miny, req.maxy)
         xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
         yname = cfg.published_CRSs[req.response_crsid]["vertical_coord"]
-        xvals = numpy.linspace(
-            x_range[0],
-            x_range[1],
-            num=req.width
-        )
-        yvals = numpy.linspace(
-            y_range[0],
-            y_range[1],
-            num=req.height
-        )
+        xvals = numpy.linspace(x_range[0], x_range[1], num=req.width)
+        yvals = numpy.linspace(y_range[0], y_range[1], num=req.height)
         if req.layer.time_resolution.is_subday():
             timevals = [
                 numpy.datetime64(dt.astimezone(timezone.utc).isoformat(), "ns")
@@ -355,29 +410,30 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
             timevals = req.times
         if cfg.published_CRSs[req.request_crsid]["vertical_coord_first"]:
             nparrays = {
-                band: (("time", yname, xname),
-                       numpy.full((len(req.times), len(yvals), len(xvals)),
-                                  req.layer.band_idx.nodata_val(band),
-                                  dtype=req.layer.band_idx.dtype_val(band))
-                      )
+                band: (
+                    ("time", yname, xname),
+                    numpy.full(
+                        (len(req.times), len(yvals), len(xvals)),
+                        req.layer.band_idx.nodata_val(band),
+                        dtype=req.layer.band_idx.dtype_val(band),
+                    ),
+                )
                 for band in req.bands
             }
         else:
             nparrays = {
-                band: (("time", xname, yname),
-                       numpy.full((len(req.times), len(xvals), len(yvals)),
-                                  req.layer.band_idx.nodata_val(band),
-                                  dtype=req.layer.band_idx.dtype_val(band))
-                      )
+                band: (
+                    ("time", xname, yname),
+                    numpy.full(
+                        (len(req.times), len(xvals), len(yvals)),
+                        req.layer.band_idx.nodata_val(band),
+                        dtype=req.layer.band_idx.dtype_val(band),
+                    ),
+                )
                 for band in req.bands
             }
         data = xarray.Dataset(
-            nparrays,
-            coords={
-                "time": timevals,
-                xname: xvals,
-                yname: yvals,
-            }
+            nparrays, coords={"time": timevals, xname: xvals, yname: yvals}
         ).astype("int16")
         qprof.start_event("end_empty_dataset")
         qprof["write_action"] = "Write Empty"
@@ -389,8 +445,7 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
     qprof.end_event("fetch-datasets")
     if qprof.active:
         qprof["datasets"] = {
-            str(q): [str(i) for i in ids]
-            for q, ids in stacker.dsids().items()
+            str(q): [str(i) for i in ids] for q, ids in stacker.dsids().items()
         }
     qprof.start_event("load-data")
     # FIXME: output can be None.
@@ -410,17 +465,17 @@ def get_tiff(req, data: xr.Dataset) -> bytes:
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Does not support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {
-        'uint8': 1,
-        'int8': 2,
-        'uint16': 3,
-        'int16': 4,
-        'uint32': 5,
-        'int32': 6,
-        'float32': 7,
-        'float64': 8,
-        'complex': 10,
-        'complex64': 11,
-        'complex128': 12,
+        "uint8": 1,
+        "int8": 2,
+        "uint16": 3,
+        "int16": 4,
+        "uint32": 5,
+        "int32": 6,
+        "float32": 7,
+        "float64": 8,
+        "complex": 10,
+        "complex64": 11,
+        "complex128": 12,
     }
 
     dtype_list = [data[array].dtype for array in data.data_vars]
@@ -447,15 +502,24 @@ def get_tiff(req, data: xr.Dataset) -> bytes:
             tiled=True,
             compress="lzw",
             interleave="band",
-            dtype=dtype) as dst:
+            dtype=dtype,
+        ) as dst:
             for idx, band in enumerate(data.data_vars, start=1):
                 dst.write(data[band].values, idx)
                 dst.set_band_description(idx, req.layer.band_idx.band_label(band))
                 if cfg.wcs_tiff_statistics:
-                    dst.update_tags(idx, STATISTICS_MINIMUM=numpy.nanmin(data[band].values))
-                    dst.update_tags(idx, STATISTICS_MAXIMUM=numpy.nanmax(data[band].values))
-                    dst.update_tags(idx, STATISTICS_MEAN=numpy.nanmean(data[band].values))
-                    dst.update_tags(idx, STATISTICS_STDDEV=numpy.nanstd(data[band].values))
+                    dst.update_tags(
+                        idx, STATISTICS_MINIMUM=numpy.nanmin(data[band].values)
+                    )
+                    dst.update_tags(
+                        idx, STATISTICS_MAXIMUM=numpy.nanmax(data[band].values)
+                    )
+                    dst.update_tags(
+                        idx, STATISTICS_MEAN=numpy.nanmean(data[band].values)
+                    )
+                    dst.update_tags(
+                        idx, STATISTICS_STDDEV=numpy.nanstd(data[band].values)
+                    )
         return memfile.read()
 
 

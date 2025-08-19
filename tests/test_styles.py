@@ -60,18 +60,18 @@ def product_layer():
     product_layer.object_label = "layer.test_product"
     product_layer.pq_band = "test_band"
     product_layer.product_names = ["test_odc_product"]
-    product_layer.products = [FakeODCProduct('test_odc_product')]
+    product_layer.products = [FakeODCProduct("test_odc_product")]
     product_layer.low_res_product_names = ["test_odc_summary_product"]
-    product_layer.low_res_products = [FakeODCProduct('test_odc_summary_product')]
+    product_layer.low_res_products = [FakeODCProduct("test_odc_summary_product")]
     product_layer.always_fetch_bands = ["red", "green", "blue"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
     product_layer.band_idx._unready_attributes = []
     product_layer.band_idx.layer = product_layer
     product_layer.band_idx.band_cfg = {
-        "red": ["crimson", "foo", ],
+        "red": ["crimson", "foo"],
         "green": [],
         "blue": ["azure", "bar"],
-        "fake": []
+        "fake": [],
     }
     product_layer.band_idx._idx = {
         "red": "red",
@@ -83,9 +83,7 @@ def product_layer():
         "azure": "red",
         "fake": "fake",
     }
-    product_layer.global_cfg.layer_index = {
-        "test_product": product_layer
-    }
+    product_layer.global_cfg.layer_index = {"test_product": product_layer}
     product_layer.data_manual_merge = False
     product_layer.fuse_func = None
     product_layer.flag_bands = {
@@ -114,17 +112,15 @@ def style_cfg_lin() -> CFG_DICT:
         "components": {
             "red": {"red": 1.0},
             "green": {"green": 1.0},
-            "blue": {"blue": 1.0}
-        }
+            "blue": {"blue": 1.0},
+        },
     }
 
 
 @pytest.fixture
 def style_cfg_lin_clone() -> CFG_DICT:
     return {
-        "inherits": {
-            "style": "test_style",
-        },
+        "inherits": {"style": "test_style"},
         "name": "test_style_2",
         "title": "Test Style 2",
         "scale_factor": None,
@@ -144,12 +140,9 @@ def style_cfg_nonlin() -> CFG_DICT:
             "red": {"red": 1.0},
             "green": {
                 "function": "datacube_ows.band_utils.norm_diff",
-                "kwargs": {
-                    "band1": "red",
-                    "band2": "green",
-                }
+                "kwargs": {"band1": "red", "band2": "green"},
             },
-            "blue": {"blue": 1.0}
+            "blue": {"blue": 1.0},
         },
         "additional_bands": [],
     }
@@ -167,25 +160,17 @@ def style_cfg_map() -> CFG_DICT:
                 {
                     "title": "Invalid",
                     "abstract": "An Invalid Value",
-                    "flags": {
-                        "bar": True,
-                        "baz": False
-                    },
-                    "color": "#000000"
+                    "flags": {"bar": True, "baz": False},
+                    "color": "#000000",
                 },
                 {
                     "title": "Valid",
                     "abstract": "A Valid Value",
-                    "flags": {
-                        "or": {
-                            "x": True,
-                            "y": True
-                        }
-                    },
-                    "color": "#FFFFFF"
-                }
+                    "flags": {"or": {"x": True, "y": True}},
+                    "color": "#FFFFFF",
+                },
             ]
-        }
+        },
     }
 
 
@@ -198,12 +183,8 @@ def product_layer_alpha_map():
     product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["foo"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
-    product_layer.band_idx.band_cfg = {
-        "foo": ["foo"]
-    }
-    product_layer.band_idx._idx = {
-        "foo": "foo"
-    }
+    product_layer.band_idx.band_cfg = {"foo": ["foo"]}
+    product_layer.band_idx._idx = {"foo": "foo"}
     return product_layer
 
 
@@ -219,14 +200,12 @@ def style_cfg_map_alpha_1() -> CFG_DICT:
                 {
                     "title": "Transparent",
                     "abstract": "A Transparent Value",
-                    "flags": {
-                        "bar": True,
-                    },
+                    "flags": {"bar": True},
                     "color": "#000000",
-                    "alpha": 0.0
+                    "alpha": 0.0,
                 }
             ]
-        }
+        },
     }
 
 
@@ -242,14 +221,12 @@ def style_cfg_map_alpha_2() -> CFG_DICT:
                 {
                     "title": "Semi-Transparent",
                     "abstract": "A Semi-Transparent Value",
-                    "flags": {
-                        "bar": False,
-                    },
+                    "flags": {"bar": False},
                     "color": "#000000",
-                    "alpha": 0.5
+                    "alpha": 0.5,
                 }
             ]
-        }
+        },
     }
 
 
@@ -265,13 +242,11 @@ def style_cfg_map_alpha_3() -> CFG_DICT:
                 {
                     "title": "Non-Transparent",
                     "abstract": "A Non-Transparent Value",
-                    "flags": {
-                        "bar": False,
-                    },
+                    "flags": {"bar": False},
                     "color": "#000000",
                 }
             ]
-        }
+        },
     }
 
 
@@ -280,51 +255,52 @@ def test_valuemap_ctor() -> None:
     style.name = "style_name"
     style.product.name = "layer_name"
 
-    vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
-        "title": "",
-        "abstract": "Abstract abstractions",
-        "values": [1, 2],
-        "color": "#FFFFFF"
-    })
-    assert vm.label == "Abstract abstractions"
-    with pytest.raises(ConfigException) as e:
-        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
+    vm = datacube_ows.styles.colormap.ValueMapRule(
+        style,
+        "band3",
+        {
             "title": "",
             "abstract": "Abstract abstractions",
-            "flags": {
-                "and": {
-                    "flag": "val",
-                },
-                "or": {
-                    "other_flag": "other_val"
-                }
+            "values": [1, 2],
+            "color": "#FFFFFF",
+        },
+    )
+    assert vm.label == "Abstract abstractions"
+    with pytest.raises(ConfigException) as e:
+        vm = datacube_ows.styles.colormap.ValueMapRule(
+            style,
+            "band3",
+            {
+                "title": "",
+                "abstract": "Abstract abstractions",
+                "flags": {"and": {"flag": "val"}, "or": {"other_flag": "other_val"}},
+                "color": "#FFFFFF",
             },
-            "color": "#FFFFFF"
-        })
+        )
     assert "combines 'and' and 'or' rules" in str(e.value)
     assert "style_name" in str(e.value)
     assert "layer_name" in str(e.value)
     with pytest.raises(ConfigException) as e:
-        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
-            "title": "",
-            "abstract": "Abstract abstractions",
-            "flags": {
-                "and": {
-                    "flag": "val",
-                },
+        vm = datacube_ows.styles.colormap.ValueMapRule(
+            style,
+            "band3",
+            {
+                "title": "",
+                "abstract": "Abstract abstractions",
+                "flags": {"and": {"flag": "val"}},
+                "values": [1, 2, 3],
+                "color": "#FFFFFF",
             },
-            "values": [1, 2, 3],
-            "color": "#FFFFFF"
-        })
+        )
     assert "has both a 'flags' and a 'values' section - choose one" in str(e.value)
     assert "style_name" in str(e.value)
     assert "layer_name" in str(e.value)
     with pytest.raises(ConfigException) as e:
-        vm = datacube_ows.styles.colormap.ValueMapRule(style, "band3", {
-            "title": "",
-            "abstract": "Abstract abstractions",
-            "color": "#FFFFFF"
-        })
+        vm = datacube_ows.styles.colormap.ValueMapRule(
+            style,
+            "band3",
+            {"title": "", "abstract": "Abstract abstractions", "color": "#FFFFFF"},
+        )
     assert "must have a non-empty 'flags' or 'values' section" in str(e.value)
     assert "style_name" in str(e.value)
     assert "layer_name" in str(e.value)
@@ -340,14 +316,12 @@ def style_cfg_ramp() -> CFG_DICT:
         "index_function": {
             "function": "datacube_ows.band_utils.single_band",
             "mapped_bands": False,
-            "kwargs": {
-                "band": "foo"
-            }
+            "kwargs": {"band": "foo"},
         },
         "color_ramp": [
             {"value": 0.0, "color": "#FFFFFF", "alpha": 0.0},
-            {"value": 1.0, "color": "#000000", "alpha": 1.0}
-        ]
+            {"value": 1.0, "color": "#000000", "alpha": 1.0},
+        ],
     }
 
 
@@ -371,15 +345,13 @@ def style_cfg_ramp_mapped() -> CFG_DICT:
         "index_function": {
             "function": "datacube_ows.band_utils.single_band",
             "mapped_bands": True,
-            "kwargs": {
-                "band": "bar"
-            }
+            "kwargs": {"band": "bar"},
         },
         "band_map": {"bar": "foo"},
         "color_ramp": [
             {"value": 0.0, "color": "#FFFFFF", "alpha": 0.0},
-            {"value": 1.0, "color": "#000000", "alpha": 1.0}
-        ]
+            {"value": 1.0, "color": "#000000", "alpha": 1.0},
+        ],
     }
 
 
@@ -389,9 +361,7 @@ def test_correct_style_hybrid(product_layer, style_cfg_lin) -> None:
     style_cfg_lin["index_function"] = {
         "function": "datacube_ows.band_utils.constant",
         "mapped_bands": True,
-        "kwargs": {
-            "const": "0.1"
-        }
+        "kwargs": {"const": "0.1"},
     }
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
 
@@ -404,9 +374,7 @@ def test_correct_style_nonlin_hybrid(product_layer, style_cfg_nonlin) -> None:
     style_cfg_nonlin["index_function"] = {
         "function": "datacube_ows.band_utils.constant",
         "mapped_bands": True,
-        "kwargs": {
-            "const": "0.1"
-        }
+        "kwargs": {"const": "0.1"},
     }
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_nonlin)
     assert isinstance(style_def, datacube_ows.styles.hybrid.HybridStyleDef)
@@ -418,16 +386,18 @@ def test_invalid_component_ratio(product_layer, style_cfg_nonlin) -> None:
     style_cfg_nonlin["index_function"] = {
         "function": "datacube_ows.band_utils.constant",
         "mapped_bands": True,
-        "kwargs": {
-            "const": "0.1"
-        }
+        "kwargs": {"const": "0.1"},
     }
     with pytest.raises(ConfigException) as e:
         _ = datacube_ows.styles.StyleDef(product_layer, style_cfg_nonlin)
-    assert "Component ratio must be a floating point number between 0 and 1" in str(e.value)
+    assert "Component ratio must be a floating point number between 0 and 1" in str(
+        e.value
+    )
 
 
-def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone) -> None:
+def test_correct_style_linear(
+    product_layer, style_cfg_lin, style_cfg_lin_clone
+) -> None:
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
     product_layer.style_index[style_def.name] = style_def
     assert isinstance(style_def, datacube_ows.styles.component.ComponentStyleDef)
@@ -435,12 +405,15 @@ def test_correct_style_linear(product_layer, style_cfg_lin, style_cfg_lin_clone)
 
 def test_unresolvable_style(product_layer) -> None:
     with pytest.raises(ConfigException) as e:
-        _ = datacube_ows.styles.StyleDef(product_layer, {
-            "foo": "This is not real",
-            "name": "gotaname",
-            "abstract": "gotabstract",
-            "splunge": "doodly-doo"
-        })
+        _ = datacube_ows.styles.StyleDef(
+            product_layer,
+            {
+                "foo": "This is not real",
+                "name": "gotaname",
+                "abstract": "gotabstract",
+                "splunge": "doodly-doo",
+            },
+        )
     assert "could not determine style type" in str(e.value)
 
 
@@ -462,21 +435,19 @@ def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone) -
     except OWSEntryNotFound:
         pass
     try:
-        style = datacube_ows.styles.StyleDef.lookup_impl(product_layer.global_cfg,
-                                                         keyvals={
-                                                             "style": "test_style",
-                                                             "layer": "fake-layer"
-                                                         })
+        style = datacube_ows.styles.StyleDef.lookup_impl(
+            product_layer.global_cfg,
+            keyvals={"style": "test_style", "layer": "fake-layer"},
+        )
         assert style == "Expected exception not thrown"
     except OWSEntryNotFound:
         pass
     try:
-        style = datacube_ows.styles.StyleDef.lookup_impl(product_layer.global_cfg,
-                                                 keyvals={
-                                                     "style": "fake_style",
-                                                     "layer": "test_product"
-                                                 },
-                                                subs={"layer": {"test_product": product_layer}})
+        style = datacube_ows.styles.StyleDef.lookup_impl(
+            product_layer.global_cfg,
+            keyvals={"style": "fake_style", "layer": "test_product"},
+            subs={"layer": {"test_product": product_layer}},
+        )
         assert style == "Expected exception not thrown"
     except OWSEntryNotFound:
         pass
@@ -484,7 +455,7 @@ def test_inherit_exceptions(product_layer, style_cfg_lin, style_cfg_lin_clone) -
 
 def test_style_exceptions(product_layer, style_cfg_map: dict) -> None:
     style_no_name = dict(style_cfg_map)
-    style_no_name.pop('name', None)
+    style_no_name.pop("name", None)
     with pytest.raises(KeyError):
         _ = datacube_ows.styles.StyleDef(product_layer, style_no_name)
 
@@ -499,41 +470,46 @@ def test_alpha_style_map(
     product_layer_alpha_map,
     style_cfg_map_alpha_1,
     style_cfg_map_alpha_2,
-    style_cfg_map_alpha_3) -> None:
-
+    style_cfg_map_alpha_3,
+) -> None:
     def fake_make_mask(data: DataArray, **kwargs) -> DataArray:
         return data
-
 
     band = np.array([True, True, True])
     timarray = [np.datetime64(datetime.date.today(), "ns")]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
-    da = DataArray(band, name='foo',
-                         attrs = {
-                            "flags_definition": {
-                                "foo": {"bits": 0},
-                                "floop": {"bits": 1},
-                         }
-    })
-    dst = Dataset(data_vars={'foo': da})
+    da = DataArray(
+        band,
+        name="foo",
+        attrs={"flags_definition": {"foo": {"bits": 0}, "floop": {"bits": 1}}},
+    )
+    dst = Dataset(data_vars={"foo": da})
     ds = concat([dst], times)
     npmap = np.array([True, True, True])
     damap = DataArray(npmap)
 
-    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask):
-        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_1)
+    with patch(
+        "datacube_ows.config_utils.make_mask", new_callable=lambda: fake_make_mask
+    ):
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_alpha_map, style_cfg_map_alpha_1
+        )
 
         result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 0).all()
 
-        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_2)
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_alpha_map, style_cfg_map_alpha_2
+        )
 
         result = style_def.transform_data(ds, None)
         alpha_channel = result["alpha"].values
         assert (alpha_channel == 128).all()
 
-        style_def = datacube_ows.styles.StyleDef(product_layer_alpha_map, style_cfg_map_alpha_3)
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_alpha_map, style_cfg_map_alpha_3
+        )
 
         result = style_def.transform_data(ds, damap)
         alpha_channel = result["alpha"].values
@@ -579,7 +555,9 @@ def test_dynamic_range_compression_scale_range(product_layer, style_cfg_lin) -> 
     assert compressed[2] == 255
 
 
-def test_dynamic_range_compression_scale_range_clip(product_layer, style_cfg_lin) -> None:
+def test_dynamic_range_compression_scale_range_clip(
+    product_layer, style_cfg_lin
+) -> None:
     style_cfg_lin["scale_range"] = [-3000, 3000]
 
     style_def = datacube_ows.styles.StyleDef(product_layer, style_cfg_lin)
@@ -622,12 +600,8 @@ def product_layer_mask_map():
     product_layer.product_names = ["test_odc_product"]
     product_layer.always_fetch_bands = ["foo"]
     product_layer.band_idx = BandIndex.__new__(BandIndex)
-    product_layer.band_idx.band_cfg = {
-        "foo": ["foo"]
-    }
-    product_layer.band_idx._idx = {
-        "foo": "foo"
-    }
+    product_layer.band_idx.band_cfg = {"foo": ["foo"]}
+    product_layer.band_idx._idx = {"foo": "foo"}
     return product_layer
 
 
@@ -643,30 +617,24 @@ def style_cfg_map_mask() -> CFG_DICT:
                 {
                     "title": "Transparent",
                     "abstract": "A Transparent Value",
-                    "flags": {
-                        "bar": 1,
-                    },
+                    "flags": {"bar": 1},
                     "color": "#111111",
-                    "mask": True
+                    "mask": True,
                 },
                 {
                     "title": "Non-Transparent",
                     "abstract": "A Non-Transparent Value",
-                    "flags": {
-                        "bar": 2,
-                    },
+                    "flags": {"bar": 2},
                     "color": "#FFFFFF",
                 },
                 {
                     "title": "Impossible",
                     "abstract": "Will already have matched a previous rule",
-                    "flags": {
-                        "bar": 1,
-                    },
+                    "flags": {"bar": 1},
                     "color": "#54d56f",
-                }
+                },
             ]
-        }
+        },
     }
 
 
@@ -675,52 +643,55 @@ def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask) -> None:
         val = kwargs["bar"]
         return data == val
 
-
     dim = np.array([0, 1, 2, 3, 4, 5])
     band = np.array([0, 0, 1, 1, 2, 2])
     timarray = [np.datetime64(datetime.date.today(), "ns")]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
-    da = DataArray(band, name='foo', coords={"dim": dim}, dims=["dim"])
-    dst = Dataset(data_vars={'foo': da})
+    da = DataArray(band, name="foo", coords={"dim": dim}, dims=["dim"])
+    dst = Dataset(data_vars={"foo": da})
     ds = concat([dst], times)
 
     npmap = np.array([True, True, True, True, True, True])
     damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
 
-    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask):
-        style_def = datacube_ows.styles.StyleDef(product_layer_mask_map, style_cfg_map_mask)
+    with patch(
+        "datacube_ows.config_utils.make_mask", new_callable=lambda: fake_make_mask
+    ):
+        style_def = datacube_ows.styles.StyleDef(
+            product_layer_mask_map, style_cfg_map_mask
+        )
         data = style_def.transform_data(ds, damap)
         r = data["red"]
         g = data["green"]
         b = data["blue"]
         a = data["alpha"]
 
-        assert (r.values[2] == 17)
-        assert (g.values[2] == 17)
-        assert (b.values[2] == 17)
-        assert (a.values[2] == 0)
-        assert (r.values[4] == 255)
-        assert (g.values[4] == 255)
-        assert (b.values[4] == 255)
-        assert (a.values[4] == 255)
+        assert r.values[2] == 17
+        assert g.values[2] == 17
+        assert b.values[2] == 17
+        assert a.values[2] == 0
+        assert r.values[4] == 255
+        assert g.values[4] == 255
+        assert b.values[4] == 255
+        assert a.values[4] == 255
 
 
 def test_reint() -> None:
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
-    band = np.array([0., 0., 1., 1., 2., 2.])
-    da = DataArray(band, name='foo')
+    band = np.array([0.0, 0.0, 1.0, 1.0, 2.0, 2.0])
+    da = DataArray(band, name="foo")
 
-    assert (band.dtype.kind == "f")
+    assert band.dtype.kind == "f"
     data = ColorMapStyleDef.reint(band)
-    assert (data.dtype.kind == "i")
+    assert data.dtype.kind == "i"
 
-    assert (da.dtype.kind == "f")
+    assert da.dtype.kind == "f"
     data = ColorMapStyleDef.reint(da)
-    assert (data.dtype.kind == "i")
+    assert data.dtype.kind == "i"
 
     data = ColorMapStyleDef.reint(data)
-    assert (data.dtype.kind == "i")
+    assert data.dtype.kind == "i"
 
 
 def test_createcolordata() -> None:
@@ -729,7 +700,7 @@ def test_createcolordata() -> None:
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgba = to_rgba("#FFFFFF")
 
     data = ColorMapStyleDef.create_colordata(da, rgba, (band >= 0))
@@ -742,7 +713,7 @@ def test_createcolordata_alpha() -> None:
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgba = to_rgba("#FFFFFF", alpha=0.0)
 
     data = ColorMapStyleDef.create_colordata(da, rgba, (band >= 0))
@@ -755,7 +726,7 @@ def test_createcolordata_mask() -> None:
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, 2, 2])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgba = to_rgba("#FFFFFF", alpha=0.0)
 
     data = ColorMapStyleDef.create_colordata(da, rgba, (band > 0))
@@ -769,10 +740,12 @@ def test_createcolordata_remask() -> None:
     from datacube_ows.styles.colormap import ColorMapStyleDef
 
     band = np.array([0, 0, 1, 1, np.nan, np.nan])
-    da = DataArray(band, name='foo')
+    da = DataArray(band, name="foo")
     rgba = to_rgba("#FFFFFF", alpha=0.0)
 
-    data = ColorMapStyleDef.create_colordata(da, rgba, np.array([True, True, True, True, True, True]))
+    data = ColorMapStyleDef.create_colordata(
+        da, rgba, np.array([True, True, True, True, True, True])
+    )
     assert (np.isfinite(data["red"][0:3:1])).all()
     assert (np.isnan(data["red"][4:5:1])).all()
 
@@ -804,6 +777,7 @@ def test_bad_mpl_ramp() -> None:
         _ = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
     assert "Invalid Matplotlib name: " in str(e.value)
 
+
 @pytest.fixture
 def style_with_pq_masking() -> CFG_DICT:
     return {
@@ -815,15 +789,11 @@ def style_with_pq_masking() -> CFG_DICT:
         "components": {
             "red": {"red": 1.0},
             "green": {"green": 1.0},
-            "blue": {"blue": 1.0}
+            "blue": {"blue": 1.0},
         },
-        "pq_masks": [
-            {
-                "band": "pq",
-                "values": [0, 1, 2],
-            }
-        ]
+        "pq_masks": [{"band": "pq", "values": [0, 1, 2]}],
     }
+
 
 def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc) -> None:
     def fake_make_mask(data, **kwargs):
@@ -835,10 +805,10 @@ def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc) -
     timarray = [np.datetime64(datetime.date.today(), "ns")]
     times = DataArray(timarray, coords=[timarray], dims=["time"], name="time")
     data_vars = {
-        "pq": DataArray(band, name='pq', coords={"dim": dim}, dims=["dim"]),
-        "red": DataArray(band, name='red', coords={"dim": dim}, dims=["dim"]),
-        "green": DataArray(band, name='green', coords={"dim": dim}, dims=["dim"]),
-        "blue": DataArray(band, name='blue', coords={"dim": dim}, dims=["dim"]),
+        "pq": DataArray(band, name="pq", coords={"dim": dim}, dims=["dim"]),
+        "red": DataArray(band, name="red", coords={"dim": dim}, dims=["dim"]),
+        "green": DataArray(band, name="green", coords={"dim": dim}, dims=["dim"]),
+        "blue": DataArray(band, name="blue", coords={"dim": dim}, dims=["dim"]),
     }
     dst = Dataset(data_vars=data_vars)
     ds = concat([dst], times)
@@ -846,21 +816,27 @@ def test_style_with_pq_masks(product_layer, style_with_pq_masking, minimal_dc) -
     npmap = np.array([True, True, True, True, True, True])
     damap = DataArray(npmap, coords={"dim": dim}, dims=["dim"])
 
-    with patch('datacube_ows.config_utils.make_mask', new_callable=lambda: fake_make_mask):
+    with patch(
+        "datacube_ows.config_utils.make_mask", new_callable=lambda: fake_make_mask
+    ):
         style_def = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
         style_def.make_ready(minimal_dc)
         mask = style_def.to_mask(ds, damap)
         data = style_def.transform_data(ds, mask)
         a = data["alpha"]
 
-        assert (a.values[2] == 255)
-        assert (a.values[4] == 0)
+        assert a.values[2] == 255
+        assert a.values[4] == 0
+
 
 def test_styles_with_invalid_pq_masks(product_layer, style_with_pq_masking) -> None:
     style_with_pq_masking["pq_masks"][0]["band"] = "invalid_band"
     with pytest.raises(ConfigException) as e:
         _ = datacube_ows.styles.StyleDef(product_layer, style_with_pq_masking)
-    assert "has a mask that references flag band invalid_band which is not defined" in str(e.value)
+    assert (
+        "has a mask that references flag band invalid_band which is not defined"
+        in str(e.value)
+    )
     product_layer.flag_bands = {}
     product_layer.allflag_productbands = []
     with pytest.raises(ConfigException) as e:

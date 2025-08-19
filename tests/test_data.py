@@ -28,17 +28,19 @@ def s3_url_datasets():
             self.uris = uris
 
     datasets = []
-    d1 = TestDataset([
+    d1 = TestDataset(
+        [
             "s3://test-bucket/hello_world/data.yaml",
-            "s3://test-bucket/hello_world/data.yaml"
-    ])
-    d2 = TestDataset([
-        "s3://test-bucket/hello.word/foo.bar/hello.test.yaml",
-        "s3://test-bucket/hello.word/foo.bar/hello-test.yaml"
-    ])
-    d3 = TestDataset([
-            "s3://test-bucket/this.is/from.stac/hello.test.json",
-    ])
+            "s3://test-bucket/hello_world/data.yaml",
+        ]
+    )
+    d2 = TestDataset(
+        [
+            "s3://test-bucket/hello.word/foo.bar/hello.test.yaml",
+            "s3://test-bucket/hello.word/foo.bar/hello-test.yaml",
+        ]
+    )
+    d3 = TestDataset(["s3://test-bucket/this.is/from.stac/hello.test.json"])
 
     datasets.append(d1)
     datasets.append(d2)
@@ -54,6 +56,7 @@ def s3_url_datasets():
 
                 def item(self):
                     return self.datasets
+
             self.values = InnerMock(datasets)
 
     class PBQMock:
@@ -73,9 +76,19 @@ def s3_url_datasets():
 def test_s3_browser_uris(s3_url_datasets) -> None:
     uris = get_s3_browser_uris(s3_url_datasets)
 
-    assert "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=hello_world" in uris
-    assert "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=hello.word/foo.bar" in uris
-    assert "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=this.is/from.stac" in uris
+    assert (
+        "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=hello_world"
+        in uris
+    )
+    assert (
+        "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=hello.word/foo.bar"
+        in uris
+    )
+    assert (
+        "http://test-bucket.s3-website-ap-southeast-2.amazonaws.com/?prefix=this.is/from.stac"
+        in uris
+    )
+
 
 # TODO: read_data is now a method of the DataStacker class. This test needs a rewrite.
 # @patch('xarray.Dataset')
@@ -140,11 +153,11 @@ def test_make_derived_band_dict_nan() -> None:
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
 
-    style_dict = {
-        "fake": fake_style()
-    }
+    style_dict = {"fake": fake_style()}
 
-    band_dict = datacube_ows.feature_info._make_derived_band_dict(fake_dataset(), style_dict)
+    band_dict = datacube_ows.feature_info._make_derived_band_dict(
+        fake_dataset(), style_dict
+    )
     assert band_dict["fake"] == "n/a"
 
 
@@ -167,15 +180,15 @@ def test_make_derived_band_dict_not_nan() -> None:
             self.needed_bands = ["test"]
             self.index_function = lambda x: fake_data()
 
-    style_dict = {
-        "fake": fake_style()
-    }
+    style_dict = {"fake": fake_style()}
 
-    band_dict = datacube_ows.feature_info._make_derived_band_dict(fake_dataset(), style_dict)
+    band_dict = datacube_ows.feature_info._make_derived_band_dict(
+        fake_dataset(), style_dict
+    )
     assert band_dict["fake"] == 10.10
 
 
-def test_make_band_dict_nan(product_layer) -> None: # noqa: F811
+def test_make_band_dict_nan(product_layer) -> None:  # noqa: F811
     class fake_data:
         def __init__(self) -> None:
             self.nodata = np.nan
@@ -186,9 +199,7 @@ def test_make_band_dict_nan(product_layer) -> None: # noqa: F811
 
     class fake_dataset:
         def __init__(self) -> None:
-            self.data_vars = {
-                "fake": "fake_band"
-            }
+            self.data_vars = {"fake": "fake_band"}
 
         def __getitem__(self, key):
             return fake_data()
@@ -197,8 +208,9 @@ def test_make_band_dict_nan(product_layer) -> None: # noqa: F811
     assert band_dict["fake"] == "n/a"
 
 
-def test_make_band_dict_float(product_layer) -> None: # noqa: F811
+def test_make_band_dict_float(product_layer) -> None:  # noqa: F811
     import yaml
+
     flags_yaml = """
     flags_definition:
         category:
@@ -222,9 +234,7 @@ def test_make_band_dict_float(product_layer) -> None: # noqa: F811
 
     class int_dataset:
         def __init__(self) -> None:
-            self.data_vars = {
-                "fake": "fake_band"
-            }
+            self.data_vars = {"fake": "fake_band"}
 
         def __getitem__(self, key):
             return int_data()
@@ -242,30 +252,34 @@ def test_make_band_dict_float(product_layer) -> None: # noqa: F811
     band_dict = datacube_ows.feature_info._make_band_dict(product_layer, int_dataset())
     assert isinstance(band_dict["fake"], dict)
     assert band_dict["fake"] == {
-        "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": 'lay_over'
+        "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": "lay_over"
     }
 
-    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, float_dataset())
+    band_dict = datacube_ows.feature_info._make_band_dict(
+        product_layer, float_dataset()
+    )
     assert isinstance(band_dict["fake"], dict)
     assert band_dict["fake"] == {
-        "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": 'lay_over'
+        "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": "lay_over"
     }
 
 
-def test_pbq_ctor_simple(product_layer) -> None: # noqa: F811
+def test_pbq_ctor_simple(product_layer) -> None:  # noqa: F811
     pbq = ProductBandQuery.simple_layer_query(product_layer, {"red", "green"})
     assert str(pbq) in (
         "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_product)]",
-        "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_product)]"
+        "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_product)]",
     )
-    pbq = ProductBandQuery.simple_layer_query(product_layer, {"red", "green"}, resource_limited=True)
+    pbq = ProductBandQuery.simple_layer_query(
+        product_layer, {"red", "green"}, resource_limited=True
+    )
     assert str(pbq) in (
         "Query bands {'red', 'green'} from products [FakeODCProduct(test_odc_summary_product)]",
-        "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_summary_product)]"
+        "Query bands {'green', 'red'} from products [FakeODCProduct(test_odc_summary_product)]",
     )
 
 
-def test_pbq_ctor_full(product_layer) -> None: # noqa: F811
+def test_pbq_ctor_full(product_layer) -> None:  # noqa: F811
     pbqs = ProductBandQuery.full_layer_queries(product_layer)
     assert len(pbqs) == 2
     assert "red" in str(pbqs[0])
@@ -273,7 +287,7 @@ def test_pbq_ctor_full(product_layer) -> None: # noqa: F811
     assert "blue" in str(pbqs[0])
     assert "fake" in str(pbqs[0])
     assert "Query bands {" in str(pbqs[0])
-    assert "} from products [FakeODCProduct(test_odc_product)]"  in str(pbqs[0])
+    assert "} from products [FakeODCProduct(test_odc_product)]" in str(pbqs[0])
     assert str(pbqs[1]) in (
         "Query bands {'wongle', 'pq'} from products [FakeODCProduct(test_masking_product)]",
         "Query bands {'pq', 'wongle'} from products [FakeODCProduct(test_masking_product)]",
@@ -286,13 +300,15 @@ def test_user_date_sorter() -> None:
     minx, maxx = 140, 141
     miny, maxy = -35, -34
     crs = "EPSG:4326"
-    geom = polygon([(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs)
+    geom = polygon(
+        [(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs
+    )
 
-    odc_dates =  [
+    odc_dates = [
         np.datetime64(datetime.datetime(2018, 12, 31, 20, 0, 0), "ns"),
         np.datetime64(datetime.datetime(2019, 12, 31, 20, 0, 0), "ns"),
         np.datetime64(datetime.datetime(2020, 12, 31, 20, 0, 0), "ns"),
-     ]
+    ]
 
     user_dates = [
         datetime.date(2021, 1, 1),
@@ -310,17 +326,14 @@ def test_create_nodata(dummy_raw_calc_data) -> None:
     ds = DataStacker.__new__(DataStacker)
     data_in = dummy_raw_calc_data
     prod = MagicMock()
-    prod.measurements = {
-        "flagband": MagicMock()
-    }
+    prod.measurements = {"flagband": MagicMock()}
     prod.measurements["flagband"].nodata = 1
-    pbq = ProductBandQuery(
-                    [prod],
-                    ["flagband"],
-                    False)
+    pbq = ProductBandQuery([prod], ["flagband"], False)
     data_out = ds.create_nodata_filled_flag_bands(data_in, pbq)
     assert data_out["flagband"][0] == 1
     assert data_out["flagband"][5] == 1
     with pytest.raises(WMSException) as e:
         data_out = ds.create_nodata_filled_flag_bands(Dataset(), pbq)
-    assert "Cannot add default flag data as there is no non-flag data available" in str(e.value)
+    assert "Cannot add default flag data as there is no non-flag data available" in str(
+        e.value
+    )

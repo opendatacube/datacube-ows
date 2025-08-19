@@ -35,13 +35,13 @@ class SpatialParameter:
         self.y = y
 
     def is_x_dim(self, dimension: str) -> bool:
-        if dimension == self.crs_def['horizontal_coord'].lower():
+        if dimension == self.crs_def["horizontal_coord"].lower():
             return True
-        if dimension == self.crs_def['vertical_coord'].lower():
+        if dimension == self.crs_def["vertical_coord"].lower():
             return False
-        if dimension == self.layer.native_CRS_def['horizontal_coord'].lower():
+        if dimension == self.layer.native_CRS_def["horizontal_coord"].lower():
             return True
-        if dimension == self.layer.native_CRS_def['vertical_coord'].lower():
+        if dimension == self.layer.native_CRS_def["vertical_coord"].lower():
             return False
         if dimension in ("x", "i", "lon", "long", "lng", "longitude"):
             return True
@@ -160,10 +160,8 @@ class WCSScaler:
                 is_point = True
             elif self.is_slice("x") or self.is_slice("y"):
                 geom = odc_geom.line(
-                    [
-                        (self.min.x, self.min.y),
-                        (self.max.x, self.max.y)
-                    ], old_crs_obj)
+                    [(self.min.x, self.min.y), (self.max.x, self.max.y)], old_crs_obj
+                )
             else:
                 geom = odc_geom.polygon(
                     [
@@ -173,7 +171,7 @@ class WCSScaler:
                         (self.max.x, self.min.y),
                         (self.min.x, self.min.y),
                     ],
-                    old_crs_obj
+                    old_crs_obj,
                 )
             new_crs_obj = self.cfg.crs(new_crs)
             grid = self.layer.grids[new_crs]
@@ -181,8 +179,7 @@ class WCSScaler:
                 prj_pt = geom.to_crs(new_crs_obj)
                 x, y = prj_pt.coords[0]
                 self.min.set(x, y)
-                self.max.set(x + grid["resolution"][0],
-                             y + grid["resolution"][1])
+                self.max.set(x + grid["resolution"][0], y + grid["resolution"][1])
                 self.size.set(1, 1)
             else:
                 proj_geom = geom.to_crs(new_crs_obj)
@@ -217,9 +214,7 @@ class WCSScaler:
             raise WCSScalerOverspecifiedDimension()
         grid = self.layer.grids[self.crs]
         res = grid["resolution"][0 if self.min.is_x_dim(dimension) else 1]
-        scaled_size = abs(
-            (dim_max - dim_min) * factor / res
-        )
+        scaled_size = abs((dim_max - dim_min) * factor / res)
         self.set_size(dimension, scaled_size)
 
     def scale_size(self, dimension: str, size: int) -> None:
@@ -239,10 +234,10 @@ class WCSScaler:
         # Y axis is reversed: image coordinate conventions
         y_scale = (self.min.y - self.max.y) / self.size.y
         # if self.crs_def["vertical_coord_first"]:
-            # This should probably happen, but can't because PostGIS wants
-            # coords to be horizontal first, regardless of what the CRS says.
-            # trans_aff = Affine.translation(self.min.y, self.max.x)
-            # scale_aff = Affine.scale(y_scale, x_scale)
+        # This should probably happen, but can't because PostGIS wants
+        # coords to be horizontal first, regardless of what the CRS says.
+        # trans_aff = Affine.translation(self.min.y, self.max.x)
+        # scale_aff = Affine.scale(y_scale, x_scale)
         # else:
         trans_aff = Affine.translation(self.min.x, self.max.y)
         scale_aff = Affine.scale(x_scale, y_scale)

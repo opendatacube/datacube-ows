@@ -28,15 +28,25 @@ def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
 
 
 def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
-    if not importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}").is_dir():
-        print("Cannot find SQL resource directory - check your datacube-ows installation")
+    if (
+        not importlib.resources.files("datacube_ows")
+        .joinpath(f"sql/{driver_name}/{path}")
+        .is_dir()
+    ):
+        print(
+            "Cannot find SQL resource directory - check your datacube-ows installation"
+        )
         return False
 
     files = sorted(
-        importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}").iterdir()  # type: ignore[type-var]
+        importlib.resources.files("datacube_ows")
+        .joinpath(f"sql/{driver_name}/{path}")
+        .iterdir()  # type: ignore[type-var]
     )
 
-    filename_req_pattern = re.compile(r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql")
+    filename_req_pattern = re.compile(
+        r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql"
+    )
     filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
     conn = get_sqlconn(dc)
     try:
@@ -54,7 +64,9 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
                 try:
                     kwargs = {v: params[v] for v in reqs}
                 except KeyError as e:
-                    click.echo(f"Required parameter {e} for file {fname} not supplied - skipping")
+                    click.echo(
+                        f"Required parameter {e} for file {fname} not supplied - skipping"
+                    )
                     all_ok = False
                     continue
             else:
@@ -70,7 +82,9 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
 
 
 def read_file(driver_name: str, path: str, fname: str, **kwargs: str) -> str:
-    ref = importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}/{fname}")
+    ref = importlib.resources.files("datacube_ows").joinpath(
+        f"sql/{driver_name}/{path}/{fname}"
+    )
     sql = ""
     with ref.open("rb") as fp:
         first = True
@@ -87,7 +101,9 @@ def read_file(driver_name: str, path: str, fname: str, **kwargs: str) -> str:
     return sql
 
 
-def run_sql_statement(sql: str, fname: str, conn: sqlalchemy.Connection, env: datacube.cfg.ODCEnvironment) -> None:
+def run_sql_statement(
+    sql: str, fname: str, conn: sqlalchemy.Connection, env: datacube.cfg.ODCEnvironment
+) -> None:
     try:
         result = conn.execute(sqlalchemy.text(sql))
         click.echo(f"    ...  succeeded(?) with rowcount {result.rowcount}")
@@ -99,7 +115,7 @@ def run_sql_statement(sql: str, fname: str, conn: sqlalchemy.Connection, env: da
             )
             raise AbortRun() from None
         if isinstance(e.orig, psycopg2.errors.DuplicateObject):
-            if fname.endswith('_ignore_duplicates.sql'):
+            if fname.endswith("_ignore_duplicates.sql"):
                 click.echo("Ignoring 'already exists' error")
             else:
                 raise e from None

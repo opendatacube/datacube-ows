@@ -18,10 +18,9 @@ from datacube_ows.utils import log_call
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
-
-
 # NB. No need to disambiguate method names shared with WMS because WMTS requires
 # a "SERVICE" parameter with every request.
+
 
 @log_call
 def handle_wmts(nocase_args) -> tuple:
@@ -35,8 +34,11 @@ def handle_wmts(nocase_args) -> tuple:
         return get_tile(nocase_args)
     if operation == "GETFEATUREINFO":
         return get_feature_info(nocase_args)
-    raise WMTSException(f"Unrecognised operation: {operation}", WMTSException.OPERATION_NOT_SUPPORTED,
-                       "Request parameter")
+    raise WMTSException(
+        f"Unrecognised operation: {operation}",
+        WMTSException.OPERATION_NOT_SUPPORTED,
+        "Request parameter",
+    )
 
 
 @log_call
@@ -45,7 +47,7 @@ def get_capabilities(args) -> tuple:
     # Note: Only WMS v1.0.0 exists at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     cfg = get_config()
-    url = args.get('Host', args['url_root'])
+    url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
     section = args.get("section")
     if section:
@@ -81,9 +83,11 @@ def get_capabilities(args) -> tuple:
             elif s == "themes":
                 show_themes = True
             else:
-                raise WMTSException(f"Invalid section: {section}",
-                                WMTSException.INVALID_PARAMETER_VALUE,
-                                locator="Section parameter")
+                raise WMTSException(
+                    f"Invalid section: {section}",
+                    WMTSException.INVALID_PARAMETER_VALUE,
+                    locator="Section parameter",
+                )
     headers = cache_control_headers(cfg.wms_cap_cache_age)
     headers["Content-Type"] = "application/xml"
     return (
@@ -95,9 +99,10 @@ def get_capabilities(args) -> tuple:
             show_service_provider=show_service_provider,
             show_ops_metadata=show_ops_metadata,
             show_contents=show_contents,
-            show_themes=show_themes),
+            show_themes=show_themes,
+        ),
         200,
-        cfg.response_headers(headers)
+        cfg.response_headers(headers),
     )
 
 
@@ -123,7 +128,7 @@ def wmts_args_to_wms(args, cfg) -> dict:
         "height": 256,
         "format": format_,
         "exceptions": "application/vnd.ogc.se_xml",
-        "requestid": args["requestid"]
+        "requestid": args["requestid"],
     }
 
     tms = cfg.tile_matrix_sets.get(tileMatrixSet)
@@ -152,14 +157,15 @@ def wmts_args_to_wms(args, cfg) -> dict:
         col = int(col)
     except ValueError:
         raise WMTSException(f"Invalid Tile Col: {col}") from None
-    wms_args["bbox"] = "{:f},{:f},{:f},{:f}".format(*tms.wms_bbox_coords(tileMatrix, row, col))
+    wms_args["bbox"] = "{:f},{:f},{:f},{:f}".format(
+        *tms.wms_bbox_coords(tileMatrix, row, col)
+    )
 
     # GetFeatureInfo only args
     if "i" in args:
         wms_args["i"] = args["i"]
         wms_args["j"] = args.get("j", "")
         wms_args["info_format"] = args.get("infoformat", "")
-
 
     if args.get("ows_stats"):
         wms_args["ows_stats"] = "y"
@@ -176,10 +182,12 @@ def get_tile(args) -> tuple:
         return get_map(wms_args)
     except WMSException as wmse:
         first_error = wmse.errors[0]
-        e = WMTSException(first_error["msg"],
-                            code=first_error["code"],
-                            locator=first_error["locator"],
-                            http_response=wmse.http_response)
+        e = WMTSException(
+            first_error["msg"],
+            code=first_error["code"],
+            locator=first_error["locator"],
+            http_response=wmse.http_response,
+        )
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
         raise e from None
@@ -195,10 +203,12 @@ def get_feature_info(args) -> tuple:
         return feature_info(wms_args)
     except WMSException as wmse:
         first_error = wmse.errors[0]
-        e = WMTSException(first_error["msg"],
-                          code=first_error["code"],
-                          locator=first_error["locator"],
-                          http_response=wmse.http_response)
+        e = WMTSException(
+            first_error["msg"],
+            code=first_error["code"],
+            locator=first_error["locator"],
+            http_response=wmse.http_response,
+        )
         for error in wmse.errors[1:]:
             e.add_error(error["msg"], code=error["code"], locator=error["locator"])
         raise e from None

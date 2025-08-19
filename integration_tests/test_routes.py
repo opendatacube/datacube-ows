@@ -4,8 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Run with DB to simulate actual function
-"""
+"""Run with DB to simulate actual function"""
 
 
 def test_db_connect_success(flask_client) -> None:

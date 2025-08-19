@@ -16,17 +16,20 @@ def test_cfg_attrib_empty(minimal_owner) -> None:
     attrib = AttributionCfg.parse({}, minimal_owner)
     assert attrib is None
 
+
 @pytest.fixture
 def minimal_owner():
     owner = MagicMock()
     owner.attribution_title = None
     return owner
 
+
 @pytest.fixture
 def owner_w_attrib_title():
     owner = MagicMock()
     owner.attribution_title = "Sir"
     return owner
+
 
 def test_cfg_attrib_emptyfail(minimal_owner) -> None:
     with pytest.raises(ConfigException) as excinfo:
@@ -35,9 +38,7 @@ def test_cfg_attrib_emptyfail(minimal_owner) -> None:
 
 
 def test_cfg_attrib_title_only(owner_w_attrib_title) -> None:
-    attrib = AttributionCfg.parse({
-        "title": "Sir"
-    }, owner_w_attrib_title)
+    attrib = AttributionCfg.parse({"title": "Sir"}, owner_w_attrib_title)
     assert attrib.title == "Sir"
     assert attrib.get("title") == "Sir"
     assert attrib.logo_width is None
@@ -45,21 +46,17 @@ def test_cfg_attrib_title_only(owner_w_attrib_title) -> None:
 
 
 def test_cfg_attrib_url_only(minimal_owner) -> None:
-    attrib = AttributionCfg.parse({
-        "url": "http://test.url/path/name",
-    }, minimal_owner)
+    attrib = AttributionCfg.parse({"url": "http://test.url/path/name"}, minimal_owner)
     assert attrib.title is None
     assert attrib.logo_width is None
     assert attrib.url == "http://test.url/path/name"
 
 
 def test_cfg_attrib_minimal_logo_only(minimal_owner) -> None:
-    attrib = AttributionCfg.parse({
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png"
-        }
-    }, minimal_owner)
+    attrib = AttributionCfg.parse(
+        {"logo": {"url": "http://test.url/path/img.png", "format": "image/png"}},
+        minimal_owner,
+    )
     assert attrib.title is None
     assert attrib.url is None
     assert attrib.logo_url == "http://test.url/path/img.png"
@@ -69,55 +66,58 @@ def test_cfg_attrib_minimal_logo_only(minimal_owner) -> None:
 
 def test_cfg_attrib_logo_requirements(minimal_owner) -> None:
     with pytest.raises(ConfigException) as excinfo:
-        _ = AttributionCfg.parse({
-            "logo": {
-                "url": "http://test.url/path/img.png",
-            }
-        }, minimal_owner)
+        _ = AttributionCfg.parse(
+            {"logo": {"url": "http://test.url/path/img.png"}}, minimal_owner
+        )
     assert "url and format" in str(excinfo.value)
     with pytest.raises(ConfigException) as excinfo:
-        _ = AttributionCfg.parse({
-            "logo": {
-                "format": "image/png"
-            }
-        }, minimal_owner)
+        _ = AttributionCfg.parse({"logo": {"format": "image/png"}}, minimal_owner)
     assert "url and format" in str(excinfo.value)
 
 
 def test_cfg_attrib_logo_options(minimal_owner) -> None:
-    attrib = AttributionCfg.parse({
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png",
-            "width": 200
-        }
-    }, minimal_owner)
+    attrib = AttributionCfg.parse(
+        {
+            "logo": {
+                "url": "http://test.url/path/img.png",
+                "format": "image/png",
+                "width": 200,
+            }
+        },
+        minimal_owner,
+    )
     assert attrib.logo_url == "http://test.url/path/img.png"
     assert attrib.logo_fmt == "image/png"
     assert attrib.logo_width == 200
     assert attrib.logo_height is None
-    attrib = AttributionCfg.parse({
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png",
-            "width": 200,
-            "height": 300
-        }
-    }, minimal_owner)
+    attrib = AttributionCfg.parse(
+        {
+            "logo": {
+                "url": "http://test.url/path/img.png",
+                "format": "image/png",
+                "width": 200,
+                "height": 300,
+            }
+        },
+        minimal_owner,
+    )
     assert attrib.logo_height == 300
 
 
 def test_cfg_attrib_all_flds(minimal_dc, owner_w_attrib_title) -> None:
-    attrib = AttributionCfg.parse({
-        "title": "Sir",
-        "url": "http://test.url/path",
-        "logo": {
-            "url": "http://test.url/path/img.png",
-            "format": "image/png",
-            "width": 200,
-            "height": 150,
-        }
-    }, owner_w_attrib_title)
+    attrib = AttributionCfg.parse(
+        {
+            "title": "Sir",
+            "url": "http://test.url/path",
+            "logo": {
+                "url": "http://test.url/path/img.png",
+                "format": "image/png",
+                "width": 200,
+                "height": 150,
+            },
+        },
+        owner_w_attrib_title,
+    )
     assert attrib.title == "Sir"
     assert attrib.url == "http://test.url/path"
     assert attrib.logo_url == "http://test.url/path/img.png"
@@ -137,33 +137,21 @@ def test_surl_empty() -> None:
 
 def test_surl_no_url() -> None:
     with pytest.raises(KeyError):
-        _ = SuppURL.parse_list([
-            {
-                "format": "text/html"
-            }
-        ])
+        _ = SuppURL.parse_list([{"format": "text/html"}])
 
 
 def test_surl_no_format() -> None:
     with pytest.raises(KeyError):
-        _ = SuppURL.parse_list([
-            {
-                "url": "http://test.url/path"
-            }
-        ])
+        _ = SuppURL.parse_list([{"url": "http://test.url/path"}])
 
 
 def test_surl_full(minimal_dc) -> None:
-    supps = SuppURL.parse_list([
-        {
-            "url": "http://test.url/path",
-            "format": "text/html"
-        },
-        {
-            "url": "http://test.url/another_path",
-            "format": "text/plain"
-        },
-    ])
+    supps = SuppURL.parse_list(
+        [
+            {"url": "http://test.url/path", "format": "text/html"},
+            {"url": "http://test.url/another_path", "format": "text/plain"},
+        ]
+    )
     assert len(supps) == 2
     assert supps[0].url == "http://test.url/path"
     assert supps[1].url == "http://test.url/another_path"

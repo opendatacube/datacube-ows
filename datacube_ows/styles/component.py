@@ -28,31 +28,52 @@ class ComponentStyleDef(StyleDefBase):
     Style Subclass that allows the behaviour of each component (red, green, blue, alpha) to be
     specified independently.
     """
-    def __init__(self, product: "OWSNamedLayer",
-                 style_cfg: CFG_DICT,
-                 stand_alone: bool = False,
-                 defer_multi_date: bool = False,
-                 user_defined: bool = False) -> None:
+
+    def __init__(
+        self,
+        product: "OWSNamedLayer",
+        style_cfg: CFG_DICT,
+        stand_alone: bool = False,
+        defer_multi_date: bool = False,
+        user_defined: bool = False,
+    ) -> None:
         """
         See superclass
         """
-        super().__init__(product, style_cfg,
-                         stand_alone=stand_alone, defer_multi_date=defer_multi_date, user_defined=user_defined)
+        super().__init__(
+            product,
+            style_cfg,
+            stand_alone=stand_alone,
+            defer_multi_date=defer_multi_date,
+            user_defined=user_defined,
+        )
         style_cfg: CFG_DICT = cast(CFG_DICT, self._raw_cfg)
         self.raw_rgb_components: dict[str, Callable | LINEAR_COMP_DICT] = {}
-        raw_components = cast(dict[str, Callable | LINEAR_COMP_DICT], style_cfg["components"])
+        raw_components = cast(
+            dict[str, Callable | LINEAR_COMP_DICT], style_cfg["components"]
+        )
         for imgband in ["red", "green", "blue", "alpha"]:
-            components = cast(Callable | LINEAR_COMP_DICT | CFG_DICT | None, raw_components.get(imgband))
+            components = cast(
+                Callable | LINEAR_COMP_DICT | CFG_DICT | None,
+                raw_components.get(imgband),
+            )
             if components is None:
                 if imgband == "alpha":
                     continue
-                raise ConfigException(f"No components defined for {imgband} band in style {self.name}, layer {product.name}")
+                raise ConfigException(
+                    f"No components defined for {imgband} band in style {self.name}, layer {product.name}"
+                )
             if callable(components) or "function" in components:
-                self.raw_rgb_components[imgband] = FunctionWrapper(self.product, cast(CFG_DICT | Callable, components),
-                                                                   stand_alone=self.stand_alone)
+                self.raw_rgb_components[imgband] = FunctionWrapper(
+                    self.product,
+                    cast(CFG_DICT | Callable, components),
+                    stand_alone=self.stand_alone,
+                )
                 if not self.stand_alone:
                     if "additional_bands" not in style_cfg:
-                        raise ConfigException("Style with a function component must declare additional_bands.")
+                        raise ConfigException(
+                            "Style with a function component must declare additional_bands."
+                        )
                     for b in cast(list[str], style_cfg.get("additional_bands", [])):
                         self.raw_needed_bands.add(b)
             else:
@@ -65,7 +86,9 @@ class ComponentStyleDef(StyleDefBase):
 
         self.scale_factor = cast(float, style_cfg.get("scale_factor"))
         if "scale_range" in style_cfg:
-            self.scale_min, self.scale_max = cast(list[float | None], style_cfg["scale_range"])
+            self.scale_min, self.scale_max = cast(
+                list[float | None], style_cfg["scale_range"]
+            )
         elif self.scale_factor:
             self.scale_min = 0.0
             self.scale_max = 255.0 * self.scale_factor
@@ -106,7 +129,9 @@ class ComponentStyleDef(StyleDefBase):
         super().make_ready(*args, **kwargs)
         self.raw_rgb_components = {}
 
-    def dealias_components(self, comp_in: LINEAR_COMP_DICT | None) -> LINEAR_COMP_DICT | None:
+    def dealias_components(
+        self, comp_in: LINEAR_COMP_DICT | None
+    ) -> LINEAR_COMP_DICT | None:
         """
         Convert a component dictionary with band aliases to a component dictionary using canonical band names.
 
@@ -119,7 +144,8 @@ class ComponentStyleDef(StyleDefBase):
             return None
         return {
             self.product.band_idx.band(self.local_band(band_alias)): value
-            for band_alias, value in comp_in.items() if band_alias not in ['scale_range']
+            for band_alias, value in comp_in.items()
+            if band_alias not in ["scale_range"]
         }
 
     def compress_band(self, component_name: str, imgband_data: DataArray) -> DataArray:
@@ -145,10 +171,12 @@ class ComponentStyleDef(StyleDefBase):
         :return: RGBA uint8 xarray
         """
         imgdata = cast(dict[Hashable, Any], {})
-        for imgband, components in cast(dict[str, Callable | LINEAR_COMP_DICT], self.rgb_components).items():
+        for imgband, components in cast(
+            dict[str, Callable | LINEAR_COMP_DICT], self.rgb_components
+        ).items():
             if callable(components):
                 imgband_data = components(data)
-                imgband_data = imgband_data.astype('uint8')
+                imgband_data = imgband_data.astype("uint8")
                 imgdata[imgband] = imgband_data
             else:
                 imgband_data = None
@@ -165,8 +193,10 @@ class ComponentStyleDef(StyleDefBase):
                     else:
                         imgband_data = imgband_component
                 if imgband_data is None:
-                    null_np = np.zeros(tuple(data.sizes.values()), 'float64')
-                    imgband_data = DataArray(null_np, data.coords, tuple(data.sizes.keys()))
+                    null_np = np.zeros(tuple(data.sizes.values()), "float64")
+                    imgband_data = DataArray(
+                        null_np, data.coords, tuple(data.sizes.keys())
+                    )
                 if imgband != "alpha":
                     imgband_data = self.compress_band(imgband, imgband_data)
                 imgdata[imgband] = imgband_data.astype("uint8")

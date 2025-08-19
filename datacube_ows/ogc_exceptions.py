@@ -23,29 +23,33 @@ class OGCException(Exception):
     schema_url: str | None = None
 
     # pylint: disable=super-init-not-called
-    def __init__(self, msg, code=None, locator=None, http_response: int = 400, valid_keys=None) -> None:
+    def __init__(
+        self, msg, code=None, locator=None, http_response: int = 400, valid_keys=None
+    ) -> None:
         self.http_response = http_response
         self.errors: list = []
         self.add_error(msg, code, locator, valid_keys)
 
     def add_error(self, msg, code=None, locator=None, valid_keys=None) -> None:
-        self.errors.append({
-            "msg": msg,
-            "code": code,
-            "locator": locator,
-            "valid_keys": valid_keys
-        })
+        self.errors.append(
+            {"msg": msg, "code": code, "locator": locator, "valid_keys": valid_keys}
+        )
 
     # pylint: disable=dangerous-default-value
-    def exception_response(self, traceback: list | None = None) -> tuple[str, int, dict[str, str]]:
-        return (render_template("ogc_error.xml",
-                                exception=self,
-                                traceback=[] if traceback is None else traceback,
-                                version=self.version,
-                                schema_url=self.schema_url),
-                self.http_response,
-                resp_headers({"Content-Type": "application/xml"})
-               )
+    def exception_response(
+        self, traceback: list | None = None
+    ) -> tuple[str, int, dict[str, str]]:
+        return (
+            render_template(
+                "ogc_error.xml",
+                exception=self,
+                traceback=[] if traceback is None else traceback,
+                version=self.version,
+                schema_url=self.schema_url,
+            ),
+            self.http_response,
+            resp_headers({"Content-Type": "application/xml"}),
+        )
 
 
 class WMSException(OGCException):
@@ -107,9 +111,9 @@ class WCS2Exception(OGCException):
             traceback = []
         exceptions = [
             OWSException(
-                code=error['code'],
-                locator=error['locator'],
-                text=[error['msg'], *tb.format_list(traceback)]
+                code=error["code"],
+                locator=error["locator"],
+                text=[error["msg"], *tb.format_list(traceback)],
             )
             for error in self.errors
         ]
@@ -121,5 +125,5 @@ class WCS2Exception(OGCException):
         return (
             result.value,
             self.http_response,
-            resp_headers({"Content-Type": "application/xml"})
+            resp_headers({"Content-Type": "application/xml"}),
         )

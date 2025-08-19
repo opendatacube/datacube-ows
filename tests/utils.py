@@ -13,12 +13,33 @@ MOTO_PORT = "5555"
 MOTO_S3_ENDPOINT_URI = "http://127.0.0.1:" + MOTO_PORT
 
 coords = [
-    ('x', [
-        0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
-        10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0,
-    ]),
-    ('y', [-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]),
-    ('time', [np.datetime64(datetime.date.today(), "ns")])
+    (
+        "x",
+        [
+            0.0,
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            11.0,
+            12.0,
+            13.0,
+            14.0,
+            15.0,
+            16.0,
+            17.0,
+            18.0,
+            19.0,
+        ],
+    ),
+    ("y", [-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]),
+    ("time", [np.datetime64(datetime.date.today(), "ns")]),
 ]
 
 
@@ -33,38 +54,27 @@ def dummy_da(val, name: str, coords, attrs=None, dtype=np.float64) -> xr.DataArr
     data = np.ndarray([len(a) for n, a in coords], dtype=dtype)
     coords = dict(coords)
     data.fill(val)
-    return xr.DataArray(
-        data,
-        coords=coords,
-        dims=dims,
-        attrs=attrs,
-        name=name,
-    )
+    return xr.DataArray(data, coords=coords, dims=dims, attrs=attrs, name=name)
 
 
-def dim1_da(name: str, vals: list, coords: list, with_time: bool = True, attrs=None) -> xr.DataArray:
+def dim1_da(
+    name: str, vals: list, coords: list, with_time: bool = True, attrs=None
+) -> xr.DataArray:
     if len(vals) != len(coords):
         raise Exception("vals and coords must match len")
     if attrs is None:
         attrs = {}
     dims = ["dim"]
     shape = [len(coords)]
-    coords = {
-        'dim': coords,
-    }
+    coords = {"dim": coords}
     if with_time:
         dims.append("time")
         coords["time"] = [np.datetime64(datetime.date.today(), "ns")]
         shape.append(1)
     buff_arr = np.array(vals)
     data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
-    return xr.DataArray(
-        data,
-        coords=coords,
-        dims=dims,
-        attrs=attrs,
-        name=name,
-    )
+    return xr.DataArray(data, coords=coords, dims=dims, attrs=attrs, name=name)
+
 
 def dim1_da_time(name: str, vals, dates, coords, attrs=None) -> xr.DataArray:
     if len(coords) != len(vals):
@@ -74,16 +84,7 @@ def dim1_da_time(name: str, vals, dates, coords, attrs=None) -> xr.DataArray:
             raise Exception("dates and coords must match lengths")
     dims = ["dim", "time"]
     shape = [len(coords), len(dates)]
-    coords = {
-        "dim": coords,
-        "time": [np.datetime64(d, "ns") for d in dates],
-    }
+    coords = {"dim": coords, "time": [np.datetime64(d, "ns") for d in dates]}
     buff_arr = np.array(vals)
     data = np.ndarray(shape, buffer=buff_arr, dtype=buff_arr.dtype)
-    return xr.DataArray(
-        data,
-        coords=coords,
-        dims=dims,
-        attrs=attrs,
-        name=name,
-    )
+    return xr.DataArray(data, coords=coords, dims=dims, attrs=attrs, name=name)

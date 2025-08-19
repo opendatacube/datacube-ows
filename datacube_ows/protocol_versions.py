@@ -27,7 +27,9 @@ FlaskHandler = Callable[[Mapping[str, str]], FlaskResponse]
 
 
 class SupportedSvcVersion:
-    def __init__(self, service: str, version: str, router, exception_class: type[OGCException]) -> None:
+    def __init__(
+        self, service: str, version: str, router, exception_class: type[OGCException]
+    ) -> None:
         self.service = service.lower()
         self.service_upper = service.upper()
         self.version = version
@@ -38,7 +40,11 @@ class SupportedSvcVersion:
 
 
 class SupportedSvc:
-    def __init__(self, versions: Sequence[SupportedSvcVersion], default_exception_class: type[OGCException] | None = None) -> None:
+    def __init__(
+        self,
+        versions: Sequence[SupportedSvcVersion],
+        default_exception_class: type[OGCException] | None = None,
+    ) -> None:
         self.versions = sorted(versions, key=lambda x: x.version_parts)
         assert len(self.versions) > 0
         self.service = self.versions[0].service
@@ -78,7 +84,7 @@ class SupportedSvc:
             if rv_parts >= v.version_parts:
                 return v
         # The constructor asserted that self.versions is not empty, so this is safe.
-        #pylint: disable=undefined-loop-variable
+        # pylint: disable=undefined-loop-variable
         return v
 
     def activated(self) -> bool:
@@ -87,17 +93,19 @@ class SupportedSvc:
 
 
 OWS_SUPPORTED = {
-    "wms": SupportedSvc([
-        SupportedSvcVersion("wms", "1.3.0", handle_wms, WMSException),
-    ]),
-    "wmts": SupportedSvc([
-        SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException),
-    ]),
-    "wcs": SupportedSvc([
-        SupportedSvcVersion("wcs", "1.0.0", handle_wcs1, WCS1Exception),
-        SupportedSvcVersion("wcs", "2.0.0", handle_wcs2, WCS2Exception),
-        SupportedSvcVersion("wcs", "2.1.0", handle_wcs2, WCS2Exception),
-    ]),
+    "wms": SupportedSvc(
+        [SupportedSvcVersion("wms", "1.3.0", handle_wms, WMSException)]
+    ),
+    "wmts": SupportedSvc(
+        [SupportedSvcVersion("wmts", "1.0.0", handle_wmts, WMTSException)]
+    ),
+    "wcs": SupportedSvc(
+        [
+            SupportedSvcVersion("wcs", "1.0.0", handle_wcs1, WCS1Exception),
+            SupportedSvcVersion("wcs", "2.0.0", handle_wcs2, WCS2Exception),
+            SupportedSvcVersion("wcs", "2.1.0", handle_wcs2, WCS2Exception),
+        ]
+    ),
 }
 
 

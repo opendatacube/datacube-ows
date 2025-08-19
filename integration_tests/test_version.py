@@ -7,6 +7,7 @@
 """Test update ranges on DB using Click testing
 https://click.palletsprojects.com/en/7.x/testing/
 """
+
 from datacube_ows.__init__ import __version__
 from datacube_ows.update_ranges_impl import main
 

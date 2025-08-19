@@ -22,6 +22,7 @@ def test_ids_datasets() -> None:
         def __init__(self, id_) -> None:
             self.id = id_
             self.c = self
+
     stv = MockSTV(42)
     assert MVSelectOpts.IDS.sel(stv) == [42]
     assert MVSelectOpts.DATASETS.sel(stv) == [42]
@@ -35,6 +36,7 @@ def test_extent() -> None:
 
 def test_count() -> None:
     from sqlalchemy import text
+
     stv = MockSTV(id_=text("foo"))
     sel = MVSelectOpts.COUNT.sel(stv)
     assert len(sel) == 1

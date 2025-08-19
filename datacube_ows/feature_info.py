@@ -31,9 +31,12 @@ from datacube_ows.wms_utils import GetFeatureInfoParameters, img_coords_to_geopo
 
 
 @log_call
-def get_s3_browser_uris(datasets: dict[ProductBandQuery, xarray.DataArray],
-                        pt: geom.Geometry | None = None,
-                        s3url: str = "", s3bucket: str = "") -> set[str]:
+def get_s3_browser_uris(
+    datasets: dict[ProductBandQuery, xarray.DataArray],
+    pt: geom.Geometry | None = None,
+    s3url: str = "",
+    s3bucket: str = "",
+) -> set[str]:
     uris = []
     last_crs = None
     for pbq, dss in datasets.items():
@@ -55,19 +58,24 @@ def get_s3_browser_uris(datasets: dict[ProductBandQuery, xarray.DataArray],
     uris = list(chain.from_iterable(uris))
     unique_uris = set(uris)
 
-    regex = re.compile(r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-\.]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-\.]+.(yaml|json)")
+    regex = re.compile(
+        r"s3:\/\/(?P<bucket>[a-zA-Z0-9_\-\.]+)\/(?P<prefix>[\S]+)/[a-zA-Z0-9_\-\.]+.(yaml|json)"
+    )
 
     # convert to browsable link
     def convert(uri: str) -> str:
-        uri_format = "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
+        uri_format = (
+            "http://{bucket}.s3-website-ap-southeast-2.amazonaws.com/?prefix={prefix}"
+        )
         uri_format_prod = str(s3url) + "/?prefix={prefix}"
         result = regex.match(uri)
         if result is not None:
             if result.group("bucket") == str(s3bucket):
                 new_uri = uri_format_prod.format(prefix=result.group("prefix"))
             else:
-                new_uri = uri_format.format(bucket=result.group("bucket"),
-                                            prefix=result.group("prefix"))
+                new_uri = uri_format.format(
+                    bucket=result.group("bucket"), prefix=result.group("prefix")
+                )
         else:
             new_uri = uri
         return new_uri
@@ -75,9 +83,10 @@ def get_s3_browser_uris(datasets: dict[ProductBandQuery, xarray.DataArray],
     return {convert(uri) for uri in unique_uris}
 
 
-
 @log_call
-def _make_band_dict(prod_cfg: OWSNamedLayer, pixel_dataset: xarray.Dataset) -> dict[str, dict[str, bool | str] | str]:
+def _make_band_dict(
+    prod_cfg: OWSNamedLayer, pixel_dataset: xarray.Dataset
+) -> dict[str, dict[str, bool | str] | str]:
     band_dict: dict[str, dict[str, bool | str] | str] = {}
     for k, _ in pixel_dataset.data_vars.items():
         band_val = pixel_dataset[k].item()
@@ -86,18 +95,18 @@ def _make_band_dict(prod_cfg: OWSNamedLayer, pixel_dataset: xarray.Dataset) -> d
             try:
                 flag_dict = mask_to_dict(flag_def, band_val)
             except TypeError:
-                logging.warning('Working around for float bands')
+                logging.warning("Working around for float bands")
                 flag_dict = mask_to_dict(flag_def, int(band_val))
             ret_val: dict[str, bool | str] = {}
             for flag, val in flag_dict.items():
                 if not val:
                     continue
-                ret_val[flag_def[flag].get('description', flag)] = val
+                ret_val[flag_def[flag].get("description", flag)] = val
             band_dict[k] = ret_val
         else:
             try:
                 band_lbl = prod_cfg.band_idx.band_label(k)
-                assert k is not None   # for type checker
+                assert k is not None  # for type checker
                 if band_val == pixel_dataset[k].nodata or numpy.isnan(band_val):
                     band_dict[band_lbl] = "n/a"
                 else:
@@ -123,7 +132,10 @@ def _make_derived_band_dict(
         if not style.include_in_feature_info:
             continue
 
-        if any(pixel_dataset[band] == pixel_dataset[band].nodata for band in style.needed_bands):
+        if any(
+            pixel_dataset[band] == pixel_dataset[band].nodata
+            for band in style.needed_bands
+        ):
             continue
 
         value = style.index_function(pixel_dataset).item()
@@ -151,7 +163,8 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
     else:
         # Make a 1x1 pixel geobox
         geo_point_geobox = GeoBox.from_geopolygon(
-            geo_point, params.geobox.resolution, crs=params.geobox.crs)
+            geo_point, params.geobox.resolution, crs=params.geobox.crs
+        )
     stacker = DataStacker(params.layer, geo_point_geobox, params.times)  # type: ignore[arg-type]
     # --- Begin code section requiring datacube.
     cfg = get_config()
@@ -162,16 +175,15 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
     v_coord = cast(str, cfg.published_CRSs[params.crsid]["vertical_coord"])
     s3_bucket = cfg.s3_bucket
     s3_url = cfg.s3_url
-    isel_kwargs = {
-        h_coord: 0,
-        v_coord: 0
-    }
+    isel_kwargs = {h_coord: 0, v_coord: 0}
     if any(all_time_datasets):
         # Group datasets by time, load only datasets that match the idx_date
         global_info_written = False
         feature_json["data"] = []
         fi_date_index: dict[datetime, RAW_CFG] = {}
-        time_datasets = stacker.datasets(all_flag_bands=True, point=geo_point_geobox.extent)
+        time_datasets = stacker.datasets(
+            all_flag_bands=True, point=geo_point_geobox.extent
+        )
         data = stacker.data(time_datasets, skip_corrections=True)
         if data is not None:
             for dt in data.time.values:
@@ -206,7 +218,9 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 assert ds is not None
                 if params.layer.multi_product:
                     if "platform" in ds.metadata_doc:
-                        date_info["source_product"] = f"{ds.product.name} ({ds.metadata_doc['platform']['code']})"
+                        date_info["source_product"] = (
+                            f"{ds.product.name} ({ds.metadata_doc['platform']['code']})"
+                        )
                     else:
                         date_info["source_product"] = ds.product.name
 
@@ -218,10 +232,16 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 if params.layer.time_resolution.is_summary():
                     date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
                 else:
-                    date_info["time"] = dataset_center_time(ds).strftime("%Y-%m-%d %H:%M:%S %Z")
+                    date_info["time"] = dataset_center_time(ds).strftime(
+                        "%Y-%m-%d %H:%M:%S %Z"
+                    )
                 # Collect raw band values for pixel and derived bands from styles
-                date_info["bands"] = cast(RAW_CFG, _make_band_dict(params.layer, pixel_ds))
-                derived_band_dict = cast(RAW_CFG, _make_derived_band_dict(pixel_ds, params.layer.style_index))
+                date_info["bands"] = cast(
+                    RAW_CFG, _make_band_dict(params.layer, pixel_ds)
+                )
+                derived_band_dict = cast(
+                    RAW_CFG, _make_derived_band_dict(pixel_ds, params.layer.style_index)
+                )
                 if derived_band_dict:
                     date_info["band_derived"] = derived_band_dict
                 # Add any legacy custom-defined fields.
@@ -247,16 +267,16 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                         date_info[k] = f(pixel_ds, ds)
 
                 cast(list[RAW_CFG], feature_json["data"]).append(date_info)
-                fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)["data"][-1]
+                fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)[
+                    "data"
+                ][-1]
             # Multidate custom includes reflect all selected times on multidate requests,
             # and are added as an extra all-time data record after the date ones.
             times = list(data.time.values)
             if len(times) > 1 and params.style is not None:
                 mdh = params.style.get_multi_date_handler(times)
                 if mdh is not None:
-                    date_info = {
-                        "time": "all"
-                    }
+                    date_info = {"time": "all"}
                     for k, f in mdh.feature_info_includes.items():
                         # Function signature: pass in:
                         # * a multi-date single pixel (1x1xn) multiband xarray Dataset,
@@ -274,14 +294,21 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                     # tolist() converts a numpy datetime64 to a python datatime
                     dt = Timestamp(stacker.group_by.group_by_func(ds)).to_pydatetime()
                     if params.layer.time_resolution.is_subday():
-                        cast(list[RAW_CFG], feature_json["data_available_for_dates"]).append(dt.isoformat())
+                        cast(
+                            list[RAW_CFG], feature_json["data_available_for_dates"]
+                        ).append(dt.isoformat())
                     else:
-                        cast(list[RAW_CFG], feature_json["data_available_for_dates"]).append(dt.strftime("%Y-%m-%d"))
+                        cast(
+                            list[RAW_CFG], feature_json["data_available_for_dates"]
+                        ).append(dt.strftime("%Y-%m-%d"))
                     break
         if time_datasets:
             feature_json["data_links"] = cast(
                 RAW_CFG,
-                sorted(get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket)))
+                sorted(
+                    get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket)
+                ),
+            )
         else:
             feature_json["data_links"] = []
         if params.layer.feature_info_include_utc_dates:
@@ -296,7 +323,8 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                     else:
                         unsorted_dates.append(ds.time.begin.strftime("%Y-%m-%d"))
             feature_json["data_available_for_utc_dates"] = sorted(
-                d.center_time.strftime("%Y-%m-%d") for d in all_time_datasets)
+                d.center_time.strftime("%Y-%m-%d") for d in all_time_datasets
+            )
 
     result: CFG_DICT = {
         "type": "FeatureCollection",
@@ -306,10 +334,10 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 "properties": feature_json,
                 "geometry": {
                     "type": "Point",
-                    "coordinates": geo_point.coords[0]  # type: ignore[dict-item]
-                }
+                    "coordinates": geo_point.coords[0],  # type: ignore[dict-item]
+                },
             }
-        ]
+        ],
     }
     if params.format == "text/html":
         return html_json_response(result, cfg)

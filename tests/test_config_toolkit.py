@@ -8,17 +8,11 @@ from datacube_ows.config_toolkit import deepinherit
 
 
 def test_deepinherit_shallow() -> None:
-    parent = {
-        "a": 72,
-        "b": "eagle",
-        "c": False
-    }
+    parent = {"a": 72, "b": "eagle", "c": False}
 
-    child = {
-        "a": 365
-    }
+    child = {"a": 365}
     child = deepinherit(parent, child)
-    assert child['a'] == 365
+    assert child["a"] == 365
     assert child["b"] == "eagle"
     assert not child["c"]
 
@@ -32,21 +26,16 @@ def test_deepinherit_deep() -> None:
             "cake": "chocolate",
             "y": ["some", "body", "once"],
             "z": [44, 42, 53],
-            "c": {
-                "foo": "bar",
-                "wing": "wang"
-            }
-        }
+            "c": {"foo": "bar", "wing": "wang"},
+        },
     }
 
     child = {
         "b": {
             "spice": "nutmeg",
-            "c": {
-                "wing": "chicken"
-            },
+            "c": {"wing": "chicken"},
             "y": ["told", "me"],
-            "z": [11]
+            "z": [11],
         }
     }
     child = deepinherit(parent, child)
@@ -65,19 +54,9 @@ def test_array_inheritance() -> None:
         "ding": "dong",
         "bing": "bang",
         "wham": ["a-lam", "a-bing", "bong"],
-        "king": {
-            "tide": "oceanography",
-            "crab": "crustacean",
-            "Sick-Nasty": "Spades",
-        }
+        "king": {"tide": "oceanography", "crab": "crustacean", "Sick-Nasty": "Spades"},
     }
-    inherit_to = {
-        "foo": "baz",
-        "wham": [],
-        "king": {
-            "Penguin": "Antarctica"
-        }
-    }
+    inherit_to = {"foo": "baz", "wham": [], "king": {"Penguin": "Antarctica"}}
     inherited = deepinherit(inherit_from, inherit_to)
     assert inherited["foo"] == "baz"
     assert inherited["wham"] == []

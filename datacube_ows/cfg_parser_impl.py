@@ -34,7 +34,9 @@ from datacube_ows.ows_configuration import (
 def main(version: bool) -> int:
     # --version
     if version:
-        click.echo(f"Open Data Cube Open Web Services (datacube-ows) version {__version__}")
+        click.echo(
+            f"Open Data Cube Open Web Services (datacube-ows) version {__version__}"
+        )
     return 0
 
 
@@ -71,7 +73,14 @@ def main(version: bool) -> int:
     "--output-file",
     help="Provide an output inventory file name with extension .json",
 )
-def check(parse_only: bool, folders: bool, styles: bool, input_file: str, output_file: str, paths: list[str]) -> int:
+def check(
+    parse_only: bool,
+    folders: bool,
+    styles: bool,
+    input_file: str,
+    output_file: str,
+    paths: list[str],
+) -> int:
     """Check configuration files
 
     Takes a list of configuration specifications which are each loaded and validated in turn,
@@ -98,7 +107,14 @@ def check(parse_only: bool, folders: bool, styles: bool, input_file: str, output
     return 0
 
 
-def parse_path(path: str | None, parse_only: bool, folders: bool, styles: bool, input_file: str, output_file: str) -> bool:
+def parse_path(
+    path: str | None,
+    parse_only: bool,
+    folders: bool,
+    styles: bool,
+    input_file: str,
+    output_file: str,
+) -> bool:
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
@@ -142,7 +158,7 @@ def parse_path(path: str | None, parse_only: bool, folders: bool, styles: bool, 
     "-m",
     "--msg-file",
     default="messages.po",
-    help="Write to a message file with the translatable metadata from the configuration. (Defaults to 'messages.po')"
+    help="Write to a message file with the translatable metadata from the configuration. (Defaults to 'messages.po')",
 )
 @click.argument("path", nargs=1, required=False)
 def extract(path: str, cfg_only: bool, msg_file: str) -> int:
@@ -174,35 +190,41 @@ def extract(path: str, cfg_only: bool, msg_file: str) -> int:
     "--new",
     is_flag=True,
     default=False,
-    help="Create a new translation template. (Default is to update an existing one.)"
+    help="Create a new translation template. (Default is to update an existing one.)",
 )
 @click.option(
     "-m",
     "--msg-file",
     default=None,
-    help="Use this message file as the template for translation files. (defaults to message filename from configuration)"
+    help="Use this message file as the template for translation files. (defaults to message filename from configuration)",
 )
 @click.option(
     "-d",
     "--translations-dir",
     default=None,
-    help="Path to the output translations directory. Defaults to value from configuration"
+    help="Path to the output translations directory. Defaults to value from configuration",
 )
 @click.option(
     "-D",
     "--domain",
     default=None,
-    help="The domain of the translation files. Defaults to value from configuration"
+    help="The domain of the translation files. Defaults to value from configuration",
 )
 @click.option(
     "-c",
     "--cfg",
     default=None,
-    help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
+    help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)",
 )
 @click.argument("languages", nargs=-1)
-def translation(languages: list[str], msg_file: str | None, new: bool,
-                domain: str | None, translations_dir: str | None, cfg: str | None) -> int:
+def translation(
+    languages: list[str],
+    msg_file: str | None,
+    new: bool,
+    domain: str | None,
+    translations_dir: str | None,
+    cfg: str | None,
+) -> int:
     """Generate a new translations catalog based on the specified message file.
 
     Takes a list of languages to generate catalogs for. "all" can be included as a shorthand
@@ -211,7 +233,12 @@ def translation(languages: list[str], msg_file: str | None, new: bool,
     if len(languages) == 0:
         click.echo("No language(s) specified.")
         sys.exit(1)
-    if msg_file is None or domain is None or translations_dir is None or "all" in languages:
+    if (
+        msg_file is None
+        or domain is None
+        or translations_dir is None
+        or "all" in languages
+    ):
         try:
             raw_cfg = read_config(cfg)
             config = OWSConfig(refresh=True, cfg=raw_cfg)
@@ -219,19 +246,25 @@ def translation(languages: list[str], msg_file: str | None, new: bool,
             click.echo(f"Config exception for path: {e!s}")
             sys.exit(1)
         if domain is None:
-            click.echo(f"Using message domain '{config.message_domain}' from configuration")
+            click.echo(
+                f"Using message domain '{config.message_domain}' from configuration"
+            )
             domain = config.message_domain
         if translations_dir is None and config.translations_dir is None:
             click.echo("No translations directory was supplied or is configured")
             sys.exit(1)
         elif translations_dir is None:
-            click.echo(f"Using translations directory '{config.translations_dir}' from configuration")
+            click.echo(
+                f"Using translations directory '{config.translations_dir}' from configuration"
+            )
             translations_dir = config.translations_dir
         if msg_file is None and config.msg_file_name is None:
             click.echo("No message file name was supplied or is configured")
             sys.exit(1)
         elif msg_file is None:
-            click.echo(f"Using message file location '{config.msg_file_name}' from configuration")
+            click.echo(
+                f"Using message file location '{config.msg_file_name}' from configuration"
+            )
             msg_file = config.msg_file_name
         all_langs = config.locales
     else:
@@ -261,16 +294,24 @@ def translation(languages: list[str], msg_file: str | None, new: bool,
     return 0
 
 
-def create_translation(msg_file: str, translations_dir: str, domain: str, locale: str) -> bool:
+def create_translation(
+    msg_file: str, translations_dir: str, domain: str, locale: str
+) -> bool:
     click.echo(f"Creating template for language: {locale}")
-    os.system(f"pybabel init -i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
+    os.system(
+        f"pybabel init -i {msg_file} -d {translations_dir} -D {domain} -l {locale}"
+    )
     return True
 
 
-def update_translation(msg_file: str, translations_dir: str, domain: str, locale: str) -> bool:
+def update_translation(
+    msg_file: str, translations_dir: str, domain: str, locale: str
+) -> bool:
     click.echo(f"Updating template for language: {locale}")
-    os.system(f"pybabel update --no-fuzzy-matching --ignore-obsolete "
-              f"-i {msg_file} -d {translations_dir} -D {domain} -l {locale}")
+    os.system(
+        f"pybabel update --no-fuzzy-matching --ignore-obsolete "
+        f"-i {msg_file} -d {translations_dir} -D {domain} -l {locale}"
+    )
     return True
 
 
@@ -279,22 +320,27 @@ def update_translation(msg_file: str, translations_dir: str, domain: str, locale
     "-d",
     "--translations-dir",
     default=None,
-    help="Path to the output translations directory. Defaults to value from configuration"
+    help="Path to the output translations directory. Defaults to value from configuration",
 )
 @click.option(
     "-D",
     "--domain",
     default=None,
-    help="The domain of the translation files. Defaults to value from configuration"
+    help="The domain of the translation files. Defaults to value from configuration",
 )
 @click.option(
     "-c",
     "--cfg",
     default=None,
-    help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)"
+    help="Configuration specification to use to determine translations directory and domain (defaults to environment $DATACUBE_OWS_CFG)",
 )
 @click.argument("languages", nargs=-1)
-def compile_cmd(languages: list[str], domain: str | None, translations_dir: str | None, cfg: str | None) -> int:
+def compile_cmd(
+    languages: list[str],
+    domain: str | None,
+    translations_dir: str | None,
+    cfg: str | None,
+) -> int:
     """Compile completed translation files.
 
     Takes a list of languages to generate catalogs for. "all" can be included as a shorthand
@@ -311,13 +357,17 @@ def compile_cmd(languages: list[str], domain: str | None, translations_dir: str 
             click.echo(f"Config exception for path: {e!s}")
             sys.exit(1)
         if domain is None:
-            click.echo(f"Using message domain '{config.message_domain}' from configuration")
+            click.echo(
+                f"Using message domain '{config.message_domain}' from configuration"
+            )
             domain = config.message_domain
         if translations_dir is None and config.translations_dir is None:
             click.echo("No translations directory was supplied or is configured")
             sys.exit(1)
         elif translations_dir is None:
-            click.echo(f"Using translations directory '{config.translations_dir}' from configuration")
+            click.echo(
+                f"Using translations directory '{config.translations_dir}' from configuration"
+            )
             translations_dir = config.translations_dir
         all_langs = config.locales
     else:
@@ -347,7 +397,9 @@ def write_msg_file(msg_file: str, cfg: OWSConfig) -> None:
         write_po(fp, cfg.export_metadata())
 
 
-def layers_report(config_values: dict[str, OWSNamedLayer], input_file: str, output_file: str) -> None:
+def layers_report(
+    config_values: dict[str, OWSNamedLayer], input_file: str, output_file: str
+) -> None:
     report = {"total_layers_count": len(config_values.values()), "layers": []}
     for lyr in config_values.values():
         layer = {
@@ -365,7 +417,7 @@ def layers_report(config_values: dict[str, OWSNamedLayer], input_file: str, outp
             click.echo(ddiff)
             sys.exit(1)
     elif output_file:
-        with open(output_file, 'w') as reportfile:
+        with open(output_file, "w") as reportfile:
             json.dump(report, reportfile, indent=4)
 
 

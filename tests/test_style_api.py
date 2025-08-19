@@ -40,8 +40,8 @@ def simple_rgb_style_cfg() -> CFG_DICT:
         "components": {
             "red": {"red": 1.0},
             "green": {"green": 1.0},
-            "blue": {"blue": 1.0}
-        }
+            "blue": {"blue": 1.0},
+        },
     }
 
 
@@ -55,9 +55,9 @@ def simple_rgb_perband_scaling_style_cfg() -> CFG_DICT:
         "components": {
             "red": {"red": 1.0, "scale_range": [0, 200]},
             "green": {"green": 1.0, "scale_range": [0, 500]},
-            "blue": {"blue": 1.0}
+            "blue": {"blue": 1.0},
         },
-        "scale_range": [0, 350]
+        "scale_range": [0, 350],
     }
 
 
@@ -72,7 +72,9 @@ def test_component_style(dummy_raw_data, null_mask, simple_rgb_style_cfg) -> Non
     assert result["blue"].values[0][0] == 2
 
 
-def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_scaling_style_cfg) -> None:
+def test_perband_component_style(
+    dummy_raw_data, null_mask, simple_rgb_perband_scaling_style_cfg
+) -> None:
     style = StandaloneStyle(simple_rgb_perband_scaling_style_cfg)
     mask = style.to_mask(dummy_raw_data, null_mask)
     result = style.transform_data(dummy_raw_data, mask)
@@ -81,16 +83,15 @@ def test_perband_component_style(dummy_raw_data, null_mask, simple_rgb_perband_s
 
 
 def test_external_legends(simple_rgb_style_cfg) -> None:
-    simple_rgb_style_cfg["legend"] = {
-        "url": "http://fake.com/not/a/real/image_url.png"
-    }
+    simple_rgb_style_cfg["legend"] = {"url": "http://fake.com/not/a/real/image_url.png"}
     style = StandaloneStyle(simple_rgb_style_cfg)
     for l in style.legend_cfg.legend_urls:  # noqa: E741
-        assert style.legend_cfg.legend_urls[l] == "http://fake.com/not/a/real/image_url.png"
+        assert (
+            style.legend_cfg.legend_urls[l]
+            == "http://fake.com/not/a/real/image_url.png"
+        )
     simple_rgb_style_cfg["legend"] = {
-        "url": {
-           "de": "http://fake.com/not/a/real/image_url.png"
-        }
+        "url": {"de": "http://fake.com/not/a/real/image_url.png"}
     }
     with pytest.raises(ConfigException) as e:
         style = StandaloneStyle(simple_rgb_style_cfg)
@@ -106,36 +107,29 @@ def simple_ramp_style_cfg() -> CFG_DICT:
         "index_function": {
             "function": "datacube_ows.band_utils.norm_diff",
             "mapped_bands": True,
-            "kwargs": {
-                "band1": "ir",
-                "band2": "red"
-            }
+            "kwargs": {"band1": "ir", "band2": "red"},
         },
         "needed_bands": ["red", "ir"],
         "color_ramp": [
-            {
-                "value": -0.00000001,
-                "color": "#000000",
-                "alpha": 0.0
-            },
-            {
-                "value": 0.0,
-                "color": "#000000",
-                "alpha": 1.0
-            },
+            {"value": -0.00000001, "color": "#000000", "alpha": 0.0},
+            {"value": 0.0, "color": "#000000", "alpha": 1.0},
             {"value": 0.2, "color": "#FF00FF"},
             {"value": 0.4, "color": "#00FF00"},
             {"value": 0.5, "color": "#FFFF00"},
             {"value": 0.6, "color": "#0000FF"},
             {"value": 0.8, "color": "#00FFFF"},
-            {"value": 1.0, "color": "#FFFFFF"}
+            {"value": 1.0, "color": "#FFFFFF"},
         ],
     }
 
 
-def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg) -> None:
+def test_ramp_style(
+    dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg
+) -> None:
     style = StandaloneStyle(simple_ramp_style_cfg)
-    result = apply_ows_style(style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
+    result = apply_ows_style(
+        style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     # point 0 800, 200 (idx=0.6)maps to blue
@@ -153,7 +147,7 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     # point 3 600,200 (idx=0.5) maps to yellow
     assert result["alpha"].values[3] == 255
     assert result["red"].values[3] == 255
-    assert result["green"].values[3] >= 254 # Why isn't it 255?
+    assert result["green"].values[3] >= 254  # Why isn't it 255?
     assert result["blue"].values[3] == 0
     # point 4 200,200 (idx=0.0) maps to black
     assert result["alpha"].values[4] == 255
@@ -163,16 +157,23 @@ def test_ramp_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_c
     # point 5 1000,700 (idx=0.176) maps to between black and magenta
     assert result["alpha"].values[5] == 255
     assert result["green"].values[5] == 0
-    assert abs(result["red"].values[5] - result["blue"].values[5]) <= 1 # Why not exactly equal?
+    assert (
+        abs(result["red"].values[5] - result["blue"].values[5]) <= 1
+    )  # Why not exactly equal?
     assert result["red"].values[5] > 0
     assert result["red"].values[5] < 255
 
-def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg) -> None:
+
+def test_ramp_expr_style(
+    dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_style_cfg
+) -> None:
     del simple_ramp_style_cfg["index_function"]
     del simple_ramp_style_cfg["needed_bands"]
     simple_ramp_style_cfg["index_expression"] = "(ir-red)/(ir+red)"
     style = StandaloneStyle(simple_ramp_style_cfg)
-    result = apply_ows_style(style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
+    result = apply_ows_style(
+        style, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     # point 0 800, 200 (idx=0.6)maps to blue
@@ -190,7 +191,7 @@ def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_st
     # point 3 600,200 (idx=0.5) maps to yellow
     assert result["alpha"].values[3] == 255
     assert result["red"].values[3] == 255
-    assert result["green"].values[3] >= 254 # Why isn't it 255?
+    assert result["green"].values[3] >= 254  # Why isn't it 255?
     assert result["blue"].values[3] == 0
     # point 4 200,200 (idx=0.0) maps to black
     assert result["alpha"].values[4] == 255
@@ -200,7 +201,9 @@ def test_ramp_expr_style(dummy_raw_calc_data, raw_calc_null_mask, simple_ramp_st
     # point 5 1000,700 (idx=0.176) maps to between black and magenta
     assert result["alpha"].values[5] == 255
     assert result["green"].values[5] == 0
-    assert abs(result["red"].values[5] - result["blue"].values[5]) <= 1 # Why not exactly equal?
+    assert (
+        abs(result["red"].values[5] - result["blue"].values[5]) <= 1
+    )  # Why not exactly equal?
     assert result["red"].values[5] > 0
     assert result["red"].values[5] < 255
 
@@ -214,25 +217,16 @@ def test_ramp_legend_standalone(simple_ramp_style_cfg) -> None:
 
 
 def test_ramp_legend_ranges(simple_ramp_style_cfg) -> None:
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.2",
-        "end": "0.8"
-    }
+    simple_ramp_style_cfg["legend"] = {"begin": "0.2", "end": "0.8"}
     style = StandaloneStyle(simple_ramp_style_cfg)
     assert style.legend_cfg.begin == Decimal("0.2")
     assert style.legend_cfg.end == Decimal("0.8")
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.3",
-        "end": "0.7"
-    }
+    simple_ramp_style_cfg["legend"] = {"begin": "0.3", "end": "0.7"}
     style = StandaloneStyle(simple_ramp_style_cfg)
     assert style.legend_cfg.begin == Decimal("0.3")
     assert style.legend_cfg.end == Decimal("0.7")
 
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "-0.3",
-        "end": "1.7"
-    }
+    simple_ramp_style_cfg["legend"] = {"begin": "-0.3", "end": "1.7"}
     style = StandaloneStyle(simple_ramp_style_cfg)
     assert style.legend_cfg.begin == Decimal("-0.3")
     assert style.legend_cfg.end == Decimal("1.7")
@@ -242,7 +236,7 @@ def test_ramp_legend_parse_errs(simple_ramp_style_cfg) -> None:
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.15",
         "begin": "0.95",  # noqa: F601
-        "decimal_places": -1
+        "decimal_places": -1,
     }
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(simple_ramp_style_cfg)
@@ -254,7 +248,7 @@ def test_ramp_ticks_multimethod(simple_ramp_style_cfg) -> None:
         "begin": "0.0",
         "end": "1.0",
         "ticks_every": "0.2",
-        "tick_count": 5
+        "tick_count": 5,
     }
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(simple_ramp_style_cfg)
@@ -263,7 +257,7 @@ def test_ramp_ticks_multimethod(simple_ramp_style_cfg) -> None:
         "begin": "0.0",
         "end": "1.0",
         "ticks_every": "0.2",
-        "ticks": ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]
+        "ticks": ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"],
     }
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(simple_ramp_style_cfg)
@@ -272,7 +266,7 @@ def test_ramp_ticks_multimethod(simple_ramp_style_cfg) -> None:
         "begin": "0.0",
         "end": "1.0",
         "ticks": ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"],
-        "tick_count": 5
+        "tick_count": 5,
     }
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(simple_ramp_style_cfg)
@@ -287,10 +281,7 @@ def test_ramp_ticks_every(simple_ramp_style_cfg) -> None:
         "ticks_every": "1.0",
     }
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.0"),
-        Decimal("1.0"),
-    ]
+    assert style.legend_cfg.ticks == [Decimal("0.0"), Decimal("1.0")]
     assert style.legend_cfg.default_abstract is None
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
@@ -298,22 +289,14 @@ def test_ramp_ticks_every(simple_ramp_style_cfg) -> None:
         "ticks_every": "0.5",
     }
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.0"),
-        Decimal("0.5"),
-        Decimal("1.0"),
-    ]
+    assert style.legend_cfg.ticks == [Decimal("0.0"), Decimal("0.5"), Decimal("1.0")]
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
         "ticks_every": "0.7",
     }
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.0"),
-        Decimal("0.7"),
-        Decimal("1.0"),
-    ]
+    assert style.legend_cfg.ticks == [Decimal("0.0"), Decimal("0.7"), Decimal("1.0")]
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
@@ -338,42 +321,18 @@ def test_ramp_ticks_every(simple_ramp_style_cfg) -> None:
     assert "ticks_every must be greater than zero" in str(e.value)
 
 
-
 def test_ramp_tick_count(simple_ramp_style_cfg) -> None:
     # default
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.0",
-        "end": "1.0",
-    }
+    simple_ramp_style_cfg["legend"] = {"begin": "0.0", "end": "1.0"}
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.0"),
-        Decimal("1.0"),
-    ]
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.0",
-        "end": "1.0",
-        "tick_count": 1
-    }
+    assert style.legend_cfg.ticks == [Decimal("0.0"), Decimal("1.0")]
+    simple_ramp_style_cfg["legend"] = {"begin": "0.0", "end": "1.0", "tick_count": 1}
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.0"),
-        Decimal("1.0"),
-    ]
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.0",
-        "end": "1.0",
-        "tick_count": 0
-    }
+    assert style.legend_cfg.ticks == [Decimal("0.0"), Decimal("1.0")]
+    simple_ramp_style_cfg["legend"] = {"begin": "0.0", "end": "1.0", "tick_count": 0}
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.0"),
-    ]
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.0",
-        "end": "1.0",
-        "tick_count": 5
-    }
+    assert style.legend_cfg.ticks == [Decimal("0.0")]
+    simple_ramp_style_cfg["legend"] = {"begin": "0.0", "end": "1.0", "tick_count": 5}
     style = StandaloneStyle(simple_ramp_style_cfg)
     assert style.legend_cfg.ticks == [
         Decimal("0.0"),
@@ -383,49 +342,34 @@ def test_ramp_tick_count(simple_ramp_style_cfg) -> None:
         Decimal("0.8"),
         Decimal("1.0"),
     ]
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.0",
-        "end": "1.0",
-        "tick_count": -4
-    }
+    simple_ramp_style_cfg["legend"] = {"begin": "0.0", "end": "1.0", "tick_count": -4}
     with pytest.raises(ConfigException) as e:
         style = StandaloneStyle(simple_ramp_style_cfg)
     assert "tick_count cannot be negative" in str(e.value)
 
 
 def test_explicit_ticks(simple_ramp_style_cfg) -> None:
-    simple_ramp_style_cfg["legend"] = {
-        "begin": "0.0",
-        "end": "1.0",
-        "ticks": []
-    }
+    simple_ramp_style_cfg["legend"] = {"begin": "0.0", "end": "1.0", "ticks": []}
     style = StandaloneStyle(simple_ramp_style_cfg)
     assert style.legend_cfg.ticks == []
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
-        "ticks": ["0.0", "0.7", "1.0"]
+        "ticks": ["0.0", "0.7", "1.0"],
     }
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.0"),
-        Decimal("0.7"),
-        Decimal("1.0"),
-    ]
+    assert style.legend_cfg.ticks == [Decimal("0.0"), Decimal("0.7"), Decimal("1.0")]
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
-        "ticks": ["0.2", "0.9"]
+        "ticks": ["0.2", "0.9"],
     }
     style = StandaloneStyle(simple_ramp_style_cfg)
-    assert style.legend_cfg.ticks == [
-        Decimal("0.2"),
-        Decimal("0.9"),
-    ]
+    assert style.legend_cfg.ticks == [Decimal("0.2"), Decimal("0.9")]
     simple_ramp_style_cfg["legend"] = {
         "begin": "0.0",
         "end": "1.0",
-        "ticks": ["0.2", "1.9"]
+        "ticks": ["0.2", "1.9"],
     }
     with pytest.raises(ConfigException) as e:
         style = StandaloneStyle(simple_ramp_style_cfg)
@@ -443,29 +387,27 @@ def rgb_style_with_masking_cfg() -> CFG_DICT:
         "components": {
             "red": {"red": 1.0},
             "green": {"green": 1.0},
-            "blue": {"blue": 1.0}
+            "blue": {"blue": 1.0},
         },
         "pq_masks": [
+            {"band": "pq", "flags": {"splodgy": "Splodgeless"}},
             {
                 "band": "pq",
-                "flags": {
-                    'splodgy': "Splodgeless",
-                },
+                "flags": {"ugly": True, "impossible": "Woah!"},
+                "invert": True,
             },
-            {
-                "band": "pq",
-                "flags": {
-                    "ugly": True,
-                    "impossible": "Woah!"
-                },
-                "invert": True
-            },
-        ]
+        ],
     }
 
 
-def test_component_style_with_masking(dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg) -> None:
-    result = apply_ows_style_cfg(rgb_style_with_masking_cfg, dummy_raw_calc_data, valid_data_mask=raw_calc_null_mask)
+def test_component_style_with_masking(
+    dummy_raw_calc_data, raw_calc_null_mask, rgb_style_with_masking_cfg
+) -> None:
+    result = apply_ows_style_cfg(
+        rgb_style_with_masking_cfg,
+        dummy_raw_calc_data,
+        valid_data_mask=raw_calc_null_mask,
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     alphas = result["alpha"].values
@@ -488,33 +430,20 @@ def simple_colormap_style_cfg() -> CFG_DICT:
                 {
                     "title": "Impossibly Tasty",
                     "abstract": "Tasty AND Impossible",
-                    "flags": {
-                        "and": {
-                            "flavour": "Tasty",
-                            "impossible": "Woah!"
-                        },
-                    },
-                    "color": "#FF0000"
+                    "flags": {"and": {"flavour": "Tasty", "impossible": "Woah!"}},
+                    "color": "#FF0000",
                 },
                 {
                     "title": "Possibly Tasty",
                     "abstract": "Tasty and Possible",
-                    "flags": {
-                        "flavour": "Tasty",
-                        "impossible": False
-                    },
-                    "color": "#00FF00"
+                    "flags": {"flavour": "Tasty", "impossible": False},
+                    "color": "#00FF00",
                 },
                 {
                     "title": "Ugly/Splodgy",
                     "abstract": "Ugly or splodgy",
-                    "flags": {
-                        "or": {
-                            "ugly": True,
-                            "splodgy": "Splodgy"
-                        }
-                    },
-                    "color": "#0000FF"
+                    "flags": {"or": {"ugly": True, "splodgy": "Splodgy"}},
+                    "color": "#0000FF",
                 },
             ]
         },
@@ -528,39 +457,23 @@ def simple_colormap_style_cfg() -> CFG_DICT:
                         {
                             "title": "Bland to Tasty",
                             "abstract": "All yummification.",
-                            "flags": [
-                                {
-                                    "flavour": "Bland"
-                                },
-                                {
-                                    "flavour": "Tasty"
-                                },
-                            ],
-                            "color": "#8080FF"
+                            "flags": [{"flavour": "Bland"}, {"flavour": "Tasty"}],
+                            "color": "#8080FF",
                         },
                         {
                             "title": "Was ugly, is splodgy",
                             "abstract": "unless they have also been yummified",
-                            "flags": [
-                                {
-                                    "ugly": True,
-                                },
-                                {
-                                    "splodgy": "Splodgy"
-                                }
-                            ],
-                            "color": "#FF00FF"
+                            "flags": [{"ugly": True}, {"splodgy": "Splodgy"}],
+                            "color": "#FF00FF",
                         },
                         {
                             "title": "Woah!",
                             "abstract": "Ended up impossible (may have just always been impossible) - doesn't include impossible yummifications",
                             "flags": [
-                                {}, # Empty date rule = matches all remaining pixels for that date
-                                {
-                                    "impossible": "Woah!"
-                                }
+                                {},  # Empty date rule = matches all remaining pixels for that date
+                                {"impossible": "Woah!"},
                             ],
-                            "color": "#FF0080"
+                            "color": "#FF0080",
                         },
                         {
                             "title": "Flawless to Perfect",
@@ -573,7 +486,7 @@ def simple_colormap_style_cfg() -> CFG_DICT:
                                         "flavour": "Tasty",
                                         "splodgy": "Splodgeless",
                                         "ugly": False,
-                                    },
+                                    }
                                 },
                                 {
                                     "or": {
@@ -583,25 +496,31 @@ def simple_colormap_style_cfg() -> CFG_DICT:
                                         "splodgy": "Splodgy",
                                         "ugly": True,
                                     }
-                                }
+                                },
                             ],
-                            "color": "#FFFFFF"
+                            "color": "#FFFFFF",
                         },
                         {
                             "title": "Everything else",
                             "abstract": "The rest of what's left",
                             "flags": [{}, {}],
-                            "color": "#808080"
-                        }
+                            "color": "#808080",
+                        },
                     ]
-                }
+                },
             }
-        ]
+        ],
     }
 
 
-def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg) -> None:
-    result = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
+def test_colormap_style(
+    dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg
+) -> None:
+    result = apply_ows_style_cfg(
+        simple_colormap_style_cfg,
+        dummy_col_map_data,
+        valid_data_mask=raw_calc_null_mask,
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     # point 0 tasy and possible: green
@@ -632,11 +551,15 @@ def test_colormap_style(dummy_col_map_data, raw_calc_null_mask, simple_colormap_
     # point 5 fall through -transparent
     assert result["alpha"].values[5] == 0
 
-def test_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, simple_colormap_style_cfg) -> None:
+
+def test_colormap_multidate(
+    dummy_col_map_time_data, timed_raw_calc_null_mask, simple_colormap_style_cfg
+) -> None:
     result = apply_ows_style_cfg(
-                        simple_colormap_style_cfg,
-                        dummy_col_map_time_data,
-                        valid_data_mask=timed_raw_calc_null_mask)
+        simple_colormap_style_cfg,
+        dummy_col_map_time_data,
+        valid_data_mask=timed_raw_calc_null_mask,
+    )
     # Point 0: fallback
     assert result["alpha"].values[0] == 255
     assert result["red"].values[0] == 128
@@ -668,6 +591,7 @@ def test_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, s
     assert result["green"].values[5] == 128
     assert result["blue"].values[5] == 255
 
+
 @pytest.fixture
 def enum_colormap_style_cfg() -> CFG_DICT:
     return {
@@ -676,21 +600,9 @@ def enum_colormap_style_cfg() -> CFG_DICT:
         "abstract": "This is a Test Style for Datacube WMS",
         "value_map": {
             "pq": [
-                {
-                    "title": "Blah",
-                    "values": [8, 25],
-                    "color": "#FF0000"
-                },
-                {
-                    "title": "Rock and Roll",
-                    "values": [4, 19, 25],
-                    "color": "#00FF00"
-                },
-                {
-                    "title": "",
-                    "values": [17],
-                    "color": "#0000FF"
-                },
+                {"title": "Blah", "values": [8, 25], "color": "#FF0000"},
+                {"title": "Rock and Roll", "values": [4, 19, 25], "color": "#00FF00"},
+                {"title": "", "values": [17], "color": "#0000FF"},
             ]
         },
         "multi_date": [
@@ -703,29 +615,33 @@ def enum_colormap_style_cfg() -> CFG_DICT:
                         {
                             "title": "Rock and Roll",
                             "values": [[], [14, 19, 27]],
-                            "color": "#00FF00"
+                            "color": "#00FF00",
                         },
                         {
                             "title": "Blah Blah",
                             "values": [[8, 25], [17, 30, 31]],
-                            "color": "#FF0000"
+                            "color": "#FF0000",
                         },
                         {
                             "title": "Foo Blah",
                             "invert": [True, False],
                             "values": [[10], []],
                             "color": "#0000FF",
-                            "alpha": 0.0
+                            "alpha": 0.0,
                         },
                     ]
-                }
+                },
             }
-        ]
+        ],
     }
 
 
-def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg) -> None:
-    result = apply_ows_style_cfg(enum_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
+def test_enum_colormap_style(
+    dummy_col_map_data, raw_calc_null_mask, enum_colormap_style_cfg
+) -> None:
+    result = apply_ows_style_cfg(
+        enum_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     # point 0 (8) Blah - red
@@ -756,10 +672,15 @@ def test_enum_colormap_style(dummy_col_map_data, raw_calc_null_mask, enum_colorm
     assert result["green"].values[5] == 0
     assert result["blue"].values[5] == 255
 
-def test_enum_colormap_multidate(dummy_col_map_time_data, timed_raw_calc_null_mask, enum_colormap_style_cfg) -> None:
-    result = apply_ows_style_cfg(enum_colormap_style_cfg,
-                                 dummy_col_map_time_data,
-                                 valid_data_mask=timed_raw_calc_null_mask)
+
+def test_enum_colormap_multidate(
+    dummy_col_map_time_data, timed_raw_calc_null_mask, enum_colormap_style_cfg
+) -> None:
+    result = apply_ows_style_cfg(
+        enum_colormap_style_cfg,
+        dummy_col_map_time_data,
+        valid_data_mask=timed_raw_calc_null_mask,
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     # point 0 (8->30) Blah Blah - red
@@ -796,21 +717,13 @@ def enum_animated_value_map() -> CFG_DICT:
         "abstract": "This is a Test Style for Datacube WMS",
         "value_map": {
             "pq": [
-                {
-                    "title": "Blah",
-                    "values": [8, 25],
-                    "color": "#FF0000"
-                },
+                {"title": "Blah", "values": [8, 25], "color": "#FF0000"},
                 {
                     "title": "Rock and Roll",
                     "values": [4, 19, 25, 30],
-                    "color": "#00FF00"
+                    "color": "#00FF00",
                 },
-                {
-                    "title": "",
-                    "values": [17],
-                    "color": "#0000FF"
-                },
+                {"title": "", "values": [17], "color": "#0000FF"},
             ]
         },
         "multi_date": [
@@ -819,13 +732,18 @@ def enum_animated_value_map() -> CFG_DICT:
                 "preserve_user_date_order": True,
                 "allowed_count_range": [2, 2],
             }
-        ]
+        ],
     }
 
-def test_animated_colour_map(enum_animated_value_map, dummy_col_map_time_data, timed_raw_calc_null_mask) -> None:
-    result = apply_ows_style_cfg(enum_animated_value_map,
-                                 dummy_col_map_time_data,
-                                 valid_data_mask=timed_raw_calc_null_mask)
+
+def test_animated_colour_map(
+    enum_animated_value_map, dummy_col_map_time_data, timed_raw_calc_null_mask
+) -> None:
+    result = apply_ows_style_cfg(
+        enum_animated_value_map,
+        dummy_col_map_time_data,
+        valid_data_mask=timed_raw_calc_null_mask,
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     # point 0 (8) Blah - red, green
@@ -858,21 +776,9 @@ def enum_colormap_aggregate_multidate() -> CFG_DICT:
         "abstract": "This is a Test Style for Datacube WMS",
         "value_map": {
             "pq": [
-                {
-                    "title": "Blah",
-                    "values": [8, 25],
-                    "color": "#FF0000"
-                },
-                {
-                    "title": "Rock and Roll",
-                    "values": [4, 19, 25],
-                    "color": "#00FF00"
-                },
-                {
-                    "title": "",
-                    "values": [17],
-                    "color": "#0000FF"
-                },
+                {"title": "Blah", "values": [8, 25], "color": "#FF0000"},
+                {"title": "Rock and Roll", "values": [4, 19, 25], "color": "#00FF00"},
+                {"title": "", "values": [17], "color": "#0000FF"},
             ]
         },
         "multi_date": [
@@ -883,27 +789,28 @@ def enum_colormap_aggregate_multidate() -> CFG_DICT:
                 "aggregator_function": test_agg,
                 "value_map": {
                     "pq": [
-                        {
-                            "title": "GGG",
-                            "values": [0],
-                            "color": "#0000FF"
-                        },
+                        {"title": "GGG", "values": [0], "color": "#0000FF"},
                         {
                             "title": "SSS",
                             "values": [1],
                             "color": "#0000FF",
-                            "mask": True
+                            "mask": True,
                         },
                     ]
                 },
             }
-        ]
+        ],
     }
 
-def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_data, timed_raw_calc_null_mask) -> None:
-    result = apply_ows_style_cfg(enum_colormap_aggregate_multidate,
-                                 dummy_col_map_time_data,
-                                 valid_data_mask=timed_raw_calc_null_mask)
+
+def test_aggregator_map(
+    enum_colormap_aggregate_multidate, dummy_col_map_time_data, timed_raw_calc_null_mask
+) -> None:
+    result = apply_ows_style_cfg(
+        enum_colormap_aggregate_multidate,
+        dummy_col_map_time_data,
+        valid_data_mask=timed_raw_calc_null_mask,
+    )
     for channel in ("red", "green", "blue", "alpha"):
         assert channel in result.data_vars
     # point 0 (8->30) no
@@ -923,7 +830,9 @@ def test_aggregator_map(enum_colormap_aggregate_multidate, dummy_col_map_time_da
     assert result["blue"].values[4] == 255
 
 
-def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_cfg) -> None:
+def test_invalid_multidate_rules(
+    enum_colormap_style_cfg, simple_colormap_style_cfg
+) -> None:
     simple_colormap_style_cfg["multi_date"][0]["allowed_count_range"] = [2, 4]
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(simple_colormap_style_cfg)
@@ -934,34 +843,27 @@ def test_invalid_multidate_rules(enum_colormap_style_cfg, simple_colormap_style_
         _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "value maps not supported for animation handlers" in str(e.value)
     simple_colormap_style_cfg["multi_date"][0]["animate"] = False
-    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][3]["invert"] = [True, False, True]
+    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][3]["invert"] = [
+        True,
+        False,
+        True,
+    ]
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "Invert entry has wrong number of rule sets for date count" in str(e.value)
     del simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][3]["invert"]
-    orig_flags = simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"]
-    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
-        {
-            "flavour": "Bland"
-        },
-        {
-            "flavour": "Bland"
-        },
-        {
-            "flavour": "Tasty"
-        },
-    ],
+    orig_flags = simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0][
+        "flags"
+    ]
+    simple_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = (
+        [{"flavour": "Bland"}, {"flavour": "Bland"}, {"flavour": "Tasty"}],
+    )
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(simple_colormap_style_cfg)
     assert "Flags entry has wrong number of rule sets for date count" in str(e.value)
     enum_colormap_style_cfg["multi_date"][0]["value_map"]["pq"][0]["flags"] = [
-        {
-            "or": {"flavour": "Bland"},
-            "and": {"flavour": "Tasty"},
-        },
-        {
-            "flavour": "Tasty"
-        },
+        {"or": {"flavour": "Bland"}, "and": {"flavour": "Tasty"}},
+        {"flavour": "Tasty"},
     ]
     with pytest.raises(ConfigException) as e:
         _ = StandaloneStyle(enum_colormap_style_cfg)
@@ -983,15 +885,23 @@ def test_map_legend(simple_colormap_style_cfg) -> None:
     assert img.size == (400, 125)
 
 
-def test_api_none_mask(dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg) -> None:
-    null_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data, valid_data_mask=raw_calc_null_mask)
+def test_api_none_mask(
+    dummy_col_map_data, raw_calc_null_mask, simple_colormap_style_cfg
+) -> None:
+    null_mask = apply_ows_style_cfg(
+        simple_colormap_style_cfg,
+        dummy_col_map_data,
+        valid_data_mask=raw_calc_null_mask,
+    )
     none_mask = apply_ows_style_cfg(simple_colormap_style_cfg, dummy_col_map_data)
     for i in range(6):
         for c in ("red", "green", "blue", "alpha"):
             assert null_mask[c].values[i] == none_mask[c].values[i]
 
 
-def test_landsat_like_configs(dummy_raw_ls_data, configs_for_landsat, null_mask) -> None:
+def test_landsat_like_configs(
+    dummy_raw_ls_data, configs_for_landsat, null_mask
+) -> None:
     for cfg in configs_for_landsat:
         style = StandaloneStyle(cfg)
         mask = style.to_mask(dummy_raw_ls_data, null_mask)
@@ -1007,7 +917,9 @@ def test_wofs_like_configs(dummy_raw_wo_data, configs_for_wofs, null_mask) -> No
         assert result
 
 
-def test_fc_wofs_like_configs(dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs, null_mask) -> None:
+def test_fc_wofs_like_configs(
+    dummy_raw_fc_plus_wo, configs_for_combined_fc_wofs, null_mask
+) -> None:
     for cfg in configs_for_combined_fc_wofs:
         style = StandaloneStyle(cfg)
         mask = style.to_mask(dummy_raw_fc_plus_wo, null_mask)

@@ -24,7 +24,9 @@ def new_finfo_platform(data, ds):
     return ds.metadata.platform
 
 
-def new_twodate_finfo(data: xr.Dataset, band, band_mapper: Callable | None = None) -> xr.Dataset:
+def new_twodate_finfo(
+    data: xr.Dataset, band, band_mapper: Callable | None = None
+) -> xr.Dataset:
     if band_mapper is not None:
         band = band_mapper(band)
     data1, data2 = (data.sel(time=dt) for dt in data.coords["time"].values)

@@ -4,8 +4,8 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Run with no DB to simulate connection failure
-"""
+"""Run with no DB to simulate connection failure"""
+
 import os
 import sys
 
@@ -18,6 +18,7 @@ if src_dir not in sys.path:
 
 def reset_global_config() -> None:
     from datacube_ows.ows_configuration import OWSConfig
+
     OWSConfig._instance = None
 
 
@@ -31,25 +32,25 @@ def no_db(monkeypatch):
 
 def test_db_connect_fail(no_db, flask_client) -> None:
     """Start with a database connection"""
-    rv = flask_client.get('/ping')
+    rv = flask_client.get("/ping")
     assert rv.status_code == 500
 
 
 def test_wcs_fail(no_db, flask_client) -> None:
     """WCS endpoint fails"""
-    rv = flask_client.get('/wcs')
+    rv = flask_client.get("/wcs")
     assert rv.status_code == 400
 
 
 def test_wms_fail(no_db, flask_client) -> None:
     """WMS endpoint fails"""
-    rv = flask_client.get('/wms')
+    rv = flask_client.get("/wms")
     assert rv.status_code == 400
 
 
 def test_wmts_fail(no_db, flask_client) -> None:
     """WMTS endpoint fails"""
-    rv = flask_client.get('/wmts')
+    rv = flask_client.get("/wmts")
     assert rv.status_code == 400
 
 
@@ -62,5 +63,5 @@ def test_legend_fail(no_db, flask_client) -> None:
 def test_index_fail(no_db, flask_client) -> None:
     """Base index endpoint fails"""
     # Should actually be 200 TODO
-    rv = flask_client.get('/')
+    rv = flask_client.get("/")
     assert rv.status_code == 500

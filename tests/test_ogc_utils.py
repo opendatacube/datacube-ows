@@ -30,20 +30,14 @@ def test_dataset_center_time() -> None:
     dct = datacube_ows.time_utils.dataset_center_time
     ds = DSCT({})
     assert dct(ds).year == 1970
-    ds = DSCT({
-        "properties": {
-            "dtr:start_datetime": "1980-01-01T00:00:00"
-        },
-    })
+    ds = DSCT({"properties": {"dtr:start_datetime": "1980-01-01T00:00:00"}})
     assert dct(ds).year == 1980
-    ds = DSCT({
-        "extent": {
-            "center_dt": "1990-01-01T00:00:00"
-        },
-        "properties": {
-            "dtr:start_datetime": "1980-01-01T00:00:00"
-        },
-    })
+    ds = DSCT(
+        {
+            "extent": {"center_dt": "1990-01-01T00:00:00"},
+            "properties": {"dtr:start_datetime": "1980-01-01T00:00:00"},
+        }
+    )
     assert dct(ds).year == 1990
 
 
@@ -58,11 +52,12 @@ def dummy_ds():
             (149.0, -35.4),
             (149.0, -35.3),
         ],
-        crs="EPSG:4326"
+        crs="EPSG:4326",
     )
     ds.center_time = datetime.datetime(2020, 12, 25, 15, 11, 11, tzinfo=timezone.utc)
     ds.metadata_doc = {}
     return ds
+
 
 def test_tz_for_dataset(dummy_ds) -> None:
     ret = datacube_ows.time_utils.tz_for_dataset(dummy_ds)
@@ -92,7 +87,6 @@ def test_month_date_range_wrap() -> None:
 
 
 def test_get_service_base_url() -> None:
-
     # not a list
     allowed_urls = "https://foo.hello.world"
     request_url = "https://foo.bar.baz"
@@ -106,7 +100,11 @@ def test_get_service_base_url() -> None:
     assert ret == "https://foo.hello.world"
 
     # Value in list
-    allowed_urls = ["https://foo.hello.world", "https://foo.bar.baz", "https://alice.bob.eve"]
+    allowed_urls = [
+        "https://foo.hello.world",
+        "https://foo.bar.baz",
+        "https://alice.bob.eve",
+    ]
     request_url = "https://foo.bar.baz"
     ret = datacube_ows.http_utils.get_service_base_url(allowed_urls, request_url)
     assert ret == "https://foo.bar.baz"
@@ -137,34 +135,34 @@ def test_parse_for_base_url() -> None:
 
 
 def test_create_geobox() -> None:
-    geobox = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
-                                                  140.7184, 145.6924, -16.1144, -13.4938,
-                                                  1182, 668)
-    geobox_ho = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
-                                                  140.7184, 145.6924, -16.1144, -13.4938,
-                                                  height=668)
-    geobox_wo = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
-                              140.7184, 145.6924, -16.1144, -13.4938,
-                              width=1182)
+    geobox = datacube_ows.ogc_utils.create_geobox(
+        "EPSG:4326", 140.7184, 145.6924, -16.1144, -13.4938, 1182, 668
+    )
+    geobox_ho = datacube_ows.ogc_utils.create_geobox(
+        "EPSG:4326", 140.7184, 145.6924, -16.1144, -13.4938, height=668
+    )
+    geobox_wo = datacube_ows.ogc_utils.create_geobox(
+        "EPSG:4326", 140.7184, 145.6924, -16.1144, -13.4938, width=1182
+    )
     for _ in (geobox, geobox_ho, geobox_wo):
         assert geobox.width == 1182
         assert geobox.height == 668
     with pytest.raises(Exception) as excinfo:
-        _ = datacube_ows.ogc_utils.create_geobox("EPSG:4326",
-                                                         140.7184, 145.6924, -16.1144, -13.4938)
+        _ = datacube_ows.ogc_utils.create_geobox(
+            "EPSG:4326", 140.7184, 145.6924, -16.1144, -13.4938
+        )
     assert "Must supply at least a width or height" in str(excinfo.value)
 
 
-
-coords = [
-    ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
-]
+coords = [("x", [-1.0, -0.5, 0.0, 0.5, 1.0])]
 
 
 def test_mask_by_val() -> None:
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
-        "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dont_match": dummy_da(
+            679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"
+        ),
     }
     mask = datacube_ows.ogc_utils.mask_by_val(data, "match")
     assert not mask.values[0]
@@ -179,7 +177,9 @@ def test_mask_by_val() -> None:
 def test_mask_by_val2() -> None:
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
-        "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dont_match": dummy_da(
+            679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"
+        ),
     }
     mask = datacube_ows.ogc_utils.mask_by_val2(data, "match")
     assert not mask.values[0]
@@ -190,7 +190,9 @@ def test_mask_by_val2() -> None:
 def test_mask_by_bitflag() -> None:
     data = {
         "match": dummy_da(128, "match", coords, attrs={"nodata": 128}, dtype="uint8"),
-        "dont_match": dummy_da(63, "dont_match", coords, attrs={"nodata": 128}, dtype="uint8"),
+        "dont_match": dummy_da(
+            63, "dont_match", coords, attrs={"nodata": 128}, dtype="uint8"
+        ),
     }
     mask = datacube_ows.ogc_utils.mask_by_bitflag(data, "match")
     assert not mask.values[0]
@@ -201,18 +203,24 @@ def test_mask_by_bitflag() -> None:
 def test_mask_by_val_in_band() -> None:
     data = {
         "match": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
-        "dont_match": dummy_da(679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "dont_match": dummy_da(
+            679, "dont_match", coords, attrs={"nodata": -999}, dtype="int16"
+        ),
         "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
     }
     mask = datacube_ows.ogc_utils.mask_by_val_in_band(data, "dband", mask_band="match")
     assert not mask.values[0]
-    mask = datacube_ows.ogc_utils.mask_by_val_in_band(data, "dband", mask_band="dont_match", val=679)
+    mask = datacube_ows.ogc_utils.mask_by_val_in_band(
+        data, "dband", mask_band="dont_match", val=679
+    )
     assert not mask.values[0]
 
 
 def test_mask_by_quality() -> None:
     data = {
-        "quality": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "quality": dummy_da(
+            -999, "match", coords, attrs={"nodata": -999}, dtype="int16"
+        ),
         "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
     }
     mask = datacube_ows.ogc_utils.mask_by_quality(data, "dband")
@@ -233,7 +241,9 @@ def test_mask_by_extent_flag() -> None:
 
 def test_mask_by_extent_val() -> None:
     data = {
-        "extent": dummy_da(-999, "match", coords, attrs={"nodata": -999}, dtype="int16"),
+        "extent": dummy_da(
+            -999, "match", coords, attrs={"nodata": -999}, dtype="int16"
+        ),
         "dband": dummy_da(0.77, "dband", coords, dtype="float128"),
     }
     mask = datacube_ows.ogc_utils.mask_by_extent_val(data, "dband")
@@ -257,6 +267,7 @@ def test_rolling_window() -> None:
     class DummyLayer:
         def search_times(self, d):
             return d, d
+
     lyr = DummyLayer()
 
     start, end = rolling_window_ndays(
@@ -270,70 +281,79 @@ def test_rolling_window() -> None:
             datetime.datetime(2020, 6, 17),
             datetime.datetime(2020, 6, 18),
         ],
-        layer_cfg = lyr,
-        ndays = 6
+        layer_cfg=lyr,
+        ndays=6,
     )
     assert start == datetime.datetime(2020, 6, 9)
     assert end == datetime.datetime(2020, 6, 18)
 
 
 def test_day_summary_date_range() -> None:
-    start, end = datacube_ows.time_utils.day_summary_date_range(datetime.date(2015, 5, 12))
+    start, end = datacube_ows.time_utils.day_summary_date_range(
+        datetime.date(2015, 5, 12)
+    )
     assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=timezone.utc)
     assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=timezone.utc)
 
-xy_coords = [
-    ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
-    ("y", [-1.0, -0.5]),
-]
+
+xy_coords = [("x", [-1.0, -0.5, 0.0, 0.5, 1.0]), ("y", [-1.0, -0.5])]
 
 xyt_coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
     ("y", [-1.0, -0.5, 0.0, 0.5, 1.0]),
-    ("time", [
-                datetime.datetime(2021, 1, 1, 22, 44, 5),
-                datetime.datetime.now()
-              ])
+    ("time", [datetime.datetime(2021, 1, 1, 22, 44, 5), datetime.datetime.now()]),
 ]
 
+
 def test_png_loop_over() -> None:
-    data = xarray.Dataset({
+    data = xarray.Dataset(
+        {
             "red": dummy_da(100, "red", xyt_coords, dtype="uint8"),
             "green": dummy_da(70, "green", xyt_coords, dtype="uint8"),
             "blue": dummy_da(150, "blue", xyt_coords, dtype="uint8"),
             "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
-        })
+        }
+    )
     imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, loop_over="time")
     assert len(imgs) == 2
     assert len(imgs[0]) == 78
     assert imgs[0].find(b"\x89PNG") == 0
 
+
 def test_png_loop_over_anim() -> None:
-    data = xarray.Dataset({
-        "red": dummy_da(100, "red", xyt_coords, dtype="uint8"),
-        "green": dummy_da(70, "green", xyt_coords, dtype="uint8"),
-        "blue": dummy_da(150, "blue", xyt_coords, dtype="uint8"),
-        "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
-    })
-    imgs = datacube_ows.ogc_utils.xarray_image_as_png(data, loop_over="time", animate=True)
+    data = xarray.Dataset(
+        {
+            "red": dummy_da(100, "red", xyt_coords, dtype="uint8"),
+            "green": dummy_da(70, "green", xyt_coords, dtype="uint8"),
+            "blue": dummy_da(150, "blue", xyt_coords, dtype="uint8"),
+            "alpha": dummy_da(200, "alpha", xyt_coords, dtype="uint8"),
+        }
+    )
+    imgs = datacube_ows.ogc_utils.xarray_image_as_png(
+        data, loop_over="time", animate=True
+    )
     assert len(imgs) == 173
     assert imgs.find(b"\x89PNG") == 0
 
 
 def test_render_frame() -> None:
-    data = xarray.Dataset({
-        "red": dummy_da(100, "red", xy_coords, dtype="uint8"),
-        "green": dummy_da(70, "green", xy_coords, dtype="uint8"),
-        "blue": dummy_da(150, "blue", xy_coords, dtype="uint8"),
-        "alpha": dummy_da(200, "alpha", xy_coords, dtype="uint8"),
-    })
+    data = xarray.Dataset(
+        {
+            "red": dummy_da(100, "red", xy_coords, dtype="uint8"),
+            "green": dummy_da(70, "green", xy_coords, dtype="uint8"),
+            "blue": dummy_da(150, "blue", xy_coords, dtype="uint8"),
+            "alpha": dummy_da(200, "alpha", xy_coords, dtype="uint8"),
+        }
+    )
     png = datacube_ows.ogc_utils.render_frame(data, 5, 2)
     assert png.shape == (2, 5, 4)
-    data = xarray.Dataset({
-        "red": dummy_da(100, "red", xy_coords, dtype="uint8"),
-        "green": dummy_da(70, "green", xy_coords, dtype="uint8"),
-        "blue": dummy_da(150, "blue", xy_coords, dtype="uint8"),
-    })
+    data = xarray.Dataset(
+        {
+            "red": dummy_da(100, "red", xy_coords, dtype="uint8"),
+            "green": dummy_da(70, "green", xy_coords, dtype="uint8"),
+            "blue": dummy_da(150, "blue", xy_coords, dtype="uint8"),
+        }
+    )
     png = datacube_ows.ogc_utils.render_frame(data, 5, 2)
     assert png.shape == (2, 5, 4)
 

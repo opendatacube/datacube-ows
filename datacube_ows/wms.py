@@ -31,8 +31,11 @@ def handle_wms(nocase_args: dict[str, str]) -> tuple | None:
         return feature_info(nocase_args)
     if operation == "GETLEGENDGRAPHIC":
         return legend_graphic(nocase_args)
-    raise WMSException(f"Unrecognised operation: {operation}", WMSException.OPERATION_NOT_SUPPORTED,
-                       "Request parameter")
+    raise WMSException(
+        f"Unrecognised operation: {operation}",
+        WMSException.OPERATION_NOT_SUPPORTED,
+        "Request parameter",
+    )
 
 
 @log_call
@@ -41,15 +44,12 @@ def get_capabilities(args) -> tuple[str, int, dict[str, str]]:
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
     cfg = get_config()
-    url = args.get('Host', args['url_root'])
+    url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
     headers = cache_control_headers(cfg.wms_cap_cache_age)
     headers["Content-Type"] = "application/xml"
     return (
-        render_template(
-            "wms_capabilities.xml",
-            cfg=cfg,
-            base_url=base_url),
+        render_template("wms_capabilities.xml", cfg=cfg, base_url=base_url),
         200,
-        cfg.response_headers(headers)
+        cfg.response_headers(headers),
     )

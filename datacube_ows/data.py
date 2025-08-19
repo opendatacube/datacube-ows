@@ -32,8 +32,12 @@ from datacube_ows.wms_utils import GetMapParameters
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
-def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
-                     geometry: geom.Geometry, user_dates: list[datetime]) -> xarray.DataArray:
+def user_date_sorter(
+    layer: OWSNamedLayer,
+    odc_dates: list[datetime],
+    geometry: geom.Geometry,
+    user_dates: list[datetime],
+) -> xarray.DataArray:
     # TODO: Make more elegant.  Just a little bit elegant would do.
     result = []
     tz = tz_for_geometry(geometry) if layer.time_resolution.is_solar() else None
@@ -45,19 +49,15 @@ def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
             norm_date = solar_date(ts, tz)
             return norm_date == user_date
         if time_res.is_summary():
-            norm_date = date(ts.year,
-                             ts.month,
-                             ts.day)
+            norm_date = date(ts.year, ts.month, ts.day)
             return norm_date == user_date
-        norm_date = datetime(ts.year,
-                             ts.month,
-                             ts.day,
-                             ts.hour,
-                             ts.minute,
-                             ts.second,
-                             tzinfo=ts.tzinfo)
+        norm_date = datetime(
+            ts.year, ts.month, ts.day, ts.hour, ts.minute, ts.second, tzinfo=ts.tzinfo
+        )
         user_date = default_to_utc(user_date)
-        return user_date >= norm_date and user_date < norm_date + timedelta(hours=23, minutes=59, seconds=59)
+        return user_date >= norm_date and user_date < norm_date + timedelta(
+            hours=23, minutes=59, seconds=59
+        )
 
     for odc_date in odc_dates:
         for idx, user_date in enumerate(user_dates):
@@ -66,10 +66,7 @@ def user_date_sorter(layer: OWSNamedLayer, odc_dates: list[datetime],
                 break
     npresult = numpy.array(result, dtype="uint8")
     return xarray.DataArray(
-        npresult,
-        coords={"time": odc_dates},
-        dims=["time"],
-        name="user_date_sorter"
+        npresult, coords={"time": odc_dates}, dims=["time"], name="user_date_sorter"
     )
 
 
@@ -89,13 +86,22 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
     else:
         mdh = params.style.get_multi_date_handler(n_dates)
         if mdh is None:
-            raise WMSException(f"Style {params.style.name} does not support GetMap "
-                               f"requests with {n_dates} dates",
-                               WMSException.INVALID_DIMENSION_VALUE, locator="Time parameter")
+            raise WMSException(
+                f"Style {params.style.name} does not support GetMap "
+                f"requests with {n_dates} dates",
+                WMSException.INVALID_DIMENSION_VALUE,
+                locator="Time parameter",
+            )
     qprof["n_dates"] = n_dates
     try:
         # Tiling.
-        stacker = DataStacker(params.layer, params.geobox, params.times, params.resampling, style=params.style)  # type: ignore[arg-type]
+        stacker = DataStacker(
+            params.layer,
+            params.geobox,
+            params.times,  # type: ignore[arg-type]
+            params.resampling,
+            style=params.style,
+        )
         qprof["zoom_factor"] = params.zf
         qprof.start_event("count-datasets")
         n_datasets = stacker.n_datasets()
@@ -104,7 +110,9 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
         qprof["zoom_level_base"] = params.resources.base_zoom_level
         qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
         try:
-            params.layer.resource_limits.check_wms(n_datasets, params.zf, params.resources)
+            params.layer.resource_limits.check_wms(
+                n_datasets, params.zf, params.resources
+            )
         except ResourceLimited as e:
             stacker.resource_limited = True
             qprof["resource_limited"] = str(e)
@@ -117,7 +125,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                     "datasets": [
                         [f"{ds.id} ({ds.product.name})" for ds in tdss]
                         for tdss in dsxr.values
-                    ]
+                    ],
                 }
                 qprof["datasets"].append(query_res)
         if stacker.resource_limited and not params.layer.low_res_product_names:
@@ -133,7 +141,8 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                 params.geobox,
                 extent,
                 params.layer.resource_limits.zoom_fill,
-                params.layer)
+                params.layer,
+            )
             qprof.end_event("write")
         elif n_datasets == 0:
             qprof["write_action"] = "No datasets: Write Empty"
@@ -149,7 +158,9 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                 if not dss.any():
                     _LOG.warning("Flag band %s returned no data", str(flagband))
                 if len(dss.time) != n_dates and flagband.main:
-                    qprof["write_action"] = f"{n_dates} requested, only {len(dss.time)} found - returning empty image"
+                    qprof["write_action"] = (
+                        f"{n_dates} requested, only {len(dss.time)} found - returning empty image"
+                    )
                     raise EmptyResponse()
             qprof.end_event("fetch-datasets")
             _LOG.debug("load start %s %s", datetime.now().time(), args["requestid"])
@@ -184,11 +195,8 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                     td_ext_mask = xarray.DataArray(td_ext_mask_man)
                 if td_ext_mask is None:
                     td_ext_mask = xarray.DataArray(
-                                        ~numpy.zeros(
-                                                    td[band].values.shape,
-                                                    dtype=numpy.bool_
-                                        ),
-                                        td[band].coords
+                        ~numpy.zeros(td[band].values.shape, dtype=numpy.bool_),
+                        td[band].coords,
                     )
                 td_masks.append(td_ext_mask)
             extent_mask = xarray.concat(td_masks, dim=data.time)
@@ -196,10 +204,11 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
             qprof["write_action"] = "Write Data"
             if mdh and mdh.preserve_user_date_order:
                 sorter = user_date_sorter(
-                                          params.layer,
-                                          data.time.values,
-                                          params.geobox.geographic_extent,
-                                          params.times)  # type: ignore[arg-type]
+                    params.layer,
+                    data.time.values,
+                    params.geobox.geographic_extent,
+                    params.times,  # type: ignore[arg-type]
+                )
                 data = data.sortby(sorter)
                 extent_mask = extent_mask.sortby(sorter)
 
@@ -211,12 +220,21 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
 
     if params.ows_stats:
         return json_response(qprof.profile())
-    return png_response(body, extra_headers=params.layer.resource_limits.wms_cache_rules.cache_headers(n_datasets))
+    return png_response(
+        body,
+        extra_headers=params.layer.resource_limits.wms_cache_rules.cache_headers(
+            n_datasets
+        ),
+    )
 
 
 @log_call
-def _write_png(data: xarray.Dataset, style: StyleDef, extent_mask: xarray.DataArray,
-               qprof: QueryProfiler) -> bytes:
+def _write_png(
+    data: xarray.Dataset,
+    style: StyleDef,
+    extent_mask: xarray.DataArray,
+    qprof: QueryProfiler,
+) -> bytes:
     qprof.start_event("combine-masks")
     mask = style.to_mask(data, extent_mask)
     qprof.end_event("combine-masks")
@@ -228,7 +246,9 @@ def _write_png(data: xarray.Dataset, style: StyleDef, extent_mask: xarray.DataAr
     # Verified using : https://docs.dea.ga.gov.au/notebooks/Frequently_used_code/Animated_timeseries.html
     mdh = style.get_multi_date_handler(img_data)
     if mdh:
-        image = xarray_image_as_png(img_data, loop_over='time', animate=True, frame_duration=mdh.frame_duration)
+        image = xarray_image_as_png(
+            img_data, loop_over="time", animate=True, frame_duration=mdh.frame_duration
+        )
     else:
         image = xarray_image_as_png(img_data)
     qprof.end_event("write")
@@ -238,38 +258,41 @@ def _write_png(data: xarray.Dataset, style: StyleDef, extent_mask: xarray.DataAr
 @log_call
 def _write_empty(geobox: GeoBox) -> bytes:
     with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=geobox.width,
-                          height=geobox.height,
-                          count=1,
-                          transform=None,
-                          nodata=0,
-                          dtype='uint8'):
+        with memfile.open(
+            driver="PNG",
+            width=geobox.width,
+            height=geobox.height,
+            count=1,
+            transform=None,
+            nodata=0,
+            dtype="uint8",
+        ):
             pass
         return memfile.read()
 
 
 @log_call
-def _write_polygon(geobox: GeoBox, polygon: geom.Geometry, zoom_fill: list[int], layer: OWSNamedLayer) -> bytes:
+def _write_polygon(
+    geobox: GeoBox, polygon: geom.Geometry, zoom_fill: list[int], layer: OWSNamedLayer
+) -> bytes:
     geobox_ext = geobox.extent
     if geobox_ext.within(polygon):
         data = numpy.full([geobox.height, geobox.width], fill_value=1, dtype="uint8")
     else:
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
-        data = rasterize(shapes=[polygon],
-                          fill=0,
-                          default_value=2,
-                          out=data,
-                          transform=geobox.affine
-                        )
+        data = rasterize(
+            shapes=[polygon], fill=0, default_value=2, out=data, transform=geobox.affine
+        )
     with MemoryFile() as memfile:
-        with memfile.open(driver='PNG',
-                          width=geobox.width,
-                          height=geobox.height,
-                          count=4,
-                          transform=None,
-                          nodata=0,
-                          dtype='uint8') as thing:
+        with memfile.open(
+            driver="PNG",
+            width=geobox.width,
+            height=geobox.height,
+            count=4,
+            transform=None,
+            nodata=0,
+            dtype="uint8",
+        ) as thing:
             for idx, fill in enumerate(zoom_fill, start=1):
                 thing.write_band(idx, data * fill)
         return memfile.read()

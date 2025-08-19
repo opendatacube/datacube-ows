@@ -4,8 +4,8 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Gunicorn config for Prometheus internal metrics
-"""
+"""Gunicorn config for Prometheus internal metrics"""
+
 import os
 
 from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics

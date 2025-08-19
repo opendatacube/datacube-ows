@@ -4,8 +4,8 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Test band math utilities
-"""
+"""Test band math utilities"""
+
 from collections.abc import Callable, Sequence
 from typing import Literal
 
@@ -73,12 +73,7 @@ def dummy_layer() -> OWSProductLayer:
 
 @pytest.fixture
 def band_mapper() -> Callable[[Literal["b1", "b2", "b1a", "b2a"]], str]:
-    idx = {
-        "b1": "b1",
-        "b2": "b2",
-        "b1a": "b1",
-        "b2a": "b2",
-    }
+    idx = {"b1": "b1", "b2": "b2", "b1a": "b1", "b2a": "b2"}
     return lambda b: idx[b]
 
 
@@ -126,7 +121,8 @@ def test_pre_scaled_norm_diff(band_mapper) -> None:
     assert (
         pre_scaled_norm_diff(
             TEST_XARR, "b1a", "b2", band_mapper=band_mapper, scale_from=[0, 1]
-        ) is not None
+        )
+        is not None
     )
     assert np.array_equal(
         pre_scaled_norm_diff(TEST_XARR2, "b3", "b2", 2.0, 0.0, 6.0, 0.0).values,
@@ -176,18 +172,32 @@ def test_single_band_offset_log(band_mapper) -> None:
     assert single_band_offset_log(TEST_XARR, "b1", offset=0.5) is not None
     assert single_band_offset_log(TEST_XARR, "b1", scale=100) is not None
     assert single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0]) is not None
-    assert single_band_offset_log(TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]) is not None
+    assert (
+        single_band_offset_log(
+            TEST_XARR, "b1", scale_from=[0.0, 4.0], scale_to=[0, 1024]
+        )
+        is not None
+    )
     assert single_band_offset_log(TEST_XARR, "b1", band_mapper=band_mapper) is not None
-    assert single_band_offset_log(TEST_XARR, "b1", mult_band="b2", band_mapper=band_mapper) is not None
+    assert (
+        single_band_offset_log(TEST_XARR, "b1", mult_band="b2", band_mapper=band_mapper)
+        is not None
+    )
 
 
 def test_single_band_arcsec(band_mapper) -> None:
     assert single_band_arcsec(TEST_XARR, "b1") is not None
     assert single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8]) is not None
-    assert single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024]) is not None
+    assert (
+        single_band_arcsec(TEST_XARR, "b1", scale_from=[0.0, 0.8], scale_to=[0, 1024])
+        is not None
+    )
     assert single_band_arcsec(TEST_XARR, "b1", band_mapper=band_mapper) is not None
 
 
 def test_rvi(band_mapper) -> None:
     assert radar_vegetation_index(TEST_XARR, "b1", "b2") is not None
-    assert radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper) is not None
+    assert (
+        radar_vegetation_index(TEST_XARR, "b1", "b2", band_mapper=band_mapper)
+        is not None
+    )

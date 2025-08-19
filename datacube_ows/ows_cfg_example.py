@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-
 # Example configuration file for datacube_ows.
 #
 # The file was originally the only documentation for the configuration file format.
@@ -45,12 +44,11 @@ landsat8_bands = {
     "swir1": ["shortwave_infrared_1", "near_shortwave_infrared"],
     "swir2": ["shortwave_infrared_2", "far_shortwave_infrared"],
     "coastal_aerosol": ["far_blue"],
-
     # N.B. Include pixel quality bands if they are in the main data product.
 }
 
 sentinel2_bands = {
-    "nbar_coastal_aerosol": ['nbar_far_blue'],
+    "nbar_coastal_aerosol": ["nbar_far_blue"],
     "nbar_blue": [],
     "nbar_green": [],
     "nbar_red": [],
@@ -61,18 +59,17 @@ sentinel2_bands = {
     "nbar_nir_2": ["nbar_near_infrared_2"],
     "nbar_swir_2": ["nbar_shortwave_infrared_2"],
     "nbar_swir_3": ["nbar_shortwave_infrared_3"],
-    "nbart_coastal_aerosol": ['coastal_aerosol', 'nbart_far_blue', 'far_blue'],
-    "nbart_blue": ['blue'],
-    "nbart_green": ['green'],
-    "nbart_red": ['red'],
-    "nbart_red_edge_1": ['red_edge_1'],
-    "nbart_red_edge_2": ['red_edge_2'],
-    "nbart_red_edge_3": ['red_edge_3'],
+    "nbart_coastal_aerosol": ["coastal_aerosol", "nbart_far_blue", "far_blue"],
+    "nbart_blue": ["blue"],
+    "nbart_green": ["green"],
+    "nbart_red": ["red"],
+    "nbart_red_edge_1": ["red_edge_1"],
+    "nbart_red_edge_2": ["red_edge_2"],
+    "nbart_red_edge_3": ["red_edge_3"],
     "nbart_nir_1": ["nir_1", "nbart_near_infrared_1"],
     "nbart_nir_2": ["nir_2", "nbart_near_infrared_2"],
     "nbart_swir_2": ["swir_2", "nbart_shortwave_infrared_2"],
     "nbart_swir_3": ["swir_3", "nbart_shortwave_infrared_3"],
-
     # N.B. Include pixel quality bands if they are in the main data product.
     "quality": [],
 }
@@ -96,12 +93,8 @@ style_rgb = {
             # but this is not enforced.
             "red": 1.0
         },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 1.0
-        }
+        "green": {"green": 1.0},
+        "blue": {"blue": 1.0},
     },
     # The raw band value range to be compressed to an 8 bit range for the output image tiles.
     # Band values outside this range are clipped to 0 or 255 as appropriate.
@@ -114,54 +107,26 @@ style_rgb = {
         # A legend cannot be auto-generated for a linear combination style, so a url pointing to
         # legend PNG image must be supplied if 'show_legend' is True.
         # Note that legend urls are proxied, not displayed directly to the user.
-        "url": "http://example.com/custom_style_image.png"
-    }
-
+        "url": "http://example.com/custom_style_image.png",
+    },
 }
 
 style_rgb_cloudmask = {
     "name": "cloud_masked_rgb",
     "title": "Simple RGB with cloud masking",
     "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud masking",
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 1.0
-        }
-    },
+    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
     # PQ masking example
     # Pixels with any of the listed flag values are masked out (made transparent).
-    "pq_masks": [
-        {
-            "flags": {
-                "cloud_acca": "no_cloud",
-                "cloud_fmask": "no_cloud",
-            },
-        },
-    ],
-    "scale_range": [0.0, 3000.0]
+    "pq_masks": [{"flags": {"cloud_acca": "no_cloud", "cloud_fmask": "no_cloud"}}],
+    "scale_range": [0.0, 3000.0],
 }
 
 style_rgb_cloud_and_shadowmask = {
     "name": "cloud_and_shadow_masked_rgb",
     "title": "Simple RGB with cloud and cloud shadow masking",
     "abstract": "Simple true-colour image, using the red, green and blue bands, with cloud and cloud shadow masking",
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 1.0
-        }
-    },
+    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
     # PQ masking example
     "pq_masks": [
         {
@@ -170,10 +135,10 @@ style_rgb_cloud_and_shadowmask = {
                 "cloud_fmask": "no_cloud",
                 "cloud_shadow_acca": "no_cloud_shadow",
                 "cloud_shadow_fmask": "no_cloud_shadow",
-            },
-        },
+            }
+        }
     ],
-    "scale_range": [0.0, 3000.0]
+    "scale_range": [0.0, 3000.0],
 }
 
 style_ext_rgb = {
@@ -181,18 +146,11 @@ style_ext_rgb = {
     "title": "Extended RGB",
     "abstract": "Extended true-colour image, incorporating the coastal aerosol band",
     "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 0.6,
-            "coastal_aerosol": 0.4
-        }
+        "red": {"red": 1.0},
+        "green": {"green": 1.0},
+        "blue": {"blue": 0.6, "coastal_aerosol": 0.4},
     },
-    "scale_range": [0.0, 3000.0]
+    "scale_range": [0.0, 3000.0],
 }
 
 style_ls8_allband_false_colour = {
@@ -200,23 +158,11 @@ style_ls8_allband_false_colour = {
     "title": "Wideband false-colour",
     "abstract": "False-colour image, incorporating all available LS8 spectral bands",
     "components": {
-        "red": {
-            "swir2": 0.255,
-            "swir1": 0.45,
-            "nir": 0.255,
-        },
-        "green": {
-            "nir": 0.255,
-            "red": 0.45,
-            "green": 0.255,
-        },
-        "blue": {
-            "green": 0.255,
-            "blue": 0.45,
-            "coastal_aerosol": 0.255,
-        }
+        "red": {"swir2": 0.255, "swir1": 0.45, "nir": 0.255},
+        "green": {"nir": 0.255, "red": 0.45, "green": 0.255},
+        "blue": {"green": 0.255, "blue": 0.45, "coastal_aerosol": 0.255},
     },
-    "scale_range": [0.0, 3000.0]
+    "scale_range": [0.0, 3000.0],
 }
 
 style_infrared_false_colour = {
@@ -232,14 +178,8 @@ style_infrared_false_colour = {
             # by defining a band alias.)
             "scale_range": [5.0, 4000.0],
         },
-        "green": {
-            "swir2": 1.0,
-            "scale_range": [25.0, 4000.0],
-        },
-        "blue": {
-            "nir": 1.0,
-            "scale_range": [0.0, 3000.0],
-        }
+        "green": {"swir2": 1.0, "scale_range": [25.0, 4000.0]},
+        "blue": {"nir": 1.0, "scale_range": [0.0, 3000.0]},
     },
     # The style scale_range can be omitted if all components have a component-specific scale_range defined.
     # "scale_range": [0.0, 3000.0]
@@ -269,35 +209,22 @@ style_mineral_content = {
             #
             "function": "datacube_ows.band_utils.norm_diff",
             "mapped_bands": True,
-            "kwargs": {
-                "band1": "red",
-                "band2": "blue",
-                "scale_from": [-0.1, 1.0],
-            }
+            "kwargs": {"band1": "red", "band2": "blue", "scale_from": [-0.1, 1.0]},
         },
         "green": {
             "function": "datacube_ows.band_utils.norm_diff",
             "mapped_bands": True,
-            "kwargs": {
-                "band1": "nir",
-                "band2": "swir1",
-                "scale_from": [-0.1, 1.0],
-            }
+            "kwargs": {"band1": "nir", "band2": "swir1", "scale_from": [-0.1, 1.0]},
         },
         "blue": {
             "function": "datacube_ows.band_utils.norm_diff",
             "mapped_bands": True,
-            "kwargs": {
-                "band1": "swir1",
-                "band2": "swir2",
-                "scale_from": [-0.1, 1.0],
-            }
-        }
+            "kwargs": {"band1": "swir1", "band2": "swir2", "scale_from": [-0.1, 1.0]},
+        },
     },
     # If ANY components include a function callback, the bands that need to be passed to the callback
     # MUST be declared in a "additional_bands" item:
-    "additional_bands": ["red", "blue", "nir", "swir1", "swir2"]
-
+    "additional_bands": ["red", "blue", "nir", "swir1", "swir2"],
     #
     # The style scale_range can be omitted if all components have a component-specific scale_range defined or
     # a function callback.
@@ -310,35 +237,19 @@ style_pure_ls8_coastal_aerosol = {
     "title": "Spectral band 1 - Coastal aerosol",
     "abstract": "Coastal aerosol band, approximately 435nm to 450nm",
     "components": {
-        "red": {
-            "coastal_aerosol": 1.0
-        },
-        "green": {
-            "coastal_aerosol": 1.0
-        },
-        "blue": {
-            "coastal_aerosol": 1.0
-        }
+        "red": {"coastal_aerosol": 1.0},
+        "green": {"coastal_aerosol": 1.0},
+        "blue": {"coastal_aerosol": 1.0},
     },
-    "scale_range": [0.0, 3000.0]
+    "scale_range": [0.0, 3000.0],
 }
 
 style_pure_ls8_blue = {
     "name": "blue",
     "title": "Spectral band 2 - Blue",
     "abstract": "Blue band, approximately 453nm to 511nm",
-    "components": {
-        "red": {
-            "blue": 1.0
-        },
-        "green": {
-            "blue": 1.0
-        },
-        "blue": {
-            "blue": 1.0
-        }
-    },
-    "scale_range": [0.0, 3000.0]
+    "components": {"red": {"blue": 1.0}, "green": {"blue": 1.0}, "blue": {"blue": 1.0}},
+    "scale_range": [0.0, 3000.0],
 }
 
 style_pure_ls8_green = {
@@ -346,53 +257,27 @@ style_pure_ls8_green = {
     "title": "Spectral band 3 - Green",
     "abstract": "Green band, approximately 534nm to 588nm",
     "components": {
-        "red": {
-            "green": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "green": 1.0
-        }
+        "red": {"green": 1.0},
+        "green": {"green": 1.0},
+        "blue": {"green": 1.0},
     },
-    "scale_range": [0.0, 3000.0]
+    "scale_range": [0.0, 3000.0],
 }
 
 style_pure_ls8_red = {
     "name": "red",
     "title": "Spectral band 4 - Red",
     "abstract": "Red band, roughly 637nm to 672nm",
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "red": 1.0
-        },
-        "blue": {
-            "red": 1.0
-        }
-    },
-    "scale_range": [0.0, 3000.0]
+    "components": {"red": {"red": 1.0}, "green": {"red": 1.0}, "blue": {"red": 1.0}},
+    "scale_range": [0.0, 3000.0],
 }
 
 style_pure_ls8_nir = {
     "name": "nir",
     "title": "Spectral band 5 - Near infra-red",
     "abstract": "Near infra-red band, roughly 853nm to 876nm",
-    "components": {
-        "red": {
-            "nir": 1.0
-        },
-        "green": {
-            "nir": 1.0
-        },
-        "blue": {
-            "nir": 1.0
-        }
-    },
-    "scale_range": [0.0, 3000.0]
+    "components": {"red": {"nir": 1.0}, "green": {"nir": 1.0}, "blue": {"nir": 1.0}},
+    "scale_range": [0.0, 3000.0],
 }
 
 style_pure_ls8_swir1 = {
@@ -400,17 +285,11 @@ style_pure_ls8_swir1 = {
     "title": "Spectral band 6 - Short wave infra-red 1",
     "abstract": "Short wave infra-red band 1, roughly 1575nm to 1647nm",
     "components": {
-        "red": {
-            "swir1": 1.0
-        },
-        "green": {
-            "swir1": 1.0
-        },
-        "blue": {
-            "swir1": 1.0
-        }
+        "red": {"swir1": 1.0},
+        "green": {"swir1": 1.0},
+        "blue": {"swir1": 1.0},
     },
-    "scale_range": [0.0, 3000.0]
+    "scale_range": [0.0, 3000.0],
 }
 
 style_pure_ls8_swir2 = {
@@ -418,17 +297,11 @@ style_pure_ls8_swir2 = {
     "title": "Spectral band 7 - Short wave infra-red 2",
     "abstract": "Short wave infra-red band 2, roughly 2117nm to 2285nm",
     "components": {
-        "red": {
-            "swir2": 1.0
-        },
-        "green": {
-            "swir2": 1.0
-        },
-        "blue": {
-            "swir2": 1.0
-        }
+        "red": {"swir2": 1.0},
+        "green": {"swir2": 1.0},
+        "blue": {"swir2": 1.0},
     },
-    "scale_range": [0.0, 3000.0]
+    "scale_range": [0.0, 3000.0],
 }
 
 
@@ -458,10 +331,7 @@ style_ndvi = {
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "mapped_bands": True,
-        "kwargs": {
-            "band1": "nir",
-            "band2": "red"
-        }
+        "kwargs": {"band1": "nir", "band2": "red"},
     },
     # List of bands used by this style. The band may not be passed to the index function if it is not declared
     # here, resulting in an error.  Band aliases can be used here.
@@ -471,61 +341,26 @@ style_ndvi = {
     "color_ramp": [
         # Any value less than the first entry will have colour and alpha of the first entry.
         # (i.e. in this example all negative values will be fully transparent (alpha=0.0).)
-        {
-            "value": -0.0,
-            "color": "#8F3F20",
-            "alpha": 0.0
-        },
-        {
-            "value": 0.0,
-            "color": "#8F3F20",
-            "alpha": 1.0
-        },
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
         {
             # do not have to defined alpha value
             # if no alpha is specified, alpha will default to 1.0 (fully opaque)
             "value": 0.1,
-            "color": "#A35F18"
+            "color": "#A35F18",
         },
-        {
-            "value": 0.2,
-            "color": "#B88512"
-        },
-        {
-            "value": 0.3,
-            "color": "#CEAC0E"
-        },
-        {
-            "value": 0.4,
-            "color": "#E5D609"
-        },
-        {
-            "value": 0.5,
-            "color": "#FFFF0C"
-        },
-        {
-            "value": 0.6,
-            "color": "#C3DE09"
-        },
-        {
-            "value": 0.7,
-            "color": "#88B808"
-        },
-        {
-            "value": 0.8,
-            "color": "#529400"
-        },
-        {
-            "value": 0.9,
-            "color": "#237100"
-        },
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
         # Values greater than the last entry will use the colour and alpha of the last entry.
         # (N.B. This will not happen for this example because it is normalised so that 1.0 is
         # maximum possible value.)
-        {
-            "value": 1.0,
-            "color": "#114D04"
-        }
+        {"value": 1.0, "color": "#114D04"},
     ],
     # If true, the calculated index value for the pixel will be included in GetFeatureInfo responses.
     # Defaults to True.
@@ -538,8 +373,8 @@ style_ndvi = {
         "show_legend": True,
         # Instead of using the generated color ramp legend for the style, a URL to an PNG file can
         # be used instead.  If 'url' is not supplied, the generated legend is used.
-        "url": "http://example.com/custom_style_image.png"
-    }
+        "url": "http://example.com/custom_style_image.png",
+    },
 }
 
 # Examples of non-linear colour-ramped style with multi-date support.
@@ -550,71 +385,29 @@ style_ndvi_delta = {
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "mapped_bands": True,
-        "kwargs": {
-            "band1": "nir",
-            "band2": "red"
-        }
+        "kwargs": {"band1": "nir", "band2": "red"},
     },
     "needed_bands": ["red", "nir"],
     # The color ramp for single-date requests - same as ndvi style example above
     "color_ramp": [
-        {
-            "value": -0.0,
-            "color": "#8F3F20",
-            "alpha": 0.0
-        },
-        {
-            "value": 0.0,
-            "color": "#8F3F20",
-            "alpha": 1.0
-        },
-        {
-            "value": 0.1,
-            "color": "#A35F18"
-        },
-        {
-            "value": 0.2,
-            "color": "#B88512"
-        },
-        {
-            "value": 0.3,
-            "color": "#CEAC0E"
-        },
-        {
-            "value": 0.4,
-            "color": "#E5D609"
-        },
-        {
-            "value": 0.5,
-            "color": "#FFFF0C"
-        },
-        {
-            "value": 0.6,
-            "color": "#C3DE09"
-        },
-        {
-            "value": 0.7,
-            "color": "#88B808"
-        },
-        {
-            "value": 0.8,
-            "color": "#529400"
-        },
-        {
-            "value": 0.9,
-            "color": "#237100"
-        },
-        {
-            "value": 1.0,
-            "color": "#114D04"
-        }
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+        {"value": 0.1, "color": "#A35F18"},
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
+        {"value": 1.0, "color": "#114D04"},
     ],
     "include_in_feature_info": True,
     "legend": {
         # Show the legend (default True for colour ramp styles)
         "show_legend": True,
         # Example config for colour ramp style auto-legend generation.
-
         # The range covered by the legend.
         # Defaults to the first and last non transparent (alpha != 0.0)
         # entry in the explicit colour ramp, or the values in the range parameter.
@@ -635,16 +428,13 @@ style_ndvi_delta = {
         # Default is a tick_count of 1, which means only the begin and end ticks.
         # Legend title.  Defaults to the style name.
         "title": "This is not a legend",
-
         # Units
         # added to title of legend in parenthesis, default is to not display units.  To emulate
         # the previous default behaviour use:
         "units": "unitless",
-
         # decimal_places. 1 for "1.0" style labels, 2 for "1.00" and 0 for "1", etc.
         # (default 1)
         "decimal_places": 1,
-
         # tick_labels
         # Labels for individual ticks can be customised"
         "tick_labels": {
@@ -671,32 +461,24 @@ style_ndvi_delta = {
             # Or the label can changed.  Note that the default prefix and suffix
             # are still applied unless explicitly over-ridden.
             # E.g. To display "(max)" for the 1.0 tick:
-            "1.0": {
-                "label": "max"
-            }
+            "1.0": {"label": "max"},
         },
-
         # MatPlotLib rcparams options.
         # Defaults to {} (i.e. matplotlib defaults)
         # See https://matplotlib.org/3.2.2/tutorials/introductory/customizing.html
-        "rcParams": {
-                 "lines.linewidth": 2,
-                 "font.weight": "bold",
-        },
-
+        "rcParams": {"lines.linewidth": 2, "font.weight": "bold"},
         # Image size (in "inches").
         # Matplotlib's default dpi is 100, so measured in hundreds of pixels unless the dpi
         # is over-ridden by the rcParams above.
         # Default is 4x1.25, i.e. 400x125 pixels
         "width": 4,
         "height": 1.25,
-
         # strip_location
         # The location and size of the coloured strip, in format:
         #  [ left, bottom, width, height ], as passed to Matplotlib Figure.add_axes function.
         # All values as fractions of the width and height.  (i.e. between 0.0 and 1.0)
         # The default is:
-        "strip_location": [0.05, 0.5, 0.9, 0.15]
+        "strip_location": [0.05, 0.5, 0.9, 0.15],
     },
     # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
     "multi_date": [
@@ -730,12 +512,12 @@ style_ndvi_delta = {
             "legend": {
                 # Legend only covers positive part of ramp.
                 "begin": "0.0",
-                "end": "1.0"
+                "end": "1.0",
             },
             # The feature info label for the multi-date index value.
-            "feature_info_label": "ndvi_delta"
+            "feature_info_label": "ndvi_delta",
         }
-    ]
+    ],
 }
 
 # Examples of non-linear colour-ramped style with multi-date animation support.
@@ -746,71 +528,29 @@ style_ndvi_anim = {
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "mapped_bands": True,
-        "kwargs": {
-            "band1": "nir",
-            "band2": "red"
-        }
+        "kwargs": {"band1": "nir", "band2": "red"},
     },
     "needed_bands": ["red", "nir"],
     # The color ramp for single-date requests - same as ndvi style example above
     "color_ramp": [
-        {
-            "value": -0.0,
-            "color": "#8F3F20",
-            "alpha": 0.0
-        },
-        {
-            "value": 0.0,
-            "color": "#8F3F20",
-            "alpha": 1.0
-        },
-        {
-            "value": 0.1,
-            "color": "#A35F18"
-        },
-        {
-            "value": 0.2,
-            "color": "#B88512"
-        },
-        {
-            "value": 0.3,
-            "color": "#CEAC0E"
-        },
-        {
-            "value": 0.4,
-            "color": "#E5D609"
-        },
-        {
-            "value": 0.5,
-            "color": "#FFFF0C"
-        },
-        {
-            "value": 0.6,
-            "color": "#C3DE09"
-        },
-        {
-            "value": 0.7,
-            "color": "#88B808"
-        },
-        {
-            "value": 0.8,
-            "color": "#529400"
-        },
-        {
-            "value": 0.9,
-            "color": "#237100"
-        },
-        {
-            "value": 1.0,
-            "color": "#114D04"
-        }
+        {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+        {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+        {"value": 0.1, "color": "#A35F18"},
+        {"value": 0.2, "color": "#B88512"},
+        {"value": 0.3, "color": "#CEAC0E"},
+        {"value": 0.4, "color": "#E5D609"},
+        {"value": 0.5, "color": "#FFFF0C"},
+        {"value": 0.6, "color": "#C3DE09"},
+        {"value": 0.7, "color": "#88B808"},
+        {"value": 0.8, "color": "#529400"},
+        {"value": 0.9, "color": "#237100"},
+        {"value": 1.0, "color": "#114D04"},
     ],
     "include_in_feature_info": True,
     "legend": {
         # Show the legend (default True for colour ramp styles)
         "show_legend": True,
         # Example config for colour ramp style auto-legend generation.
-
         # The range covered by the legend.
         # Defaults to the first and last non transparent (alpha != 0.0)
         # entry in the explicit colour ramp, or the values in the range parameter.
@@ -831,16 +571,13 @@ style_ndvi_anim = {
         # Default is a tick_count of 1, which means only the begin and end ticks.
         # Legend title.  Defaults to the style name.
         "title": "This is not a legend",
-
         # Units
         # added to title of legend in parenthesis, default is to not display units.  To emulate
         # the previous default behaviour use:
         "units": "unitless",
-
         # decimal_places. 1 for "1.0" style labels, 2 for "1.00" and 0 for "1", etc.
         # (default 1)
         "decimal_places": 1,
-
         # tick_labels
         # Labels for individual ticks can be customised"
         "tick_labels": {
@@ -867,32 +604,24 @@ style_ndvi_anim = {
             # Or the label can changed.  Note that the default prefix and suffix
             # are still applied unless explicitly over-ridden.
             # E.g. To display "(max)" for the 1.0 tick:
-            "1.0": {
-                "label": "max"
-            }
+            "1.0": {"label": "max"},
         },
-
         # MatPlotLib rcparams options.
         # Defaults to {} (i.e. matplotlib defaults)
         # See https://matplotlib.org/3.2.2/tutorials/introductory/customizing.html
-        "rcParams": {
-                 "lines.linewidth": 2,
-                 "font.weight": "bold",
-        },
-
+        "rcParams": {"lines.linewidth": 2, "font.weight": "bold"},
         # Image size (in "inches").
         # Matplotlib's default dpi is 100, so measured in hundreds of pixels unless the dpi
         # is over-ridden by the rcParams above.
         # Default is 4x1.25, i.e. 400x125 pixels
         "width": 4,
         "height": 1.25,
-
         # strip_location
         # The location and size of the coloured strip, in format:
         #  [ left, bottom, width, height ], as passed to Matplotlib Figure.add_axes function.
         # All values as fractions of the width and height.  (i.e. between 0.0 and 1.0)
         # The default is:
-        "strip_location": [0.05, 0.5, 0.9, 0.15]
+        "strip_location": [0.05, 0.5, 0.9, 0.15],
     },
     # Define behaviour(s) for multi-date requests. If not declared, style only supports single-date requests.
     "multi_date": [
@@ -917,66 +646,28 @@ style_ndvi_anim = {
             },
             # The color ramp for single-date requests - same as ndvi style example above
             "color_ramp": [
-                {
-                    "value": -0.0,
-                    "color": "#8F3F20",
-                    "alpha": 0.0
-                },
-                {
-                    "value": 0.0,
-                    "color": "#8F3F20",
-                    "alpha": 1.0
-                },
-                {
-                    "value": 0.1,
-                    "color": "#A35F18"
-                },
-                {
-                    "value": 0.2,
-                    "color": "#B88512"
-                },
-                {
-                    "value": 0.3,
-                    "color": "#CEAC0E"
-                },
-                {
-                    "value": 0.4,
-                    "color": "#E5D609"
-                },
-                {
-                    "value": 0.5,
-                    "color": "#FFFF0C"
-                },
-                {
-                    "value": 0.6,
-                    "color": "#C3DE09"
-                },
-                {
-                    "value": 0.7,
-                    "color": "#88B808"
-                },
-                {
-                    "value": 0.8,
-                    "color": "#529400"
-                },
-                {
-                    "value": 0.9,
-                    "color": "#237100"
-                },
-                {
-                    "value": 1.0,
-                    "color": "#114D04"
-                }
+                {"value": -0.0, "color": "#8F3F20", "alpha": 0.0},
+                {"value": 0.0, "color": "#8F3F20", "alpha": 1.0},
+                {"value": 0.1, "color": "#A35F18"},
+                {"value": 0.2, "color": "#B88512"},
+                {"value": 0.3, "color": "#CEAC0E"},
+                {"value": 0.4, "color": "#E5D609"},
+                {"value": 0.5, "color": "#FFFF0C"},
+                {"value": 0.6, "color": "#C3DE09"},
+                {"value": 0.7, "color": "#88B808"},
+                {"value": 0.8, "color": "#529400"},
+                {"value": 0.9, "color": "#237100"},
+                {"value": 1.0, "color": "#114D04"},
             ],
             "legend": {
                 # Legend only covers positive part of ramp.
                 "begin": "0.0",
-                "end": "1.0"
+                "end": "1.0",
             },
             # The feature info label for the multi-date animation performs a pixel drill.
-            "feature_info_label": "ndvi_anim"
+            "feature_info_label": "ndvi_anim",
         }
-    ]
+    ],
 }
 
 # Examples of Matplotlib Color-Ramp styles
@@ -1008,7 +699,7 @@ style_deform = {
         # decimal places for tick labels
         # set to 0 for ints
         "decimal_places": 0,
-    }
+    },
 }
 
 style_ndvi_cloudmask = {
@@ -1018,10 +709,7 @@ style_ndvi_cloudmask = {
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "mapped_bands": True,
-        "kwargs": {
-            "band1": "nir",
-            "band2": "red"
-        }
+        "kwargs": {"band1": "nir", "band2": "red"},
     },
     "needed_bands": ["red", "nir"],
     # If a "range" is supplied instead of a "color_ramp", a default color ramp is used.
@@ -1031,14 +719,7 @@ style_ndvi_cloudmask = {
     # Areas where the index_function returns greater than the upper range limit are displayed as dark red.
     "range": [0.0, 1.0],
     # Cloud masks work the same as for linear combination styles.
-    "pq_masks": [
-        {
-            "flags": {
-                "cloud_acca": "no_cloud",
-                "cloud_fmask": "no_cloud",
-            },
-        },
-    ],
+    "pq_masks": [{"flags": {"cloud_acca": "no_cloud", "cloud_fmask": "no_cloud"}}],
     # Already have NDVI in GetFeatureInfo.
     "include_in_feature_info": False,
 }
@@ -1050,10 +731,7 @@ style_ndwi = {
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "mapped_bands": True,
-        "kwargs": {
-            "band1": "green",
-            "band2": "nir"
-        }
+        "kwargs": {"band1": "green", "band2": "nir"},
     },
     "needed_bands": ["green", "nir"],
     "range": [0.0, 1.0],
@@ -1066,10 +744,7 @@ style_ndbi = {
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "mapped_bands": True,
-        "kwargs": {
-            "band1": "swir2",
-            "band2": "nir"
-        }
+        "kwargs": {"band1": "swir2", "band2": "nir"},
     },
     "needed_bands": ["swir2", "nir"],
     "range": [0.0, 1.0],
@@ -1083,77 +758,27 @@ style_wofs_frequency = {
     "index_function": {
         "function": "datacube_ows.band_utils.single_band",
         "mapped_bands": True,
-        "kwargs": {
-            "band": "frequency",
-        }
+        "kwargs": {"band": "frequency"},
     },
     # Should the index_function value be shown as a derived band in GetFeatureInfo responses.
     # Defaults to true for style types with an index function.
     "include_in_feature_info": False,
     "color_ramp": [
-        {
-            "value": 0.002,
-            "color": "#000000",
-            "alpha": 0.0
-        },
-        {
-            "value": 0.005,
-            "color": "#8e0101",
-            "alpha": 0.25
-        },
-        {
-            "value": 0.01,
-            "color": "#cf2200",
-            "alpha": 0.75
-        },
-        {
-            "value": 0.02,
-            "color": "#e38400"
-        },
-        {
-            "value": 0.05,
-            "color": "#e3df00"
-        },
-        {
-            "value": 0.1,
-            "color": "#a6e300"
-        },
-        {
-            "value": 0.2,
-            "color": "#62e300"
-        },
-        {
-            "value": 0.3,
-            "color": "#00e32d"
-        },
-        {
-            "value": 0.4,
-            "color": "#00e384"
-        },
-        {
-            "value": 0.5,
-            "color": "#00e3c8"
-        },
-        {
-            "value": 0.6,
-            "color": "#00c5e3"
-        },
-        {
-            "value": 0.7,
-            "color": "#0097e3"
-        },
-        {
-            "value": 0.8,
-            "color": "#005fe3"
-        },
-        {
-            "value": 0.9,
-            "color": "#000fe3"
-        },
-        {
-            "value": 1.0,
-            "color": "#5700e3",
-        }
+        {"value": 0.002, "color": "#000000", "alpha": 0.0},
+        {"value": 0.005, "color": "#8e0101", "alpha": 0.25},
+        {"value": 0.01, "color": "#cf2200", "alpha": 0.75},
+        {"value": 0.02, "color": "#e38400"},
+        {"value": 0.05, "color": "#e3df00"},
+        {"value": 0.1, "color": "#a6e300"},
+        {"value": 0.2, "color": "#62e300"},
+        {"value": 0.3, "color": "#00e32d"},
+        {"value": 0.4, "color": "#00e384"},
+        {"value": 0.5, "color": "#00e3c8"},
+        {"value": 0.6, "color": "#00c5e3"},
+        {"value": 0.7, "color": "#0097e3"},
+        {"value": 0.8, "color": "#005fe3"},
+        {"value": 0.9, "color": "#000fe3"},
+        {"value": 1.0, "color": "#5700e3"},
     ],
     # defines the format of the legend generated
     # for this style
@@ -1172,8 +797,8 @@ style_wofs_frequency = {
             "0.50": {"label": "50"},
             "0.75": {"label": "75"},
             "1.00": {"label": "100"},
-        }
-    }
+        },
+    },
 }
 
 # Mask layers - examples of how to display raw pixel quality data.
@@ -1187,10 +812,7 @@ style_cloud_mask = {
     "index_function": {
         "function": "datacube_ows.band_utils.constant",
         "mapped_bands": True,
-        "kwargs": {
-            "band": "red",
-            "const": "0.1"
-        }
+        "kwargs": {"band": "red", "const": "0.1"},
     },
     "needed_bands": ["red"],
     "range": [0.0, 1.0],
@@ -1203,13 +825,7 @@ style_cloud_mask = {
     #      Specifying "cloud"for both flags and setting the "pq_mask_invert" to False would
     #      show pixels which are not clouds in both metrics.
     "pq_masks": [
-        {
-            "invert": True,
-            "flags": {
-                "cloud_acca": "no_cloud",
-                "cloud_fmask": "no_cloud",
-            },
-        },
+        {"invert": True, "flags": {"cloud_acca": "no_cloud", "cloud_fmask": "no_cloud"}}
     ],
     "legend": {
         # Default legend won't work well with mask layers, so set 'show_legend' to False or provide a url to
@@ -1232,25 +848,12 @@ style_rgb_ndvi = {
     "index_function": {
         "function": "datacube_ows.band_utils.norm_diff",
         "mapped_bands": True,
-        "kwargs": {
-            "band1": "nir",
-            "band2": "red"
-        }
+        "kwargs": {"band1": "nir", "band2": "red"},
     },
     "needed_bands": ["red", "nir"],
     "range": [0.0, 1.0],
-    "components": {
-        "red": {
-            "red": 1.0
-        },
-        "green": {
-            "green": 1.0
-        },
-        "blue": {
-            "blue": 1.0
-        }
-    },
-    "scale_range": [0.0, 3000.0]
+    "components": {"red": {"red": 1.0}, "green": {"green": 1.0}, "blue": {"blue": 1.0}},
+    "scale_range": [0.0, 3000.0],
     # N.B. The "pq_mask" section works the same as for the style types above.
 }
 
@@ -1270,17 +873,13 @@ style_mangrove = {
                 # flags that all must match
                 # in order for this style color to apply
                 # "and" and "or" flags cannot be mixed
-                "flags": {
-                    "and": {
-                        "woodland": True
-                    }
-                },
+                "flags": {"and": {"woodland": True}},
                 "color": "#9FFF4C",
                 # If specified as True (defaults to False)
                 # Any areas which match this flag set
                 # will be masked out completely, similar to using an extent
                 # mask function or pq masking
-                "mask": True
+                "mask": True,
             },
             {
                 "title": "Open Forest",
@@ -1288,26 +887,20 @@ style_mangrove = {
                 # flags that any may match
                 # in order for this style color to apply
                 # "and" and "or" flags cannot be mixed
-                "flags": {
-                    "or": {
-                        "open_forest": True
-                    }
-                },
+                "flags": {"or": {"open_forest": True}},
                 "color": "#5ECC00",
                 # Can set an optional alpha value (0.0 - 1.0) for these colors
                 # will default to 1.0 (fully opaque)
-                "alpha": 0.5
+                "alpha": 0.5,
             },
             {
                 "title": "Closed Forest",
                 "abstract": "(>80% cover)",
-                "flags": {
-                    "closed_forest": True
-                },
-                "color": "#3B7F00"
+                "flags": {"closed_forest": True},
+                "color": "#3B7F00",
             },
         ]
-    }
+    },
     # NB: You can also do additional masking using the "pq_mask" section as described above for other
     #     style types.
 }
@@ -1330,7 +923,6 @@ standard_resource_limits = {
         #
         # Defaults to [150, 180, 200, 160]
         "zoomed_out_fill_colour": [150, 180, 200, 160],
-
         # WMS/WMTS Resource Limit 1: Min zoom factor
         #
         # The zoom factor is a dimensionless number calculated from the request in a way that is independent
@@ -1341,7 +933,6 @@ standard_resource_limits = {
         #
         # Defaults to 300.0
         "min_zoom_factor": 500.0,
-
         # Min zoom factor (above) works well for small-tiled requests, (e.g. 256x256 as sent by Terria).
         # However, for large-tiled requests (e.g. as sent by QGIS), large and intensive queries can still
         # go through to the datacube.
@@ -1374,7 +965,7 @@ standard_resource_limits = {
             {
                 # Where number of datasets greater than or equal to the min_datasets value for this rule AND
                 # less than the min_datasets of the next rule (4-7 in this example)
-                "min_datasets": 4, # Must be greater than zero.  Blank tiles (0 datasets) are NEVER cached
+                "min_datasets": 4,  # Must be greater than zero.  Blank tiles (0 datasets) are NEVER cached
                 # The cache-control max-age for this rule, in seconds.
                 "max_age": 86400,  # 86400 seconds = 24 hours
             },
@@ -1389,17 +980,17 @@ standard_resource_limits = {
             # 4-7 datasets: max-age: 86400
             # 8-10 datasets: max-age: 604800
             # 11+ datasets:  no-cache (over-limit behaviour.  Low-resolution summary product or shaded polygons.)
-        ]
+        ],
     },
     "wcs": {
         # wcs::max_datasets is the WCS equivalent of wms::max_datasets.  The main requirement for setting this
         # value is to avoid gateway timeouts on overly large WCS requests (and reduce server load).
         #
         # Defaults to zero, which is interpreted as no dataset limit.
-        "max_datasets": 16,
+        "max_datasets": 16
         # dataset_cache_rules can be set independently for WCS requests.  This example omits it, so
         # WCS GetCoverage requests will always return no cache-control header.
-    }
+    },
 }
 
 
@@ -1408,28 +999,25 @@ standard_resource_limits = {
 ows_cfg = {
     # Config entries in the "global" section apply to all services and all layers/coverages
     "global": {
-
         # These HTML headers are added to all responses
         # Optional, default {} - no added headers
         "response_headers": {
-            "Access-Control-Allow-Origin": "*",  # CORS header (strongly recommended)
+            "Access-Control-Allow-Origin": "*"  # CORS header (strongly recommended)
         },
         # Which web service(s) should be implemented by this instance
         # Optional, defaults: wms,wmts: True, wcs: False
-        "services": {
-            "wms": True,
-            "wmts": True,
-            "wcs": True
-        },
+        "services": {"wms": True, "wmts": True, "wcs": True},
         # Service title - appears e.g. in Terria catalog (required)
         "title": "Open web-services for the Open Data Cube",
         # Service URL.
         # A list of fully qualified URLs that the service can return
         # in the GetCapabilities documents based on the requesting url
-        "allowed_urls": ["http://localhost/odc_ows",
-                          "https://localhost/odc_ows",
-                          "https://alternateurl.domain.org/odc_ows",
-                          "http://127.0.0.1:8000/"],
+        "allowed_urls": [
+            "http://localhost/odc_ows",
+            "https://localhost/odc_ows",
+            "https://alternateurl.domain.org/odc_ows",
+            "http://127.0.0.1:8000/",
+        ],
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",
@@ -1438,11 +1026,7 @@ ows_cfg = {
         "abstract": """This web-service serves georectified raster data from our very own special Open Data Cube instance.""",
         # Keywords included for all services and products
         # Optional - defaults to empty list.
-        "keywords": [
-            "satellite",
-            "australia",
-            "time-series",
-        ],
+        "keywords": ["satellite", "australia", "time-series"],
         # Contact info.
         # Optional but strongly recommended - defaults to blank.
         "contact_info": {
@@ -1482,7 +1066,7 @@ ows_cfg = {
                 "url": "https://www.acme.com/satellites/images/acme-370x73.png",
                 # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
                 "format": "image/png",
-            }
+            },
         },
         # If fees are charged for the use of the service, these can be described here in free text.
         # If blank or not included, defaults to "none".
@@ -1502,10 +1086,10 @@ ows_cfg = {
             },
             "EPSG:4326": {  # WGS-84
                 "geographic": True,
-                "vertical_coord_first": True
+                "vertical_coord_first": True,
             },
             "EPSG:3111": {  # VicGrid94 for delwp.vic.gov.au
-               "geographic": False,
+                "geographic": False,
                 "horizontal_coord": "x",
                 "vertical_coord": "y",
             },
@@ -1515,8 +1099,7 @@ ows_cfg = {
                 "vertical_coord": "y",
             },
         },
-    },   #### End of "global" section.
-
+    },  #### End of "global" section.
     # Config items in the "wms" section apply to the WMS service (and WMTS, which is implemented as a
     # thin wrapper to the WMS code unless stated otherwise) to all WMS/WMTS layers (unless over-ridden).
     "wms": {
@@ -1531,7 +1114,6 @@ ows_cfg = {
         # Optional, defaults to 256x256
         "max_width": 512,
         "max_height": 512,
-
         # These define the AuthorityURLs.
         # They represent the authorities that define the "Identifiers" defined layer by layer below.
         # The spec allows AuthorityURLs to be defined anywhere on the Layer heirarchy, but datacube_ows treats them
@@ -1541,9 +1123,8 @@ ows_cfg = {
             # The authorities dictionary maps names to authority urls.
             "auth": "https://authoritative-authority.com",
             "idsrus": "https://www.identifiers-r-us.com",
-        }
-    }, ####  End of "wms" section.
-
+        },
+    },  ####  End of "wms" section.
     # Config items in the "wmts" section apply to the WMTS service only.
     # Note that most items in the "wms" section apply to the WMTS service
     # as well as the WMS service.
@@ -1593,10 +1174,9 @@ ows_cfg = {
                 # is 2**1 = 2
                 # So tiles side by side (2x1) (then 4x2, 8x4, 16x8, etc.)
                 "matrix_exponent_initial_offsets": (1, 0),
-            },
+            }
         }
     },
-
     # Config items in the "wcs" section apply to the WCS service to all WCS coverages
     # (unless over-ridden).
     "wcs": {
@@ -1616,7 +1196,7 @@ ows_cfg = {
                 # The file extension to add to the filename.
                 "extension": "tif",
                 # Whether or not the file format supports multiple time slices.
-                "multi-time": False
+                "multi-time": False,
             },
             "netCDF": {
                 "renderers": {
@@ -1626,14 +1206,13 @@ ows_cfg = {
                 "mime": "application/x-netcdf",
                 "extension": "nc",
                 "multi-time": True,
-            }
+            },
         },
         # The wcs:native_format must be declared in wcs:formats dict above.
         # Maybe over-ridden at the named layer (i.e. coverage)
         # level.
         "native_format": "GeoTIFF",
-    }, ###### End of "wcs" section
-
+    },  ###### End of "wcs" section
     # Products published by this datacube_ows instance.
     # The layers section is a list of layer definitions.  Each layer may be either:
     # 1) A folder-layer.  Folder-layers are not named and can contain a list of child layers.  Folder-layers are
@@ -1649,15 +1228,11 @@ ows_cfg = {
             # to that of the parent layer.
             "abstract": "Images from the Landsat 8 satellite",
             # NOTE: Folder-layers do not have a layer "name".
-
             # Keywords are optional, but can be added at any folder level and are cumulative.
             # A layer combines its own keywords, the keywords of it's parent (and grandparent, etc) layers,
             # and any keywords defined in the global section above.
             #
-            "keywords": [
-                "landsat",
-                "landsat8",
-            ],
+            "keywords": ["landsat", "landsat8"],
             # Attribution.  This entire section is optional.  If provided, it overrides any
             #               attribution defined in the wms section above or any higher layers, and
             #               applies to this layer and all child layers under this layer unless itself
@@ -1678,7 +1253,7 @@ ows_cfg = {
                     "url": "https://www.ga.gov.au/__data/assets/image/0011/61589/GA-DEA-Logo-Inline-370x73.png",
                     # Image MIME type for the logo - should match type referenced in the logo url (required if logo specified.)
                     "format": "image/png",
-                }
+                },
             },
             # Folder-type layers include a list of sub-layers
             "layers": [
@@ -1693,7 +1268,6 @@ ows_cfg = {
                     "name": "ls8_nbart_albers",
                     # The ODC product name for the associated data product
                     "product_name": "ls8_nbart_albers",
-
                     # Supported bands, mapping native band names to a list of possible aliases.
                     # See reusable band alias maps above for documentation.
                     "bands": landsat8_bands,
@@ -1809,7 +1383,6 @@ ows_cfg = {
                     # If the WCS section is not supplied, then this named layer will NOT appear as a WCS
                     # coverage (but will still be a layer in WMS and WMTS).
                     "wcs": {
-
                         # The default bands for a WCS request.
                         # 1. Must be provided if WCS is activated.
                         # 2. Must contain at least one band.
@@ -1821,14 +1394,14 @@ ows_cfg = {
                         # in the global wcs formats section.
                         # Optional: if not supplied defaults to the
                         # globally defined native_format.
-                        "native_format": "NetCDF"
+                        "native_format": "NetCDF",
                     },
                     # Each key of the identifiers dictionary must match a name from the authorities dictionary
                     # in the global section.  The values are the identifiers defined for this layer by that
                     # authority.
                     "identifiers": {
                         "auth": "ls8_ard",
-                        "idsrus": "12345435::0054234::GHW::24356-splunge"
+                        "idsrus": "12345435::0054234::GHW::24356-splunge",
                     },
                     # The urls section provides the values that are included in the FeatureListURLs and
                     # DataURLs sections of a WMS GetCapabilities document.
@@ -1845,19 +1418,19 @@ ows_cfg = {
                         "features": [
                             {
                                 "url": "http://domain.tld/path/to/page.html",
-                                "format": "text/html"
+                                "format": "text/html",
                             },
                             {
                                 "url": "http://another-domain.tld/path/to/image.png",
-                                "format": "image/png"
-                            }
+                                "format": "image/png",
+                            },
                         ],
                         "data": [
                             {
                                 "url": "http://abc.xyz/data-link.xml",
-                                "format": "application/xml"
+                                "format": "application/xml",
                             }
-                        ]
+                        ],
                     },
                     # The feature_info section is optional.
                     "feature_info": {
@@ -1876,9 +1449,9 @@ ows_cfg = {
                                 "mapped_bands": False,
                                 "kwargs": {
                                     "template": "https://host.domain/path/{data['f_id']:06}.csv"
-                                }
+                                },
                             }
-                        }
+                        },
                     },
                     # The sub_products section is optional.
                     "sub_products": {
@@ -1904,18 +1477,28 @@ ows_cfg = {
                         # style.  See reusable style definitions above for more documentation on
                         # defining styles.
                         "styles": [
-                            style_rgb, style_rgb_cloudmask, style_rgb_cloud_and_shadowmask,
-                            style_ext_rgb, style_ls8_allband_false_colour, style_infrared_false_colour,
-                            style_pure_ls8_coastal_aerosol, style_pure_ls8_blue,
-                            style_pure_ls8_green, style_pure_ls8_red,
-                            style_pure_ls8_nir, style_pure_ls8_swir1, style_pure_ls8_swir2,
-                            style_ndvi, style_ndvi_cloudmask,
-                            style_ndwi, style_ndbi,
+                            style_rgb,
+                            style_rgb_cloudmask,
+                            style_rgb_cloud_and_shadowmask,
+                            style_ext_rgb,
+                            style_ls8_allband_false_colour,
+                            style_infrared_false_colour,
+                            style_pure_ls8_coastal_aerosol,
+                            style_pure_ls8_blue,
+                            style_pure_ls8_green,
+                            style_pure_ls8_red,
+                            style_pure_ls8_nir,
+                            style_pure_ls8_swir1,
+                            style_pure_ls8_swir2,
+                            style_ndvi,
+                            style_ndvi_cloudmask,
+                            style_ndwi,
+                            style_ndbi,
                             style_cloud_mask,
-                            style_rgb_ndvi
-                        ]
-                    }
-                }, #### End of ls8_nbart_albers product
+                            style_rgb_ndvi,
+                        ],
+                    },
+                },  #### End of ls8_nbart_albers product
                 {
                     # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
                     "title": "Level 1 USGS Landsat-8 Public Data Set",
@@ -1947,26 +1530,30 @@ ows_cfg = {
                         "manual_merge": True,
                         # Apply corrections for solar angle, for "Level 1" products.
                         # (Defaults to false - should not be used for NBAR/NBAR-T or other Analysis Ready products
-                        "apply_solar_corrections": True
+                        "apply_solar_corrections": True,
                     },
-                    "wcs": {
-                        "default_bands": ["red", "green", "blue"],
-                    },
+                    "wcs": {"default_bands": ["red", "green", "blue"]},
                     "styling": {
                         "default_style": "simple_rgb",
                         "styles": [
-                            style_rgb, style_ext_rgb,
-                            style_ls8_allband_false_colour, style_infrared_false_colour,
-                            style_pure_ls8_coastal_aerosol, style_pure_ls8_blue,
-                            style_pure_ls8_green, style_pure_ls8_red,
-                            style_pure_ls8_nir, style_pure_ls8_swir1, style_pure_ls8_swir2,
-                            style_ndvi, style_ndwi, style_ndbi,
-                            style_rgb_ndvi
-                        ]
-                    }
-                }, ##### End of ls8_level1_pds product definition.
-
-
+                            style_rgb,
+                            style_ext_rgb,
+                            style_ls8_allband_false_colour,
+                            style_infrared_false_colour,
+                            style_pure_ls8_coastal_aerosol,
+                            style_pure_ls8_blue,
+                            style_pure_ls8_green,
+                            style_pure_ls8_red,
+                            style_pure_ls8_nir,
+                            style_pure_ls8_swir1,
+                            style_pure_ls8_swir2,
+                            style_ndvi,
+                            style_ndwi,
+                            style_ndbi,
+                            style_rgb_ndvi,
+                        ],
+                    },
+                },  ##### End of ls8_level1_pds product definition.
                 {
                     # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
                     "title": "WOfS Summary",
@@ -1982,25 +1569,16 @@ ows_cfg = {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
                         "fuse_func": "datacube_ows.wms_utils.wofls_fuser",
                     },
-                    "wcs": {
-                        "default_bands": ["frequency"],
-                    },
-                    "styling": {
-                        "styles": [
-                            style_wofs_frequency
-                        ]
-                    }
-                }, ##### End of wofs_summary product definition.
-
-            ]
+                    "wcs": {"default_bands": ["frequency"]},
+                    "styling": {"styles": [style_wofs_frequency]},
+                },  ##### End of wofs_summary product definition.
+            ],
         },  ### End of Landsat 8 folder.
         {
             # NOTE: This layer is a folder - it is NOT "named layer" that can be selected in GetMap requests
             "title": "Sentinel-2 Products",
             "abstract": "Products containing data ultimately derived from ESA's Sentinel-2 satellite.",
-            "keywords": [
-                "sentinel2",
-            ],
+            "keywords": ["sentinel2"],
             "layers": [
                 {
                     # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
@@ -2031,33 +1609,26 @@ ows_cfg = {
                         "manual_merge": False,
                         "apply_solar_corrections": False,
                     },
-                    "wcs": {
-                        "default_bands": ["red", "green", "blue"],
-                    },
-                    "identifiers": {
-                        "auth": "s2_nrt_multi",
-                    },
+                    "wcs": {"default_bands": ["red", "green", "blue"]},
+                    "identifiers": {"auth": "s2_nrt_multi"},
                     "urls": {
                         "features": [
                             {
                                 "url": "http://domain.tld/path/to/page.html",
-                                "format": "text/html"
+                                "format": "text/html",
                             }
                         ],
                         "data": [
                             {
                                 "url": "http://abc.xyz/data-link.xml",
-                                "format": "application/xml"
+                                "format": "application/xml",
                             }
-                        ]
+                        ],
                     },
-                    "styling": {
-                        "default_style": "simple_rgb",
-                        "styles": [style_rgb],
-                    }
-                } ##### End of sentinel2_nrt multi-product definition
+                    "styling": {"default_style": "simple_rgb", "styles": [style_rgb]},
+                }  ##### End of sentinel2_nrt multi-product definition
             ],
-        },   #### End of Sentinel-2 folder
+        },  #### End of Sentinel-2 folder
         {
             # NOTE: This layer IS a mappable "named layer" that can be selected in GetMap requests
             # NOTE: Named layers can sit at the same heirarchical level as folder layers.
@@ -2075,30 +1646,20 @@ ows_cfg = {
                 "manual_merge": False,
                 "apply_solar_corrections": False,
             },
-            "wcs": {
-                "default_bands": ["canopy_cover_class"],
-            },
-            "identifiers": {
-                "auth": "mangrove_canopy_cover",
-            },
+            "wcs": {"default_bands": ["canopy_cover_class"]},
+            "identifiers": {"auth": "mangrove_canopy_cover"},
             "urls": {
                 "features": [
                     {
                         "url": "http://domain.tld/path/to/page.html",
-                        "format": "text/html"
+                        "format": "text/html",
                     }
                 ],
                 "data": [
-                    {
-                        "url": "http://abc.xyz/data-link.xml",
-                        "format": "application/xml"
-                    }
-                ]
+                    {"url": "http://abc.xyz/data-link.xml", "format": "application/xml"}
+                ],
             },
-            "styling": {
-                "default_style": "mangrove",
-                "styles": [style_mangrove],
-            }
-        } ##### End of mangrove_cover definition
-    ]  ##### End of "layers" list.
-} #### End of example configuration object
+            "styling": {"default_style": "mangrove", "styles": [style_mangrove]},
+        },  ##### End of mangrove_cover definition
+    ],  ##### End of "layers" list.
+}  #### End of example configuration object

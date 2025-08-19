@@ -33,11 +33,14 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 
 class ProductBandQuery:
-    def __init__(self,
-                 products: list[Product],
-                 bands: Iterable[str],
-                 main: bool = False, manual_merge: bool = False, ignore_time: bool = False,
-                 fuse_func: FuserFunction | None = None
+    def __init__(
+        self,
+        products: list[Product],
+        bands: Iterable[str],
+        main: bool = False,
+        manual_merge: bool = False,
+        ignore_time: bool = False,
+        fuse_func: FuserFunction | None = None,
     ) -> None:
         self.products = products
         self.bands = set(bands)
@@ -45,10 +48,7 @@ class ProductBandQuery:
         self.fuse_func = fuse_func
         self.ignore_time = ignore_time
         self.main = main
-        self.key = (
-            tuple(p.id for p in self.products),
-            tuple(bands)
-        )
+        self.key = (tuple(p.id for p in self.products), tuple(bands))
 
     @override
     def __str__(self) -> str:
@@ -59,77 +59,106 @@ class ProductBandQuery:
         return hash(self.key)
 
     @classmethod
-    def style_queries(cls, style: StyleDef, resource_limited: bool = False) -> list["ProductBandQuery"]:
+    def style_queries(
+        cls, style: StyleDef, resource_limited: bool = False
+    ) -> list["ProductBandQuery"]:
         queries = [
-            cls.simple_layer_query(style.product, style.needed_bands,
-                                   manual_merge=style.product.data_manual_merge,
-                                   fuse_func=style.product.fuse_func,
-                                   resource_limited=resource_limited)
+            cls.simple_layer_query(
+                style.product,
+                style.needed_bands,
+                manual_merge=style.product.data_manual_merge,
+                fuse_func=style.product.fuse_func,
+                resource_limited=resource_limited,
+            )
         ]
         for fp in style.flag_products:
             if fp.products_match(style.product.product_names):
                 for band in fp.bands:
-                    assert band in style.needed_bands, "Style band not in needed bands list"
+                    assert band in style.needed_bands, (
+                        "Style band not in needed bands list"
+                    )
             else:
                 pq_products = fp.low_res_products if resource_limited else fp.products
-                queries.append(cls(
-                    pq_products,
-                    list(fp.bands),
-                    manual_merge=fp.manual_merge,
-                    ignore_time=fp.ignore_time,
-                    fuse_func=fp.fuse_func
-                ))
+                queries.append(
+                    cls(
+                        pq_products,
+                        list(fp.bands),
+                        manual_merge=fp.manual_merge,
+                        ignore_time=fp.ignore_time,
+                        fuse_func=fp.fuse_func,
+                    )
+                )
         return queries
 
     @classmethod
-    def full_layer_queries(cls,
-                           layer: OWSNamedLayer,
-                           main_bands: list[str] | None = None) -> list["ProductBandQuery"]:
+    def full_layer_queries(
+        cls, layer: OWSNamedLayer, main_bands: list[str] | None = None
+    ) -> list["ProductBandQuery"]:
         if main_bands:
             needed_bands: Iterable[str] = main_bands
         else:
             needed_bands = set(layer.band_idx.band_cfg.keys())
         queries = [
-            cls.simple_layer_query(layer, needed_bands,
-                                   manual_merge=layer.data_manual_merge,
-                                   fuse_func=layer.fuse_func,
-                                   resource_limited=False)
+            cls.simple_layer_query(
+                layer,
+                needed_bands,
+                manual_merge=layer.data_manual_merge,
+                fuse_func=layer.fuse_func,
+                resource_limited=False,
+            )
         ]
         for fpb in layer.allflag_productbands:
             if fpb.products_match(layer.product_names):
                 for band in fpb.bands:
-                    assert band in needed_bands, "main product band not in needed bands list"
+                    assert band in needed_bands, (
+                        "main product band not in needed bands list"
+                    )
             else:
                 pq_products = fpb.products
-                queries.append(cls(
-                    pq_products,
-                    list(fpb.bands),
-                    manual_merge=fpb.manual_merge,
-                    ignore_time=fpb.ignore_time,
-                    fuse_func=fpb.fuse_func
-                ))
+                queries.append(
+                    cls(
+                        pq_products,
+                        list(fpb.bands),
+                        manual_merge=fpb.manual_merge,
+                        ignore_time=fpb.ignore_time,
+                        fuse_func=fpb.fuse_func,
+                    )
+                )
         return queries
 
     @classmethod
-    def simple_layer_query(cls, layer: OWSNamedLayer,
-                           bands: Iterable[str],
-                           manual_merge: bool = False,
-                           fuse_func: FuserFunction | None = None,
-                           resource_limited: bool = False) -> "ProductBandQuery":
+    def simple_layer_query(
+        cls,
+        layer: OWSNamedLayer,
+        bands: Iterable[str],
+        manual_merge: bool = False,
+        fuse_func: FuserFunction | None = None,
+        resource_limited: bool = False,
+    ) -> "ProductBandQuery":
         main_products = layer.low_res_products if resource_limited else layer.products
-        return cls(main_products, bands, manual_merge=manual_merge, main=True, fuse_func=fuse_func)
+        return cls(
+            main_products,
+            bands,
+            manual_merge=manual_merge,
+            main=True,
+            fuse_func=fuse_func,
+        )
+
 
 PerPBQReturnType = xarray.DataArray | Iterable[UUID]
 
+
 class DataStacker:
     @log_call
-    def __init__(self,
-                 layer: OWSNamedLayer,
-                 geobox: GeoBox,
-                 times: list[datetime.datetime],
-                 resampling: Resampling | None = None,
-                 style: StyleDef | None = None,
-                 bands: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        layer: OWSNamedLayer,
+        geobox: GeoBox,
+        times: list[datetime.datetime],
+        resampling: Resampling | None = None,
+        style: StyleDef | None = None,
+        bands: list[str] | None = None,
+    ) -> None:
         self._layer = layer
         self.cfg = layer.global_cfg
         self._geobox = geobox
@@ -149,11 +178,7 @@ class DataStacker:
         if self._layer.mosaic_date_func:
             self._times = [self._layer.mosaic_date_func(layer.ranges.times)]
         else:
-            self._times = [
-                    self._layer.search_times(
-                            t, self._geobox)
-                    for t in times
-            ]
+            self._times = [self._layer.search_times(t, self._geobox) for t in times]
         self.group_by = self._layer.dataset_groupby()
         self.resource_limited = False
 
@@ -166,22 +191,26 @@ class DataStacker:
             queries = ProductBandQuery.style_queries(self.style)
         else:
             # Just take needed bands.
-            queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
+            queries = [
+                ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())
+            ]
         geom = self._geobox.extent
         for query in queries:
             qry_times = None if query.ignore_time else self._times
-            return self._layer.ows_index().count(self._layer, times=qry_times, geom=geom, products=query.products)
+            return self._layer.ows_index().count(
+                self._layer, times=qry_times, geom=geom, products=query.products
+            )
         return 0
 
     def extent(self, crs: CRS | None = None) -> Geometry | None:
         query = ProductBandQuery.simple_layer_query(
-                self._layer,
-                self.needed_bands(),
-                self.resource_limited
+            self._layer, self.needed_bands(), self.resource_limited
         )
         geom = self._geobox.extent
         times = None if query.ignore_time else self._times
-        return self._layer.ows_index().extent(self._layer, times=times, geom=geom, products=query.products, crs=crs)
+        return self._layer.ows_index().extent(
+            self._layer, times=times, geom=geom, products=query.products, crs=crs
+        )
 
     def dsids(self) -> dict[ProductBandQuery, Iterable[UUID]]:
         if self.style:
@@ -189,60 +218,69 @@ class DataStacker:
             queries = ProductBandQuery.style_queries(self.style)
         else:
             # Just take needed bands.
-            queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
+            queries = [
+                ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())
+            ]
         results: list[tuple[ProductBandQuery, Iterable[UUID]]] = []
         for query in queries:
             qry_times = None if query.ignore_time else self._times
-            result = self._layer.ows_index().dsid_search(self._layer, times=qry_times, geom=self._geobox.extent,
-                                                         products=query.products)
+            result = self._layer.ows_index().dsid_search(
+                self._layer,
+                times=qry_times,
+                geom=self._geobox.extent,
+                products=query.products,
+            )
             results.append((query, result))
         return OrderedDict(results)
 
     def datasets_all_time(self, point: Geometry | None = None) -> xarray.DataArray:
         query = ProductBandQuery.simple_layer_query(
-                    self._layer,
-                    self.needed_bands(),
-                    self.resource_limited)
+            self._layer, self.needed_bands(), self.resource_limited
+        )
         geom = point if point else self._geobox.extent
         result = self._layer.ows_index().ds_search(
-            layer=self._layer,
-            geom=geom,
-            products=query.products)
+            layer=self._layer, geom=geom, products=query.products
+        )
         return datacube.Datacube.group_datasets(result, self.group_by)
 
-    def datasets(self,
-                 all_flag_bands: bool = False,
-                 point: Geometry | None = None,
-                 ) -> dict[ProductBandQuery, xarray.DataArray]:
+    def datasets(
+        self, all_flag_bands: bool = False, point: Geometry | None = None
+    ) -> dict[ProductBandQuery, xarray.DataArray]:
         if self.style:
             # we have a style - lets go with that.
             queries = ProductBandQuery.style_queries(self.style)
         elif all_flag_bands:
-            queries = ProductBandQuery.full_layer_queries(self._layer, self.needed_bands())
+            queries = ProductBandQuery.full_layer_queries(
+                self._layer, self.needed_bands()
+            )
         else:
             # Just take needed bands.
-            queries = [ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())]
+            queries = [
+                ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())
+            ]
 
         geom = point if point else self._geobox.extent
         results: list[tuple[ProductBandQuery, xarray.DataArray]] = []
         for query in queries:
             qry_times = None if query.ignore_time else self._times
             result = self._layer.ows_index().ds_search(
-                               layer=self._layer,
-                               times=qry_times,
-                               geom=geom,
-                               products=query.products)
+                layer=self._layer, times=qry_times, geom=geom, products=query.products
+            )
             grpd_result = datacube.Datacube.group_datasets(result, self.group_by)
             results.append((query, grpd_result))
         return OrderedDict(results)
 
     @staticmethod
-    def create_nodata_filled_flag_bands(data: xarray.Dataset, pbq: ProductBandQuery) -> xarray.Dataset:
+    def create_nodata_filled_flag_bands(
+        data: xarray.Dataset, pbq: ProductBandQuery
+    ) -> xarray.Dataset:
         var = None
         for var in data.data_vars.variables:  # noqa: B007
             break
         if var is None:
-            raise WMSException("Cannot add default flag data as there is no non-flag data available")
+            raise WMSException(
+                "Cannot add default flag data as there is no non-flag data available"
+            )
         template = cast(xarray.DataArray, getattr(data, cast(str, var)))
         data_new_bands = {}
         for band in pbq.bands:
@@ -253,13 +291,17 @@ class DataStacker:
             data_new_bands[band] = qry_result
         data = data.assign(data_new_bands)
         for band in pbq.bands:
-            data[band].attrs["flags_definition"] = pbq.products[0].measurements[band].flags_definition
+            data[band].attrs["flags_definition"] = (
+                pbq.products[0].measurements[band].flags_definition
+            )
         return data
 
     @log_call
-    def data(self,
-             datasets_by_query: dict[ProductBandQuery, xarray.DataArray],
-             skip_corrections: bool = False) -> xarray.Dataset | None:
+    def data(
+        self,
+        datasets_by_query: dict[ProductBandQuery, xarray.DataArray],
+        skip_corrections: bool = False,
+    ) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, consider-using-enumerate
         # datasets is an XArray DataArray of datasets grouped by time.
         data: xarray.Dataset | None = None
@@ -270,9 +312,21 @@ class DataStacker:
             measurements = pbq.products[0].lookup_measurements(pbq.bands)
             fuse_func = pbq.fuse_func
             if pbq.manual_merge:
-                qry_result = self.manual_data_stack(datasets, measurements, pbq.bands, skip_corrections, fuse_func=fuse_func)
+                qry_result = self.manual_data_stack(
+                    datasets,
+                    measurements,
+                    pbq.bands,
+                    skip_corrections,
+                    fuse_func=fuse_func,
+                )
             else:
-                qry_result = self.read_data(datasets, measurements, self._geobox, resampling=self._resampling, fuse_func=fuse_func)
+                qry_result = self.read_data(
+                    datasets,
+                    measurements,
+                    self._geobox,
+                    resampling=self._resampling,
+                    fuse_func=fuse_func,
+                )
             if qry_result is None:
                 continue
             if data is None:
@@ -284,7 +338,9 @@ class DataStacker:
             if pbq.ignore_time:
                 # regularise time dimension:
                 if len(qry_result.time) > 1:
-                    raise WMSException("Cannot ignore time on PQ (flag) bands from a time-aware product")
+                    raise WMSException(
+                        "Cannot ignore time on PQ (flag) bands from a time-aware product"
+                    )
                 if len(qry_result.time) == len(data.time):
                     qry_result["time"] = data.time
                 else:
@@ -294,7 +350,9 @@ class DataStacker:
                     data_new_bands = {}
                     for band in pbq.bands:
                         band_data = qry_result[band]
-                        timeless_band_data = band_data.sel(time=qry_result.time.values[0])
+                        timeless_band_data = band_data.sel(
+                            time=qry_result.time.values[0]
+                        )
                         band_time_slices = []
                         for _ in data.time.values:
                             band_time_slices.append(timeless_band_data)
@@ -308,22 +366,31 @@ class DataStacker:
                 continue
             assert data is not None
             qry_result.coords["time"] = data.coords["time"]
-            data = cast(xarray.Dataset, xarray.combine_by_coords([data, qry_result], join="exact"))
+            data = cast(
+                xarray.Dataset,
+                xarray.combine_by_coords([data, qry_result], join="exact"),
+            )
 
         return data
 
     @log_call
-    def manual_data_stack(self,
-                          datasets: xarray.DataArray,
-                          measurements: Mapping[str, Measurement],
-                          bands: set[str],
-                          skip_corrections: bool,
-                          fuse_func: FuserFunction | None) -> xarray.Dataset | None:
+    def manual_data_stack(
+        self,
+        datasets: xarray.DataArray,
+        measurements: Mapping[str, Measurement],
+        bands: set[str],
+        skip_corrections: bool,
+        fuse_func: FuserFunction | None,
+    ) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         if self.style:
-            flag_bands: Iterable[str] = set(filter(lambda b: b in self.style.flag_bands, bands))  # type: ignore[arg-type]
-            non_flag_bands: Iterable[str] = set(filter(lambda b: b not in self.style.flag_bands, bands))  #type: ignore[arg-type]
+            flag_bands: Iterable[str] = set(
+                filter(lambda b: b in self.style.flag_bands, bands)  # type: ignore[arg-type]
+            )
+            non_flag_bands: Iterable[str] = set(
+                filter(lambda b: b not in self.style.flag_bands, bands)  # type: ignore[arg-type]
+            )
         else:
             non_flag_bands = bands
             flag_bands = set()
@@ -332,7 +399,9 @@ class DataStacker:
             tds = datasets.sel(time=dt)
             merged = None
             for ds in cast(Iterable[Dataset], tds.values.item()):
-                d = self.read_data_for_single_dataset(ds, measurements, self._geobox, fuse_func=fuse_func)
+                d = self.read_data_for_single_dataset(
+                    ds, measurements, self._geobox, fuse_func=fuse_func
+                )
                 extent_mask = None
                 for band in non_flag_bands:
                     for f in self._layer.extent_mask_func:
@@ -350,7 +419,7 @@ class DataStacker:
                 continue
             for band in flag_bands:
                 # REVISIT: not sure about type converting one band like this?
-                merged[band] = merged[band].astype('uint16', copy=True)
+                merged[band] = merged[band].astype("uint16", copy=True)
                 merged[band].attrs = d[band].attrs
             time_slices.append(merged)
 
@@ -361,38 +430,45 @@ class DataStacker:
     # Read data for given datasets and measurements per the output_geobox
     # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data(self,
-                  datasets: xarray.DataArray,
-                  measurements: Mapping[str, Measurement],
-                  geobox: GeoBox,
-                  skip_broken: bool = True,
-                  resampling: Resampling = "nearest",
-                  fuse_func: FuserFunction | None = None) -> xarray.Dataset:
+    def read_data(
+        self,
+        datasets: xarray.DataArray,
+        measurements: Mapping[str, Measurement],
+        geobox: GeoBox,
+        skip_broken: bool = True,
+        resampling: Resampling = "nearest",
+        fuse_func: FuserFunction | None = None,
+    ) -> xarray.Dataset:
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
-                    datasets,
-                    geobox,
-                    measurements=measurements,
-                    fuse_func=fuse_func,
-                    skip_broken_datasets=skip_broken,
-                    patch_url=self._layer.patch_url,
-                    resampling=resampling)
+                datasets,
+                geobox,
+                measurements=measurements,
+                fuse_func=fuse_func,
+                skip_broken_datasets=skip_broken,
+                patch_url=self._layer.patch_url,
+                resampling=resampling,
+            )
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise
 
     # TODO: Make skip_broken passed in via config
     @log_call
-    def read_data_for_single_dataset(self,
-                                     dataset: Dataset,
-                                     measurements: Mapping[str, Measurement],
-                                     geobox: GeoBox,
-                                     skip_broken: bool = True,
-                                     resampling: Resampling = "nearest",
-                                     fuse_func: FuserFunction | None = None) -> xarray.Dataset:
+    def read_data_for_single_dataset(
+        self,
+        dataset: Dataset,
+        measurements: Mapping[str, Measurement],
+        geobox: GeoBox,
+        skip_broken: bool = True,
+        resampling: Resampling = "nearest",
+        fuse_func: FuserFunction | None = None,
+    ) -> xarray.Dataset:
         datasets = [dataset]
-        dc_datasets = datacube.Datacube.group_datasets(datasets, self._layer.time_resolution.dataset_groupby())
+        dc_datasets = datacube.Datacube.group_datasets(
+            datasets, self._layer.time_resolution.dataset_groupby()
+        )
         CredentialManager.check_cred()
         try:
             return datacube.Datacube.load_data(
@@ -402,7 +478,8 @@ class DataStacker:
                 fuse_func=fuse_func,
                 skip_broken_datasets=skip_broken,
                 patch_url=self._layer.patch_url,
-                resampling=resampling)
+                resampling=resampling,
+            )
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
             raise

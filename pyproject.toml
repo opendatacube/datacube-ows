@@ -111,6 +111,13 @@ warn_unused_ignores = true
 [tool.pytest.ini_options]
 console_output_style = "times"
 
+[tool.ruff]
+extend-exclude = [
+    "datacube_ows/_version.py",
+    "docs/conf.py",
+    "licenseheaders.py",
+]
+
 [tool.ruff.lint]
 select = [
     "A",  # Don't shadow built-ins
@@ -137,14 +144,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Stay close to the generated file for readthedocs, so ignore some rules.
-"docs/conf.py" = ["A001", "E402"]
 # Using pytest_namespace requires assignment before importing pytest.
 "integration_tests/conftest.py" = ["E402"]
 # Multiline string, no good place for adding a noqa.
 "integration_tests/cfg/ows_test_cfg.py" = ["RUF001"]
-# Third-party software, keep pristine.
-"licenseheaders.py" = ["B", "C", "I", "RET", "SIM", "UP"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120

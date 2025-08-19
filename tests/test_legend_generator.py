@@ -30,8 +30,9 @@ def prelegend_colorramp_style() -> StyleDefBase:
     return style
 
 
-def test_create_legend_for_style(dummy_layer) -> None: # noqa: F811
+def test_create_legend_for_style(dummy_layer) -> None:  # noqa: F811
     from datacube_ows.legend_generator import create_legend_for_style
+
     assert create_legend_for_style(dummy_layer, "stylish_steve") is None
 
 
@@ -55,13 +56,10 @@ def test_image_from_bad_image_url(bad_image_url) -> None:
     with pytest.raises(WMSException):
         _ = get_image_from_url(bad_image_url)
 
+
 def test_parse_colorramp_defaults() -> None:
     legend = ColorRampDef.Legend(MagicMock(), {})
-    _ = ColorRamp(MagicMock(),
-                     {
-                        "range": [0.0, 1.0],
-                     },
-                     legend)
+    _ = ColorRamp(MagicMock(), {"range": [0.0, 1.0]}, legend)
     assert legend.begin == Decimal("0.0")
     assert legend.end == Decimal("1.0")
     assert legend.ticks == [Decimal("0.0"), Decimal("1.0")]
@@ -73,9 +71,6 @@ def test_parse_colorramp_defaults() -> None:
 
 
 def test_parse_colorramp_legend_beginend() -> None:
-    legend = ColorRampDef.Legend(MagicMock(), {
-        "begin": "0.0",
-        "end": "2.0"
-    })
+    legend = ColorRampDef.Legend(MagicMock(), {"begin": "0.0", "end": "2.0"})
     assert legend.begin == Decimal("0.0")
     assert legend.end == Decimal("2.0")

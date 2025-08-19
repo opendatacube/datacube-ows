@@ -15,9 +15,7 @@ from datacube_ows.wcs2_utils import uniform_crs
 @pytest.fixture
 def minimal_cfg():
     cfg = MagicMock()
-    cfg.published_CRSs = {
-        "dummy": {},
-    }
+    cfg.published_CRSs = {"dummy": {}}
     return cfg
 
 

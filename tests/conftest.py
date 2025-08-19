@@ -23,6 +23,7 @@ from tests.utils import coords, dim1_da, dim1_da_time, dummy_da
 def flask_client(monkeypatch) -> Generator[flask.Flask]:
     monkeypatch.setenv("DEFER_CFG_PARSE", "yes")
     from datacube_ows.ogc import app
+
     with app.test_client() as client:
         yield client
 
@@ -31,7 +32,7 @@ def flask_client(monkeypatch) -> Generator[flask.Flask]:
 def minimal_dc():
     dc = MagicMock()
     nb = MagicMock()
-    nb.index = ['band1', 'band2', 'band3', 'band4']
+    nb.index = ["band1", "band2", "band3", "band4"]
     nb.__getitem__.return_value = {
         "band1": -999,
         "band2": -999,
@@ -58,23 +59,23 @@ def minimal_dc():
     dc.index.environment = ODCConfig.get_environment()
 
     def product_by_name(s):
-        if 'lookupfail' in s:
+        if "lookupfail" in s:
             return None
-        mprod  = MagicMock()
+        mprod = MagicMock()
         mprod.name = s
 
         mprod.definition = {"storage": {}}
-        if 'nonativecrs' in s:
+        if "nonativecrs" in s:
             pass
-        elif 'badnativecrs' in s:
+        elif "badnativecrs" in s:
             mprod.definition["storage"]["crs"] = "EPSG:9999"
-        elif 'nativecrs' in s:
+        elif "nativecrs" in s:
             mprod.definition["storage"]["crs"] = "EPSG:4326"
         else:
             mprod.definition["storage"]["crs"] = "EPSG:4326"
-        if 'nonativeres' in s:
+        if "nonativeres" in s:
             pass
-        elif 'nativeres' in s:
+        elif "nativeres" in s:
             mprod.definition["storage"]["resolution"] = {
                 "latitude": -0.001,
                 "longitude": 0.001,
@@ -87,6 +88,7 @@ def minimal_dc():
 
         def lookup_measurements(ls: str | list[str]) -> dict[str, Any]:
             from datacube.model import Measurement
+
             if isinstance(ls, str):
                 ls = [ls]
             out = {}
@@ -108,6 +110,7 @@ def minimal_dc():
 
         mprod.lookup_measurements = lookup_measurements
         return mprod
+
     dc.index.products.get_by_name = product_by_name
     return dc
 
@@ -170,9 +173,7 @@ def minimal_global_cfg(minimal_dc):
             "alias_of": None,
         },
     }
-    global_cfg.folder_index = {
-        "folder.existing_folder": MagicMock(),
-    }
+    global_cfg.folder_index = {"folder.existing_folder": MagicMock()}
     return global_cfg
 
 
@@ -199,9 +200,7 @@ def minimal_layer_cfg() -> CFG_DICT:
             "band3": ["band3", "band_3"],
             "band4": ["band4", "band_4"],
         },
-        "image_processing": {
-            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-        },
+        "image_processing": {"extent_mask_func": "datacube_ows.ogc_utils.mask_by_val"},
         "styling": {
             "default_style": "band1",
             "styles": [
@@ -214,10 +213,10 @@ def minimal_layer_cfg() -> CFG_DICT:
                         "green": {"band1": 1.0},
                         "blue": {"band1": 1.0},
                     },
-                    "scale_range": [0, 1024]
+                    "scale_range": [0, 1024],
                 }
-            ]
-        }
+            ],
+        },
     }
 
 
@@ -229,9 +228,7 @@ def minimal_multiprod_cfg():
         "name": "a_layer",
         "multi_product": True,
         "product_names": ["foo", "bar"],
-        "image_processing": {
-            "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
-        },
+        "image_processing": {"extent_mask_func": "datacube_ows.ogc_utils.mask_by_val"},
         "styling": {
             "default_style": "band1",
             "styles": [
@@ -244,26 +241,31 @@ def minimal_multiprod_cfg():
                         "green": {"band1": 1.0},
                         "blue": {"band1": 1.0},
                     },
-                    "scale_range": [0, 1024]
+                    "scale_range": [0, 1024],
                 }
-            ]
-        }
+            ],
+        },
     }
 
 
 @pytest.fixture
 def mock_range():
     from datacube_ows.index import CoordRange, LayerExtent
-    times = [datetime.date(2010, 1, 1), datetime.date(2010, 1, 2), datetime.date(2010, 1, 3)]
+
+    times = [
+        datetime.date(2010, 1, 1),
+        datetime.date(2010, 1, 2),
+        datetime.date(2010, 1, 3),
+    ]
     return LayerExtent(
         lat=CoordRange(-0.1, 0.1),
         lon=CoordRange(-0.1, 0.1),
         times=times,
         bboxes={
-            "EPSG:4326": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1, },
-            "EPSG:3577": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1, },
-            "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1, },
-        }
+            "EPSG:4326": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1},
+            "EPSG:3577": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1},
+            "EPSG:3857": {"top": 0.1, "bottom": -0.1, "left": -0.1, "right": 0.1},
+        },
     )
 
 
@@ -280,17 +282,17 @@ def minimal_global_raw_cfg() -> CFG_DICT:
             ],
             "published_CRSs": {
                 "EPSG:3857": {  # Web Mercator
-                     "geographic": False,
-                     "horizontal_coord": "x",
-                     "vertical_coord": "y",
+                    "geographic": False,
+                    "horizontal_coord": "x",
+                    "vertical_coord": "y",
                 },
                 "EPSG:4326": {  # WGS-84
                     "geographic": True,
-                    "vertical_coord_first": True
+                    "vertical_coord_first": True,
                 },
             },
         },
-        "layers": []
+        "layers": [],
     }
 
 
@@ -309,7 +311,7 @@ def wcs_global_cfg() -> CFG_DICT:
                 # The file extension to add to the filename.
                 "extension": "tif",
                 # Whether or not the file format supports multiple time slices.
-                "multi-time": False
+                "multi-time": False,
             },
             "netCDF": {
                 "renderers": {
@@ -319,7 +321,7 @@ def wcs_global_cfg() -> CFG_DICT:
                 "mime": "application/x-netcdf",
                 "extension": "nc",
                 "multi-time": True,
-            }
+            },
         },
         "native_format": "GeoTIFF",
     }
@@ -327,13 +329,15 @@ def wcs_global_cfg() -> CFG_DICT:
 
 @pytest.fixture
 def dummy_raw_data() -> xr.Dataset:
-    return xr.Dataset({
-        "ir": dummy_da(3, "ir", coords),
-        "red": dummy_da(5, "red", coords),
-        "green": dummy_da(7, "green", coords),
-        "blue": dummy_da(2, "blue", coords),
-        "uv": dummy_da(-1, "uv", coords),
-    })
+    return xr.Dataset(
+        {
+            "ir": dummy_da(3, "ir", coords),
+            "red": dummy_da(5, "red", coords),
+            "green": dummy_da(7, "green", coords),
+            "blue": dummy_da(2, "blue", coords),
+            "uv": dummy_da(-1, "uv", coords),
+        }
+    )
 
 
 @pytest.fixture
@@ -344,42 +348,39 @@ def null_mask() -> xr.DataArray:
 @pytest.fixture
 def dummy_raw_calc_data() -> xr.Dataset:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
-    return xr.Dataset({
-        "ir": dim1_da("ir", [800, 100, 1000, 600, 200, 1000], dim_coords),
-        "red": dim1_da("red", [200, 500, 0, 200, 200, 700], dim_coords),
-        "green": dim1_da("green", [100, 500, 0, 400, 300, 200], dim_coords),
-        "blue": dim1_da("blue", [200, 500, 1000, 600, 100, 700], dim_coords),
-        "uv": dim1_da("uv", [400, 600, 900, 200, 400, 100], dim_coords),
-        "pq": dim1_da("pq", [0b000, 0b001, 0b010, 0b011, 0b100, 0b111], dim_coords,
-                      attrs={
-                                "flags_definition": {
-                                    "splodgy": {
-                                        "bits": 2,
-                                        "values": {
-                                            '0': "Splodgeless",
-                                            '1': "Splodgy",
-                                        },
-                                        "description": "All splodgy looking"
-                                    },
-                                    "ugly": {
-                                        "bits": 1,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                        "description": "Real, real ugly",
-                                    },
-                                    "impossible": {
-                                        "bits": 0,
-                                        "values": {
-                                            '0': False,
-                                            '1': "Woah!"
-                                        },
-                                        "description": "Won't happen. Can't happen. Might happen.",
-                                    },
-                                }
-                            })
-    })
+    return xr.Dataset(
+        {
+            "ir": dim1_da("ir", [800, 100, 1000, 600, 200, 1000], dim_coords),
+            "red": dim1_da("red", [200, 500, 0, 200, 200, 700], dim_coords),
+            "green": dim1_da("green", [100, 500, 0, 400, 300, 200], dim_coords),
+            "blue": dim1_da("blue", [200, 500, 1000, 600, 100, 700], dim_coords),
+            "uv": dim1_da("uv", [400, 600, 900, 200, 400, 100], dim_coords),
+            "pq": dim1_da(
+                "pq",
+                [0b000, 0b001, 0b010, 0b011, 0b100, 0b111],
+                dim_coords,
+                attrs={
+                    "flags_definition": {
+                        "splodgy": {
+                            "bits": 2,
+                            "values": {"0": "Splodgeless", "1": "Splodgy"},
+                            "description": "All splodgy looking",
+                        },
+                        "ugly": {
+                            "bits": 1,
+                            "values": {"0": False, "1": True},
+                            "description": "Real, real ugly",
+                        },
+                        "impossible": {
+                            "bits": 0,
+                            "values": {"0": False, "1": "Woah!"},
+                            "description": "Won't happen. Can't happen. Might happen.",
+                        },
+                    }
+                },
+            ),
+        }
+    )
 
 
 def dim1_null_mask(coords) -> xr.DataArray:
@@ -391,52 +392,40 @@ def raw_calc_null_mask() -> xr.DataArray:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     return dim1_da("mask", [True] * len(dim_coords), dim_coords)
 
+
 @pytest.fixture
 def timed_raw_calc_null_mask():
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     dates = [datetime.datetime(2000, 1, 1), datetime.datetime(2020, 1, 1)]
-    return dim1_da_time("mask", [[True] * len(dates)] * len(dim_coords), dates, dim_coords)
+    return dim1_da_time(
+        "mask", [[True] * len(dates)] * len(dim_coords), dates, dim_coords
+    )
 
 
 flags_def: CFG_DICT = {
     "joviality": {
         "bits": 4,
-        "values": {
-            '0': "Melancholic",
-            '1': "Joyous",
-        },
-        "description": "All splodgy looking"
+        "values": {"0": "Melancholic", "1": "Joyous"},
+        "description": "All splodgy looking",
     },
     "flavour": {
         "bits": 3,
-        "values": {
-            '0': "Bland",
-            '1': "Tasty",
-        },
-        "description": "All splodgy looking"
+        "values": {"0": "Bland", "1": "Tasty"},
+        "description": "All splodgy looking",
     },
     "splodgy": {
         "bits": 2,
-        "values": {
-            '0': "Splodgeless",
-            '1': "Splodgy",
-        },
-        "description": "All splodgy looking"
+        "values": {"0": "Splodgeless", "1": "Splodgy"},
+        "description": "All splodgy looking",
     },
     "ugly": {
         "bits": 1,
-        "values": {
-            '0': False,
-            '1': True
-        },
+        "values": {"0": False, "1": True},
         "description": "Real, real ugly",
     },
     "impossible": {
         "bits": 0,
-        "values": {
-            '0': False,
-            '1': "Woah!"
-        },
+        "values": {"0": False, "1": "Woah!"},
         "description": "Won't happen. Can't happen. Might happen.",
     },
 }
@@ -445,137 +434,130 @@ flags_def: CFG_DICT = {
 @pytest.fixture
 def dummy_col_map_data() -> xr.Dataset:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
-    return xr.Dataset({
-        "pq": dim1_da("pq", [0b01000, 0b11001, 0b00010, 0b10011, 0b00100, 0b10001], dim_coords,
-                      attrs={
-                          "flags_definition": flags_def
-                      })
-    })
+    return xr.Dataset(
+        {
+            "pq": dim1_da(
+                "pq",
+                [0b01000, 0b11001, 0b00010, 0b10011, 0b00100, 0b10001],
+                dim_coords,
+                attrs={"flags_definition": flags_def},
+            )
+        }
+    )
+
 
 @pytest.fixture
 def dummy_col_map_time_data() -> xr.Dataset:
     dim_coords = [-2.0, -1.0, 0.0, -1.0, -2.0, -3.0]
     dates = [datetime.datetime(2000, 1, 1), datetime.datetime(2020, 1, 1)]
-    return xr.Dataset({
-        "pq": dim1_da_time("pq", [
-                [0b01000, 0b11110],
-                [0b11001, 0b10001],
-                [0b01010, 0b01101],
-                [0b10011, 0b01110],
-                [0b00100, 0b11011],
-                [0b10111, 0b11000],
-                            ],
-                            dates, dim_coords,
-                            attrs={
-                      "flags_definition": flags_def
-                  })
-    })
+    return xr.Dataset(
+        {
+            "pq": dim1_da_time(
+                "pq",
+                [
+                    [0b01000, 0b11110],
+                    [0b11001, 0b10001],
+                    [0b01010, 0b01101],
+                    [0b10011, 0b01110],
+                    [0b00100, 0b11011],
+                    [0b10111, 0b11000],
+                ],
+                dates,
+                dim_coords,
+                attrs={"flags_definition": flags_def},
+            )
+        }
+    )
 
 
 @pytest.fixture
 def dummy_raw_ls_data() -> xr.Dataset:
-    return xr.Dataset({
-        "red": dummy_da(5, "red", coords, dtype=np.int16),
-        "green": dummy_da(7, "green", coords, dtype=np.int16),
-        "blue": dummy_da(2, "blue", coords, dtype=np.int16),
-        "nir": dummy_da(101, "nir", coords, dtype=np.int16),
-        "swir1": dummy_da(1051, "swir1", coords, dtype=np.int16),
-        "swir2": dummy_da(1051, "swir2", coords, dtype=np.int16),
-    })
+    return xr.Dataset(
+        {
+            "red": dummy_da(5, "red", coords, dtype=np.int16),
+            "green": dummy_da(7, "green", coords, dtype=np.int16),
+            "blue": dummy_da(2, "blue", coords, dtype=np.int16),
+            "nir": dummy_da(101, "nir", coords, dtype=np.int16),
+            "swir1": dummy_da(1051, "swir1", coords, dtype=np.int16),
+            "swir2": dummy_da(1051, "swir2", coords, dtype=np.int16),
+        }
+    )
 
 
 @pytest.fixture
 def dummy_raw_wo_data() -> xr.Dataset:
-    return xr.Dataset({
-        "water": dummy_da(0b101,
-                        "red",
-                        coords,
-                        dtype=np.uint8,
-                        attrs = {
-                                "flags_definition": {
-                                    "nodata": {
-                                        "bits": 0,
-                                        "description": "No data",
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                    },
-                                    "noncontiguous": {
-                                        "description": "At least one EO band is missing or saturated",
-                                        "bits": 1,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                    },
-                                    "low_solar_angle": {
-                                        "description": "Low solar incidence angle",
-                                        "bits": 2,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                    },
-                                    "terrain_shadow": {
-                                        "description": "Terrain shadow",
-                                        "bits": 3,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                    },
-                                    "high_slope": {
-                                        "description": "High slope",
-                                        "bits": 4,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        }
-                                    },
-                                    "cloud_shadow": {
-                                        "description": "Cloud shadow",
-                                        "bits": 5,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                    },
-                                    "cloud": {
-                                        "description": "Cloudy",
-                                        "bits": 6,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                    },
-                                    "water_observed": {
-                                        "description": "Classified as water by the decision tree",
-                                        "bits": 7,
-                                        "values": {
-                                            '0': False,
-                                            '1': True
-                                        },
-                                    },
-                                }
-                            })
-    })
+    return xr.Dataset(
+        {
+            "water": dummy_da(
+                0b101,
+                "red",
+                coords,
+                dtype=np.uint8,
+                attrs={
+                    "flags_definition": {
+                        "nodata": {
+                            "bits": 0,
+                            "description": "No data",
+                            "values": {"0": False, "1": True},
+                        },
+                        "noncontiguous": {
+                            "description": "At least one EO band is missing or saturated",
+                            "bits": 1,
+                            "values": {"0": False, "1": True},
+                        },
+                        "low_solar_angle": {
+                            "description": "Low solar incidence angle",
+                            "bits": 2,
+                            "values": {"0": False, "1": True},
+                        },
+                        "terrain_shadow": {
+                            "description": "Terrain shadow",
+                            "bits": 3,
+                            "values": {"0": False, "1": True},
+                        },
+                        "high_slope": {
+                            "description": "High slope",
+                            "bits": 4,
+                            "values": {"0": False, "1": True},
+                        },
+                        "cloud_shadow": {
+                            "description": "Cloud shadow",
+                            "bits": 5,
+                            "values": {"0": False, "1": True},
+                        },
+                        "cloud": {
+                            "description": "Cloudy",
+                            "bits": 6,
+                            "values": {"0": False, "1": True},
+                        },
+                        "water_observed": {
+                            "description": "Classified as water by the decision tree",
+                            "bits": 7,
+                            "values": {"0": False, "1": True},
+                        },
+                    }
+                },
+            )
+        }
+    )
 
 
 @pytest.fixture
 def dummy_raw_fc_data() -> xr.Dataset:
-    return xr.Dataset({
-        "bs": dummy_da(546, "bs", coords, dtype=np.int16),
-        "pv": dummy_da(723, "pv", coords, dtype=np.int16),
-        "npv": dummy_da(209, "npv", coords, dtype=np.int16),
-    })
+    return xr.Dataset(
+        {
+            "bs": dummy_da(546, "bs", coords, dtype=np.int16),
+            "pv": dummy_da(723, "pv", coords, dtype=np.int16),
+            "npv": dummy_da(209, "npv", coords, dtype=np.int16),
+        }
+    )
 
 
 @pytest.fixture
-def dummy_raw_fc_plus_wo(dummy_raw_fc_data, dummy_raw_wo_data) -> xr.DataArray | xr.Dataset:
-    return xr.combine_by_coords(
-            [dummy_raw_fc_data, dummy_raw_wo_data],
-            join="exact")
+def dummy_raw_fc_plus_wo(
+    dummy_raw_fc_data, dummy_raw_wo_data
+) -> xr.DataArray | xr.Dataset:
+    return xr.combine_by_coords([dummy_raw_fc_data, dummy_raw_wo_data], join="exact")
 
 
 @pytest.fixture
@@ -620,25 +602,14 @@ def configs_for_landsat() -> list:
         },
         {
             "components": {
-                "red": {
-                    "red": 0.333,
-                    "green": 0.333,
-                    "blue": 0.333,
-                },
+                "red": {"red": 0.333, "green": 0.333, "blue": 0.333},
                 "green": {"nir": 1.0},
-                "blue": {
-                    "swir1": 0.5,
-                    "swir2": 0.5,
-                },
+                "blue": {"swir1": 0.5, "swir2": 0.5},
             },
             "scale_range": (50, 3000),
         },
         {
-            "components": {
-                "red": {"red": 1.0},
-                "green": {},
-                "blue": {},
-            },
+            "components": {"red": {"red": 1.0}, "green": {}, "blue": {}},
             "scale_range": (50, 3000),
         },
         {
@@ -667,24 +638,14 @@ def configs_for_landsat() -> list:
         },
         {
             "components": {
-                "red": {
-                    "swir1": 1.0,
-                    "scale_range": (1500, 3700),
-                },
-                "green": {
-                    "nir": 1.0,
-                    "scale_range": (1600, 3200),
-                },
+                "red": {"swir1": 1.0, "scale_range": (1500, 3700)},
+                "green": {"nir": 1.0, "scale_range": (1600, 3200)},
                 "blue": {"green": 1.0},
             },
             "scale_range": (200, 1900),
         },
         {
-            "components": {
-                "red": {"red": 1.0},
-                "green": ndvi,
-                "blue": {"blue": 1.0},
-            },
+            "components": {"red": {"red": 1.0}, "green": ndvi, "blue": {"blue": 1.0}},
             "scale_range": (50, 3000),
         },
         {
@@ -692,10 +653,7 @@ def configs_for_landsat() -> list:
                 "red": {"red": 1.0},
                 "green": {
                     "function": scaled_ndvi,
-                    "kwargs": {
-                        "scale_from": (0.0, 1.0),
-                        "scale_to": (0, 255)
-                    }
+                    "kwargs": {"scale_from": (0.0, 1.0), "scale_to": (0, 255)},
                 },
                 "blue": {"blue": 1.0},
             },
@@ -710,8 +668,8 @@ def configs_for_landsat() -> list:
                         "band1": "nir",
                         "band2": "red",
                         "scale_from": (0.0, 1.0),
-                        "scale_to": (0, 255)
-                    }
+                        "scale_to": (0, 255),
+                    },
                 },
                 "blue": {
                     "function": "datacube_ows.band_utils.norm_diff",
@@ -719,8 +677,8 @@ def configs_for_landsat() -> list:
                         "band1": "green",
                         "band2": "nir",
                         "scale_from": (0.0, 1.0),
-                        "scale_to": (0, 255)
-                    }
+                        "scale_to": (0, 255),
+                    },
                 },
             },
             "scale_range": (50, 3000),
@@ -732,7 +690,7 @@ def configs_for_landsat() -> list:
                 "kwargs": {"band1": "nir", "band2": "red"},
             },
             "mpl_ramp": "RdYlGn",
-            "range": [-1.0, 1.0]
+            "range": [-1.0, 1.0],
         },
         {
             "index_function": {
@@ -740,7 +698,7 @@ def configs_for_landsat() -> list:
                 "kwargs": {"band1": "nir", "band2": "red"},
             },
             "mpl_ramp": "ocean_r",
-            "range": [0.0, 1.0]
+            "range": [0.0, 1.0],
         },
         {
             "index_function": {
@@ -749,14 +707,14 @@ def configs_for_landsat() -> list:
             },
             "color_ramp": [
                 {"value": -1.0, "color": "#0000FF"},
-                {"value": -0.2, "color": "#005050", },
-                {"value": -0.1, "color": "#505050", },
-                {"value": -0.01, "color": "#303030", },
-                {"value": 0.0, "color": "black", },
-                {"value": 0.01, "color": "#303000", },
-                {"value": 0.5, "color": "#707030", },
-                {"value": 1.0, "color": "#FF9090", },
-            ]
+                {"value": -0.2, "color": "#005050"},
+                {"value": -0.1, "color": "#505050"},
+                {"value": -0.01, "color": "#303030"},
+                {"value": 0.0, "color": "black"},
+                {"value": 0.01, "color": "#303000"},
+                {"value": 0.5, "color": "#707030"},
+                {"value": 1.0, "color": "#FF9090"},
+            ],
         },
         {
             "index_function": {
@@ -764,34 +722,13 @@ def configs_for_landsat() -> list:
                 "kwargs": {"band1": "nir", "band2": "red"},
             },
             "color_ramp": [
-                {
-                    "value": -1.0,
-                    "color": "#000000",
-                    "alpha": 0.0,
-                },
-                {
-                    "value": 0.0,
-                    "color": "#000000",
-                    "alpha": 0.0,
-                },
-                {
-                    "value": 0.1,
-                    "color": "#000030",
-                    "alpha": 1.0,
-                },
-                {
-                    "value": 0.3,
-                    "color": "#703070",
-                },
-                {
-                    "value": 0.6,
-                    "color": "#e0e070",
-                },
-                {
-                    "value": 1.0,
-                    "color": "#90FF90",
-                }
-            ]
+                {"value": -1.0, "color": "#000000", "alpha": 0.0},
+                {"value": 0.0, "color": "#000000", "alpha": 0.0},
+                {"value": 0.1, "color": "#000030", "alpha": 1.0},
+                {"value": 0.3, "color": "#703070"},
+                {"value": 0.6, "color": "#e0e070"},
+                {"value": 1.0, "color": "#90FF90"},
+            ],
         },
         {
             "components": {
@@ -804,8 +741,8 @@ def configs_for_landsat() -> list:
                         "band1": "nir",
                         "band2": "red",
                         "scale_from": (0.0, 0.5),
-                        "scale_to": (0, 255)
-                    }
+                        "scale_to": (0, 255),
+                    },
                 },
             },
             "scale_range": (50, 3000),
@@ -855,7 +792,7 @@ def configs_for_wofs() -> list:
                         "color": "Brown",
                     },
                 ]
-            }
+            },
         },
         {
             "name": "observations",
@@ -903,7 +840,7 @@ def configs_for_wofs() -> list:
                         "color": "SaddleBrown",
                     },
                 ]
-            }
+            },
         },
         {
             "value_map": {
@@ -912,45 +849,27 @@ def configs_for_wofs() -> list:
                         # Make noncontiguous data transparent
                         "title": "",
                         "abstract": "",
-                        "flags": {
-                            "or": {
-                                "noncontiguous": True,
-                                "nodata": True,
-                            },
-                        },
+                        "flags": {"or": {"noncontiguous": True, "nodata": True}},
                         "alpha": 0.0,
                         "color": "#ffffff",
                     },
                     {
                         "title": "Cloudy Steep Terrain",
                         "abstract": "",
-                        "flags": {
-                            "and": {
-                                "high_slope": True,
-                                "cloud": True
-                            }
-                        },
+                        "flags": {"and": {"high_slope": True, "cloud": True}},
                         "color": "#f2dcb4",
                     },
                     {
                         "title": "Cloudy Water",
                         "abstract": "",
-                        "flags": {
-                            "and": {
-                                "water_observed": True,
-                                "cloud": True
-                            }
-                        },
+                        "flags": {"and": {"water_observed": True, "cloud": True}},
                         "color": "#bad4f2",
                     },
                     {
                         "title": "Shaded Water",
                         "abstract": "",
                         "flags": {
-                            "and": {
-                                "water_observed": True,
-                                "cloud_shadow": True
-                            }
+                            "and": {"water_observed": True, "cloud_shadow": True}
                         },
                         "color": "#335277",
                     },
@@ -970,10 +889,7 @@ def configs_for_wofs() -> list:
                         "title": "Terrain Shadow or Low Sun Angle",
                         "abstract": "",
                         "flags": {
-                            "or": {
-                                "terrain_shadow": True,
-                                "low_solar_angle": True
-                            },
+                            "or": {"terrain_shadow": True, "low_solar_angle": True}
                         },
                         "color": "#2f2922",
                     },
@@ -986,9 +902,7 @@ def configs_for_wofs() -> list:
                     {
                         "title": "Water",
                         "abstract": "",
-                        "flags": {
-                            "water_observed": True,
-                        },
+                        "flags": {"water_observed": True},
                         "color": "#4f81bd",
                     },
                     {
@@ -998,7 +912,7 @@ def configs_for_wofs() -> list:
                         "color": "#96966e",
                     },
                 ]
-            },
+            }
         },
     ]
 
@@ -1010,14 +924,15 @@ def configs_for_combined_fc_wofs() -> list:
             "components": {
                 "red": {"bs": 1.0},
                 "green": {"pv": 1.0},
-                "blue": {"npv": 1.0}},
+                "blue": {"npv": 1.0},
+            },
             "scale_range": [0.0, 100.0],
         },
         {
             "components": {
                 "red": {"bs": 1.0},
                 "green": {"pv": 1.0},
-                "blue": {"npv": 1.0}
+                "blue": {"npv": 1.0},
             },
             "scale_range": [0.0, 100.0],
             "pq_masks": [
@@ -1032,44 +947,33 @@ def configs_for_combined_fc_wofs() -> list:
                         "cloud_shadow": False,
                         "cloud": False,
                         "water_observed": False,
-                    }
+                    },
                 }
-            ]
+            ],
         },
         {
             "components": {
                 "red": {"bs": 1.0},
                 "green": {"pv": 1.0},
-                "blue": {"npv": 1.0}
+                "blue": {"npv": 1.0},
             },
             "scale_range": [0.0, 100.0],
-            "pq_masks": [
-                {
-                    "band": "water",
-                    "values": [1],
-                }
-            ]
+            "pq_masks": [{"band": "water", "values": [1]}],
         },
         {
             "components": {
                 "red": {"bs": 1.0},
                 "green": {"pv": 1.0},
-                "blue": {"npv": 1.0}
+                "blue": {"npv": 1.0},
             },
             "scale_range": [0.0, 100.0],
-            "pq_masks": [
-                {
-                    "band": "water",
-                    "values": [1],
-                    "invert": True,
-                }
-            ]
+            "pq_masks": [{"band": "water", "values": [1], "invert": True}],
         },
         {
             "components": {
                 "red": {"bs": 1.0},
                 "green": {"pv": 1.0},
-                "blue": {"npv": 1.0}
+                "blue": {"npv": 1.0},
             },
             "scale_range": [0.0, 100.0],
             "pq_masks": [
@@ -1087,71 +991,71 @@ def configs_for_combined_fc_wofs() -> list:
                         "low_solar_angle": False,
                         "high_slope": False,
                         "cloud_shadow": False,
-                    }
+                    },
                 },
                 {
                     # Mask out pixels with cloud AND no water observed
                     "band": "water",
-                    "flags": {
-                        "cloud": True,
-                        "water_observed": False,
-                    },
+                    "flags": {"cloud": True, "water_observed": False},
                     "invert": True,
                 },
-            ]
-        }
+            ],
+        },
     ]
+
 
 @pytest.fixture
 def multi_date_cfg() -> CFG_DICT:
-   return  {
-       "index_function": {
-           "function": "datacube_ows.band_utils.norm_diff",
-           "kwargs": {"band1": "nir", "band2": "red"},
-       },
-       "color_ramp": [
-           {"value": -1.0, "color": "#0000FF"},
-           {"value": -0.2, "color": "#005050", },
-           {"value": -0.1, "color": "#505050", },
-           {"value": -0.01, "color": "#303030", },
-           {"value": 0.0, "color": "black", },
-           {"value": 0.01, "color": "#303000", },
-           {"value": 0.5, "color": "#707030", },
-           {"value": 1.0, "color": "#FF9090", },
-       ],
-       "multi_date": [
-           {
-               "allowed_count_range": [2, 2],
-               "preserve_user_date_order": True,
-               "aggregator_function": {
-                   "function": "datacube_ows.band_utils.multi_date_delta"
-               },
-               "mpl_ramp": "RdYlBu",
-               "range": [-1.0, 1.0],
-           }
-       ]
-   }
+    return {
+        "index_function": {
+            "function": "datacube_ows.band_utils.norm_diff",
+            "kwargs": {"band1": "nir", "band2": "red"},
+        },
+        "color_ramp": [
+            {"value": -1.0, "color": "#0000FF"},
+            {"value": -0.2, "color": "#005050"},
+            {"value": -0.1, "color": "#505050"},
+            {"value": -0.01, "color": "#303030"},
+            {"value": 0.0, "color": "black"},
+            {"value": 0.01, "color": "#303000"},
+            {"value": 0.5, "color": "#707030"},
+            {"value": 1.0, "color": "#FF9090"},
+        ],
+        "multi_date": [
+            {
+                "allowed_count_range": [2, 2],
+                "preserve_user_date_order": True,
+                "aggregator_function": {
+                    "function": "datacube_ows.band_utils.multi_date_delta"
+                },
+                "mpl_ramp": "RdYlBu",
+                "range": [-1.0, 1.0],
+            }
+        ],
+    }
+
 
 xyt_coords = [
     ("x", [-1.0, -0.5, 0.0, 0.5, 1.0]),
     ("y", [-1.0, -0.5, 0.0, 0.5, 1.0]),
-    ("time", [
-                datetime.datetime(2021, 1, 1, 22, 44, 5),
-                datetime.datetime.now()
-              ])
+    ("time", [datetime.datetime(2021, 1, 1, 22, 44, 5), datetime.datetime.now()]),
 ]
+
 
 @pytest.fixture
 def xyt_dummydata() -> xr.Dataset:
-    return xr.Dataset({
+    return xr.Dataset(
+        {
             "red": dummy_da(1400, "red", xyt_coords, dtype="int16"),
             "green": dummy_da(700, "green", xyt_coords, dtype="int16"),
             "blue": dummy_da(1500, "blue", xyt_coords, dtype="int16"),
             "nir": dummy_da(2000, "nir", xyt_coords, dtype="int16"),
-        })
+        }
+    )
 
 
 @pytest.fixture
 def empty_driver_cache() -> None:
     from datacube_ows.index.driver import OWSIndexDriverCache
+
     OWSIndexDriverCache._instance = None

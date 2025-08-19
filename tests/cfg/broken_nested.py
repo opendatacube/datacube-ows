@@ -7,8 +7,5 @@
 
 mixed_3 = {
     "test": 2634,
-    "subtest": {
-        "include": "tests.cfg.simple.doesnt_exist",
-        "type": "python"
-    }
+    "subtest": {"include": "tests.cfg.simple.doesnt_exist", "type": "python"},
 }

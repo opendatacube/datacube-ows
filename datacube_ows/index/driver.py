@@ -19,6 +19,7 @@ cache_lock = Lock()
 class OWSIndexDriverCache:
     _instance = None
     _initialised = False
+
     def __new__(cls, *args, **kwargs) -> "OWSIndexDriverCache":
         if cls._instance is None:
             with cache_lock:
@@ -31,6 +32,7 @@ class OWSIndexDriverCache:
             if not self._initialised:
                 self._initialised = True
                 self._drivers = load_drivers(group)
+
     def __call__(self, name: str) -> Optional["OWSAbstractIndexDriver"]:
         """
         :returns: None if driver with a given name is not found
@@ -41,8 +43,7 @@ class OWSIndexDriverCache:
         return self._drivers.get(name, None)
 
     def drivers(self) -> list[str]:
-        """ Returns list of driver names
-        """
+        """Returns list of driver names"""
         return list(self._drivers.keys())
 
 

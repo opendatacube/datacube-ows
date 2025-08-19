@@ -25,25 +25,33 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
 
     Returns a linear blend of a component image and colour ramp image
     """
+
     auto_legend = False
 
-    def __init__(self,
-                 product: "OWSNamedLayer",
-                 style_cfg: CFG_DICT,
-                 defer_multi_date: bool = False,
-                 stand_alone: bool = False,
-                 user_defined: bool = False) -> None:
+    def __init__(
+        self,
+        product: "OWSNamedLayer",
+        style_cfg: CFG_DICT,
+        defer_multi_date: bool = False,
+        stand_alone: bool = False,
+        user_defined: bool = False,
+    ) -> None:
         """
         See StyleBaseDef
         """
-        super().__init__(product, style_cfg,
-                                 defer_multi_date=defer_multi_date,
-                                 stand_alone=stand_alone,
-                                 user_defined=user_defined)
+        super().__init__(
+            product,
+            style_cfg,
+            defer_multi_date=defer_multi_date,
+            stand_alone=stand_alone,
+            user_defined=user_defined,
+        )
         style_cfg = cast(CFG_DICT, self._raw_cfg)
         self.component_ratio = float(cast(float | str, style_cfg["component_ratio"]))
         if self.component_ratio < 0.0 or self.component_ratio > 1.0:
-            raise ConfigException("Component ratio must be a floating point number between 0 and 1")
+            raise ConfigException(
+                "Component ratio must be a floating point number between 0 and 1"
+            )
 
     @override
     def transform_single_date_data(self, data: Dataset) -> Dataset:
@@ -53,21 +61,25 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
         :param data: Raw data, all bands.
         :return: RGBA uint8 xarray
         """
-        #pylint: disable=too-many-locals
+        # pylint: disable=too-many-locals
         if self.index_function is not None:
-            data['index_function'] = (data.dims, self.index_function(data).data)
+            data["index_function"] = (data.dims, self.index_function(data).data)
 
         imgdata = Dataset(coords=data)
 
-        d: DataArray = data['index_function']
+        d: DataArray = data["index_function"]
         for band, _ in self.rgb_components.items():
-            rampdata = DataArray(self.color_ramp.get_value(d, band),
-                                 coords=d.coords,
-                                 dims=d.dims)
+            rampdata = DataArray(
+                self.color_ramp.get_value(d, band), coords=d.coords, dims=d.dims
+            )
             component_band_data: DataArray | None = None
-            for c_band, c_intensity in cast(LINEAR_COMP_DICT, self.rgb_components[band]).items():
+            for c_band, c_intensity in cast(
+                LINEAR_COMP_DICT, self.rgb_components[band]
+            ).items():
                 if callable(c_intensity):
-                    imgband_component_data = cast(DataArray, c_intensity(data[c_band], c_band, band))
+                    imgband_component_data = cast(
+                        DataArray, c_intensity(data[c_band], c_band, band)
+                    )
                 else:
                     imgband_component_data = data[c_band] * cast(DataArray, c_intensity)
                 if component_band_data is not None:
@@ -76,12 +88,13 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                     component_band_data = imgband_component_data
                 if band != "alpha":
                     component_band_data = self.compress_band(band, component_band_data)
-            img_band_data = (rampdata * 255.0 * (1.0 - self.component_ratio)
-                             + self.component_ratio * cast(DataArray,
-                                                           component_band_data))
+            img_band_data = rampdata * 255.0 * (
+                1.0 - self.component_ratio
+            ) + self.component_ratio * cast(DataArray, component_band_data)
             imgdata[band] = (d.dims, img_band_data.astype("uint8").data)
 
         return imgdata
+
 
 # Register HybridStyleDef as a priority subclass of StyleDefBase
 #    (priority means takes precedence over ComponentStyleDef and ColourRampDef)

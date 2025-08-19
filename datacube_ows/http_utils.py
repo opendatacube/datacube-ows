@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 FlaskResponse = tuple[str | bytes, int, dict[str, str]]
 
 
-
 def resp_headers(d: dict[str, str]) -> dict[str, str]:
     """
     Take a dictionary of http response headers and all required response headers from the configuration.
@@ -29,6 +28,7 @@ def resp_headers(d: dict[str, str]) -> dict[str, str]:
     :return:
     """
     from datacube_ows.ows_configuration import get_config
+
     return get_config().response_headers(d)
 
 
@@ -64,8 +64,9 @@ def get_service_base_url(allowed_urls: list[str] | str, request_url: str) -> str
     return url.rstrip("/")
 
 
-def capture_headers(req: Request,
-                    args_dict: dict[str, str | None]) -> dict[str, str | None]:
+def capture_headers(
+    req: Request, args_dict: dict[str, str | None]
+) -> dict[str, str | None]:
     """
     Capture significant flask metadata into the args dictionary
 
@@ -73,11 +74,11 @@ def capture_headers(req: Request,
     :param args_dict: A Flask args dictionary
     :return:
     """
-    args_dict['referer'] = req.headers.get('Referer', None)
-    args_dict['origin'] = req.headers.get('Origin', None)
-    args_dict['requestid'] = req.environ.get("FLASK_REQUEST_ID")
-    args_dict['host'] = req.headers.get('Host', None)
-    args_dict['url_root'] = req.url_root
+    args_dict["referer"] = req.headers.get("Referer", None)
+    args_dict["origin"] = req.headers.get("Origin", None)
+    args_dict["requestid"] = req.environ.get("FLASK_REQUEST_ID")
+    args_dict["host"] = req.headers.get("Host", None)
+    args_dict["url_root"] = req.url_root
 
     return args_dict
 
@@ -106,14 +107,22 @@ def lower_get_args() -> dict[str, str]:
 
 def json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> FlaskResponse:
     from datacube_ows.ows_configuration import get_config
+
     if not cfg:
         cfg = get_config()
     assert cfg is not None  # for type checker
-    return json.dumps(result), 200, cfg.response_headers({"Content-Type": "application/json"})
+    return (
+        json.dumps(result),
+        200,
+        cfg.response_headers({"Content-Type": "application/json"}),
+    )
 
 
-def html_json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> FlaskResponse:
+def html_json_response(
+    result: CFG_DICT, cfg: Optional["OWSConfig"] = None
+) -> FlaskResponse:
     from datacube_ows.ows_configuration import get_config
+
     if not cfg:
         cfg = get_config()
     assert cfg is not None  # for type checker
@@ -121,8 +130,13 @@ def html_json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> F
     return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})
 
 
-def png_response(body: bytes, cfg: Optional["OWSConfig"] = None, extra_headers: Mapping[str, str] | None = None) -> FlaskResponse:
+def png_response(
+    body: bytes,
+    cfg: Optional["OWSConfig"] = None,
+    extra_headers: Mapping[str, str] | None = None,
+) -> FlaskResponse:
     from datacube_ows.ows_configuration import get_config
+
     if not cfg:
         cfg = get_config()
     assert cfg is not None  # For type checker

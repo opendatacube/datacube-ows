@@ -52,9 +52,7 @@ def test_bidx_p_minimal(minimal_prod) -> None:
 
 
 def test_bidx_p_unready(minimal_prod) -> None:
-    bidx = BandIndex(minimal_prod, {
-        "foo": ["foo"]
-    })
+    bidx = BandIndex(minimal_prod, {"foo": ["foo"]})
     with pytest.raises(OWSConfigNotReady) as excinfo:
         _ = bidx.measurements
     assert "measurements" in str(excinfo.value)
@@ -68,25 +66,17 @@ def test_bidx_p_unready(minimal_prod) -> None:
 
 def test_bidx_p_duplicates(minimal_prod) -> None:
     with pytest.raises(ConfigException) as excinfo:
-        _ = BandIndex(minimal_prod, {
-            "foo": ["bar"],
-            "bar": ["baz"]
-        })
+        _ = BandIndex(minimal_prod, {"foo": ["bar"], "bar": ["baz"]})
     assert "Duplicate band name/alias" in str(excinfo.value)
     assert "bar" in str(excinfo.value)
     with pytest.raises(ConfigException) as excinfo:
-       _ = BandIndex(minimal_prod, {
-            "foo": ["bar"],
-            "boo": ["bar"]
-        })
+        _ = BandIndex(minimal_prod, {"foo": ["bar"], "boo": ["bar"]})
     assert "Duplicate band name/alias" in str(excinfo.value)
     assert "bar" in str(excinfo.value)
 
 
 def test_bidx_p_band(minimal_prod) -> None:
-    bidx = BandIndex(minimal_prod, {
-        "foo": ["bar", "baz"],
-    })
+    bidx = BandIndex(minimal_prod, {"foo": ["bar", "baz"]})
     assert bidx.band("foo") == "foo"
     assert bidx.band("bar") == "foo"
     assert bidx.band("baz") == "foo"
@@ -97,11 +87,10 @@ def test_bidx_p_band(minimal_prod) -> None:
 
 
 def test_bidx_p_band_labels(minimal_prod) -> None:
-    bidx = BandIndex(minimal_prod, {
-        "foo": ["bar", "foo", "baz"],
-        "zing": ["pow", "splat"],
-        "oof": [],
-    })
+    bidx = BandIndex(
+        minimal_prod,
+        {"foo": ["bar", "foo", "baz"], "zing": ["pow", "splat"], "oof": []},
+    )
     bls = bidx.band_labels()
     assert "bar" in bls
     assert "pow" in bls
@@ -110,9 +99,7 @@ def test_bidx_p_band_labels(minimal_prod) -> None:
 
 
 def test_bidx_p_label(minimal_prod) -> None:
-    bidx = BandIndex(minimal_prod, {
-        "foo": ["bar", "baz"],
-    })
+    bidx = BandIndex(minimal_prod, {"foo": ["bar", "baz"]})
     assert bidx.band_label("foo") == "bar"
     assert bidx.band_label("bar") == "bar"
     assert bidx.band_label("baz") == "bar"
@@ -123,12 +110,15 @@ def test_bidx_p_label(minimal_prod) -> None:
 
 
 def test_bidx_makeready(minimal_prod) -> None:
-    bidx = BandIndex(minimal_prod, {
-        "band1": [],
-        "band2": ["alias2"],
-        "band3": ["alias3", "band3"],
-        "band4": ["band4", "alias4"]
-    })
+    bidx = BandIndex(
+        minimal_prod,
+        {
+            "band1": [],
+            "band2": ["alias2"],
+            "band3": ["alias3", "band3"],
+            "band4": ["band4", "alias4"],
+        },
+    )
     bidx.make_ready()
     assert bidx.ready
     assert bidx.band("band1") == "band1"
@@ -139,6 +129,7 @@ def test_bidx_makeready(minimal_prod) -> None:
 
 def test_bidx_makeready_default(minimal_prod) -> None:
     import numpy as np
+
     bidx = BandIndex(minimal_prod, {})
     bidx.make_ready()
     assert bidx.ready
@@ -155,10 +146,7 @@ def test_bidx_makeready_default(minimal_prod) -> None:
 
 
 def test_bidx_makeready_invalid_band(minimal_prod) -> None:
-    bidx = BandIndex(minimal_prod, {
-        "band1": ["band1", "valid"],
-        "bandx": ["invalid"]
-    })
+    bidx = BandIndex(minimal_prod, {"band1": ["band1", "valid"], "bandx": ["invalid"]})
     assert bidx.band("valid") == "band1"
     assert bidx.band("invalid") == "bandx"
     with pytest.raises(ConfigException) as excinfo:

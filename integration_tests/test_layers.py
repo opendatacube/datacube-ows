@@ -10,6 +10,7 @@ from datacube_ows.ows_configuration import OWSConfig, get_config, read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 def test_metadata_export() -> None:
     cfg = get_config(refresh=True)
 

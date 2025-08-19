@@ -16,10 +16,8 @@ from datacube_ows.ows_configuration import TimeRes
 def simple_geobox() -> GeoBox:
     from affine import Affine
 
-    aff = Affine.translation(145.0, -35.0) * Affine.scale(
-        1.0 / 256, 2.0 / 256
-    )
-    return GeoBox((256, 256), aff, 'EPSG:4326')
+    aff = Affine.translation(145.0, -35.0) * Affine.scale(1.0 / 256, 2.0 / 256)
+    return GeoBox((256, 256), aff, "EPSG:4326")
 
 
 def test_timeres_enum(simple_geobox) -> None:
@@ -50,8 +48,7 @@ def test_solar(simple_geobox) -> None:
     assert "Solar time resolution search_times requires a geobox" in str(e.value)
 
     assert res.search_times(
-        datetime(2020, 6, 7, 20, 20, 0, tzinfo=timezone.utc),
-        simple_geobox,
+        datetime(2020, 6, 7, 20, 20, 0, tzinfo=timezone.utc), simple_geobox
     ) == (
         datetime(2020, 6, 6, 14, 0, tzinfo=timezone.utc),
         datetime(2020, 6, 7, 13, 59, 59, tzinfo=timezone.utc),

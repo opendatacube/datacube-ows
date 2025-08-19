@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-#pylint: skip-file
+# pylint: skip-file
 import os
 import sys
 
@@ -25,12 +25,10 @@ application = app
 
 def main() -> None:
     if "--version" in sys.argv:
-        print("Open Data Cube Open Web Services (datacube-ows) version",
-              __version__
-              )
+        print("Open Data Cube Open Web Services (datacube-ows) version", __version__)
         exit(0)
     app.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
