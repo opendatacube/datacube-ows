@@ -36,7 +36,7 @@ dependencies = [
     "xarray",
 ]
 requires-python = ">=3.10.0"
-readme = "README.md"
+readme = "README.rst"
 license = "Apache-2.0"
 keywords = ["datacube", "wms", "wcs"]
 classifiers = [
