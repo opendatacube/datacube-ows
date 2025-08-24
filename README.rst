@@ -157,7 +157,7 @@ To run the standard Docker image, create a docker volume containing your ows con
         -e AWS_DEFAULT_REGION=ap-southeast-2 \                     # AWS Default Region (supply even if NOT accessing files on S3! See Issue #151)
         -e SENTRY_DSN=https://key@sentry.local/projid \            # Key for Sentry logging (optional)
         \ # Database connection URL: postgresql://<username>:<password>@<hostname>:<port>/<database>
-        -e ODC_DEFAULT_DB_URL=postgresql://myuser:mypassword@172.17.0.1:5432/mydb \
+        -e ODC_DEFAULT_DB_URL=postgresql://myuser:mypassword@172.17.0.1:35434/mydb \
         -e PYTHONPATH=/code                                        # The default PATH is under env, change this to target /code
         -p 8080:8000 \                                             # Publish the gunicorn port (8000) on the Docker
         \                                                          # container at port 8008 on the host machine.
