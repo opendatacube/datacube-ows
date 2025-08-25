@@ -3,7 +3,7 @@ services:
     image: opendatacube/datacube-index:latest
     environment:
       DB_HOSTNAME: ${DB_HOSTNAME}
-      DB_PORT: 5432
+      DB_PORT: 35434
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}

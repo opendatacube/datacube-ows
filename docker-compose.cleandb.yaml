@@ -1,21 +1,23 @@
 services:
   postgres:
     # clean postgis db
-    image: kartoza/postgis:16
+    image: postgis/postgis:17-3.5
     hostname: postgres
     environment:
       - POSTGRES_DB
       - POSTGRES_PORT
+      - PGPORT=35434
       - POSTGRES_PASSWORD
       - POSTGRES_USER
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT}:35434"
     restart: always
     volumes:
+      - ./docker/files/create-pg-databases.sh:/docker-entrypoint-initdb.d/create-pg-databases.sh
       - type: tmpfs
-        target: /var/lib/postgresql
+        target: /var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "postgres", "-q", "-d", "$POSTGRES_DB", "-U", "$POSTGRES_USER"]
+      test: ["CMD", "pg_isready", "-h", "postgres", "-q", "--port", "35434", "-d", "$POSTGRES_DB", "-U", "$POSTGRES_USER"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -24,7 +26,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: 35434
     depends_on:
       postgres:
         condition: service_healthy

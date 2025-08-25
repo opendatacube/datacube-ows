@@ -151,7 +151,7 @@ indexing and create db dump
 
   # return to index container
   docker exec -it index_index_1 bash # if using chained docker compose the container name is datacube-ows_index_1
-  pg_dump -U localhost -p 5432 -h localhost odc > dump.sql
+  pg_dump -U localhost -p 35434 -h localhost odc > dump.sql
   # enter password on prompt: mysecretpassword or check .env file
   exit
 
