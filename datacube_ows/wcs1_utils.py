@@ -10,7 +10,6 @@ import numpy
 import xarray
 import xarray as xr
 from affine import Affine
-from dask.delayed import Delayed
 from dateutil.parser import parse
 from odc.geo import geom
 from odc.geo.geobox import GeoBox
@@ -523,7 +522,7 @@ def get_tiff(req, data: xr.Dataset) -> bytes:
         return memfile.read()
 
 
-def get_netcdf(req, data: xr.Dataset) -> bytes | Delayed | None:
+def get_netcdf(req, data: xr.Dataset) -> bytes:
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid
     for _, v in data.data_vars.items():
@@ -536,4 +535,4 @@ def get_netcdf(req, data: xr.Dataset) -> bytes | Delayed | None:
         del data["time"].attrs["units"]
 
     # And export to NetCDF
-    return data.to_netcdf()
+    return bytes(data.to_netcdf())

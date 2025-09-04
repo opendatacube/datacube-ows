@@ -431,4 +431,4 @@ def get_netcdf(request, data: xr.Dataset, crs) -> bytes:
         del data["time"].attrs["units"]
 
     # And export to NetCDF
-    return data.to_netcdf()
+    return bytes(data.to_netcdf())
