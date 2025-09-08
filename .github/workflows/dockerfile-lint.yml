@@ -41,7 +41,7 @@ jobs:
           perl -pi -e 's# --checksum=sha256:\S+##g' Dockerfile
 
       - name: lint Dockerfile
-        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        uses: hadolint/hadolint-action@3fc49fb50d59c6ab7917a2e4195dba633e515b29 # v3.2.0
         with:
           dockerfile: Dockerfile
           ignore: DL3008,DL3002,DL3013,DL3059,SC2102
