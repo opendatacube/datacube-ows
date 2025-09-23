@@ -1002,9 +1002,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         )
         # Native CRS
         if product_native_specs is not None and "crs" in product_native_specs:
-            self.native_CRS = str(
-                CRS(product_native_specs["crs"])
-            )  # normalise CRS string to avoid case difference issues
+            # normalise CRS string to avoid case difference issues
+            self.native_CRS = str(CRS(product_native_specs["crs"]))
             if self.cfg_native_crs == self.native_CRS:
                 _LOG.debug(
                     "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
