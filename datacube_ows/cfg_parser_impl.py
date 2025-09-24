@@ -309,7 +309,7 @@ def update_translation(
 ) -> bool:
     click.echo(f"Updating template for language: {locale}")
     os.system(
-        f"pybabel update --no-fuzzy-matching --ignore-obsolete "
+        "pybabel update --no-fuzzy-matching --ignore-obsolete "
         f"-i {msg_file} -d {translations_dir} -D {domain} -l {locale}"
     )
     return True

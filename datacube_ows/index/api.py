@@ -213,6 +213,6 @@ def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
     if ows_index_driver is None:
         raise ConfigException(
             f"ODC Environment {env._name} uses ODC index driver {env.index_driver} which is "
-            f"not (yet) supported by OWS."
+            "not (yet) supported by OWS."
         )
     return ows_index_driver.ows_index()
