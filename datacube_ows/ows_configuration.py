@@ -29,7 +29,7 @@ from datacube import Datacube
 from datacube.api.query import GroupBy
 from datacube.cfg import ODCConfig, ODCEnvironment
 from datacube.model import Measurement, Product
-from odc.geo import CRS
+from odc.geo import CRS, CRSError
 from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
@@ -1008,7 +1008,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             except CRSError:
                 raise ConfigException(
                     f"Product {self.product_name} in layer {self.name} specifies an invalid CRS: {product_native_specs['crs']}"
-                )
+                ) from None
             if self.cfg_native_crs == self.native_CRS:
                 _LOG.debug(
                     "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
