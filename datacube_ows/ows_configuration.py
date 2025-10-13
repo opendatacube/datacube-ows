@@ -696,7 +696,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("bboxes")
         self.band_idx = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
-        self.cfg_native_crs = cfg.get("native_crs")
+        self.cfg_native_crs: str = cfg.get("native_crs")
         self.declare_unready("resolution_x")
         self.declare_unready("resolution_y")
         self.resource_limits = OWSResourceManagementRules(
@@ -1003,7 +1003,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         # Native CRS
         if product_native_specs is not None and "crs" in product_native_specs:
             # normalise CRS string to avoid case difference issues
-            self.native_CRS = str(CRS(product_native_specs["crs"]))
+            try:
+                self.native_CRS = str(CRS(product_native_specs["crs"]))
+            except CRSError:
+                raise ConfigException(f"Product {self.product_name} in layer {self.name} specifies an invalid CRS: {product_native_specs['crs']}")
             if self.cfg_native_crs == self.native_CRS:
                 _LOG.debug(
                     "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
@@ -1245,7 +1248,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if not geobox:
             bbox = self.ranges.bboxes[self.native_CRS]
             geobox = create_geobox(
-                self.native_CRS,
+                CRS(self.native_CRS),
                 bbox["left"],
                 bbox["bottom"],
                 bbox["right"],

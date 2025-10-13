@@ -68,7 +68,7 @@ def minimal_dc():
         if "nonativecrs" in s:
             pass
         elif "badnativecrs" in s:
-            mprod.definition["storage"]["crs"] = "EPSG:9999"
+            mprod.definition["storage"]["crs"] = "EPSG:32756"
         elif "nativecrs" in s:
             mprod.definition["storage"]["crs"] = "EPSG:4326"
         else:
