@@ -16,12 +16,12 @@ def test_update_ranges_schema_without_roles(runner) -> None:
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
     result = runner.invoke(main, ["-E", "owspostgis", "--schema"])
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_update_ranges_schema_with_roles(
@@ -34,7 +34,7 @@ def test_update_ranges_schema_with_roles(
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
     result = runner.invoke(
         main,
         [
@@ -50,7 +50,7 @@ def test_update_ranges_schema_with_roles(
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
     result = runner.invoke(
         main,
         [
@@ -64,7 +64,7 @@ def test_update_ranges_schema_with_roles(
         ],
     )
     assert "Unable to connect to the nonono" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_update_ranges_roles_only(
@@ -76,7 +76,7 @@ def test_update_ranges_roles_only(
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
     result = runner.invoke(
         main,
         [
@@ -91,7 +91,7 @@ def test_update_ranges_roles_only(
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_update_ranges_cleanup(runner) -> None:
@@ -99,7 +99,7 @@ def test_update_ranges_cleanup(runner) -> None:
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_update_ranges_views(runner) -> None:
@@ -107,29 +107,29 @@ def test_update_ranges_views(runner) -> None:
     assert "Cannot find SQL resource" not in result.output
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_update_version(runner) -> None:
     result = runner.invoke(main, ["--version"])
     assert "Open Data Cube Open Web Services (datacube-ows) version" in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_update_ranges_product(runner, product_name: str) -> None:
     result = runner.invoke(main, [product_name])
     assert "ERROR" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_update_ranges_bad_product(runner, product_name: str) -> None:
     result = runner.invoke(main, ["not_a_real_product_name"])
     assert "not_a_real_product_name" in result.output
     assert "does not exist in the OWS configuration - skipping" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_update_ranges(runner) -> None:
     result = runner.invoke(main)
     assert "ERROR" not in result.output
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"

@@ -13,33 +13,33 @@ from datacube_ows.cfg_parser_impl import main
 
 def test_cfg_parser_simple(runner) -> None:
     result = runner.invoke(main, [])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_parse_only(runner) -> None:
     result = runner.invoke(main, ["check", "-p"])
     print(repr(result))
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_folder_hierarchy(runner) -> None:
     result = runner.invoke(main, ["check", "-f"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_styles(runner) -> None:
     result = runner.invoke(main, ["check", "-s"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_folder_hierarchy_and_styles(runner) -> None:
     result = runner.invoke(main, ["check", "-f", "-s"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_folders_parse_only(runner) -> None:
     result = runner.invoke(main, ["check", "-f", "-p"])
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_parser_input_file_compare(runner) -> None:
@@ -47,18 +47,18 @@ def test_cfg_parser_input_file_compare(runner) -> None:
     result = runner.invoke(main, ["check", "-i", f"{this_dir}/ows_cfg_report.json"])
     assert result.exception is None
     assert b"Configuration parsed OK" in result.stdout_bytes
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_msg_file(runner) -> None:
     result = runner.invoke(main, ["extract", "-m", "messages.po"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_msg_file_null(runner) -> None:
     result = runner.invoke(main, ["extract", "-m", "/dev/null"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_msg_file_null_badcfg(runner) -> None:
@@ -71,25 +71,25 @@ def test_cfg_parser_msg_file_null_badcfg(runner) -> None:
             "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_output_file_compare(runner) -> None:
     result = runner.invoke(main, ["check", "-o", "inventory.json"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_output_file_compare_null(runner) -> None:
     result = runner.invoke(main, ["check", "-o", "/dev/null"])
     assert result.exception is None
     assert b"Configuration parsed OK" in result.stdout_bytes
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_version(runner) -> None:
     result = runner.invoke(main, ["--version"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_bad_cfgenv(runner) -> None:
@@ -98,14 +98,14 @@ def test_cfg_parser_bad_cfgenv(runner) -> None:
         ["check"],
         env={"DATACUBE_OWS_CFG": "integration_tests.cfg.ows_test_cfg_bad.ows_cfg"},
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_parser_good_cfgarg(runner) -> None:
     result = runner.invoke(
         main, ["check", "integration_tests.cfg.ows_test_cfg.ows_cfg"]
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_bad_cfgarg(runner) -> None:
@@ -117,7 +117,7 @@ def test_cfg_parser_bad_cfgarg(runner) -> None:
             "integration_tests.cfg.ows_test_cfg_bad.ows_cfg",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory(runner) -> None:
@@ -136,7 +136,7 @@ def test_cfg_write_new_translation_directory(runner) -> None:
             "de",
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_write_update_translation_directory(runner) -> None:
@@ -154,7 +154,7 @@ def test_cfg_write_update_translation_directory(runner) -> None:
             "de",
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory_cfg(runner) -> None:
@@ -173,7 +173,7 @@ def test_cfg_write_new_translation_directory_cfg(runner) -> None:
             "de",
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory_all_langs(runner) -> None:
@@ -192,7 +192,7 @@ def test_cfg_write_new_translation_directory_all_langs(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_write_update_translation_directory_all_langs(runner) -> None:
@@ -210,7 +210,7 @@ def test_cfg_write_update_translation_directory_all_langs(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory_all_bad_cfg(runner) -> None:
@@ -231,7 +231,7 @@ def test_cfg_write_new_translation_directory_all_bad_cfg(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory_no_domain(runner) -> None:
@@ -248,7 +248,7 @@ def test_cfg_write_new_translation_directory_no_domain(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory_no_msg_file(runner) -> None:
@@ -267,7 +267,7 @@ def test_cfg_write_new_translation_directory_no_msg_file(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory_missing_msg_file(runner) -> None:
@@ -286,7 +286,7 @@ def test_cfg_write_new_translation_directory_missing_msg_file(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_write_translation_directory_cfg_directory(runner) -> None:
@@ -295,7 +295,7 @@ def test_cfg_write_translation_directory_cfg_directory(runner) -> None:
         main,
         ["translation", "-m", f"{this_dir}/cfg/message.po", "-D", "ows_cfg", "all"],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_write_new_translation_directory_no_directory(runner) -> None:
@@ -314,7 +314,7 @@ def test_cfg_write_new_translation_directory_no_directory(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
     result = runner.invoke(
         main,
         [
@@ -329,7 +329,7 @@ def test_cfg_write_new_translation_directory_no_directory(runner) -> None:
             "all",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_new_translation_no_language(runner) -> None:
@@ -347,7 +347,7 @@ def test_cfg_new_translation_no_language(runner) -> None:
             "ows_cfg",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 @pytest.mark.xfail(reason="Permission denied")
@@ -357,7 +357,7 @@ def test_cfg_parser_compile(runner) -> None:
         main,
         ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "en"],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 @pytest.mark.xfail(reason="Permission denied")
@@ -367,7 +367,7 @@ def test_cfg_parser_compile_all(runner) -> None:
         main,
         ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg", "all"],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_compile_no_lang(runner) -> None:
@@ -375,7 +375,7 @@ def test_cfg_parser_compile_no_lang(runner) -> None:
     result = runner.invoke(
         main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "-D", "ows_cfg"]
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_parser_compile_no_domain(runner) -> None:
@@ -383,13 +383,13 @@ def test_cfg_parser_compile_no_domain(runner) -> None:
     result = runner.invoke(
         main, ["compile", "-d", f"{this_dir}/cfg/test_translations", "en"]
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 @pytest.mark.xfail(reason="Permission denied")
 def test_cfg_parser_compile_default_dir(runner) -> None:
     result = runner.invoke(main, ["compile", "en"])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_cfg_parser_compile_no_dir(runner) -> None:
@@ -397,7 +397,7 @@ def test_cfg_parser_compile_no_dir(runner) -> None:
         main,
         ["compile", "-c", "integration_tests.cfg.ows_test_cfg_no_i18n.ows_cfg", "en"],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_cfg_parser_compile_bad_cfg(runner) -> None:
@@ -413,4 +413,4 @@ def test_cfg_parser_compile_bad_cfg(runner) -> None:
             "en",
         ],
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"

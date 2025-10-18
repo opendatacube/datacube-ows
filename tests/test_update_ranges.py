@@ -33,39 +33,39 @@ def layer_name() -> str:
 def test_update_ranges_misuse_cases(runner, role_name: str, layer_name: str) -> None:
     result = runner.invoke(main, ["--schema", layer_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--cleanup", layer_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--read-role", role_name, layer_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--write-role", role_name, layer_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--views", "--cleanup"])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--views", layer_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--views", "--schema"])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--views", "--read-role", role_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--views", "--write-role", role_name])
     assert "Sorry" in result.output
-    assert result.exit_code == 1
+    assert result.exit_code == 1, f"Output: {result.output}"
 
 
 def test_run_sql(minimal_dc) -> None:
