@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgis/postgis:17-3.5
+    image: postgis/postgis:18-3.6
     hostname: postgres
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
@@ -13,7 +13,7 @@ services:
     volumes:
       - ./docker/files/create-pg-databases.sh:/docker-entrypoint-initdb.d/create-pg-databases.sh
       - type: tmpfs
-        target: /var/lib/postgresql/data
+        target: /var/lib/postgresql
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "postgres", "-q", "--port", "35434", "-d", "$POSTGRES_DB", "-U", "$POSTGRES_USER"]
       timeout: 45s
