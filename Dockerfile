@@ -1,4 +1,6 @@
 # syntax=docker/dockerfile:1
+FROM ghcr.io/astral-sh/uv:0.9.3@sha256:ecfea7316b266ba82a5e9efb052339ca410dd774dc01e134a30890e6b85c7cd1 AS uv
+
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.3@sha256:dab45abca3ca83695d442018692f4f8a0f41955871c57e6101d7f89a92375caa AS base
 
 LABEL org.opencontainers.image.source=https://github.com/opendatacube/datacube-ows
@@ -40,11 +42,7 @@ ENV UV_COMPILE_BYTECODE=0 \
 
 WORKDIR /build
 
-# False alarm, next line is pointing to a https link.
-# hadolint ignore=DL3020
-ADD --checksum=sha256:5429c9b96cab65198c2e5bfe83e933329aa16303a0369d5beedc71785a4a2f36 --chown=root:root --chmod=644 --link $UV uv.tar.gz
-
-RUN tar xf uv.tar.gz -C /usr/local/bin --strip-components=1 --no-same-owner
+COPY --link --from=uv /uv /uvx /usr/local/bin/
 
 COPY --link pyproject.toml uv.lock /build/
 
