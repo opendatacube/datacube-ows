@@ -5,6 +5,11 @@ updates:
   schedule:
     interval: "weekly"
   target-branch: "develop"
+  # If there are multiple updates, combine them into a single PR
+  groups:
+    actions-deps:
+      patterns:
+        - "*"
 - package-ecosystem: docker
   directory: "/"
   schedule:
