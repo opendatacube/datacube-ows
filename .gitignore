@@ -45,7 +45,7 @@ coverage.xml
 *,cover
 .hypothesis/
 messages.po
-iventory.json
+inventory.json
 
 # Translations
 *.mo
