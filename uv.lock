@@ -709,7 +709,7 @@ array = [
 
 [[package]]
 name = "datacube"
-version = "1.9.9"
+version = "1.9.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "affine" },
@@ -744,9 +744,9 @@ dependencies = [
     { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "xarray", version = "2025.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/dd/ab/01d1bea6eb834247026e2915d31077719fb7c618117c1394ceecf7da0cce/datacube-1.9.9.tar.gz", hash = "sha256:a49426d1047849335f9db0ca1ce3623b40cc2690b8472f86ea58e3578c3615a7", size = 2319856, upload-time = "2025-09-02T08:07:04.21Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/63/80a89359594dd3362a7be4351373f19453fda5811a81d16801bed9c893df/datacube-1.9.10.tar.gz", hash = "sha256:86883338460a73eb9105fff7ec01fcc37e638859e7ec56f693cc91ccf59da156", size = 2358145, upload-time = "2025-10-21T04:56:08.811Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/1e/decece457f347340911fe0b8ce096742f36289c31e32cd8deb8f23b7309d/datacube-1.9.9-py3-none-any.whl", hash = "sha256:ce3749c2d17039efb97cdf7d3937064040e37493579c260d7f5874be45aac3d8", size = 441288, upload-time = "2025-09-02T08:07:02.224Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/0f/d2c3f52adfb34315524f702a2b16c86d45a5d466107929466d6e66654ffa/datacube-1.9.10-py3-none-any.whl", hash = "sha256:13db76095fa73db49d26691a2960934418b3730f638abe56aebac42440c12d61", size = 449436, upload-time = "2025-10-21T04:56:06.581Z" },
 ]
 
 [package.optional-dependencies]
@@ -870,7 +870,7 @@ requires-dist = [
     { name = "babel" },
     { name = "blinker", marker = "extra == 'ops'" },
     { name = "click" },
-    { name = "datacube", extras = ["performance", "s3"], specifier = ">=1.9.4" },
+    { name = "datacube", extras = ["performance", "s3"], specifier = ">=1.9.10" },
     { name = "datacube-ows", extras = ["dev", "ops", "test"], marker = "extra == 'all'" },
     { name = "deepdiff" },
     { name = "flask" },
@@ -906,7 +906,7 @@ requires-dist = [
     { name = "pytest-mock", marker = "extra == 'test'" },
     { name = "python-dateutil" },
     { name = "python-slugify" },
-    { name = "rasterio", specifier = ">=1.3.2" },
+    { name = "rasterio" },
     { name = "regex" },
     { name = "requests" },
     { name = "ruff", marker = "extra == 'dev'" },

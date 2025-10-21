@@ -12,7 +12,7 @@ dependencies = [
     "affine",
     "antimeridian",
     "click",
-    "datacube[performance,s3]>=1.9.4",
+    "datacube[performance,s3]>=1.9.10",
     "deepdiff",
     "flask",
     "fsspec",
@@ -27,7 +27,7 @@ dependencies = [
     "pyparsing",
     "python_dateutil",
     "python_slugify",
-    "rasterio>=1.3.2",
+    "rasterio",
     "regex",
     "requests",
     "scipy",
@@ -162,5 +162,5 @@ include = ["datacube*"]
 
 [tool.setuptools_scm]
 write_to = "datacube_ows/_version.py"
-fallback_version = "1.9.4"
+fallback_version = "1.9.5"
 version_scheme = "post-release"
