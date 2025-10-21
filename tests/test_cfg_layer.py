@@ -800,8 +800,8 @@ def test_native_crs_unpublished(
         "EPSG": {"top": 1, "bottom": -1, "left": -1, "right": 1}
     }
     with pytest.raises(ConfigException) as excinfo:
-        lyr.make_ready(minimal_dc)
-    assert "EPSG:9999" in str(excinfo.value)
+        lyr.make_ready(minimal_dc)  # getting CRSError (originating l.1006)
+    assert "EPSG:32756" in str(excinfo.value)
     assert "a_layer" in str(excinfo.value)
     assert "not in published CRSs" in str(excinfo.value)
 

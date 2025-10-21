@@ -29,7 +29,7 @@ from datacube import Datacube
 from datacube.api.query import GroupBy
 from datacube.cfg import ODCConfig, ODCEnvironment
 from datacube.model import Measurement, Product
-from odc.geo import CRS
+from odc.geo import CRS, CRSError
 from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
@@ -696,7 +696,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("bboxes")
         self.band_idx = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
-        self.cfg_native_crs = cfg.get("native_crs")
+        self.cfg_native_crs = cast(str, cfg.get("native_crs"))
         self.declare_unready("resolution_x")
         self.declare_unready("resolution_y")
         self.resource_limits = OWSResourceManagementRules(
@@ -956,11 +956,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if "native_crs" in cfg:
             if not self.cfg_native_crs:
                 _LOG.warning(
-                    "Specifying native_crs in wcs section of layer %s is now deprecated, pleas move to "
+                    "Specifying native_crs in wcs section of layer %s is now deprecated, please move to "
                     "main layer section if required",
                     self.name,
                 )
-                self.cfg_native_crs = cfg["native_crs"]
+                self.cfg_native_crs = cast(str, cfg["native_crs"])
             else:
                 _LOG.warning(
                     "native_crs in wcs section of layer %s ignored in favour of value in "
@@ -1002,7 +1002,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         )
         # Native CRS
         if product_native_specs is not None and "crs" in product_native_specs:
-            self.native_CRS = product_native_specs["crs"]
+            # normalise CRS string to avoid case difference issues
+            try:
+                self.native_CRS = str(CRS(product_native_specs["crs"]))
+            except CRSError:
+                raise ConfigException(
+                    f"Product {self.product_name} in layer {self.name} specifies an invalid CRS: {product_native_specs['crs']}"
+                ) from None
             if self.cfg_native_crs == self.native_CRS:
                 _LOG.debug(
                     "Native crs for layer %s is specified in ODC metadata and does not need to be specified in configuration",
@@ -1244,7 +1250,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if not geobox:
             bbox = self.ranges.bboxes[self.native_CRS]
             geobox = create_geobox(
-                self.native_CRS,
+                CRS(self.native_CRS),
                 bbox["left"],
                 bbox["bottom"],
                 bbox["right"],
