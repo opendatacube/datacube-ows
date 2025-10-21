@@ -696,7 +696,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("bboxes")
         self.band_idx = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
-        self.cfg_native_crs: str = cfg.get("native_crs")
+        self.cfg_native_crs = cast(str, cfg.get("native_crs"))
         self.declare_unready("resolution_x")
         self.declare_unready("resolution_y")
         self.resource_limits = OWSResourceManagementRules(
@@ -956,11 +956,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if "native_crs" in cfg:
             if not self.cfg_native_crs:
                 _LOG.warning(
-                    "Specifying native_crs in wcs section of layer %s is now deprecated, pleas move to "
+                    "Specifying native_crs in wcs section of layer %s is now deprecated, please move to "
                     "main layer section if required",
                     self.name,
                 )
-                self.cfg_native_crs = cfg["native_crs"]
+                self.cfg_native_crs = cast(str, cfg["native_crs"])
             else:
                 _LOG.warning(
                     "native_crs in wcs section of layer %s ignored in favour of value in "
