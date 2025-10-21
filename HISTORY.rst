@@ -7,6 +7,33 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.5 (2025-08-08)
+------------------
+
+## What's Changed
+
+Significant changes include:
+
+- Bug fix to CRS handling.  We still prefer upper case CRSs in config, but can now
+  handle lower case CRSs in ODC metadata.  A more major overhaul of OWS's CRS handling is still needed.
+- Update to latest version of datacube core.
+- HTTP requests (e.g. for forwarded logo images) are now retried on failure.
+
+All included updates:
+
+* Manual dependency updates by @pjonsson (#1272, #1284, #1297,  #1313,
+* Auto-dependency updates (#1262-#1264, #1268-#1271, #1275-#1278, #1280-#1281, #1283, #1286-#1291, #1293-#1296,
+  #1300-#1306, #1309-#1311, #1314-#1315, #1317-#1318)
+* Improvements to CA actions by @pjonsson (#1265, #1273, #1312)
+* Misc code cleanup by @pjonsson (#1261, #1299)
+* Improvements to default docker behaviour (#1274, #1279)
+* Retry HTTP requests (e.g. for forwarded images) by @pjonsson in #1266
+* Wrap to_netcdf in bytes() for latest xarray versions by @pjonsson in #1285
+* Normalise native spec CRS by @Ariana-B in #1298
+* Update HISTORY.txt and default version number for release by @SpacemanPaul in #1319.
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.4...1.9.5
+
 1.9.4 (2025-08-08)
 ------------------
 
