@@ -57,7 +57,7 @@ def initialise_debugging(log: Logger | None = None) -> None:
         import pydevd_pycharm
 
         pydevd_pycharm.settrace(
-            "172.17.0.1", port=12321, stdoutToServer=True, stderrToServer=True
+            "172.17.0.1", port=12321, stdout_to_server=True, stderr_to_server=True
         )
         if log:
             log.info("PyCharm Debugging enabled")

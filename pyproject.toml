@@ -60,7 +60,7 @@ doc = [
 [project.optional-dependencies]
 dev = [
     "mypy",
-    "pydevd-pycharm~=243.26053.29",
+    "pydevd-pycharm~=252.26830.99",
     "pylint",
     "ruff",
     "types-python-dateutil",
