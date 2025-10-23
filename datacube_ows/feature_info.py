@@ -335,7 +335,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 "geometry": {
                     "type": "Point",
                     # This is supposed to be GeoJSON compatible, so should use 4326 lat/long coords here.
-                    "coordinates": geo_point.to_crs('epsg:4326').coords[0],  # type: ignore[dict-item]
+                    "coordinates": geo_point.to_crs("epsg:4326").coords[0],  # type: ignore[dict-item]
                 },
             }
         ],
