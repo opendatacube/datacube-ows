@@ -311,7 +311,7 @@ class DataStacker:
                 continue
             measurements = pbq.products[0].lookup_measurements(pbq.bands)
             fuse_func = pbq.fuse_func
-            if pbq.manual_merge:
+            if pbq.manual_merge and len(datasets) > 0:
                 qry_result = self.manual_data_stack(
                     datasets,
                     measurements,
