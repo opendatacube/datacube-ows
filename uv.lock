@@ -989,7 +989,8 @@ provides-extras = ["dev", "ops", "postgres", "setup", "test", "all"]
 
 [package.metadata.requires-dev]
 doc = [
-    { name = "sphinx" },
+    { name = "sphinx", marker = "python_full_version < '3.11'", specifier = ">=8.1.3" },
+    { name = "sphinx", marker = "python_full_version >= '3.11'", specifier = ">=8.2.3" },
     { name = "sphinx-click" },
 ]
 
