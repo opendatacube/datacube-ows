@@ -27,7 +27,8 @@ def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
     return dc.index._db._engine.connect()  # type: ignore[attr-defined]
 
 
-def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
+def run_sql(dc: Datacube, path: str, **params: str) -> bool:
+    driver_name = dc.index.environment.index_driver
     if (
         not importlib.resources.files("datacube_ows")
         .joinpath(f"sql/{driver_name}/{path}")

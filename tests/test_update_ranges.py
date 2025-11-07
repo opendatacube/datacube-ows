@@ -69,8 +69,9 @@ def test_update_ranges_misuse_cases(runner, role_name: str, layer_name: str) -> 
 
 
 def test_run_sql(minimal_dc) -> None:
-    assert not run_sql(minimal_dc, "postgres", "no_such_directory")
+    minimal_dc.index.environment.index_driver = "postgres"
+    assert not run_sql(minimal_dc, "no_such_directory")
 
-    assert not run_sql(minimal_dc, "postgres", "templates")
+    assert not run_sql(minimal_dc, "templates")
 
-    assert not run_sql(minimal_dc, "postgres", "ows_schema/grants/read_only")
+    assert not run_sql(minimal_dc, "ows_schema/grants/read_only")

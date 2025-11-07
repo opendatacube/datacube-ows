@@ -198,7 +198,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         )
 
     def _run_sql(self, dc: Datacube, path: str, **params: str) -> bool:
-        return run_sql(dc, self.name, path, **params)
+        return run_sql(dc, path, **params)
 
 
 pgisdriverlock = Lock()
