@@ -12,7 +12,7 @@ dependencies = [
     "affine",
     "antimeridian",
     "click",
-    "datacube[performance,s3]>=1.9.10",
+    "datacube[performance,s3]>=1.9.10,<1.10.0",
     "deepdiff",
     "flask",
     "fsspec",
