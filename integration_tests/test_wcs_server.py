@@ -1063,7 +1063,7 @@ def test_wcs20_getcoverage_geotiff(ows_server) -> None:
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST, "EPSG:4326"
     )
     output = wcs.getCoverage(
-        identifier=[layer.name],
+        identifier=layer.name,
         format="image/geotiff",
         subsets=subsets,
         subsettingcrs="EPSG:4326",
@@ -1086,7 +1086,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
     )
     with pytest.raises(ServiceException) as e:
         _ = wcs.getCoverage(
-            identifier=[layer.name],
+            identifier=layer.name,
             format="image/geotiff",
             subsets=subsets,
             subsettingcrs="EPSG:4326",
@@ -1095,7 +1095,7 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
     assert "too much data for a single request" in str(e.value)
     # Test default request
     with pytest.raises(ServiceException) as e:
-        _ = wcs.getCoverage(identifier=[layer.name], format="application/x-netcdf")
+        _ = wcs.getCoverage(identifier=layer.name, format="application/x-netcdf")
     assert "too much data for a single request" in str(e.value)
 
 
@@ -1113,7 +1113,7 @@ def test_wcs20_getcoverage_netcdf(ows_server) -> None:
     )
 
     output = wcs.getCoverage(
-        identifier=[layer.name],
+        identifier=layer.name,
         format="application/x-netcdf",
         subsets=subsets,
         subsettingcrs="EPSG:4326",
@@ -1140,7 +1140,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server) -> None:
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, "EPSG:4326"
     )
     output = wcs.getCoverage(
-        identifier=[layer.name],
+        identifier=layer.name,
         format="application/x-netcdf",
         # to select the subset, find one valid coordination and replace the
         # number and keep the .3 and .4
@@ -1172,7 +1172,7 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server) -> None:
     )
     try:
         _ = wcs.getCoverage(
-            identifier=[contents[0]],
+            identifier=contents[0],
             format="image/geotiff",
             subsets=subsets,
             subsettingcrs="EPSG:4326",
@@ -1201,7 +1201,7 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server) -> None:
         if len(subsets[2]) < 2:
             continue
         resp = wcs.getCoverage(
-            identifier=[layer.name],
+            identifier=layer.name,
             format="application/x-netcdf",
             subsets=subsets,
             subsettingcrs="EPSG:4326",
