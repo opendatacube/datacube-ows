@@ -23,7 +23,7 @@ from datacube_ows.index.api import (
     LayerSignature,
     OWSAbstractIndex,
     OWSAbstractIndexDriver,
-    TimeSearchTerm,
+    TimeSearchTerm, InsufficientDbPrivileges, check_perms,
 )
 from datacube_ows.index.sql import run_sql
 from datacube_ows.ows_configuration import OWSNamedLayer
@@ -54,19 +54,33 @@ class OWSPostgisIndex(OWSAbstractIndex):
             pass
         return db_ok
 
+    @override
+    def _check_perms(self, dc: Datacube, group: str) -> None:
+        assert group in ("user", "manage", "admin")
+        try:
+            with dc.index._db._give_me_a_connection() as conn:  # type: ignore[attr-defined]
+                conn.execute(
+                    text(f"set role odc_{group}")
+                )
+        except Exception:
+            raise InsufficientDbPrivileges(f"db user {dc.index.environment.db_user} does not have odc_{group} privileges")
+        return
+
     # method to delete obsolete schemas etc.
     @override
+    @check_perms("admin")
     def cleanup_schema(self, dc: Datacube) -> None:
         # No obsolete schema for postgis databases to clean up.
         pass
 
     # Schema creation method
     @override
+    @check_perms("admin")
     def create_schema(self, dc: Datacube) -> None:
         click.echo("Creating/updating schema and tables...")
         self._run_sql(dc, "ows_schema/create")
 
-    # Permission management method
+    # Permission management method TO BE REMOVED
     @override
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
         if read_only:
@@ -76,17 +90,20 @@ class OWSPostgisIndex(OWSAbstractIndex):
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
+    @check_perms("manage")
     def update_geotemporal_index(self, dc: Datacube) -> None:
         # Native ODC geotemporal index used in postgis driver.
         pass
 
     @override
+    @check_perms("manage")
     def create_range_entry(
         self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
     ) -> None:
         create_range_entry_impl(layer, cache)
 
     @override
+    @check_perms("user")
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
         return get_ranges_impl(layer)
 
@@ -146,6 +163,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         return query
 
     @override
+    @check_perms("user")
     def ds_search(
         self,
         layer: OWSNamedLayer,
@@ -158,6 +176,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def dsid_search(
         self,
         layer: OWSNamedLayer,
@@ -171,6 +190,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
             yield ds.id  # type: ignore[attr-defined]
 
     @override
+    @check_perms("user")
     def count(
         self,
         layer: OWSNamedLayer,
@@ -183,6 +203,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def extent(
         self,
         layer: OWSNamedLayer,

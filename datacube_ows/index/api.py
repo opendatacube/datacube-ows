@@ -8,7 +8,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import NamedTuple, TypeAlias
+from typing import NamedTuple, TypeAlias, Callable
 from uuid import UUID
 
 from datacube import Datacube
@@ -25,6 +25,10 @@ if TYPE_CHECKING:
 
 
 class AbortRun(Exception):
+    pass
+
+
+class InsufficientDbPrivileges(AbortRun):
     pass
 
 
@@ -75,37 +79,41 @@ class LayerExtent:
 class OWSAbstractIndex(ABC):
     name: str = ""
 
-    # method to check database access (for ping op)
+    # method to check if we are in a user group
+    @abstractmethod
+    def _check_perms(self, dc: Datacube, group: str) -> None: ...
+
+    # method to check database access (for ping op) (requires odc "user" perms)
     @abstractmethod
     def check_db_access(self, dc: Datacube) -> bool: ...
 
-    # method to delete obsolete schemas etc.
+    # method to delete obsolete schemas etc. (requires odc "admin" perms)
     @abstractmethod
     def cleanup_schema(self, dc: Datacube): ...
 
-    # Schema creation method
+    # Schema creation method (requires odc "admin" perms)
     @abstractmethod
     def create_schema(self, dc: Datacube): ...
 
-    # Permission management method
+    # Permission management method (TO BE REMOVED!)
     @abstractmethod
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False): ...
 
-    # Spatiotemporal index update method (e.g. refresh materialised views)
+    # Spatiotemporal index update method (e.g. refresh materialised views) (requires odc "manage" perms)
     @abstractmethod
     def update_geotemporal_index(self, dc: Datacube): ...
 
-    # Range table update method
+    # Range table update method (requires odc "manage" perms)
     @abstractmethod
     def create_range_entry(
         self, layer: "OWSNamedLayer", cache: dict[LayerSignature, list[str]]
     ) -> None: ...
 
-    # Range table read method
+    # Range table read method (requires odc "user" perms)
     @abstractmethod
     def get_ranges(self, layer: "OWSNamedLayer") -> LayerExtent | None: ...
 
-    # Spatiotemporal search methods
+    # Spatiotemporal search methods (requires odc "user" perms)
     @abstractmethod
     def ds_search(
         self,
@@ -216,3 +224,12 @@ def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
             "not (yet) supported by OWS."
         )
     return ows_index_driver.ows_index()
+
+
+def check_perms (group: str) -> Callable[[Callable], Callable]:
+    def outer(f: Callable) -> Callable:
+        def inner(instance, dc: Datacube, *args, **kwargs) -> None:
+            instance._check_perms(dc, group)
+            f(instance, dc, *args, **kwargs)
+        return inner
+    return outer

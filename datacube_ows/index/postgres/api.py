@@ -17,6 +17,8 @@ from sqlalchemy import text
 from typing_extensions import override
 
 from datacube_ows.index.api import (
+    check_perms,
+    InsufficientDbPrivileges,
     LayerExtent,
     LayerSignature,
     OWSAbstractIndex,
@@ -52,13 +54,28 @@ class OWSPostgresIndex(OWSAbstractIndex):
             pass
         return db_ok
 
+    @override
+    def _check_perms(self, dc: Datacube, group: str) -> None:
+        assert group in ("user", "manage", "admin")
+        try:
+            with dc.index._db._give_me_a_connection() as conn:  # type: ignore[attr-defined]
+                conn.execute(
+                    text(f"set role agdc_{group}")
+                )
+        except Exception:
+            raise InsufficientDbPrivileges(f"db user {dc.index.environment.db_user} does not have agdc_{group} privileges")
+        return
+
+
     # method to delete obsolete schemas etc.
     @override
+    @check_perms("admin")
     def cleanup_schema(self, dc: Datacube) -> None:
         self._run_sql(dc, "ows_schema/cleanup")
 
     # Schema creation method
     @override
+    @check_perms("admin")
     def create_schema(self, dc: Datacube) -> None:
         click.echo("Creating/updating schema and tables...")
         self._run_sql(dc, "ows_schema/create")
@@ -67,7 +84,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         click.echo("Setting ownership of materialised views...")
         self._run_sql(dc, "extent_views/grants/refresh_owner")
 
-    # Permission management method
+    # Permission management method TO BE REOMVED
     @override
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
         if read_only:
@@ -79,20 +96,24 @@ class OWSPostgresIndex(OWSAbstractIndex):
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
+    @check_perms("manage")
     def update_geotemporal_index(self, dc: Datacube) -> None:
         self._run_sql(dc, "extent_views/refresh")
 
     @override
+    @check_perms("manage")
     def create_range_entry(
         self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
     ) -> None:
         create_range_entry_impl(layer, cache)
 
     @override
+    @check_perms("user")
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
         return get_ranges_impl(layer)
 
     @override
+    @check_perms("user")
     def ds_search(
         self,
         layer: OWSNamedLayer,
@@ -112,6 +133,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def dsid_search(
         self,
         layer: OWSNamedLayer,
@@ -131,6 +153,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def count(
         self,
         layer: OWSNamedLayer,
@@ -150,6 +173,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def extent(
         self,
         layer: OWSNamedLayer,
