@@ -35,12 +35,14 @@ from datacube_ows.startup_utils import initialise_debugging
 @click.option(
     "--read-role",
     multiple=True,
-    help="(Only valid with --schema) Role(s) to grant read-only database permissions to",
+    deprecated=True,
+    help="No longer supported - use `datacube user` commands instead.",
 )
 @click.option(
     "--write-role",
     multiple=True,
-    help="(Only valid with --schema) Role(s) to grant both read and write/update database permissions to",
+    deprecated=True,
+    help="No longer supported - use `datacube user` commands instead.",
 )
 @click.option(
     "--cleanup",
@@ -52,7 +54,7 @@ from datacube_ows.startup_utils import initialise_debugging
     "-E",
     "--env",
     default=None,
-    help="(Only valid with --schema or --read-role or --write-role or --cleanup) environment to write to.",
+    help="(Only valid with --schema --cleanup) environment to write to.",
 )
 @click.option(
     "--version", is_flag=True, default=False, help="Print version string and exit"
@@ -150,11 +152,15 @@ def main(
             "Sorry, cannot update the materialised views and ranges in the same invocation."
         )
         sys.exit(1)
-    elif read_role and (views or layers):
-        click.echo("Sorry, read-role can't be granted with view or range updates")
+    elif read_role:
+        click.echo("--read-role is no longer supported. "
+                   "Use `datacube user` commands for OWS user management. "
+                   "read-only users should be created with the ODC 'user' role.")
         sys.exit(1)
-    elif write_role and (views or layers):
-        click.echo("Sorry, write-role can't be granted with view or range updates")
+    elif write_role:
+        click.echo("--write-role is no longer supported. "
+                   "Use `datacube user` commands for OWS user management. "
+                   "write-enabled users should be created with the ODC 'manage' role.")
         sys.exit(1)
 
     initialise_debugging()
@@ -179,12 +185,6 @@ def main(
             if schema:
                 click.echo("Creating or replacing OWS database schema:...")
                 ows_index(dc).create_schema(dc)
-            for role in read_role:
-                click.echo(f"Granting read-only access to role {role}...")
-                ows_index(dc).grant_perms(dc, role, read_only=True)
-            for role in write_role:
-                click.echo(f"Granting read/write access to role {role}...")
-                ows_index(dc).grant_perms(dc, role)
             if views:
                 click.echo("Updating materialised views...")
                 ows_index(dc).update_geotemporal_index(dc)

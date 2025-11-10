@@ -87,11 +87,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
         click.echo("Granting tables permissions to odc roles...")
         self._run_sql(dc, "ows_schema/grants/")
 
-    # Permission management method TO BE REMOVED
-    @override
-    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
-        raise NotImplementedError()
-
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
     @check_perms("manage")

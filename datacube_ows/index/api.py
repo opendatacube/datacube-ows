@@ -95,10 +95,6 @@ class OWSAbstractIndex(ABC):
     @abstractmethod
     def create_schema(self, dc: Datacube): ...
 
-    # Permission management method (TO BE REMOVED!)
-    @abstractmethod
-    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False): ...
-
     # Spatiotemporal index update method (e.g. refresh materialised views) (requires odc "manage" perms)
     @abstractmethod
     def update_geotemporal_index(self, dc: Datacube): ...

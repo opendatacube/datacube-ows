@@ -91,11 +91,6 @@ class OWSPostgresIndex(OWSAbstractIndex):
         click.echo("Granting views permissions to agdc roles.")
         self._run_sql(dc, "extent_views/grants")
 
-    # Permission management method TO BE REOMVED
-    @override
-    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
-        raise NotImplementedError()
-
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
     @check_perms("manage")
