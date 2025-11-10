@@ -18,6 +18,7 @@ from typing_extensions import override
 
 from datacube_ows.index.api import (
     check_perms,
+    AbortRun,
     InsufficientDbPrivileges,
     LayerExtent,
     LayerSignature,
@@ -58,12 +59,12 @@ class OWSPostgresIndex(OWSAbstractIndex):
     def _check_perms(self, dc: Datacube, group: str) -> None:
         assert group in ("user", "manage", "admin")
         try:
-            with dc.index._db._give_me_a_connection() as conn:  # type: ignore[attr-defined]
+            with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
                 conn.execute(
                     text(f"set role agdc_{group}")
                 )
-        except Exception:
-            raise InsufficientDbPrivileges(f"db user {dc.index.environment.db_user} does not have agdc_{group} privileges")
+        except Exception as e:
+            raise InsufficientDbPrivileges(f"db user {dc.index.environment.db_username} does not have agdc_{group} privileges: {e}")
         return
 
 
@@ -77,22 +78,23 @@ class OWSPostgresIndex(OWSAbstractIndex):
     @override
     @check_perms("admin")
     def create_schema(self, dc: Datacube) -> None:
-        click.echo("Creating/updating schema and tables...")
+        click.echo("Creating schema and postgis extension...")
+        if not self._run_sql(dc, "ows_schema/bootstrap"):
+            raise AbortRun("Could not bootstrap schema: "
+                           "try using an ODC environment that connects as a database superuser")
+        click.echo("Creating/updating tables...")
         self._run_sql(dc, "ows_schema/create")
         click.echo("Creating/updating materialised views...")
         self._run_sql(dc, "extent_views/create")
-        click.echo("Setting ownership of materialised views...")
-        self._run_sql(dc, "extent_views/grants/refresh_owner")
+        click.echo("Granting tables permissions to agdc roles.")
+        self._run_sql(dc, "ows_schema/grants")
+        click.echo("Granting views permissions to agdc roles.")
+        self._run_sql(dc, "extent_views/grants")
 
     # Permission management method TO BE REOMVED
     @override
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
-        if read_only:
-            self._run_sql(dc, "ows_schema/grants/read_only", role=role)
-            self._run_sql(dc, "extent_views/grants/read_only", role=role)
-        else:
-            self._run_sql(dc, "ows_schema/grants/read_write", role=role)
-            self._run_sql(dc, "extent_views/grants/write_refresh", role=role)
+        raise NotImplementedError()
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override

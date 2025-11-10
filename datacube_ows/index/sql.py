@@ -14,6 +14,7 @@ import sqlalchemy
 from datacube import Datacube
 
 from datacube_ows.index import AbortRun
+from datacube_ows.index.api import InsufficientDbPrivileges
 
 
 def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
@@ -28,32 +29,34 @@ def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
 
 
 def run_sql(dc: Datacube, path: str, **params: str) -> bool:
-    driver_name = dc.index.environment.index_driver
-    if (
-        not importlib.resources.files("datacube_ows")
-        .joinpath(f"sql/{driver_name}/{path}")
-        .is_dir()
-    ):
+    driver_names = {
+        "pg_index": "postgres",
+        "pgis_index": "postgis",
+    }
+    driver_name = driver_names[dc.index.name]
+    print(f"path in is {path}")
+    full_path = importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}")
+    if (not full_path.is_dir()):
         print(
-            "Cannot find SQL resource directory - check your datacube-ows installation"
+            f"Cannot find SQL resource directory {full_path} - check your datacube-ows installation"
         )
         return False
 
     files = sorted(
-        importlib.resources.files("datacube_ows")
-        .joinpath(f"sql/{driver_name}/{path}")
-        .iterdir()  # type: ignore[type-var]
+        full_path.iterdir()  # type: ignore[type-var]
     )
 
+    # N.B. We aren't actually using this "required parameters" feature at
+    #      the moment.
     filename_req_pattern = re.compile(
         r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql"
     )
     filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
-    conn = get_sqlconn(dc)
-    try:
+    with get_sqlconn(dc) as conn:
         all_ok: bool = True
         for fi in files:
             fname = fi.name
+            isolated = fname.endswith("_isolated.sql")
             match = filename_pattern.fullmatch(fname)
             if not match:
                 click.echo(f"Illegal SQL filename: {fname} (skipping)")
@@ -63,7 +66,7 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
             reqs = req_match.group("reqs").split("_") if req_match else []
             if reqs:
                 try:
-                    kwargs = {v: params[v] for v in reqs}
+                    kwargs = {v: params[v] for v in reqs if v != "isolated"}
                 except KeyError as e:
                     click.echo(
                         f"Required parameter {e} for file {fname} not supplied - skipping"
@@ -75,11 +78,14 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
             sql = read_file(driver_name, path, fname, **kwargs)
             if reqs:
                 sql = sql.format(**kwargs)
-            run_sql_statement(sql, fname, conn, dc.index.environment)
+            if isolated:
+                conn.commit()
+                with get_sqlconn(dc).execution_options(isolation_level="AUTOCOMMIT") as iso_conn:
+                    run_sql_statement(sql, fname, iso_conn, dc.index.environment)
+            else:
+                run_sql_statement(sql, fname, conn, dc.index.environment)
 
         return all_ok
-    finally:
-        conn.close()
 
 
 def read_file(driver_name: str, path: str, fname: str, **kwargs: str) -> str:
@@ -111,14 +117,17 @@ def run_sql_statement(
 
     except sqlalchemy.exc.ProgrammingError as e:
         if isinstance(e.orig, psycopg2.errors.InsufficientPrivilege):
+            click.echo(f"Permissions error in: {sql}: {e}")
             click.echo(
                 f"Insufficient Privileges (user {env.db_username}). Schema altering actions should be run by a role with admin privileges"
             )
-            raise AbortRun() from None
+            raise InsufficientDbPrivileges() from None
         if isinstance(e.orig, psycopg2.errors.DuplicateObject):
             if fname.endswith("_ignore_duplicates.sql"):
                 click.echo("Ignoring 'already exists' error")
             else:
+                click.echo(f"!! {e}")
                 raise e from None
         else:
+            click.echo(f"!! {e}")
             raise e from e

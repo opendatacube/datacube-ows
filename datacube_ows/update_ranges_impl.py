@@ -191,8 +191,8 @@ def main(
             if cleanup:
                 click.echo("Cleaning up datacube-1.8.x range tables and views...")
                 ows_index(dc).cleanup_schema(dc)
-        except AbortRun:
-            click.echo("Aborting schema update")
+        except AbortRun as e:
+            click.echo(f"Aborting schema update: {e}")
             errors = True
         click.echo("Done")
         if errors:

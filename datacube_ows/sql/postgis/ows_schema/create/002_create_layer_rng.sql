@@ -1,4 +1,4 @@
--- Creating/replacing product ranges table
+-- Creating/replacing layer ranges table
 
 create table if not exists ows.layer_ranges (
     layer varchar(255) not null primary key,

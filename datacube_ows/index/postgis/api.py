@@ -19,6 +19,7 @@ from sqlalchemy import text
 from typing_extensions import override
 
 from datacube_ows.index.api import (
+    AbortRun,
     LayerExtent,
     LayerSignature,
     OWSAbstractIndex,
@@ -77,16 +78,19 @@ class OWSPostgisIndex(OWSAbstractIndex):
     @override
     @check_perms("admin")
     def create_schema(self, dc: Datacube) -> None:
-        click.echo("Creating/updating schema and tables...")
+        click.echo("Creating schema...")
+        if not self._run_sql(dc, "ows_schema/bootstrap"):
+            raise AbortRun("Could not bootstrap schema: "
+                           "try using an ODC environment that connects as a database superuser.")
+        click.echo("Creating/updating tables...")
         self._run_sql(dc, "ows_schema/create")
+        click.echo("Granting tables permissions to odc roles...")
+        self._run_sql(dc, "ows_schema/grants/")
 
     # Permission management method TO BE REMOVED
     @override
     def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
-        if read_only:
-            self._run_sql(dc, "ows_schema/grants/read_only", role=role)
-        else:
-            self._run_sql(dc, "ows_schema/grants/read_write", role=role)
+        raise NotImplementedError()
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
