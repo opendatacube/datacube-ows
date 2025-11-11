@@ -39,12 +39,12 @@ def test_update_ranges_misuse_cases(runner, role_name: str, layer_name: str) -> 
     assert "Sorry" in result.output
     assert result.exit_code == 1, f"Output: {result.output}"
 
-    result = runner.invoke(main, ["--read-role", role_name, layer_name])
-    assert "Sorry" in result.output
+    result = runner.invoke(main, ["--read-role", role_name])
+    assert "Use `datacube user`" in result.output
     assert result.exit_code == 1, f"Output: {result.output}"
 
-    result = runner.invoke(main, ["--write-role", role_name, layer_name])
-    assert "Sorry" in result.output
+    result = runner.invoke(main, ["--write-role", role_name])
+    assert "Use `datacube user`" in result.output
     assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--views", "--cleanup"])
@@ -56,14 +56,6 @@ def test_update_ranges_misuse_cases(runner, role_name: str, layer_name: str) -> 
     assert result.exit_code == 1, f"Output: {result.output}"
 
     result = runner.invoke(main, ["--views", "--schema"])
-    assert "Sorry" in result.output
-    assert result.exit_code == 1, f"Output: {result.output}"
-
-    result = runner.invoke(main, ["--views", "--read-role", role_name])
-    assert "Sorry" in result.output
-    assert result.exit_code == 1, f"Output: {result.output}"
-
-    result = runner.invoke(main, ["--views", "--write-role", role_name])
     assert "Sorry" in result.output
     assert result.exit_code == 1, f"Output: {result.output}"
 

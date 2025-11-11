@@ -8,7 +8,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import NamedTuple, TypeAlias, Callable
+from typing import Any, NamedTuple, TypeAlias, Callable
 from uuid import UUID
 
 from datacube import Datacube
@@ -224,8 +224,8 @@ def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
 
 def check_perms (group: str) -> Callable[[Callable], Callable]:
     def outer(f: Callable) -> Callable:
-        def inner(instance, dc: Datacube, *args, **kwargs) -> None:
+        def inner(instance, dc: Datacube, *args, **kwargs) -> Any:
             instance._check_perms(dc, group)
-            f(instance, dc, *args, **kwargs)
+            return f(instance, dc, *args, **kwargs)
         return inner
     return outer

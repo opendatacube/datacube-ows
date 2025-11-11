@@ -164,12 +164,15 @@ def test_make_ready_catch_errors(minimal_global_cfg, minimal_dc) -> None:
 
 
 def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range) -> None:
+    from datacube_ows.index.postgres.api import OWSPostgresIndex
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready()
+    with patch.object(OWSPostgresIndex, "_check_perms", return_value=None) as check_perms:
+        check_perms.return_value = None
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready()
     assert lyr.ready
     assert not lyr.hide
     assert lyr.default_time == mock_range.times[-1]
@@ -327,12 +330,14 @@ def test_noprod_multiproduct(
 def test_minimal_multiproduct(
     minimal_multiprod_cfg, minimal_global_cfg, minimal_dc, mock_range
 ) -> None:
+    from datacube_ows.index.postgres.api import OWSPostgresIndex
     lyr = parse_ows_layer(minimal_multiprod_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+    with patch.object(OWSPostgresIndex, "_check_perms", return_value=None) as check_perms:
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
     assert "a_layer" in str(lyr)
@@ -668,13 +673,15 @@ def test_time_axis_errors(minimal_layer_cfg, minimal_global_cfg) -> None:
 def test_earliest_default_time(
     minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range
 ) -> None:
+    from datacube_ows.index.postgres.api import OWSPostgresIndex
     minimal_layer_cfg["default_time"] = "earliest"
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+    with patch.object(OWSPostgresIndex, "_check_perms", return_value=None) as check_perms:
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
     assert lyr.default_time == mock_range.times[0]
@@ -685,13 +692,15 @@ def test_earliest_default_time(
 def test_latest_default_time(
     minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range
 ) -> None:
+    from datacube_ows.index.postgres.api import OWSPostgresIndex
     minimal_layer_cfg["default_time"] = "latest"
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+    with patch.object(OWSPostgresIndex, "_check_perms", return_value=None) as check_perms:
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
     assert lyr.default_time == mock_range.times[-1]
@@ -702,13 +711,15 @@ def test_latest_default_time(
 def test_valid_default_time(
     minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range
 ) -> None:
+    from datacube_ows.index.postgres.api import OWSPostgresIndex
     minimal_layer_cfg["default_time"] = "2010-01-02"
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+    with patch.object(OWSPostgresIndex, "_check_perms", return_value=None) as check_perms:
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
     assert lyr.default_time == datetime.date(2010, 1, 2)
@@ -719,13 +730,15 @@ def test_valid_default_time(
 def test_missing_default_time(
     minimal_layer_cfg, minimal_global_cfg, minimal_dc, mock_range
 ) -> None:
+    from datacube_ows.index.postgres.api import OWSPostgresIndex
     minimal_layer_cfg["default_time"] = "2020-01-22"
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+    with patch.object(OWSPostgresIndex, "_check_perms", return_value=None) as check_perms:
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready(minimal_dc)
     assert lyr.ready
     assert not lyr.hide
     assert lyr.default_time == mock_range.times[-1]
@@ -853,13 +866,15 @@ def test_no_native_resolution_badlen(
 def test_native_resolution_mismatch(
     minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
 ) -> None:
+    from datacube_ows.index.postgres.api import OWSPostgresIndex
     minimal_layer_cfg["native_crs"] = "EPSG:4326"
     minimal_layer_cfg["native_resolution"] = [0.1, -0.1]
     minimal_layer_cfg["product_name"] = "foo_nativeres"
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready(minimal_dc)
+    with patch.object(OWSPostgresIndex, "_check_perms", return_value=None) as check_perms:
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready(minimal_dc)
     assert not lyr.hide
     assert lyr.ready
     assert math.isclose(lyr.resolution_x, 0.001, rel_tol=1e-8)

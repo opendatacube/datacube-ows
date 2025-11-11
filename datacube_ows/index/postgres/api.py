@@ -107,7 +107,8 @@ class OWSPostgresIndex(OWSAbstractIndex):
     @override
     @check_perms("user")
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
-        return get_ranges_impl(layer)
+        ranges = get_ranges_impl(layer)
+        return ranges
 
     @override
     @check_perms("user")
