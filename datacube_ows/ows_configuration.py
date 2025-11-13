@@ -63,7 +63,7 @@ from datacube_ows.utils import group_by_begin_datetime, group_by_mosaic, group_b
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from datacube_ows.product_ranges import LayerExtent
+    from datacube_ows.index.api import LayerExtent
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -216,8 +216,10 @@ class BandIndex(OWSMetadataConfig):
                 return b
         raise ConfigException(f"Unknown band: {name_alias} in layer {self.layer_name}")
 
-    def band_label(self, name_alias: str) -> str:
+    def band_label(self, name_alias: str, canonical=False) -> str:
         canonical_name = self.band(name_alias)
+        if canonical:
+            return canonical_name
         return cast(str, self.read_local_metadata(canonical_name))
 
     def nodata_val(self, name_alias: str) -> float | int:
@@ -231,8 +233,8 @@ class BandIndex(OWSMetadataConfig):
     def dtype_size(self, name_alias: str) -> int:
         return self.dtype_val(name_alias).itemsize
 
-    def band_labels(self) -> list[str]:
-        return [self.band_label(b) for b in self.band_cfg]
+    def band_labels(self, canonical=False) -> list[str]:
+        return [self.band_label(b, canonical=canonical) for b in self.band_cfg]
 
     def band_nodata_vals(self) -> list[int | float]:
         return [self.nodata_val(b) for b in self.band_cfg if b in self.band_cfg]

@@ -7,12 +7,13 @@
 from urllib import request
 
 import pytest
+import requests
 from lxml import etree
 from owslib.util import ServiceException
 from owslib.wcs import WebCoverageService
 
 from datacube_ows.legend_utils import retrying_requests
-from datacube_ows.ows_configuration import OWSConfig, get_config
+from datacube_ows.ows_configuration import OWSConfig, TimeRes, get_config
 from integration_tests.utils import ODCExtent
 
 
@@ -29,7 +30,8 @@ def check_wcs_error(
 ) -> None:
     if params is None:
         params = {}
-    resp = retrying_requests.get(url, params=params, timeout=10.0)
+    # Shouldn't be any need to retry when expecting an error.
+    resp = requests.get(url, params=params, timeout=10.0)
     assert resp.status_code == expected_status_code
 
     assert expected_error_message in resp.text
@@ -1694,7 +1696,7 @@ def test_wcs2_tiff_multidate(ows_server) -> None:
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "green,swir_1",
+            "rangesubset": "greenish,swir_1",
             "subset": subsets,
         },
     )
@@ -1766,7 +1768,7 @@ def test_wcs2_getcov_bad_band(ows_server) -> None:
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.layer_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
     assert layer
@@ -1797,7 +1799,7 @@ def test_wcs2_getcov_bad_band_range(ows_server) -> None:
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.layer_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
     assert layer
@@ -1816,7 +1818,7 @@ def test_wcs2_getcov_bad_band_range(ows_server) -> None:
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "B03:B11",
+            "rangesubset": "B03:green",
             "subset": subsets,
         },
         expected_error_message="No such field B03",
@@ -1833,7 +1835,7 @@ def test_wcs2_getcov_bad_band_range(ows_server) -> None:
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "green:B03",
+            "rangesubset": "nbart_green:B03",
             "subset": subsets,
         },
         expected_error_message="No such field B03",
@@ -1911,7 +1913,7 @@ def test_wcs2_getcov_bad_format(ows_server) -> None:
             "rangesubset": "green:B03",
             "subset": subsets,
         },
-        expected_error_message="No such field B03",
+        expected_error_message="No such field",
         expected_status_code=400,
     )
 

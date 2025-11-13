@@ -196,28 +196,38 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     # Rangesubset
     #
 
-    band_labels = layer.band_idx.band_labels()
+    band_labels = layer.band_idx.band_labels(canonical=True)
+    trans_band_labels = layer.band_idx.band_labels()
     if request.range_subset:
         bands = []
         for range_subset in request.range_subset:
             if isinstance(range_subset, str):
-                if range_subset not in band_labels:
+                if range_subset in band_labels:
+                    bands.append(range_subset)
+                elif range_subset in trans_band_labels:
+                    bands.append(band_labels[trans_band_labels.index(range_subset)])
+                else:
                     raise WCS2Exception(
                         f"No such field {range_subset}",
                         WCS2Exception.NO_SUCH_FIELD,
                         locator=range_subset,
                         valid_keys=band_labels,
                     )
-                bands.append(range_subset)
             else:
-                if range_subset.start not in band_labels:
+                if (
+                    range_subset.start not in band_labels
+                    and range_subset.start not in trans_band_labels
+                ):
                     raise WCS2Exception(
                         f"No such field {range_subset.start}",
                         WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
                         locator=range_subset.start,
                         valid_keys=band_labels,
                     )
-                if range_subset.end not in band_labels:
+                if (
+                    range_subset.end not in band_labels
+                    and range_subset.end not in trans_band_labels
+                ):
                     raise WCS2Exception(
                         f"No such field {range_subset.end}",
                         WCS2Exception.ILLEGAL_FIELD_SEQUENCE,
@@ -225,8 +235,14 @@ def get_coverage_data(request, styles, qprof) -> tuple:
                         valid_keys=band_labels,
                     )
 
-                start = band_labels.index(range_subset.start)
-                end = band_labels.index(range_subset.end)
+                if range_subset.start in band_labels:
+                    start = band_labels.index(range_subset.start)
+                else:
+                    start = trans_band_labels.index(range_subset.start)
+                if range_subset.end in band_labels:
+                    end = band_labels.index(range_subset.end)
+                else:
+                    end = trans_band_labels.index(range_subset.end)
                 bands.extend(
                     band_labels[start : (end + 1) if end > start else (end - 1)]
                 )
