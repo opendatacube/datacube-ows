@@ -13,7 +13,6 @@ import psycopg2
 import sqlalchemy
 from datacube import Datacube
 
-from datacube_ows.index import AbortRun
 from datacube_ows.index.api import InsufficientDbPrivileges
 
 
@@ -35,8 +34,10 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
     }
     driver_name = driver_names[dc.index.name]
     print(f"path in is {path}")
-    full_path = importlib.resources.files("datacube_ows").joinpath(f"sql/{driver_name}/{path}")
-    if (not full_path.is_dir()):
+    full_path = importlib.resources.files("datacube_ows").joinpath(
+        f"sql/{driver_name}/{path}"
+    )
+    if not full_path.is_dir():
         print(
             f"Cannot find SQL resource directory {full_path} - check your datacube-ows installation"
         )
@@ -80,7 +81,9 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
                 sql = sql.format(**kwargs)
             if isolated:
                 conn.commit()
-                with get_sqlconn(dc).execution_options(isolation_level="AUTOCOMMIT") as iso_conn:
+                with get_sqlconn(dc).execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as iso_conn:
                     run_sql_statement(sql, fname, iso_conn, dc.index.environment)
             else:
                 run_sql_statement(sql, fname, conn, dc.index.environment)

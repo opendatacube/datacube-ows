@@ -20,11 +20,13 @@ from typing_extensions import override
 
 from datacube_ows.index.api import (
     AbortRun,
+    InsufficientDbPrivileges,
     LayerExtent,
     LayerSignature,
     OWSAbstractIndex,
     OWSAbstractIndexDriver,
-    TimeSearchTerm, InsufficientDbPrivileges, check_perms,
+    TimeSearchTerm,
+    check_perms,
 )
 from datacube_ows.index.sql import run_sql
 from datacube_ows.ows_configuration import OWSNamedLayer
@@ -60,11 +62,11 @@ class OWSPostgisIndex(OWSAbstractIndex):
         assert group in ("user", "manage", "admin")
         try:
             with dc.index._db._give_me_a_connection() as conn:  # type: ignore[attr-defined]
-                conn.execute(
-                    text(f"set role odc_{group}")
-                )
+                conn.execute(text(f"set role odc_{group}"))
         except Exception:
-            raise InsufficientDbPrivileges(f"db user {dc.index.environment.db_user} does not have odc_{group} privileges")
+            raise InsufficientDbPrivileges(
+                f"db user {dc.index.environment.db_user} does not have odc_{group} privileges"
+            ) from None
         return
 
     # method to delete obsolete schemas etc.
@@ -80,8 +82,10 @@ class OWSPostgisIndex(OWSAbstractIndex):
     def create_schema(self, dc: Datacube) -> None:
         click.echo("Creating schema...")
         if not self._run_sql(dc, "ows_schema/bootstrap"):
-            raise AbortRun("Could not bootstrap schema: "
-                           "try using an ODC environment that connects as a database superuser.")
+            raise AbortRun(
+                "Could not bootstrap schema: "
+                "try using an ODC environment that connects as a database superuser."
+            )
         click.echo("Creating/updating tables...")
         self._run_sql(dc, "ows_schema/create")
         click.echo("Granting tables permissions to odc roles...")

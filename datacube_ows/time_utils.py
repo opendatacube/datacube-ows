@@ -207,7 +207,7 @@ def rolling_window_ndays(
 ) -> tuple[datetime.datetime, datetime.datetime]:
     if ndays > len(available_dates):
         days = available_dates
-        idx = - len(available_dates)
+        idx = -len(available_dates)
     else:
         idx = -ndays
         days = available_dates[idx:]

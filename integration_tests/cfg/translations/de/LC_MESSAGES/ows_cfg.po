@@ -32,4 +32,3 @@ msgstr "Simple RGB"
 
 msgid "layer.s2_l2a.bands.B03"
 msgstr "gruen"
-

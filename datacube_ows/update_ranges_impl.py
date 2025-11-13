@@ -153,14 +153,18 @@ def main(
         )
         sys.exit(1)
     elif read_role:
-        click.echo("--read-role is no longer supported. "
-                   "Use `datacube user` commands for OWS user management. "
-                   "read-only users should be created with the ODC 'user' role.")
+        click.echo(
+            "--read-role is no longer supported. "
+            "Use `datacube user` commands for OWS user management. "
+            "read-only users should be created with the ODC 'user' role."
+        )
         sys.exit(1)
     elif write_role:
-        click.echo("--write-role is no longer supported. "
-                   "Use `datacube user` commands for OWS user management. "
-                   "write-enabled users should be created with the ODC 'manage' role.")
+        click.echo(
+            "--write-role is no longer supported. "
+            "Use `datacube user` commands for OWS user management. "
+            "write-enabled users should be created with the ODC 'manage' role."
+        )
         sys.exit(1)
 
     initialise_debugging()

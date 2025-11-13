@@ -10,7 +10,6 @@ from collections.abc import Callable
 from datetime import date, datetime, timezone
 from typing import cast
 
-import click
 import datacube
 import odc.geo
 import sqlalchemy.exc
