@@ -10,7 +10,8 @@ import os
 
 if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
     cfgbase = "integration_tests.cfg."
-    trans_dir = "."
+    # N.B. relative paths are evaluated inconsistently - use an absolute path instead!
+    trans_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 else:
     cfgbase = "config."
     trans_dir = "/src"
