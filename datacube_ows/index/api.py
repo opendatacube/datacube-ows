@@ -8,7 +8,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import Any, NamedTuple, TypeAlias, Callable
+from typing import Any, NamedTuple, TypeAlias, Callable, Union
 from uuid import UUID
 
 from datacube import Datacube
@@ -224,8 +224,15 @@ def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
 
 def check_perms (group: str) -> Callable[[Callable], Callable]:
     def outer(f: Callable) -> Callable:
-        def inner(instance, dc: Datacube, *args, **kwargs) -> Any:
+        def inner(instance, dcl: Union[Datacube, "OWSNamedLayer"], *args, **kwargs) -> Any:
+            from datacube_ows.ows_configuration import OWSNamedLayer
+            if isinstance(dcl, OWSNamedLayer):
+                dc = Datacube(env=dcl.local_env)
+            elif isinstance(dcl, Datacube):
+                dc = dcl
+            else:
+                raise TypeError("Expected Datacube or OWSNamedLayer")
             instance._check_perms(dc, group)
-            return f(instance, dc, *args, **kwargs)
+            return f(instance, dcl, *args, **kwargs)
         return inner
     return outer
