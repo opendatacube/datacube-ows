@@ -165,7 +165,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         geo_point_geobox = GeoBox.from_geopolygon(
             geo_point, params.geobox.resolution, crs=params.geobox.crs
         )
-    stacker = DataStacker(params.layer, geo_point_geobox, params.times)  # type: ignore[arg-type]
+    stacker = DataStacker(params.layer, geo_point_geobox, params.times)
     # --- Begin code section requiring datacube.
     cfg = get_config()
     all_time_datasets = stacker.datasets_all_time(point=geo_point_geobox.extent)
@@ -225,7 +225,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                         date_info["source_product"] = ds.product.name
 
                 # Extract data pixel
-                pixel_ds: xarray.Dataset = td.isel(**isel_kwargs)  # type: ignore[arg-type]
+                pixel_ds: xarray.Dataset = td.isel(**isel_kwargs)
 
                 # Get accurate timestamp from dataset
                 assert ds.time is not None  # For type checker

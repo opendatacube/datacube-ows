@@ -154,7 +154,7 @@ class DataStacker:
         self,
         layer: OWSNamedLayer,
         geobox: GeoBox,
-        times: list[datetime.datetime],
+        times: list[datetime.datetime | datetime.date],
         resampling: Resampling | None = None,
         style: StyleDef | None = None,
         bands: list[str] | None = None,

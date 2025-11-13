@@ -521,7 +521,7 @@ class TimeRes(Enum):
             return None
 
     def search_times(
-        self, t: datetime.datetime, geobox: GeoBox | None = None
+        self, t: datetime.datetime|datetime.date, geobox: GeoBox | None = None
     ) -> datetime.datetime | tuple[datetime.datetime, datetime.datetime]:
         if self.is_solar():
             if geobox is None:
@@ -535,12 +535,14 @@ class TimeRes(Enum):
             # For subday products, return a single start datetime instead of a range.
             # mv_index will expand this to a one-second search range.
             # This prevents users from having to always use the full ISO timestamp in queries.
+            assert isinstance(t, datetime.datetime)
             times = t
         else:
             # For summary products, return a single start date instead of a range.
             # mv_index will expand this to a one-day search range
             # This allows data with overlapping time periods to be resolved by start date.
-            times = t
+            assert isinstance(t, datetime.date)
+            times = datetime.datetime.combine(t, datetime.time(), datetime.timezone.utc)
 
         return times
 
@@ -1247,10 +1249,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return 1
 
     def search_times(
-        self, t: datetime.datetime, geobox=None
+        self, t: datetime.datetime | datetime.date, geobox=None
     ) -> datetime.datetime | tuple[datetime.datetime, datetime.datetime]:
         if not geobox:
-            bbox = self.ranges.bboxes[self.native_CRS]
+            bbox = cast(dict[str, float | int], self.ranges.bboxes[self.native_CRS])
             geobox = create_geobox(
                 CRS(self.native_CRS),
                 bbox["left"],

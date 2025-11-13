@@ -205,7 +205,7 @@ def parse_time_item(item: str, layer: OWSNamedLayer) -> datetime | date:
             times, with_tz=layer.time_resolution.is_subday()
         )
         if layer.time_resolution.is_subday():
-            matching_times: list[datetime] = [
+            matching_times: list[datetime | date] = [
                 t for t in layer.ranges.times if start <= t <= end
             ]
         else:
