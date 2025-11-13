@@ -41,6 +41,7 @@ def jsonise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
 def create_range_entry(
     layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
 ) -> None:
+    # Take layer signature
     meta = LayerSignature(
         time_res=layer.time_resolution.value,
         products=tuple(layer.product_names),
@@ -48,13 +49,11 @@ def create_range_entry(
         datasets=layer.dc.index.datasets.count(product=layer.product_names),
     )
 
-    click.echo(f"Postgres Updating range for layer {layer.name}")
-    click.echo(f"(signature: {meta.as_json()!r})")
     conn = get_sqlconn(layer.dc)
     txn = conn.begin()
     if meta in cache:
         template = cache[meta][0]
-        click.echo(f"Layer {template} has same signature - reusing")
+        # A layer has same signature - reuse range"
         cache[meta].append(layer.name)
         try:
             conn.execute(
