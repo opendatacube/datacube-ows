@@ -368,11 +368,11 @@ class ODCExtent:
         search_times = [self.layer.search_times(t) for t in ext_times]
         if space.needs_full_extent() and not self.full_extent:
             self.full_extent = self.layer.ows_index().extent(
-                layer=self.layer, products=self.layer.products
+                self.layer, products=self.layer.products
             )
         if space.needs_time_extent():
             time_extent = self.layer.ows_index().extent(
-                layer=self.layer, products=self.layer.products, times=search_times
+                self.layer, products=self.layer.products, times=search_times
             )
         else:
             time_extent = None
