@@ -30,9 +30,12 @@ def test_zero_grid(
     assert mock_range.bboxes["EPSG:4326"]["bottom"] > 0
     assert not lyr.ready
     with (
-        patch.object(OWSPostgresIndex, "_check_perms", return_value=None),
+        patch("datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms") as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
         patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
     ):
+        check_perms.return_value=None
+        api_dc.return_value=minimal_global_cfg.dc
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
@@ -50,9 +53,12 @@ def test_zero_grid(
         "right": -0.1,
     }
     with (
-        patch.object(OWSPostgresIndex, "_check_perms", return_value=None),
+        patch("datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms") as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
         patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
     ):
+        check_perms.return_value=None
+        api_dc.return_value=minimal_global_cfg.dc
         get_rng.return_value = mock_range
         with pytest.raises(ConfigException) as excinfo:
             lyr.make_ready(minimal_dc)
