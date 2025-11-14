@@ -552,6 +552,7 @@ reslim_for_sentinel2 = {
     },
     "wcs": {
         "max_datasets": 32,  # Defaults to no dataset limit
+        "max_image_size": 800 * 800 * 16,
     },
 }
 

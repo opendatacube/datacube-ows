@@ -521,7 +521,7 @@ class TimeRes(Enum):
             return None
 
     def search_times(
-        self, t: datetime.datetime|datetime.date, geobox: GeoBox | None = None
+        self, t: datetime.datetime | datetime.date, geobox: GeoBox | None = None
     ) -> datetime.datetime | tuple[datetime.datetime, datetime.datetime]:
         if self.is_solar():
             if geobox is None:

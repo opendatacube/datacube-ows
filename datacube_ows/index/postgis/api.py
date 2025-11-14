@@ -160,8 +160,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
                     st, _ = normalise_to_dtr(st)
                     et, _ = normalise_to_dtr(et)
                     time_args.append(Range(st, et))
-            if len(time_args) > 1:
-                raise ValueError("Huh?")
             query["time"] = time_args[0]
         return query
 

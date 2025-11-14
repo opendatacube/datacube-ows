@@ -142,6 +142,7 @@ class ODCExtent:
         MIDDLE = 100
         FIRST_TWO = 200
         LAST_TWO = -200
+        ALL_TIMES = 1000
 
         def slice(self, ls: list) -> list:
             try:
@@ -149,11 +150,13 @@ class ODCExtent:
                     i = len(ls) // 2
                     return ls[i : i + 1]
                 if self == self.FIRST_TWO:
-                    return ls[0:1]
+                    return ls[0:2]
                 if self == self.LAST_TWO:
                     return ls[-2:]
                 if self == self.LAST:
                     return ls[-1:]
+                if self == self.ALL_TIMES:
+                    return ls
                 return ls[self.value : self.value + 1]
             except IndexError:
                 return []
@@ -168,6 +171,7 @@ class ODCExtent:
     MIDDLE = TimeRequestTypes.MIDDLE
     FIRST_TWO = TimeRequestTypes.FIRST_TWO
     LAST_TWO = TimeRequestTypes.LAST_TWO
+    ALL_TIMES = TimeRequestTypes.ALL_TIMES
 
     class SpaceRequestType(enum.Enum):
         FULL_LAYER_EXTENT = 0

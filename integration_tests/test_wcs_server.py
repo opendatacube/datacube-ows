@@ -1058,8 +1058,10 @@ def test_wcs20_getcoverage_geotiff(ows_server) -> None:
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.layer_index[contents[0]]
-    assert layer.ready and not layer.hide
+    for layer_cap in contents:
+        layer = cfg.layer_index[layer_cap]
+        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+            break
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST, "EPSG:4326"
@@ -1069,7 +1071,7 @@ def test_wcs20_getcoverage_geotiff(ows_server) -> None:
         format="image/geotiff",
         subsets=subsets,
         subsettingcrs="EPSG:4326",
-        scalesize="x(400),y(300)",
+        scalesize="x(300),y(200)",
     )
     assert output
     assert output.info()["Content-Type"] == "image/geotiff"
@@ -1079,9 +1081,10 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
-
-    layer = cfg.layer_index.get("s2_l2a_clone")
-    assert layer.ready and not layer.hide
+    for layer_cap in list(wcs.contents):
+        layer = cfg.layer_index[layer_cap]
+        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+            break
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.LAST, "EPSG:4326"
@@ -1108,7 +1111,10 @@ def test_wcs20_getcoverage_netcdf(ows_server) -> None:
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.layer_index[contents[0]]
+    for layer_cap in contents:
+        layer = cfg.layer_index[layer_cap]
+        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+            break
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326"
@@ -1167,14 +1173,17 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server) -> None:
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    layer = cfg.layer_index[contents[0]]
+    for layer_cap in contents:
+        layer = cfg.layer_index[layer_cap]
+        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+            break
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
-        ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326"
+        ODCExtent.FULL_LAYER_EXTENT, ODCExtent.FIRST_TWO, crs="EPSG:4326"
     )
     try:
         _ = wcs.getCoverage(
-            identifier=contents[0],
+            identifier=layer.name,
             format="image/geotiff",
             subsets=subsets,
             subsettingcrs="EPSG:4326",
@@ -1196,6 +1205,8 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server) -> None:
     assert len(contents) == len(list(cfg.active_products))
     for i in (0, 11):
         layer = cfg.layer_index[contents[i]]
+        if layer.time_resolution == TimeRes.SUBDAY:
+            continue
         extent = ODCExtent(layer)
         subsets = extent.wcs2_subsets(
             ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO, crs="EPSG:4326"
@@ -1655,38 +1666,21 @@ def test_wcs2_getcov_styles(ows_server) -> None:
     assert r.status_code == 200
 
 
-# WCS2 style parameter disabled.
-#    r = retrying_requests.get(
-#       ows_server.url + "/wcs",
-#        params={
-#            "request": "GetCoverage",
-#            "coverageid": layer.name,
-#            "version": "2.1.0",
-#            "service": "WCS",
-#            "format": "image/geotiff",
-#            "subsettingcrs": "EPSG:4326",
-#            "scalesize": "x(400),y(400)",
-#            "styles": "simple_rgb,pure_red",
-#            "subset": subsets,
-#        },
-#    )
-#    assert r.status_code == 400
-
-
 def test_wcs2_tiff_multidate(ows_server) -> None:
     cfg = get_config(refresh=True)
     layer = None
     for lyr in cfg.layer_index.values():
-        if lyr.ready and not lyr.hide:
+        if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
     assert layer
     extent = ODCExtent(layer)
     subsets = extent.raw_wcs2_subsets(
-        ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.SECOND
+        ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
 
-    r = retrying_requests.get(
+    # Shouldn't be any need to retry when expecting an error.
+    r = requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
@@ -1696,12 +1690,13 @@ def test_wcs2_tiff_multidate(ows_server) -> None:
             "format": "image/geotiff",
             "subsettingcrs": "EPSG:4326",
             "scalesize": "x(400),y(400)",
-            "rangesubset": "greenish,swir_1",
+            "rangesubset": "nbart_green,nbart_swir_2",
             "subset": subsets,
         },
+        timeout=10.0,
     )
     assert r.status_code == 400
-    assert "Multiple time slices not supported by GeoTIFF format" in r.text
+    assert "Format does not support multi-time" in r.text
 
 
 def test_wcs2_getcov_bands(ows_server) -> None:
