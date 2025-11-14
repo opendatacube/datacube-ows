@@ -77,6 +77,15 @@ create an OWS schema in the ``myenv`` ODC environment::
 
     datacube-ows-update -E myenv --schema
 
+Initially creating an OWS schema requires a database superuser.  Prior to datacube-ows v1.9.6, OWS
+maintained it's own database permissions system.  Immediately after upgrading from OWS v1.9.5 or earlier to
+1.9.6 or later, you should run the ``--schema`` command as a database superuser.
+
+Subsequent schema updates can be
+performed by any user with ODC ``admin`` privileges (``agdc_admin`` role for postgres driver
+databases, or ``odc_admin`` role for postgis driver databases).
+
+
 ==========================================
 Cleaning up an old datacube-ows 1.8 schema
 ==========================================
@@ -102,36 +111,25 @@ with the ``-E`` option.
 Granting permissions to database roles
 ======================================
 
-The ``datacube-ows`` web application requires permissions to read from the various tables and views in the ``ows``
-schema.  These can permissions (including read-access to the ODC tables can be granted to a database role with
-the ``--read-role <role_name>`` argument::
+From datacube OWS 1.9.6 onwards, OWS uses the standard datacube core permissions framework.
 
-    datacube-ows-update --read-role role1
+E.g. To grant a user "read" permissions for OWS views and tables to a user "ows_reader"::
 
+    datacube -E myenv user grant user ows_reader
 
-You do not need to use --read-role and --write-role on the same user - granting write permissions automatically
-grants read permissions as well.
+Or to grant a user "write" permissions (e.g. allowed to update OWS views and tables)::
 
-The ``datacube-ows-update`` options that update the data in the OWS schema (described below) require read/write
-permissions that can be granted with the ``--write-role <role_name>`` option::
+    datacube -E myenv user grant manage ows_writer
 
-    datacube-ows-update --write-role role2
+Or to grant a user "admin" permissions (e.g. allowed to update the OWS schema)::
 
-The ``--read-role`` and ``write-role`` options can be used separately, together, and/or with the ``--schema``
-and ``--cleanup`` options.  They can also be used multiple times in the one invocation to grant permissions to
-multiple roles::
+    datacube -E myenv user grant admin ows_admin
 
-    datacube-ows-update --schema --cleanup --read-role role1 --read-role role2 --read-role role3 --write-role admin
-
-The ``--read-role`` and ``--write-role`` options are executed against the ODC environment database identified
-by the ``-E`` option  (Default is ``default``)::
-
-    datacube-ows-update -E myenv --read-role role1 --read-role role2 --read-role role3 --write-role admin
 
 Updating/Maintaining OWS data
 -----------------------------
 
-Updating/maintaining data in the OWS schema requires the permissions granted with ``--write-role``,
+Updating/maintaining data in the OWS schema requires the ODC "manage" role,
 as described above.  It is performed with the following ``datacube-ows-update`` options:
 
 =============================
