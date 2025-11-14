@@ -158,8 +158,9 @@ datacube -E owspostgis dataset add https://dea-public-data.s3.ap-southeast-2.ama
 # grant user permissions
 datacube user grant user "$SERVER_DB_USERNAME"
 datacube -E owspostgis user grant user "$SERVER_DB_USERNAME"
-datacube user grant manage "$POSTGRES_USER"
-datacube -E owspostgis user grant manage "$POSTGRES_USER"
+
+datacube user grant admin "$POSTGRES_USER"
+datacube -E owspostgis user grant admin "$POSTGRES_USER"
 
 # create ows schema, tables, views, etc.
 datacube-ows-update --schema
