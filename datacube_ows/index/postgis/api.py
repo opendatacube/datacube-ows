@@ -65,7 +65,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                 conn.execute(text(f"set role odc_{group}"))
         except Exception:
             raise InsufficientDbPrivileges(
-                f"db user {dc.index.environment.db_user} does not have odc_{group} privileges"
+                f"db user {dc.index.environment.db_username} does not have odc_{group} privileges"
             ) from None
         return
 
