@@ -225,7 +225,9 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                         date_info["source_product"] = ds.product.name
 
                 # Extract data pixel
-                pixel_ds: xarray.Dataset = td.isel(**isel_kwargs)
+                #       Mypy complains locally about this ignore being unused,
+                #       but mypy on github fails without it.
+                pixel_ds: xarray.Dataset = td.isel(**isel_kwargs)  # type: ignore[arg-type]
 
                 # Get accurate timestamp from dataset
                 assert ds.time is not None  # For type checker
