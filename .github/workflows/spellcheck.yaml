@@ -3,25 +3,18 @@ name: Spell check
 
 on:
   pull_request:
-    branches:
+    branches: &branches
       - 'develop'
       - 'develop-1.9'
-    paths:
+    paths: &paths
       - 'docs/**'
       - '*.md'
       - '*.rst'
       - '.github/workflows/spellcheck.yaml'
-
 
   push:
-    branches:
-      - 'develop'
-      - 'develop-1.9'
-    paths:
-      - 'docs/**'
-      - '*.md'
-      - '*.rst'
-      - '.github/workflows/spellcheck.yaml'
+    branches: *branches
+    paths: *paths
 
 permissions: {}
 
