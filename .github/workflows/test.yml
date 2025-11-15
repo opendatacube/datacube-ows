@@ -3,10 +3,10 @@ name: Tests
 
 on:
   pull_request:
-    branches:
+    branches: &branches
       - 'develop'
       - 'develop-1.9'
-    paths:
+    paths: &paths
       - '**'
       - '!docs/**'
       - '!*.rst'
@@ -16,17 +16,8 @@ on:
       - '.github/workflows/test.yml'
 
   push:
-    branches:
-      - 'develop'
-      - 'develop-1.9'
-    paths:
-      - '**'
-      - '!docs/**'
-      - '!*.rst'
-      - '!*.md'
-      - '!datacube_ows/__init__.py'
-      - '!.github/**'
-      - '.github/workflows/test.yml'
+    branches: *branches
+    paths: *paths
 
   release:
     types:

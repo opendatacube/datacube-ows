@@ -3,10 +3,10 @@ name: Complementary config test
 
 on:
   pull_request:
-    branches:
+    branches: &branches
       - 'develop-1.9'
       - 'develop'
-    paths:
+    paths: &paths
       - '**'
       - '!docs/**'
       - '!*.rst'
@@ -16,17 +16,8 @@ on:
       - '.github/workflows/complementary-config-test.yaml'
 
   push:
-    branches:
-      - 'develop-1.9'
-      - 'develop'
-    paths:
-      - '**'
-      - '!docs/**'
-      - '!*.rst'
-      - '!*.md'
-      - '!datacube_ows/__init__.py'
-      - '!.github/**'
-      - '.github/workflows/complementary-config-test.yaml'
+    branches: *branches
+    paths: *paths
 
 env:
   DOCKER_IMAGE: ghcr.io/opendatacube/ows:tests

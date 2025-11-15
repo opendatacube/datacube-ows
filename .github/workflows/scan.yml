@@ -3,20 +3,16 @@ name: Scan
 
 on:
   push:
-    branches:
+    branches: &branches
       - develop
       - develop-1.9
-    paths:
+    paths: &paths
       - ".github/workflows/scan.yml"
       - "Dockerfile"
 
   pull_request:
-    branches:
-      - develop
-      - develop-1.9
-    paths:
-      - ".github/workflows/scan.yml"
-      - "Dockerfile"
+    branches: *branches
+    paths: *paths
 
   schedule:
     - cron: '0 0 * * *'

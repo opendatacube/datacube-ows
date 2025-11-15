@@ -3,19 +3,16 @@ name: dockerfile Linting
 
 on:
   pull_request:
-    branches:
+    branches: &branches
       - 'develop'
       - 'develop-1.9'
-    paths:
+    paths: &paths
       - 'Dockerfile'
       - '.github/workflows/dockerfile-lint.yml'
 
   push:
-    branches:
-      - 'develop'
-    paths:
-      - 'Dockerfile'
-      - '.github/workflows/dockerfile-lint.yml'
+    branches: *branches
+    paths: *paths
 
 permissions: {}
 
