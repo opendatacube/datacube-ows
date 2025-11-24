@@ -13,6 +13,7 @@ import sqlalchemy
 from datacube import Datacube
 
 from datacube_ows import __version__
+from datacube_ows.config_utils import OWSConfigNotReady
 from datacube_ows.index import AbortRun, LayerSignature, ows_index
 from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.startup_utils import initialise_debugging
@@ -221,6 +222,9 @@ def main(
             sys.exit(1)
         else:
             raise e
+    except OWSConfigNotReady as e:
+        click.echo(f"ERROR: {e}", err=True)
+        sys.exit(1)
     if errors:
         sys.exit(1)
 
