@@ -6,7 +6,7 @@
 
 from collections.abc import Iterable
 from threading import Lock
-from typing import cast
+from typing import Literal, cast
 from uuid import UUID
 
 import click
@@ -56,8 +56,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return db_ok
 
     @override
-    def _check_perms(self, dc: Datacube, group: str) -> None:
-        assert group in ("user", "manage", "admin")
+    def _check_perms(self, dc: Datacube, group: Literal["user", "manage", "admin"]) -> None:
         try:
             with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
                 conn.execute(text(f"set role agdc_{group}"))
