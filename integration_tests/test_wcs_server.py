@@ -6,6 +6,7 @@
 
 from urllib import request
 
+import os
 import pytest
 import requests
 from lxml import etree
@@ -15,6 +16,11 @@ from owslib.wcs import WebCoverageService
 from datacube_ows.legend_utils import retrying_requests
 from datacube_ows.ows_configuration import OWSConfig, TimeRes, get_config
 from integration_tests.utils import ODCExtent
+
+
+# Set this environment variable to suppress retries in tests.
+if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
+    retrying_requests = requests
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
@@ -30,8 +36,7 @@ def check_wcs_error(
 ) -> None:
     if params is None:
         params = {}
-    # Shouldn't be any need to retry when expecting an error.
-    resp = requests.get(url, params=params, timeout=10.0)
+    resp = retrying_requests.get(url, params=params, timeout=10.0)
     assert resp.status_code == expected_status_code
 
     assert expected_error_message in resp.text
@@ -1057,11 +1062,15 @@ def test_wcs20_getcoverage_geotiff(ows_server) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
+    layer = None
     contents = list(wcs.contents)
     for layer_cap in contents:
-        layer = cfg.layer_index[layer_cap]
-        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+        lyr = cfg.layer_index[layer_cap]
+        if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
+            layer = lyr
             break
+    assert layer is not None
+
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.FIRST, "EPSG:4326"
@@ -1081,10 +1090,13 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
     cfg = get_config(refresh=True)
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
+    layer = None
     for layer_cap in list(wcs.contents):
-        layer = cfg.layer_index[layer_cap]
-        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+        lyr = cfg.layer_index[layer_cap]
+        if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
+            layer = lyr
             break
+    assert layer is not None
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.LAST, "EPSG:4326"
@@ -1112,9 +1124,11 @@ def test_wcs20_getcoverage_netcdf(ows_server) -> None:
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     for layer_cap in contents:
-        layer = cfg.layer_index[layer_cap]
-        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+        lyr = cfg.layer_index[layer_cap]
+        if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
+            layer = lyr
             break
+    assert layer is not None
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND, "EPSG:4326"
@@ -1139,10 +1153,12 @@ def test_wcs20_getcoverage_crs_alias(ows_server) -> None:
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
+    layer = None
     for lyr_name in contents:
         if not lyr_name.startswith("s2_l"):
             layer = cfg.layer_index[lyr_name]
             break
+    assert layer is not None
     extent = ODCExtent(layer)
     _ = extent.wcs2_subsets(
         ODCExtent.CENTRAL_SUBSET_FOR_TIMES, ODCExtent.SECOND_LAST, "EPSG:4326"
@@ -1171,12 +1187,15 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
-    # Ensure that we have at least some layers available
+    # Find a suitable layer
     contents = list(wcs.contents)
+    layer = None
     for layer_cap in contents:
-        layer = cfg.layer_index[layer_cap]
-        if layer.ready and not layer.hide and layer.time_resolution != TimeRes.SUBDAY:
+        lyr = cfg.layer_index[layer_cap]
+        if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
+            layer = lyr
             break
+    assert layer is not None
     extent = ODCExtent(layer)
     subsets = extent.wcs2_subsets(
         ODCExtent.FULL_LAYER_EXTENT, ODCExtent.FIRST_TWO, crs="EPSG:4326"
@@ -1679,8 +1698,7 @@ def test_wcs2_tiff_multidate(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
 
-    # Shouldn't be any need to retry when expecting an error.
-    r = requests.get(
+    r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "GetCoverage",
