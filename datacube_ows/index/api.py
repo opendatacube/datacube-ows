@@ -222,7 +222,9 @@ def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
     return ows_index_driver.ows_index()
 
 
-def check_perms(group: Literal["user", "admin", "manage"]) -> Callable[[Callable], Callable]:
+def check_perms(
+    group: Literal["user", "admin", "manage"],
+) -> Callable[[Callable], Callable]:
     def outer(f: Callable) -> Callable:
         def inner(
             instance, dcl: Union[Datacube, "OWSNamedLayer"], *args, **kwargs

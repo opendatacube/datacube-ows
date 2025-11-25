@@ -4,9 +4,9 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 from urllib import request
 
-import os
 import pytest
 import requests
 from lxml import etree
@@ -16,7 +16,6 @@ from owslib.wcs import WebCoverageService
 from datacube_ows.legend_utils import retrying_requests
 from datacube_ows.ows_configuration import OWSConfig, TimeRes, get_config
 from integration_tests.utils import ODCExtent
-
 
 # Set this environment variable to suppress retries in tests.
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
