@@ -66,7 +66,6 @@ class OWSPostgresIndex(OWSAbstractIndex):
             raise InsufficientDbPrivileges(
                 f"db user {dc.index.environment.db_username} does not have agdc_{group} privileges: {e}"
             ) from None
-        return
 
     # method to delete obsolete schemas etc.
     @override

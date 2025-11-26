@@ -216,7 +216,7 @@ class BandIndex(OWSMetadataConfig):
                 return b
         raise ConfigException(f"Unknown band: {name_alias} in layer {self.layer_name}")
 
-    def band_label(self, name_alias: str, canonical=False) -> str:
+    def band_label(self, name_alias: str, canonical: bool = False) -> str:
         canonical_name = self.band(name_alias)
         if canonical:
             return canonical_name
@@ -233,7 +233,7 @@ class BandIndex(OWSMetadataConfig):
     def dtype_size(self, name_alias: str) -> int:
         return self.dtype_val(name_alias).itemsize
 
-    def band_labels(self, canonical=False) -> list[str]:
+    def band_labels(self, canonical: bool = False) -> list[str]:
         return [self.band_label(b, canonical=canonical) for b in self.band_cfg]
 
     def band_nodata_vals(self) -> list[int | float]:

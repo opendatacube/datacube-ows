@@ -68,7 +68,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
             raise InsufficientDbPrivileges(
                 f"db user {dc.index.environment.db_username} does not have odc_{group} privileges"
             ) from None
-        return
 
     # method to delete obsolete schemas etc.
     @override

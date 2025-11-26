@@ -43,9 +43,7 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
         )
         return False
 
-    files = sorted(
-        full_path.iterdir()  # type: ignore[type-var]
-    )
+    files = sorted(full_path.iterdir())  # type: ignore[type-var]
 
     # N.B. We aren't actually using this "required parameters" feature at
     #      the moment.
