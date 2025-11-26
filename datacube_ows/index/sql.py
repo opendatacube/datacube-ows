@@ -10,8 +10,8 @@ import re
 import click
 import datacube.cfg
 import sqlalchemy
-from psycopg2.errors import InsufficientPrivilege, DuplicateObject
 from datacube import Datacube
+from psycopg2.errors import DuplicateObject, InsufficientPrivilege
 
 from datacube_ows.index.api import InsufficientDbPrivileges
 
@@ -82,14 +82,18 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
                 with get_sqlconn(dc).execution_options(
                     isolation_level="AUTOCOMMIT"
                 ) as iso_conn:
-                    run_sql_statement(sql, comment, fname, iso_conn, dc.index.environment)
+                    run_sql_statement(
+                        sql, comment, fname, iso_conn, dc.index.environment
+                    )
             else:
                 run_sql_statement(sql, comment, fname, conn, dc.index.environment)
 
         return all_ok
 
 
-def read_file(driver_name: str, path: str, fname: str, **kwargs: str) -> tuple[str, str]:
+def read_file(
+    driver_name: str, path: str, fname: str, **kwargs: str
+) -> tuple[str, str]:
     ref = importlib.resources.files("datacube_ows").joinpath(
         f"sql/{driver_name}/{path}/{fname}"
     )
@@ -111,7 +115,11 @@ def read_file(driver_name: str, path: str, fname: str, **kwargs: str) -> tuple[s
 
 
 def run_sql_statement(
-    sql: str, comment: str, fname: str, conn: sqlalchemy.Connection, env: datacube.cfg.ODCEnvironment
+    sql: str,
+    comment: str,
+    fname: str,
+    conn: sqlalchemy.Connection,
+    env: datacube.cfg.ODCEnvironment,
 ) -> None:
     click.echo(f" - Running SQL statement: {comment}")
     try:

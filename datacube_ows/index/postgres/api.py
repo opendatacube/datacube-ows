@@ -17,7 +17,6 @@ from sqlalchemy import text
 from typing_extensions import override
 
 from datacube_ows.index.api import (
-    AbortRun,
     InsufficientDbPrivileges,
     LayerExtent,
     LayerSignature,
