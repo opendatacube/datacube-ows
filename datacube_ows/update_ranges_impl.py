@@ -15,6 +15,7 @@ from datacube import Datacube
 from datacube_ows import __version__
 from datacube_ows.config_utils import OWSConfigNotReady
 from datacube_ows.index import AbortRun, LayerSignature, ows_index
+from datacube_ows.index.api import InsufficientDbPrivileges
 from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.startup_utils import initialise_debugging
 
@@ -172,7 +173,7 @@ def main(
     cfg = get_config(called_from_update_ranges=True)
     app = cfg.odc_app + "-update"
     errors: bool = False
-    if schema or read_role or write_role or cleanup or views:
+    if schema or cleanup or views:
         try:
             if cfg.default_env and env is None:
                 dc = Datacube(env=cfg.default_env, app=app)
@@ -207,6 +208,8 @@ def main(
     try:
         errors = add_ranges(cfg, layers)
         click.echo("Done.")
+    except InsufficientDbPrivileges as e:
+        click.echo(e)
     except sqlalchemy.exc.ProgrammingError as e:
         import psycopg2.errors
 
@@ -225,6 +228,7 @@ def main(
             click.echo("       Try running with the --views options first.")
             sys.exit(1)
         else:
+            click.echo("Unexpected database error:")
             raise e
     except OWSConfigNotReady as e:
         click.echo(f"ERROR: {e}", err=True)

@@ -78,11 +78,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
     @check_perms("admin")
     def create_schema(self, dc: Datacube) -> None:
         click.echo("Creating schema and postgis extension...")
-        if not self._run_sql(dc, "ows_schema/bootstrap"):
-            raise AbortRun(
-                "Could not bootstrap schema: "
-                "try using an ODC environment that connects as a database superuser"
-            )
+        self._run_sql(dc, "ows_schema/bootstrap")
         click.echo("Creating/updating tables...")
         self._run_sql(dc, "ows_schema/create")
         click.echo("Creating/updating materialised views...")
