@@ -190,7 +190,7 @@ class OWSConfigEntry:
 
         Handles unready attributes for two-phase intitialisation and stows the raw configuration away.
 
-        :param cfg: The congfiguration being parsed
+        :param cfg: The configuration being parsed
         :param args:
         :param kwargs:
         """
