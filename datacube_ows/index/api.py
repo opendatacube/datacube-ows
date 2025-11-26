@@ -80,8 +80,9 @@ class OWSAbstractIndex(ABC):
     name: str = ""
 
     # method to check if we are in a user group
+    # N.B. Subclasses may add additional groups to the Literal as required.
     @abstractmethod
-    def _check_perms(self, dc: Datacube, group: str) -> None: ...
+    def _check_perms(self, dc: Datacube, group: Literal["admin"]) -> None: ...
 
     # method to check database access (for ping op) (requires odc "user" perms)
     @abstractmethod
