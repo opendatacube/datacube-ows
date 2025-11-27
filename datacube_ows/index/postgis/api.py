@@ -16,6 +16,7 @@ from datacube import Datacube
 from datacube.model import Dataset, Product, Range
 from odc.geo import CRS, Geometry
 from sqlalchemy import text
+from psycopg2.errors import ProgrammingError
 from typing_extensions import override
 
 from datacube_ows.index.api import (
@@ -64,7 +65,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         try:
             with dc.index._db._give_me_a_connection() as conn:  # type: ignore[attr-defined]
                 conn.execute(text(f"set role odc_{group}"))
-        except Exception:
+        except ProgrammingError:
             raise InsufficientDbPrivileges(
                 f"db user {dc.index.environment.db_username} does not have odc_{group} privileges"
             ) from None
