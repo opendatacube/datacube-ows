@@ -1223,9 +1223,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def ranges(self) -> "LayerExtent":
         if self.dynamic:
             ranges_ok = self.force_range_update()
-        if not ranges_ok:
-            self.hide = True
-            raise ConfigException(f"No ranges found for layer {self.name}")
+            if not ranges_ok:
+                self.hide = True
+                raise ConfigException(f"No ranges found for layer {self.name}")
         assert self._ranges is not None  # For type checker
         return self._ranges
 
