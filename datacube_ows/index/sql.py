@@ -104,10 +104,7 @@ def read_file(
         for line in fp:
             sline = str(line, "utf-8")
             if first and sline.startswith("--"):
-                if kwargs:
-                    comment = sline[2:].format(**kwargs)
-                else:
-                    comment = sline[2:]
+                comment = sline[2:].format(**kwargs) if kwargs else sline[2:]
             else:
                 sql = sql + "\n" + sline
             first = False
