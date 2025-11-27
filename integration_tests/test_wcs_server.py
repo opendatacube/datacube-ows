@@ -19,6 +19,7 @@ from integration_tests.utils import ODCExtent
 # Set this environment variable to suppress retries in tests.
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
     import requests
+
     retrying_requests = requests
 
 

@@ -15,8 +15,8 @@ from antimeridian import fix_shape
 from datacube import Datacube
 from datacube.model import Dataset, Product, Range
 from odc.geo import CRS, Geometry
-from sqlalchemy import text
 from psycopg2.errors import ProgrammingError
+from sqlalchemy import text
 from typing_extensions import override
 
 from datacube_ows.index.api import (
