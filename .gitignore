@@ -82,6 +82,7 @@ ows_*_cfg.py
 .DS_Store
 docker-compose.yaml
 ows_cfg.py
+integration_tests/cfg/test_translations
 
 _version.py
 .env

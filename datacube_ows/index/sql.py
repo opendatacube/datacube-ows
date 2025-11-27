@@ -9,11 +9,11 @@ import re
 
 import click
 import datacube.cfg
-import psycopg2
 import sqlalchemy
 from datacube import Datacube
+from psycopg2.errors import DuplicateObject, InsufficientPrivilege
 
-from datacube_ows.index import AbortRun
+from datacube_ows.index.api import InsufficientDbPrivileges
 
 
 def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
@@ -27,32 +27,35 @@ def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
     return dc.index._db._engine.connect()  # type: ignore[attr-defined]
 
 
-def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
-    if (
-        not importlib.resources.files("datacube_ows")
-        .joinpath(f"sql/{driver_name}/{path}")
-        .is_dir()
-    ):
+def run_sql(dc: Datacube, path: str, **params: str) -> bool:
+    driver_names = {
+        "pg_index": "postgres",
+        "pgis_index": "postgis",
+    }
+    driver_name = driver_names[dc.index.name]
+    print(f"path in is {path}")
+    full_path = importlib.resources.files("datacube_ows").joinpath(
+        f"sql/{driver_name}/{path}"
+    )
+    if not full_path.is_dir():
         print(
-            "Cannot find SQL resource directory - check your datacube-ows installation"
+            f"Cannot find SQL resource directory {full_path} - check your datacube-ows installation"
         )
         return False
 
-    files = sorted(
-        importlib.resources.files("datacube_ows")
-        .joinpath(f"sql/{driver_name}/{path}")
-        .iterdir()  # type: ignore[type-var]
-    )
+    files = sorted(full_path.iterdir())  # type: ignore[type-var]
 
+    # N.B. We aren't actually using this "required parameters" feature at
+    #      the moment.
     filename_req_pattern = re.compile(
         r"\d+[_a-zA-Z0-9]+_requires_(?P<reqs>[_a-zA-Z0-9]+)\.sql"
     )
     filename_pattern = re.compile(r"\d+[_a-zA-Z0-9]+\.sql")
-    conn = get_sqlconn(dc)
-    try:
+    with get_sqlconn(dc) as conn:
         all_ok: bool = True
         for fi in files:
             fname = fi.name
+            isolated = fname.endswith("_isolated.sql")
             match = filename_pattern.fullmatch(fname)
             if not match:
                 click.echo(f"Illegal SQL filename: {fname} (skipping)")
@@ -62,7 +65,7 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
             reqs = req_match.group("reqs").split("_") if req_match else []
             if reqs:
                 try:
-                    kwargs = {v: params[v] for v in reqs}
+                    kwargs = {v: params[v] for v in reqs if v != "isolated"}
                 except KeyError as e:
                     click.echo(
                         f"Required parameter {e} for file {fname} not supplied - skipping"
@@ -71,53 +74,65 @@ def run_sql(dc: Datacube, driver_name: str, path: str, **params: str) -> bool:
                     continue
             else:
                 kwargs = {}
-            sql = read_file(driver_name, path, fname, **kwargs)
+            comment, sql = read_file(driver_name, path, fname, **kwargs)
             if reqs:
                 sql = sql.format(**kwargs)
-            run_sql_statement(sql, fname, conn, dc.index.environment)
+            if isolated:
+                conn.commit()
+                with get_sqlconn(dc).execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as iso_conn:
+                    run_sql_statement(
+                        sql, comment, fname, iso_conn, dc.index.environment
+                    )
+            else:
+                run_sql_statement(sql, comment, fname, conn, dc.index.environment)
 
         return all_ok
-    finally:
-        conn.close()
 
 
-def read_file(driver_name: str, path: str, fname: str, **kwargs: str) -> str:
+def read_file(
+    driver_name: str, path: str, fname: str, **kwargs: str
+) -> tuple[str, str]:
     ref = importlib.resources.files("datacube_ows").joinpath(
         f"sql/{driver_name}/{path}/{fname}"
     )
+    comment = ""
     sql = ""
     with ref.open("rb") as fp:
         first = True
         for line in fp:
             sline = str(line, "utf-8")
             if first and sline.startswith("--"):
-                if kwargs:
-                    click.echo(f" - Running {sline[2:].format(**kwargs)}")
-                else:
-                    click.echo(f" - Running {sline[2:]}")
+                comment = sline[2:].format(**kwargs) if kwargs else sline[2:]
             else:
                 sql = sql + "\n" + sline
             first = False
-    return sql
+    return comment, sql
 
 
 def run_sql_statement(
-    sql: str, fname: str, conn: sqlalchemy.Connection, env: datacube.cfg.ODCEnvironment
+    sql: str,
+    comment: str,
+    fname: str,
+    conn: sqlalchemy.Connection,
+    env: datacube.cfg.ODCEnvironment,
 ) -> None:
+    click.echo(f" - Running SQL statement: {comment}")
     try:
         result = conn.execute(sqlalchemy.text(sql))
         click.echo(f"    ...  succeeded(?) with rowcount {result.rowcount}")
-
     except sqlalchemy.exc.ProgrammingError as e:
-        if isinstance(e.orig, psycopg2.errors.InsufficientPrivilege):
-            click.echo(
-                f"Insufficient Privileges (user {env.db_username}). Schema altering actions should be run by a role with admin privileges"
-            )
-            raise AbortRun() from None
-        if isinstance(e.orig, psycopg2.errors.DuplicateObject):
+        if isinstance(e.orig, InsufficientPrivilege):
+            raise InsufficientDbPrivileges(
+                f"Insufficient Privileges (user {env.db_username}). Try running again as a database superuser"
+            ) from None
+        if isinstance(e.orig, DuplicateObject):
             if fname.endswith("_ignore_duplicates.sql"):
                 click.echo("Ignoring 'already exists' error")
             else:
+                click.echo(f"Unexpected database error: {e}")
                 raise e from None
         else:
+            click.echo(f"Unexpected database error: {e}")
             raise e from e

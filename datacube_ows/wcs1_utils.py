@@ -246,9 +246,9 @@ class WCS1GetCoverageRequest:
             # we can accept a style from WMS, and return the bands used for it.
             self.bands = list(get_bands_from_styles(args["styles"], self.layer))
             if not self.bands:
-                self.bands = self.layer.band_idx.band_labels()
+                self.bands = self.layer.band_idx.band_labels(canonical=True)
         else:
-            self.bands = self.layer.band_idx.band_labels()
+            self.bands = self.layer.band_idx.band_labels(canonical=True)
 
         # Argument: EXCEPTIONS (optional - defaults to XML)
         if "exceptions" in args and args["exceptions"] != "application/vnd.ogc.se_xml":

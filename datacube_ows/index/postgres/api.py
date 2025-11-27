@@ -6,22 +6,25 @@
 
 from collections.abc import Iterable
 from threading import Lock
-from typing import cast
+from typing import Literal, cast
 from uuid import UUID
 
 import click
 from datacube import Datacube
 from datacube.model import Dataset, Product
 from odc.geo import CRS, Geometry
+from psycopg2.errors import ProgrammingError
 from sqlalchemy import text
 from typing_extensions import override
 
 from datacube_ows.index.api import (
+    InsufficientDbPrivileges,
     LayerExtent,
     LayerSignature,
     OWSAbstractIndex,
     OWSAbstractIndexDriver,
     TimeSearchTerm,
+    check_perms,
 )
 from datacube_ows.index.sql import run_sql
 from datacube_ows.ows_configuration import OWSNamedLayer
@@ -52,47 +55,59 @@ class OWSPostgresIndex(OWSAbstractIndex):
             pass
         return db_ok
 
+    @override
+    def _check_perms(
+        self, dc: Datacube, group: Literal["user", "manage", "admin"]
+    ) -> None:
+        try:
+            with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
+                conn.execute(text(f"set role agdc_{group}"))
+        except ProgrammingError as e:
+            raise InsufficientDbPrivileges(
+                f"db user {dc.index.environment.db_username} does not have agdc_{group} privileges: {e}"
+            ) from None
+
     # method to delete obsolete schemas etc.
     @override
+    @check_perms("admin")
     def cleanup_schema(self, dc: Datacube) -> None:
         self._run_sql(dc, "ows_schema/cleanup")
 
     # Schema creation method
     @override
+    @check_perms("admin")
     def create_schema(self, dc: Datacube) -> None:
-        click.echo("Creating/updating schema and tables...")
+        click.echo("Creating schema and postgis extension...")
+        self._run_sql(dc, "ows_schema/bootstrap")
+        click.echo("Creating/updating tables...")
         self._run_sql(dc, "ows_schema/create")
         click.echo("Creating/updating materialised views...")
         self._run_sql(dc, "extent_views/create")
-        click.echo("Setting ownership of materialised views...")
-        self._run_sql(dc, "extent_views/grants/refresh_owner")
-
-    # Permission management method
-    @override
-    def grant_perms(self, dc: Datacube, role: str, read_only: bool = False) -> None:
-        if read_only:
-            self._run_sql(dc, "ows_schema/grants/read_only", role=role)
-            self._run_sql(dc, "extent_views/grants/read_only", role=role)
-        else:
-            self._run_sql(dc, "ows_schema/grants/read_write", role=role)
-            self._run_sql(dc, "extent_views/grants/write_refresh", role=role)
+        click.echo("Granting tables permissions to agdc roles.")
+        self._run_sql(dc, "ows_schema/grants")
+        click.echo("Granting views permissions to agdc roles.")
+        self._run_sql(dc, "extent_views/grants")
 
     # Spatiotemporal index update method (e.g. refresh materialised views)
     @override
+    @check_perms("manage")
     def update_geotemporal_index(self, dc: Datacube) -> None:
         self._run_sql(dc, "extent_views/refresh")
 
     @override
+    @check_perms("manage")
     def create_range_entry(
         self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
     ) -> None:
         create_range_entry_impl(layer, cache)
 
     @override
+    @check_perms("user")
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
         return get_ranges_impl(layer)
 
     @override
+    @check_perms("user")
     def ds_search(
         self,
         layer: OWSNamedLayer,
@@ -112,6 +127,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def dsid_search(
         self,
         layer: OWSNamedLayer,
@@ -131,6 +147,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def count(
         self,
         layer: OWSNamedLayer,
@@ -150,6 +167,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         )
 
     @override
+    @check_perms("user")
     def extent(
         self,
         layer: OWSNamedLayer,
@@ -173,7 +191,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return extent.to_crs(crs)
 
     def _run_sql(self, dc: Datacube, path: str, **params: str) -> bool:
-        return run_sql(dc, self.name, path, **params)
+        return run_sql(dc, path, **params)
 
 
 pgdriverlock = Lock()

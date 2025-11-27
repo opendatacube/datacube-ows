@@ -202,7 +202,7 @@ The following instructions are for installing on a clean Linux system.
     # to create schema, tables and materialised views used by datacube-ows.
 
     export DATACUBE_OWS_CFG=datacube_ows.ows_cfg_example.ows_cfg
-    datacube-ows-update --write-role ubuntu --schema
+    datacube-ows-update ubuntu --schema
 
     # If you are not using the `default` ODC environment, you can specify the environment to create the schema in:
 

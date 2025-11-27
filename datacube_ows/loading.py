@@ -154,7 +154,7 @@ class DataStacker:
         self,
         layer: OWSNamedLayer,
         geobox: GeoBox,
-        times: list[datetime.datetime],
+        times: list[datetime.datetime | datetime.date],
         resampling: Resampling | None = None,
         style: StyleDef | None = None,
         bands: list[str] | None = None,
@@ -239,7 +239,7 @@ class DataStacker:
         )
         geom = point if point else self._geobox.extent
         result = self._layer.ows_index().ds_search(
-            layer=self._layer, geom=geom, products=query.products
+            self._layer, geom=geom, products=query.products
         )
         return datacube.Datacube.group_datasets(result, self.group_by)
 
@@ -264,7 +264,7 @@ class DataStacker:
         for query in queries:
             qry_times = None if query.ignore_time else self._times
             result = self._layer.ows_index().ds_search(
-                layer=self._layer, times=qry_times, geom=geom, products=query.products
+                self._layer, times=qry_times, geom=geom, products=query.products
             )
             grpd_result = datacube.Datacube.group_datasets(result, self.group_by)
             results.append((query, grpd_result))

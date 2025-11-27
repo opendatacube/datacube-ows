@@ -205,8 +205,12 @@ def rolling_window_ndays(
     layer_cfg: OWSExtensibleConfigEntry,
     ndays: int = 6,
 ) -> tuple[datetime.datetime, datetime.datetime]:
-    idx = -ndays
-    days = available_dates[idx:]
+    if ndays > len(available_dates):
+        days = available_dates
+        idx = -len(available_dates)
+    else:
+        idx = -ndays
+        days = available_dates[idx:]
     start, _ = layer_cfg.search_times(days[idx])
     _, end = layer_cfg.search_times(days[-1])
     return start, end

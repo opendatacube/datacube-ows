@@ -167,9 +167,17 @@ def test_minimal_named_layer(minimal_layer_cfg, minimal_global_cfg, mock_range) 
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
-        get_rng.return_value = mock_range
-        lyr.make_ready()
+    with (
+        patch(
+            "datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms"
+        ) as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
+    ):
+        check_perms.return_value = None
+        api_dc.return_value = minimal_global_cfg.dc
+        with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+            get_rng.return_value = mock_range
+            lyr.make_ready()
     assert lyr.ready
     assert not lyr.hide
     assert lyr.default_time == mock_range.times[-1]
@@ -330,7 +338,15 @@ def test_minimal_multiproduct(
     lyr = parse_ows_layer(minimal_multiprod_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+    with (
+        patch(
+            "datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms"
+        ) as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
+        patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
+    ):
+        check_perms.return_value = None
+        api_dc.return_value = minimal_global_cfg.dc
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -672,7 +688,15 @@ def test_earliest_default_time(
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+    with (
+        patch(
+            "datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms"
+        ) as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
+        patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
+    ):
+        check_perms.return_value = None
+        api_dc.return_value = minimal_global_cfg.dc
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -689,7 +713,15 @@ def test_latest_default_time(
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+    with (
+        patch(
+            "datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms"
+        ) as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
+        patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
+    ):
+        check_perms.return_value = None
+        api_dc.return_value = minimal_global_cfg.dc
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -706,7 +738,15 @@ def test_valid_default_time(
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+    with (
+        patch(
+            "datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms"
+        ) as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
+        patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
+    ):
+        check_perms.return_value = None
+        api_dc.return_value = minimal_global_cfg.dc
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -723,7 +763,15 @@ def test_missing_default_time(
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.name == "a_layer"
     assert not lyr.ready
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+    with (
+        patch(
+            "datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms"
+        ) as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
+        patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
+    ):
+        check_perms.return_value = None
+        api_dc.return_value = minimal_global_cfg.dc
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert lyr.ready
@@ -857,7 +905,15 @@ def test_native_resolution_mismatch(
     minimal_layer_cfg["native_resolution"] = [0.1, -0.1]
     minimal_layer_cfg["product_name"] = "foo_nativeres"
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
-    with patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng:
+    with (
+        patch(
+            "datacube_ows.index.postgres.api.OWSPostgresIndex._check_perms"
+        ) as check_perms,
+        patch("datacube_ows.index.api.Datacube") as api_dc,
+        patch("datacube_ows.index.postgres.api.get_ranges_impl") as get_rng,
+    ):
+        check_perms.return_value = None
+        api_dc.return_value = minimal_global_cfg.dc
         get_rng.return_value = mock_range
         lyr.make_ready(minimal_dc)
     assert not lyr.hide

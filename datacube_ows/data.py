@@ -98,7 +98,7 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
         stacker = DataStacker(
             params.layer,
             params.geobox,
-            params.times,  # type: ignore[arg-type]
+            params.times,
             params.resampling,
             style=params.style,
         )

@@ -11,83 +11,13 @@ https://click.palletsprojects.com/en/7.x/testing/
 from datacube_ows.update_ranges_impl import main
 
 
-def test_update_ranges_schema_without_roles(runner) -> None:
+def test_update_ranges_schema(runner) -> None:
     result = runner.invoke(main, ["--schema"])
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0, f"Output: {result.output}"
     result = runner.invoke(main, ["-E", "owspostgis", "--schema"])
-    assert "appear to be missing" not in result.output
-    assert "Insufficient Privileges" not in result.output
-    assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0, f"Output: {result.output}"
-
-
-def test_update_ranges_schema_with_roles(
-    runner, read_role_name: str, write_role_name: str
-) -> None:
-    result = runner.invoke(
-        main,
-        ["--schema", "--read-role", read_role_name, "--write-role", write_role_name],
-    )
-    assert "appear to be missing" not in result.output
-    assert "Insufficient Privileges" not in result.output
-    assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0, f"Output: {result.output}"
-    result = runner.invoke(
-        main,
-        [
-            "-E",
-            "owspostgis",
-            "--schema",
-            "--read-role",
-            read_role_name,
-            "--write-role",
-            write_role_name,
-        ],
-    )
-    assert "appear to be missing" not in result.output
-    assert "Insufficient Privileges" not in result.output
-    assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0, f"Output: {result.output}"
-    result = runner.invoke(
-        main,
-        [
-            "-E",
-            "nonononodontcallanenviornmentthis",
-            "--schema",
-            "--read-role",
-            read_role_name,
-            "--write-role",
-            write_role_name,
-        ],
-    )
-    assert "Unable to connect to the nonono" in result.output
-    assert result.exit_code == 1, f"Output: {result.output}"
-
-
-def test_update_ranges_roles_only(
-    runner, read_role_name: str, write_role_name: str
-) -> None:
-    result = runner.invoke(
-        main, ["--read-role", read_role_name, "--write-role", write_role_name]
-    )
-    assert "appear to be missing" not in result.output
-    assert "Insufficient Privileges" not in result.output
-    assert "Cannot find SQL resource" not in result.output
-    assert result.exit_code == 0, f"Output: {result.output}"
-    result = runner.invoke(
-        main,
-        [
-            "-E",
-            "owspostgis",
-            "--read-role",
-            read_role_name,
-            "--write-role",
-            write_role_name,
-        ],
-    )
     assert "appear to be missing" not in result.output
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output

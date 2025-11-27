@@ -15,6 +15,7 @@ from datacube import Datacube
 from datacube_ows import __version__
 from datacube_ows.config_utils import OWSConfigNotReady
 from datacube_ows.index import AbortRun, LayerSignature, ows_index
+from datacube_ows.index.api import InsufficientDbPrivileges
 from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.startup_utils import initialise_debugging
 
@@ -35,12 +36,14 @@ from datacube_ows.startup_utils import initialise_debugging
 @click.option(
     "--read-role",
     multiple=True,
-    help="(Only valid with --schema) Role(s) to grant read-only database permissions to",
+    deprecated=True,
+    help="No longer supported - use `datacube user` commands instead.",
 )
 @click.option(
     "--write-role",
     multiple=True,
-    help="(Only valid with --schema) Role(s) to grant both read and write/update database permissions to",
+    deprecated=True,
+    help="No longer supported - use `datacube user` commands instead.",
 )
 @click.option(
     "--cleanup",
@@ -52,7 +55,7 @@ from datacube_ows.startup_utils import initialise_debugging
     "-E",
     "--env",
     default=None,
-    help="(Only valid with --schema or --read-role or --write-role or --cleanup) environment to write to.",
+    help="(Only valid with --schema --cleanup) environment to write to.",
 )
 @click.option(
     "--version", is_flag=True, default=False, help="Print version string and exit"
@@ -150,11 +153,19 @@ def main(
             "Sorry, cannot update the materialised views and ranges in the same invocation."
         )
         sys.exit(1)
-    elif read_role and (views or layers):
-        click.echo("Sorry, read-role can't be granted with view or range updates")
+    elif read_role:
+        click.echo(
+            "--read-role is no longer supported. "
+            "Use `datacube user` commands for OWS user management. "
+            "read-only users should be created with the ODC 'user' role."
+        )
         sys.exit(1)
-    elif write_role and (views or layers):
-        click.echo("Sorry, write-role can't be granted with view or range updates")
+    elif write_role:
+        click.echo(
+            "--write-role is no longer supported. "
+            "Use `datacube user` commands for OWS user management. "
+            "write-enabled users should be created with the ODC 'manage' role."
+        )
         sys.exit(1)
 
     initialise_debugging()
@@ -162,7 +173,7 @@ def main(
     cfg = get_config(called_from_update_ranges=True)
     app = cfg.odc_app + "-update"
     errors: bool = False
-    if schema or read_role or write_role or cleanup or views:
+    if schema or cleanup or views:
         try:
             if cfg.default_env and env is None:
                 dc = Datacube(env=cfg.default_env, app=app)
@@ -179,20 +190,14 @@ def main(
             if schema:
                 click.echo("Creating or replacing OWS database schema:...")
                 ows_index(dc).create_schema(dc)
-            for role in read_role:
-                click.echo(f"Granting read-only access to role {role}...")
-                ows_index(dc).grant_perms(dc, role, read_only=True)
-            for role in write_role:
-                click.echo(f"Granting read/write access to role {role}...")
-                ows_index(dc).grant_perms(dc, role)
             if views:
                 click.echo("Updating materialised views...")
                 ows_index(dc).update_geotemporal_index(dc)
             if cleanup:
                 click.echo("Cleaning up datacube-1.8.x range tables and views...")
                 ows_index(dc).cleanup_schema(dc)
-        except AbortRun:
-            click.echo("Aborting schema update")
+        except AbortRun as e:
+            click.echo(f"Aborting schema update: {e}")
             errors = True
         click.echo("Done")
         if errors:
@@ -203,6 +208,8 @@ def main(
     try:
         errors = add_ranges(cfg, layers)
         click.echo("Done.")
+    except InsufficientDbPrivileges as e:
+        click.echo(e)
     except sqlalchemy.exc.ProgrammingError as e:
         import psycopg2.errors
 
@@ -221,6 +228,7 @@ def main(
             click.echo("       Try running with the --views options first.")
             sys.exit(1)
         else:
+            click.echo("Unexpected database error:")
             raise e
     except OWSConfigNotReady as e:
         click.echo(f"ERROR: {e}", err=True)

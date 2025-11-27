@@ -10,7 +10,8 @@ import os
 
 if os.environ.get("DATACUBE_OWS_CFG", "").startswith("integration_tests"):
     cfgbase = "integration_tests.cfg."
-    trans_dir = "."
+    # N.B. relative paths are evaluated inconsistently - use an absolute path instead!
+    trans_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 else:
     cfgbase = "config."
     trans_dir = "/src"
@@ -551,6 +552,7 @@ reslim_for_sentinel2 = {
     },
     "wcs": {
         "max_datasets": 32,  # Defaults to no dataset limit
+        "max_image_size": 800 * 800 * 16,
     },
 }
 

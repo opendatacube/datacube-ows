@@ -56,6 +56,7 @@ def minimal_dc():
         "bar": nb,
     }
     dc.list_measurements.return_value = lmo
+    dc.index.name = "pg_index"
     dc.index.environment = ODCConfig.get_environment()
 
     def product_by_name(s):
