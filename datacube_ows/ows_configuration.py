@@ -794,7 +794,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 self.low_res_products.append(product)
         self.product = self.products[0]
         self.definition = self.product.definition
-        self.force_range_update()
+        ranges_ok = self.force_range_update()
         self.band_idx.make_ready()
         self.resource_limits.make_ready()
         self.all_flag_band_names: set[str] = set()
@@ -816,6 +816,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         if not self.hide:
             super().make_ready(*args, **kwargs)
+
+        if not ranges_ok:
+            # Hide layers that are ready except that no ranges are available.
+            self.hide = True
 
     # pylint: disable=attribute-defined-outside-init
     def parse_image_processing(self, cfg: CFG_DICT) -> None:
@@ -1167,8 +1171,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def parse_pq_names(self, cfg: CFG_DICT):
         raise NotImplementedError()
 
-    def force_range_update(self) -> None:
-        self.hide = False
+    def force_range_update(self) -> bool:
         try:
             self._ranges = self.ows_index().get_ranges(self)
             if self._ranges is None:
@@ -1191,13 +1194,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 self.default_time = self._ranges.end_time
             else:
                 self.default_time = self._ranges.end_time
-
+            return True
         # pylint: disable=broad-except
         except Exception as a:
             if not self.global_cfg.called_from_update_ranges:
                 _LOG.warning("get_ranges failed for layer %s: %s", self.name, str(a))
-            self.hide = True
             self.bboxes = {}
+            return False
 
     def time_range(
         self, ranges: Optional["LayerExtent"] = None
@@ -1219,7 +1222,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     @property
     def ranges(self) -> "LayerExtent":
         if self.dynamic:
-            self.force_range_update()
+            ranges_ok = self.force_range_update()
+        if not ranges_ok:
+            self.hide = True
+            raise ConfigException(f"No ranges found for layer {self.name}")
         assert self._ranges is not None  # For type checker
         return self._ranges
 
