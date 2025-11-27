@@ -78,7 +78,7 @@ create an OWS schema in the ``myenv`` ODC environment::
     datacube-ows-update -E myenv --schema
 
 Initially creating an OWS schema requires a database superuser.  Prior to datacube-ows v1.9.6, OWS
-maintained it's own database permissions system.  Immediately after upgrading from OWS v1.9.5 or earlier to
+maintained its own database permissions system.  Immediately after upgrading from OWS v1.9.5 or earlier to
 1.9.6 or later, you should run the ``--schema`` command as a database superuser.
 
 Subsequent schema updates can be
