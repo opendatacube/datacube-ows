@@ -695,9 +695,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         self.dynamic = cfg.get("dynamic", False)
 
-        self.declare_unready("default_time")
-        self.declare_unready("_ranges")
-        self.declare_unready("bboxes")
+        self._ranges: LayerExtent | None = None
+        self.bboxes: CFG_DICT = {}
+        self.default_time: datetime.datetime | datetime.date | None = None
         self.band_idx = BandIndex(self, cast(CFG_DICT, cfg.get("bands")))
         self.cfg_native_resolution = cfg.get("native_resolution")
         self.cfg_native_crs = cast(str, cfg.get("native_crs"))
@@ -819,6 +819,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         if not ranges_ok:
             # Hide layers that are ready except that no ranges are available.
+            _LOG.warning("Layer %s is ready but no ranges are available.", self.name)
             self.hide = True
 
     # pylint: disable=attribute-defined-outside-init
@@ -980,11 +981,11 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("native_CRS_def")
 
         # Rectified Grids
-        self.declare_unready("origin_x")
-        self.declare_unready("origin_y")
-        self.declare_unready("grid_high_x")
-        self.declare_unready("grid_high_y")
-        self.declare_unready("grids")
+        self.origin_x: int | float = 0
+        self.origin_y: int | float = 0
+        self.grid_high_x: int | float = 0
+        self.grid_high_y: int | float = 0
+        self.grids: dict = {}
         # Band management
         if cfg.get("default_bands"):
             _LOG.warning(
@@ -1100,7 +1101,6 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                         self.name,
                         self.native_CRS,
                     )
-                self.hide = True
                 return
             self.origin_x = native_bounding_box["left"]
             self.origin_y = native_bounding_box["bottom"]
@@ -1175,7 +1175,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         try:
             self._ranges = self.ows_index().get_ranges(self)
             if self._ranges is None:
-                raise Exception("Null product range")
+                return False
             self.bboxes = self.extract_bboxes()
             if self.default_time_rule == DEF_TIME_EARLIEST:
                 self.default_time = self._ranges.start_time
