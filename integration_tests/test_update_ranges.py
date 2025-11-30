@@ -30,6 +30,11 @@ def test_update_ranges_cleanup(runner) -> None:
     assert "Insufficient Privileges" not in result.output
     assert "Cannot find SQL resource" not in result.output
     assert result.exit_code == 0, f"Output: {result.output}"
+    result = runner.invoke(main, ["-E", "owspostgis", "--cleanup"])
+    assert "appear to be missing" not in result.output
+    assert "Insufficient Privileges" not in result.output
+    assert "Cannot find SQL resource" not in result.output
+    assert result.exit_code == 0, f"Output: {result.output}"
 
 
 def test_update_ranges_views(runner) -> None:
@@ -46,13 +51,19 @@ def test_update_version(runner) -> None:
     assert result.exit_code == 0, f"Output: {result.output}"
 
 
-def test_update_ranges_product(runner, product_name: str) -> None:
-    result = runner.invoke(main, [product_name])
+def test_update_ranges_postgres_layer(runner, layer_name: str) -> None:
+    result = runner.invoke(main, [layer_name])
     assert "ERROR" not in result.output
     assert result.exit_code == 0, f"Output: {result.output}"
 
 
-def test_update_ranges_bad_product(runner, product_name: str) -> None:
+def test_update_ranges_postgis_layer(runner, postgis_layer_name: str) -> None:
+    result = runner.invoke(main, [postgis_layer_name])
+    assert "ERROR" not in result.output
+    assert result.exit_code == 0, f"Output: {result.output}"
+
+
+def test_update_ranges_bad_product(runner) -> None:
     result = runner.invoke(main, ["not_a_real_product_name"])
     assert "not_a_real_product_name" in result.output
     assert "does not exist in the OWS configuration - skipping" in result.output

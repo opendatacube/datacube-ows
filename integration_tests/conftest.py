@@ -106,8 +106,13 @@ def representative_bbox(
 
 
 @pytest.fixture
-def product_name() -> str:
+def layer_name() -> str:
     return "s2_l2a"
+
+
+@pytest.fixture
+def postgis_layer_name() -> str:
+    return "s2_l2a_postgis"
 
 
 @pytest.fixture

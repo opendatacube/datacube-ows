@@ -1093,7 +1093,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         if self.global_cfg.wcs and self.wcs:
             # Prepare Rectified Grids
             try:
-                native_bounding_box = cast(dict[str, int | float], self.bboxes[self.native_CRS])
+                native_bounding_box = cast(
+                    dict[str, int | float], self.bboxes[self.native_CRS]
+                )
             except KeyError:
                 if not self.global_cfg.called_from_update_ranges:
                     _LOG.warning(
