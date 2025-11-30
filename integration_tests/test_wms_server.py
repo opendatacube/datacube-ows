@@ -150,14 +150,14 @@ def test_wms_getmap(ows_server) -> None:
         assert img.info()["Content-Type"] == "image/png"
 
 
-def test_wms_getmap_requests(ows_server, product_name: str) -> None:
+def test_wms_getmap_requests(ows_server, layer_name: str) -> None:
     resp = retrying_requests.get(
         ows_server.url + "/wms",
         params={
             "service": "WMS",
             "version": "1.3.0",
             "request": "GetMap",
-            "layers": product_name,
+            "layers": layer_name,
             "width": "150",
             "height": "150",
             "crs": "EPSG:4326",
@@ -212,14 +212,14 @@ def test_wms_getmap_bad_requests(ows_server) -> None:
     assert "Layer not_a_real_layer is not defined" in resp.text
 
 
-def test_wms_getmap_qprof(ows_server, product_name: str) -> None:
+def test_wms_getmap_qprof(ows_server, layer_name: str) -> None:
     resp = retrying_requests.get(
         ows_server.url + "/wms",
         params={
             "service": "WMS",
             "version": "1.3.0",
             "request": "GetMap",
-            "layers": product_name,
+            "layers": layer_name,
             "width": "150",
             "height": "150",
             "crs": "EPSG:4326",
@@ -355,10 +355,10 @@ def test_wms_getfeatureinfo(ows_server) -> None:
             assert response.info()["Content-Type"] == "text/html"
 
 
-def test_custom_feature_info(ows_server, product_name: str) -> None:
+def test_custom_feature_info(ows_server, layer_name: str) -> None:
     wms = WebMapService(url=ows_server.url + "/wms", version="1.3.0", timeout=300)
 
-    test_layer = wms.contents[product_name]
+    test_layer = wms.contents[layer_name]
     query_times = ["2021-12-21T02:01:19", "2021-12-26T02:01:29"]
     bbox = test_layer.boundingBoxWGS84
     response = retrying_requests.get(
@@ -367,7 +367,7 @@ def test_custom_feature_info(ows_server, product_name: str) -> None:
             "service": "WMS",
             "version": "1.3.0",
             "request": "GetFeatureInfo",
-            "query_layers": product_name,
+            "query_layers": layer_name,
             "width": "256",
             "height": "256",
             "crs": "EPSG:4326",

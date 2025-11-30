@@ -80,7 +80,7 @@ def test_metadata_file_ignore(monkeypatch) -> None:
         OWSConfig._msg_src = cached_catalog
 
 
-def test_metadata_read(monkeypatch, product_name: str) -> None:
+def test_metadata_read(monkeypatch, layer_name: str) -> None:
     cached_cfg = OWSConfig._instance
     monkeypatch.chdir(src_dir)
     try:
@@ -98,7 +98,7 @@ def test_metadata_read(monkeypatch, product_name: str) -> None:
         assert "Over-ridden" in folder.abstract
         assert "bunny-rabbit" in folder.abstract
 
-        lyr = cfg.layer_index[product_name]
+        lyr = cfg.layer_index[layer_name]
         assert "Over-ridden" in lyr.title
         assert "chook" in lyr.title
 

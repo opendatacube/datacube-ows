@@ -27,11 +27,11 @@ def test_wcs1_i18n(ows_server) -> None:
     assert "German translation" in resp.text
 
 
-def test_wcs1_bands_i18n(ows_server, product_name: str) -> None:
+def test_wcs1_bands_i18n(ows_server, layer_name: str) -> None:
     resp = retrying_requests.get(
         ows_server.url
         + "/wcs?request=DescribeCoverage&service=WCS&version=1.0.0&coverageid="
-        + product_name,
+        + layer_name,
         timeout=10,
         headers={"Accept-Language": "de"},
     )
@@ -49,11 +49,11 @@ def test_wcs2_i18n(ows_server) -> None:
     assert "German translation" in resp.text
 
 
-def test_wcs2_bands_i18n(ows_server, product_name: str) -> None:
+def test_wcs2_bands_i18n(ows_server, layer_name: str) -> None:
     resp = retrying_requests.get(
         ows_server.url
         + "/wcs?request=DescribeCoverage&service=WCS&version=2.0.1&coverageid="
-        + product_name,
+        + layer_name,
         timeout=10,
         headers={"Accept-Language": "de"},
     )

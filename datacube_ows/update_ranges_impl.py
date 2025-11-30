@@ -252,6 +252,10 @@ def add_ranges(cfg: OWSConfig, layer_names: list[str]) -> bool:
             errors = True
             continue
         layer = cfg.layer_index[name]
+        if not layer.ready:
+            click.echo(f"Layer '{name}' cannot currently be loaded - skipping")
+            errors = True
+            continue
         layer.ows_index().create_range_entry(layer, cache)
 
     click.echo("Done.")
