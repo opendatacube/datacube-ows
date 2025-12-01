@@ -26,7 +26,7 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 
 @deprecat(
-    reason="The 'rolling_windows_ndays' mosaicing function has moved to 'datacube.time_utils' - "
+    reason="The 'rolling_windows_ndays' mosaicing function has moved to 'datacube_ows.time_utils' - "
     "please import it from there.",
     version="1.9.0",
 )
