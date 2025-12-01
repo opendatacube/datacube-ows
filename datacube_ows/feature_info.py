@@ -231,7 +231,14 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
 
                 # Get accurate timestamp from dataset
                 assert ds.time is not None  # For type checker
-                if params.layer.time_resolution.is_summary():
+                if params.layer.mosaic_date_func is not None:
+                    start, end = params.layer.mosaic_date_func(
+                        params.layer.ranges.times
+                    )
+                    date_info["time"] = (
+                        start.strftime("%Y-%m-%d") + " - " + end.strftime("%Y-%m-%d")
+                    )
+                elif params.layer.time_resolution.is_summary():
                     date_info["time"] = ds.time.begin.strftime("%Y-%m-%d")
                 else:
                     date_info["time"] = dataset_center_time(ds).strftime(
@@ -295,7 +302,9 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                 if ds.extent and ds.extent.contains(pt_native):
                     # tolist() converts a numpy datetime64 to a python datatime
                     dt = Timestamp(stacker.group_by.group_by_func(ds)).to_pydatetime()
-                    if params.layer.time_resolution.is_subday():
+                    if params.layer.mosaic_date_func is not None:
+                        pass
+                    elif params.layer.time_resolution.is_subday():
                         cast(
                             list[RAW_CFG], feature_json["data_available_for_dates"]
                         ).append(dt.isoformat())
