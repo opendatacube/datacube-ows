@@ -16,6 +16,7 @@ from datacube import Datacube
 from datacube.api.query import GroupBy, solar_day
 from datacube.model import Dataset
 from numpy import datetime64 as npdt64
+from numpy import timedelta64 as npdelt64
 from sqlalchemy.engine.base import Connection
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -115,20 +116,29 @@ def group_by_solar(pnames: list[str] | None = None) -> GroupBy:
     )
 
 
+# NB Epoch is arbitrary - could be any date in past or future.
+epoch = npdt64("1970-01-01", "ns")
+
+
 def group_by_mosaic(pnames: list[str] | None = None) -> GroupBy:
+    # Need to sort in reverse date order to ensure that latest data is always rendered.
+    # (see definition of _default_fuser() in datacube.storage._loader._default_fuser)
+    def reverse_solar_day_sortkey(ds: Dataset) -> npdelt64:
+        return epoch - solar_day(ds)
+
     base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:
         index = {pn: i for i, pn in enumerate(pnames)}
         sort_key: Callable[[Dataset], tuple] = lambda ds: (  # noqa: E731
-            solar_day(ds),
+            reverse_solar_day_sortkey(ds),
             index.get(ds.product.name),
             base_sort_key(ds),
         )
     else:
-        sort_key = lambda ds: (solar_day(ds), base_sort_key(ds))  # noqa: E731
+        sort_key = lambda ds: (reverse_solar_day_sortkey(ds), base_sort_key(ds))  # noqa: E731
     return GroupBy(
         dimension="time",
-        group_by_func=lambda n: npdt64(datetime.datetime(1970, 1, 1), "ns"),
+        group_by_func=lambda n: epoch,
         units="seconds since 1970-01-01 00:00:00",
         sort_key=sort_key,
     )
