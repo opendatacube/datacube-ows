@@ -137,7 +137,6 @@ def test_group_by_stat(datasets_for_sorting) -> None:
         "K",
         "L",
     ]
-
     gby = group_by_begin_datetime(["prod_c", "prod_b", "prod_a"], truncate_dates=False)
     date_only = Datacube.group_datasets(datasets_for_sorting, gby)
     assert len(date_only) == 2
@@ -198,6 +197,8 @@ def test_group_by_mosaic(datasets_for_sorting) -> None:
     assert len(date_only) == 1
     arrays = date_only.values
     assert [ds.id for ds in arrays[0]] == [
+        "H",
+        "L",
         "A",
         "B",
         "E",
@@ -208,8 +209,6 @@ def test_group_by_mosaic(datasets_for_sorting) -> None:
         "D",
         "G",
         "K",
-        "H",
-        "L",
     ]
 
     gby = group_by_mosaic(["prod_c", "prod_b", "prod_a"])
@@ -217,6 +216,8 @@ def test_group_by_mosaic(datasets_for_sorting) -> None:
     assert len(date_only) == 1
     arrays = date_only.values
     assert [ds.id for ds in arrays[0]] == [
+        "L",
+        "H",
         "I",
         "J",
         "K",
@@ -227,8 +228,6 @@ def test_group_by_mosaic(datasets_for_sorting) -> None:
         "B",
         "C",
         "D",
-        "L",
-        "H",
     ]
 
 
