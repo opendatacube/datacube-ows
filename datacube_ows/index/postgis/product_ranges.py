@@ -14,12 +14,13 @@ import datacube
 import odc.geo
 import sqlalchemy.exc
 from odc.geo.crs import CRS
-from psycopg2.extras import Json
+from psycopg.types.json import Json as Json3
+from psycopg2.extras import Json as Json2
 from sqlalchemy import text
 
 from datacube_ows.index.api import CoordRange, LayerExtent, LayerSignature
 from datacube_ows.ows_configuration import OWSNamedLayer
-from datacube_ows.utils import get_sqlconn
+from datacube_ows.utils import get_driver_name, get_sqlconn
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -78,6 +79,7 @@ def create_range_entry(
                 {"layer_id": layer.name, "template_id": template},
             )
     else:
+        Json = Json3 if get_driver_name(layer.dc.index) == "psycopg" else Json2
         # insert empty row if one does not already exist
         conn.execute(
             text("""
