@@ -5,9 +5,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import enum
+import os
+from urllib import request
 
+from lxml import etree
 from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
+
+from datacube_ows.legend_utils import retrying_requests
+
+# Set this environment variable to suppress retries in tests.
+if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
+    import requests
+
+    retrying_requests = requests
 
 
 class WCS20Extent:
@@ -384,3 +395,21 @@ class ODCExtent:
         extent = space.subset(time_extent, self.full_extent)
 
         return extent, ext_times
+
+
+class HttpResolver(etree.Resolver):
+    """LXML resolver for HTTP/HTTPS links."""
+
+    def resolve(self, url: str, pubid: object, context: object):
+        uri = url.lower()
+        if uri.startswith("http:") or uri.startswith("https:"):
+            res = retrying_requests.get(url, allow_redirects=True)
+            return self.resolve_string(res.text, context, base_url=url)
+        return None
+
+
+def get_xsd(name: str) -> etree.XMLSchema:
+    xsd_f = request.urlopen("https://schemas.opengis.net/" + name)
+    parser = etree.XMLParser(load_dtd=True, no_network=False)
+    parser.resolvers.add(HttpResolver())
+    return etree.XMLSchema(etree.parse(xsd_f, parser))

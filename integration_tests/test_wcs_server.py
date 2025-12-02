@@ -14,21 +14,13 @@ from owslib.wcs import WebCoverageService
 
 from datacube_ows.legend_utils import retrying_requests
 from datacube_ows.ows_configuration import OWSConfig, TimeRes, get_config
-from integration_tests.utils import ODCExtent
+from integration_tests.utils import ODCExtent, get_xsd
 
 # Set this environment variable to suppress retries in tests.
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
     import requests
 
     retrying_requests = requests
-
-
-def get_xsd(name: str) -> etree.XMLSchema:
-    # TODO: Get XSD's for different versions
-    xsd_f = request.urlopen("http://schemas.opengis.net/wcs/" + name)
-    schema_doc = etree.parse(xsd_f)
-
-    return etree.XMLSchema(schema_doc)
 
 
 def check_wcs_error(
@@ -94,7 +86,7 @@ def test_wcs1_getcap(ows_server) -> None:
 
     # Validate XML Schema
     resp_xml = etree.parse(resp.fp)
-    gc_xds = get_xsd("1.0.0/wcsCapabilities.xsd")
+    gc_xds = get_xsd("wcs/1.0.0/wcsCapabilities.xsd")
     assert gc_xds.validate(resp_xml)
 
 
@@ -997,7 +989,7 @@ def test_wcs1_describecoverage(ows_server) -> None:
 
     resp = wcs.getDescribeCoverage(test_layer_name)
 
-    gc_xds = get_xsd("1.0.0/describeCoverage.xsd")
+    gc_xds = get_xsd("wcs/1.0.0/describeCoverage.xsd")
     assert gc_xds.validate(resp)
 
 

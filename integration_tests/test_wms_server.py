@@ -13,12 +13,15 @@ from lxml import etree
 from owslib.wms import WebMapService
 
 from datacube_ows.legend_utils import retrying_requests
+from integration_tests.utils import HttpResolver
 
 
 def get_xsd(name: str) -> etree.XMLSchema:
     path = Path(__file__).resolve().parent.parent / "wms_xsds" / name
+    parser = etree.XMLParser(load_dtd=True, no_network=False)
+    parser.resolvers.add(HttpResolver())
     with open(path) as xsd_f:
-        schema_doc = etree.parse(xsd_f)
+        schema_doc = etree.parse(xsd_f, parser)
     return etree.XMLSchema(schema_doc)
 
 
