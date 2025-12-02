@@ -3,7 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Literal
 
 import numpy
@@ -13,7 +13,7 @@ import xarray as xr
 
 
 def scale_data(
-    imgband_data: numpy.ndarray, scale_from: list[float], scale_to: list[float]
+    imgband_data: numpy.ndarray, scale_from: Sequence[float], scale_to: Sequence[float]
 ) -> numpy.ndarray:
     sc_min, sc_max = scale_from
     tc_min, tc_max = scale_to
