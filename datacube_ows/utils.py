@@ -14,6 +14,7 @@ from typing import Any, TypeVar, cast
 
 from datacube import Datacube
 from datacube.api.query import GroupBy, solar_day
+from datacube.index import Index
 from datacube.model import Dataset
 from numpy import datetime64 as npdt64
 from sqlalchemy.engine.base import Connection
@@ -143,6 +144,11 @@ def get_sqlconn(dc: Datacube) -> Connection:
     """
     # pylint: disable=protected-access
     return dc.index._db._engine.connect()  # type: ignore[attr-defined]
+
+
+def get_driver_name(index: Index) -> str:
+    """Return the driver name for the engine of a datacube index."""
+    return index._db._engine.url.get_driver_name()  # type: ignore[attr-defined]
 
 
 def find_matching_date(dt, dates) -> bool:
