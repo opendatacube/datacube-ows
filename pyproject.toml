@@ -19,7 +19,6 @@ dependencies = [
     "geoalchemy2",
     "importlib_metadata",
     "lark",
-    "lxml<6",
     "matplotlib",
     "numpy>=1.22",
     "prometheus_flask_exporter",
@@ -86,6 +85,7 @@ setup = ["setuptools", "setuptools_scm"]
 test = [
     "flask-cors",
     "fsspec",
+    "lxml",
     "owslib>0.29.2",
     "psycopg2",
     "pytest",
