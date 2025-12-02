@@ -16,6 +16,7 @@ from datacube.index import Index
 from datacube.model import Dataset, Product
 from geoalchemy2 import Geometry
 from odc.geo.geom import Geometry as ODCGeom
+from psycopg.types.range import TimestamptzRange
 from psycopg2.extras import DateTimeTZRange
 from sqlalchemy import SMALLINT, Column, MetaData, Table, and_, or_, select, text
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
@@ -24,7 +25,7 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.elements import ClauseElement
 from sqlalchemy.sql.functions import count, func
 
-from datacube_ows.utils import default_to_utc
+from datacube_ows.utils import default_to_utc, get_driver_name
 
 
 def get_sqlalc_engine(index: Index) -> Engine:
@@ -147,7 +148,12 @@ def mv_search(
                     )
                 )
             else:
-                or_clauses.append(stv.c.temporal_extent.op("&&")(DateTimeTZRange(*t)))
+                TZRange = (
+                    TimestamptzRange
+                    if get_driver_name(index) == "psycopg"
+                    else DateTimeTZRange
+                )
+                or_clauses.append(stv.c.temporal_extent.op("&&")(TZRange(*t)))
         s = s.where(or_(*or_clauses))
     orig_crs = None
     if geom is not None:
