@@ -15,6 +15,7 @@ from uuid import UUID as UUID_
 from datacube.index import Index
 from datacube.model import Dataset, Product
 from geoalchemy2 import Geometry
+from geoalchemy2.functions import ST_AsGeoJSON, ST_Union
 from odc.geo.geom import Geometry as ODCGeom
 from psycopg.types.range import TimestamptzRange
 from psycopg2.extras import DateTimeTZRange
@@ -76,7 +77,7 @@ class MVSelectOpts(Enum):
         if self == self.COUNT:
             return [cast(ClauseElement, count(stv.c.id))]
         if self == self.EXTENT:
-            return [text("ST_AsGeoJSON(ST_Union(spatial_extent))")]
+            return [ST_AsGeoJSON(ST_Union(text("spatial_extent")))]
         raise AssertionError("Invalid selection option")
 
 
