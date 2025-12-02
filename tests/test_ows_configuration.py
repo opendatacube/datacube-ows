@@ -16,12 +16,14 @@ from tests.utils import a_function
 
 def test_function_wrapper_lyr() -> None:
     lyr = MagicMock()
-    func_cfg = "tests.utils.a_function"
-    f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
+    func_cfg_str = "tests.utils.a_function"
+    f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg_str)
     assert f(7)[0] == "a7  b2  c3"
     assert f(5, c=4)[0] == "a5  b2  c4"
     assert f.band_mapper is None
-    func_cfg = {"function": "tests.utils.a_function"}
+    func_cfg: datacube_ows.config_utils.CFG_DICT = {
+        "function": "tests.utils.a_function"
+    }
     f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     assert f(7, 8)[0] == "a7  b8  c3"
     func_cfg = {
