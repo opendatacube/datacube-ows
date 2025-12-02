@@ -5,7 +5,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import enum
+from urllib import request
 
+from lxml import etree
 from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
@@ -384,3 +386,9 @@ class ODCExtent:
         extent = space.subset(time_extent, self.full_extent)
 
         return extent, ext_times
+
+
+def get_xsd(name: str) -> etree.XMLSchema:
+    xsd_f = request.urlopen("http://schemas.opengis.net/" + name)
+    schema_doc = etree.parse(xsd_f)
+    return etree.XMLSchema(schema_doc)

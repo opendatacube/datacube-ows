@@ -12,14 +12,7 @@ from owslib.util import ServiceException
 from owslib.wmts import WebMapTileService
 
 from datacube_ows.legend_utils import retrying_requests
-
-
-def get_xsd(name: str) -> etree.XMLSchema:
-    # since this function is only being called by getcapabilities set to wmts/1.0.0
-    # the exception schema is available from http://schemas.opengis.net/ows/1.1.0/
-    xsd_f = request.urlopen("http://schemas.opengis.net/wmts/1.0/" + name)
-    schema_doc = etree.parse(xsd_f)
-    return etree.XMLSchema(schema_doc)
+from integration_tests.utils import get_xsd
 
 
 def check_wmts_error(
@@ -72,7 +65,7 @@ def test_wmts_getcap(ows_server) -> None:
 
     # Validate XML Schema
     resp_xml = etree.parse(resp.fp)
-    gc_xds = get_xsd("wmtsGetCapabilities_response.xsd")
+    gc_xds = get_xsd("wmts/1.0/wmtsGetCapabilities_response.xsd")
     assert gc_xds.validate(resp_xml)
 
 
