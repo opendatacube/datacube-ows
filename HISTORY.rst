@@ -19,8 +19,8 @@ If upgrading, we recommend upgrading to `datacube>=1.9.11` first.  Update ODC an
     # Update OWS schema:
     datacube-ows-update --schema
 
-Note that this release drops the separate OWS users - all permissions default to the user (c.f. old readrole),
-manage (c.f. old ows writerole), and admin (manage the OWS schema - new feature).
+Note that this release drops the separate OWS users - all permissions default to the user (c.f. old read-role),
+manage (c.f. old ows write-role), and admin (manage the OWS schema - new feature).
 
 Use::
     datacube user grant [user|manage|admin] <db_username>
@@ -96,7 +96,7 @@ Autoupdates
 * build(deps): bump astral-sh/uv from 0.9.14 to 0.9.15 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1369
 
 Includes contributions from @pjonsson, @omad, and @SpacemanPaul, with thanks to supporting organisations
-RISE, CSRIO and Geoscience Australia.
+RISE, CSIRO and Geoscience Australia.
 
 **Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.5...1.9.6
 
