@@ -44,6 +44,7 @@ australia
 auth
 autogenerate
 autoupdate
+autoupdates
 awk
 aws
 ba
@@ -107,6 +108,7 @@ crs
 crss
 CRSs
 crt
+CSIRO
 cryptographic
 ctl
 customisable
@@ -274,6 +276,7 @@ MatPlotLib
 matplotlibrc
 maxage
 maxdepth
+misconfigured
 md
 mkdir
 mpl
@@ -310,6 +313,7 @@ npv
 numpy
 odc
 ogc
+omad
 OIDC
 onwards
 opendatacube
@@ -319,8 +323,10 @@ osgeo
 OSGeo
 overriden
 ows
+owslib
 ows's
 OWS's
+OWSConfigNotReady
 palsar
 params
 pds
