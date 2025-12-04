@@ -167,5 +167,5 @@ include = ["datacube*"]
 
 [tool.setuptools_scm]
 write_to = "datacube_ows/_version.py"
-fallback_version = "1.9.5"
+fallback_version = "1.9.6"
 version_scheme = "post-release"
