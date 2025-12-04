@@ -235,30 +235,29 @@ def sanitise_bbox(bbox: odc.geo.geom.BoundingBox) -> dict[str, float]:
 
 
 def get_ranges(layer: OWSNamedLayer) -> LayerExtent | None:
-    conn = get_sqlconn(layer.dc)
-    results = conn.execute(
-        text("""
-        SELECT *
-        FROM ows.layer_ranges
-        WHERE layer=:pname"""),
-        {"pname": layer.name},
-    )
-
-    for result in results:
-        conn.close()
-        if layer.time_resolution.is_subday():
-            dt_parser: Callable[[str], datetime | date] = (  # noqa: E731
-                lambda dts: datetime.fromisoformat(dts)
-            )
-        else:
-            dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()  # noqa: E731
-        times = [dt_parser(d) for d in result.dates if d is not None]
-        if not times:
-            return None
-        return LayerExtent(
-            lat=CoordRange(min=float(result.lat_min), max=float(result.lat_max)),
-            lon=CoordRange(min=float(result.lon_min), max=float(result.lon_max)),
-            times=times,
-            bboxes=result.bboxes,
+    with get_sqlconn(layer.dc) as conn:
+        results = conn.execute(
+            text("""
+            SELECT *
+            FROM ows.layer_ranges
+            WHERE layer=:pname"""),
+            {"pname": layer.name},
         )
-    return None
+
+        for result in results:
+            if layer.time_resolution.is_subday():
+                dt_parser: Callable[[str], datetime | date] = (  # noqa: E731
+                    lambda dts: datetime.fromisoformat(dts)
+                )
+            else:
+                dt_parser = lambda dts: datetime.strptime(dts, "%Y-%m-%d").date()  # noqa: E731
+            times = [dt_parser(d) for d in result.dates if d is not None]
+            if not times:
+                return None
+            return LayerExtent(
+                lat=CoordRange(min=float(result.lat_min), max=float(result.lat_max)),
+                lon=CoordRange(min=float(result.lon_min), max=float(result.lon_max)),
+                times=times,
+                bboxes=result.bboxes,
+            )
+        return None
