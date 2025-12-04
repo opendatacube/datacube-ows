@@ -7,10 +7,104 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.6 (2025-12-04)
+------------------
+
+If upgrading, we recommend upgrading to `datacube>=1.9.11` first.  Update ODC and OWS schemas as follows:
+
+(NB: use an ODC database environment with database superuser privileges)::
+
+    # Update ODC schema:
+    datacube system init
+    # Update OWS schema:
+    datacube-ows-update --schema
+
+Note that this release drops the separate OWS users - all permissions default to the user (c.f. old readrole),
+manage (c.f. old ows writerole), and admin (manage the OWS schema - new feature).
+
+Use::
+    datacube user grant [user|manage|admin] <db_username>
+
+instead of the old::
+    datacube-ows --read-role <db_username> --write-role <db_username>
+
+If you no longer run OWS 1.8.x versions, now would be a good time to also run::
+
+    # Cleanup OWS 1.8 range tables and materialised views
+    datacube-ows-update --cleanup
+
+These schema changes only affects database user permissions and schema management.  A datacube-1.9.11/ows-1.9.6
+schema is backwards compatible with earlier versions of datacube and ows.
+
+What's Changed
+++++++++++++++
+
+* GetFeatureInfo cleanup and bugfix by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1322
+* CI: fetch tags for release by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1320
+* Combine weekly Dependabot updates to GitHub Actions into a single PR by @omad in https://github.com/opendatacube/datacube-ows/pull/1316
+* readthedocs: fix uv warning by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1334
+* Update to latest Sphinx by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1335
+* Update to owslib 0.35.0 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1337
+* pyproject: use datacube < 1.10.0 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1340
+* CI: use anchors for branches & paths by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1344
+* uv.lock: update dependencies by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1352
+* update_ranges_impl: catch OWSConfigNotReady by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1348
+* Db user perms cleanup by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1343
+* Updates fail cleanly on misconfigured layers. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1356
+* config_utils: fix typo in doc string by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1357
+* compose: use a single db container by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1358
+* Include psycopg3 in dependencies by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1359
+* tests: sync po files by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1360
+* Move lxml from main dependency to test dependency. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1366
+* Add psycopg3 support by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1364
+* Adjust some type annotations by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1367
+* Fix mosaic date stacking order by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1363
+* Update to lxml 6 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1368
+* CI: do not fail fast by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1370
+* Update to datacube 1.9.11 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1371
+* Prepare for 1.9.6 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1372
+
+Autoupdates
++++++++++++
+
+* build(deps): bump astral-sh/uv from 0.9.4 to 0.9.5 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1321
+* build(deps): bump mambaorg/micromamba from 2.3.2 to 2.3.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1326
+* build(deps): bump astral-sh/setup-uv from 7.1.1 to 7.1.2 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1324
+* build(deps): bump actions/upload-artifact from 4.6.2 to 5.0.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1325
+* build(deps): bump github/codeql-action from 4.30.9 to 4.31.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1323
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1327
+* build(deps): bump mambaorg/micromamba from `e4ef56b` to `800e7ad` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1328
+* build(deps): bump astral-sh/uv from 0.9.5 to 0.9.6 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1329
+* build(deps): bump astral-sh/uv from 0.9.6 to 0.9.7 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1330
+* build(deps): bump github/codeql-action from 4.31.0 to 4.31.2 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1331
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1332
+* build(deps): bump docker/metadata-action from 5.8.0 to 5.9.0 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1338
+* build(deps): bump astral-sh/uv from 0.9.7 to 0.9.8 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1339
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1341
+* build(deps): bump astral-sh/uv from 0.9.8 to 0.9.9 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1342
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1345
+* build(deps): bump astral-sh/uv from 0.9.9 to 0.9.10 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1346
+* build(deps): bump astral-sh/uv from 0.9.10 to 0.9.11 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1347
+* build(deps): bump mambaorg/micromamba from 2.3.3 to 2.4.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1350
+* build(deps): bump the actions-deps group with 3 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1349
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1351
+* build(deps): bump astral-sh/uv from 0.9.11 to 0.9.12 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1353
+* build(deps): bump astral-sh/uv from 0.9.12 to 0.9.13 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1355
+* build(deps): bump the actions-deps group with 2 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1361
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1362
+* build(deps): bump astral-sh/uv from 0.9.13 to 0.9.14 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1365
+* build(deps): bump astral-sh/uv from 0.9.14 to 0.9.15 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1369
+
+Includes contributions from @pjonsson, @omad, and @SpacemanPaul, with thanks to supporting organisations
+RISE, CSRIO and Geoscience Australia.
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.5...1.9.6
+
 1.9.5 (2025-10-21)
 ------------------
 
-## What's Changed
+What's Changed
+++++++++++++++
 
 Significant changes include:
 
