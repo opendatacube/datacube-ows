@@ -1185,7 +1185,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     "get_ranges failed for layer %s: %s(%s)",
                     self.name,
                     e.__class__.__name__,
-                    str(e)
+                    str(e),
                 )
             self.bboxes = {}
             return False
