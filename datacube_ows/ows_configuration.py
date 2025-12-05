@@ -1178,31 +1178,36 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self._ranges = self.ows_index().get_ranges(self)
             if self._ranges is None:
                 return False
-            self.bboxes = self.extract_bboxes()
-            if self.default_time_rule == DEF_TIME_EARLIEST:
-                self.default_time = self._ranges.start_time
-            elif (
-                isinstance(self.default_time_rule, datetime.date)
-                and self.default_time_rule in self._ranges.time_set
-            ):
-                self.default_time = self.default_time_rule
-            elif isinstance(self.default_time_rule, datetime.date):
-                _LOG.warning(
-                    "default_time for named_layer %s is explicit date (%s) that is "
-                    " not available for the layer. Using most recent available date instead.",
-                    self.name,
-                    self.default_time_rule.isoformat(),
-                )
-                self.default_time = self._ranges.end_time
-            else:
-                self.default_time = self._ranges.end_time
-            return True
         # pylint: disable=broad-except
-        except Exception as a:
+        except Exception as e:
             if not self.global_cfg.called_from_update_ranges:
-                _LOG.warning("get_ranges failed for layer %s: %s", self.name, str(a))
+                _LOG.warning(
+                    "get_ranges failed for layer %s: %s(%s)",
+                    self.name,
+                    e.__class__.__name__,
+                    str(e),
+                )
             self.bboxes = {}
             return False
+        self.bboxes = self.extract_bboxes()
+        if self.default_time_rule == DEF_TIME_EARLIEST:
+            self.default_time = self._ranges.start_time
+        elif (
+            isinstance(self.default_time_rule, datetime.date)
+            and self.default_time_rule in self._ranges.time_set
+        ):
+            self.default_time = self.default_time_rule
+        elif isinstance(self.default_time_rule, datetime.date):
+            _LOG.warning(
+                "default_time for named_layer %s is explicit date (%s) that is "
+                "not available for the layer. Using most recent available date instead.",
+                self.name,
+                self.default_time_rule.isoformat(),
+            )
+            self.default_time = self._ranges.end_time
+        else:
+            self.default_time = self._ranges.end_time
+        return True
 
     def time_range(
         self, ranges: Optional["LayerExtent"] = None
