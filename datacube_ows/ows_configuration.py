@@ -1200,7 +1200,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         elif isinstance(self.default_time_rule, datetime.date):
             _LOG.warning(
                 "default_time for named_layer %s is explicit date (%s) that is "
-                " not available for the layer. Using most recent available date instead.",
+                "not available for the layer. Using most recent available date instead.",
                 self.name,
                 self.default_time_rule.isoformat(),
             )
