@@ -10,6 +10,8 @@ updates:
     actions-deps:
       patterns:
         - "*"
+  cooldown:
+    default-days: "10"
 - package-ecosystem: docker
   directory: "/"
   schedule:
