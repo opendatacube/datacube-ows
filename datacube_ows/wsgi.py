@@ -12,7 +12,7 @@ import sys
 # This is the directory of the source code that the web app will run from
 sys.path.append("/opt")
 
-# The location of the datcube config file.
+# The location of the datacube config file.
 if os.path.isfile("/opt/odc/.datacube.conf.local"):
     os.environ.setdefault("ODC_CONFIG_PATH", "/opt/odc/.datacube.conf.local")
 

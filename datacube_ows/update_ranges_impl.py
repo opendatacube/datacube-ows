@@ -93,7 +93,7 @@ def main(
         (These schema management actions require higher level permissions.)
 
     * datacube-ows-update --cleanup
-        Clean up (drop) any datcube-ows 1.8.x database entities.
+        Clean up (drop) any datacube-ows 1.8.x database entities.
 
         The --cleanup option can also be passed in combination with the --schema option described above.
 
