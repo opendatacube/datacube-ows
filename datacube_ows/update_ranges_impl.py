@@ -80,18 +80,6 @@ def main(
     * datacube-ows-update --schema
         Create (re-create) the OWS schema (including materialised views)
 
-    * datacube-ows-update --read-role role1 --read-role role2 --write-role role3
-        Grants read or read/write permissions to the OWS tables and views to the indicated role(s).
-
-        The --read-role and --write-role options can also be passed in combination with the --schema option
-        described above.
-
-        Read permissions are required for the database role that the datacube-ows service uses.
-
-        Write permissions are required for the database role used to run the Data Management actions below.
-
-        (These schema management actions require higher level permissions.)
-
     * datacube-ows-update --cleanup
         Clean up (drop) any datacube-ows 1.8.x database entities.
 
