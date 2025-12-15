@@ -33,6 +33,7 @@ from odc.geo import CRS, CRSError
 from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
+from sqlalchemy.exc import OperationalError
 from typing_extensions import override
 
 from datacube_ows.config_utils import (
@@ -364,6 +365,8 @@ class OWSLayer(OWSMetadataConfig):
             try:
                 self._dc = Datacube(env=self._local_env, app=self.global_cfg.odc_app)
                 return self._dc
+            except OperationalError:
+                raise
             except Exception as e:
                 raise ODCInitException(str(e)) from None
 
