@@ -184,5 +184,4 @@ def test_sentry_before_send() -> None:
         _ = LGEOS380().GEOSGeom_destroy()
     except Exception:
         hint = {"exc_info": sys.exc_info()}
-        assert "exc_info" in hint
         assert before_send("event", hint) is None
