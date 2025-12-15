@@ -117,8 +117,6 @@ class ComponentStyleDef(StyleDefBase):
         Second-phase (db aware) initialisation
 
         Mostly sorting out bands, esp flag bands.
-
-        :param dc: A datacube object
         """
         self.rgb_components = cast(dict[str, None | Callable | LINEAR_COMP_DICT], {})
         for band, component in self.raw_rgb_components.items():
