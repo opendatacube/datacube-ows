@@ -53,6 +53,7 @@ RUN --mount=type=cache,id=opendatacube-uv-cache,target=/root/.cache \
       --no-binary-package fiona \
       --no-binary-package netcdf4 \
       --no-binary-package psycopg \
+      --no-binary-package psycopg-c \
       --no-binary-package psycopg2 \
       --no-binary-package rasterio \
       --no-binary-package shapely

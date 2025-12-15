@@ -77,7 +77,7 @@ ops = [
     "gunicorn[gevent]",
     "prometheus_client",
     "psycopg2",
-    "psycopg",
+    "psycopg[c]",
     "sentry_sdk",
 ]
 postgres = ["psycopg2"]
