@@ -11,7 +11,7 @@ import sys
 import click
 import sqlalchemy
 from datacube import Datacube
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datacube_ows import __version__
 from datacube_ows.config_utils import OWSConfigNotReady
@@ -167,12 +167,11 @@ def main(
     errors: bool = False
     if schema or cleanup or views:
         try:
-            if cfg.default_env and env is None:
-                dc = Datacube(env=cfg.default_env, app=app)
-            else:
-                dc = Datacube(env=env, app=app)
-        except Exception:
-            click.echo(f"Unable to connect to the {env or cfg.default_env} database.")
+            dc = Datacube(
+                env=cfg.default_env if cfg.default_env and env is None else env, app=app
+            )
+        except (OperationalError, ProgrammingError) as e:
+            click.echo(f"ERROR: {e}", err=True)
             sys.exit(1)
 
         click.echo(
