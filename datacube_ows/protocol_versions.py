@@ -45,8 +45,9 @@ class SupportedSvc:
         versions: Sequence[SupportedSvcVersion],
         default_exception_class: type[OGCException] | None = None,
     ) -> None:
+        if not versions:
+            raise RuntimeError("Empty versions sequence")
         self.versions = sorted(versions, key=lambda x: x.version_parts)
-        assert len(self.versions) > 0
         self.service = self.versions[0].service
         self.service_upper = self.versions[0].service_upper
         assert self.service.upper() == self.service_upper
@@ -83,9 +84,8 @@ class SupportedSvc:
         for v in reversed(self.versions):
             if rv_parts >= v.version_parts:
                 return v
-        # The constructor asserted that self.versions is not empty, so this is safe.
-        # pylint: disable=undefined-loop-variable
-        return v
+        # The constructor ensures that self.versions is not empty, so this is safe.
+        return self.versions[0]
 
     def activated(self) -> bool:
         cfg = get_config()
