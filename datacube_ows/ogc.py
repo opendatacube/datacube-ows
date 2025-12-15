@@ -137,6 +137,7 @@ def ogc_impl():
         _LOG.error("Handled Error: %s", repr(e.errors))
         return e.exception_response()
     except Exception as e:  # pylint: disable=broad-except
+        _LOG.exception(e)
         tb = sys.exc_info()[2]
         ogc_e = WMSException(f"Unexpected server error: {e!s}", http_response=500)
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
@@ -183,6 +184,7 @@ def ogc_svc_impl(svc):
     except OGCException as e:
         return e.exception_response()
     except Exception as e:  # pylint: disable=broad-except
+        _LOG.exception(e)
         tb = sys.exc_info()[2]
         ogc_e = version_support.exception_class(
             f"Unexpected server error: {e!s}", http_response=500

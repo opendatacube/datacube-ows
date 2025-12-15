@@ -158,8 +158,11 @@ def main(
         sys.exit(1)
 
     initialise_debugging()
-
-    cfg = get_config(called_from_update_ranges=True)
+    try:
+        cfg = get_config(called_from_update_ranges=True)
+    except OperationalError as e:
+        click.echo(f"ERROR: {e}", err=True)
+        sys.exit(1)
     app = cfg.odc_app + "-update"
     errors: bool = False
     if schema or cleanup or views:

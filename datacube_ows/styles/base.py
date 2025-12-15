@@ -259,8 +259,6 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         Second-phase (db aware) initialisation
 
         Mostly sorting out bands, esp flag bands.
-
-        :param dc: A datacube object
         """
         # pyre-ignore[16]
         self.needed_bands: set[str] = set()
