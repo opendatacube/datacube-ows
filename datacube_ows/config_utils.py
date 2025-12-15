@@ -261,10 +261,8 @@ class OWSConfigEntry:
         In the base class we just confirm that all declared-unready attributes have been initialised,
         and set the ready flag.
 
-        :param dc:
         :param args:
         :param kwargs:
-        :return:
         """
         if self._unready_attributes:
             raise OWSConfigNotReady(
@@ -778,8 +776,6 @@ class OWSFlagBand(OWSConfigEntry):
     def make_ready(self, *args: Any, **kwargs: Any) -> None:
         """
         Second round (db-aware) intialisation.
-
-        :param dc: A Datacube object
         """
         # pyre-ignore[16]
         self.pq_products: list[Product] = []
@@ -902,8 +898,6 @@ class FlagProductBands(OWSConfigEntry):
     def make_ready(self, *args, **kwargs) -> None:
         """
         Second round (db-aware) intialisation.
-
-        :param dc: A Datacube object
         """
         for fb in self.flag_bands.values():
             fb = cast(OWSFlagBand, fb)
