@@ -59,9 +59,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
         return db_ok
 
     @override
-    def _check_perms(
-        self, dc: Datacube, group: Literal["user", "manage", "admin"]
-    ) -> None:
+    def _check_perms(self, dc: Datacube, group: Literal["manage", "admin"]) -> None:
         if get_driver_name(dc.index) == "psycopg":
             from psycopg.errors import ProgrammingError
         else:
@@ -111,7 +109,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
         create_range_entry_impl(layer, cache)
 
     @override
-    @check_perms("user")
     def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None:
         return get_ranges_impl(layer)
 
@@ -169,7 +166,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
         return query
 
     @override
-    @check_perms("user")
     def ds_search(
         self,
         layer: OWSNamedLayer,
@@ -182,7 +178,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
         )
 
     @override
-    @check_perms("user")
     def dsid_search(
         self,
         layer: OWSNamedLayer,
@@ -196,7 +191,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
             yield ds.id  # type: ignore[attr-defined]
 
     @override
-    @check_perms("user")
     def count(
         self,
         layer: OWSNamedLayer,
@@ -209,7 +203,6 @@ class OWSPostgisIndex(OWSAbstractIndex):
         )
 
     @override
-    @check_perms("user")
     def extent(
         self,
         layer: OWSNamedLayer,

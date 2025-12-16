@@ -224,7 +224,7 @@ def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
 
 
 def check_perms(
-    group: Literal["user", "admin", "manage"],
+    group: Literal["admin", "manage"],
 ) -> Callable[[Callable], Callable]:
     def outer(f: Callable) -> Callable:
         def inner(
