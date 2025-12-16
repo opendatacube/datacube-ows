@@ -119,7 +119,7 @@ def parse_path(
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
         if not parse_only:
-            with Datacube() as dc:
+            with Datacube(app=cfg.odc_app + "-cfg") as dc:
                 cfg.make_ready(dc)
     except ConfigException as e:
         click.echo(f"Config exception for path {e!s}")
