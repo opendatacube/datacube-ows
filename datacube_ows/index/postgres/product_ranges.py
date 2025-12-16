@@ -15,8 +15,6 @@ import odc.geo
 import sqlalchemy.exc
 from odc.geo.crs import CRS
 from odc.geo.geom import Geometry
-from psycopg.types.json import Json as Json3
-from psycopg2.extras import Json as Json2
 from sqlalchemy import text
 
 from datacube_ows.index.api import CoordRange, LayerExtent, LayerSignature
@@ -49,157 +47,164 @@ def create_range_entry(
         datasets=layer.dc.index.datasets.count(product=layer.product_names),
     )
 
-    conn = get_sqlconn(layer.dc)
-    txn = conn.begin()
-    if meta in cache:
-        template = cache[meta][0]
-        # A layer has same signature - reuse range"
-        cache[meta].append(layer.name)
-        try:
+    with get_sqlconn(layer.dc) as conn:
+        txn = conn.begin()
+        if meta in cache:
+            template = cache[meta][0]
+            # A layer has same signature - reuse range"
+            cache[meta].append(layer.name)
+            try:
+                conn.execute(
+                    text("""
+                INSERT INTO ows.layer_ranges
+                    (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
+                SELECT :layer_id, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated
+                FROM ows.layer_ranges lr2
+                WHERE lr2.layer = :template_id"""),
+                    {"layer_id": layer.name, "template_id": template},
+                )
+            except sqlalchemy.exc.IntegrityError:
+                conn.execute(
+                    text("""
+                UPDATE ows.layer_ranges lr1
+                SET lat_min = lr2.lat_min,
+                    lat_max = lr2.lat_max,
+                    lon_min = lr2.lon_min,
+                    lon_max = lr2.lon_max,
+                    dates = lr2.dates,
+                    bboxes = lr2.bboxes,
+                    meta = lr2.meta,
+                    last_updated = lr2.last_updated
+                FROM ows.layer_ranges lr2
+                WHERE lr1.layer = :layer_id
+                AND   lr2.layer = :template_id"""),
+                    {"layer_id": layer.name, "template_id": template},
+                )
+        else:
+            if get_driver_name(layer.dc.index) == "psycopg":
+                from psycopg.types.json import Json
+            else:
+                from psycopg2.extras import Json
+            # insert empty row if one does not already exist
             conn.execute(
                 text("""
             INSERT INTO ows.layer_ranges
-                (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
-            SELECT :layer_id, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated
-            FROM ows.layer_ranges lr2
-            WHERE lr2.layer = :template_id"""),
-                {"layer_id": layer.name, "template_id": template},
+            (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
+            VALUES
+            (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
+            ON CONFLICT (layer) DO NOTHING
+            """),
+                {
+                    "p_layer": layer.name,
+                    "empty": Json(""),
+                    "meta": Json(meta.as_json()),
+                    "now": datetime.now(tz=timezone.utc),
+                },
             )
-        except sqlalchemy.exc.IntegrityError:
+
+            prodids = [p.id for p in layer.products]
+            # Update min/max lat/longs
+            conn.execute(
+                text(
+                    """
+              UPDATE ows.layer_ranges lr
+              SET lat_min = st_ymin(subq.bbox),
+                  lat_max = st_ymax(subq.bbox),
+                  lon_min = st_xmin(subq.bbox),
+                  lon_max = st_xmax(subq.bbox)
+              FROM (
+                SELECT st_extent(stv.spatial_extent) as bbox
+                FROM ows.space_time_view stv
+                WHERE stv.dataset_type_ref = ANY(:prodids)
+              ) as subq
+              WHERE lr.layer = :layer_id
+              """
+                ),
+                {"layer_id": layer.name, "prodids": prodids},
+            )
+
+            # Set default timezone
+            conn.execute(text("""set timezone to 'Etc/UTC'"""))
+
+            # Loop over dates
+            dates = set()  # Should get to here!
+            if layer.time_resolution.is_solar():
+                results = conn.execute(
+                    text(
+                        """
+                  select
+                        lower(temporal_extent), upper(temporal_extent),
+                        ST_X(ST_Centroid(spatial_extent))
+                  from ows.space_time_view
+                  WHERE dataset_type_ref = ANY(:prodids)
+                  """
+                    ),
+                    {"prodids": prodids},
+                )
+                for result in results:
+                    dt1, dt2, lon = result
+                    dt = dt1 + (dt2 - dt1) / 2
+                    dt = dt.astimezone(timezone.utc)
+
+                    solar_day = datacube.api.query._convert_to_solar_time(
+                        dt, lon
+                    ).date()
+                    dates.add(solar_day)
+            else:
+                results = conn.execute(
+                    text(
+                        """
+                  select
+                        array_agg(temporal_extent)
+                  from ows.space_time_view
+                  WHERE dataset_type_ref = ANY(:prodids)
+                  """
+                    ),
+                    {"prodids": prodids},
+                )
+                for result in results:
+                    for dat_ran in result[0]:
+                        dates.add(dat_ran.lower)
+
+            if layer.time_resolution.is_subday():
+                date_formatter = lambda d: d.isoformat()  # noqa: E731
+            else:
+                date_formatter = lambda d: d.strftime("%Y-%m-%d")  # noqa: E731
+
+            dates = sorted(dates)
             conn.execute(
                 text("""
-            UPDATE ows.layer_ranges lr1
-            SET lat_min = lr2.lat_min,
-                lat_max = lr2.lat_max,
-                lon_min = lr2.lon_min,
-                lon_max = lr2.lon_max,
-                dates = lr2.dates,
-                bboxes = lr2.bboxes,
-                meta = lr2.meta,
-                last_updated = lr2.last_updated
-            FROM ows.layer_ranges lr2
-            WHERE lr1.layer = :layer_id
-            AND   lr2.layer = :template_id"""),
-                {"layer_id": layer.name, "template_id": template},
+               UPDATE ows.layer_ranges
+               SET dates = :dates
+               WHERE layer= :layer_id
+            """),
+                {
+                    "dates": Json(list(map(date_formatter, dates))),
+                    "layer_id": layer.name,
+                },
             )
-    else:
-        Json = Json3 if get_driver_name(layer.dc.index) == "psycopg" else Json2
-        # insert empty row if one does not already exist
-        conn.execute(
-            text("""
-        INSERT INTO ows.layer_ranges
-        (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
-        VALUES
-        (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
-        ON CONFLICT (layer) DO NOTHING
-        """),
-            {
-                "p_layer": layer.name,
-                "empty": Json(""),
-                "meta": Json(meta.as_json()),
-                "now": datetime.now(tz=timezone.utc),
-            },
-        )
+            # calculate bounding boxes
+            # Get extent polygon from materialised views
 
-        prodids = [p.id for p in layer.products]
-        # Update min/max lat/longs
-        conn.execute(
-            text(
-                """
-          UPDATE ows.layer_ranges lr
-          SET lat_min = st_ymin(subq.bbox),
-              lat_max = st_ymax(subq.bbox),
-              lon_min = st_xmin(subq.bbox),
-              lon_max = st_xmax(subq.bbox)
-          FROM (
-            SELECT st_extent(stv.spatial_extent) as bbox
-            FROM ows.space_time_view stv
-            WHERE stv.dataset_type_ref = ANY(:prodids)
-          ) as subq
-          WHERE lr.layer = :layer_id
-          """
-            ),
-            {"layer_id": layer.name, "prodids": prodids},
-        )
-
-        # Set default timezone
-        conn.execute(text("""set timezone to 'Etc/UTC'"""))
-
-        # Loop over dates
-        dates = set()  # Should get to here!
-        if layer.time_resolution.is_solar():
-            results = conn.execute(
-                text(
-                    """
-              select
-                    lower(temporal_extent), upper(temporal_extent),
-                    ST_X(ST_Centroid(spatial_extent))
-              from ows.space_time_view
-              WHERE dataset_type_ref = ANY(:prodids)
-              """
-                ),
-                {"prodids": prodids},
+            extent_4386 = cast(
+                Geometry,
+                mv_search(layer.dc, MVSelectOpts.EXTENT, products=layer.products),
             )
-            for result in results:
-                dt1, dt2, lon = result
-                dt = dt1 + (dt2 - dt1) / 2
-                dt = dt.astimezone(timezone.utc)
 
-                solar_day = datacube.api.query._convert_to_solar_time(dt, lon).date()
-                dates.add(solar_day)
-        else:
-            results = conn.execute(
-                text(
-                    """
-              select
-                    array_agg(temporal_extent)
-              from ows.space_time_view
-              WHERE dataset_type_ref = ANY(:prodids)
-              """
-                ),
-                {"prodids": prodids},
+            all_bboxes = bbox_projections(extent_4386, layer.global_cfg.crses)
+
+            conn.execute(
+                text("""
+            UPDATE ows.layer_ranges
+            SET bboxes = :bbox
+            WHERE layer = :layer_id
+            """),
+                {"bbox": Json(all_bboxes), "layer_id": layer.name},
             )
-            for result in results:
-                for dat_ran in result[0]:
-                    dates.add(dat_ran.lower)
 
-        if layer.time_resolution.is_subday():
-            date_formatter = lambda d: d.isoformat()  # noqa: E731
-        else:
-            date_formatter = lambda d: d.strftime("%Y-%m-%d")  # noqa: E731
+            cache[meta] = [layer.name]
 
-        dates = sorted(dates)
-        conn.execute(
-            text("""
-           UPDATE ows.layer_ranges
-           SET dates = :dates
-           WHERE layer= :layer_id
-        """),
-            {"dates": Json(list(map(date_formatter, dates))), "layer_id": layer.name},
-        )
-        # calculate bounding boxes
-        # Get extent polygon from materialised views
-
-        extent_4386 = cast(
-            Geometry,
-            mv_search(layer.dc.index, MVSelectOpts.EXTENT, products=layer.products),
-        )
-
-        all_bboxes = bbox_projections(extent_4386, layer.global_cfg.crses)
-
-        conn.execute(
-            text("""
-        UPDATE ows.layer_ranges
-        SET bboxes = :bbox
-        WHERE layer = :layer_id
-        """),
-            {"bbox": Json(all_bboxes), "layer_id": layer.name},
-        )
-
-        cache[meta] = [layer.name]
-
-    txn.commit()
-    conn.close()
+        txn.commit()
 
 
 def bbox_projections(

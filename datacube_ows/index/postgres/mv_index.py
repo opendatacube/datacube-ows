@@ -12,26 +12,18 @@ from types import UnionType
 from typing import cast
 from uuid import UUID as UUID_
 
-from datacube.index import Index
+from datacube import Datacube
 from datacube.model import Dataset, Product
 from geoalchemy2 import Geometry
 from geoalchemy2.functions import ST_AsGeoJSON, ST_Union
 from odc.geo.geom import Geometry as ODCGeom
-from psycopg.types.range import TimestamptzRange
-from psycopg2.extras import DateTimeTZRange
 from sqlalchemy import SMALLINT, Column, MetaData, Table, and_, or_, select, text
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.engine import Row
-from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.elements import ClauseElement
 from sqlalchemy.sql.functions import count, func
 
-from datacube_ows.utils import default_to_utc, get_driver_name
-
-
-def get_sqlalc_engine(index: Index) -> Engine:
-    # pylint: disable=protected-access
-    return index._db._engine  # type: ignore[attr-defined]
+from datacube_ows.utils import default_to_utc, get_driver_name, get_sqlconn
 
 
 def get_st_view(meta: MetaData) -> Table:
@@ -100,7 +92,7 @@ TimeSearchTerm = (
 
 
 def mv_search(
-    index: Index,
+    dc: Datacube,
     sel: MVSelectOpts = MVSelectOpts.IDS,
     times: Iterable[TimeSearchTerm] | None = None,
     geom: ODCGeom | None = None,
@@ -118,7 +110,6 @@ def mv_search(
 
     :return: See MVSelectOpts doc
     """
-    engine = get_sqlalc_engine(index)
     stv = st_view
     if products is None:
         raise Exception("Must filter by product/layer")
@@ -149,11 +140,14 @@ def mv_search(
                     )
                 )
             else:
-                TZRange = (
-                    TimestamptzRange
-                    if get_driver_name(index) == "psycopg"
-                    else DateTimeTZRange
-                )
+                if get_driver_name(dc.index) == "psycopg":
+                    from psycopg.types.range import TimestamptzRange
+
+                    TZRange = TimestamptzRange
+                else:
+                    from psycopg2.extras import DateTimeTZRange
+
+                    TZRange = DateTimeTZRange
                 or_clauses.append(stv.c.temporal_extent.op("&&")(TZRange(*t)))
         s = s.where(or_(*or_clauses))
     orig_crs = None
@@ -164,12 +158,14 @@ def mv_search(
         geom_js = json.dumps(geom.json)
         s = s.where(stv.c.spatial_extent.intersects(geom_js))
     # print(s) # Print SQL Statement
-    with engine.connect() as conn:
-        if sel == MVSelectOpts.ALL:
+    if sel == MVSelectOpts.ALL:
+        with get_sqlconn(dc) as conn:
             return conn.execute(s)
-        if sel == MVSelectOpts.IDS:
+    if sel == MVSelectOpts.IDS:
+        with get_sqlconn(dc) as conn:
             return [r[0] for r in conn.execute(s)]
-        if sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
+    if sel in (MVSelectOpts.COUNT, MVSelectOpts.EXTENT):
+        with get_sqlconn(dc) as conn:
             for r in conn.execute(s):
                 if sel == MVSelectOpts.COUNT:
                     return cast(int, r[0])
@@ -187,9 +183,10 @@ def mv_search(
                 else:
                     intersect = uniongeom
                 return intersect
-        elif sel == MVSelectOpts.DATASETS:
+    elif sel == MVSelectOpts.DATASETS:
+        with get_sqlconn(dc) as conn:
             ids = [r[0] for r in conn.execute(s)]
-            return index.datasets.bulk_get(ids)
-        else:
-            raise Exception("Invalid Selection Option")
+        return dc.index.datasets.bulk_get(ids)
+    else:
+        raise Exception("Invalid Selection Option")
     raise Exception("Unreachable code reached")

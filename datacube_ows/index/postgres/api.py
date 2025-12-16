@@ -13,7 +13,6 @@ import click
 from datacube import Datacube
 from datacube.model import Dataset, Product
 from odc.geo import CRS, Geometry
-from psycopg2.errors import ProgrammingError
 from sqlalchemy import text
 from typing_extensions import override
 
@@ -28,6 +27,7 @@ from datacube_ows.index.api import (
 )
 from datacube_ows.index.sql import run_sql
 from datacube_ows.ows_configuration import OWSNamedLayer
+from datacube_ows.utils import get_driver_name, get_sqlconn
 
 from .mv_index import MVSelectOpts, mv_search
 from .product_ranges import create_range_entry as create_range_entry_impl
@@ -42,7 +42,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
     def check_db_access(self, dc: Datacube) -> bool:
         db_ok = False
         try:
-            with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
+            with get_sqlconn(dc) as conn:
                 results = conn.execute(
                     text("""
                     SELECT *
@@ -59,8 +59,12 @@ class OWSPostgresIndex(OWSAbstractIndex):
     def _check_perms(
         self, dc: Datacube, group: Literal["user", "manage", "admin"]
     ) -> None:
+        if get_driver_name(dc.index) == "psycopg":
+            from psycopg.errors import ProgrammingError
+        else:
+            from psycopg2.errors import ProgrammingError
         try:
-            with dc.index._db.give_me_a_connection() as conn:  # type: ignore[attr-defined]
+            with get_sqlconn(dc) as conn:
                 conn.execute(text(f"set role agdc_{group}"))
         except ProgrammingError as e:
             raise InsufficientDbPrivileges(
@@ -118,7 +122,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return cast(
             Iterable[Dataset],
             mv_search(
-                layer.dc.index,
+                layer.dc,
                 MVSelectOpts.DATASETS,
                 times=times,
                 geom=geom,
@@ -138,7 +142,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return cast(
             Iterable[UUID],
             mv_search(
-                layer.dc.index,
+                layer.dc,
                 MVSelectOpts.IDS,
                 times=times,
                 geom=geom,
@@ -158,7 +162,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         return cast(
             int,
             mv_search(
-                layer.dc.index,
+                layer.dc,
                 MVSelectOpts.COUNT,
                 times=times,
                 geom=geom,
@@ -179,7 +183,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         extent = cast(
             Geometry | None,
             mv_search(
-                layer.dc.index,
+                layer.dc,
                 MVSelectOpts.EXTENT,
                 times=times,
                 geom=geom,

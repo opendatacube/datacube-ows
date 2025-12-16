@@ -11,20 +11,9 @@ import click
 import datacube.cfg
 import sqlalchemy
 from datacube import Datacube
-from psycopg2.errors import DuplicateObject, InsufficientPrivilege
 
 from datacube_ows.index.api import InsufficientDbPrivileges
-
-
-def get_sqlconn(dc: Datacube) -> sqlalchemy.Connection:
-    """
-    Extracts a SQLAlchemy database connection from a Datacube object.
-
-    :param dc: An initialised Datacube object
-    :return: A SQLAlchemy database connection object.
-    """
-    # pylint: disable=protected-access
-    return dc.index._db._engine.connect()  # type: ignore[attr-defined]
+from datacube_ows.utils import get_driver_name, get_sqlconn
 
 
 def run_sql(dc: Datacube, path: str, **params: str) -> bool:
@@ -82,11 +71,9 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
                 with get_sqlconn(dc).execution_options(
                     isolation_level="AUTOCOMMIT"
                 ) as iso_conn:
-                    run_sql_statement(
-                        sql, comment, fname, iso_conn, dc.index.environment
-                    )
+                    run_sql_statement(sql, comment, fname, iso_conn, dc.index)
             else:
-                run_sql_statement(sql, comment, fname, conn, dc.index.environment)
+                run_sql_statement(sql, comment, fname, conn, dc.index)
 
         return all_ok
 
@@ -116,16 +103,21 @@ def run_sql_statement(
     comment: str,
     fname: str,
     conn: sqlalchemy.Connection,
-    env: datacube.cfg.ODCEnvironment,
+    idx: datacube.index.Index,
 ) -> None:
     click.echo(f" - Running SQL statement: {comment}")
+    if get_driver_name(idx) == "psycopg":
+        from psycopg.errors import DuplicateObject, InsufficientPrivilege
+    else:
+        from psycopg2.errors import DuplicateObject, InsufficientPrivilege
+
     try:
         result = conn.execute(sqlalchemy.text(sql))
         click.echo(f"    ...  succeeded(?) with rowcount {result.rowcount}")
     except sqlalchemy.exc.ProgrammingError as e:
         if isinstance(e.orig, InsufficientPrivilege):
             raise InsufficientDbPrivileges(
-                f"Insufficient Privileges (user {env.db_username}). Try running again as a database superuser"
+                f"Insufficient Privileges (user {idx.environment.db_username}). Try running again as a database superuser"
             ) from None
         if isinstance(e.orig, DuplicateObject):
             if fname.endswith("_ignore_duplicates.sql"):
