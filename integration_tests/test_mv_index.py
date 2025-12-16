@@ -15,14 +15,14 @@ from datacube_ows.time_utils import local_solar_date_range
 def test_full_layer() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
-    sel = mv_search(lyr.dc.index, MVSelectOpts.COUNT, products=lyr.products)
+    sel = mv_search(lyr.dc, MVSelectOpts.COUNT, products=lyr.products)
     assert sel > 0
 
 
 def test_select_all() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
-    rows = mv_search(lyr.dc.index, MVSelectOpts.ALL, products=lyr.products)
+    rows = mv_search(lyr.dc, MVSelectOpts.ALL, products=lyr.products)
     for row in rows:
         assert len(row) > 1
 
@@ -31,7 +31,7 @@ def test_no_products() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
     with pytest.raises(Exception) as e:
-        _ = mv_search(lyr.dc.index, MVSelectOpts.COUNT)
+        _ = mv_search(lyr.dc, MVSelectOpts.COUNT)
     assert "Must filter by product/layer" in str(e.value)
 
 
@@ -63,25 +63,23 @@ def test_time_search() -> None:
     )
 
     time_rng = local_solar_date_range(MockGeobox(geom), time)
-    sel = mv_search(
-        lyr.dc.index, MVSelectOpts.COUNT, times=[time_rng], products=lyr.products
-    )
+    sel = mv_search(lyr.dc, MVSelectOpts.COUNT, times=[time_rng], products=lyr.products)
     assert sel > 0
 
 
 def test_count() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
-    count = mv_search(lyr.dc.index, MVSelectOpts.COUNT, products=lyr.products)
-    ids = mv_search(lyr.dc.index, MVSelectOpts.IDS, products=lyr.products)
+    count = mv_search(lyr.dc, MVSelectOpts.COUNT, products=lyr.products)
+    ids = mv_search(lyr.dc, MVSelectOpts.IDS, products=lyr.products)
     assert len(ids) == count
 
 
 def test_datasets() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
-    dss = mv_search(lyr.dc.index, MVSelectOpts.DATASETS, products=lyr.products)
-    ids = mv_search(lyr.dc.index, MVSelectOpts.IDS, products=lyr.products)
+    dss = mv_search(lyr.dc, MVSelectOpts.DATASETS, products=lyr.products)
+    ids = mv_search(lyr.dc, MVSelectOpts.IDS, products=lyr.products)
     assert len(ids) == len(dss)
     for ds in dss:
         assert ds.id in ids
@@ -109,10 +107,10 @@ def test_extent_and_spatial() -> None:
     )
 
     all_ext = mv_search(
-        lyr.dc.index, MVSelectOpts.EXTENT, geom=layer_ext_geom, products=lyr.products
+        lyr.dc, MVSelectOpts.EXTENT, geom=layer_ext_geom, products=lyr.products
     )
     small_ext = mv_search(
-        lyr.dc.index, MVSelectOpts.EXTENT, geom=small_geom, products=lyr.products
+        lyr.dc, MVSelectOpts.EXTENT, geom=small_geom, products=lyr.products
     )
     assert layer_ext_geom.contains(all_ext)
     assert small_geom.contains(small_ext)
@@ -120,9 +118,9 @@ def test_extent_and_spatial() -> None:
     assert small_ext.area < all_ext.area
 
     all_count = mv_search(
-        lyr.dc.index, MVSelectOpts.COUNT, geom=layer_ext_geom, products=lyr.products
+        lyr.dc, MVSelectOpts.COUNT, geom=layer_ext_geom, products=lyr.products
     )
     small_count = mv_search(
-        lyr.dc.index, MVSelectOpts.COUNT, geom=small_geom, products=lyr.products
+        lyr.dc, MVSelectOpts.COUNT, geom=small_geom, products=lyr.products
     )
     assert small_count <= all_count
