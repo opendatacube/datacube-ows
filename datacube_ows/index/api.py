@@ -224,7 +224,7 @@ def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
 
 
 def check_perms(
-    group: Literal["user", "admin", "manage"],
+    group: Literal["admin", "manage"],
 ) -> Callable[[Callable], Callable]:
     def outer(f: Callable) -> Callable:
         def inner(
@@ -233,7 +233,7 @@ def check_perms(
             from datacube_ows.ows_configuration import OWSNamedLayer
 
             if isinstance(dcl, OWSNamedLayer):
-                dc = Datacube(env=dcl.local_env)
+                dc = dcl.dc
             elif isinstance(dcl, Datacube):
                 dc = dcl
             else:

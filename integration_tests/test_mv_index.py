@@ -15,6 +15,7 @@ from datacube_ows.time_utils import local_solar_date_range
 def test_full_layer() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
+    assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     sel = mv_search(lyr.dc, MVSelectOpts.COUNT, products=lyr.products)
     assert sel > 0
 
@@ -22,6 +23,7 @@ def test_full_layer() -> None:
 def test_select_all() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
+    assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     rows = mv_search(lyr.dc, MVSelectOpts.ALL, products=lyr.products)
     for row in rows:
         assert len(row) > 1
@@ -30,14 +32,13 @@ def test_select_all() -> None:
 def test_no_products() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
+    assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     with pytest.raises(Exception) as e:
         _ = mv_search(lyr.dc, MVSelectOpts.COUNT)
     assert "Must filter by product/layer" in str(e.value)
 
 
 def test_bad_set_opt() -> None:
-    cfg = get_config()
-    _ = next(iter(cfg.layer_index.values()))
     with pytest.raises(ValueError):
         _ = MVSelectOpts("INVALID")
 
@@ -53,6 +54,7 @@ class MockGeobox:
 def test_time_search() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
+    assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     time = lyr.ranges.end_time
     geom = box(
         lyr.bboxes["EPSG:4326"]["left"],
@@ -70,6 +72,7 @@ def test_time_search() -> None:
 def test_count() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
+    assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     count = mv_search(lyr.dc, MVSelectOpts.COUNT, products=lyr.products)
     ids = mv_search(lyr.dc, MVSelectOpts.IDS, products=lyr.products)
     assert len(ids) == count
@@ -78,6 +81,7 @@ def test_count() -> None:
 def test_datasets() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
+    assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     dss = mv_search(lyr.dc, MVSelectOpts.DATASETS, products=lyr.products)
     ids = mv_search(lyr.dc, MVSelectOpts.IDS, products=lyr.products)
     assert len(ids) == len(dss)
@@ -88,6 +92,7 @@ def test_datasets() -> None:
 def test_extent_and_spatial() -> None:
     cfg = get_config()
     lyr = next(iter(cfg.layer_index.values()))
+    assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     layer_ext_bbx = (
         lyr.bboxes["EPSG:4326"]["left"],
         lyr.bboxes["EPSG:4326"]["bottom"],
