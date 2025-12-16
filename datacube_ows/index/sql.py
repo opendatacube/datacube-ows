@@ -107,7 +107,7 @@ def run_sql_statement(
 ) -> None:
     click.echo(f" - Running SQL statement: {comment}")
     if get_driver_name(idx) == "psycopg":
-        from psycopg import DuplicateObject, InsufficientPrivilege
+        from psycopg.errors import DuplicateObject, InsufficientPrivilege
     else:
         from psycopg2.errors import DuplicateObject, InsufficientPrivilege
 
