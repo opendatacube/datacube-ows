@@ -7,8 +7,8 @@ import yaml
 from datacube import Datacube
 from datacube.index.hl import Doc2Dataset
 
-dc = Datacube()
-dc_pgis = Datacube(env="owspostgis")
+dc = Datacube(app="ows-metadata-importer")
+dc_pgis = Datacube(env="owspostgis", app="ows-metadata-importer")
 
 doc2ds = Doc2Dataset(
     dc.index,
