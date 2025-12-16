@@ -233,7 +233,7 @@ def check_perms(
             from datacube_ows.ows_configuration import OWSNamedLayer
 
             if isinstance(dcl, OWSNamedLayer):
-                dc = Datacube(env=dcl.local_env)
+                dc = dcl.dc
             elif isinstance(dcl, Datacube):
                 dc = dcl
             else:
