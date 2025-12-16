@@ -60,7 +60,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         self, dc: Datacube, group: Literal["user", "manage", "admin"]
     ) -> None:
         if get_driver_name(dc.index) == "psycopg":
-            from psycopg import ProgrammingError
+            from psycopg.errors import ProgrammingError
         else:
             from psycopg2.errors import ProgrammingError
         try:
