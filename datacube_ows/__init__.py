@@ -10,3 +10,7 @@ except ImportError:
     # Default version number.
     # Will only be used when running datacube-ows direct from source code (not properly installed)
     __version__ = "1.9.6"
+
+from .startup_utils import create_app
+
+__all__ = ["__version__", "create_app"]

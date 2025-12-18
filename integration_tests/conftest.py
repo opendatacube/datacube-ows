@@ -12,15 +12,21 @@ pytest_plugins = ["helpers_namespace"]
 import pytest
 from click.testing import CliRunner
 from datacube.cfg import ODCConfig
+from flask import Flask
 from pytest_localserver.http import WSGIServer
 
-from datacube_ows import ogc
-from datacube_ows.ogc import app
+from datacube_ows import create_app
+
+
+@pytest.fixture(scope="session")
+def flask_app() -> Generator[Flask]:
+    app = create_app()
+    yield app
 
 
 @pytest.fixture
-def flask_client() -> Generator[WSGIServer]:
-    with app.test_client() as client:
+def flask_client(flask_app) -> Generator[WSGIServer]:
+    with flask_app.test_client() as client:
         yield client
 
 
@@ -29,7 +35,7 @@ class generic_obj:
 
 
 @pytest.fixture(scope="session")
-def ows_server(request) -> WSGIServer:
+def ows_server(request, flask_app) -> WSGIServer:
     """
     Run the OWS server for the duration of these tests
     """
@@ -38,7 +44,7 @@ def ows_server(request) -> WSGIServer:
         server = generic_obj()
         server.url = external_url
     else:
-        server = WSGIServer(port="5000", application=ogc.app)
+        server = WSGIServer(port="5000", application=flask_app)
         server.start()
         request.addfinalizer(server.stop)
 

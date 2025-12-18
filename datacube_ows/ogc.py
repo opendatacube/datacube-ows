@@ -3,13 +3,12 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-
+import logging
 import sys
 import traceback
 from logging import Logger
-from time import monotonic
 
-from flask import g, render_template, request
+from flask import render_template, request
 
 from datacube_ows import __version__
 from datacube_ows.http_utils import (
@@ -21,75 +20,19 @@ from datacube_ows.http_utils import (
 from datacube_ows.index.api import ows_index
 from datacube_ows.legend_generator import create_legend_for_style
 from datacube_ows.ogc_exceptions import OGCException, WMSException
-from datacube_ows.ows_configuration import OWSConfig, get_config
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.protocol_versions import SupportedSvc, supported_versions
-from datacube_ows.startup_utils import (
-    initialise_aws_credentials,
-    initialise_babel,
-    initialise_debugging,
-    initialise_flask,
-    initialise_ignorable_warnings,
-    initialise_logger,
-    initialise_prometheus,
-    initialise_sentry,
-    parse_config_file,
-    proxy_fix,
-)
 from datacube_ows.wcs1 import WCS_REQUESTS
 from datacube_ows.wms import WMS_REQUESTS
 
-# Logging intialisation
-_LOG: Logger = initialise_logger()
-initialise_ignorable_warnings()
-
-# Initialisation of external libraries - controlled by environment variables.
-initialise_debugging(_LOG)
-initialise_sentry(_LOG)
-initialise_aws_credentials(_LOG)
-
-# Prepare parsed configuration object
-cfg: OWSConfig | None = parse_config_file()
-
-# Initialise Flask
-app = initialise_flask(__name__)
-
-babel = initialise_babel(cfg, app)
-
-# Initialisation of external libraries that depend on Flask
-# (controlled by environment variables)
-metrics = initialise_prometheus(app, _LOG)
-
-# Add middleware to fix proxy headers, controlled by environment variables
-app = proxy_fix(app, _LOG)
+_LOG: Logger = logging.getLogger(__name__)
 
 # Protocol/Version lookup table
 OWS_SUPPORTED: dict[str, SupportedSvc] = supported_versions()
 
-# Prometheus Metrics
-prometheus_ows_ogc_metric = metrics.histogram(
-    "ows_ogc",
-    "Summary by OGC request protocol, version, operation, layer, and HTTP Status",
-    labels={
-        "query_request": lambda: request.args.get("request", "NONE").upper(),
-        "query_service": lambda: request.args.get("service", "NONE").upper(),
-        "query_version": lambda: request.args.get("version"),
-        "query_layer": lambda: (
-            request.args.get("query_layers")  # WMS GetFeatureInfo
-            or request.args.get("layers")  # WMS
-            or request.args.get("layer")  # WMTS
-            or request.args.get("coverage")  # WCS 1.x
-            or request.args.get("coverageid")  # WCS 2.x
-        ),
-        "status": lambda r: r.status_code,
-    },
-)
-
 
 # Flask Routes
-
-
-@app.route("/")
-@prometheus_ows_ogc_metric
+# (Note that actual route declarations take place in startup_utils.py)
 def ogc_impl():
     # pylint: disable=too-many-branches
     nocase_args = lower_get_args()
@@ -192,28 +135,18 @@ def ogc_svc_impl(svc):
         return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
 
 
-@app.route("/wms")
-@prometheus_ows_ogc_metric
 def ogc_wms_impl():
     return ogc_svc_impl("wms")
 
 
-@app.route("/wmts")
-@prometheus_ows_ogc_metric
 def ogc_wmts_impl():
     return ogc_svc_impl("wmts")
 
 
-@app.route("/wcs")
-@prometheus_ows_ogc_metric
 def ogc_wcs_impl():
     return ogc_svc_impl("wcs")
 
 
-@app.route("/ping")
-@metrics.summary(
-    "ows_heartbeat_pings", "Ping durations", labels={"status": lambda r: r.status}
-)
 def ping() -> tuple[str, int, dict[str, str]]:
     dbs_ok = {
         name: ows_index(dc).check_db_access(dc)
@@ -239,16 +172,6 @@ def ping() -> tuple[str, int, dict[str, str]]:
     )
 
 
-@app.route("/legend/<string:layer>/<string:style>/legend.png")
-@metrics.histogram(
-    "ows_legends",
-    "Legend query durations",
-    labels={
-        "layer": lambda: request.path.split("/")[2],
-        "style": lambda: request.path.split("/")[3],
-        "status": lambda r: r.status,
-    },
-)
 def legend(layer, style, dates=None):
     # pylint: disable=redefined-outer-name
     cfg = get_config()
@@ -268,36 +191,3 @@ def legend(layer, style, dates=None):
     if not img:
         return "Unknown Style", 404, resp_headers({"Content-Type": "text/plain"})
     return img
-
-
-# Flask middleware
-
-
-@app.before_request
-def start_timer() -> None:
-    # pylint: disable=assigning-non-slot
-    g.ogc_start_time = monotonic()
-
-
-@app.after_request
-def log_time_and_request_response(response):
-    time_taken = int((monotonic() - g.ogc_start_time) * 1000)
-    # request.environ.get('HTTP_X_REAL_IP') captures requester ip on a local docker container via gunicorn
-    if request.environ.get("HTTP_X_REAL_IP"):
-        ip = request.environ.get("HTTP_X_REAL_IP")
-    # request.environ.get('HTTP_X_FORWARDED_FOR') captures request IP forwarded by ingress/loadbalancer
-    elif request.environ.get("HTTP_X_FORWARDED_FOR"):
-        ip = request.environ.get("HTTP_X_FORWARDED_FOR")
-    # request.environ.get('REMOTE_ADDR') is standard internal IP address
-    elif request.environ.get("REMOTE_ADDR"):
-        ip = request.environ.get("REMOTE_ADDR")
-    else:
-        ip = "Not found"
-    _LOG.info(
-        "ip: %s request: %s returned status: %d and took: %d ms",
-        ip,
-        request.url,
-        response.status_code,
-        time_taken,
-    )
-    return response
