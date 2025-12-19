@@ -10,24 +10,22 @@ import os
 import sys
 
 # This is the directory of the source code that the web app will run from
-sys.path.append("/opt")
+sys.path.append("/src")
 
 # The location of the datacube config file.
-if os.path.isfile("/opt/odc/.datacube.conf.local"):
-    os.environ.setdefault("ODC_CONFIG_PATH", "/opt/odc/.datacube.conf.local")
+if os.path.isfile("/src/odc/.datacube.conf.local"):
+    os.environ.setdefault("ODC_CONFIG_PATH", "/src/odc/.datacube.conf.local")
 
-from datacube_ows import __version__
+from datacube_ows import __version__, create_app
 
-from datacube_ows.ogc import app  # isort:skip
-
-application = app
+application = create_app()
 
 
 def main() -> None:
     if "--version" in sys.argv:
         print("Open Data Cube Open Web Services (datacube-ows) version", __version__)
         exit(0)
-    app.run()
+    application.run()
 
 
 if __name__ == "__main__":
