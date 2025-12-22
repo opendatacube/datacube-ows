@@ -42,16 +42,16 @@ wheels = [
 
 [[package]]
 name = "antimeridian"
-version = "0.4.5"
+version = "0.4.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "shapely" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0a/25/183493a0a47f1a70d22329083c65396ee8a343a6dbe6b3eb29d0da496099/antimeridian-0.4.5.tar.gz", hash = "sha256:088f8daec4109ce5d85d52e9b4382bffcbd1a5b47c78644898f9c6d8562d1207", size = 12632839, upload-time = "2025-11-26T14:41:03.361Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b8/75/9090aec3959ddc6a5881bc2f2f718a7510cbf518a3100718ca1097085506/antimeridian-0.4.4.tar.gz", hash = "sha256:cb6b9f93e7af6c3f064e0764974fdb62fe1a118926d010eabc4826b9f597ab3b", size = 12632548, upload-time = "2025-11-26T14:06:31.54Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/ce/68d6e31f0a75a5cccc03535e47434c0ca4be37fe950e93117e455cbc362c/antimeridian-0.4.5-py3-none-any.whl", hash = "sha256:8b1f82c077d2c48eae0a6606759cfec9133a0701250371cb707a56959451d9dd", size = 15111, upload-time = "2025-11-26T14:41:01.523Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/79/86484a6e3ef453dfa2f24caa971dc3f69baf95d3a0f2c6d7b378375394ab/antimeridian-0.4.4-py3-none-any.whl", hash = "sha256:050cf00e73dcd51a170042b32d8fa6280eecfe9faf1b13d24610bc22c85e7006", size = 15023, upload-time = "2025-11-26T14:06:29.705Z" },
 ]
 
 [[package]]
@@ -773,7 +773,7 @@ array = [
 
 [[package]]
 name = "datacube"
-version = "1.9.11"
+version = "1.9.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "affine" },
@@ -808,9 +808,9 @@ dependencies = [
     { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "xarray", version = "2025.11.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/9c/0ea8a74a551b0828aaa2ccb540fad959da3778b937e5bc8c576b94a21887/datacube-1.9.11.tar.gz", hash = "sha256:987e424aa88a170811699f0f0540de7bd7632f5dcf53e7cd2dd4e92ef7bee606", size = 2380624, upload-time = "2025-12-03T09:33:43.268Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/42/6a/e2f7173cf8628cc355057b0236d542581ec28c81b4a670abe0e6094c7a7a/datacube-1.9.12.tar.gz", hash = "sha256:dc4bc524c4d8f5f2ef8afa31e13cb381c7bdb1b69990d6f83cc6fb5a91091678", size = 2400860, upload-time = "2025-12-22T02:18:16.552Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/ee/990601e2c5d0fb3dc58f467e46e8022e31ce4bde464aee180143d31223c0/datacube-1.9.11-py3-none-any.whl", hash = "sha256:aa0e367687cf20669d44461e441278477dfad310d4cab6ef67768be2222ca7c9", size = 456465, upload-time = "2025-12-03T09:33:41.573Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/6b/4827190709010e92710f8faf1116320d103b4b9ada85e87195bc4d21f72b/datacube-1.9.12-py3-none-any.whl", hash = "sha256:7cc8ba317cd551fca7500fd6f6b90fef0a768137153ea4dac23dbc102faa7b24", size = 458557, upload-time = "2025-12-22T02:18:14.702Z" },
 ]
 
 [package.optional-dependencies]
@@ -937,7 +937,7 @@ requires-dist = [
     { name = "babel" },
     { name = "blinker", marker = "extra == 'ops'" },
     { name = "click" },
-    { name = "datacube", extras = ["performance", "s3"], specifier = ">=1.9.10,<1.10.0" },
+    { name = "datacube", extras = ["performance", "s3"], specifier = ">=1.9.12,<1.10.0" },
     { name = "datacube-ows", extras = ["dev", "ops", "test"], marker = "extra == 'all'" },
     { name = "deepdiff" },
     { name = "flask" },
@@ -2270,7 +2270,7 @@ wheels = [
 
 [[package]]
 name = "odc-geo"
-version = "0.4.10"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "affine" },
@@ -2280,15 +2280,17 @@ dependencies = [
     { name = "pyproj", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pyproj", version = "3.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "shapely" },
+    { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "xarray", version = "2025.11.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/53/f6/f22d9728ed1652f092bdb8e0f04cf68f7212d273ad118225a252fc8cbfb4/odc_geo-0.4.10.tar.gz", hash = "sha256:5670a797c4243e9379b20905ea37ff23ad287e7fa37c672dc53546923daf6d52", size = 192809, upload-time = "2025-03-03T04:12:24.077Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/01/81dcfe5255d24a4cd5fd4b6066397dee88b8e623cb61a13fd149ea3abf5f/odc_geo-0.5.0.tar.gz", hash = "sha256:495aa75d033a82cf9de12d23d9a0f49976d2a03166c8e55e5853b4372f5bcaae", size = 145370, upload-time = "2025-12-09T22:20:32.436Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/e2/311fb383d9534eef7bfbe858fad931b6e3dbe85843c50592f50063c3bc83/odc_geo-0.4.10-py3-none-any.whl", hash = "sha256:ab5f26f56883a11286a9583c04d30190e35a2702e8aa72fa3b4b438bea851b19", size = 155067, upload-time = "2025-03-03T04:12:22.114Z" },
+    { url = "https://files.pythonhosted.org/packages/78/44/628480a67c0c9329aaafa3ff0fcb94e1e3f8494a685b48cf8bbcf6432c2a/odc_geo-0.5.0-py3-none-any.whl", hash = "sha256:630e74208351d4409d128ac9a10aeb4f3bc821cadf93993b63a3b3b082312613", size = 159019, upload-time = "2025-12-09T22:20:30.264Z" },
 ]
 
 [[package]]
 name = "odc-loader"
-version = "0.5.1"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dask", extra = ["array"] },
@@ -2296,17 +2298,18 @@ dependencies = [
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "odc-geo" },
     { name = "rasterio" },
+    { name = "typing-extensions" },
     { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "xarray", version = "2025.11.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/c6/fd9dbf40aaf94bf3c9712a9ffdd0a791599764c3e4b80b5917aaf6280ec8/odc_loader-0.5.1.tar.gz", hash = "sha256:bf3adf53b10248bbab3bb1fcb043995c12e204dbde4f9a751cd3331b1c6a1212", size = 41616, upload-time = "2025-04-03T00:14:03.126Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/af/c2/5f96051a6e0e1e62bcc78933b1152c2db47e83d8fd12a7a627e2afbeee87/odc_loader-0.6.0.tar.gz", hash = "sha256:6c1b5dac2a00ba4292be57038c2665e78069dab4726f9b884fe5a608f8779263", size = 48094, upload-time = "2025-12-08T01:22:33.268Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/48/d45d414b8228325051b0a09f68322ef26717eb9b6517579ae395adf2fbfc/odc_loader-0.5.1-py3-none-any.whl", hash = "sha256:fbe505e2f0e8ac4db2542935bdf5f706e6147817d818073a8a98d3226bd6470f", size = 50717, upload-time = "2025-04-03T00:14:01.687Z" },
+    { url = "https://files.pythonhosted.org/packages/84/99/6636f7097a5e461d560317024522279f52931b5a52c8caa0755a14d5f1fd/odc_loader-0.6.0-py3-none-any.whl", hash = "sha256:e1a24f6b6516ea5a594e455b04e3e10d0342d2b0cd8695656bdf55ab71a26ec0", size = 57313, upload-time = "2025-12-08T01:22:32.147Z" },
 ]
 
 [[package]]
 name = "odc-stac"
-version = "0.4.1"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "affine" },
@@ -2323,9 +2326,9 @@ dependencies = [
     { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "xarray", version = "2025.11.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7c/29/b5e432aa6f5db144a4c7e86588b940122209431081e6cd3f4cc9b58a9746/odc_stac-0.4.1.tar.gz", hash = "sha256:7fcb110d8a02ca569b7b5647421f3687d803de292df0362d716accd513bea145", size = 110264, upload-time = "2025-11-23T23:44:48.275Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/79/2b9866a4686a54bcf959cc7ada51931a92478bf00717b19318aa3eb039d1/odc_stac-0.5.0.tar.gz", hash = "sha256:bee270811814a0e370881dc149b4d3709d2c46525316e192c6ecb1f452c6ad85", size = 116776, upload-time = "2025-12-10T23:22:34.569Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/0e/3f555b37a4e9da2aa37655b71e83792401958dc4078e77ffd4fa2616934f/odc_stac-0.4.1-py3-none-any.whl", hash = "sha256:e3910f6c8e06a609d981d38843861076617ec49d41034c22a081690182cea39c", size = 40096, upload-time = "2025-11-23T23:44:46.102Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/c7/b8f2b3e53f26f8f463002f3e8023189653b627b22ba6c00ef86eaba50b73/odc_stac-0.5.0-py3-none-any.whl", hash = "sha256:02c3161242a8032d8d769c477d1668d563ef5c6e44617f3fdb273dfca1c20136", size = 43153, upload-time = "2025-12-10T23:22:32.361Z" },
 ]
 
 [[package]]
