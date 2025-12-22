@@ -12,7 +12,7 @@ dependencies = [
     "affine",
     "antimeridian",
     "click",
-    "datacube[performance,s3]>=1.9.10,<1.10.0",
+    "datacube[performance,s3]>=1.9.12,<1.10.0",
     "deepdiff",
     "flask",
     "fsspec",
@@ -167,5 +167,5 @@ include = ["datacube*"]
 
 [tool.setuptools_scm]
 write_to = "datacube_ows/_version.py"
-fallback_version = "1.9.6"
+fallback_version = "1.9.7"
 version_scheme = "post-release"

@@ -86,7 +86,7 @@ class RequestScale:
         if crs.units == ("metre", "metre"):
             return cast(tuple[float, float], tuple(abs(r) for r in resolution))
         resolution_rectangle = polygon(
-            ((0, 0), (0, resolution[1]), resolution, (0, resolution[0]), (0, 0)),
+            [(0, 0), (0, resolution[1]), resolution, (0, resolution[0]), (0, 0)],
             crs=crs,
         )
         proj_bbox = resolution_rectangle.to_crs("EPSG:3857").boundingbox

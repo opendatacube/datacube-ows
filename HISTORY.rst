@@ -7,6 +7,78 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.7 (2025-12-21)
+------------------
+
+Mostly addressing issues in the previous release.
+
+If upgrading, we recommend upgrading to `datacube>=1.9.12` first.
+
+Schema updates are recommended, especially if using the postgis driver.  Only perform the schema updates once all
+processes accessing your index have been upgraded to datacube>=1.9.11. Update ODC and OWS schemas as follows:
+
+(NB: use an ODC database environment with database superuser privileges)::
+
+    # Update ODC schema:
+    datacube system init
+    # Update OWS schema:
+    datacube-ows-update --schema
+
+Note that this release drops the separate OWS users - all permissions default to the user (c.f. old read-role),
+manage (c.f. old ows write-role), and admin (manage the OWS schema - new feature).
+
+Use::
+    datacube user grant [user|manage|admin] <db_username>
+
+instead of the old::
+    datacube-ows --read-role <db_username> --write-role <db_username>
+
+If you no longer run OWS 1.8.x versions, now would be a good time to also run::
+
+    # Cleanup OWS 1.8 range tables and materialised views
+    datacube-ows-update --cleanup
+
+These schema changes only affects database user permissions and schema management.  A datacube-1.9.12/ows-1.9.7
+schema is backwards compatible with earlier versions of datacube and ows. (Note this was advised for the previous
+releases as well, but was unfortunately not actually the case for postgis indexes).
+
+
+What's Changed
+++++++++++++++
+
+* Improve error reporting from get_ranges. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1377
+* dependabot: add 10 day cooldown by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1379
+* uv.lock: update to urllib3 2.6.0 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1378
+* postgis: fix comment typo by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1385
+* uv.lock: update to rasterio 1.4.4 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1391
+* datacube-ows-update: fix help output by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1390
+* Replace assert with RuntimeError by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1392
+* ogc: log unexpected exceptions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1393
+* Doc string fixes by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1394
+* datacube-ows-update: detect OperationalError by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1395
+* psycopg3: install c extras by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1398
+* datacube-ows-update: print exception by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1396
+* Connection handling cleanup by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1399
+* Name datacube connection by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1401
+* api: re-use existing datacube by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1400
+* Refactor to support thread-safe Flask initialisation. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1403
+* Bump version numbers and update HISTORY.rst for 1.9.7 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1406
+
+Automated Updates
++++++++++++++++++
+
+* build(deps): bump astral-sh/uv from 0.9.15 to 0.9.16 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1382
+* build(deps): bump the actions-deps group with 3 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1380
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1384
+* build(deps): bump mambaorg/micromamba from `4037bec` to `b505801` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1381
+* dependabot: fix syntax error by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1383
+* build(deps): bump astral-sh/uv from 0.9.16 to 0.9.17 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1389
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1397
+* build(deps): bump astral-sh/uv from 0.9.17 to 0.9.18 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1402
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.6...1.9.7
+
+
 1.9.6 (2025-12-04)
 ------------------
 

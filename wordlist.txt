@@ -96,6 +96,7 @@ colourramp
 conda
 conf
 config
+cooldown
 cookiecutter
 coord
 coords
@@ -316,6 +317,7 @@ ogc
 omad
 OIDC
 onwards
+OperationalError
 opendatacube
 OpenDataCube
 OpenDatacube
@@ -386,6 +388,7 @@ rgba
 rst
 rtaib
 runtime
+RuntimeError
 runtimes
 satisifies
 scalable
@@ -433,6 +436,7 @@ unpatched
 unscaled
 uri
 url
+urllib
 urls
 usgs
 utc
