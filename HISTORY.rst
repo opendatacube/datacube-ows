@@ -62,7 +62,7 @@ What's Changed
 * Name datacube connection by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1401
 * api: re-use existing datacube by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1400
 * Refactor to support thread-safe Flask initialisation. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1403
-* Bump version numbers and update HISTORY.rst for 1.9.7 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1404
+* Bump version numbers and update HISTORY.rst for 1.9.7 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1406
 
 Automated Updates
 +++++++++++++++++
