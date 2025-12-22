@@ -180,13 +180,13 @@ class OWSAbstractIndex(ABC):
             x, y = any_geom.coords[0]
             delta_x, delta_y = layer.cfg_native_resolution
             return polygon(
-                (
+                [
                     (x, y),
                     (x + delta_x, y),
                     (x + delta_x, y + delta_y),
                     (x, y + delta_y),
                     (x, y),
-                ),
+                ],
                 crs=layer.native_CRS,
             )
         if any_geom.geom_type in ("MultiPoint", "LineString", "MultiLineString"):
