@@ -436,6 +436,7 @@ unpatched
 unscaled
 uri
 url
+urllib
 urls
 usgs
 utc
