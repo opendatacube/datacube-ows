@@ -9,6 +9,7 @@ import os
 import warnings
 from collections.abc import Callable
 from logging import Logger
+from threading import Lock
 from time import monotonic
 from typing import Any, TypeVar
 
@@ -95,16 +96,19 @@ def initialise_sentry(log: Logger | None = None) -> None:
         if log:
             log.info("Sentry initialised")
 
+credential_lock = Lock()
 
 class CredentialManager:
     _instance = None
 
     def __new__(cls, log: Logger | None = None) -> "CredentialManager":
+        # new/init assumed to be called with credential_lock held
         if not cls._instance:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self, log: Logger | None = None) -> None:
+        # new/init assumed to be called with credential_lock held
         # Startup initialisation of libraries controlled by environment variables
         self.use_aws = False
         self.unsigned = False
@@ -178,8 +182,9 @@ class CredentialManager:
     @classmethod
     def check_cred(cls) -> None:
         # pylint: disable=protected-access
-        assert cls._instance is not None
-        cls._instance._check_cred()
+        with credential_lock:
+            assert cls._instance is not None
+            cls._instance._check_cred()
 
     def renew_creds(self) -> None:
         if self.use_aws:
@@ -199,8 +204,9 @@ class CredentialManager:
 
 def initialise_aws_credentials(log: Logger | None = None) -> None:
     # pylint: disable=protected-access
-    if CredentialManager._instance is None:
-        _ = CredentialManager(log)
+    with credential_lock:
+        if CredentialManager._instance is None:
+            _ = CredentialManager(log)
 
 
 def parse_config_file(log: Logger | None = None) -> OWSConfig | None:
