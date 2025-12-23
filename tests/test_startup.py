@@ -14,30 +14,8 @@ import pytest
 
 
 def test_fake_creds(monkeypatch) -> None:
-    from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
-
-    CredentialManager._instance = None
-    log = MagicMock()
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "")
-    initialise_aws_credentials(log=log)
-    CredentialManager._instance = None
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
-    monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "false")
-    monkeypatch.setenv("AWS_REQUEST_PAYER", "requester")
-    with patch("datacube_ows.startup_utils.configure_s3_access") as s3a:
-        s3a.return_value = None
-        initialise_aws_credentials(log=log)
-        assert os.getenv("AWS_NO_SIGN_REQUEST") is None
-        CredentialManager._instance = None
-        monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "yes")
-        initialise_aws_credentials()
-        assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
-
-
-def test_renewable_creds(monkeypatch) -> None:
-    from datacube_ows.startup_utils import (
+    from datacube_ows.startup_utils.creds import (
         CredentialManager,
-        RefreshableCredentials,
         initialise_aws_credentials,
     )
 
@@ -49,7 +27,33 @@ def test_renewable_creds(monkeypatch) -> None:
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
     monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "false")
     monkeypatch.setenv("AWS_REQUEST_PAYER", "requester")
-    with patch("datacube_ows.startup_utils.configure_s3_access") as s3a:
+    with patch("datacube_ows.startup_utils.creds.configure_s3_access") as s3a:
+        s3a.return_value = None
+        initialise_aws_credentials(log=log)
+        assert os.getenv("AWS_NO_SIGN_REQUEST") is None
+        CredentialManager._instance = None
+        monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "yes")
+        initialise_aws_credentials()
+        assert os.getenv("AWS_ACCESS_KEY_ID") == "fake"
+
+
+def test_renewable_creds(monkeypatch) -> None:
+    from botocore.credentials import RefreshableCredentials
+
+    from datacube_ows.startup_utils.creds import (
+        CredentialManager,
+        initialise_aws_credentials,
+    )
+
+    CredentialManager._instance = None
+    log = MagicMock()
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "")
+    initialise_aws_credentials(log=log)
+    CredentialManager._instance = None
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-1")
+    monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "false")
+    monkeypatch.setenv("AWS_REQUEST_PAYER", "requester")
+    with patch("datacube_ows.startup_utils.creds.configure_s3_access") as s3a:
         mock_creds = MagicMock(spec=RefreshableCredentials)
         s3a.return_value = mock_creds
         initialise_aws_credentials(log=log)
@@ -59,7 +63,10 @@ def test_renewable_creds(monkeypatch) -> None:
 
 
 def test_s3_endpoint_default(monkeypatch) -> None:
-    from datacube_ows.startup_utils import CredentialManager, initialise_aws_credentials
+    from datacube_ows.startup_utils.creds import (
+        CredentialManager,
+        initialise_aws_credentials,
+    )
 
     CredentialManager._instance = None
     log = MagicMock()
