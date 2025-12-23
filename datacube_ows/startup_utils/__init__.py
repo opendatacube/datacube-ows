@@ -304,9 +304,9 @@ def create_app() -> Flask:
     cfg = parse_config_file(log)
     initialise_ignorable_warnings()
     initialise_debugging(log)
+    app = initialise_flask(__name__)
     initialise_sentry(log)
     initialise_aws_credentials(log)
-    app = initialise_flask(__name__)
     initialise_babel(cfg, app)
     metrics = initialise_prometheus(app, log)
     ows_ogc_metric = metrics.histogram(
