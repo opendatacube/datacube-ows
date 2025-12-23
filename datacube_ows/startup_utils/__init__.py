@@ -12,8 +12,6 @@ from logging import Logger
 from time import monotonic
 from typing import Any, TypeVar
 
-from botocore.credentials import RefreshableCredentials
-from datacube.utils.aws import configure_s3_access
 from flask import Flask, g, request
 from rasterio.errors import NotGeoreferencedWarning
 
@@ -161,6 +159,7 @@ class CredentialManager:
             )
 
     def _check_cred(self) -> None:
+        from botocore.credentials import RefreshableCredentials
         if self.credentials and isinstance(self.credentials, RefreshableCredentials):
             if self.credentials.refresh_needed():
                 self.renew_creds()
@@ -184,6 +183,8 @@ class CredentialManager:
 
     def renew_creds(self) -> None:
         if self.use_aws:
+            from botocore.credentials import RefreshableCredentials
+            from datacube.utils.aws import configure_s3_access
             if self.log:
                 self.log.info("Establishing/renewing credentials")
             self.credentials = configure_s3_access(
