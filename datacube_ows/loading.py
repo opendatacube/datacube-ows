@@ -24,7 +24,7 @@ from typing_extensions import override
 
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ows_configuration import OWSNamedLayer
-from datacube_ows.startup_utils import CredentialManager
+from datacube_ows.startup_utils.creds import CredentialManager
 from datacube_ows.styles import StyleDef
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import solar_correct_data
