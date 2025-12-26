@@ -9,6 +9,7 @@ import traceback
 from logging import Logger
 
 from flask import render_template, request
+from sqlalchemy.exc import OperationalError
 
 from datacube_ows import __version__
 from datacube_ows.http_utils import (
@@ -126,6 +127,13 @@ def ogc_svc_impl(svc):
         return version_support.router(nocase_args)
     except OGCException as e:
         return e.exception_response()
+    except OperationalError as e:
+        # Expected types of failures in this branch. Log the error to console and give
+        # the user a generic 500 response.
+        _LOG.error(e)
+        return version_support.exception_class(
+            "Internal server error.", http_response=500
+        ).exception_response()
     except Exception as e:  # pylint: disable=broad-except
         _LOG.exception(e)
         tb = sys.exc_info()[2]
