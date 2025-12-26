@@ -121,19 +121,19 @@ The first time you run docker-compose, you will need to add the `--build` option
 
 To start ows with a pre-indexed database::
 
-  docker compose -f docker-compose.yaml up
+  docker compose up
 
 To start ows with db and gunicorn instead of flask (production)::
 
   docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up
 
-The default environment variables (in .env file) can be overriden by setting local environment variables::
+The default environment variables (in .env file) can be overridden by setting local environment variables::
 
   # Enable pydev for pycharm (needs rebuild to install python libs)
   # hot reload is not supported, so we need to set FLASK_DEV to production
   export PYDEV_DEBUG=yes
   export FLASK_DEV=production
-  docker compose -f docker-compose.yaml up --build
+  docker compose up --build
 
 setup env with .env file
 ^^^^^^^^^^^^^^^^^^^^^^^^
