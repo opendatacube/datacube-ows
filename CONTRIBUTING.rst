@@ -109,7 +109,7 @@ setting a NEW db dump
 .. code-block:: console
 
     # bring up indexing and db container
-    docker compose -f docker-compose.index.yaml -f docker-compose.db.yaml up
+    docker compose -f docker-compose.index.yaml up
 
 
 building on top of existing db dump
@@ -117,7 +117,7 @@ building on top of existing db dump
 
 .. code-block:: console
 
-  docker compose -f docker-compose.yaml -f docker-compose.index.yaml -f docker-compose.db.yaml up
+  docker compose -f docker-compose.yaml -f docker-compose.index.yaml up
 
 checkpoint
 ~~~~~~~~~~

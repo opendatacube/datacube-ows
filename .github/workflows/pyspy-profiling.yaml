@@ -67,7 +67,7 @@ jobs:
         export LOCAL_UID=$(id -u $USER)
         export LOCAL_GID=$(id -g $USER)
         export $(grep -v '^#' .env_simple | xargs)
-        docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml up --quiet-pull -d
+        docker compose -f docker-compose.yaml -f docker-compose.pyspy.yaml up --quiet-pull -d
         sleep 10
 
     - name: set output container pid (stage 1 - get ows container pid)
@@ -77,7 +77,7 @@ jobs:
         export LOCAL_GID=$(id -g $USER)
         export $(grep -v '^#' .env_simple | xargs)
         echo "PID=$(docker inspect --format '{{.State.Pid}}' $(docker inspect -f '{{.Name}}' \
-        $(docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml ps -q ows) \
+        $(docker compose -f docker-compose.yaml -f docker-compose.pyspy.yaml ps -q ows) \
         | cut -c2-))" > $GITHUB_OUTPUT
 
     - name: Run py-spy profiling (stage 1 - run profiling service)
@@ -87,16 +87,16 @@ jobs:
         export LOCAL_UID=$(id -u $USER)
         export LOCAL_GID=$(id -g $USER)
         export $(grep -v '^#' .env_simple | xargs)
-        docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
+        docker compose -f docker-compose.yaml -f docker-compose.pyspy.yaml \
         exec -T ows /bin/sh -c "cd /code && ./test_urls.sh &"
-        docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
+        docker compose -f docker-compose.yaml -f docker-compose.pyspy.yaml \
         run pyspy record -f speedscope -o ./artifacts/profile.json --duration 30 \
         --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
 
     - name: Stop py-spy profiling after timeout (stage 1 - stop profiling)
       run: |
         export $(grep -v '^#' .env_simple | xargs)
-        docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml down
+        docker compose -f docker-compose.yaml -f docker-compose.pyspy.yaml down
 
     - name: Upload profile to artifact (stage 1 - Upload profiling svg to artifacts)
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0

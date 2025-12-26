@@ -80,9 +80,9 @@ jobs:
           export LOCAL_UID=$(id -u $USER)
           export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml up --quiet-pull -d --wait
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /src && ./check-code-all.sh"
-          docker compose -f docker-compose.yaml -f docker-compose.db.yaml down
+          docker compose -f docker-compose.yaml up --quiet-pull -d --wait
+          docker compose -f docker-compose.yaml exec -T ows /bin/sh -c "cd /src && ./check-code-all.sh"
+          docker compose -f docker-compose.yaml down
 
       - name: Upload All coverage to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2

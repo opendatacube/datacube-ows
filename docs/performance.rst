@@ -35,7 +35,7 @@ Docker-Compose
 --------------
 To make the chained docker compose with pre-indexed database: ::
 
-    COMPOSE_CHAIN='docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml'
+    COMPOSE_CHAIN='docker compose -f docker-compose.yaml -f docker-compose.pyspy.yaml'
 
 To make the chained docker compose with local database: ::
 
