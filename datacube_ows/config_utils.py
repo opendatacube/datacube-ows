@@ -12,12 +12,11 @@ import os
 from collections.abc import Callable, Sequence
 from importlib import import_module
 from itertools import chain
-from typing import Any, TypeAlias, cast
+from typing import Any, TypeAlias, cast, override
 from urllib.parse import urlparse
 
 import fsspec
 from datacube.utils.masking import make_mask
-from typing_extensions import override
 
 from datacube_ows.config_toolkit import deepinherit
 

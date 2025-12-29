@@ -8,13 +8,12 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from collections.abc import Iterable
-from typing import cast
+from typing import cast, override
 from uuid import UUID
 
 import datacube
 import numpy
 import xarray
-from typing_extensions import override
 
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.startup_utils.creds import CredentialManager

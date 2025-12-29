@@ -9,7 +9,7 @@ import logging
 import os
 import sys
 from time import monotonic
-from typing import Any, TypeVar
+from typing import Any
 
 from flask import Flask, g, request
 from sqlalchemy.exc import OperationalError
@@ -40,10 +40,9 @@ def initialise_logger(name: str | None = None) -> Logger:
     return log
 
 
-SentryEvent = TypeVar("SentryEvent")
-
-
-def before_send(event: SentryEvent, hint: dict[str, Any]) -> SentryEvent | None:
+def before_send[SentryEvent](
+    event: SentryEvent, hint: dict[str, Any]
+) -> SentryEvent | None:
     if "exc_info" in hint:
         _, exc_value, _ = hint["exc_info"]
         if isinstance(

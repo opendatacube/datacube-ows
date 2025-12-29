@@ -4,9 +4,10 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import override
+
 from affine import Affine
 from odc.geo import geom as odc_geom
-from typing_extensions import override
 
 
 class WCSScalerException(Exception):

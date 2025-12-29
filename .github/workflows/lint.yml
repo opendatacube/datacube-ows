@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
         lintcommand:
           - "pylint -j 2 datacube_ows --disable=C,R,W,E1136"
           - "ruff check --output-format=github"

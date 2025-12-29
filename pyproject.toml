@@ -27,7 +27,7 @@ dependencies = [
     "urllib3",
     "xarray",
 ]
-requires-python = ">=3.11.0"
+requires-python = ">=3.12"
 readme = "README.rst"
 license = "Apache-2.0"
 keywords = ["datacube", "wms", "wcs"]
@@ -37,9 +37,9 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 [project.urls]
@@ -105,7 +105,7 @@ postgis = "datacube_ows.index.postgis.api:ows_index_driver_init"
 postgres = "datacube_ows.index.postgres.api:ows_index_driver_init"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 allow_redefinition = true
 enable_error_code = ["explicit-override"]
 ignore_missing_imports = true
@@ -147,6 +147,7 @@ ignore = [
     "E501",
     "RUF012",
     "RUF022",
+    "UP040",
 ]
 
 [tool.ruff.lint.per-file-ignores]

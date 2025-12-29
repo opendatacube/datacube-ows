@@ -11,7 +11,7 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from functools import wraps
 from time import monotonic
-from typing import Any, TypeVar, cast
+from typing import Any, TypeAlias, cast
 
 from datacube.api.query import GroupBy, solar_day
 from numpy import datetime64 as npdt64
@@ -26,10 +26,10 @@ if TYPE_CHECKING:
     from numpy import timedelta64 as npdelt64
     from sqlalchemy.engine.base import Connection
 
-F = TypeVar("F", bound=Callable[..., Any])
+Fcallable: TypeAlias = Callable[..., Any]
 
 
-def log_call(func: F) -> F:
+def log_call[F: Fcallable](func: F) -> F:
     """
     Profiling function decorator
 
@@ -46,7 +46,7 @@ def log_call(func: F) -> F:
     return cast("F", log_wrapper)
 
 
-def time_call(func: F) -> F:
+def time_call[F: Fcallable](func: F) -> F:
     """
     Profiling function decorator
 

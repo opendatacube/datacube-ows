@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import datetime
 from threading import Lock
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import click
 from antimeridian import fix_shape
@@ -15,7 +15,6 @@ from datacube.drivers.common_psql import as_role
 from datacube.model import Range
 from odc.geo import CRS, Geometry
 from sqlalchemy import text
-from typing_extensions import override
 
 from datacube_ows.index.api import (
     AbortRun,

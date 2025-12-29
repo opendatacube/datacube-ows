@@ -5,12 +5,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import datetime
+from typing import override
 from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 from odc.geo.geom import polygon
-from typing_extensions import override
 from xarray import Dataset
 
 import datacube_ows.data

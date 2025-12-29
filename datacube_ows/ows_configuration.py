@@ -23,7 +23,7 @@ import os
 from collections.abc import Mapping
 from enum import Enum
 from threading import Lock
-from typing import Any, cast
+from typing import Any, cast, override
 
 import numpy
 from datacube import Datacube
@@ -32,7 +32,6 @@ from odc.geo import CRS, CRSError
 from ows import Version
 from slugify import slugify
 from sqlalchemy.exc import OperationalError
-from typing_extensions import override
 
 from datacube_ows.config_utils import (
     ConfigException,

@@ -7,12 +7,11 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import cast
+from typing import cast, override
 
 import numpy
 import xarray
 from datacube.utils.masking import make_mask
-from typing_extensions import override
 from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import (
