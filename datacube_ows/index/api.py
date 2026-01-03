@@ -8,6 +8,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from datetime import date, datetime
+from functools import wraps
 from typing import Any, Literal, NamedTuple, TypeAlias, Union
 from uuid import UUID
 
@@ -227,6 +228,7 @@ def check_perms(
     group: Literal["admin", "manage"],
 ) -> Callable[[Callable], Callable]:
     def outer(f: Callable) -> Callable:
+        @wraps(f)
         def inner(
             instance, dcl: Union[Datacube, "OWSNamedLayer"], *args, **kwargs
         ) -> Any:

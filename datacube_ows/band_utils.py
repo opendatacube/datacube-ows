@@ -4,6 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Callable, Sequence
+from functools import wraps
 from typing import Literal
 
 import numpy
@@ -24,6 +25,7 @@ def scale_data(
 
 
 def scalable(undecorated):
+    @wraps(undecorated)
     def decorated(*args, **kwargs):
         scale_from = kwargs.pop("scale_from", None)
         scale_to = kwargs.pop("scale_to", None)
@@ -38,6 +40,7 @@ def scalable(undecorated):
 
 
 def band_modulator(undecorated):
+    @wraps(undecorated)
     def decorated(data, *args, **kwargs):
         band_mapper = kwargs.get("band_mapper")
         mult_band = kwargs.pop("mult_band", None)
