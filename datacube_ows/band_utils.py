@@ -24,7 +24,7 @@ def scale_data(
     return scaled + tc_min
 
 
-def scalable(undecorated):
+def scalable(undecorated: Callable) -> Callable:
     @wraps(undecorated)
     def decorated(*args, **kwargs):
         scale_from = kwargs.pop("scale_from", None)
@@ -39,7 +39,7 @@ def scalable(undecorated):
     return decorated
 
 
-def band_modulator(undecorated):
+def band_modulator(undecorated: Callable) -> Callable:
     @wraps(undecorated)
     def decorated(data, *args, **kwargs):
         band_mapper = kwargs.get("band_mapper")
