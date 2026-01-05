@@ -7,6 +7,7 @@
 import io
 import logging
 from collections.abc import Iterable, Mapping, MutableMapping, Sized
+from threading import Lock
 from typing import Any, Optional, Union, cast
 
 import datacube.model
@@ -15,7 +16,6 @@ import xarray as xr
 from flask_babel import get_locale
 from PIL import Image
 from typing_extensions import override
-from threading import Lock
 
 import datacube_ows.band_utils
 from datacube_ows.config_utils import (
