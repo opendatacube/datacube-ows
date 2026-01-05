@@ -26,10 +26,11 @@ from datacube_ows.config_toolkit import deepinherit
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    import datacube_ows.ows_configuration.AttributionCfg
-    import datacube_ows.ows_configuration.OWSConfig
+    import datacube_ows.ows_configuration
+
+    # FIXME: remove the next import line and fix type errors in api.py.
     import datacube_ows.ows_configuration.OWSNamedLayer
-    import datacube_ows.styles.base.StyleMask
+    import datacube_ows.styles.base
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
