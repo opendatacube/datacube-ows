@@ -66,6 +66,7 @@ dev = [
     "pydevd-pycharm~=252.26830.99",
     "pylint",
     "ruff",
+    "ty",
     "types-python-dateutil",
     "types-PyYAML",  # Used by metadata_importer.py.
     "types-requests",
