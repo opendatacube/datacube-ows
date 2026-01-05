@@ -7,6 +7,7 @@
 import io
 import logging
 from collections.abc import Iterable, Mapping, MutableMapping, Sized
+from threading import Lock
 from typing import Any, Optional, Union, cast
 
 import datacube.model
@@ -37,6 +38,10 @@ from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 
 _LOG: logging.Logger = logging.getLogger(__name__)
+
+
+# Matplotlib is not thread safe. Add a lock to serialise access to it.
+mpl_lock = Lock()
 
 
 class LegendBase(OWSConfigEntry):
@@ -434,7 +439,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     def render_legend(self, dates: int | list[Any]) -> Image.Image | None:
         """
-        Render legend, if possible
+        Render legend, if possible.
+
         :param dates: The number of dates to render the legend for (e.g. for delta)
         :return: A PIL Image object, or None.
         """
@@ -453,7 +459,9 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if not legend.style_or_mdh.auto_legend:
             return None
         bytesio = io.BytesIO()
-        legend.render(bytesio)
+        # Serialise Matplotlib access
+        with mpl_lock:
+            legend.render(bytesio)
         bytesio.seek(0)
         return Image.open(bytesio)
 
