@@ -39,7 +39,7 @@ RESAMPLING_METHODS = {
 
 
 def _bounding_pts(
-    minx: int, miny: int, maxx: int, maxy: int, src_crs, dst_crs=None
+    minx: float, miny: float, maxx: float, maxy: float, src_crs, dst_crs=None
 ) -> tuple[float, float, float, float]:
     # pylint: disable=too-many-locals
     p1 = geom.point(minx, maxy, src_crs)
@@ -63,7 +63,7 @@ def _bounding_pts(
     return minx, miny, maxx, maxy
 
 
-def _get_geobox_xy(args, crs: CRS) -> tuple:
+def _get_geobox_xy(args, crs: CRS) -> tuple[float, float, float, float]:
     if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
         miny, minx, maxy, maxx = map(float, args["bbox"].split(","))
     else:

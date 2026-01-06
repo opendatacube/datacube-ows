@@ -121,14 +121,16 @@ def get_capabilities(args: dict) -> tuple[Any, int, dict]:
                 identifier=product.name,
                 coverage_subtype="RectifiedGridCoverage",
                 title=product.title,
-                wgs84_bbox=WGS84BoundingBox(
-                    [
-                        product.ranges.lon.min,
-                        product.ranges.lat.min,
-                        product.ranges.lon.max,
-                        product.ranges.lat.max,
-                    ]
-                ),
+                wgs84_bbox=[
+                    WGS84BoundingBox(
+                        [
+                            product.ranges.lon.min,
+                            product.ranges.lat.min,
+                            product.ranges.lon.max,
+                            product.ranges.lat.max,
+                        ]
+                    )
+                ],
             )
             for product in cfg.layer_index.values()
             if product.ready and not product.hide and product.wcs

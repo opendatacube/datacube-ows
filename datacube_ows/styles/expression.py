@@ -16,7 +16,7 @@ from datacube_ows.config_utils import ConfigException
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    import datacube_ows.styles.StyleDef
+    import datacube_ows.styles
 
 # Lark stuff.
 

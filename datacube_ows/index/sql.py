@@ -4,13 +4,15 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-import importlib
+import importlib.resources
 import re
 
 import click
 import datacube.cfg
+import datacube.index
 import sqlalchemy
 from datacube import Datacube
+from sqlalchemy.exc import ProgrammingError
 
 from datacube_ows.index.api import InsufficientDbPrivileges
 from datacube_ows.utils import get_driver_name, get_sqlconn
@@ -114,7 +116,7 @@ def run_sql_statement(
     try:
         result = conn.execute(sqlalchemy.text(sql))
         click.echo(f"    ...  succeeded(?) with rowcount {result.rowcount}")
-    except sqlalchemy.exc.ProgrammingError as e:
+    except ProgrammingError as e:
         if isinstance(e.orig, InsufficientPrivilege):
             raise InsufficientDbPrivileges(
                 f"Insufficient Privileges (user {idx.environment.db_username}). Try running again as a database superuser"

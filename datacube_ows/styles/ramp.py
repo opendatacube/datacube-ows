@@ -14,6 +14,7 @@ from math import isclose
 from typing import Any, Union, cast
 
 import matplotlib
+import matplotlib.colorbar
 import numpy
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, to_rgba
