@@ -123,9 +123,13 @@ To start ows with a pre-indexed database::
 
   docker compose -f docker-compose.yaml -f docker-compose.db.yaml up
 
+To start ows with db and flask (development)::
+
+  docker compose -f docker-compose.yaml -f docker-compose.override.yaml -f docker-compose.db.yaml up
+
 To start ows with db and gunicorn instead of flask (production)::
 
-  docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.prod.yaml up
+  docker compose -f docker-compose.yaml -f docker-compose.db.yaml up
 
 The default environment variables (in .env file) can be overriden by setting local environment variables::
 
