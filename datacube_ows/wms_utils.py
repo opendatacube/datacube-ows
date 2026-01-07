@@ -530,7 +530,7 @@ class GetFeatureInfoParameters(GetParameters):
             raise WMSException(
                 "Vertical coordinate not supplied",
                 WMSException.INVALID_POINT,
-                f"{coords[0]} parameter",
+                f"{coords[1]} parameter",
             )
         self.i = int(i)
         self.j = int(j)
