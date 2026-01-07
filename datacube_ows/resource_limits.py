@@ -20,7 +20,7 @@ from datacube_ows.ogc_utils import create_geobox
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    import datacube_ows.ows_configuration.OWSConfig
+    import datacube_ows.ows_configuration
 
 
 def parse_cache_age(cfg: dict, entry, section, default: int = 0) -> int:
