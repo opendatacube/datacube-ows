@@ -93,29 +93,27 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
                 locator="Time parameter",
             )
     qprof["n_dates"] = n_dates
+    # Tiling.
+    stacker = DataStacker(
+        params.layer,
+        params.geobox,
+        params.times,
+        params.resampling,
+        style=params.style,
+    )
+    qprof["zoom_factor"] = params.zf
+    qprof.start_event("count-datasets")
+    n_datasets = stacker.n_datasets()
+    qprof.end_event("count-datasets")
+    qprof["n_datasets"] = n_datasets
+    qprof["zoom_level_base"] = params.resources.base_zoom_level
+    qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
     try:
-        # Tiling.
-        stacker = DataStacker(
-            params.layer,
-            params.geobox,
-            params.times,
-            params.resampling,
-            style=params.style,
-        )
-        qprof["zoom_factor"] = params.zf
-        qprof.start_event("count-datasets")
-        n_datasets = stacker.n_datasets()
-        qprof.end_event("count-datasets")
-        qprof["n_datasets"] = n_datasets
-        qprof["zoom_level_base"] = params.resources.base_zoom_level
-        qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
-        try:
-            params.layer.resource_limits.check_wms(
-                n_datasets, params.zf, params.resources
-            )
-        except ResourceLimited as e:
-            stacker.resource_limited = True
-            qprof["resource_limited"] = str(e)
+        params.layer.resource_limits.check_wms(n_datasets, params.zf, params.resources)
+    except ResourceLimited as e:
+        stacker.resource_limited = True
+        qprof["resource_limited"] = str(e)
+    try:
         if qprof.active:
             q_ds_dict = stacker.datasets()
             qprof["datasets"] = []
