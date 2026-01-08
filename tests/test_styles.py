@@ -638,7 +638,7 @@ def style_cfg_map_mask() -> CFG_DICT:
     }
 
 
-def test_RGBAMapped_Masking(product_layer_mask_map, style_cfg_map_mask) -> None:
+def test_rgba_mapped_masking(product_layer_mask_map, style_cfg_map_mask) -> None:
     def fake_make_mask(data, **kwargs) -> np.ndarray:
         val = kwargs["bar"]
         return data == val

@@ -112,8 +112,8 @@ def wmts_args_to_wms(args, cfg) -> dict:
     style = args.get("style")
     format_ = args.get("format")
     time = args.get("time", "")
-    tileMatrixSet = args.get("tilematrixset")
-    tileMatrix = args.get("tilematrix")
+    tile_matrix_set = args.get("tilematrixset")
+    tile_matrix = args.get("tilematrix")
     row = args.get("tilerow")
     col = args.get("tilecol")
 
@@ -131,24 +131,24 @@ def wmts_args_to_wms(args, cfg) -> dict:
         "requestid": args["requestid"],
     }
 
-    tms = cfg.tile_matrix_sets.get(tileMatrixSet)
+    tms = cfg.tile_matrix_sets.get(tile_matrix_set)
     if not tms:
         for _tms in cfg.tile_matrix_sets.values():
-            if tileMatrixSet == _tms.wkss:
+            if tile_matrix_set == _tms.wkss:
                 tms = _tms
                 break
 
     if tms is None:
-        raise WMTSException("Invalid Tile Matrix Set: " + tileMatrixSet)
+        raise WMTSException("Invalid Tile Matrix Set: " + tile_matrix_set)
 
     wms_args["crs"] = tms.crs_name
     _ = cfg.published_CRSs[tms.crs_name]
     try:
-        tileMatrix = int(tileMatrix)
-        if tileMatrix < 0 or tileMatrix >= len(tms.scale_set):
-            raise WMTSException(f"Invalid Tile Matrix: {tileMatrix}")
+        tile_matrix = int(tile_matrix)
+        if tile_matrix < 0 or tile_matrix >= len(tms.scale_set):
+            raise WMTSException(f"Invalid Tile Matrix: {tile_matrix}")
     except ValueError:
-        raise WMTSException(f"Invalid Tile Matrix: {tileMatrix}") from None
+        raise WMTSException(f"Invalid Tile Matrix: {tile_matrix}") from None
     try:
         row = int(row)
     except ValueError:
@@ -158,7 +158,7 @@ def wmts_args_to_wms(args, cfg) -> dict:
     except ValueError:
         raise WMTSException(f"Invalid Tile Col: {col}") from None
     wms_args["bbox"] = "{:f},{:f},{:f},{:f}".format(
-        *tms.wms_bbox_coords(tileMatrix, row, col)
+        *tms.wms_bbox_coords(tile_matrix, row, col)
     )
 
     # GetFeatureInfo only args
