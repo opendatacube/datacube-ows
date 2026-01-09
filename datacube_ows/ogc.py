@@ -36,8 +36,7 @@ OWS_SUPPORTED: dict[str, SupportedSvc] = supported_versions()
 # (Note that actual route declarations take place in startup_utils.py)
 def ogc_impl():
     # pylint: disable=too-many-branches
-    nocase_args = lower_get_args()
-    nocase_args = capture_headers(request, nocase_args)
+    nocase_args = capture_headers(request, lower_get_args())
     service = nocase_args.get("service", "").upper()
 
     if service:
@@ -89,8 +88,7 @@ def ogc_impl():
 
 def ogc_svc_impl(svc):
     svc_support = OWS_SUPPORTED.get(svc)
-    nocase_args = lower_get_args()
-    nocase_args = capture_headers(request, nocase_args)
+    nocase_args = capture_headers(request, lower_get_args())
     service = nocase_args.get("service", svc).upper()
 
     # Is service activated in config?
@@ -186,11 +184,7 @@ def legend(layer, style, dates=None):
     product = cfg.layer_index.get(layer)
     if not product:
         return "Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"})
-    if dates is None:
-        args = lower_get_args()
-        ndates = int(args.get("ndates", 0))
-    else:
-        ndates = len(dates)
+    ndates = int(lower_get_args().get("ndates", 0)) if dates is None else len(dates)
     try:
         img = create_legend_for_style(product, style, ndates)
     except WMSException as e:

@@ -89,7 +89,7 @@ def cache_control_headers(max_age: int) -> dict[str, str]:
     return {"cache-control": f"max-age={max_age}"}
 
 
-def lower_get_args() -> dict[str, str]:
+def lower_get_args() -> dict[str, str | None]:
     """
     Return Flask request arguments, with argument names converted to lower case.
 
@@ -97,7 +97,7 @@ def lower_get_args() -> dict[str, str]:
     Spec does not specify which instance should be used if a parameter is provided more than once.
     This function uses the LAST instance.
     """
-    d = {}
+    d: dict[str, str | None] = {}
     for k in request.args:
         kl = k.lower()
         for v in request.args.getlist(k):
