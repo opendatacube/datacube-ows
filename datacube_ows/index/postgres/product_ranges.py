@@ -49,10 +49,10 @@ def create_range_entry(
 
     with get_sqlconn(layer.dc) as conn:
         txn = conn.begin()
-        if meta in cache:
-            template = cache[meta][0]
+        cached = cache.get(meta)
+        if cached is not None:
+            template = cached[0]
             # A layer has same signature - reuse range"
-            cache[meta].append(layer.name)
             try:
                 conn.execute(
                     text("""
@@ -202,9 +202,11 @@ def create_range_entry(
                 {"bbox": Json(all_bboxes), "layer_id": layer.name},
             )
 
-            cache[meta] = [layer.name]
-
         txn.commit()
+        # Only update cache after successful commit.
+        if cached is None:
+            cache[meta] = []
+        cache[meta].append(layer.name)
 
 
 def bbox_projections(
