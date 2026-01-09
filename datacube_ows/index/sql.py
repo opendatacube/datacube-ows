@@ -8,7 +8,6 @@ import importlib.resources
 import re
 
 import click
-import datacube.cfg
 import datacube.index
 import sqlalchemy
 from datacube import Datacube
