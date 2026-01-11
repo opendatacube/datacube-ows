@@ -7,7 +7,7 @@
 from urllib import request
 
 import pytest
-from lxml import etree
+from lxml.etree import XML, parse
 from owslib.util import ServiceException
 from owslib.wmts import WebMapTileService
 
@@ -25,7 +25,7 @@ def check_wmts_error(
 
     resp_content = e.value.fp.read()
     assert expected_error_message in str(resp_content)
-    resp_xml = etree.XML(resp_content)
+    resp_xml = XML(resp_content)
     assert resp_xml is not None
 
 
@@ -64,7 +64,7 @@ def test_wmts_getcap(ows_server) -> None:
     assert resp.headers["cache-control"] == "max-age=5"
 
     # Validate XML Schema
-    resp_xml = etree.parse(resp.fp)
+    resp_xml = parse(resp.fp)
     gc_xds = get_xsd("wmts/1.0/wmtsGetCapabilities_response.xsd")
     assert gc_xds.validate(resp_xml)
 
