@@ -31,7 +31,8 @@ def flask_client(flask_app) -> Generator[WSGIServer]:
 
 
 class generic_obj:
-    pass
+    def __init__(self, url: str) -> None:
+        self.url = url
 
 
 @pytest.fixture(scope="session")
@@ -41,8 +42,7 @@ def ows_server(request, flask_app) -> WSGIServer:
     """
     external_url = os.environ.get("SERVER_URL")
     if external_url:
-        server = generic_obj()
-        server.url = external_url
+        server = generic_obj(external_url)
     else:
         server = WSGIServer(port="5000", application=flask_app)
         server.start()
