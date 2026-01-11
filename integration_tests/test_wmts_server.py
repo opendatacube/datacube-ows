@@ -16,7 +16,7 @@ from integration_tests.utils import get_xsd
 
 
 def check_wmts_error(
-    url, expected_error_message=None, expected_status_code: int = 400
+    url, expected_error_message: str, expected_status_code: int = 400
 ) -> None:
     with pytest.raises(Exception) as e:
         _ = request.urlopen(url, timeout=10)
