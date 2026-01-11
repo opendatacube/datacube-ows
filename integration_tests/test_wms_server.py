@@ -9,20 +9,20 @@ from pathlib import Path
 from urllib import request
 
 import pytest
-from lxml import etree
+from lxml.etree import XML, XMLParser, XMLSchema, fromstring, parse
 from owslib.wms import WebMapService
 
 from datacube_ows.legend_utils import retrying_requests
 from integration_tests.utils import HttpResolver
 
 
-def get_xsd(name: str) -> etree.XMLSchema:
+def get_xsd(name: str) -> XMLSchema:
     path = Path(__file__).resolve().parent.parent / "wms_xsds" / name
-    parser = etree.XMLParser(load_dtd=True, no_network=False)
+    parser = XMLParser(load_dtd=True, no_network=False)
     parser.resolvers.add(HttpResolver())
     with open(path) as xsd_f:
-        schema_doc = etree.parse(xsd_f, parser)
-    return etree.XMLSchema(schema_doc)
+        schema_doc = parse(xsd_f, parser)
+    return XMLSchema(schema_doc)
 
 
 def check_wms_error(
@@ -34,7 +34,7 @@ def check_wms_error(
     assert e.value.getcode() == expected_status_code
 
     resp_content = e.value.fp.read()
-    resp_xml = etree.XML(resp_content)
+    resp_xml = XML(resp_content)
 
     # Validate response against Schema
     ex_xsd = get_xsd("exceptions_1_3_0.xsd")
@@ -80,7 +80,7 @@ def test_getcap_xsd(ows_server) -> None:
     caps_document = resp.text
 
     # Validate XML Schema
-    resp_xml = etree.fromstring(resp.content)
+    resp_xml = fromstring(resp.content)
     gc_xds = get_xsd("capabilities_extensions_local.xsd")
     result = gc_xds.validate(resp_xml)
     if not result:
@@ -102,7 +102,7 @@ def test_getcap_response(ows_server) -> None:
     assert resp.headers["cache-control"] == "max-age=5"
 
     # Validate XML Schema
-    resp_xml = etree.parse(resp.fp)
+    resp_xml = parse(resp.fp)
     root = resp_xml.getroot()
     layers = root.findall(".//{http://www.opengis.net/wms}Layer[@queryable='1']")
     for layer in layers:

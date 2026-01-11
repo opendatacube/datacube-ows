@@ -8,7 +8,7 @@ import os
 from urllib import request
 
 import pytest
-from lxml import etree
+from lxml.etree import XML, parse
 from owslib.util import ServiceException
 from owslib.wcs import WebCoverageService
 
@@ -32,7 +32,7 @@ def check_wcs_error(
     assert resp.status_code == expected_status_code
 
     assert expected_error_message in resp.text
-    resp_xml = etree.XML(resp.content)
+    resp_xml = XML(resp.content)
     assert resp_xml is not None
 
 
@@ -85,7 +85,7 @@ def test_wcs1_getcap(ows_server) -> None:
     assert resp.code == 200
 
     # Validate XML Schema
-    resp_xml = etree.parse(resp.fp)
+    resp_xml = parse(resp.fp)
     gc_xds = get_xsd("wcs/1.0.0/wcsCapabilities.xsd")
     assert gc_xds.validate(resp_xml)
 
