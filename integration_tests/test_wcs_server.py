@@ -24,7 +24,7 @@ if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
 
 
 def check_wcs_error(
-    url, expected_error_message=None, expected_status_code: int = 400, params=None
+    url, expected_error_message: str, expected_status_code: int = 400, params=None
 ) -> None:
     if params is None:
         params = {}
