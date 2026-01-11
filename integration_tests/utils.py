@@ -80,8 +80,8 @@ class WCS20Extent:
         )
 
     def bbox_crs(self, crs) -> tuple[float, float, float, float]:
-        low = point(*self.lower_corner, crs=self.native_crs).to_crs(crs)
-        up = point(*self.upper_corner, crs=self.native_crs).to_crs(crs)
+        low = point(*self.lower_corner, crs=self.native_crs).to_crs(crs)  # type:ignore[misc]
+        up = point(*self.upper_corner, crs=self.native_crs).to_crs(crs)  # type:ignore[misc]
         return (
             float(low.coords[0][0]),
             float(low.coords[0][1]),
@@ -317,7 +317,7 @@ class ODCExtent:
     ) -> dict:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
-            time_strs = (times[0].strftime("%Y-%m-%d"),)
+            time_strs: tuple[str] | tuple[str, str] = (times[0].strftime("%Y-%m-%d"),)
         else:
             time_strs = (times[0].strftime("%Y-%m-%d"), times[-1].strftime("%Y-%m-%d"))
         crs_extent = extent if crs == "EPSG:4326" else extent.to_crs(crs)
@@ -336,7 +336,10 @@ class ODCExtent:
     ) -> tuple:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
-            time_sub = ("time", times[0].strftime("%Y-%m-%d"))
+            time_sub: tuple[str, str] | tuple[str, str, str] = (
+                "time",
+                times[0].strftime("%Y-%m-%d"),
+            )
         else:
             time_sub = (
                 "time",
