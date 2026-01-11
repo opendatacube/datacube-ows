@@ -1447,7 +1447,7 @@ def test_wcs2_getcov_trim_time(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
     if len(subsets[2].split(",")) == 1:
-        subsets = [subsets[0], subsets[1], 'time("2021-12-30","2022-01-01")']
+        subsets = (subsets[0], subsets[1], 'time("2021-12-30","2022-01-01")')
 
     r = retrying_requests.get(
         ows_server.url + "/wcs",
