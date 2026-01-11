@@ -18,7 +18,7 @@ from datacube_ows.legend_utils import retrying_requests
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
     import requests
 
-    retrying_requests = requests
+    retrying_requests = requests  # type:ignore[assignment]
 
 
 class WCS20Extent:
@@ -56,7 +56,11 @@ class WCS20Extent:
             bbox, xstart=xstart, xwidth=xwidth, ystart=ystart, ywidth=ywidth
         )
         if multi_time:
-            time = ("time", self.time[0], self.time[1])
+            time: tuple[str, str] | tuple[str, str, str] = (
+                "time",
+                self.time[0],
+                self.time[1],
+            )
         elif first_time:
             time = ("time", self.time[0])
         else:
