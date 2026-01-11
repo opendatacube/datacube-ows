@@ -8,7 +8,7 @@ import enum
 import os
 from urllib import request
 
-from lxml import etree
+from lxml.etree import Resolver, XMLParser, XMLSchema, parse
 from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
@@ -401,7 +401,7 @@ class ODCExtent:
         return extent, ext_times
 
 
-class HttpResolver(etree.Resolver):
+class HttpResolver(Resolver):
     """LXML resolver for HTTP/HTTPS links."""
 
     def resolve(self, url: str, pubid: object, context: object):
@@ -412,8 +412,8 @@ class HttpResolver(etree.Resolver):
         return None
 
 
-def get_xsd(name: str) -> etree.XMLSchema:
+def get_xsd(name: str) -> XMLSchema:
     xsd_f = request.urlopen("https://schemas.opengis.net/" + name)
-    parser = etree.XMLParser(load_dtd=True, no_network=False)
+    parser = XMLParser(load_dtd=True, no_network=False)
     parser.resolvers.add(HttpResolver())
-    return etree.XMLSchema(etree.parse(xsd_f, parser))
+    return XMLSchema(parse(xsd_f, parser))
