@@ -420,3 +420,55 @@ def get_xsd(name: str) -> XMLSchema:
     parser = XMLParser(load_dtd=True, no_network=False)
     parser.resolvers.add(HttpResolver())
     return XMLSchema(parse(xsd_f, parser))
+
+
+def enclosed_bbox(
+    bbox: tuple[float, float, float, float], flip: bool = False
+) -> tuple[float, float, float, float]:
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    if flip:
+        return (
+            lat_min + 0.45 * lat_range,
+            lon_min + 0.45 * lon_range,
+            lat_max - 0.45 * lat_range,
+            lon_max - 0.45 * lon_range,
+        )
+    return (
+        lon_min + 0.45 * lon_range,
+        lat_min + 0.45 * lat_range,
+        lon_max - 0.45 * lon_range,
+        lat_max - 0.45 * lat_range,
+    )
+
+
+def disjoint_bbox(
+    bbox: tuple[float, float, float, float],
+) -> tuple[float, float, float, float]:
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    return (
+        lon_min - 0.4 * lon_range,
+        lat_min - 0.4 * lat_range,
+        lon_min - 0.2 * lon_range,
+        lat_min - 0.2 * lat_range,
+    )
+
+
+def representative_bbox(
+    bbox: tuple[float, float, float, float],
+) -> tuple[float, float, float, float]:
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    return (
+        lon_min + 0.40 * lon_range,
+        lat_min + 0.45 * lat_range,
+        lon_min + 0.41 * lon_range,
+        lat_min + 0.46 * lat_range,
+    )

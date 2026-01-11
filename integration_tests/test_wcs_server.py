@@ -14,7 +14,13 @@ from owslib.wcs import WebCoverageService
 
 from datacube_ows.legend_utils import retrying_requests
 from datacube_ows.ows_configuration import OWSConfig, TimeRes, get_config
-from integration_tests.utils import ODCExtent, get_xsd
+from integration_tests.utils import (
+    ODCExtent,
+    disjoint_bbox,
+    enclosed_bbox,
+    get_xsd,
+    representative_bbox,
+)
 
 # Set this environment variable to suppress retries in tests.
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
@@ -740,7 +746,7 @@ def test_wcs1_getcoverage_geotiff(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="GeoTIFF",
-        bbox=pytest.helpers.representative_bbox(bbox),
+        bbox=representative_bbox(bbox),
         crs="EPSG:4326",
         width=400,
         height=300,
@@ -765,7 +771,7 @@ def test_wcs1_getcoverage_empty(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="GeoTIFF",
-        bbox=pytest.helpers.disjoint_bbox(bbox),
+        bbox=disjoint_bbox(bbox),
         crs="EPSG:4326",
         width=400,
         height=300,
@@ -788,7 +794,7 @@ def test_wcs1_getcoverage_bigimage(ows_server) -> None:
         _ = wcs.getCoverage(
             identifier="s2_l2a_clone",
             format="GeoTIFF",
-            bbox=pytest.helpers.representative_bbox(bbox),
+            bbox=representative_bbox(bbox),
             crs="EPSG:4326",
             width=2400,
             height=2300,
@@ -813,7 +819,7 @@ def test_wcs1_getcoverage_geotiff_respcrs(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="GeoTIFF",
-        bbox=pytest.helpers.representative_bbox(bbox),
+        bbox=representative_bbox(bbox),
         crs="EPSG:4326",
         response_crs="EPSG:3857",
         width=400,
@@ -838,7 +844,7 @@ def test_wcs1_getcoverage_netcdf(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="netCDF",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
+        bbox=enclosed_bbox(bbox),
         crs="EPSG:4326",
         width=400,
         height=300,
@@ -850,7 +856,7 @@ def test_wcs1_getcoverage_netcdf(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="netCDF",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
+        bbox=enclosed_bbox(bbox),
         crs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         width=400,
         height=300,
@@ -918,7 +924,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier="nonexistentproduct",
             format="GeoTIFF",
-            bbox=pytest.helpers.disjoint_bbox(bbox),
+            bbox=disjoint_bbox(bbox),
             crs="EPSG:4326",
             width=400,
             height=300,
@@ -931,7 +937,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier=contents[0],
             # format='GeoTIFF',
-            bbox=pytest.helpers.disjoint_bbox(bbox),
+            bbox=disjoint_bbox(bbox),
             crs="EPSG:4326",
             width=400,
             height=300,
@@ -944,7 +950,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier=contents[0],
             format="GeoTIFF",
-            bbox=pytest.helpers.representative_bbox(bbox),
+            bbox=representative_bbox(bbox),
             # crs='EPSG:4326',
             width=400,
             height=300,
@@ -957,7 +963,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier=contents[0],
             format="GeoTIFF",
-            bbox=pytest.helpers.representative_bbox(bbox),
+            bbox=representative_bbox(bbox),
             crs="EPSG:432676",
             width=400,
             height=300,

@@ -10,6 +10,7 @@ from odc.geo.geom import box
 from datacube_ows.index.postgres.mv_index import MVSelectOpts, mv_search
 from datacube_ows.ows_configuration import get_config
 from datacube_ows.time_utils import local_solar_date_range
+from integration_tests.utils import enclosed_bbox
 
 
 def test_full_layer() -> None:
@@ -99,7 +100,7 @@ def test_extent_and_spatial() -> None:
         lyr.bboxes["EPSG:4326"]["right"],
         lyr.bboxes["EPSG:4326"]["top"],
     )
-    small_bbox = pytest.helpers.enclosed_bbox(layer_ext_bbx)
+    small_bbox = enclosed_bbox(layer_ext_bbx)
     layer_ext_geom = box(
         layer_ext_bbx[0],
         layer_ext_bbx[1],

@@ -876,7 +876,6 @@ all = [
     { name = "pylint" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pytest-helpers-namespace" },
     { name = "pytest-localserver" },
     { name = "pytest-mock" },
     { name = "ruff" },
@@ -920,7 +919,6 @@ test = [
     { name = "psycopg2" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pytest-helpers-namespace" },
     { name = "pytest-localserver" },
     { name = "pytest-mock" },
 ]
@@ -971,7 +969,6 @@ requires-dist = [
     { name = "pyparsing" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-cov", marker = "extra == 'test'" },
-    { name = "pytest-helpers-namespace", marker = "extra == 'test'" },
     { name = "pytest-localserver", marker = "extra == 'test'" },
     { name = "pytest-mock", marker = "extra == 'test'" },
     { name = "python-dateutil" },
@@ -2874,18 +2871,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/5e/f7/c933acc76f5208b3b00089573cf6a2bc26dc80a8aece8f52bb7d6b1855ca/pytest_cov-7.0.0.tar.gz", hash = "sha256:33c97eda2e049a0c5298e91f519302a1334c26ac65c1a483d6206fd458361af1", size = 54328, upload-time = "2025-09-09T10:57:02.113Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ee/49/1377b49de7d0c1ce41292161ea0f721913fa8722c19fb9c1e3aa0367eecb/pytest_cov-7.0.0-py3-none-any.whl", hash = "sha256:3b8e9558b16cc1479da72058bdecf8073661c7f57f7d3c5f22a1c23507f2d861", size = 22424, upload-time = "2025-09-09T10:57:00.695Z" },
-]
-
-[[package]]
-name = "pytest-helpers-namespace"
-version = "2021.12.29"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e8/61/7f1a476b375c1238d152c164f7ffb694c662da8247816947be84b5fe2e8a/pytest-helpers-namespace-2021.12.29.tar.gz", hash = "sha256:792038247e0021beb966a7ea6e3a70ff5fcfba77eb72c6ec8fd6287af871c35b", size = 53355, upload-time = "2021-12-29T22:00:37.27Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/a7/34844a563c425962658f093b359636deefd19eab6783896e0d378dae88a1/pytest_helpers_namespace-2021.12.29-py3-none-any.whl", hash = "sha256:d5c0262642998437a73d85cb6ae0db57d574facc551c4a4695e92ec50469eb98", size = 10501, upload-time = "2021-12-29T22:00:35.614Z" },
 ]
 
 [[package]]

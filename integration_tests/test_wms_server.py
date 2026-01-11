@@ -13,7 +13,7 @@ from lxml.etree import XML, XMLParser, XMLSchema, fromstring, parse
 from owslib.wms import WebMapService
 
 from datacube_ows.legend_utils import retrying_requests
-from integration_tests.utils import HttpResolver
+from integration_tests.utils import HttpResolver, enclosed_bbox
 
 
 def get_xsd(name: str) -> XMLSchema:
@@ -143,7 +143,7 @@ def test_wms_getmap(ows_server) -> None:
             layers=[test_layer_name],
             styles=[],
             srs="EPSG:4326",
-            bbox=pytest.helpers.enclosed_bbox(bbox),
+            bbox=enclosed_bbox(bbox),
             size=(150, 150),
             format="image/png",
             transparent=True,
@@ -252,7 +252,7 @@ def test_wms_multiproduct_getmap(ows_server, multiproduct_name: str) -> None:
         layers=[multiproduct_name],
         styles=[],
         srs="EPSG:3577",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
+        bbox=enclosed_bbox(bbox),
         size=(150, 150),
         format="image/png",
         transparent=True,
@@ -292,7 +292,7 @@ def test_wms_style_looping_getmap(ows_server) -> None:
         test_layer_styles = wms.contents[test_layer_name].styles
 
         bbox = test_layer.boundingBoxWGS84
-        layer_bbox = pytest.helpers.enclosed_bbox(bbox)
+        layer_bbox = enclosed_bbox(bbox)
 
         for style in test_layer_styles:
             img = wms.getmap(
@@ -330,7 +330,7 @@ def test_wms_getfeatureinfo(ows_server) -> None:
             response = wms.getfeatureinfo(
                 layers=[test_layer_name],
                 srs="EPSG:4326",
-                bbox=pytest.helpers.enclosed_bbox(bbox),
+                bbox=enclosed_bbox(bbox),
                 size=(256, 256),
                 format="image/png",
                 query_layers=[test_layer_name],
@@ -345,7 +345,7 @@ def test_wms_getfeatureinfo(ows_server) -> None:
             response = wms.getfeatureinfo(
                 layers=[test_layer_name],
                 srs="EPSG:4326",
-                bbox=pytest.helpers.enclosed_bbox(bbox),
+                bbox=enclosed_bbox(bbox),
                 size=(256, 256),
                 format="image/png",
                 query_layers=[test_layer_name],
@@ -374,9 +374,7 @@ def test_custom_feature_info(ows_server, layer_name: str) -> None:
             "width": "256",
             "height": "256",
             "crs": "EPSG:4326",
-            "bbox": ",".join(
-                str(f) for f in pytest.helpers.enclosed_bbox(bbox, flip=True)
-            ),
+            "bbox": ",".join(str(f) for f in enclosed_bbox(bbox, flip=True)),
             "info_format": "application/json",
             "feature_count": "20",
             "styles": "ndvi_delta",
