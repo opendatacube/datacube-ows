@@ -20,7 +20,7 @@ from integration_tests.utils import ODCExtent, get_xsd
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
     import requests
 
-    retrying_requests = requests
+    retrying_requests = requests  # type:ignore[assignment]
 
 
 def check_wcs_error(
