@@ -881,6 +881,7 @@ def test_extent_utils() -> None:
     ft_extent, last_times = ext.subsets(
         space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST
     )
+    assert ext.full_extent is not None
     assert len(last_times) == 1
     assert ft_extent.area < ext.full_extent.area
     assert first_times[0] < last_times[0]
