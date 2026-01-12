@@ -90,7 +90,6 @@ test = [
     "owslib>0.29.2",
     "psycopg2",
     "pytest",
-    "pytest-helpers-namespace",
     "pytest_cov",
     "pytest_localserver",
     "pytest_mock",
@@ -150,8 +149,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Using pytest_namespace requires assignment before importing pytest.
-"integration_tests/conftest.py" = ["E402"]
 # Multiline string, no good place for adding a noqa.
 "integration_tests/cfg/ows_test_cfg.py" = ["RUF001"]
 

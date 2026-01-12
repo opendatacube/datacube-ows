@@ -8,7 +8,7 @@ import enum
 import os
 from urllib import request
 
-from lxml import etree
+from lxml.etree import Resolver, XMLParser, XMLSchema, parse
 from odc.geo.geom import BoundingBox, Geometry, point
 from shapely.ops import triangulate, unary_union
 
@@ -18,7 +18,7 @@ from datacube_ows.legend_utils import retrying_requests
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
     import requests
 
-    retrying_requests = requests
+    retrying_requests = requests  # type:ignore[assignment]
 
 
 class WCS20Extent:
@@ -56,7 +56,11 @@ class WCS20Extent:
             bbox, xstart=xstart, xwidth=xwidth, ystart=ystart, ywidth=ywidth
         )
         if multi_time:
-            time = ("time", self.time[0], self.time[1])
+            time: tuple[str, str] | tuple[str, str, str] = (
+                "time",
+                self.time[0],
+                self.time[1],
+            )
         elif first_time:
             time = ("time", self.time[0])
         else:
@@ -76,8 +80,8 @@ class WCS20Extent:
         )
 
     def bbox_crs(self, crs) -> tuple[float, float, float, float]:
-        low = point(*self.lower_corner, crs=self.native_crs).to_crs(crs)
-        up = point(*self.upper_corner, crs=self.native_crs).to_crs(crs)
+        low = point(*self.lower_corner, crs=self.native_crs).to_crs(crs)  # type:ignore[misc]
+        up = point(*self.upper_corner, crs=self.native_crs).to_crs(crs)  # type:ignore[misc]
         return (
             float(low.coords[0][0]),
             float(low.coords[0][1]),
@@ -313,7 +317,7 @@ class ODCExtent:
     ) -> dict:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
-            time_strs = (times[0].strftime("%Y-%m-%d"),)
+            time_strs: tuple[str] | tuple[str, str] = (times[0].strftime("%Y-%m-%d"),)
         else:
             time_strs = (times[0].strftime("%Y-%m-%d"), times[-1].strftime("%Y-%m-%d"))
         crs_extent = extent if crs == "EPSG:4326" else extent.to_crs(crs)
@@ -332,7 +336,10 @@ class ODCExtent:
     ) -> tuple:
         extent, times = self.subsets(space, time)
         if len(times) == 1:
-            time_sub = ("time", times[0].strftime("%Y-%m-%d"))
+            time_sub: tuple[str, str] | tuple[str, str, str] = (
+                "time",
+                times[0].strftime("%Y-%m-%d"),
+            )
         else:
             time_sub = (
                 "time",
@@ -397,7 +404,7 @@ class ODCExtent:
         return extent, ext_times
 
 
-class HttpResolver(etree.Resolver):
+class HttpResolver(Resolver):
     """LXML resolver for HTTP/HTTPS links."""
 
     def resolve(self, url: str, pubid: object, context: object):
@@ -408,8 +415,60 @@ class HttpResolver(etree.Resolver):
         return None
 
 
-def get_xsd(name: str) -> etree.XMLSchema:
+def get_xsd(name: str) -> XMLSchema:
     xsd_f = request.urlopen("https://schemas.opengis.net/" + name)
-    parser = etree.XMLParser(load_dtd=True, no_network=False)
+    parser = XMLParser(load_dtd=True, no_network=False)
     parser.resolvers.add(HttpResolver())
-    return etree.XMLSchema(etree.parse(xsd_f, parser))
+    return XMLSchema(parse(xsd_f, parser))
+
+
+def enclosed_bbox(
+    bbox: tuple[float, float, float, float], flip: bool = False
+) -> tuple[float, float, float, float]:
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    if flip:
+        return (
+            lat_min + 0.45 * lat_range,
+            lon_min + 0.45 * lon_range,
+            lat_max - 0.45 * lat_range,
+            lon_max - 0.45 * lon_range,
+        )
+    return (
+        lon_min + 0.45 * lon_range,
+        lat_min + 0.45 * lat_range,
+        lon_max - 0.45 * lon_range,
+        lat_max - 0.45 * lat_range,
+    )
+
+
+def disjoint_bbox(
+    bbox: tuple[float, float, float, float],
+) -> tuple[float, float, float, float]:
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    return (
+        lon_min - 0.4 * lon_range,
+        lat_min - 0.4 * lat_range,
+        lon_min - 0.2 * lon_range,
+        lat_min - 0.2 * lat_range,
+    )
+
+
+def representative_bbox(
+    bbox: tuple[float, float, float, float],
+) -> tuple[float, float, float, float]:
+    lon_min, lat_min, lon_max, lat_max = bbox
+    lon_range = lon_max - lon_min
+    lat_range = lat_max - lat_min
+
+    return (
+        lon_min + 0.40 * lon_range,
+        lat_min + 0.45 * lat_range,
+        lon_min + 0.41 * lon_range,
+        lat_min + 0.46 * lat_range,
+    )

@@ -9,20 +9,20 @@ from pathlib import Path
 from urllib import request
 
 import pytest
-from lxml import etree
+from lxml.etree import XML, XMLParser, XMLSchema, fromstring, parse
 from owslib.wms import WebMapService
 
 from datacube_ows.legend_utils import retrying_requests
-from integration_tests.utils import HttpResolver
+from integration_tests.utils import HttpResolver, enclosed_bbox
 
 
-def get_xsd(name: str) -> etree.XMLSchema:
+def get_xsd(name: str) -> XMLSchema:
     path = Path(__file__).resolve().parent.parent / "wms_xsds" / name
-    parser = etree.XMLParser(load_dtd=True, no_network=False)
+    parser = XMLParser(load_dtd=True, no_network=False)
     parser.resolvers.add(HttpResolver())
     with open(path) as xsd_f:
-        schema_doc = etree.parse(xsd_f, parser)
-    return etree.XMLSchema(schema_doc)
+        schema_doc = parse(xsd_f, parser)
+    return XMLSchema(schema_doc)
 
 
 def check_wms_error(
@@ -34,7 +34,7 @@ def check_wms_error(
     assert e.value.getcode() == expected_status_code
 
     resp_content = e.value.fp.read()
-    resp_xml = etree.XML(resp_content)
+    resp_xml = XML(resp_content)
 
     # Validate response against Schema
     ex_xsd = get_xsd("exceptions_1_3_0.xsd")
@@ -80,7 +80,7 @@ def test_getcap_xsd(ows_server) -> None:
     caps_document = resp.text
 
     # Validate XML Schema
-    resp_xml = etree.fromstring(resp.content)
+    resp_xml = fromstring(resp.content)
     gc_xds = get_xsd("capabilities_extensions_local.xsd")
     result = gc_xds.validate(resp_xml)
     if not result:
@@ -102,7 +102,7 @@ def test_getcap_response(ows_server) -> None:
     assert resp.headers["cache-control"] == "max-age=5"
 
     # Validate XML Schema
-    resp_xml = etree.parse(resp.fp)
+    resp_xml = parse(resp.fp)
     root = resp_xml.getroot()
     layers = root.findall(".//{http://www.opengis.net/wms}Layer[@queryable='1']")
     for layer in layers:
@@ -143,7 +143,7 @@ def test_wms_getmap(ows_server) -> None:
             layers=[test_layer_name],
             styles=[],
             srs="EPSG:4326",
-            bbox=pytest.helpers.enclosed_bbox(bbox),
+            bbox=enclosed_bbox(bbox),
             size=(150, 150),
             format="image/png",
             transparent=True,
@@ -252,7 +252,7 @@ def test_wms_multiproduct_getmap(ows_server, multiproduct_name: str) -> None:
         layers=[multiproduct_name],
         styles=[],
         srs="EPSG:3577",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
+        bbox=enclosed_bbox(bbox),
         size=(150, 150),
         format="image/png",
         transparent=True,
@@ -292,7 +292,7 @@ def test_wms_style_looping_getmap(ows_server) -> None:
         test_layer_styles = wms.contents[test_layer_name].styles
 
         bbox = test_layer.boundingBoxWGS84
-        layer_bbox = pytest.helpers.enclosed_bbox(bbox)
+        layer_bbox = enclosed_bbox(bbox)
 
         for style in test_layer_styles:
             img = wms.getmap(
@@ -330,7 +330,7 @@ def test_wms_getfeatureinfo(ows_server) -> None:
             response = wms.getfeatureinfo(
                 layers=[test_layer_name],
                 srs="EPSG:4326",
-                bbox=pytest.helpers.enclosed_bbox(bbox),
+                bbox=enclosed_bbox(bbox),
                 size=(256, 256),
                 format="image/png",
                 query_layers=[test_layer_name],
@@ -345,7 +345,7 @@ def test_wms_getfeatureinfo(ows_server) -> None:
             response = wms.getfeatureinfo(
                 layers=[test_layer_name],
                 srs="EPSG:4326",
-                bbox=pytest.helpers.enclosed_bbox(bbox),
+                bbox=enclosed_bbox(bbox),
                 size=(256, 256),
                 format="image/png",
                 query_layers=[test_layer_name],
@@ -374,9 +374,7 @@ def test_custom_feature_info(ows_server, layer_name: str) -> None:
             "width": "256",
             "height": "256",
             "crs": "EPSG:4326",
-            "bbox": ",".join(
-                str(f) for f in pytest.helpers.enclosed_bbox(bbox, flip=True)
-            ),
+            "bbox": ",".join(str(f) for f in enclosed_bbox(bbox, flip=True)),
             "info_format": "application/json",
             "feature_count": "20",
             "styles": "ndvi_delta",

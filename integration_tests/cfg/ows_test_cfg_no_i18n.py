@@ -31,7 +31,7 @@ bands_fc = {
     "NPV": ["non_photosynthetic_vegetation", "brown_vegetation"],
 }
 
-bands_wofs_obs = {"water": []}
+bands_wofs_obs: dict[str, list[str]] = {"water": []}
 
 
 # REUSABLE CONFIG FRAGMENTS - Style definitions

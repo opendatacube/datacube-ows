@@ -8,23 +8,29 @@ import os
 from urllib import request
 
 import pytest
-from lxml import etree
+from lxml.etree import XML, parse
 from owslib.util import ServiceException
 from owslib.wcs import WebCoverageService
 
 from datacube_ows.legend_utils import retrying_requests
 from datacube_ows.ows_configuration import OWSConfig, TimeRes, get_config
-from integration_tests.utils import ODCExtent, get_xsd
+from integration_tests.utils import (
+    ODCExtent,
+    disjoint_bbox,
+    enclosed_bbox,
+    get_xsd,
+    representative_bbox,
+)
 
 # Set this environment variable to suppress retries in tests.
 if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
     import requests
 
-    retrying_requests = requests
+    retrying_requests = requests  # type:ignore[assignment]
 
 
 def check_wcs_error(
-    url, expected_error_message=None, expected_status_code: int = 400, params=None
+    url, expected_error_message: str, expected_status_code: int = 400, params=None
 ) -> None:
     if params is None:
         params = {}
@@ -32,7 +38,7 @@ def check_wcs_error(
     assert resp.status_code == expected_status_code
 
     assert expected_error_message in resp.text
-    resp_xml = etree.XML(resp.content)
+    resp_xml = XML(resp.content)
     assert resp_xml is not None
 
 
@@ -85,7 +91,7 @@ def test_wcs1_getcap(ows_server) -> None:
     assert resp.code == 200
 
     # Validate XML Schema
-    resp_xml = etree.parse(resp.fp)
+    resp_xml = parse(resp.fp)
     gc_xds = get_xsd("wcs/1.0.0/wcsCapabilities.xsd")
     assert gc_xds.validate(resp_xml)
 
@@ -740,7 +746,7 @@ def test_wcs1_getcoverage_geotiff(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="GeoTIFF",
-        bbox=pytest.helpers.representative_bbox(bbox),
+        bbox=representative_bbox(bbox),
         crs="EPSG:4326",
         width=400,
         height=300,
@@ -765,7 +771,7 @@ def test_wcs1_getcoverage_empty(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="GeoTIFF",
-        bbox=pytest.helpers.disjoint_bbox(bbox),
+        bbox=disjoint_bbox(bbox),
         crs="EPSG:4326",
         width=400,
         height=300,
@@ -788,7 +794,7 @@ def test_wcs1_getcoverage_bigimage(ows_server) -> None:
         _ = wcs.getCoverage(
             identifier="s2_l2a_clone",
             format="GeoTIFF",
-            bbox=pytest.helpers.representative_bbox(bbox),
+            bbox=representative_bbox(bbox),
             crs="EPSG:4326",
             width=2400,
             height=2300,
@@ -813,7 +819,7 @@ def test_wcs1_getcoverage_geotiff_respcrs(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="GeoTIFF",
-        bbox=pytest.helpers.representative_bbox(bbox),
+        bbox=representative_bbox(bbox),
         crs="EPSG:4326",
         response_crs="EPSG:3857",
         width=400,
@@ -838,7 +844,7 @@ def test_wcs1_getcoverage_netcdf(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="netCDF",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
+        bbox=enclosed_bbox(bbox),
         crs="EPSG:4326",
         width=400,
         height=300,
@@ -850,7 +856,7 @@ def test_wcs1_getcoverage_netcdf(ows_server) -> None:
     output = wcs.getCoverage(
         identifier=contents[0],
         format="netCDF",
-        bbox=pytest.helpers.enclosed_bbox(bbox),
+        bbox=enclosed_bbox(bbox),
         crs="I-CANT-BELIEVE-ITS-NOT-EPSG:4326",
         width=400,
         height=300,
@@ -881,6 +887,7 @@ def test_extent_utils() -> None:
     ft_extent, last_times = ext.subsets(
         space=ODCExtent.FULL_EXTENT_FOR_TIMES, time=ODCExtent.LAST
     )
+    assert ext.full_extent is not None
     assert len(last_times) == 1
     assert ft_extent.area < ext.full_extent.area
     assert first_times[0] < last_times[0]
@@ -917,7 +924,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier="nonexistentproduct",
             format="GeoTIFF",
-            bbox=pytest.helpers.disjoint_bbox(bbox),
+            bbox=disjoint_bbox(bbox),
             crs="EPSG:4326",
             width=400,
             height=300,
@@ -930,7 +937,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier=contents[0],
             # format='GeoTIFF',
-            bbox=pytest.helpers.disjoint_bbox(bbox),
+            bbox=disjoint_bbox(bbox),
             crs="EPSG:4326",
             width=400,
             height=300,
@@ -943,7 +950,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier=contents[0],
             format="GeoTIFF",
-            bbox=pytest.helpers.representative_bbox(bbox),
+            bbox=representative_bbox(bbox),
             # crs='EPSG:4326',
             width=400,
             height=300,
@@ -956,7 +963,7 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         wcs.getCoverage(
             identifier=contents[0],
             format="GeoTIFF",
-            bbox=pytest.helpers.representative_bbox(bbox),
+            bbox=representative_bbox(bbox),
             crs="EPSG:432676",
             width=400,
             height=300,
@@ -1447,7 +1454,7 @@ def test_wcs2_getcov_trim_time(ows_server) -> None:
         ODCExtent.OFFSET_SUBSET_FOR_TIMES, ODCExtent.FIRST_TWO
     )
     if len(subsets[2].split(",")) == 1:
-        subsets = [subsets[0], subsets[1], 'time("2021-12-30","2022-01-01")']
+        subsets = (subsets[0], subsets[1], 'time("2021-12-30","2022-01-01")')
 
     r = retrying_requests.get(
         ows_server.url + "/wcs",
