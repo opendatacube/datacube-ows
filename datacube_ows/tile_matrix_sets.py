@@ -166,5 +166,5 @@ class TileMatrixSet(OWSConfigEntry):
         maxs = [m + ts for m, ts in zip(mins, tile_span, strict=False)]
 
         if self.crs_cfg["vertical_coord_first"]:
-            return (maxs[1], mins[0], mins[1], maxs[0])
-        return (mins[0], maxs[1], maxs[0], mins[1])
+            return maxs[1], mins[0], mins[1], maxs[0]
+        return mins[0], maxs[1], maxs[0], mins[1]

@@ -106,12 +106,12 @@ def test_getcap_response(ows_server) -> None:
     root = resp_xml.getroot()
     layers = root.findall(".//{http://www.opengis.net/wms}Layer[@queryable='1']")
     for layer in layers:
-        wLong = layer.findall(".//{http://www.opengis.net/wms}westBoundLongitude")[0]
+        w_long = layer.findall(".//{http://www.opengis.net/wms}westBoundLongitude")[0]
         geo_bbox = layer.findall(
             "./{http://www.opengis.net/wms}BoundingBox[@CRS='EPSG:4326']"
         )[0]
         assert math.isclose(
-            float(wLong.text), float(geo_bbox.attrib["miny"]), rel_tol=1e-8
+            float(w_long.text), float(geo_bbox.attrib["miny"]), rel_tol=1e-8
         )
 
 

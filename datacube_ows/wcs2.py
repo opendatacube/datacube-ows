@@ -150,7 +150,7 @@ def get_capabilities(args: dict) -> tuple[Any, int, dict]:
 
     headers = cache_control_headers(cfg.wms_cap_cache_age)
     headers["Content-Type"] = result.content_type
-    return (result.value, 200, cfg.response_headers(headers))
+    return result.value, 200, cfg.response_headers(headers)
 
 
 def create_coverage_description(cfg: OWSConfig, product) -> CoverageDescription:
@@ -288,7 +288,7 @@ def desc_coverages(args) -> tuple:
     min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)
     headers = cache_control_headers(min_cache_age)
     headers["Content-Type"] = result.content_type
-    return (result.value, 200, resp_headers(headers))
+    return result.value, 200, resp_headers(headers)
 
 
 @log_call
@@ -300,4 +300,4 @@ def get_coverage(
     output, headers = get_coverage_data(request_obj, styles, qprof)
     if ows_stats:
         return json_response(qprof.profile())
-    return (output, 200, resp_headers(headers))
+    return output, 200, resp_headers(headers)

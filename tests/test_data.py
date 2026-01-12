@@ -135,61 +135,61 @@ def test_s3_browser_uris(s3_url_datasets) -> None:
 
 
 def test_make_derived_band_dict_nan() -> None:
-    class fake_data:
+    class FakeData:
         def __init__(self) -> None:
             self.nodata = np.nan
 
         def item(self):
             return np.nan
 
-    class fake_dataset:
+    class FakeDataset:
         def __getitem__(self, key):
-            return fake_data()
+            return FakeData()
 
-    class fake_style:
+    class FakeStyle:
         include_in_feature_info = True
 
         def __init__(self) -> None:
             self.needed_bands = ["test"]
-            self.index_function = lambda x: fake_data()
+            self.index_function = lambda x: FakeData()
 
-    style_dict = {"fake": fake_style()}
+    style_dict = {"fake": FakeStyle()}
 
     band_dict = datacube_ows.feature_info._make_derived_band_dict(
-        fake_dataset(), style_dict
+        FakeDataset(), style_dict
     )
     assert band_dict["fake"] == "n/a"
 
 
 def test_make_derived_band_dict_not_nan() -> None:
-    class fake_data:
+    class FakeData:
         def __init__(self) -> None:
             self.nodata = -6666
 
         def item(self) -> float:
             return 10.10
 
-    class fake_dataset:
+    class FakeDataset:
         def __getitem__(self, key):
-            return fake_data()
+            return FakeData()
 
-    class fake_style:
+    class FakeStyle:
         include_in_feature_info = True
 
         def __init__(self) -> None:
             self.needed_bands = ["test"]
-            self.index_function = lambda x: fake_data()
+            self.index_function = lambda x: FakeData()
 
-    style_dict = {"fake": fake_style()}
+    style_dict = {"fake": FakeStyle()}
 
     band_dict = datacube_ows.feature_info._make_derived_band_dict(
-        fake_dataset(), style_dict
+        FakeDataset(), style_dict
     )
     assert band_dict["fake"] == 10.10
 
 
 def test_make_band_dict_nan(product_layer) -> None:  # noqa: F811
-    class fake_data:
+    class FakeData:
         def __init__(self) -> None:
             self.nodata = np.nan
             self.attrs = {}
@@ -197,14 +197,14 @@ def test_make_band_dict_nan(product_layer) -> None:  # noqa: F811
         def item(self):
             return np.nan
 
-    class fake_dataset:
+    class FakeDataset:
         def __init__(self) -> None:
             self.data_vars = {"fake": "fake_band"}
 
         def __getitem__(self, key):
-            return fake_data()
+            return FakeData()
 
-    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, fake_dataset())
+    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, FakeDataset())
     assert band_dict["fake"] == "n/a"
 
 
@@ -224,7 +224,7 @@ def test_make_band_dict_float(product_layer) -> None:  # noqa: F811
             255: land
     """
 
-    class int_data:
+    class IntData:
         def __init__(self) -> None:
             self.nodata = np.nan
             self.attrs = yaml.load(flags_yaml, yaml.Loader)
@@ -232,32 +232,30 @@ def test_make_band_dict_float(product_layer) -> None:  # noqa: F811
         def item(self) -> int:
             return 100
 
-    class int_dataset:
+    class IntDataset:
         def __init__(self) -> None:
             self.data_vars = {"fake": "fake_band"}
 
         def __getitem__(self, key):
-            return int_data()
+            return IntData()
 
-    class float_data(int_data):
+    class FloatData(IntData):
         @override
         def item(self) -> float:
             return 100.0
 
-    class float_dataset(int_dataset):
+    class FloatDataset(IntDataset):
         @override
         def __getitem__(self, key):
-            return float_data()
+            return FloatData()
 
-    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, int_dataset())
+    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, IntDataset())
     assert isinstance(band_dict["fake"], dict)
     assert band_dict["fake"] == {
         "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": "lay_over"
     }
 
-    band_dict = datacube_ows.feature_info._make_band_dict(
-        product_layer, float_dataset()
-    )
+    band_dict = datacube_ows.feature_info._make_band_dict(product_layer, FloatDataset())
     assert isinstance(band_dict["fake"], dict)
     assert band_dict["fake"] == {
         "Mask image as provided by JAXA - Ocean and water, lay over, shadowing, land.": "lay_over"
