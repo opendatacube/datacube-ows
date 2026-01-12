@@ -45,10 +45,10 @@ def create_range_entry(
 
     with get_sqlconn(layer.dc) as conn:
         txn = conn.begin()
-        if meta in cache:
-            template = cache[meta][0]
+        cached = cache.get(meta)
+        if cached is not None:
+            template = cached[0]
             # Layer {template} has same signature - reusing
-            cache[meta].append(layer.name)
             try:
                 conn.execute(
                     text("""
@@ -194,8 +194,11 @@ def create_range_entry(
                 },
             )
 
-            cache[meta] = [layer.name]
         txn.commit()
+        # Only update cache after successful commit.
+        if cached is None:
+            cache[meta] = []
+        cache[meta].append(layer.name)
 
 
 def build_bboxes(layer: OWSNamedLayer) -> dict[str, dict[str, float]]:
