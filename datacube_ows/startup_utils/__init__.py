@@ -10,12 +10,13 @@ import warnings
 from collections.abc import Callable
 from logging import Logger
 from time import monotonic
-from typing import Any, TypeVar
+from typing import Any, Optional, TypeVar
 
 from flask import Flask, g, request
-from rasterio.errors import NotGeoreferencedWarning
 
-from datacube_ows.ows_configuration import OWSConfig, get_config
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
 
 __all__ = [
     "create_app",
@@ -37,6 +38,8 @@ def initialise_logger(name: str | None = None) -> Logger:
 
 def initialise_ignorable_warnings() -> None:
     # Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
+    from rasterio.errors import NotGeoreferencedWarning
+
     warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
 
 
@@ -86,9 +89,11 @@ def initialise_sentry(log: Logger | None = None) -> None:
             log.info("Sentry initialised")
 
 
-def parse_config_file(log: Logger | None = None) -> OWSConfig | None:
+def parse_config_file(log: Logger | None = None) -> Optional["OWSConfig"]:
     # Cache a parsed config file object
     # (unless deferring to first request)
+    from datacube_ows.ows_configuration import get_config
+
     cfg = None
     if not os.environ.get("DEFER_CFG_PARSE"):
         cfg = get_config()
@@ -178,10 +183,10 @@ def initialise_babel(cfg, app: Flask) -> object | None:
 
 def create_app() -> Flask:
     log = initialise_logger()
+    app = initialise_flask(__name__)
     cfg = parse_config_file(log)
     initialise_ignorable_warnings()
     initialise_debugging(log)
-    app = initialise_flask(__name__)
     initialise_sentry(log)
     from datacube_ows.startup_utils.creds import initialise_aws_credentials
 
