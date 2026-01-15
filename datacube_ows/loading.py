@@ -15,11 +15,11 @@ import datacube
 import numpy
 import xarray
 from datacube.model import Dataset, Measurement, Product
-from datacube.storage._load import FuserFunction
 from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import Geometry
 from odc.geo.warp import Resampling
+from odc.loader.types import FuserFunc
 from typing_extensions import override
 
 from datacube_ows.ogc_exceptions import WMSException
@@ -40,7 +40,7 @@ class ProductBandQuery:
         main: bool = False,
         manual_merge: bool = False,
         ignore_time: bool = False,
-        fuse_func: FuserFunction | None = None,
+        fuse_func: FuserFunc | None = None,
     ) -> None:
         self.products = products
         self.bands = set(bands)
@@ -132,7 +132,7 @@ class ProductBandQuery:
         layer: OWSNamedLayer,
         bands: Iterable[str],
         manual_merge: bool = False,
-        fuse_func: FuserFunction | None = None,
+        fuse_func: FuserFunc | None = None,
         resource_limited: bool = False,
     ) -> "ProductBandQuery":
         main_products = layer.low_res_products if resource_limited else layer.products
@@ -380,7 +380,7 @@ class DataStacker:
         measurements: Mapping[str, Measurement],
         bands: set[str],
         skip_corrections: bool,
-        fuse_func: FuserFunction | None,
+        fuse_func: FuserFunc | None,
     ) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
@@ -437,7 +437,7 @@ class DataStacker:
         geobox: GeoBox,
         skip_broken: bool = True,
         resampling: Resampling = "nearest",
-        fuse_func: FuserFunction | None = None,
+        fuse_func: FuserFunc | None = None,
     ) -> xarray.Dataset:
         CredentialManager.check_cred()
         try:
@@ -463,7 +463,7 @@ class DataStacker:
         geobox: GeoBox,
         skip_broken: bool = True,
         resampling: Resampling = "nearest",
-        fuse_func: FuserFunction | None = None,
+        fuse_func: FuserFunc | None = None,
     ) -> xarray.Dataset:
         datasets = [dataset]
         dc_datasets = datacube.Datacube.group_datasets(
