@@ -12,7 +12,6 @@ from datetime import date, datetime, timezone
 import click
 import datacube
 import odc.geo
-import sqlalchemy.exc
 from odc.geo.crs import CRS
 from sqlalchemy import text
 
@@ -46,58 +45,45 @@ def create_range_entry(
     with get_sqlconn(layer.dc) as conn:
         txn = conn.begin()
         cached = cache.get(meta)
+        if get_driver_name(layer.dc.index) == "psycopg":
+            from psycopg.types.json import Json
+        else:
+            from psycopg2.extras import Json
+        # insert initial empty row if one does not already exist, so we can safely update it later.
+        conn.execute(
+            text("""
+                 INSERT INTO ows.layer_ranges
+                 (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
+                 VALUES (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
+                 ON CONFLICT (layer) DO NOTHING
+                 """),
+            {
+                "p_layer": layer.name,
+                "empty": Json(""),
+                "meta": Json(meta.as_json()),
+                "now": datetime.now(tz=timezone.utc),
+            },
+        )
         if cached is not None:
             template = cached[0]
             # Layer {template} has same signature - reusing
-            try:
-                conn.execute(
-                    text("""
-                INSERT INTO ows.layer_ranges
-                    (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
-                SELECT :layer_id, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated
-                FROM ows.layer_ranges lr2
-                WHERE lr2.layer = :template_id"""),
-                    {"layer_id": layer.name, "template_id": template},
-                )
-            except sqlalchemy.exc.IntegrityError:
-                conn.execute(
-                    text("""
-                UPDATE ows.layer_ranges lr1
-                SET lat_min = lr2.lat_min,
-                    lat_max = lr2.lat_max,
-                    lon_min = lr2.lon_min,
-                    lon_max = lr2.lon_max,
-                    dates = lr2.dates,
-                    bboxes = lr2.bboxes,
-                    meta = lr2.meta,
-                    last_updated = lr2.last_updated
-                FROM ows.layer_ranges lr2
-                WHERE lr1.layer = :layer_id
-                AND   lr2.layer = :template_id"""),
-                    {"layer_id": layer.name, "template_id": template},
-                )
-        else:
-            if get_driver_name(layer.dc.index) == "psycopg":
-                from psycopg.types.json import Json
-            else:
-                from psycopg2.extras import Json
-            # insert empty row if one does not already exist
             conn.execute(
                 text("""
-            INSERT INTO ows.layer_ranges
-            (layer, lat_min, lat_max, lon_min, lon_max, dates, bboxes, meta, last_updated)
-            VALUES
-            (:p_layer, 0, 0, 0, 0, :empty, :empty, :meta, :now)
-            ON CONFLICT (layer) DO NOTHING
-            """),
-                {
-                    "p_layer": layer.name,
-                    "empty": Json(""),
-                    "meta": Json(meta.as_json()),
-                    "now": datetime.now(tz=timezone.utc),
-                },
+            UPDATE ows.layer_ranges lr1
+            SET lat_min = lr2.lat_min,
+                lat_max = lr2.lat_max,
+                lon_min = lr2.lon_min,
+                lon_max = lr2.lon_max,
+                dates = lr2.dates,
+                bboxes = lr2.bboxes,
+                meta = lr2.meta,
+                last_updated = lr2.last_updated
+            FROM ows.layer_ranges lr2
+            WHERE lr1.layer = :layer_id
+            AND   lr2.layer = :template_id"""),
+                {"layer_id": layer.name, "template_id": template},
             )
-
+        else:
             prodids = [p.id for p in layer.products]
 
             # Set default timezone
