@@ -225,6 +225,7 @@ GoogleMap
 googlemapscompatible
 GoogleMapsCompatible
 greyscale
+gthread
 gunicorn
 haesler
 handyness
@@ -454,6 +455,7 @@ WCSRequest
 webmap
 webmercator
 WebMercator
+werkzeug
 wgs
 whatnick
 wholeworld
