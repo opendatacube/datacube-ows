@@ -545,7 +545,7 @@ class TimeRes(Enum):
             # mv_index will expand this to a one-day search range
             # This allows data with overlapping time periods to be resolved by start date.
             assert isinstance(t, datetime.date)
-            times = datetime.datetime.combine(t, datetime.time(), datetime.timezone.utc)
+            times = datetime.datetime.combine(t, datetime.time(), datetime.UTC)
 
         return times
 

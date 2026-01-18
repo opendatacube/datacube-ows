@@ -5,7 +5,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import datetime
-from datetime import timezone
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
 
@@ -54,7 +53,7 @@ def dummy_ds():
         ],
         crs="EPSG:4326",
     )
-    ds.center_time = datetime.datetime(2020, 12, 25, 15, 11, 11, tzinfo=timezone.utc)
+    ds.center_time = datetime.datetime(2020, 12, 25, 15, 11, 11, tzinfo=datetime.UTC)
     ds.metadata_doc = {}
     return ds
 
@@ -82,8 +81,8 @@ def test_local_date(dummy_ds) -> None:
 def test_month_date_range_wrap() -> None:
     d = datetime.date(2019, 12, 1)
     a, b = datacube_ows.time_utils.month_date_range(d)
-    assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=timezone.utc)
-    assert b == datetime.datetime(2019, 12, 31, 0, 0, 0, tzinfo=timezone.utc)
+    assert a == datetime.datetime(2019, 12, 1, 0, 0, 0, tzinfo=datetime.UTC)
+    assert b == datetime.datetime(2019, 12, 31, 0, 0, 0, tzinfo=datetime.UTC)
 
 
 def test_get_service_base_url() -> None:
@@ -292,8 +291,8 @@ def test_day_summary_date_range() -> None:
     start, end = datacube_ows.time_utils.day_summary_date_range(
         datetime.date(2015, 5, 12)
     )
-    assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=timezone.utc)
-    assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=timezone.utc)
+    assert start == datetime.datetime(2015, 5, 12, 0, 0, 0, tzinfo=datetime.UTC)
+    assert end == datetime.datetime(2015, 5, 12, 23, 59, 59, tzinfo=datetime.UTC)
 
 
 xy_coords = [("x", [-1.0, -0.5, 0.0, 0.5, 1.0]), ("y", [-1.0, -0.5])]

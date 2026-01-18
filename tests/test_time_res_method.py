@@ -4,7 +4,7 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from odc.geo.geobox import GeoBox
@@ -44,14 +44,14 @@ def test_solar(simple_geobox) -> None:
     assert not res.is_summary()
 
     with pytest.raises(ValueError) as e:
-        res.search_times(datetime(2020, 6, 7, 20, 20, 0, tzinfo=timezone.utc))
+        res.search_times(datetime(2020, 6, 7, 20, 20, 0, tzinfo=UTC))
     assert "Solar time resolution search_times requires a geobox" in str(e.value)
 
     assert res.search_times(
-        datetime(2020, 6, 7, 20, 20, 0, tzinfo=timezone.utc), simple_geobox
+        datetime(2020, 6, 7, 20, 20, 0, tzinfo=UTC), simple_geobox
     ) == (
-        datetime(2020, 6, 6, 14, 0, tzinfo=timezone.utc),
-        datetime(2020, 6, 7, 13, 59, 59, tzinfo=timezone.utc),
+        datetime(2020, 6, 6, 14, 0, tzinfo=UTC),
+        datetime(2020, 6, 7, 13, 59, 59, tzinfo=UTC),
     )
 
 
@@ -60,9 +60,9 @@ def test_summary() -> None:
     assert not res.is_subday()
     assert not res.is_solar()
     assert res.is_summary()
-    assert res.search_times(
-        datetime(2020, 6, 7, 0, 0, 0, tzinfo=timezone.utc)
-    ) == datetime(2020, 6, 7, 0, 0, 0, tzinfo=timezone.utc)
+    assert res.search_times(datetime(2020, 6, 7, 0, 0, 0, tzinfo=UTC)) == datetime(
+        2020, 6, 7, 0, 0, 0, tzinfo=UTC
+    )
 
 
 def test_legacy_aliases() -> None:

@@ -7,7 +7,6 @@
 import datetime
 import logging
 from collections.abc import Callable
-from datetime import timezone
 from functools import wraps
 from time import monotonic
 from typing import Any, TypeVar, cast
@@ -192,5 +191,5 @@ def find_matching_date(dt, dates) -> bool:
 
 def default_to_utc(dt: datetime.datetime) -> datetime.datetime:
     if not dt.tzinfo:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=datetime.UTC)
     return dt

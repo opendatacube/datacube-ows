@@ -6,7 +6,6 @@
 
 import datetime
 import logging
-from datetime import timezone
 from zoneinfo import ZoneInfo
 
 from datacube.model import Dataset
@@ -119,7 +118,7 @@ def local_solar_date_range(
     tz: datetime.tzinfo = tz_for_geometry(geobox.extent)
     start = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz)
     end = datetime.datetime(date.year, date.month, date.day, 23, 59, 59, tzinfo=tz)
-    return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
+    return start.astimezone(datetime.UTC), end.astimezone(datetime.UTC)
 
 
 def month_date_range(
@@ -133,13 +132,13 @@ def month_date_range(
     :param date: A date or datetime object to take the month and year from
     :return: A tuple of two UTC datetime objects, delimiting an entire calendar month.
     """
-    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    start = datetime.datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=datetime.UTC)
     y: int = date.year
     m: int = date.month + 1
     if m == 13:
         m = 1
         y = y + 1
-    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.utc) - datetime.timedelta(
+    end = datetime.datetime(y, m, 1, 0, 0, 0, tzinfo=datetime.UTC) - datetime.timedelta(
         days=1
     )
     return start, end
@@ -154,8 +153,8 @@ def year_date_range(date: datetime.date) -> tuple[datetime.datetime, datetime.da
     :param date: A date or datetime object to take the year from
     :return: A tuple of two UTC datetime objects, delimiting an entire calendar year.
     """
-    start = datetime.datetime(date.year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    end = datetime.datetime(date.year, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+    start = datetime.datetime(date.year, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
+    end = datetime.datetime(date.year, 12, 31, 23, 59, 59, tzinfo=datetime.UTC)
     return start, end
 
 
@@ -171,10 +170,10 @@ def day_summary_date_range(
     :return: A tuple of two UTC datetime objects, delimiting a calendar day.
     """
     start = datetime.datetime(
-        date.year, date.month, date.day, 0, 0, 0, tzinfo=timezone.utc
+        date.year, date.month, date.day, 0, 0, 0, tzinfo=datetime.UTC
     )
     end = datetime.datetime(
-        date.year, date.month, date.day, 23, 59, 59, tzinfo=timezone.utc
+        date.year, date.month, date.day, 23, 59, 59, tzinfo=datetime.UTC
     )
     return start, end
 

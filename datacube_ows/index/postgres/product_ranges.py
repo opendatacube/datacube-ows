@@ -7,7 +7,7 @@
 import logging
 import math
 from collections.abc import Callable
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import cast
 
 import datacube
@@ -64,7 +64,7 @@ def create_range_entry(
                 "p_layer": layer.name,
                 "empty": Json(""),
                 "meta": Json(meta.as_json()),
-                "now": datetime.now(tz=timezone.utc),
+                "now": datetime.now(tz=UTC),
             },
         )
         if cached is not None:
@@ -129,7 +129,7 @@ def create_range_entry(
                 for result in results:
                     dt1, dt2, lon = result
                     dt = dt1 + (dt2 - dt1) / 2
-                    dt = dt.astimezone(timezone.utc)
+                    dt = dt.astimezone(UTC)
 
                     solar_day = datacube.api.query._convert_to_solar_time(
                         dt, lon

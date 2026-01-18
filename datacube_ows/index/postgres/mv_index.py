@@ -129,9 +129,7 @@ def mv_search(
                     )
                 )
             elif isinstance(t, datetime.date):
-                st = datetime.datetime(
-                    t.year, t.month, t.day, tzinfo=datetime.timezone.utc
-                )
+                st = datetime.datetime(t.year, t.month, t.day, tzinfo=datetime.UTC)
                 tmax = st + datetime.timedelta(days=1)
                 or_clauses.append(
                     and_(

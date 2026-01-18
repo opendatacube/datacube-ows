@@ -145,7 +145,7 @@ class OWSPostgisIndex(OWSAbstractIndex):
                         unnorm.year,
                         unnorm.month,
                         unnorm.day,
-                        tzinfo=datetime.timezone.utc,
+                        tzinfo=datetime.UTC,
                     )
                     tmax = st + datetime.timedelta(days=1)
                 else:
