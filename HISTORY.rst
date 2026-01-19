@@ -7,6 +7,61 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.8 (2026-01-19)
+------------------
+
+Datacube OWS now supports gthread worker types in gunicorn, as OWS is mostly I/O-bound, this should allow pretty
+significant performance improvements.  Lots of minor fixes.
+
+If upgrading from 1.9.5 or earlier, be sure to read and follow the schema update instructions in the release notes
+for version 1.9.7.
+
+## What's Changed
+
+* Dockerfile: remove leftovers by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1412
+* Use create_app everywhere by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1413
+* ogc: catch OperationalError by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1414
+* Wrap decorators by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1420
+* Serialise matplotlib access by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1421
+* compose: speed up database by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1423
+* compose: default to Dockerfile command by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1424
+* Type fixes by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1425
+* Add Ty to dev dependencies by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1426
+* wms_utils: fix error message by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1428
+* resource_limits: fix imports by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1430
+* uv.lock: update to urllib3 2.6.3 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1431
+* Type check most of tests/ by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1435
+* Various lint fixes by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1432
+* product_ranges: update cache after commit by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1434
+* uv.lock: update to werkzeug 3.1.5 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1439
+* Attempt to fix startup issues raised in #1404 by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1411
+* Update to GDAL 3.12.1 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1441
+* Consolidate cached and non-cached branches of product_ranges by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1442
+* Python 3.11 minimum by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1446
+* Prepare for 1.9.8 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1444
+
+### automated updates
+
+* build(deps): bump codecov/codecov-action from 5.5.1 to 5.5.2 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1409
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1410
+* build(deps): bump mambaorg/micromamba from `b505801` to `8b4c132` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1407
+* build(deps): bump the actions-deps group with 5 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1416
+* build(deps): bump astral-sh/uv from 0.9.18 to 0.9.20 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1418
+* build(deps): bump astral-sh/uv from 0.9.20 to 0.9.21 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1419
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1422
+* build(deps): bump astral-sh/uv from 0.9.21 to 0.9.22 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1427
+* build(deps): bump mambaorg/micromamba from `8b4c132` to `0016952` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1433
+* build(deps): bump astral-sh/uv from 0.9.22 to 0.9.24 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1436
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1437
+* build(deps): bump mambaorg/micromamba from 2.4.0 to 2.5.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1438
+* build(deps): bump astral-sh/uv from 0.9.24 to 0.9.25 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1440
+* build(deps): bump astral-sh/uv from 0.9.25 to 0.9.26 in https://github.com/opendatacube/datacube-ows/pull/1443
+* build(deps): bump distributed from 2025.12.0 to 2026.1.1 in https://github.com/opendatacube/datacube-ows/pull/1445
+
+With particular thanks to @pjonsson and RISE.
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.7...1.9.8
+
 1.9.7 (2025-12-21)
 ------------------
 
