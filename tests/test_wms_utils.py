@@ -70,7 +70,7 @@ def test_parse_wms_time_strings_with_present() -> None:
         ["2018-01-10", "PRESENT"]
     )
     assert start == dt.datetime(2018, 1, 10, 0, 0)
-    assert (dt.datetime.now(dt.timezone.utc) - end).total_seconds() < 60
+    assert (dt.datetime.now(dt.UTC) - end).total_seconds() < 60
 
 
 @pytest.fixture
