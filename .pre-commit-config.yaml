@@ -8,7 +8,7 @@ repos:
     -   id: trailing-whitespace
         exclude: '^integration_tests/cfg/translations/'
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.13
+    rev: v0.14.14
     hooks:
     -   id: ruff-check
         args: [--fix, --show-fixes, --output-format, grouped]
