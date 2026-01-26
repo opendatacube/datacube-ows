@@ -14,9 +14,21 @@ ENV LC_ALL=C.UTF-8 \
 
 FROM base AS builder
 
+ARG PG_VERSION=18
+
+# hadolint ignore=DL4006
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get -qq -y --no-install-recommends install dirmngr gpg gpg-agent  > /dev/null \
+    && GNUPGHOME="$(mktemp -d)" \
+    && export GNUPGHOME \
+    && pg_key="B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8" \
+    && gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$pg_key" \
+    && gpg --batch --export --armor "$pg_key" > /etc/apt/keyrings/postgres.gpg.asc \
+    && gpgconf --kill all \
+    && echo "deb [signed-by=/etc/apt/keyrings/postgres.gpg.asc] http://apt.postgresql.org/pub/repos/apt noble-pgdg main $PG_VERSION" | tee /etc/apt/sources.list.d/postgres.list \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -81,14 +93,22 @@ FROM base
 # Add login-script for UID/GID-remapping.
 COPY --chown=root:root --link docker/files/remap-user.sh /usr/local/bin/remap-user.sh
 
+COPY --from=builder --link /etc/apt/keyrings/postgres.gpg.asc /etc/apt/keyrings/postgres.gpg.asc
+COPY --from=builder --link /etc/apt/sources.list.d/postgres.list /etc/apt/sources.list.d/postgres.list
+
+ARG PG_VERSION=18
+ARG ENVIRONMENT=deployment
+# hadolint ignore=SC2086
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     export DEBIAN_FRONTEND=noninteractive \
+    && EXTRAS=$([ "$ENVIRONMENT" = "deployment" ] || echo "postgresql-client-$PG_VERSION") \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
             gosu \
             tini \
+            $EXTRAS \
     && mkdir /app \
     && chown ubuntu:ubuntu /app
 
