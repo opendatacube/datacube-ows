@@ -416,9 +416,15 @@ class HttpResolver(Resolver):
 
 
 def get_xsd(name: str) -> XMLSchema:
-    xsd_f = request.urlopen("https://schemas.opengis.net/" + name)
+    req = request.Request("https://schemas.opengis.net/" + name)
+    req.add_header(
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0",
+    )
     parser = XMLParser(load_dtd=True, no_network=False)
     parser.resolvers.add(HttpResolver())
+    # FIXME: this should probably use a with-statement so urlopen() gets closed.
+    xsd_f = request.urlopen(req)
     return XMLSchema(parse(xsd_f, parser))
 
 

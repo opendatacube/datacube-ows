@@ -30,6 +30,14 @@ def make_session(max_retries: Retry) -> Session:
     session = Session()
     session.mount("http://", HTTPAdapter(max_retries=max_retries))
     session.mount("https://", HTTPAdapter(max_retries=max_retries))
+    session.headers.update(
+        [
+            (
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0",
+            )
+        ]
+    )
     return session
 
 
