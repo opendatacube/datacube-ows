@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ghcr.io/astral-sh/uv:0.9.26@sha256:9a23023be68b2ed09750ae636228e903a54a05ea56ed03a934d00fe9fbeded4b AS uv
+FROM ghcr.io/astral-sh/uv:0.9.27@sha256:143b40f4ab56a780f43377604702107b5a35f83a4453daf1e4be691358718a6a AS uv
 
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1@sha256:398748c845f3bbdc44080818ef044b6067875c0b308cc2666acc7732b86284b9 AS base
 
