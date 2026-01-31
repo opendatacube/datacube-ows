@@ -5,7 +5,6 @@ services:
       context: .
       args:
         PYDEV_DEBUG: "${PYDEV_DEBUG}"
-        ENVIRONMENT: test
     image: ghcr.io/opendatacube/ows:tests
     # Uncomment for use with non-dockerised postgres (for docker-compose 1.x)
     # network_mode: host
