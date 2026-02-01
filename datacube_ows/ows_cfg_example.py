@@ -9,7 +9,7 @@
 # Example configuration file for datacube_ows.
 #
 # The file was originally the only documentation for the configuration file format.
-# Detailed and up-to-date formal documentation is now available and this this file
+# Detailed and up-to-date formal documentation is now available and this file
 # is no longer actively maintained and may contain errors or obsolete elements.
 #
 # https://datacube-ows.readthedocs.io/en/latest/configuration.html
@@ -78,19 +78,20 @@ sentinel2_bands = {
 
 # Examples of styles which are linear combinations of the available spectral bands.
 style_rgb = {
-    # Machine readable style name. (required.  Must be unique within a layer.)
+    # Machine-readable style name (required, must be unique within a layer).
     "name": "simple_rgb",
-    # Human readable style title (required.  Must be unique within a layer.)
+    # Human-readable style title (required, must be unique within a layer).
     "title": "Simple RGB",
-    # Abstract - a longer human readable style description. (required. Must be unique within a layer.)
+    # Abstract - a longer human-readable style description (required, must be
+    # unique within a layer).
     "abstract": "Simple true-colour image, using the red, green and blue bands",
     # Components section is required for linear combination styles.
     # The component keys MUST be "red", "green" and "blue" (and optionally "alpha")
     "components": {
         "red": {
             # Band aliases may be used here.
-            # Values are multipliers.  The should add to 1.0 for each component to preserve overall brightness levels,
-            # but this is not enforced.
+            # Values are multipliers. The value should add to 1.0 for each component
+            # to preserve overall brightness levels, but this is not enforced.
             "red": 1.0
         },
         "green": {"green": 1.0},
@@ -198,10 +199,10 @@ style_mineral_content = {
             #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
             #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, a band mapping function is passed
             #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
-            #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
-            #       to band names.
+            #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band
+            #       aliases to band names.
             #
-            # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
+            # The function is assumed to take one argument, an xarray Dataset.  (Plus any additional
             # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
             #
             # An xarray DataArray is returned containing the band data.  Note that it is up to the function
@@ -322,10 +323,10 @@ style_ndvi = {
     #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
     #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, a band mapping function is passed
     #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
-    #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
-    #       to band names.
+    #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band
+    #       aliases to band names.
     #
-    # The function is assumed to take one arguments, an xarray Dataset.  (Plus any additional
+    # The function is assumed to take one argument, an xarray Dataset.  (Plus any additional
     # arguments required by the args and kwargs values in format 3, possibly including product_cfg.)
     #
     "index_function": {
@@ -409,7 +410,7 @@ style_ndvi_delta = {
         "show_legend": True,
         # Example config for colour ramp style auto-legend generation.
         # The range covered by the legend.
-        # Defaults to the first and last non transparent (alpha != 0.0)
+        # Defaults to the first and last non-transparent (alpha != 0.0)
         # entry in the explicit colour ramp, or the values in the range parameter.
         # It is recommended that values be supplied as integers or strings rather
         # than floating point.
@@ -429,14 +430,14 @@ style_ndvi_delta = {
         # Legend title.  Defaults to the style name.
         "title": "This is not a legend",
         # Units
-        # added to title of legend in parenthesis, default is to not display units.  To emulate
-        # the previous default behaviour use:
+        # added to title of legend in parentheses, default is to not display units.
+        # To emulate the previous default behaviour use:
         "units": "unitless",
         # decimal_places. 1 for "1.0" style labels, 2 for "1.00" and 0 for "1", etc.
         # (default 1)
         "decimal_places": 1,
         # tick_labels
-        # Labels for individual ticks can be customised"
+        # Labels for individual ticks can be customised
         "tick_labels": {
             # The special entry "default" allows setting
             # a prefix and/or suffix for all labels.
@@ -458,7 +459,7 @@ style_ndvi_delta = {
                 "prefix": "",
                 "suffix": "",
             },
-            # Or the label can changed.  Note that the default prefix and suffix
+            # Or the label can be changed. Note that the default prefix and suffix
             # are still applied unless explicitly over-ridden.
             # E.g. To display "(max)" for the 1.0 tick:
             "1.0": {"label": "max"},
@@ -492,7 +493,7 @@ style_ndvi_delta = {
             # Optional. Defaults to False (date coordinates in the "time" dimension are always sorted chronologically)
             "preserve_user_date_order": True,
             # A function, expressed in the standard format as described elsewhere in this example file.
-            # The function is assumed to take one arguments, an xarray Dataset.
+            # The function is assumed to take one argument, an xarray Dataset.
             # The function returns an xarray Dataset with a single band, which is the input to the
             # colour ramp defined below.
             "aggregator_function": {
@@ -552,7 +553,7 @@ style_ndvi_anim = {
         "show_legend": True,
         # Example config for colour ramp style auto-legend generation.
         # The range covered by the legend.
-        # Defaults to the first and last non transparent (alpha != 0.0)
+        # Defaults to the first and last non-transparent (alpha != 0.0)
         # entry in the explicit colour ramp, or the values in the range parameter.
         # It is recommended that values be supplied as integers or strings rather
         # than floating point.
@@ -572,14 +573,14 @@ style_ndvi_anim = {
         # Legend title.  Defaults to the style name.
         "title": "This is not a legend",
         # Units
-        # added to title of legend in parenthesis, default is to not display units.  To emulate
-        # the previous default behaviour use:
+        # added to title of legend in parentheses, default is to not display units.
+        # To emulate the previous default behaviour use:
         "units": "unitless",
         # decimal_places. 1 for "1.0" style labels, 2 for "1.00" and 0 for "1", etc.
         # (default 1)
         "decimal_places": 1,
         # tick_labels
-        # Labels for individual ticks can be customised"
+        # Labels for individual ticks can be customised
         "tick_labels": {
             # The special entry "default" allows setting
             # a prefix and/or suffix for all labels.
@@ -601,7 +602,7 @@ style_ndvi_anim = {
                 "prefix": "",
                 "suffix": "",
             },
-            # Or the label can changed.  Note that the default prefix and suffix
+            # Or the label can be changed. Note that the default prefix and suffix
             # are still applied unless explicitly over-ridden.
             # E.g. To display "(max)" for the 1.0 tick:
             "1.0": {"label": "max"},
@@ -638,7 +639,7 @@ style_ndvi_anim = {
             # Flag that an animation should be generated. Without this only the most recent frame is returned. Optional.
             "animate": True,
             # A function, expressed in the standard format as described elsewhere in this example file.
-            # The function is assumed to take one arguments, an xarray Dataset.
+            # The function is assumed to take one argument, an xarray Dataset.
             # The function returns an xarray Dataset with a with multiple-bands per time step, output is defined
             # by colour ramp below
             "aggregator_function": {
@@ -1052,7 +1053,7 @@ ows_cfg = {
         # default attribution for any layer that does not override it.
         "attribution": {
             # Attribution must contain at least one of ("title", "url" and "logo")
-            # A human readable title for the attribution - e.g. the name of the attributed organisation
+            # A human-readable title for the attribution - e.g. the name of the attributed organisation
             "title": "Acme Satellites",
             # The associated - e.g. URL for the attributed organisation
             "url": "http://www.acme.com/satellites",
@@ -1074,7 +1075,7 @@ ows_cfg = {
         # If there are constraints on access to the service, they can be described here in free text.
         # If blank or not included, defaults to "none".
         "access_constraints": "",
-        # Supported co-ordinate reference systems. Any coordinate system supported by GDAL and Proj.4J can be used.
+        # Supported coordinate reference systems. Any coordinate system supported by GDAL and Proj.4J can be used.
         # At least one CRS must be included.  At least one geographic CRS must be included if WCS is active.
         # WGS-84 (EPSG:4326) is strongly recommended, but not required.
         # Web Mercator (EPSG:3857) is strongly recommended, but is only required if WMTS is active.
@@ -1229,7 +1230,7 @@ ows_cfg = {
             "abstract": "Images from the Landsat 8 satellite",
             # NOTE: Folder-layers do not have a layer "name".
             # Keywords are optional, but can be added at any folder level and are cumulative.
-            # A layer combines its own keywords, the keywords of it's parent (and grandparent, etc) layers,
+            # A layer combines its own keywords, the keywords of it's parent (and grandparent, etc.) layers,
             # and any keywords defined in the global section above.
             #
             "keywords": ["landsat", "landsat8"],
@@ -1239,7 +1240,7 @@ ows_cfg = {
             #               overridden.
             "attribution": {
                 # Attribution must contain at least one of ("title", "url" and "logo")
-                # A human readable title for the attribution - e.g. the name of the attributed organisation
+                # A human-readable title for the attribution - e.g. the name of the attributed organisation
                 "title": "Digital Earth Australia",
                 # The associated - e.g. URL for the attributed organisation
                 "url": "http://www.ga.gov.au/dea",
@@ -1274,7 +1275,7 @@ ows_cfg = {
                     # Resource limits.
                     # See reusable resource limit declarations above for documentation.
                     "resource_limits": standard_resource_limits,
-                    # If "dynamic" is False (the default) the the ranges for the product are cached in memory.
+                    # If "dynamic" is False (the default) the ranges for the product are cached in memory.
                     # Dynamic products slow down the generation of the GetCapabilities document - use sparingly.
                     "dynamic": False,
                     # The resolution of the time access.  Optional. Allowed values are:
@@ -1328,8 +1329,8 @@ ows_cfg = {
                         #    c) "kwargs" (optional): An array of additional keyword arguments that will always be passed to the function.
                         #    d) "mapped_bands" (optional): Boolean (defaults to False). If true, a band mapping function is passed
                         #       to the function as a keyword argument named "band_mapper".  This is useful if you are passing band aliases
-                        #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band aliases to
-                        #       to band names.
+                        #       to the function in the args or kwargs.  The band_mapper allows the index function to convert band
+                        #       aliases to band names.
                         #
                         # Passed directly to the datacube load_data function.  Defaults to None.
                         "fuse_func": "datacube.helpers.ga_pq_fuser",
@@ -1407,7 +1408,7 @@ ows_cfg = {
                     # DataURLs sections of a WMS GetCapabilities document.
                     # Multiple of each may be defined per product.
                     #
-                    # The entire section the "features and "data" subsections within it are optional. The
+                    # The entire section the "features" and "data" subsections within it are optional. The
                     # default is an empty list(s).
                     #
                     # Each individual entry must include a url and MIME type format.
