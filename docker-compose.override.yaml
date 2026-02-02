@@ -2,4 +2,9 @@
 
 services:
   ows:
+    build:
+      context: .
+      args:
+        PYDEV_DEBUG: "${PYDEV_DEBUG}"
+        ENVIRONMENT: test
     command: ["flask", "run", "--host=0.0.0.0", "--port=8000"]

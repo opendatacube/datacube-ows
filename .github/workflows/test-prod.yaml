@@ -66,6 +66,7 @@ jobs:
           export LOCAL_GID=$(id -g $USER)
           export $(grep -v '^#' .env_simple | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml up --quiet-pull -d --wait
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "apt-get update && apt-get install -y postgresql-client-18"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /src && ./check-code-all.sh --no-test"
 
       # Run some tests on the images
