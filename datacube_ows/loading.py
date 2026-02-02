@@ -311,22 +311,26 @@ class DataStacker:
                 continue
             measurements = pbq.products[0].lookup_measurements(pbq.bands)
             fuse_func = pbq.fuse_func
-            if pbq.manual_merge and len(datasets) > 0:
-                qry_result = self.manual_data_stack(
-                    datasets,
-                    measurements,
-                    pbq.bands,
-                    skip_corrections,
-                    fuse_func=fuse_func,
+            try:
+                qry_result = (
+                    self.manual_data_stack(
+                        datasets,
+                        measurements,
+                        pbq.bands,
+                        skip_corrections,
+                        fuse_func=fuse_func,
+                    )
+                    if pbq.manual_merge and len(datasets) > 0
+                    else self.read_data(
+                        datasets,
+                        measurements,
+                        self._geobox,
+                        resampling=self._resampling,
+                        fuse_func=fuse_func,
+                    )
                 )
-            else:
-                qry_result = self.read_data(
-                    datasets,
-                    measurements,
-                    self._geobox,
-                    resampling=self._resampling,
-                    fuse_func=fuse_func,
-                )
+            except Exception as e:
+                raise WMSException("Error loading data") from e
             if qry_result is None:
                 continue
             if data is None:
