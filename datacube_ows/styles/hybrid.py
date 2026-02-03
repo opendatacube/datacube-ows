@@ -63,7 +63,8 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
         """
         # pylint: disable=too-many-locals
         if self.index_function is not None:
-            data["index_function"] = (data.dims, self.index_function(data).data)
+            idx_data = self.index_function(data)
+            data["index_function"] = (idx_data.dims, idx_data.data)
 
         imgdata = Dataset(coords=data)
 
