@@ -807,7 +807,7 @@ requires-dist = [
     { name = "babel" },
     { name = "blinker", marker = "extra == 'ops'" },
     { name = "click" },
-    { name = "datacube", extras = ["performance", "s3"], specifier = ">=1.9.13,<1.10.0" },
+    { name = "datacube", extras = ["performance", "s3"], specifier = ">=1.9.14,<1.10.0" },
     { name = "datacube-ows", extras = ["dev", "ops", "test"], marker = "extra == 'all'" },
     { name = "deepdiff" },
     { name = "flask" },
