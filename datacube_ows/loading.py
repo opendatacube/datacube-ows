@@ -452,6 +452,7 @@ class DataStacker:
                 fuse_func=fuse_func,
                 skip_broken_datasets=skip_broken,
                 patch_url=self._layer.patch_url,
+                driver="rio",
                 resampling=resampling,
             )
         except Exception as e:
@@ -482,6 +483,7 @@ class DataStacker:
                 fuse_func=fuse_func,
                 skip_broken_datasets=skip_broken,
                 patch_url=self._layer.patch_url,
+                driver="rio",
                 resampling=resampling,
             )
         except Exception as e:
