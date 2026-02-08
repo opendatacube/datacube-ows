@@ -63,7 +63,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         else:
             from psycopg2.errors import ProgrammingError
         try:
-            with get_sqlconn(dc) as conn, as_role(conn, f"agdc_{group}") as conn:
+            with get_sqlconn(dc) as conn, as_role(conn, f"agdc_{group}"):
                 pass
         except ProgrammingError as e:
             raise InsufficientDbPrivileges(

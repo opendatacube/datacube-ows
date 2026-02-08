@@ -69,8 +69,10 @@ def run_sql(dc: Datacube, path: str, **params: str) -> bool:
                 sql = sql.format(**kwargs)
             if isolated:
                 conn.commit()
-                with get_sqlconn(dc) as iso_conn:
-                    iso_conn.execution_options(isolation_level="AUTOCOMMIT")
+                with (
+                    get_sqlconn(dc) as _conn,
+                    _conn.execution_options(isolation_level="AUTOCOMMIT") as iso_conn,
+                ):
                     run_sql_statement(sql, comment, fname, iso_conn, dc.index)
             else:
                 run_sql_statement(sql, comment, fname, conn, dc.index)
