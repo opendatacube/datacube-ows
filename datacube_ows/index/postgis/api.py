@@ -13,6 +13,7 @@ from uuid import UUID
 import click
 from antimeridian import fix_shape
 from datacube import Datacube
+from datacube.drivers.common_psql import as_role
 from datacube.model import Dataset, Product, Range
 from odc.geo import CRS, Geometry
 from sqlalchemy import text
@@ -65,8 +66,8 @@ class OWSPostgisIndex(OWSAbstractIndex):
         else:
             from psycopg2.errors import ProgrammingError
         try:
-            with get_sqlconn(dc) as conn:
-                conn.execute(text(f"set role odc_{group}"))
+            with get_sqlconn(dc) as conn, as_role(conn, f"odc_{group}"):
+                pass
         except ProgrammingError:
             raise InsufficientDbPrivileges(
                 f"db user {dc.index.environment.db_username} does not have odc_{group} privileges"

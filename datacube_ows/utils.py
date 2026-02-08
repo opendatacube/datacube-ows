@@ -6,7 +6,8 @@
 
 import datetime
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from functools import wraps
 from time import monotonic
 from typing import Any, TypeVar, cast
@@ -144,15 +145,16 @@ def group_by_mosaic(pnames: list[str] | None = None) -> GroupBy:
     )
 
 
-def get_sqlconn(dc: Datacube) -> Connection:
+@contextmanager
+def get_sqlconn(dc: Datacube) -> Generator[Connection]:
     """
     Extracts a SQLAlchemy database connection from a Datacube object.
 
     :param dc: An initialised Datacube object
     :return: A SQLAlchemy database connection object.
     """
-    # pylint: disable=protected-access
-    return dc.index._db._engine.connect()  # type: ignore[attr-defined]
+    with dc.index._db._engine.connect() as conn:  # type: ignore[attr-defined]
+        yield conn
 
 
 def get_driver_name(index: Index) -> str:

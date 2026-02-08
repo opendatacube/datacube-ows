@@ -11,6 +11,7 @@ from uuid import UUID
 
 import click
 from datacube import Datacube
+from datacube.drivers.common_psql import as_role
 from datacube.model import Dataset, Product
 from odc.geo import CRS, Geometry
 from sqlalchemy import text
@@ -62,8 +63,8 @@ class OWSPostgresIndex(OWSAbstractIndex):
         else:
             from psycopg2.errors import ProgrammingError
         try:
-            with get_sqlconn(dc) as conn:
-                conn.execute(text(f"set role agdc_{group}"))
+            with get_sqlconn(dc) as conn, as_role(conn, f"agdc_{group}"):
+                pass
         except ProgrammingError as e:
             raise InsufficientDbPrivileges(
                 f"db user {dc.index.environment.db_username} does not have agdc_{group} privileges: {e}"
