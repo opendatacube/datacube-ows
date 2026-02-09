@@ -596,6 +596,7 @@ ows_cfg = {
         "message_file": f"{trans_dir}/integration_tests/cfg/message.po",
         "translations_directory": f"{trans_dir}/integration_tests/cfg/translations",
         "supported_languages": ["en", "de"],
+        "load_driver": "rio",
         # URL that humans can visit to learn more about the service(s) or organization
         # should be fully qualified
         "info_url": "http://opendatacube.org",

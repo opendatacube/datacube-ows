@@ -131,6 +131,20 @@ def test_no_services(minimal_global_raw_cfg) -> None:
     assert "At least one service must be active" in str(excinfo.value)
 
 
+def test_load_driver(minimal_global_raw_cfg) -> None:
+    OWSConfig._instance = None
+    cfg = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert cfg.load_driver == "legacy"
+
+
+def test_invalid_load_driver(minimal_global_raw_cfg) -> None:
+    OWSConfig._instance = None
+    minimal_global_raw_cfg["global"]["load_driver"] = "flange"
+    with pytest.raises(ConfigException) as excinfo:
+        _ = OWSConfig(cfg=minimal_global_raw_cfg)
+    assert "Invalid load_driver" in str(excinfo.value)
+
+
 def test_no_published_crss(minimal_global_raw_cfg) -> None:
     del minimal_global_raw_cfg["global"]["published_CRSs"]
     with pytest.raises(ConfigException) as e:

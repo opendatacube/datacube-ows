@@ -453,6 +453,7 @@ class DataStacker:
                 skip_broken_datasets=skip_broken,
                 patch_url=self._layer.patch_url,
                 resampling=resampling,
+                driver=self.cfg.load_driver,
             )
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
@@ -483,6 +484,7 @@ class DataStacker:
                 skip_broken_datasets=skip_broken,
                 patch_url=self._layer.patch_url,
                 resampling=resampling,
+                driver=self.cfg.load_driver,
             )
         except Exception as e:
             _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))

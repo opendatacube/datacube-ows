@@ -1719,6 +1719,11 @@ class OWSConfig(OWSMetadataConfig):
         self.attribution = AttributionCfg.parse(
             cast(CFG_DICT | None, cfg.get("attribution")), self
         )
+        self.load_driver = cast(str, cfg.get("load_driver", "legacy"))
+        if self.load_driver not in ["rio", "legacy"]:
+            raise ConfigException(
+                f"Invalid load_driver: {self.load_driver} Please use 'rio' or 'legacy'"
+            )
 
         def make_gml_name(name: str) -> str:
             if name.startswith("EPSG:"):
