@@ -137,8 +137,10 @@ def simplify_geom(geom_in, crs: str = "EPSG:4326") -> Geometry:
     rawtriangles = list(triangulate(geom))
     triangles = list(
         filter(
-            lambda x: geom_in.geom.contains(x.representative_point())
-            and x.area / geom.area > 0.1,
+            lambda x: (
+                geom_in.geom.contains(x.representative_point())
+                and x.area / geom.area > 0.1
+            ),
             rawtriangles,
         )
     )
