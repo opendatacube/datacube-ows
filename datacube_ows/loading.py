@@ -237,7 +237,7 @@ class DataStacker:
         query = ProductBandQuery.simple_layer_query(
             self._layer, self.needed_bands(), self.resource_limited
         )
-        geom = point if point else self._geobox.extent
+        geom = point or self._geobox.extent
         result = self._layer.ows_index().ds_search(
             self._layer, geom=geom, products=query.products
         )
@@ -259,7 +259,7 @@ class DataStacker:
                 ProductBandQuery.simple_layer_query(self._layer, self.needed_bands())
             ]
 
-        geom = point if point else self._geobox.extent
+        geom = point or self._geobox.extent
         results: list[tuple[ProductBandQuery, xarray.DataArray]] = []
         for query in queries:
             qry_times = None if query.ignore_time else self._times

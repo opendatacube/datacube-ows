@@ -74,11 +74,8 @@ def initialise_sentry(log: Logger | None = None) -> None:
         import sentry_sdk
         from sentry_sdk.integrations.flask import FlaskIntegration
 
-        SENTRY_ENV_TAG = (
-            os.environ.get("SENTRY_ENV_TAG")
-            if os.environ.get("SENTRY_ENV_TAG")
-            else "dev"
-        )
+        SENTRY_ENV_TAG = os.environ.get("SENTRY_ENV_TAG") or "dev"
+
         sentry_sdk.init(
             dsn=os.environ["SENTRY_DSN"],
             environment=SENTRY_ENV_TAG,

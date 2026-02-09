@@ -1915,7 +1915,7 @@ class OWSConfig(OWSMetadataConfig):
             raise ConfigException(f"CRS {crsid} is not published")
         crs_def = self.published_CRSs[crsid]
         crs_alias = crs_def["alias_of"]
-        use_crs = crs_alias if crs_alias else crsid
+        use_crs = crs_alias or crsid
         return CRS(use_crs)
 
     def response_headers(self, d: dict[str, str]) -> dict[str, str]:
