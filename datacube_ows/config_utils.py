@@ -118,7 +118,8 @@ def get_file_loc(x: str) -> str:
     and the URL location of a remote file.
     """
     xp = urlparse(x)
-    if xp.scheme in ("s3",):  # NOTE: could add http/s, ...
+    # NOTE: could add http/s, ...
+    if xp.scheme == "s3":
         enable_s3 = os.environ.get("DATACUBE_OWS_CFG_ALLOW_S3", "no")
         if enable_s3.lower() not in ("yes", "true", "1", "y"):
             raise ConfigException(

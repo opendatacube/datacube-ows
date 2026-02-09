@@ -66,7 +66,7 @@ class WCS20Extent:
         else:
             time = ("time", self.time[1])
 
-        if crs in ["EPSG:4326"]:
+        if crs.to_upper() == "EPSG:4326":
             # Vertical coordinate First
             return [("x", bbox[1], bbox[3]), ("y", bbox[0], bbox[2]), time]
         return [("x", bbox[0], bbox[2]), ("y", bbox[1], bbox[3]), time]

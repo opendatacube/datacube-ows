@@ -143,7 +143,7 @@ class ComponentStyleDef(StyleDefBase):
         return {
             self.product.band_idx.band(self.local_band(band_alias)): value
             for band_alias, value in comp_in.items()
-            if band_alias not in ["scale_range"]
+            if band_alias != "scale_range"
         }
 
     def compress_band(self, component_name: str, imgband_data: DataArray) -> DataArray:
