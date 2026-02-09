@@ -29,7 +29,7 @@ What's Changed
 * uv.lock: update to datacube 1.9.14 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1462
 * Use common psql (where not using explicit SQL files) by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1463
 * Support "rio" driver - configurable, still defaults to "legacy" by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1466
-* Bump default version number and 1.9.9 release notes by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1467
+* Bump default version number and 1.9.9 release notes by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1468
 
 Autoupdates
 +++++++++++
@@ -44,6 +44,7 @@ Autoupdates
 * build(deps): bump astral-sh/uv from 0.9.28 to 0.9.29 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1460
 * build(deps): bump astral-sh/uv from 0.9.29 to 0.9.30 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1461
 * build(deps): bump astral-sh/uv from 0.9.30 to 0.10.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1464
+* build(deps): bump the actions-deps group with 2 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1467
 
 **Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.8...1.9.9
 
