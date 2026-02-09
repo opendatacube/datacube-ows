@@ -386,6 +386,7 @@ renderer
 repo
 rgb
 rgba
+rio
 rst
 rtaib
 runtime
