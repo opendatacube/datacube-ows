@@ -7,6 +7,49 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.9 (2026-02-09)
+------------------
+
+Datacube OWS now supports the "rio" loader driver.  The legacy loader is still enabled
+by default but this can be over-ridden by setting ``"load_driver": "rio"`` in the
+global section of the OWS configuration file.  Together with gthread gunicorn worker
+support added in 1.9.8, this should deliver considerable performance improvements
+to OWS instances.
+
+Uses the latest version of core to ensure cleaner user permissions management.
+
+What's Changed
+++++++++++++++
+
+* Set User-Agent for requests by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1451
+* ows_cfg_example: comment fixes by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1456
+* tests: speed up by using db dump  by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1455
+* loading: raise exception on failure by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1457
+* Fix hybrid style xarray merge. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1459
+* uv.lock: update to datacube 1.9.14 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1462
+* Use common psql (where not using explicit SQL files) by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1463
+* Support "rio" driver - configurable, still defaults to "legacy" by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1466
+* Bump default version number and 1.9.9 release notes by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1467
+
+Autoupdates
++++++++++++
+
+* build(deps): bump astral-sh/setup-uv from 7.1.6 to 7.2.0 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1447
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1448
+* build(deps): bump actions/checkout from 6.0.1 to 6.0.2 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1450
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1452
+* build(deps): bump astral-sh/uv from 0.9.26 to 0.9.27 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1453
+* build(deps): bump astral-sh/uv from 0.9.27 to 0.9.28 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1454
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1458
+* build(deps): bump astral-sh/uv from 0.9.28 to 0.9.29 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1460
+* build(deps): bump astral-sh/uv from 0.9.29 to 0.9.30 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1461
+* build(deps): bump astral-sh/uv from 0.9.30 to 0.10.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1464
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.8...1.9.9
+
+The Open Data Cube Steering Council thanks Geoscience Australia and RISE for supporting
+the work on this release.
+
 1.9.8 (2026-01-19)
 ------------------
 
