@@ -89,6 +89,7 @@ def _make_band_dict(
 ) -> dict[str, dict[str, bool | str] | str]:
     band_dict: dict[str, dict[str, bool | str] | str] = {}
     for k, _ in pixel_dataset.data_vars.items():
+        assert isinstance(k, str)
         band_val = pixel_dataset[k].item()
         flag_def = pixel_dataset[k].attrs.get("flags_definition")
         if flag_def:
