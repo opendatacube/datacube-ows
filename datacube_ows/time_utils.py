@@ -50,9 +50,9 @@ def dataset_center_time(dataset: Dataset) -> datetime.datetime:
 
 def solar_date(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.date:
     """
-    Convert a datetime to a new timezone, and evalute as a date.
+    Convert a datetime to a new timezone, and evaluate as a date.
 
-    :param dt: A datetime in an aribitrary timezone.
+    :param dt: A datetime in an arbitrary timezone.
     :param tz: The timezone to evaluate the date in.
     :return: A date object.
     """
@@ -75,7 +75,7 @@ def local_date(ds: Dataset, tz: datetime.tzinfo | None = None) -> datetime.date:
 
 def tz_for_dataset(ds: Dataset) -> datetime.tzinfo:
     """
-    Determine the timezone for a dataset (using it's extent)
+    Determine the timezone for a dataset (using its extent)
 
     :param ds: An ODC dataset object
     :return: A timezone object
@@ -87,7 +87,7 @@ def tz_for_coord(lon: float | int, lat: float | int) -> datetime.tzinfo:
     """
     Determine the Timezone for given lat/long coordinates
 
-    :param lon: Longitude, in degress
+    :param lon: Longitude, in degrees
     :param lat: Latitude, in degrees
     :return: A timezone object
     :raises: NoTimezoneException
@@ -125,7 +125,7 @@ def month_date_range(
     date: datetime.date,
 ) -> tuple[datetime.datetime, datetime.datetime]:
     """
-    Take a month from a date and convert to a one month long UTC datetime range encompassing the month.
+    Take a month from a date and convert to a one-month-long UTC datetime range encompassing the month.
 
     Ignores timezone effects - suitable for statistical/summary data
 
