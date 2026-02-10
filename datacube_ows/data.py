@@ -94,13 +94,18 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
             )
     qprof["n_dates"] = n_dates
     # Tiling.
-    stacker = DataStacker(
-        params.layer,
-        params.geobox,
-        params.times,
-        params.resampling,
-        style=params.style,
-    )
+    try:
+        stacker = DataStacker(
+            params.layer,
+            params.geobox,
+            params.times,
+            params.resampling,
+            style=params.style,
+        )
+    except ValueError as e:
+        # TimeZoneFinder raises a ValueError when lat/lon is out of bounds.
+        # There is already a warning logged for the problem so just raise here.
+        raise WMSException("Error creating DataStacker") from e
     qprof["zoom_factor"] = params.zf
     qprof.start_event("count-datasets")
     n_datasets = stacker.n_datasets()
