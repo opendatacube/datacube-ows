@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM ghcr.io/astral-sh/uv:0.10.0@sha256:78a7ff97cd27b7124a5f3c2aefe146170793c56a1e03321dd31a289f6d82a04f AS uv
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1@sha256:398748c845f3bbdc44080818ef044b6067875c0b308cc2666acc7732b86284b9 AS base
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.2@sha256:885caba325a405ab08793feba1510170ef19d9758c41849f8554ac97e7221dd3 AS base
 
 LABEL org.opencontainers.image.source=https://github.com/opendatacube/datacube-ows
 LABEL org.opencontainers.image.description="Datacube OWS"
