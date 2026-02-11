@@ -86,24 +86,44 @@ jobs:
       - name: Test WMS GetCapabilities
         run: |
           curl --silent --show-error --fail \
+          --retry 5 \
+          --retry-all-errors \
+          --retry-delay 0 \
+          --retry-max-time 40 \
           "localhost:8000/?service=WMS&version=1.3.0&request=GetCapabilities" \
       - name: Test WMTS GetCapabilities
         run: |
           curl --silent --show-error --fail \
+          --retry 5 \
+          --retry-all-errors \
+          --retry-delay 0 \
+          --retry-max-time 40 \
           "localhost:8000/?service=WMS&version=1.0.0&request=GetCapabilities" \
           > /dev/null
       - name: Test WCS1 GetCapabilities
         run: |
           curl --silent --show-error --fail \
+          --retry 5 \
+          --retry-all-errors \
+          --retry-delay 0 \
+          --retry-max-time 40 \
           "localhost:8000/?service=WCS&version=1.0.0&request=GetCapabilities"
           > /dev/null
       - name: Test WCS2 GetCapabilities
         run: |
           curl --silent --show-error --fail \
+          --retry 5 \
+          --retry-all-errors \
+          --retry-delay 0 \
+          --retry-max-time 40 \
           "localhost:8000/?service=WCS&version=2.0.1&request=GetCapabilities"
           > /dev/null
       - name: Test Prometheus Metrics
         run: |
           curl --silent --show-error --fail \
+          --retry 5 \
+          --retry-all-errors \
+          --retry-delay 0 \
+          --retry-max-time 40 \
           "localhost:8000/metrics"
           > /dev/null
