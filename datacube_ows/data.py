@@ -115,8 +115,12 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
     n_datasets = stacker.n_datasets()
     qprof.end_event("count-datasets")
     qprof["n_datasets"] = n_datasets
-    qprof["zoom_level_base"] = params.resources.base_zoom_level
-    qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
+    try:
+        qprof["zoom_level_base"] = params.resources.base_zoom_level
+        qprof["zoom_level_adjusted"] = params.resources.load_adjusted_zoom_level
+    except ValueError as e:
+        # Non-closed polygon can bring us here.
+        raise WMSException("Error getting zoom level") from e
     try:
         params.layer.resource_limits.check_wms(n_datasets, params.zf, params.resources)
     except ResourceLimited as e:
