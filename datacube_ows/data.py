@@ -78,7 +78,11 @@ class EmptyResponse(Exception):
 def get_map(args: dict[str, str]) -> FlaskResponse:
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
-    params = GetMapParameters(args)
+    try:
+        params = GetMapParameters(args)
+    except ValueError as e:
+        # See #1478 for one example that brings us here.
+        raise WMSException("Failed to get map parameters") from e
     qprof = QueryProfiler(params.ows_stats)
     n_dates = len(params.times)
     if n_dates == 1:
