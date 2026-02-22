@@ -133,6 +133,7 @@ def ogc_svc_impl(svc):
             "Internal server error.", http_response=500
         ).exception_response()
     except Exception as e:  # pylint: disable=broad-except
+        _LOG.error(f"Arguments for unexpected error: {nocase_args}")
         _LOG.exception(e)
         tb = sys.exc_info()[2]
         ogc_e = version_support.exception_class(
