@@ -8,18 +8,18 @@ repos:
     -   id: trailing-whitespace
         exclude: '^integration_tests/cfg/translations/|^integration_tests/cfg/test_db.sql'
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.1
+    rev: v0.15.2
     hooks:
     -   id: ruff-check
         args: [--fix, --show-fixes, --output-format, grouped]
     -   id: ruff-format
 -   repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.3
+    rev: 0.10.4
     hooks:
     # Ensure uv.lock is up-to-date if pyproject.toml has changed.
     -   id: uv-lock
 -   repo: https://github.com/PyCQA/pylint
-    rev: v4.0.4
+    rev: v4.0.5
     hooks:
       - id: pylint
         args: ["--disable=C,R,W,E1136"]
