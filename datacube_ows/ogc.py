@@ -4,7 +4,6 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 import logging
-import sys
 import traceback
 from logging import Logger
 
@@ -81,9 +80,8 @@ def ogc_impl():
         return e.exception_response()
     except Exception as e:  # pylint: disable=broad-except
         _LOG.exception(e)
-        tb = sys.exc_info()[2]
         ogc_e = WMSException(f"Unexpected server error: {e!s}", http_response=500)
-        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+        return ogc_e.exception_response(traceback=traceback.format_exception(e))
 
 
 def ogc_svc_impl(svc):
@@ -135,11 +133,10 @@ def ogc_svc_impl(svc):
     except Exception as e:  # pylint: disable=broad-except
         _LOG.error(f"Arguments for unexpected error: {nocase_args}")
         _LOG.exception(e)
-        tb = sys.exc_info()[2]
         ogc_e = version_support.exception_class(
             f"Unexpected server error: {e!s}", http_response=500
         )
-        return ogc_e.exception_response(traceback=traceback.extract_tb(tb))
+        return ogc_e.exception_response(traceback=traceback.format_exception(e))
 
 
 def ogc_wms_impl():
