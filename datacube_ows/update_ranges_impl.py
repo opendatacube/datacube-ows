@@ -9,7 +9,6 @@
 import sys
 
 import click
-import sqlalchemy
 from datacube import Datacube
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
@@ -201,7 +200,7 @@ def main(
         click.echo("Done.")
     except InsufficientDbPrivileges as e:
         click.echo(e)
-    except sqlalchemy.exc.ProgrammingError as e:
+    except ProgrammingError as e:
         import psycopg2.errors
 
         if isinstance(e.orig, psycopg2.errors.UndefinedColumn):
