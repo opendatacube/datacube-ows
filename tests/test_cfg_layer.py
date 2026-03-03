@@ -36,6 +36,7 @@ def test_inherit_parent(minimal_global_cfg, minimal_parent) -> None:
         global_cfg=minimal_global_cfg,
     )
     assert lyr.abstract == "Parent Abstract"
+    assert lyr.attribution is not None
     assert lyr.attribution.title == "Parent Attribution"
     assert "global" in lyr.keywords
     assert "parent" in lyr.keywords

@@ -121,17 +121,24 @@ def test_cfg_py_nested_1(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_1")
     cfg = read_config()
 
-    assert "this_test" in cfg
-    assert len(cfg["this_test"]) == 2
-    assert cfg["this_test"][0]["test"] == 8888
-    assert cfg["this_test"][1]["test"] == 1
+    member = cfg.get("this_test")
+    assert member is not None
+    assert isinstance(member, list)
+    assert len(member) == 2
+    first = member[0]
+    assert isinstance(first, dict)
+    assert first["test"] == 8888
+    second = member[1]
+    assert isinstance(second, dict)
+    assert second["test"] == 1
 
 
 def test_cfg_py_nested_2(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.nested.nested_2")
     cfg = read_config()
-
-    assert cfg["subtest"]["test"] == 2
+    subtest = cfg["subtest"]
+    assert isinstance(subtest, dict)
+    assert subtest["test"] == 2
 
 
 def test_cfg_py_nested_3(monkeypatch) -> None:
@@ -139,13 +146,25 @@ def test_cfg_py_nested_3(monkeypatch) -> None:
     cfg = read_config()
 
     assert cfg["test"] == 233
-    assert len(cfg["things"]) == 3
-    assert cfg["things"][0]["test"] == 2562
-    assert cfg["things"][0]["thing"] is None
-    assert cfg["things"][1]["test"] == 2563
-    assert cfg["things"][1]["thing"]["test"] == 123
-    assert cfg["things"][2]["test"] == 2564
-    assert cfg["things"][2]["thing"]["test"] == 3
+    things = cfg.get("things")
+    assert isinstance(things, list)
+    assert len(things) == 3
+    first = things[0]
+    assert isinstance(first, dict)
+    assert first["test"] == 2562
+    assert first["thing"] is None
+    second = things[1]
+    assert isinstance(second, dict)
+    assert second["test"] == 2563
+    second_thing = second.get("thing")
+    assert isinstance(second_thing, dict)
+    assert second_thing["test"] == 123
+    third = things[2]
+    assert isinstance(third, dict)
+    assert third["test"] == 2564
+    third_thing = third.get("thing")
+    assert isinstance(third_thing, dict)
+    assert third_thing["test"] == 3
 
 
 def test_cfg_py_nested_4(monkeypatch) -> None:
@@ -153,22 +172,45 @@ def test_cfg_py_nested_4(monkeypatch) -> None:
     cfg = read_config()
 
     assert cfg["test"] == 222
-    assert len(cfg["things"]) == 3
-    assert cfg["things"][0]["test"] == 2572
-    assert cfg["things"][0]["thing"] is None
-    assert cfg["things"][1]["test"] == 2573
-    assert cfg["things"][1]["thing"]["test"] == 123
-    assert cfg["things"][2]["test"] == 2574
-    ncfg = cfg["things"][2]["thing"]
+    things = cfg.get("things")
+    assert isinstance(things, list)
+    assert len(things) == 3
+    first = things[0]
+    assert isinstance(first, dict)
+    assert first["test"] == 2572
+    assert first["thing"] is None
+    second = things[1]
+    assert isinstance(second, dict)
+    assert second["test"] == 2573
+    second_thing = second.get("thing")
+    assert isinstance(second_thing, dict)
+    assert second_thing["test"] == 123
+    third = things[2]
+    assert isinstance(third, dict)
+    assert third["test"] == 2574
+    ncfg = third["thing"]
 
-    assert ncfg["test"] == 233
-    assert len(ncfg["things"]) == 3
-    assert ncfg["things"][0]["test"] == 2562
-    assert ncfg["things"][0]["thing"] is None
-    assert ncfg["things"][1]["test"] == 2563
-    assert ncfg["things"][1]["thing"]["test"] == 123
-    assert ncfg["things"][2]["test"] == 2564
-    assert ncfg["things"][2]["thing"]["test"] == 3
+    assert isinstance(ncfg, dict)
+    assert ncfg.get("test") == 233
+    n_things = ncfg.get("things")
+    assert isinstance(n_things, list)
+    assert len(n_things) == 3
+    n_first = n_things[0]
+    assert isinstance(n_first, dict)
+    assert n_first["test"] == 2562
+    assert n_first["thing"] is None
+    n_second = n_things[1]
+    assert isinstance(n_second, dict)
+    assert n_second["test"] == 2563
+    n_second_thing = n_second.get("thing")
+    assert isinstance(n_second_thing, dict)
+    assert n_second_thing["test"] == 123
+    n_third = n_things[2]
+    assert isinstance(n_third, dict)
+    assert n_third["test"] == 2564
+    n_third_thing = n_third.get("thing")
+    assert isinstance(n_third_thing, dict)
+    assert n_third_thing["test"] == 3
 
 
 def test_cfg_py_infinite_1(monkeypatch) -> None:
@@ -198,10 +240,15 @@ def test_cfg_json_nested_2(monkeypatch) -> None:
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests/cfg/nested_2.json")
     cfg = read_config()
 
-    assert "this_test" in cfg
-    assert len(cfg["this_test"]) == 2
-    assert cfg["this_test"][0]["test"] == 88888
-    assert cfg["this_test"][1]["test"] == 1234
+    this_test = cfg.get("this_test")
+    assert isinstance(this_test, list)
+    assert len(this_test) == 2
+    first = this_test[0]
+    assert isinstance(first, dict)
+    assert first["test"] == 88888
+    second = this_test[1]
+    assert isinstance(second, dict)
+    assert second["test"] == 1234
 
 
 def validated_nested_3(cfg) -> None:
@@ -228,13 +275,23 @@ def test_cfg_json_nested_4(monkeypatch) -> None:
     cfg = read_config()
 
     assert cfg["test"] == 3222
-    assert len(cfg["things"]) == 3
-    assert cfg["things"][0]["test"] == 2572
-    assert cfg["things"][0]["thing"] is None
-    assert cfg["things"][1]["test"] == 2573
-    assert cfg["things"][1]["thing"]["test"] == 1234
-    assert cfg["things"][2]["test"] == 2574
-    validated_nested_3(cfg["things"][2]["thing"])
+    things = cfg.get("things")
+    assert isinstance(things, list)
+    assert len(things) == 3
+    first = things[0]
+    assert isinstance(first, dict)
+    assert first["test"] == 2572
+    assert first["thing"] is None
+    second = things[1]
+    assert isinstance(second, dict)
+    assert second["test"] == 2573
+    second_thing = second.get("thing")
+    assert isinstance(second_thing, dict)
+    assert second_thing["test"] == 1234
+    third = things[2]
+    assert isinstance(third, dict)
+    assert third["test"] == 2574
+    validated_nested_3(third["thing"])
 
 
 def test_cfg_json_infinite_1(monkeypatch) -> None:
@@ -276,7 +333,9 @@ def test_cfg_py_mixed_2(monkeypatch) -> None:
     cfg = read_config()
 
     assert cfg["test"] == 5224
-    assert cfg["subtest"]["test"] == 1234
+    subtest = cfg.get("subtest")
+    assert isinstance(subtest, dict)
+    assert subtest["test"] == 1234
 
 
 def test_cfg_py_mixed_3(monkeypatch) -> None:
@@ -285,8 +344,14 @@ def test_cfg_py_mixed_3(monkeypatch) -> None:
     cfg = read_config()
 
     assert cfg["test"] == 2634
-    assert cfg["subtest"]["test_py"]["test"] == 123
-    assert cfg["subtest"]["test_json"]["test"] == 1234
+    subtest = cfg.get("subtest")
+    assert isinstance(subtest, dict)
+    subtest_test_py = subtest.get("test_py")
+    assert isinstance(subtest_test_py, dict)
+    assert subtest_test_py["test"] == 123
+    subtest_test_json = subtest.get("test_json")
+    assert isinstance(subtest_test_json, dict)
+    assert subtest_test_json["test"] == 1234
 
 
 def test_cfg_json_mixed(monkeypatch) -> None:
@@ -295,5 +360,11 @@ def test_cfg_json_mixed(monkeypatch) -> None:
     cfg = read_config()
 
     assert cfg["test"] == 9364
-    assert cfg["subtest"]["test_py"]["test"] == 123
-    assert cfg["subtest"]["test_json"]["test"] == 1234
+    subtest = cfg.get("subtest")
+    assert isinstance(subtest, dict)
+    subtest_test_py = subtest.get("test_py")
+    assert isinstance(subtest_test_py, dict)
+    assert subtest_test_py["test"] == 123
+    subtest_test_json = subtest.get("test_json")
+    assert isinstance(subtest_test_json, dict)
+    assert subtest_test_json["test"] == 1234

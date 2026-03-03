@@ -383,6 +383,7 @@ def test_time_call(monkeypatch) -> None:
         return x + 1
 
     assert timed_func(7) == 8
+    assert FakeLogger._instance is not None
     assert "timed_func" in FakeLogger._instance.slot
     assert "took" in FakeLogger._instance.slot
     assert "ms" in FakeLogger._instance.slot
@@ -414,6 +415,7 @@ def test_log_call(monkeypatch) -> None:
         return x + 1
 
     assert timed_func(7) == 8
+    assert FakeLogger._instance is not None
     assert "timed_func" in FakeLogger._instance.slot
     assert "args" in FakeLogger._instance.slot
     assert "7" in FakeLogger._instance.slot
