@@ -10,8 +10,8 @@ from collections.abc import Callable
 from datetime import UTC, date, datetime
 from typing import cast
 
-import datacube
 import odc.geo
+from datacube.api.query import _convert_to_solar_time
 from odc.geo.crs import CRS
 from odc.geo.geom import Geometry
 from sqlalchemy import text
@@ -131,9 +131,7 @@ def create_range_entry(
                     dt = dt1 + (dt2 - dt1) / 2
                     dt = dt.astimezone(UTC)
 
-                    solar_day = datacube.api.query._convert_to_solar_time(
-                        dt, lon
-                    ).date()
+                    solar_day = _convert_to_solar_time(dt, lon).date()
                     dates.add(solar_day)
             else:
                 results = conn.execute(
