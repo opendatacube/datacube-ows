@@ -10,7 +10,9 @@ from unittest.mock import MagicMock
 import pytest
 
 
-def mock_ds_for_sort(id_: str, st: datetime, ct: datetime, lon: float, prod_name: str):
+def mock_ds_for_sort(
+    id_: str, st: datetime.datetime, ct: datetime.datetime, lon: float, prod_name: str
+):
     ds = MagicMock()
     ds.id = id_
     ds.time.begin = st
