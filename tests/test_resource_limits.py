@@ -52,7 +52,7 @@ def test_request_scale() -> None:
 
 def test_degree_to_metres() -> None:
     xres, yres = datacube_ows.resource_limits.RequestScale._metre_resolution(
-        None, CRS("EPSG:4326"), (0.005, 0.005)
+        CRS("EPSG:4326"), (0.005, 0.005)
     )
     assert xres > 1.0
     assert yres > 1.0
