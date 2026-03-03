@@ -136,7 +136,7 @@ class ValueMapRule(AbstractValueMapRule):
         """
         Construct a Multi-date Value Map Rule
 
-        :param mdh: The owning ColorMapStyleDef object
+        :param style_cfg: The owning ColorMapStyleDef object
         :param band: The name of the flag-band the rules apply to
         :param cfg: The rule specification
         """
