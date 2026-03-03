@@ -179,6 +179,7 @@ class OWSAbstractIndex(ABC):
             # Point?  Expand to a polygon covering a single native pixel.
             any_geom = any_geom.to_crs(layer.native_CRS)
             x, y = any_geom.coords[0]
+            assert isinstance(layer.cfg_native_resolution, tuple)
             delta_x, delta_y = layer.cfg_native_resolution
             return polygon(
                 [
