@@ -26,7 +26,7 @@ def test_function_wrapper_lyr() -> None:
     }
     f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     assert f(7, 8)[0] == "a7  b8  c3"
-    func_cfg = {
+    func_cfg: dict[str, datacube_ows.config_utils.RAW_CFG] = {
         "function": "tests.utils.a_function",
         "kwargs": {"foo": "bar", "c": "ouple"},
     }
@@ -40,7 +40,10 @@ def test_function_wrapper_lyr() -> None:
     assert result[0] == "apple  beagle  couple"
     assert result[1]["foo"] == "bar"
     assert "a" not in f._kwargs
-    func_cfg = {"function": "tests.utils.a_function", "args": ["bar", "ouple"]}
+    func_cfg: dict[str, datacube_ows.config_utils.RAW_CFG] = {
+        "function": "tests.utils.a_function",
+        "args": ["bar", "ouple"],
+    }
     f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     result = f("pple")
     assert result[0] == "apple  bbar  couple"
@@ -49,7 +52,10 @@ def test_function_wrapper_lyr() -> None:
     result = f()
     assert result[0] == "abar  bouple  c3"
     assert f.band_mapper is None
-    func_cfg = {"function": "so_fake.not_real.not_a_function", "args": ["bar", "ouple"]}
+    func_cfg: dict[str, datacube_ows.config_utils.RAW_CFG] = {
+        "function": "so_fake.not_real.not_a_function",
+        "args": ["bar", "ouple"],
+    }
     with pytest.raises(datacube_ows.config_utils.ConfigException) as e:
         f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     assert "Could not import python object" in str(e.value)
@@ -58,8 +64,9 @@ def test_function_wrapper_lyr() -> None:
 
 def test_func_naked() -> None:
     lyr = MagicMock()
+    func_cfg: dict[str, datacube_ows.config_utils.RAW_CFG] = {"function": a_function}  # type:ignore[dict-item]
     with pytest.raises(datacube_ows.config_utils.ConfigException):
-        _ = datacube_ows.config_utils.FunctionWrapper(lyr, {"function": a_function})
+        _ = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg)
     assert (
         "Directly including callable objects in configuration is no longer supported."
     )
@@ -68,9 +75,7 @@ def test_func_naked() -> None:
     assert (
         "Directly including callable objects in configuration is no longer supported."
     )
-    f = datacube_ows.config_utils.FunctionWrapper(
-        lyr, {"function": a_function}, stand_alone=True
-    )
+    f = datacube_ows.config_utils.FunctionWrapper(lyr, func_cfg, stand_alone=True)
     assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"
     f = datacube_ows.config_utils.FunctionWrapper(lyr, a_function, stand_alone=True)
     assert f("ardvark", "bllbbll")[0] == "aardvark  bbllbbll  c3"

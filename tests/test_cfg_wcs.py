@@ -75,8 +75,8 @@ def test_wcs_renderer_detection() -> None:
         "image/geotiff",
         "tif",
         {
-            "1": "datacube_ows.wcs1_utils.get_tiff",
-            "2": "datacube_ows.wcs2_utils.get_tiff",
+            1: "datacube_ows.wcs1_utils.get_tiff",
+            2: "datacube_ows.wcs2_utils.get_tiff",
         },
         False,
     )

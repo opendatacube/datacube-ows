@@ -1457,7 +1457,7 @@ class WCSFormat:
         name: str,
         mime: str,
         extension: str,
-        renderers: dict[int, CFG_DICT],
+        renderers: Mapping[int, str | CFG_DICT],
         multi_time: bool,
     ) -> None:
         self.name = name

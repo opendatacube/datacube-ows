@@ -79,8 +79,9 @@ class RequestScale:
             height=geobox.height,
         )
 
+    @staticmethod
     def _metre_resolution(
-        self, crs: CRS, resolution: tuple[float | int, float | int]
+        crs: CRS, resolution: tuple[float | int, float | int]
     ) -> tuple[float, float]:
         # Convert native resolution to metres for ready comparison.
         if crs.units == ("metre", "metre"):

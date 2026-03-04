@@ -102,8 +102,11 @@ def test_contact_details_parse(minimal_global_cfg) -> None:
     addr1 = ContactInfo.parse({}, minimal_global_cfg)
     assert addr1 is None
     addr2 = ContactInfo.parse({"address": {}}, minimal_global_cfg)
+    assert addr2 is not None
     assert addr2.address is None
     addr3 = ContactInfo.parse({"address": {"address": "foo"}}, minimal_global_cfg)
+    assert addr3 is not None
+    assert addr3.address is not None
     assert addr3.address.address == "foo"
 
 

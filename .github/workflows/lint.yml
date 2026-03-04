@@ -38,7 +38,7 @@ jobs:
         lintcommand:
           - "pylint -j 2 datacube_ows --disable=C,R,W,E1136"
           - "ruff check --output-format=github"
-          - "mypy datacube_ows integration_tests/cfg integration_tests/test_[a-i]*.py integration_tests/test_[n-z]*.py"
+          - "mypy datacube_ows integration_tests/cfg integration_tests/test_[a-i]*.py integration_tests/test_[n-z]*.py tests/test_c*.py tests/test_[p-r]*.py tests/test_w*.py"
     name: Linting
     steps:
       - name: checkout git
