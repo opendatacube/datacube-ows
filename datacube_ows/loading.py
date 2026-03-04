@@ -330,6 +330,9 @@ class DataStacker:
                     )
                 )
             except Exception as e:
+                _LOG.error(
+                    "Error (%s) in DataStacker.data(): %s", e.__class__.__name__, str(e)
+                )
                 raise WMSException("Error loading data") from e
             if qry_result is None:
                 continue
@@ -444,20 +447,16 @@ class DataStacker:
         fuse_func: FuserFunc | None = None,
     ) -> xarray.Dataset:
         CredentialManager.check_cred()
-        try:
-            return datacube.Datacube.load_data(
-                datasets,
-                geobox,
-                measurements=measurements,
-                fuse_func=fuse_func,
-                skip_broken_datasets=skip_broken,
-                patch_url=self._layer.patch_url,
-                resampling=resampling,
-                driver=self.cfg.load_driver,
-            )
-        except Exception as e:
-            _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
-            raise
+        return datacube.Datacube.load_data(
+            datasets,
+            geobox,
+            measurements=measurements,
+            fuse_func=fuse_func,
+            skip_broken_datasets=skip_broken,
+            patch_url=self._layer.patch_url,
+            resampling=resampling,
+            driver=self.cfg.load_driver,
+        )
 
     # TODO: Make skip_broken passed in via config
     @log_call
