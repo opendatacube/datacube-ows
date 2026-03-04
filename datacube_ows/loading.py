@@ -470,22 +470,13 @@ class DataStacker:
         resampling: Resampling = "nearest",
         fuse_func: FuserFunc | None = None,
     ) -> xarray.Dataset:
-        datasets = [dataset]
-        dc_datasets = datacube.Datacube.group_datasets(
-            datasets, self._layer.time_resolution.dataset_groupby()
+        return self.read_data(
+            datacube.Datacube.group_datasets(
+                [dataset], self._layer.time_resolution.dataset_groupby()
+            ),
+            measurements,
+            geobox,
+            skip_broken,
+            resampling,
+            fuse_func,
         )
-        CredentialManager.check_cred()
-        try:
-            return datacube.Datacube.load_data(
-                dc_datasets,
-                geobox,
-                measurements=measurements,
-                fuse_func=fuse_func,
-                skip_broken_datasets=skip_broken,
-                patch_url=self._layer.patch_url,
-                resampling=resampling,
-                driver=self.cfg.load_driver,
-            )
-        except Exception as e:
-            _LOG.error("Error (%s) in load_data: %s", e.__class__.__name__, str(e))
-            raise
