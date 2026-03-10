@@ -45,6 +45,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         python3-dev
 
 ENV UV_COMPILE_BYTECODE=0 \
+    UV_HTTP_RETRIES=10 \
     UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/app \
     UV_PYTHON_DOWNLOADS=never \
