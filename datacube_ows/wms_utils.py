@@ -64,10 +64,15 @@ def _bounding_pts(
 
 
 def _get_geobox_xy(args, crs: CRS) -> tuple[float, float, float, float]:
-    if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
-        miny, minx, maxy, maxx = map(float, args["bbox"].split(","))
-    else:
-        minx, miny, maxx, maxy = map(float, args["bbox"].split(","))
+    try:
+        if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
+            miny, minx, maxy, maxx = map(float, args["bbox"].split(","))
+        else:
+            minx, miny, maxx, maxy = map(float, args["bbox"].split(","))
+    except ValueError:
+        raise WMSException(
+            "Invalid bbox parameter.  Must be 4 decimal numbers separated by commas."
+        ) from None
     return minx, miny, maxx, maxy
 
 
