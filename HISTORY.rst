@@ -7,6 +7,57 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.10 (2026-03-11)
+------------------
+
+Includes an important permissions fix for the postgres index driver and improved exception handling.
+
+What's Changed
+--------------
+
+* data: catch TimeZoneFinder exceptions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1470
+* CI: make curl retry more by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1473
+* data: catch GetMapParameter errors by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1479
+* Log arguments triggering exceptions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1480
+* ogc: format exception better by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1482
+* data: catch odc-geo exceptions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1481
+* loading: remove duplicate code by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1492
+* loading: catch exception higher up by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1493
+* Various type fixes by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1494
+* CI: update to latest Trivy workflow by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1497
+* CI: fix non-primary branch name by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1496
+* Update postgres permissions by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1502
+* Dockerfile: increase UV_HTTP_RETRIES by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1498
+* Input checking of bbox parameter by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1503
+* Prepare for 1.9.10 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1504
+
+
+Automated Updates
+-----------------
+
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1469
+* build(deps): bump osgeo/gdal from ubuntu-small-3.12.1 to ubuntu-small-3.12.2 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1471
+* build(deps): bump astral-sh/uv from 0.10.0 to 0.10.2 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1472
+* build(deps): bump pillow from 12.1.0 to 12.1.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1474
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1475
+* build(deps): bump astral-sh/uv from 0.10.2 to 0.10.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1476
+* build(deps): bump astral-sh/uv from 0.10.3 to 0.10.4 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1477
+* build(deps): bump the actions-deps group with 2 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1483
+* build(deps): bump werkzeug from 3.1.5 to 3.1.6 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1484
+* build(deps): bump flask from 3.1.2 to 3.1.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1485
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1486
+* build(deps): bump astral-sh/uv from 0.10.4 to 0.10.5 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1487
+* build(deps): bump astral-sh/uv from 0.10.5 to 0.10.6 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1488
+* build(deps): bump astral-sh/uv from 0.10.6 to 0.10.7 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1490
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1491
+* build(deps): bump astral-sh/uv from 0.10.7 to 0.10.8 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1495
+* build(deps): bump astral-sh/uv from 0.10.8 to 0.10.9 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1499
+* build(deps): bump the actions-deps group with 2 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1500
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1501
+
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.9...1.9.10
+
 1.9.9 (2026-02-09)
 ------------------
 
