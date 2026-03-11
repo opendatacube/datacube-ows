@@ -344,6 +344,41 @@ def test_get_geobox() -> None:
     OWSConfig._instance = None
 
 
+def test_invalid_bbox() -> None:
+    from datacube_ows.ows_configuration import OWSConfig
+
+    mock_cfg = MagicMock()
+    OWSConfig._instance = mock_cfg
+    with pytest.raises(WMSException):
+        _ = datacube_ows.wms_utils._get_geobox(
+            args={
+                "width": "256",
+                "height": "256",
+                "bbox": "Not valid - not even close",
+            },
+            crs=CRS("EPSG:4326"),
+        )
+    with pytest.raises(WMSException):
+        _ = datacube_ows.wms_utils._get_geobox(
+            args={
+                "width": "256",
+                "height": "256",
+                "bbox": "-43.28507087113431,sneaky sneaky,-43.28507087113431,146.64289867785524",
+            },
+            crs=CRS("EPSG:4326"),
+        )
+    with pytest.raises(WMSException):
+        _ = datacube_ows.wms_utils._get_geobox(
+            args={
+                "width": "256",
+                "height": "256",
+                "bbox": "-43.28507087113431,145.77444644,-43.28507087113431,146.64289867785524')",
+            },
+            crs=CRS("EPSG:4326"),
+        )
+    OWSConfig._instance = None
+
+
 def test_get_arg() -> None:
     val = datacube_ows.wms_utils.get_arg({"myval": "Oh Yeah"}, "myval", "My Value")
     assert val == "Oh Yeah"
