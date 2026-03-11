@@ -38,8 +38,7 @@ Features
 
 System Architecture
 -------------------
-
-.. image:: docs/diagrams/ows_diagram1.9.png
+.. image:: https://github.com/opendatacube/datacube-ows/raw/develop/docs/diagrams/ows_diagram1.9.png
    :width: 700
 
 Known CRS Limitations

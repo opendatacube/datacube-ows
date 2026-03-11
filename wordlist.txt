@@ -192,6 +192,7 @@ func
 fuser
 gda
 gdal
+geo
 geobase
 geojson
 geomedian
@@ -211,6 +212,7 @@ getfeatureinfo
 GetFeatureInfo
 getmap
 GetMap
+GetMapParameter
 getmaps
 gettext
 gettile
@@ -420,6 +422,7 @@ sw
 terria
 th
 timezonefinder
+TimeZoneFinder
 tls
 tlt
 tmp
