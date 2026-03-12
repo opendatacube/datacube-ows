@@ -531,6 +531,9 @@ def get_netcdf(req, data: xr.Dataset) -> bytes:
             del v.attrs["spectral_definition"]
         if "flags_definition" in v.attrs:
             del v.attrs["flags_definition"]
+        # Why is this only needed with rio loader??
+        if "grid_mapping" in v.attrs:
+            del v.attrs["grid_mapping"]
     if "time" in data and "units" in data["time"].attrs:
         del data["time"].attrs["units"]
 
