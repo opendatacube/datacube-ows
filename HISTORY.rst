@@ -30,7 +30,8 @@ What's Changed
 * Dockerfile: increase UV_HTTP_RETRIES by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1498
 * Input checking of bbox parameter by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1503
 * Prepare for 1.9.10 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1504
-
+* Fix netcdf export in WCS 1 & 2. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1505
+* Prepare for 1.9.10 release (again) by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1506
 
 Automated Updates
 -----------------
