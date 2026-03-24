@@ -23,8 +23,20 @@ You can override this with the ``env`` global config entry::
 
     "env": "dev"
 
-Future releases will allow this to be over-ridden at the layer level, allowing one OWS instance to serve data
+Note that this can be over-ridden at the layer level, allowing one OWS instance to serve data
 from multiple indexes.
+
+Loader Driver
+=============
+
+Specifies the ODC loader driver to use.  Currently the default is "legacy".  Set to
+"rio" to use the rio loader driver from odc-loader.
+
+Notes:
+
+1. "rio" will become the default in a future release.
+2. For non-legacy loader drivers, fuser functions must be specified as a string (fully
+   qualified Python name).
 
 Metadata Separation and Internationalisation
 ============================================
