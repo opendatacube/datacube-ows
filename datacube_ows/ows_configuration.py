@@ -851,9 +851,14 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             )
 
         if cfg.get("fuse_func"):
-            self.fuse_func: FunctionWrapper | None = FunctionWrapper(
-                self, cast(str | CFG_DICT, cfg["fuse_func"])
-            )
+            if self.global_cfg.load_driver == "legacy":
+                self.fuse_func: FunctionWrapper | str | None = FunctionWrapper(
+                    self, cast(str | CFG_DICT, cfg["fuse_func"])
+                )
+            elif isinstance(cfg["fuse_func"], str):
+                self.fuse_func = cfg["fuse_func"]
+            else:
+                raise ConfigException(f"fuse_func must be a string for driver-based loads (in layer {self.name})")
         else:
             self.fuse_func = None
 

@@ -40,7 +40,7 @@ class ProductBandQuery:
         main: bool = False,
         manual_merge: bool = False,
         ignore_time: bool = False,
-        fuse_func: FuserFunc | None = None,
+        fuse_func: FuserFunc | str | None = None,
     ) -> None:
         self.products = products
         self.bands = set(bands)
@@ -132,7 +132,7 @@ class ProductBandQuery:
         layer: OWSNamedLayer,
         bands: Iterable[str],
         manual_merge: bool = False,
-        fuse_func: FuserFunc | None = None,
+        fuse_func: FuserFunc | str | None = None,
         resource_limited: bool = False,
     ) -> "ProductBandQuery":
         main_products = layer.low_res_products if resource_limited else layer.products
@@ -387,7 +387,7 @@ class DataStacker:
         measurements: Mapping[str, Measurement],
         bands: set[str],
         skip_corrections: bool,
-        fuse_func: FuserFunc | None,
+        fuse_func: FuserFunc | str | None,
     ) -> xarray.Dataset | None:
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
@@ -444,7 +444,7 @@ class DataStacker:
         geobox: GeoBox,
         skip_broken: bool = True,
         resampling: Resampling = "nearest",
-        fuse_func: FuserFunc | None = None,
+        fuse_func: FuserFunc | str | None = None,
     ) -> xarray.Dataset:
         CredentialManager.check_cred()
         return datacube.Datacube.load_data(
@@ -467,7 +467,7 @@ class DataStacker:
         geobox: GeoBox,
         skip_broken: bool = True,
         resampling: Resampling = "nearest",
-        fuse_func: FuserFunc | None = None,
+        fuse_func: FuserFunc | str | None = None,
     ) -> xarray.Dataset:
         return self.read_data(
             datacube.Datacube.group_datasets(
