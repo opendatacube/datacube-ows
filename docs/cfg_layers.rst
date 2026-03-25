@@ -979,7 +979,12 @@ Fuse Function (fuse_func)
 +++++++++++++++++++++++++
 
 Determines how multiple dataset arrays are compressed into a
-single time array. Specified using OWS's :doc:`function configuration
+single time array.
+
+If the global "load_driver" is set to "rio", ``fuse_func`` must be a string
+representing an importable, fully-qualified python function name (or None).
+
+For the legacy loader only, ``fuse_func`` can be Specified using OWS's :doc:`function configuration
 format <cfg_functions>`.
 
 The fuse function is passed through to directly to the datacube
@@ -1139,6 +1144,13 @@ Flag Fuse Function (fuse_func)
 Only applies if the flag band is read from a separate product
 (or product).  Equivalent to the `fuse function in the
 image_processing section <#fuse-function-fuse-func>`_.
+
+If the global "load_driver" is set to "rio", ``fuse_func`` must be a string
+representing an importable, fully-qualified python function name (or None).
+
+For the legacy loader only, ``fuse_func`` can be Specified using OWS's :doc:`function configuration
+format <cfg_functions>`.
+
 Always optional - defaults to None.
 
 Manual Flag Merge (manual_merge)

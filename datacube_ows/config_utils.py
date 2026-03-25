@@ -758,9 +758,16 @@ class OWSFlagBand(OWSConfigEntry):
         self.pq_band = str(cfg["band"])
         self.canonical_band_name = self.pq_band  # Update for aliasing on make_ready
         if "fuse_func" in cfg:
-            self.pq_fuse_func: FunctionWrapper | None = FunctionWrapper(
-                self.layer, cast(CFG_DICT, cfg["fuse_func"])
-            )
+            if self.layer.global_cfg.load_driver == "legacy":
+                self.pq_fuse_func: FunctionWrapper | str | None = FunctionWrapper(
+                    self.layer, cast(CFG_DICT, cfg["fuse_func"])
+                )
+            elif isinstance(cfg["fuse_func"], str):
+                self.pq_fuse_func = cfg["fuse_func"]
+            else:
+                raise ConfigException(
+                    f"Flag fuse_func must be a string for driver-based loads (in layer {self.layer.name})"
+                )
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = bool(cfg.get("ignore_time", False))
