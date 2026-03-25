@@ -134,6 +134,7 @@ dde
 de
 dea
 deafrica
+deepdiff
 dependabot
 deps
 desc
