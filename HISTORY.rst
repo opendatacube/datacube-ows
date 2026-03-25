@@ -7,8 +7,37 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.11 (2026-03-25)
+-------------------
+
+Mostly a bug fix release to fix handling of fuser functions with rio load driver.
+
+What's Changed
+++++++++++++++
+
+* uv.lock: update dependencies by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1511
+* Fix fuse functions in driver based loads by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1518
+* Prepare for 1.9.11 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1519
+
+Automated Updates
++++++++++++++++++
+
+* build(deps): bump the actions-deps group with 6 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1508
+* build(deps): bump astral-sh/uv from 0.10.9 to 0.10.10 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1507
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1509
+* build(deps): bump astral-sh/uv from 0.10.10 to 0.10.11 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1510
+* build(deps): bump deepdiff from 8.6.1 to 8.6.2 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1512
+* build(deps): bump astral-sh/uv from 0.10.11 to 0.10.12 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1513
+* build(deps): bump osgeo/gdal from ubuntu-small-3.12.2 to ubuntu-small-3.12.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1514
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1515
+* build(deps): bump astral-sh/uv from 0.10.12 to 0.11.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1517
+* build(deps): bump mambaorg/micromamba from `af06736` to `313021a` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1516
+
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.10...1.9.11
+
 1.9.10 (2026-03-11)
-------------------
+-------------------
 
 Includes an important permissions fix for the postgres index driver and improved exception handling.
 
