@@ -241,9 +241,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                         "%Y-%m-%d %H:%M:%S %Z"
                     )
                 # Collect raw band values for pixel and derived bands from styles
-                date_info["bands"] = cast(
-                    RAW_CFG, _make_band_dict(params.layer, td)
-                )
+                date_info["bands"] = cast(RAW_CFG, _make_band_dict(params.layer, td))
                 derived_band_dict = cast(
                     RAW_CFG, _make_derived_band_dict(td, params.layer.style_index)
                 )
