@@ -131,11 +131,15 @@ def img_coords_to_geopoint(geobox, i, j) -> geom.Geometry:
     cfg = get_config()
     h_coord = cfg.published_CRSs[str(geobox.crs)]["horizontal_coord"]
     v_coord = cfg.published_CRSs[str(geobox.crs)]["vertical_coord"]
-    return geom.point(
-        geobox.coordinates[h_coord].values[int(i)],
-        geobox.coordinates[v_coord].values[int(j)],
-        geobox.crs,
-    )
+    try:
+        x = geobox.coordinates[h_coord].values[int(i)]
+    except IndexError as e:
+        raise WMSException(f"Horizontal coordinate: {e}") from None
+    try:
+        y = geobox.coordinates[v_coord].values[int(j)]
+    except IndexError as e:
+        raise WMSException(f"Vertical coordinate: {e}") from None
+    return geom.point(x, y, geobox.crs)
 
 
 def get_layer_from_arg(args, argname: str = "layers") -> OWSNamedLayer:
