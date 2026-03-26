@@ -225,11 +225,6 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                     else:
                         date_info["source_product"] = ds.product.name
 
-                # Extract data pixel
-                #       Mypy complains locally about this ignore being unused,
-                #       but mypy on GitHub fails without it.
-                pixel_ds: xarray.Dataset = td.isel(**isel_kwargs)  # type: ignore[arg-type]
-
                 # Get accurate timestamp from dataset
                 assert ds.time is not None  # For type checker
                 if params.layer.mosaic_date_func is not None:
@@ -247,10 +242,10 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                     )
                 # Collect raw band values for pixel and derived bands from styles
                 date_info["bands"] = cast(
-                    RAW_CFG, _make_band_dict(params.layer, pixel_ds)
+                    RAW_CFG, _make_band_dict(params.layer, td)
                 )
                 derived_band_dict = cast(
-                    RAW_CFG, _make_derived_band_dict(pixel_ds, params.layer.style_index)
+                    RAW_CFG, _make_derived_band_dict(td, params.layer.style_index)
                 )
                 if derived_band_dict:
                     date_info["band_derived"] = derived_band_dict
@@ -265,7 +260,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                     # New function signature: pass in:
                     # * a single pixel (1x1x1) multiband xarray Dataset, and
                     # * the ODC Dataset model (i.e. full ODC metadata)
-                    date_info[k] = f(pixel_ds, ds)
+                    date_info[k] = f(td, ds)
 
                 if params.style is not None:
                     # Any custom-defined style fields
@@ -274,7 +269,7 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
                         # Function signature: pass in:
                         # * a single pixel (1x1x1) multiband xarray Dataset, and
                         # * the ODC Dataset model (i.e. full ODC metadata)
-                        date_info[k] = f(pixel_ds, ds)
+                        date_info[k] = f(td, ds)
 
                 cast(list[RAW_CFG], feature_json["data"]).append(date_info)
                 fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)[
