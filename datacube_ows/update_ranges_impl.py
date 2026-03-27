@@ -10,6 +10,7 @@ import sys
 
 import click
 from datacube import Datacube
+from datacube.cfg import ODCEnvironment
 from datacube.index import IndexSetupError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
@@ -64,7 +65,7 @@ from datacube_ows.startup_utils import initialise_debugging
 @click.argument("layers", nargs=-1)
 def main(
     layers: list[str],
-    env: str | None,
+    env: ODCEnvironment | str | None,
     schema: bool,
     read_role: list[str],
     write_role: list[str],
@@ -160,21 +161,25 @@ def main(
     initialise_debugging()
     db_maintenance = schema or cleanup or views
     try:
-        cfg = get_config(called_from_update_ranges=True, make_ready=not db_maintenance)
+        cfg: OWSConfig | None = get_config(
+            called_from_update_ranges=True,
+            make_ready=not db_maintenance
+        )
+        assert cfg is not None  # type check nudge
+        app = cfg.odc_app + "-update"
     except OperationalError as e:
         click.echo(f"ERROR: {e}", err=True)
         sys.exit(1)
     app = cfg.odc_app + "-update"
     errors: bool = False
     if db_maintenance:
+        if cfg is not None:
+            env = cfg.default_env if cfg.default_env and env is None else env
         try:
-            dc = Datacube(
-                env=cfg.default_env if cfg.default_env and env is None else env, app=app
-            )
+            dc = Datacube(env=env, app=app)
         except (IndexSetupError, OperationalError, ProgrammingError) as e:
             click.echo(f"ERROR: {e}", err=True)
             sys.exit(1)
-
         click.echo(
             f"Applying database schema updates to the {dc.index.environment.db_database} database:..."
         )
@@ -189,13 +194,20 @@ def main(
                 click.echo("Cleaning up datacube-1.8.x range tables and views...")
                 ows_index(dc).cleanup_schema(dc)
         except AbortRun as e:
-            click.echo(f"Aborting schema update: {e}")
+            if schema:
+                action = "schema update"
+            elif views:
+                action = "materialised view update"
+            else:
+                action = "schema cleanup"
+            click.echo(f"Aborting {action}: {e}")
             errors = True
         click.echo("Done")
         if errors:
             sys.exit(1)
         return 0
 
+    assert cfg is not None  # type check nudge
     click.echo("Deriving extents from materialised views and/or spatial indexes")
     try:
         errors = add_ranges(cfg, layers)
