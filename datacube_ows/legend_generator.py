@@ -24,7 +24,7 @@ matplotlib.use("Agg")
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
-def legend_graphic(args) -> tuple | None:
+def legend_graphic(args) -> tuple[bytes, int, dict[str, str]] | None:
     params = GetLegendGraphicParameters(args)
     img = create_legends_from_styles(params.styles, ndates=len(params.times))
     if img is None:
@@ -32,14 +32,18 @@ def legend_graphic(args) -> tuple | None:
     return img
 
 
-def create_legend_for_style(product, style_name: str, ndates: int = 0) -> tuple | None:
+def create_legend_for_style(
+    product, style_name: str, ndates: int = 0
+) -> tuple[bytes, int, dict[str, str]] | None:
     if style_name not in product.style_index:
         return None
     style = product.style_index[style_name]
     return create_legends_from_styles([style], ndates)
 
 
-def create_legends_from_styles(styles, ndates: int = 0) -> tuple | None:
+def create_legends_from_styles(
+    styles, ndates: int = 0
+) -> tuple[bytes, int, dict[str, str]] | None:
     # Run through all values in style cfg and generate
     imgs = []
     for s in styles:
