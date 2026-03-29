@@ -84,7 +84,7 @@ def ogc_impl():
         return ogc_e.exception_response(traceback=traceback.format_exception(e))
 
 
-def ogc_svc_impl(svc):
+def ogc_svc_impl(svc) -> tuple[str, int, dict[str, str]]:
     svc_support = OWS_SUPPORTED.get(svc)
     nocase_args = capture_headers(request, lower_get_args())
     service = nocase_args.get("service", svc).upper()
@@ -176,13 +176,13 @@ def ping() -> tuple[str, int, dict[str, str]]:
     )
 
 
-def legend(layer, style, dates=None):
+def legend(layer, style, dates=None) -> tuple[str | bytes, int, dict[str, str]]:
     # pylint: disable=redefined-outer-name
     cfg = get_config()
     product = cfg.layer_index.get(layer)
     if not product:
         return "Unknown Layer", 404, resp_headers({"Content-Type": "text/plain"})
-    ndates = int(lower_get_args().get("ndates", 0)) if dates is None else len(dates)
+    ndates = int(lower_get_args().get("ndates", 0)) if dates is None else len(dates)  # type: ignore[arg-type]
     try:
         img = create_legend_for_style(product, style, ndates)
     except WMSException as e:

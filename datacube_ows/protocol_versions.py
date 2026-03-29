@@ -74,7 +74,7 @@ class SupportedSvc:
             break
         return clean
 
-    def negotiated_version(self, request_version: str) -> SupportedSvcVersion:
+    def negotiated_version(self, request_version: str | None) -> SupportedSvcVersion:
         if not request_version:
             return self.versions[-1]
         parts: list[str] = list(request_version.split("."))
