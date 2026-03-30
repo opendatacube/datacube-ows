@@ -170,8 +170,7 @@ def extract(path: str, cfg_only: bool, msg_file: str) -> int:
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg, ignore_msgfile=cfg_only)
-        with Datacube() as dc:
-            cfg.make_ready(dc)
+        cfg.make_ready()
     except ConfigException as e:
         click.echo(f"Config exception for path {e!s}")
         return False
