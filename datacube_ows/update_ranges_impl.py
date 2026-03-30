@@ -10,6 +10,7 @@ import sys
 
 import click
 from datacube import Datacube
+from datacube.index import IndexSetupError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datacube_ows import __version__
@@ -169,7 +170,7 @@ def main(
             dc = Datacube(
                 env=cfg.default_env if cfg.default_env and env is None else env, app=app
             )
-        except (OperationalError, ProgrammingError) as e:
+        except (IndexSetupError, OperationalError, ProgrammingError) as e:
             click.echo(f"ERROR: {e}", err=True)
             sys.exit(1)
 
