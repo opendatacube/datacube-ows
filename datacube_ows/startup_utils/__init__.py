@@ -6,21 +6,21 @@
 
 import logging
 import os
+import sys
 import warnings
 from collections.abc import Callable
 from logging import Logger
 from time import monotonic
-from typing import Any, Optional, TypeVar
+from typing import Any, TypeVar
 
 from flask import Flask, g, request
-
-TYPE_CHECKING = False
-if TYPE_CHECKING:
-    from datacube_ows.ows_configuration import OWSConfig
+from sqlalchemy.exc import OperationalError
 
 __all__ = [
     "create_app",
 ]
+
+from datacube_ows.config_utils import ConfigException
 
 
 def initialise_logger(name: str | None = None) -> Logger:
@@ -84,17 +84,6 @@ def initialise_sentry(log: Logger | None = None) -> None:
         )
         if log:
             log.info("Sentry initialised")
-
-
-def parse_config_file(log: Logger | None = None) -> Optional["OWSConfig"]:
-    # Cache a parsed config file object
-    # (unless deferring to first request)
-    from datacube_ows.ows_configuration import get_config
-
-    cfg = None
-    if not os.environ.get("DEFER_CFG_PARSE"):
-        cfg = get_config()
-    return cfg
 
 
 def initialise_flask(name: str) -> Flask:
@@ -181,7 +170,14 @@ def initialise_babel(cfg, app: Flask) -> object | None:
 def create_app() -> Flask:
     log = initialise_logger()
     app = initialise_flask(__name__)
-    cfg = parse_config_file(log)
+    from datacube_ows.ows_configuration import get_config
+
+    try:
+        # Cache a parsed config file object (unless deferring to first request).
+        cfg = None if os.environ.get("DEFER_CFG_PARSE") else get_config()
+    except (ConfigException, OperationalError) as e:
+        log.error(str(e))
+        sys.exit(1)
     initialise_ignorable_warnings()
     initialise_debugging(log)
     initialise_sentry(log)
