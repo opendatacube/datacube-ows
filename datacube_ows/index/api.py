@@ -14,7 +14,6 @@ from uuid import UUID
 
 from datacube import Datacube
 from datacube.cfg import ODCEnvironment
-from datacube.index.abstract import AbstractIndex
 from datacube.model import Dataset, Product
 from odc.geo.crs import CRS
 from odc.geo.geom import Geometry, polygon
@@ -209,12 +208,11 @@ class OWSAbstractIndexDriver(ABC):
     def ows_index(cls) -> OWSAbstractIndex: ...
 
 
-def ows_index(odc: Datacube | AbstractIndex | ODCEnvironment) -> OWSAbstractIndex:
+def ows_index(odc: Datacube | ODCEnvironment) -> OWSAbstractIndex:
     if isinstance(odc, ODCEnvironment):
         env = odc
     else:
-        index = odc if isinstance(odc, AbstractIndex) else odc.index
-        env = index.environment
+        env = odc.index.environment
 
     from datacube_ows.index.driver import ows_index_driver_by_name
 
