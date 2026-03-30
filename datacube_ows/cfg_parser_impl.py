@@ -13,7 +13,6 @@ from typing import cast
 
 import click
 from babel.messages.pofile import write_po
-from datacube import Datacube
 from deepdiff import DeepDiff
 
 from datacube_ows import __version__
