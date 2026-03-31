@@ -70,6 +70,15 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 
 def read_config(path: str | None = None) -> CFG_DICT:
+    """
+    Read the OWS configuration and perform expansions.
+
+    Returns either a CFG_DICT suitable for passing to the OWSConfig constructor,
+    or raises a ConfigException.
+
+    :param path: A str path descriptor.  If None or not set, reads path
+                 from the $DATACUBE_OWS_CFG environment variable.
+    """
     cwd = None
     if path:
         cfg_env: str | None = path
@@ -83,6 +92,7 @@ def read_config(path: str | None = None) -> CFG_DICT:
                 "No fallback default datacube_ows.ows_cfg module found."
             )
     elif "/" in cfg_env or cfg_env.endswith(".json"):
+        # Looks a JSON file path
         try:
             cfg = load_json_obj(cfg_env)
             cwd = get_file_loc(cfg_env)
@@ -91,8 +101,10 @@ def read_config(path: str | None = None) -> CFG_DICT:
         except json.JSONDecodeError as e:
             raise ConfigException(f"Could not parse json config file {cfg_env}: {e}")
     elif "." in cfg_env:
+        # Looks like a python object
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
+        # Looks like raw JSON
         try:
             cfg = json.loads(cfg_env)
         except json.JSONDecodeError as e:
