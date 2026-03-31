@@ -13,7 +13,6 @@ from typing import cast
 
 import click
 from babel.messages.pofile import write_po
-from datacube import Datacube
 from deepdiff import DeepDiff
 
 from datacube_ows import __version__
@@ -119,8 +118,7 @@ def parse_path(
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg)
         if not parse_only:
-            with Datacube(app=cfg.odc_app + "-cfg") as dc:
-                cfg.make_ready(dc)
+            cfg.make_ready()
     except ConfigException as e:
         click.echo(f"Config exception for path {e!s}")
         return False
@@ -171,8 +169,7 @@ def extract(path: str, cfg_only: bool, msg_file: str) -> int:
     try:
         raw_cfg = read_config(path)
         cfg = OWSConfig(refresh=True, cfg=raw_cfg, ignore_msgfile=cfg_only)
-        with Datacube() as dc:
-            cfg.make_ready(dc)
+        cfg.make_ready()
     except ConfigException as e:
         click.echo(f"Config exception for path {e!s}")
         return False
