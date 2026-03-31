@@ -76,19 +76,36 @@ def read_config(path: str | None = None) -> CFG_DICT:
     else:
         cfg_env = os.environ.get("DATACUBE_OWS_CFG")
     if not cfg_env:
-        from datacube_ows.ows_cfg import ows_cfg as cfg
+        try:
+            from datacube_ows.ows_cfg import ows_cfg as cfg
+        except ImportError:
+            raise ConfigException(
+                "No fallback default datacube_ows.ows_cfg module found."
+            )
     elif "/" in cfg_env or cfg_env.endswith(".json"):
-        cfg = load_json_obj(cfg_env)
-        cwd = get_file_loc(cfg_env)
+        try:
+            cfg = load_json_obj(cfg_env)
+            cwd = get_file_loc(cfg_env)
+        except FileNotFoundError as e:
+            raise ConfigException(f"Could not open json config file {cfg_env}: {e}")
+        except json.JSONDecodeError as e:
+            raise ConfigException(f"Could not parse json config file {cfg_env}: {e}")
     elif "." in cfg_env:
         cfg = import_python_obj(cfg_env)
     elif cfg_env.startswith("{"):
-        cfg = json.loads(cfg_env)
-        abs_path = os.path.abspath(cfg_env)
-        cwd = os.path.dirname(abs_path)
+        try:
+            cfg = json.loads(cfg_env)
+        except json.JSONDecodeError as e:
+            raise ConfigException(f"Could not parse raw json config: {e}")
+        cwd = os.path.dirname(os.getcwd())
     else:
-        mod = import_module("datacube_ows.ows_cfg")
-        cfg = getattr(mod, cfg_env)
+        try:
+            mod = import_module("datacube_ows.ows_cfg")
+            cfg = getattr(mod, cfg_env)
+        except (AttributeError, ModuleNotFoundError) as e:
+            raise ConfigException(
+                f"Could not open fallback default config file (datacube_ows.ows_cfg.{cfg_env}): {e})"
+            )
     expansion = cfg_expand(cfg, cwd=cwd)
     if isinstance(expansion, dict):
         return expansion
