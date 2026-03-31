@@ -19,7 +19,6 @@ import math
 import os
 from collections.abc import Iterable, Mapping
 from enum import Enum
-from importlib import import_module
 from typing import Any, Optional, Union, cast
 
 import numpy
@@ -85,25 +84,13 @@ def read_config(path: str | None = None) -> CFG_DICT:
     else:
         cfg_env = os.environ.get("DATACUBE_OWS_CFG")
     if not cfg_env:
-        try:
-            from datacube_ows.ows_cfg import ows_cfg as cfg
-        except ImportError:
-            raise ConfigException(
-                "No fallback default datacube_ows.ows_cfg module found."
-            ) from None
-    elif "/" in cfg_env or cfg_env.endswith(".json"):
+        raise ConfigException(
+            "DATACUBE_OWS_CFG environment variable not set. "
+        ) from None
+
+    if "/" in cfg_env or cfg_env.endswith(".json"):
         # Looks a JSON file path
-        try:
-            cfg = load_json_obj(cfg_env)
-            cwd = get_file_loc(cfg_env)
-        except (FileNotFoundError, PermissionError) as e:
-            raise ConfigException(
-                f"Could not open json config file {cfg_env}: {e}"
-            ) from None
-        except json.JSONDecodeError as e:
-            raise ConfigException(
-                f"Could not parse json config file {cfg_env}: {e}"
-            ) from None
+        attempt_json_read_from_fs = True
     elif "." in cfg_env:
         # Looks like a python object
         cfg = import_python_obj(cfg_env)
@@ -115,13 +102,23 @@ def read_config(path: str | None = None) -> CFG_DICT:
             raise ConfigException(f"Could not parse raw json config: {e}") from None
         cwd = os.path.dirname(os.getcwd())
     else:
+        # Doesn't look anything much - try it as a json file path
+        attempt_json_read_from_fs = True
+
+    if attempt_json_read_from_fs:
+        # Attempt to load as JSON file.
         try:
-            mod = import_module("datacube_ows.ows_cfg")
-            cfg = getattr(mod, cfg_env)
-        except (AttributeError, ModuleNotFoundError) as e:
+            cfg = load_json_obj(cfg_env)
+            cwd = get_file_loc(cfg_env)
+        except (FileNotFoundError, PermissionError) as e:
             raise ConfigException(
-                f"Could not open fallback default config file (datacube_ows.ows_cfg.{cfg_env}): {e})"
+                f"Could not open json config file {cfg_env}: {e}"
             ) from None
+        except json.JSONDecodeError as e:
+            raise ConfigException(
+                f"Could not parse json config file {cfg_env}: {e}"
+            ) from None
+
     expansion = cfg_expand(cfg, cwd=cwd)
     if isinstance(expansion, dict):
         return expansion
