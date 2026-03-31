@@ -13,6 +13,7 @@
 #
 import contextlib
 import datetime
+import enum
 import json
 import logging
 import math
@@ -68,6 +69,12 @@ if TYPE_CHECKING:
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
+class Sources(enum.Enum):
+    READ_JSON_FILE = 0
+    LOAD_PYTHON_OBJECT = 1
+    READ_RAW_JSON = 2
+
+
 def read_config(path: str | None = None) -> CFG_DICT:
     """
     Read the OWS configuration and perform expansions.
@@ -83,30 +90,24 @@ def read_config(path: str | None = None) -> CFG_DICT:
         cfg_env: str | None = path
     else:
         cfg_env = os.environ.get("DATACUBE_OWS_CFG")
-    if not cfg_env:
-        raise ConfigException(
-            "DATACUBE_OWS_CFG environment variable not set. "
-        ) from None
 
+    if not cfg_env:
+        raise ConfigException("DATACUBE_OWS_CFG environment variable not set. ")
     if "/" in cfg_env or cfg_env.endswith(".json"):
-        # Looks a JSON file path
-        attempt_json_read_from_fs = True
+        # Looks like a URL or file path
+        src = Sources.READ_JSON_FILE
     elif "." in cfg_env:
         # Looks like a python object
-        cfg = import_python_obj(cfg_env)
+        src = Sources.LOAD_PYTHON_OBJECT
     elif cfg_env.startswith("{"):
         # Looks like raw JSON
-        try:
-            cfg = json.loads(cfg_env)
-        except json.JSONDecodeError as e:
-            raise ConfigException(f"Could not parse raw json config: {e}") from None
-        cwd = os.path.dirname(os.getcwd())
+        src = Sources.READ_RAW_JSON
     else:
-        # Doesn't look anything much - try it as a json file path
-        attempt_json_read_from_fs = True
+        # ?? - Default to parsing as a json file.
+        src = Sources.READ_JSON_FILE
 
-    if attempt_json_read_from_fs:
-        # Attempt to load as JSON file.
+    if src == Sources.READ_JSON_FILE:
+        # Attempt to load as JSON file from file system or S3
         try:
             cfg = load_json_obj(cfg_env)
             cwd = get_file_loc(cfg_env)
@@ -118,13 +119,26 @@ def read_config(path: str | None = None) -> CFG_DICT:
             raise ConfigException(
                 f"Could not parse json config file {cfg_env}: {e}"
             ) from None
+    elif src == Sources.LOAD_PYTHON_OBJECT:
+        # Attempt to import a python object.
+        cfg = import_python_obj(cfg_env)
+    else:
+        # Attempt to read raw JSON config
+        try:
+            cfg = json.loads(cfg_env)
+        except json.JSONDecodeError as e:
+            raise ConfigException(f"Could not parse raw json config: {e}") from None
 
+    if not isinstance(cfg, dict):
+        raise ConfigException(
+            f"Unexpended top level config must be a dict: {cfg!r} ({cfg.__class__.__name__})"
+        )
     expansion = cfg_expand(cfg, cwd=cwd)
-    if isinstance(expansion, dict):
-        return expansion
-    raise ConfigException(
-        f"Top level config must be a dict: {expansion!r} ({expansion.__class__.__name__})"
-    )
+    if not isinstance(expansion, dict):
+        raise ConfigException(
+            f"Top level config must be a dict: {expansion!r} ({expansion.__class__.__name__})"
+        )
+    return expansion
 
 
 class BandIndex(OWSMetadataConfig):
@@ -1964,7 +1978,7 @@ class OWSConfig(OWSMetadataConfig):
 def get_config(
     refresh: bool = False,
     called_from_update_ranges: bool = False,
-    make_ready: bool = True
+    make_ready: bool = True,
 ) -> OWSConfig:
     cfg = OWSConfig(
         refresh=refresh, called_from_update_ranges=called_from_update_ranges
