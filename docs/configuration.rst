@@ -48,8 +48,8 @@ configuration file. <#general-config-structure>`_
 Where is Configuration Read From?
 ---------------------------------
 
-Configuration is read by default from the ``ows_cfg object`` in ``datacube_ows/ows_cfg.py``
-but this can be overridden by setting the ``$DATACUBE_OWS_CFG`` environment variable.
+Configuration is read by default from a location determined by the
+the ``$DATACUBE_OWS_CFG`` environment variable, which must be set.
 
 Configuration can be read from a Python file, a JSON file, or a collection of python
 and/or JSON files.
@@ -100,9 +100,10 @@ alternative applies):
 
    Imported as **python** from named object in ``datacube_ows/ows_cfg.py``
 
-8. Blank or not set
+8. Other
 
-   Default to import ows_cfg object in ``datacube_ows/ows_cfg.py`` as described above.
+   If ``$DATACUBE_OWS_CFG`` matches none of the above, it is treated as the filename
+   of a JSON file in the current working directory.
 
 .. _inclusion:
 
