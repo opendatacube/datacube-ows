@@ -90,16 +90,20 @@ def read_config(path: str | None = None) -> CFG_DICT:
         except ImportError:
             raise ConfigException(
                 "No fallback default datacube_ows.ows_cfg module found."
-            )
+            ) from None
     elif "/" in cfg_env or cfg_env.endswith(".json"):
         # Looks a JSON file path
         try:
             cfg = load_json_obj(cfg_env)
             cwd = get_file_loc(cfg_env)
-        except FileNotFoundError as e:
-            raise ConfigException(f"Could not open json config file {cfg_env}: {e}")
+        except (FileNotFoundError, PermissionError) as e:
+            raise ConfigException(
+                f"Could not open json config file {cfg_env}: {e}"
+            ) from None
         except json.JSONDecodeError as e:
-            raise ConfigException(f"Could not parse json config file {cfg_env}: {e}")
+            raise ConfigException(
+                f"Could not parse json config file {cfg_env}: {e}"
+            ) from None
     elif "." in cfg_env:
         # Looks like a python object
         cfg = import_python_obj(cfg_env)
@@ -108,7 +112,7 @@ def read_config(path: str | None = None) -> CFG_DICT:
         try:
             cfg = json.loads(cfg_env)
         except json.JSONDecodeError as e:
-            raise ConfigException(f"Could not parse raw json config: {e}")
+            raise ConfigException(f"Could not parse raw json config: {e}") from None
         cwd = os.path.dirname(os.getcwd())
     else:
         try:
@@ -117,7 +121,7 @@ def read_config(path: str | None = None) -> CFG_DICT:
         except (AttributeError, ModuleNotFoundError) as e:
             raise ConfigException(
                 f"Could not open fallback default config file (datacube_ows.ows_cfg.{cfg_env}): {e})"
-            )
+            ) from None
     expansion = cfg_expand(cfg, cwd=cwd)
     if isinstance(expansion, dict):
         return expansion
@@ -1963,12 +1967,17 @@ class OWSConfig(OWSMetadataConfig):
 def get_config(
     refresh: bool = False,
     called_from_update_ranges: bool = False,
-    make_ready: bool = True,
+    make_ready: bool = True
 ) -> OWSConfig:
     cfg = OWSConfig(
         refresh=refresh, called_from_update_ranges=called_from_update_ranges
     )
     if make_ready and not cfg.ready:
-        with contextlib.suppress(ODCInitException):
-            cfg.make_ready()
+        try:
+            with contextlib.suppress(ODCInitException):
+                cfg.make_ready()
+        except OperationalError as e:
+            raise ConfigException(
+                f"Database outage while reading configuration: {e}."
+            ) from None
     return cfg

@@ -15,7 +15,7 @@ from datacube.index import IndexSetupError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datacube_ows import __version__
-from datacube_ows.config_utils import OWSConfigNotReady
+from datacube_ows.config_utils import ConfigException, OWSConfigNotReady
 from datacube_ows.index import AbortRun, LayerSignature, ows_index
 from datacube_ows.index.api import InsufficientDbPrivileges
 from datacube_ows.ows_configuration import OWSConfig, get_config
@@ -65,7 +65,7 @@ from datacube_ows.startup_utils import initialise_debugging
 @click.argument("layers", nargs=-1)
 def main(
     layers: list[str],
-    env: ODCEnvironment | str | None,
+    env: str | None,
     schema: bool,
     read_role: list[str],
     write_role: list[str],
@@ -159,24 +159,24 @@ def main(
         sys.exit(1)
 
     initialise_debugging()
+
     db_maintenance = schema or cleanup or views
-    try:
-        cfg: OWSConfig | None = get_config(
-            called_from_update_ranges=True,
-            make_ready=not db_maintenance
-        )
-        assert cfg is not None  # type check nudge
-        app = cfg.odc_app + "-update"
-    except OperationalError as e:
-        click.echo(f"ERROR: {e}", err=True)
-        sys.exit(1)
-    app = cfg.odc_app + "-update"
     errors: bool = False
     if db_maintenance:
-        if cfg is not None:
-            env = cfg.default_env if cfg.default_env and env is None else env
+        app = "datacube-ows-update"
+        if env is None:
+            # No explicit env provided, check for a config file
+            try:
+                cfg = get_config(called_from_update_ranges=True, make_ready=False)
+                app = cfg.odc_app + "-update"
+                update_env: ODCEnvironment | str | None = cfg.default_env or None
+            except ConfigException:
+                # No env provided, no config file, use default
+                update_env = None
+        else:
+            update_env = env
         try:
-            dc = Datacube(env=env, app=app)
+            dc = Datacube(env=update_env, app=app)
         except (IndexSetupError, OperationalError, ProgrammingError) as e:
             click.echo(f"ERROR: {e}", err=True)
             sys.exit(1)
@@ -194,12 +194,13 @@ def main(
                 click.echo("Cleaning up datacube-1.8.x range tables and views...")
                 ows_index(dc).cleanup_schema(dc)
         except AbortRun as e:
-            if schema:
-                action = "schema update"
-            elif views:
-                action = "materialised view update"
-            else:
-                action = "schema cleanup"
+            action = (
+                "schema update"
+                if schema
+                else "materialised view update"
+                if views
+                else "schema cleanup"
+            )
             click.echo(f"Aborting {action}: {e}")
             errors = True
         click.echo("Done")
@@ -207,7 +208,12 @@ def main(
             sys.exit(1)
         return 0
 
-    assert cfg is not None  # type check nudge
+    try:
+        cfg = get_config(called_from_update_ranges=True)
+    except ConfigException as e:
+        click.echo(f"ERROR reading configuration file: {e}", err=True)
+        sys.exit(1)
+
     click.echo("Deriving extents from materialised views and/or spatial indexes")
     try:
         errors = add_ranges(cfg, layers)
