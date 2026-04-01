@@ -1932,12 +1932,14 @@ class OWSConfig(OWSMetadataConfig):
 
 
 def get_config(
-    refresh: bool = False, called_from_update_ranges: bool = False
+    refresh: bool = False,
+    called_from_update_ranges: bool = False,
+    make_ready: bool = True,
 ) -> OWSConfig:
     cfg = OWSConfig(
         refresh=refresh, called_from_update_ranges=called_from_update_ranges
     )
-    if not cfg.ready:
+    if make_ready and not cfg.ready:
         with contextlib.suppress(ODCInitException):
             cfg.make_ready()
     return cfg
