@@ -20,6 +20,8 @@ import math
 import os
 from collections.abc import Iterable, Mapping
 from enum import Enum
+from importlib import import_module
+from threading import Lock
 from typing import Any, Optional, Union, cast
 
 import numpy
@@ -1975,20 +1977,24 @@ class OWSConfig(OWSMetadataConfig):
         return hdrs
 
 
+config_init_lock = Lock()
+
+
 def get_config(
     refresh: bool = False,
     called_from_update_ranges: bool = False,
     make_ready: bool = True,
 ) -> OWSConfig:
-    cfg = OWSConfig(
-        refresh=refresh, called_from_update_ranges=called_from_update_ranges
-    )
-    if make_ready and not cfg.ready:
-        try:
-            with contextlib.suppress(ODCInitException):
-                cfg.make_ready()
-        except OperationalError as e:
-            raise ConfigException(
-                f"Database outage while reading configuration: {e}."
-            ) from None
+    with config_init_lock:
+        cfg = OWSConfig(
+            refresh=refresh, called_from_update_ranges=called_from_update_ranges
+        )
+        if make_ready and not cfg.ready:
+            try:
+                with contextlib.suppress(ODCInitException):
+                    cfg.make_ready()
+            except OperationalError as e:
+                raise ConfigException(
+                    f"Database outage while reading configuration: {e}."
+                ) from None
     return cfg
