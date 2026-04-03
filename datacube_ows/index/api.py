@@ -13,7 +13,6 @@ from typing import Any, Literal, NamedTuple, TypeAlias, Union
 from uuid import UUID
 
 from datacube import Datacube
-from datacube.index.abstract import AbstractIndex
 from datacube.model import Dataset, Product
 from odc.geo.crs import CRS
 from odc.geo.geom import Geometry, polygon
@@ -208,11 +207,10 @@ class OWSAbstractIndexDriver(ABC):
     def ows_index(cls) -> OWSAbstractIndex: ...
 
 
-def ows_index(odc: Datacube | AbstractIndex) -> OWSAbstractIndex:
-    index = odc if isinstance(odc, AbstractIndex) else odc.index
-    env = index.environment
+def ows_index(odc: Datacube) -> OWSAbstractIndex:
     from datacube_ows.index.driver import ows_index_driver_by_name
 
+    env = odc.index.environment
     idx_drv_name = (
         "postgres" if env.index_driver in ("default", "legacy") else env.index_driver
     )

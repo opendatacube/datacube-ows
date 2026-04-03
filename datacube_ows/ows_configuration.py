@@ -13,13 +13,13 @@
 #
 import contextlib
 import datetime
+import enum
 import json
 import logging
 import math
 import os
 from collections.abc import Iterable, Mapping
 from enum import Enum
-from importlib import import_module
 from typing import Any, Optional, Union, cast
 
 import numpy
@@ -69,32 +69,76 @@ if TYPE_CHECKING:
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
+class Sources(enum.Enum):
+    READ_JSON_FILE = 0
+    LOAD_PYTHON_OBJECT = 1
+    READ_RAW_JSON = 2
+
+
 def read_config(path: str | None = None) -> CFG_DICT:
+    """
+    Read the OWS configuration and perform expansions.
+
+    Returns either a CFG_DICT suitable for passing to the OWSConfig constructor,
+    or raises a ConfigException.
+
+    :param path: A str path descriptor.  If None or not set, reads path
+                 from the $DATACUBE_OWS_CFG environment variable.
+    """
     cwd = None
     if path:
         cfg_env: str | None = path
     else:
         cfg_env = os.environ.get("DATACUBE_OWS_CFG")
+
     if not cfg_env:
-        from datacube_ows.ows_cfg import ows_cfg as cfg
-    elif "/" in cfg_env or cfg_env.endswith(".json"):
-        cfg = load_json_obj(cfg_env)
-        cwd = get_file_loc(cfg_env)
+        raise ConfigException("DATACUBE_OWS_CFG environment variable not set. ")
+    if "/" in cfg_env or cfg_env.endswith(".json"):
+        # Looks like a URL or file path
+        src = Sources.READ_JSON_FILE
     elif "." in cfg_env:
-        cfg = import_python_obj(cfg_env)
+        # Looks like a python object
+        src = Sources.LOAD_PYTHON_OBJECT
     elif cfg_env.startswith("{"):
-        cfg = json.loads(cfg_env)
-        abs_path = os.path.abspath(cfg_env)
-        cwd = os.path.dirname(abs_path)
+        # Looks like raw JSON
+        src = Sources.READ_RAW_JSON
     else:
-        mod = import_module("datacube_ows.ows_cfg")
-        cfg = getattr(mod, cfg_env)
+        # ?? - Default to parsing as a json file.
+        src = Sources.READ_JSON_FILE
+
+    if src == Sources.READ_JSON_FILE:
+        # Attempt to load as JSON file from file system or S3
+        try:
+            cfg = load_json_obj(cfg_env)
+            cwd = get_file_loc(cfg_env)
+        except (FileNotFoundError, PermissionError) as e:
+            raise ConfigException(
+                f"Could not open json config file {cfg_env}: {e}"
+            ) from None
+        except json.JSONDecodeError as e:
+            raise ConfigException(
+                f"Could not parse json config file {cfg_env}: {e}"
+            ) from None
+    elif src == Sources.LOAD_PYTHON_OBJECT:
+        # Attempt to import a python object.
+        cfg = import_python_obj(cfg_env)
+    else:
+        # Attempt to read raw JSON config
+        try:
+            cfg = json.loads(cfg_env)
+        except json.JSONDecodeError as e:
+            raise ConfigException(f"Could not parse raw json config: {e}") from None
+
+    if not isinstance(cfg, dict):
+        raise ConfigException(
+            f"Unexpended top level config must be a dict: {cfg!r} ({cfg.__class__.__name__})"
+        )
     expansion = cfg_expand(cfg, cwd=cwd)
-    if isinstance(expansion, dict):
-        return expansion
-    raise ConfigException(
-        f"Top level config must be a dict: {expansion!r} ({expansion.__class__.__name__})"
-    )
+    if not isinstance(expansion, dict):
+        raise ConfigException(
+            f"Top level config must be a dict: {expansion!r} ({expansion.__class__.__name__})"
+        )
+    return expansion
 
 
 class BandIndex(OWSMetadataConfig):
@@ -1940,6 +1984,11 @@ def get_config(
         refresh=refresh, called_from_update_ranges=called_from_update_ranges
     )
     if make_ready and not cfg.ready:
-        with contextlib.suppress(ODCInitException):
-            cfg.make_ready()
+        try:
+            with contextlib.suppress(ODCInitException):
+                cfg.make_ready()
+        except OperationalError as e:
+            raise ConfigException(
+                f"Database outage while reading configuration: {e}."
+            ) from None
     return cfg
