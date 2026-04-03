@@ -96,6 +96,8 @@ jobs:
 
       - name: Build Packages
         run: |
+          SETUPTOOLS_SCM_PRETEND_VERSION=$(git describe --abbrev=0 --tags)
+          export SETUPTOOLS_SCM_PRETEND_VERSION
           uv build
           uv tool run twine check --strict dist/*
 
