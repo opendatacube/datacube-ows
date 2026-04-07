@@ -147,7 +147,8 @@ def mv_search(
 
                     TZRange = DateTimeTZRange
                 or_clauses.append(stv.c.temporal_extent.op("&&")(TZRange(*t)))
-        s = s.where(or_(*or_clauses))
+        if or_clauses:
+            s = s.where(or_(*or_clauses))
     orig_crs = None
     if geom is not None:
         orig_crs = geom.crs
