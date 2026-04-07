@@ -65,6 +65,5 @@ def test_legend_fail(no_db, flask_client) -> None:
 
 def test_index_fail(no_db, flask_client) -> None:
     """Base index endpoint fails"""
-    # Should actually be 200 TODO
     rv = flask_client.get("/")
-    assert rv.status_code == 500
+    assert rv.status_code == 200
