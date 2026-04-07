@@ -33,7 +33,7 @@ def prelegend_colorramp_style() -> StyleDefBase:
 def test_create_legend_for_style(dummy_layer) -> None:  # noqa: F811
     from datacube_ows.legend_generator import create_legend_for_style
 
-    assert create_legend_for_style(dummy_layer, "stylish_steve") is None
+    assert create_legend_for_style(None, dummy_layer, "stylish_steve") is None  # type: ignore[arg-type]
 
 
 @pytest.fixture

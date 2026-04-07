@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import collections
 import logging
@@ -17,12 +18,13 @@ from rasterio import MemoryFile
 
 from datacube_ows.loading import DataStacker
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ows_configuration import OWSConfig, get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.utils import default_to_utc
 from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
-# from datacube_ows.wcs_utils import get_bands_from_styles
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -47,10 +49,8 @@ def uniform_crs(cfg: OWSConfig, crs: str) -> str:
     return crs
 
 
-def get_coverage_data(request, styles, qprof) -> tuple:
+def get_coverage_data(cfg: OWSConfig, request, styles, qprof) -> tuple:
     # pylint: disable=too-many-locals, protected-access
-
-    cfg = get_config()
     qprof.start_event("setup")
     layer_name = request.coverage_id
     layer = cfg.layer_index.get(layer_name)
@@ -336,11 +336,18 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     #
     if fmt.mime == "image/geotiff":
         output = fmt.renderer(request.version)(
-            request, output, output_crs, layer, scaler.size.x, scaler.size.y, affine
+            cfg,
+            request,
+            output,
+            output_crs,
+            layer,
+            scaler.size.x,
+            scaler.size.y,
+            affine,
         )
 
     else:
-        output = fmt.renderer(request.version)(request, output, output_crs)
+        output = fmt.renderer(request.version)(cfg, request, output, output_crs)
 
     headers = {
         "Content-Type": fmt.mime,
@@ -350,7 +357,7 @@ def get_coverage_data(request, styles, qprof) -> tuple:
     return output, headers
 
 
-def get_tiff(request, data, crs, product, width: int, height, affine):
+def get_tiff(cfg: OWSConfig, request, data, crs, product, width: int, height, affine):
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Does not support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {
@@ -372,8 +379,6 @@ def get_tiff(request, data, crs, product, width: int, height, affine):
 
     # TODO: convert other parameters as-well
     gtiff = request.geotiff_encoding_parameters
-    cfg = get_config()
-
     if len(data.time) > 1:
         raise WCS2Exception("Multiple time slices not supported by GeoTIFF format")
     data = data.squeeze(dim="time", drop=True)
@@ -434,7 +439,7 @@ def get_tiff(request, data, crs, product, width: int, height, affine):
         return memfile.read()
 
 
-def get_netcdf(request, data: xr.Dataset, crs) -> bytes:
+def get_netcdf(cfg: OWSConfig, request, data: xr.Dataset, crs) -> bytes:
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = crs
     for v in data.data_vars.values():

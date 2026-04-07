@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import io
 import logging
@@ -17,6 +18,10 @@ from datacube_ows.http_utils import resp_headers
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.wms_utils import GetLegendGraphicParameters
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
+
 # Do not use X Server backend
 
 matplotlib.use("Agg")
@@ -24,25 +29,25 @@ matplotlib.use("Agg")
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 
-def legend_graphic(args) -> tuple[bytes, int, dict[str, str]] | None:
-    params = GetLegendGraphicParameters(args)
-    img = create_legends_from_styles(params.styles, ndates=len(params.times))
+def legend_graphic(cfg: OWSConfig, args) -> tuple[bytes, int, dict[str, str]]:
+    params = GetLegendGraphicParameters(cfg, args)
+    img = create_legends_from_styles(cfg, params.styles, ndates=len(params.times))
     if img is None:
         raise WMSException("No legend is available for this request", http_response=404)
     return img
 
 
 def create_legend_for_style(
-    product, style_name: str, ndates: int = 0
+    cfg: OWSConfig, product, style_name: str, ndates: int = 0
 ) -> tuple[bytes, int, dict[str, str]] | None:
     if style_name not in product.style_index:
         return None
     style = product.style_index[style_name]
-    return create_legends_from_styles([style], ndates)
+    return create_legends_from_styles(cfg, [style], ndates)
 
 
 def create_legends_from_styles(
-    styles, ndates: int = 0
+    cfg: OWSConfig, styles, ndates: int = 0
 ) -> tuple[bytes, int, dict[str, str]] | None:
     # Run through all values in style cfg and generate
     imgs = []
@@ -61,4 +66,4 @@ def create_legends_from_styles(
     # legend = make_response(b.getvalue())
     # legend.mimetype = 'image/png'
     # b.close()
-    return b.getvalue(), 200, resp_headers({"Content-Type": "image/png"})
+    return b.getvalue(), 200, resp_headers(cfg, {"Content-Type": "image/png"})

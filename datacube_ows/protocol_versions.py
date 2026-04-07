@@ -8,6 +8,7 @@
 import contextlib
 import re
 from collections.abc import Callable, Mapping, Sequence
+from typing import TypeAlias
 
 from datacube_ows.ogc_exceptions import (
     OGCException,
@@ -16,19 +17,24 @@ from datacube_ows.ogc_exceptions import (
     WMSException,
     WMTSException,
 )
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.wcs1 import handle_wcs1
 from datacube_ows.wcs2 import handle_wcs2
 from datacube_ows.wms import handle_wms
 from datacube_ows.wmts import handle_wmts
 
-FlaskResponse = tuple
-FlaskHandler = Callable[[Mapping[str, str]], FlaskResponse]
+FlaskResponse: TypeAlias = tuple[str | bytes, int, dict[str, str]]
+FlaskHandler: TypeAlias = Callable[[Mapping[str, str]], FlaskResponse]
 
 
 class SupportedSvcVersion:
     def __init__(
-        self, service: str, version: str, router, exception_class: type[OGCException]
+        self,
+        service: str,
+        version: str,
+        # FIXME: second argument should be dict[str, str | None].
+        router: Callable[[OWSConfig, dict[str, str]], FlaskResponse],
+        exception_class: type[OGCException],
     ) -> None:
         self.service = service.lower()
         self.service_upper = service.upper()
@@ -87,8 +93,7 @@ class SupportedSvc:
         # The constructor ensures that self.versions is not empty, so this is safe.
         return self.versions[0]
 
-    def activated(self) -> bool:
-        cfg = get_config()
+    def activated(self, cfg: OWSConfig) -> bool:
         return bool(getattr(cfg, self.service))
 
 

@@ -21,7 +21,6 @@ from tests.utils import coords, dim1_da, dim1_da_time, dummy_da
 
 @pytest.fixture
 def flask_client(monkeypatch) -> Generator[flask.Flask]:
-    monkeypatch.setenv("DEFER_CFG_PARSE", "yes")
     from datacube_ows.startup_utils import create_app
 
     with create_app().test_client() as client:

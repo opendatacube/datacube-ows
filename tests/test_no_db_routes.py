@@ -26,6 +26,9 @@ def reset_global_config() -> None:
 def no_db(monkeypatch):
     monkeypatch.setenv("DATACUBE_OWS_CFG", "tests.cfg.minimal_cfg.ows_cfg")
     reset_global_config()
+    from datacube_ows.ows_configuration import get_config
+
+    _ = get_config(make_ready=False)
     yield
     reset_global_config()
 

@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from datetime import UTC
 
@@ -19,19 +20,20 @@ from rasterio import MemoryFile
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.loading import DataStacker
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ows_configuration import get_config
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.wcs_utils import get_bands_from_styles
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
 
 
 class WCS1GetCoverageRequest:
     version = Version(1, 0, 0)
 
     # pylint: disable=too-many-instance-attributes, too-many-branches, too-many-statements, too-many-locals
-    def __init__(self, args) -> None:
+    def __init__(self, cfg: OWSConfig, args) -> None:
         self.args = args
-        cfg = get_config()
-
         # Argument: Coverage (required)  -> product/layer
         if "coverage" not in args:
             raise WCS1Exception(
@@ -368,7 +370,7 @@ class WCS1GetCoverageRequest:
         self.ows_stats = bool(args.get("ows_stats"))
 
 
-def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
+def get_coverage_data(cfg: OWSConfig, req, qprof) -> tuple | tuple[int, tuple]:
     # pylint: disable=too-many-locals, protected-access
     stacker = DataStacker(req.layer, req.geobox, req.times, bands=req.bands)
     qprof.start_event("count-datasets")
@@ -395,7 +397,6 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
     if n_datasets == 0:
         # Return an empty coverage file with full metadata?
         qprof.start_event("build_empty_dataset")
-        cfg = get_config()
         x_range = (req.minx, req.maxx)
         y_range = (req.miny, req.maxy)
         xname = cfg.published_CRSs[req.response_crsid]["horizontal_coord"]
@@ -462,7 +463,7 @@ def get_coverage_data(req, qprof) -> tuple | tuple[int, tuple]:
     return n_datasets, output
 
 
-def get_tiff(req, data: xr.Dataset) -> bytes:
+def get_tiff(cfg: OWSConfig, req, data: xr.Dataset) -> bytes:
     """Uses rasterio MemoryFiles in order to return a streamable GeoTiff response"""
     # Does not support multi-time dimension data - is this even possible in GeoTiff?
     supported_dtype_map = {
@@ -484,7 +485,6 @@ def get_tiff(req, data: xr.Dataset) -> bytes:
 
     data = data.squeeze(dim="time", drop=True)
     data = data.astype(dtype)
-    cfg = get_config()
     xname = str(cfg.published_CRSs[req.response_crsid]["horizontal_coord"])
     yname = str(cfg.published_CRSs[req.response_crsid]["vertical_coord"])
     nodata = 0
@@ -524,7 +524,7 @@ def get_tiff(req, data: xr.Dataset) -> bytes:
         return memfile.read()
 
 
-def get_netcdf(req, data: xr.Dataset) -> bytes:
+def get_netcdf(cfg: OWSConfig, req, data: xr.Dataset) -> bytes:
     # Cleanup dataset attributes for NetCDF export
     data.attrs["crs"] = req.response_crsid
     for _, v in data.data_vars.items():
