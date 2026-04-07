@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import traceback as tb
 
@@ -12,6 +13,11 @@ from ows.common.v20.encoders import xml_encode_exception_report
 from typing_extensions import override
 
 from datacube_ows.http_utils import resp_headers
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
+    from datacube_ows.protocol_versions import FlaskResponse
 
 
 class OGCException(Exception):
@@ -37,8 +43,8 @@ class OGCException(Exception):
 
     # pylint: disable=dangerous-default-value
     def exception_response(
-        self, traceback: list | None = None
-    ) -> tuple[str, int, dict[str, str]]:
+        self, cfg: OWSConfig, traceback: list | None = None
+    ) -> FlaskResponse:
         return (
             render_template(
                 "ogc_error.xml",
@@ -48,7 +54,7 @@ class OGCException(Exception):
                 schema_url=self.schema_url,
             ),
             self.http_response,
-            resp_headers({"Content-Type": "application/xml"}),
+            resp_headers(cfg, {"Content-Type": "application/xml"}),
         )
 
 
@@ -106,7 +112,9 @@ class WCS2Exception(OGCException):
 
     # pylint: disable=dangerous-default-value
     @override
-    def exception_response(self, traceback: list | None = None) -> tuple:
+    def exception_response(
+        self, cfg: OWSConfig, traceback: list | None = None
+    ) -> FlaskResponse:
         if traceback is None:
             traceback = []
         exceptions = [
@@ -125,5 +133,5 @@ class WCS2Exception(OGCException):
         return (
             result.value,
             self.http_response,
-            resp_headers({"Content-Type": "application/xml"}),
+            resp_headers(cfg, {"Content-Type": "application/xml"}),
         )

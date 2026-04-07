@@ -22,7 +22,7 @@ from typing_extensions import override
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import create_geobox
-from datacube_ows.ows_configuration import OWSNamedLayer, get_config
+from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
 from datacube_ows.resource_limits import RequestScale
 from datacube_ows.styles import StyleDef, StyleDefBase
 from datacube_ows.styles.expression import ExpressionException
@@ -63,9 +63,9 @@ def _bounding_pts(
     return minx, miny, maxx, maxy
 
 
-def _get_geobox_xy(args, crs: CRS) -> tuple[float, float, float, float]:
+def _get_geobox_xy(cfg: OWSConfig, args, crs: CRS) -> tuple[float, float, float, float]:
     try:
-        if get_config().published_CRSs[str(crs)]["vertical_coord_first"]:
+        if cfg.published_CRSs[str(crs)]["vertical_coord_first"]:
             miny, minx, maxy, maxx = map(float, args["bbox"].split(","))
         else:
             minx, miny, maxx, maxy = map(float, args["bbox"].split(","))
@@ -76,10 +76,10 @@ def _get_geobox_xy(args, crs: CRS) -> tuple[float, float, float, float]:
     return minx, miny, maxx, maxy
 
 
-def _get_geobox(args, crs: CRS) -> GeoBox:
+def _get_geobox(cfg: OWSConfig, args, crs: CRS) -> GeoBox:
     width = int(args["width"])
     height = int(args["height"])
-    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
+    minx, miny, maxx, maxy = _get_geobox_xy(cfg, args, crs)
 
     if minx == maxx or miny == maxy:
         raise WMSException("Bounding box must enclose a non-zero area")
@@ -96,20 +96,20 @@ def _get_geobox(args, crs: CRS) -> GeoBox:
     return create_geobox(crs, minx, miny, maxx, maxy, width, height)
 
 
-def _get_polygon(args, crs: CRS) -> geom.Geometry:
-    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
+def _get_polygon(cfg: OWSConfig, args, crs: CRS) -> geom.Geometry:
+    minx, miny, maxx, maxy = _get_geobox_xy(cfg, args, crs)
     return geom.polygon(
         [(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs
     )
 
 
-def zoom_factor(args, crs) -> float:
+def zoom_factor(cfg: OWSConfig, args, crs) -> float:
     # Determine the geographic "zoom factor" for the request.
     # (Larger zoom factor means deeper zoom.  Smaller zoom factor means larger area.)
     # Extract request bbox and crs
     width = int(args["width"])
     height = int(args["height"])
-    minx, miny, maxx, maxy = _get_geobox_xy(args, crs)
+    minx, miny, maxx, maxy = _get_geobox_xy(cfg, args, crs)
 
     # Project to a geographic coordinate system
     # This is why we can't just use the regular geobox.  The scale needs to be
@@ -127,8 +127,7 @@ def zoom_factor(args, crs) -> float:
     return 1.0 / math.sqrt(affine.determinant)
 
 
-def img_coords_to_geopoint(geobox, i, j) -> geom.Geometry:
-    cfg = get_config()
+def img_coords_to_geopoint(cfg: OWSConfig, geobox, i, j) -> geom.Geometry:
     h_coord = cfg.published_CRSs[str(geobox.crs)]["horizontal_coord"]
     v_coord = cfg.published_CRSs[str(geobox.crs)]["vertical_coord"]
     try:
@@ -142,14 +141,13 @@ def img_coords_to_geopoint(geobox, i, j) -> geom.Geometry:
     return geom.point(x, y, geobox.crs)
 
 
-def get_layer_from_arg(args, argname: str = "layers") -> OWSNamedLayer:
+def get_layer_from_arg(cfg: OWSConfig, args, argname: str = "layers") -> OWSNamedLayer:
     layers = args.get(argname, "").split(",")
     if len(layers) != 1:
         raise WMSException("Multi-layer requests not supported")
     lyr = layers[0]
     layer_chunks = lyr.split("__")
     lyr = layer_chunks[0]
-    cfg = get_config()
     layer = cfg.layer_index.get(lyr)
     if not layer:
         raise WMSException(
@@ -333,8 +331,8 @@ def parse_wms_time_strings(parts: list[str], with_tz: bool = False) -> tuple:
 
 
 class GetParameters:
-    def __init__(self, args) -> None:
-        self.cfg = get_config()
+    def __init__(self, cfg: OWSConfig, args) -> None:
+        self.cfg = cfg
         # Version
         self.version = get_arg(
             args, "version", "WMS version", permitted_values=["1.1.1", "1.3.0"]
@@ -350,11 +348,11 @@ class GetParameters:
         )
         self.crs = self.cfg.crs(self.crsid)
         # Layers
-        self.layer = self.get_layer(args)
+        self.layer = self.get_layer(cfg, args)
 
-        self.geometry = _get_polygon(args, self.crs)
+        self.geometry = _get_polygon(cfg, args, self.crs)
         # BBox, height and width parameters
-        self.geobox = _get_geobox(args, self.crs)
+        self.geobox = _get_geobox(self.cfg, args, self.crs)
         # Web-merc antimeridian hack:
         if self.geobox.crs != self.crs:
             self.crs = self.geobox.crs  # type: ignore[assignment]
@@ -363,13 +361,13 @@ class GetParameters:
         # Time parameter
         self.times = get_times(args, self.layer)
 
-        self.method_specific_init(args)
+        self.method_specific_init(cfg, args)
 
-    def method_specific_init(self, args) -> None:
+    def method_specific_init(self, cfg: OWSConfig, args) -> None:
         pass
 
-    def get_layer(self, args) -> OWSNamedLayer:
-        return get_layer_from_arg(args)
+    def get_layer(self, cfg: OWSConfig, args) -> OWSNamedLayer:
+        return get_layer_from_arg(cfg, args)
 
 
 def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
@@ -448,8 +446,8 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
 
 
 class GetLegendGraphicParameters:
-    def __init__(self, args) -> None:
-        self.layer = get_layer_from_arg(args, "layer")
+    def __init__(self, cfg: OWSConfig, args) -> None:
+        self.layer = get_layer_from_arg(cfg, args, "layer")
 
         # Validate Format parameter
         self.format = get_arg(
@@ -468,7 +466,7 @@ class GetLegendGraphicParameters:
 
 class GetMapParameters(GetParameters):
     @override
-    def method_specific_init(self, args) -> None:
+    def method_specific_init(self, cfg: OWSConfig, args) -> None:
         # Validate Format parameter
         self.format = get_arg(
             args,
@@ -480,7 +478,6 @@ class GetMapParameters(GetParameters):
         )
 
         self.style = single_style_from_args(self.layer, args)
-        cfg = get_config()
         if self.geobox.width > cfg.wms_max_width:
             raise WMSException(
                 f"Width {self.geobox.width} exceeds supported maximum {self.cfg.wms_max_width}.",
@@ -493,7 +490,7 @@ class GetMapParameters(GetParameters):
             )
 
         # Zoom factor
-        self.zf = zoom_factor(args, self.crs)
+        self.zf = zoom_factor(cfg, args, self.crs)
 
         self.ows_stats = bool(args.get("ows_stats"))
 
@@ -511,11 +508,11 @@ class GetMapParameters(GetParameters):
 
 class GetFeatureInfoParameters(GetParameters):
     @override
-    def get_layer(self, args) -> OWSNamedLayer:
-        return get_layer_from_arg(args, "query_layers")
+    def get_layer(self, cfg: OWSConfig, args) -> OWSNamedLayer:
+        return get_layer_from_arg(cfg, args, "query_layers")
 
     @override
-    def method_specific_init(self, args) -> None:
+    def method_specific_init(self, cfg, args) -> None:
         # Validate Formata parameter
         self.format = get_arg(
             args,

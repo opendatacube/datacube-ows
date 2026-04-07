@@ -316,11 +316,13 @@ def test_parse_item_2(dummy_product) -> None:
 
 
 def test_get_geobox() -> None:
-    from datacube_ows.ows_configuration import OWSConfig
+    from datacube_ows.ows_configuration import OWSConfig, get_config
 
     mock_cfg = MagicMock()
     OWSConfig._instance = mock_cfg
+    cfg = get_config()
     gbox = datacube_ows.wms_utils._get_geobox(
+        cfg,
         args={
             "width": "256",
             "height": "256",
@@ -333,6 +335,7 @@ def test_get_geobox() -> None:
 
     with pytest.raises(WMSException) as e:
         _ = datacube_ows.wms_utils._get_geobox(
+            cfg,
             args={
                 "width": "256",
                 "height": "256",
@@ -345,12 +348,14 @@ def test_get_geobox() -> None:
 
 
 def test_invalid_bbox() -> None:
-    from datacube_ows.ows_configuration import OWSConfig
+    from datacube_ows.ows_configuration import OWSConfig, get_config
 
     mock_cfg = MagicMock()
     OWSConfig._instance = mock_cfg
+    cfg = get_config()
     with pytest.raises(WMSException):
         _ = datacube_ows.wms_utils._get_geobox(
+            cfg,
             args={
                 "width": "256",
                 "height": "256",
@@ -360,6 +365,7 @@ def test_invalid_bbox() -> None:
         )
     with pytest.raises(WMSException):
         _ = datacube_ows.wms_utils._get_geobox(
+            cfg,
             args={
                 "width": "256",
                 "height": "256",
@@ -369,6 +375,7 @@ def test_invalid_bbox() -> None:
         )
     with pytest.raises(WMSException):
         _ = datacube_ows.wms_utils._get_geobox(
+            cfg,
             args={
                 "width": "256",
                 "height": "256",

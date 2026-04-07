@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import logging
 
@@ -12,8 +13,12 @@ from datacube_ows.data import get_map
 from datacube_ows.feature_info import feature_info
 from datacube_ows.http_utils import cache_control_headers, get_service_base_url
 from datacube_ows.ogc_exceptions import WMSException, WMTSException
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.utils import log_call
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.protocol_versions import FlaskResponse
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -23,17 +28,17 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 
 
 @log_call
-def handle_wmts(nocase_args) -> tuple:
+def handle_wmts(cfg: OWSConfig, nocase_args: dict[str, str]) -> FlaskResponse:
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
     if not operation:
         raise WMTSException("No operation specified", locator="Request parameter")
     if operation == "GETCAPABILITIES":
-        return get_capabilities(nocase_args)
+        return get_capabilities(cfg, nocase_args)
     if operation == "GETTILE":
-        return get_tile(nocase_args)
+        return get_tile(cfg, nocase_args)
     if operation == "GETFEATUREINFO":
-        return get_feature_info(nocase_args)
+        return get_feature_info(cfg, nocase_args)
     raise WMTSException(
         f"Unrecognised operation: {operation}",
         WMTSException.OPERATION_NOT_SUPPORTED,
@@ -42,11 +47,9 @@ def handle_wmts(nocase_args) -> tuple:
 
 
 @log_call
-def get_capabilities(args) -> tuple:
+def get_capabilities(cfg: OWSConfig, args) -> FlaskResponse:
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.0.0 exists at this stage, so no version negotiation is necessary
-    # Extract layer metadata from Datacube.
-    cfg = get_config()
     url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
     section = args.get("section")
@@ -174,12 +177,11 @@ def wmts_args_to_wms(args, cfg) -> dict:
 
 
 @log_call
-def get_tile(args) -> tuple:
-    cfg = get_config()
+def get_tile(cfg: OWSConfig, args) -> FlaskResponse:
     wms_args = wmts_args_to_wms(args, cfg)
 
     try:
-        return get_map(wms_args)
+        return get_map(cfg, wms_args)
     except WMSException as wmse:
         first_error = wmse.errors[0]
         e = WMTSException(
@@ -194,13 +196,12 @@ def get_tile(args) -> tuple:
 
 
 @log_call
-def get_feature_info(args) -> tuple:
-    cfg = get_config()
+def get_feature_info(cfg: OWSConfig, args) -> FlaskResponse:
     wms_args = wmts_args_to_wms(args, cfg)
     wms_args["query_layers"] = wms_args["layers"]
 
     try:
-        return feature_info(wms_args)
+        return feature_info(cfg, wms_args)
     except WMSException as wmse:
         first_error = wmse.errors[0]
         e = WMTSException(

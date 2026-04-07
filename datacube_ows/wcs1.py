@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 from typing import Any
 
 from flask import render_template
@@ -13,32 +15,36 @@ from datacube_ows.http_utils import (
     json_response,
 )
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
 from datacube_ows.wcs1_utils import WCS1GetCoverageRequest, get_coverage_data
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.protocol_versions import FlaskResponse
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
 
 @log_call
-def handle_wcs1(nocase_args) -> tuple:
+def handle_wcs1(cfg: OWSConfig, nocase_args: dict[str, str]) -> FlaskResponse:
     operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS1Exception("No operation specified", locator="Request parameter")
     if operation == "GETCAPABILITIES":
-        return get_capabilities(nocase_args)
+        return get_capabilities(cfg, nocase_args)
     if operation == "DESCRIBECOVERAGE":
-        return desc_coverages(nocase_args)
+        return desc_coverages(cfg, nocase_args)
     if operation == "GETCOVERAGE":
-        return get_coverage(nocase_args)
+        return get_coverage(cfg, nocase_args)
     raise WCS1Exception(
         f"Unrecognised operation: {operation}", locator="Request parameter"
     )
 
 
 @log_call
-def get_capabilities(args) -> tuple:
+def get_capabilities(cfg: OWSConfig, args) -> tuple:
     # TODO: Handle updatesequence request parameter for cache consistency.
     section = args.get("section")
     if section:
@@ -64,7 +70,6 @@ def get_capabilities(args) -> tuple:
         )
 
     # Extract layer metadata from Datacube.
-    cfg = get_config()
     url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
     headers = cache_control_headers(cfg.wms_cap_cache_age)
@@ -84,10 +89,7 @@ def get_capabilities(args) -> tuple:
 
 
 @log_call
-def desc_coverages(args) -> tuple:
-    # Extract layer metadata from Datacube.
-    cfg = get_config()
-
+def desc_coverages(cfg: OWSConfig, args) -> tuple:
     coverages = args.get("coverage")
     products = []
     if coverages:
@@ -117,20 +119,19 @@ def desc_coverages(args) -> tuple:
 
 
 @log_call
-def get_coverage(args: dict) -> tuple[Any, int, dict]:
-    cfg = get_config()
-    req = WCS1GetCoverageRequest(args)
+def get_coverage(cfg: OWSConfig, args: dict) -> tuple[Any, int, dict]:
+    req = WCS1GetCoverageRequest(cfg, args)
     qprof = QueryProfiler(req.ows_stats)
-    n_datasets, data = get_coverage_data(req, qprof)
+    n_datasets, data = get_coverage_data(cfg, req, qprof)
     if req.ows_stats:
-        return json_response(qprof.profile())
+        return json_response(qprof.profile(), cfg)
     headers = {
         "Content-Type": req.format.mime,
         "content-disposition": f"attachment; filename={req.layer_name}.{req.format.extension}",
     }
     headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))  # type: ignore[union-attr]
     return (
-        req.format.renderer(req.version)(req, data),
+        req.format.renderer(req.version)(cfg, req, data),
         200,
         cfg.response_headers(
             {

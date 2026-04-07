@@ -3,10 +3,10 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from typing import Optional
 from urllib.parse import urlparse
 
 from flask import Request, render_template, request
@@ -16,20 +16,17 @@ from datacube_ows.config_utils import CFG_DICT
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datacube_ows.ows_configuration import OWSConfig
+    from datacube_ows.protocol_versions import FlaskResponse
 
-FlaskResponse = tuple[str | bytes, int, dict[str, str]]
 
-
-def resp_headers(d: dict[str, str]) -> dict[str, str]:
+def resp_headers(cfg: OWSConfig, d: dict[str, str]) -> dict[str, str]:
     """
     Take a dictionary of http response headers and all required response headers from the configuration.
 
     :param d:
     :return:
     """
-    from datacube_ows.ows_configuration import get_config
-
-    return get_config().response_headers(d)
+    return cfg.response_headers(d)
 
 
 def parse_for_base_url(url: str) -> str:
@@ -105,12 +102,7 @@ def lower_get_args() -> dict[str, str | None]:
     return d
 
 
-def json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> FlaskResponse:
-    from datacube_ows.ows_configuration import get_config
-
-    if not cfg:
-        cfg = get_config()
-    assert cfg is not None  # for type checker
+def json_response(result: CFG_DICT, cfg: OWSConfig) -> FlaskResponse:
     return (
         json.dumps(result),
         200,
@@ -118,28 +110,16 @@ def json_response(result: CFG_DICT, cfg: Optional["OWSConfig"] = None) -> FlaskR
     )
 
 
-def html_json_response(
-    result: CFG_DICT, cfg: Optional["OWSConfig"] = None
-) -> FlaskResponse:
-    from datacube_ows.ows_configuration import get_config
-
-    if not cfg:
-        cfg = get_config()
-    assert cfg is not None  # for type checker
+def html_json_response(result: CFG_DICT, cfg: OWSConfig) -> FlaskResponse:
     html_content = render_template("html_feature_info.html", result=result)
     return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})
 
 
 def png_response(
     body: bytes,
-    cfg: Optional["OWSConfig"] = None,
+    cfg: OWSConfig,
     extra_headers: Mapping[str, str] | None = None,
 ) -> FlaskResponse:
-    from datacube_ows.ows_configuration import get_config
-
-    if not cfg:
-        cfg = get_config()
-    assert cfg is not None  # For type checker
     if extra_headers is None:
         extra_headers = {}
     headers = {"Content-Type": "image/png"}

@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import logging
 import re
@@ -21,13 +22,17 @@ from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 
 from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException
-from datacube_ows.http_utils import FlaskResponse, html_json_response, json_response
+from datacube_ows.http_utils import html_json_response, json_response
 from datacube_ows.loading import DataStacker, ProductBandQuery
-from datacube_ows.ows_configuration import OWSNamedLayer, get_config
+from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
 from datacube_ows.styles import StyleDef
 from datacube_ows.time_utils import dataset_center_time
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import GetFeatureInfoParameters, img_coords_to_geopoint
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.protocol_versions import FlaskResponse
 
 
 @log_call
@@ -149,13 +154,13 @@ def geobox_is_point(geobox: GeoBox) -> bool:
 
 
 @log_call
-def feature_info(args: dict[str, str]) -> FlaskResponse:
+def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
-    params = GetFeatureInfoParameters(args)
+    params = GetFeatureInfoParameters(cfg, args)
     feature_json: CFG_DICT = {}
 
-    geo_point = img_coords_to_geopoint(params.geobox, params.i, params.j)
+    geo_point = img_coords_to_geopoint(cfg, params.geobox, params.i, params.j)
     # shrink geobox to point
     # Prepare to extract feature info
     if geobox_is_point(params.geobox):
@@ -168,7 +173,6 @@ def feature_info(args: dict[str, str]) -> FlaskResponse:
         )
     stacker = DataStacker(params.layer, geo_point_geobox, params.times)
     # --- Begin code section requiring datacube.
-    cfg = get_config()
     all_time_datasets = stacker.datasets_all_time(point=geo_point_geobox.extent)
 
     # Taking the data as a single point so our indexes into the data should be 0,0

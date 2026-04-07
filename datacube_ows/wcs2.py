@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import logging
 from typing import Any
@@ -24,10 +25,14 @@ from datacube_ows.http_utils import (
     resp_headers,
 )
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ows_configuration import OWSConfig, get_config
+from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
 from datacube_ows.wcs2_utils import get_coverage_data
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.protocol_versions import FlaskResponse
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -35,16 +40,17 @@ WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")
 
 
 @log_call
-def handle_wcs2(nocase_args) -> tuple:
+def handle_wcs2(cfg: OWSConfig, nocase_args: dict[str, str]) -> FlaskResponse:
     operation = nocase_args.get("request", "").upper()
     if not operation:
         raise WCS2Exception("No operation specified", locator="Request parameter")
     if operation == "GETCAPABILITIES":
-        return get_capabilities(nocase_args)
+        return get_capabilities(cfg, nocase_args)
     if operation == "DESCRIBECOVERAGE":
-        return desc_coverages(nocase_args)
+        return desc_coverages(cfg, nocase_args)
     if operation == "GETCOVERAGE":
         return get_coverage(
+            cfg,
             request.args.lists(),
             bool(nocase_args.get("ows_stats")),
             nocase_args.get("styles"),
@@ -55,9 +61,7 @@ def handle_wcs2(nocase_args) -> tuple:
 
 
 @log_call
-def get_capabilities(args: dict) -> tuple[Any, int, dict]:
-    # Extract layer metadata from Datacube.
-    cfg = get_config()
+def get_capabilities(cfg: OWSConfig, args: dict) -> tuple[Any, int, dict]:
     url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
 
@@ -251,9 +255,7 @@ def create_coverage_description(cfg: OWSConfig, product) -> CoverageDescription:
 
 
 @log_call
-def desc_coverages(args) -> tuple:
-    cfg = get_config()
-
+def desc_coverages(cfg: OWSConfig, args) -> tuple:
     request_obj = kvp_decode_describe_coverage(args)
 
     products = []
@@ -288,16 +290,16 @@ def desc_coverages(args) -> tuple:
     min_cache_age = min(p.resource_limits.wcs_desc_cache_rule for p in products)
     headers = cache_control_headers(min_cache_age)
     headers["Content-Type"] = result.content_type
-    return result.value, 200, resp_headers(headers)
+    return result.value, 200, resp_headers(cfg, headers)
 
 
 @log_call
 def get_coverage(
-    args, ows_stats: bool = False, styles=None
+    cfg: OWSConfig, args, ows_stats: bool = False, styles=None
 ) -> tuple[str | bytes, int, dict[str, str]]:
     request_obj = kvp_decode_get_coverage(args)
     qprof = QueryProfiler(ows_stats)
-    output, headers = get_coverage_data(request_obj, styles, qprof)
+    output, headers = get_coverage_data(cfg, request_obj, styles, qprof)
     if ows_stats:
-        return json_response(qprof.profile())
-    return output, 200, resp_headers(headers)
+        return json_response(qprof.profile(), cfg)
+    return output, 200, resp_headers(cfg, headers)

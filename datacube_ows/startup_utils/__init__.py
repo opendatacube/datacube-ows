@@ -20,8 +20,6 @@ __all__ = [
     "create_app",
 ]
 
-from datacube_ows.config_utils import ConfigException
-
 
 def initialise_logger(name: str | None = None) -> Logger:
     handler = logging.StreamHandler()
@@ -170,11 +168,12 @@ def initialise_babel(cfg, app: Flask) -> object | None:
 def create_app() -> Flask:
     log = initialise_logger()
     app = initialise_flask(__name__)
+    from datacube_ows.config_utils import ConfigException
     from datacube_ows.ows_configuration import get_config
 
     try:
         # Cache a parsed config file object (unless deferring to first request).
-        cfg = None if os.environ.get("DEFER_CFG_PARSE") else get_config()
+        cfg = get_config()
     except (ConfigException, OperationalError) as e:
         log.error(str(e))
         sys.exit(1)
@@ -218,29 +217,29 @@ def create_app() -> Flask:
     @app.route("/")
     @ows_ogc_metric
     def main_route():
-        return ogc_impl()
+        return ogc_impl(cfg)
 
     @app.route("/wms")
     @ows_ogc_metric
     def wms_route():
-        return ogc_wms_impl()
+        return ogc_wms_impl(cfg)
 
     @app.route("/wmts")
     @ows_ogc_metric
     def wmts_route():
-        return ogc_wmts_impl()
+        return ogc_wmts_impl(cfg)
 
     @app.route("/wcs")
     @ows_ogc_metric
     def wcs_route():
-        return ogc_wcs_impl()
+        return ogc_wcs_impl(cfg)
 
     @app.route("/ping")
     @metrics.summary(
         "ows_heartbeat_pings", "Ping durations", labels={"status": lambda r: r.status}
     )
     def ping_route():
-        return ping()
+        return ping(cfg)
 
     @app.route("/legend/<string:layer>/<string:style>/legend.png")
     @metrics.histogram(
@@ -253,13 +252,15 @@ def create_app() -> Flask:
         },
     )
     def legend_route(layer, style):
-        return legend(layer, style)
+        return legend(cfg, layer, style)
 
     # Configure Flask Middleware
     @app.before_request
     def start_timer() -> None:
         # pylint: disable=assigning-non-slot
         g.ogc_start_time = monotonic()
+        if not cfg.ready:
+            _ = get_config()
 
     @app.after_request
     def log_time_and_request_response(response):

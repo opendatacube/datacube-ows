@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from flask import render_template
 
@@ -11,26 +12,30 @@ from datacube_ows.feature_info import feature_info
 from datacube_ows.http_utils import cache_control_headers, get_service_base_url
 from datacube_ows.legend_generator import legend_graphic
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ows_configuration import get_config
+from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.utils import log_call
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.protocol_versions import FlaskResponse
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
 
 
 @log_call
-def handle_wms(nocase_args: dict[str, str]) -> tuple | None:
+def handle_wms(cfg: OWSConfig, nocase_args: dict[str, str]) -> FlaskResponse:
     operation = nocase_args.get("request", "").upper()
     # WMS operation Map
     if not operation:
         raise WMSException("No operation specified", locator="Request parameter")
     if operation == "GETCAPABILITIES":
-        return get_capabilities(nocase_args)
+        return get_capabilities(cfg, nocase_args)
     if operation == "GETMAP":
-        return get_map(nocase_args)
+        return get_map(cfg, nocase_args)
     if operation == "GETFEATUREINFO":
-        return feature_info(nocase_args)
+        return feature_info(cfg, nocase_args)
     if operation == "GETLEGENDGRAPHIC":
-        return legend_graphic(nocase_args)
+        return legend_graphic(cfg, nocase_args)
     raise WMSException(
         f"Unrecognised operation: {operation}",
         WMSException.OPERATION_NOT_SUPPORTED,
@@ -39,11 +44,10 @@ def handle_wms(nocase_args: dict[str, str]) -> tuple | None:
 
 
 @log_call
-def get_capabilities(args) -> tuple[str, int, dict[str, str]]:
+def get_capabilities(cfg: OWSConfig, args) -> tuple[str, int, dict[str, str]]:
     # TODO: Handle updatesequence request parameter for cache consistency.
     # Note: Only WMS v1.3.0 is fully supported at this stage, so no version negotiation is necessary
     # Extract layer metadata from Datacube.
-    cfg = get_config()
     url = args.get("Host", args["url_root"])
     base_url = get_service_base_url(cfg.allowed_urls, url)
     headers = cache_control_headers(cfg.wms_cap_cache_age)

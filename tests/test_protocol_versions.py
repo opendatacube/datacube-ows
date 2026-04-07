@@ -8,7 +8,8 @@ import pytest
 
 import datacube_ows.protocol_versions
 from datacube_ows.ogc_exceptions import OGCException
-from datacube_ows.protocol_versions import SupportedSvc
+from datacube_ows.ows_configuration import OWSConfig
+from datacube_ows.protocol_versions import FlaskResponse, SupportedSvc
 
 
 class DummyException1(OGCException):
@@ -19,8 +20,8 @@ class DummyException2(OGCException):
     pass
 
 
-def fake_router(*args, **kwargs) -> None:
-    return None
+def fake_router(cfg: OWSConfig, d: dict[str, str]) -> FlaskResponse:
+    return "", 500, {}
 
 
 @pytest.fixture

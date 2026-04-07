@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import logging
 from datetime import date, datetime, timedelta
@@ -17,17 +18,22 @@ from pandas import Timestamp
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 
-from datacube_ows.http_utils import FlaskResponse, json_response, png_response
+from datacube_ows.http_utils import json_response, png_response
 from datacube_ows.loading import DataStacker
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import xarray_image_as_png
-from datacube_ows.ows_configuration import OWSNamedLayer
+from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.styles import StyleDef
 from datacube_ows.time_utils import solar_date, tz_for_geometry
 from datacube_ows.utils import default_to_utc, log_call
 from datacube_ows.wms_utils import GetMapParameters
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.protocol_versions import FlaskResponse
+
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -75,11 +81,11 @@ class EmptyResponse(Exception):
 
 
 @log_call
-def get_map(args: dict[str, str]) -> FlaskResponse:
+def get_map(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
     # pylint: disable=too-many-nested-blocks, too-many-branches, too-many-statements, too-many-locals
     # Parse GET parameters
     try:
-        params = GetMapParameters(args)
+        params = GetMapParameters(cfg, args)
     except ValueError as e:
         # See #1478 for one example that brings us here.
         raise WMSException("Failed to get map parameters") from e
@@ -230,9 +236,10 @@ def get_map(args: dict[str, str]) -> FlaskResponse:
         qprof.end_event("write")
 
     if params.ows_stats:
-        return json_response(qprof.profile())
+        return json_response(qprof.profile(), cfg)
     return png_response(
         body,
+        cfg,
         extra_headers=params.layer.resource_limits.wms_cache_rules.cache_headers(
             n_datasets
         ),
