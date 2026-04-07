@@ -20,7 +20,6 @@ import math
 import os
 from collections.abc import Iterable, Mapping
 from enum import Enum
-from importlib import import_module
 from threading import Lock
 from typing import Any, Optional, Union, cast
 
@@ -1986,9 +1985,12 @@ def get_config(
     make_ready: bool = True,
 ) -> OWSConfig:
     with config_init_lock:
-        cfg = OWSConfig(
-            refresh=refresh, called_from_update_ranges=called_from_update_ranges
-        )
+        if OWSConfig._instance and OWSConfig.initialised and not refresh and not called_from_update_ranges:
+            cfg = OWSConfig._instance
+        else:
+            cfg = OWSConfig(
+                refresh=refresh, called_from_update_ranges=called_from_update_ranges
+            )
         if make_ready and not cfg.ready:
             try:
                 with contextlib.suppress(ODCInitException):
