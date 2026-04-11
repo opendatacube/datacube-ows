@@ -3,9 +3,10 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import math
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 import numpy
 import regex as re
@@ -15,18 +16,25 @@ from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
 from odc.geo import geom
 from odc.geo.crs import CRS
-from odc.geo.geobox import GeoBox
 from rasterio.warp import Resampling
 from typing_extensions import override
 
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import create_geobox
-from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
 from datacube_ows.resource_limits import RequestScale
-from datacube_ows.styles import StyleDef, StyleDefBase
+from datacube_ows.styles import StyleDef
 from datacube_ows.styles.expression import ExpressionException
 from datacube_ows.utils import default_to_utc, find_matching_date
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datetime import date
+
+    from odc.geo.geobox import GeoBox
+
+    from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
+    from datacube_ows.styles import StyleDefBase
 
 RESAMPLING_METHODS = {
     "nearest": Resampling.nearest,

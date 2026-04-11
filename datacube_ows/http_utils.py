@@ -6,15 +6,17 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
 from urllib.parse import urlparse
 
-from flask import Request, render_template, request
-
-from datacube_ows.config_utils import CFG_DICT
+from flask import render_template, request
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from flask import Request
+
+    from datacube_ows.config_utils import CFG_DICT
     from datacube_ows.ows_configuration import OWSConfig
     from datacube_ows.protocol_versions import FlaskResponse
 

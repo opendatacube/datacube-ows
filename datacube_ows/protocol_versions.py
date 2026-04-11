@@ -3,25 +3,30 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-
+from __future__ import annotations
 
 import contextlib
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from typing import TypeAlias
 
 from datacube_ows.ogc_exceptions import (
-    OGCException,
     WCS1Exception,
     WCS2Exception,
     WMSException,
     WMTSException,
 )
-from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.wcs1 import handle_wcs1
 from datacube_ows.wcs2 import handle_wcs2
 from datacube_ows.wms import handle_wms
 from datacube_ows.wmts import handle_wmts
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from datacube_ows.ogc_exceptions import OGCException
+    from datacube_ows.ows_configuration import OWSConfig
 
 FlaskResponse: TypeAlias = tuple[str | bytes, int, dict[str, str]]
 FlaskHandler: TypeAlias = Callable[[Mapping[str, str]], FlaskResponse]

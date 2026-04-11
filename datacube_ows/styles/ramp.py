@@ -3,15 +3,14 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
-import io
 import logging
 from collections import defaultdict
-from collections.abc import Hashable, Iterable, MutableMapping
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
-from typing import Any, Union, cast
+from typing import Any, cast
 
 import matplotlib
 import matplotlib.colorbar
@@ -20,7 +19,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, to_rgba
 from numpy import ubyte
 from typing_extensions import override
-from xarray import DataArray, Dataset
+from xarray import Dataset
 
 from datacube_ows.config_utils import (
     CFG_DICT,
@@ -33,6 +32,11 @@ from datacube_ows.styles.expression import Expression
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    import io
+    from collections.abc import Hashable, Iterable, MutableMapping
+
+    from xarray import DataArray
+
     from datacube_ows.ows_configuration import OWSNamedLayer
 
 _LOG: logging.Logger = logging.getLogger(__name__)
@@ -48,7 +52,7 @@ class RampNode:
     def rgba(self) -> tuple[float, float, float, float]:
         return to_rgba(self.color, self.alpha)
 
-    def with_value(self, value: int | float) -> "RampNode":
+    def with_value(self, value: int | float) -> RampNode:
         return RampNode(value, self.color, self.alpha)
 
 
@@ -171,7 +175,7 @@ class ColorRamp:
     """
 
     def __init__(
-        self, style: StyleDefBase, ramp_cfg: CFG_DICT, legend: "RampLegendBase"
+        self, style: StyleDefBase, ramp_cfg: CFG_DICT, legend: RampLegendBase
     ) -> None:
         """
         :param style: The style owning the ramp
@@ -271,7 +275,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     METADATA_TICK_LABELS: bool = True
 
     def __init__(
-        self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT
+        self, style_or_mdh: StyleDefBase | StyleDefBase.Legend, cfg: CFG_DICT
     ) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast("CFG_DICT", self._raw_cfg)
@@ -512,7 +516,7 @@ class ColorRampDef(StyleDefBase):
 
     def __init__(
         self,
-        product: "OWSNamedLayer",
+        product: OWSNamedLayer,
         style_cfg: CFG_DICT,
         stand_alone: bool = False,
         defer_multi_date: bool = False,
@@ -592,7 +596,7 @@ class ColorRampDef(StyleDefBase):
     class MultiDateHandler(StyleDefBase.MultiDateHandler):
         auto_legend = True
 
-        def __init__(self, style: "ColorRampDef", cfg: CFG_DICT) -> None:
+        def __init__(self, style: ColorRampDef, cfg: CFG_DICT) -> None:
             """
             First stage initialisation
 

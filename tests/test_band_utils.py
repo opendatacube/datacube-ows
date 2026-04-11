@@ -6,7 +6,8 @@
 
 """Test band math utilities"""
 
-from collections.abc import Callable, Sequence
+from __future__ import annotations
+
 from typing import Literal
 
 import numpy as np
@@ -33,6 +34,10 @@ from datacube_ows.band_utils import (
     sum_bands,
 )
 from datacube_ows.ows_configuration import BandIndex, OWSProductLayer
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 
 class MockArray(xr.DataArray):

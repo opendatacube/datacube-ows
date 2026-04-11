@@ -15,13 +15,13 @@ from datacube_ows.http_utils import (
     json_response,
 )
 from datacube_ows.ogc_exceptions import WCS1Exception
-from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
 from datacube_ows.wcs1_utils import WCS1GetCoverageRequest, get_coverage_data
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
     from datacube_ows.protocol_versions import FlaskResponse
 
 WCS_REQUESTS = ("DESCRIBECOVERAGE", "GETCOVERAGE")

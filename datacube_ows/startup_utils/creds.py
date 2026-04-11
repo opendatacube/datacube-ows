@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import os
-from logging import Logger
 from threading import Lock
 
 from datacube.utils.aws import configure_s3_access
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from logging import Logger
 
 credential_lock = Lock()
 
@@ -10,7 +15,7 @@ credential_lock = Lock()
 class CredentialManager:
     _instance = None
 
-    def __new__(cls, log: Logger | None = None) -> "CredentialManager":
+    def __new__(cls, log: Logger | None = None) -> CredentialManager:
         # new/init assumed to be called with credential_lock held
         if not cls._instance:
             cls._instance = super().__new__(cls)

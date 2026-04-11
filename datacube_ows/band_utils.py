@@ -3,12 +3,18 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Callable, Sequence
+from __future__ import annotations
+
 from functools import wraps
 from typing import Literal
 
 import numpy
-import xarray as xr
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    import xarray as xr
 
 # Style index functions
 

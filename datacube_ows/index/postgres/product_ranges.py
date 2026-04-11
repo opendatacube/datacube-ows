@@ -3,23 +3,30 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import logging
 import math
-from collections.abc import Callable
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from typing import cast
 
-import odc.geo
 from datacube.api.query import _convert_to_solar_time
-from odc.geo.crs import CRS
-from odc.geo.geom import Geometry
 from sqlalchemy import text
 
 from datacube_ows.index.api import CoordRange, LayerExtent, LayerSignature
 from datacube_ows.index.postgres.mv_index import MVSelectOpts, mv_search
-from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.utils import get_driver_name, get_sqlconn
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import date
+
+    import odc.geo
+    from odc.geo.crs import CRS
+    from odc.geo.geom import Geometry
+
+    from datacube_ows.ows_configuration import OWSNamedLayer
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 

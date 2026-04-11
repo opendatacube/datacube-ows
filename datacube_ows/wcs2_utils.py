@@ -7,10 +7,8 @@ from __future__ import annotations
 
 import collections
 import logging
-from datetime import date, datetime
 
 import numpy
-import xarray as xr
 from dateutil.parser import parse
 from odc.geo.geobox import GeoBox
 from ows.wcs.v20 import ScaleAxis, ScaleExtent, ScaleSize, Slice, Trim
@@ -24,6 +22,10 @@ from datacube_ows.wcs_scaler import WCSScaler, WCSScalerUnknownDimension
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from datetime import date, datetime
+
+    import xarray as xr
+
     from datacube_ows.ows_configuration import OWSConfig
 
 _LOG: logging.Logger = logging.getLogger(__name__)

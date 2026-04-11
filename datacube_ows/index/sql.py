@@ -3,18 +3,22 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import importlib.resources
 import re
 
 import click
-import datacube.index
 import sqlalchemy
-from datacube import Datacube
 from sqlalchemy.exc import ProgrammingError
 
 from datacube_ows.index.api import InsufficientDbPrivileges
 from datacube_ows.utils import get_driver_name, get_sqlconn
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    import datacube.index
+    from datacube import Datacube
 
 
 def run_sql(dc: Datacube, path: str, **params: str) -> bool:

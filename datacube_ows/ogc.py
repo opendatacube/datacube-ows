@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 import traceback
-from logging import Logger
 
 from flask import render_template, request
 from sqlalchemy.exc import OperationalError
@@ -22,14 +21,16 @@ from datacube_ows.http_utils import (
 from datacube_ows.index.api import ows_index
 from datacube_ows.legend_generator import create_legend_for_style
 from datacube_ows.ogc_exceptions import OGCException, WMSException
-from datacube_ows.protocol_versions import SupportedSvc, supported_versions
+from datacube_ows.protocol_versions import supported_versions
 from datacube_ows.wcs1 import WCS_REQUESTS
 from datacube_ows.wms import WMS_REQUESTS
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from logging import Logger
+
     from datacube_ows.ows_configuration import OWSConfig
-    from datacube_ows.protocol_versions import FlaskResponse
+    from datacube_ows.protocol_versions import FlaskResponse, SupportedSvc
 
 _LOG: Logger = logging.getLogger(__name__)
 

@@ -12,8 +12,6 @@ from typing import Any
 import numpy
 import numpy.ma
 import xarray
-from odc.geo import geom
-from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
@@ -22,17 +20,20 @@ from datacube_ows.http_utils import json_response, png_response
 from datacube_ows.loading import DataStacker
 from datacube_ows.ogc_exceptions import WMSException
 from datacube_ows.ogc_utils import xarray_image_as_png
-from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.resource_limits import ResourceLimited
-from datacube_ows.styles import StyleDef
 from datacube_ows.time_utils import solar_date, tz_for_geometry
 from datacube_ows.utils import default_to_utc, log_call
 from datacube_ows.wms_utils import GetMapParameters
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from odc.geo import geom
+    from odc.geo.geobox import GeoBox
+
+    from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
     from datacube_ows.protocol_versions import FlaskResponse
+    from datacube_ows.styles import StyleDef
 
 
 _LOG: logging.Logger = logging.getLogger(__name__)

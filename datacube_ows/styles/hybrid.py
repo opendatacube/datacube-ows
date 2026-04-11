@@ -3,20 +3,23 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from typing import cast
 
 from typing_extensions import override
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.styles.base import StyleDefBase
-from datacube_ows.styles.component import LINEAR_COMP_DICT, ComponentStyleDef
+from datacube_ows.styles.component import ComponentStyleDef
 from datacube_ows.styles.ramp import ColorRampDef
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from datacube_ows.config_utils import CFG_DICT
     from datacube_ows.ows_configuration import OWSNamedLayer
+    from datacube_ows.styles.component import LINEAR_COMP_DICT
 
 
 class HybridStyleDef(ColorRampDef, ComponentStyleDef):
@@ -30,7 +33,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
 
     def __init__(
         self,
-        product: "OWSNamedLayer",
+        product: OWSNamedLayer,
         style_cfg: CFG_DICT,
         defer_multi_date: bool = False,
         stand_alone: bool = False,

@@ -3,13 +3,18 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import xarray
-from PIL import Image
 
-from datacube_ows.config_utils import CFG_DICT
 from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from PIL import Image
+
+    from datacube_ows.config_utils import CFG_DICT
 
 initialise_ignorable_warnings()
 

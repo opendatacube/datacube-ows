@@ -12,11 +12,11 @@ from datacube_ows.feature_info import feature_info
 from datacube_ows.http_utils import cache_control_headers, get_service_base_url
 from datacube_ows.legend_generator import legend_graphic
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.utils import log_call
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
     from datacube_ows.protocol_versions import FlaskResponse
 
 WMS_REQUESTS = ("GETMAP", "GETFEATUREINFO", "GETLEGENDGRAPHIC")
