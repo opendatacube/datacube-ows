@@ -53,7 +53,7 @@ def main(version: bool) -> int:
     "--folders",
     is_flag=True,
     default=False,
-    help="Print the folder/layer heirarchy(ies) to stdout.",
+    help="Print the folder/layer hierarchy(ies) to stdout.",
 )
 @click.option(
     "-s",
