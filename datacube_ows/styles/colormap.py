@@ -3,12 +3,11 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
-import io
 import logging
-from collections.abc import Callable, MutableMapping
 from datetime import datetime
-from typing import Union, cast
+from typing import cast
 
 import numpy
 import xarray
@@ -20,16 +19,18 @@ from typing_extensions import override
 from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import (
-    CFG_DICT,
     AbstractMaskRule,
     ConfigException,
-    FlagSpec,
     OWSMetadataConfig,
 )
 from datacube_ows.styles.base import StyleDefBase
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    import io
+    from collections.abc import Callable, MutableMapping
+
+    from datacube_ows.config_utils import CFG_DICT, FlagSpec
     from datacube_ows.ows_configuration import OWSNamedLayer
 
 _LOG: logging.Logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class AbstractValueMapRule(AbstractMaskRule):
 
     def __init__(
         self,
-        style_def: Union["ColorMapStyleDef", "ColorMapStyleDef.MultiDateHandler"],
+        style_def: ColorMapStyleDef | ColorMapStyleDef.MultiDateHandler,
         band: str,
         cfg: CFG_DICT,
     ) -> None:
@@ -91,9 +92,9 @@ class AbstractValueMapRule(AbstractMaskRule):
     @classmethod
     def value_map_from_config(
         cls,
-        style_or_mdh: Union["ColorMapStyleDef", "ColorMapStyleDef.MultiDateHandler"],
+        style_or_mdh: ColorMapStyleDef | ColorMapStyleDef.MultiDateHandler,
         cfg: CFG_DICT,
-    ) -> dict[str, list["AbstractValueMapRule"]]:
+    ) -> dict[str, list[AbstractValueMapRule]]:
         """
         Create a multi-date value map rule set from a config specification
 
@@ -132,7 +133,7 @@ class ValueMapRule(AbstractValueMapRule):
     Construct a ValueMap rule-set with ValueMapRule.value_map_from_config
     """
 
-    def __init__(self, style_cfg: "ColorMapStyleDef", band: str, cfg: CFG_DICT) -> None:
+    def __init__(self, style_cfg: ColorMapStyleDef, band: str, cfg: CFG_DICT) -> None:
         """
         Construct a Multi-date Value Map Rule
 
@@ -151,7 +152,7 @@ class MultiDateValueMapRule(AbstractValueMapRule):
     """
 
     def __init__(
-        self, mdh: "ColorMapStyleDef.MultiDateHandler", band: str, cfg: CFG_DICT
+        self, mdh: ColorMapStyleDef.MultiDateHandler, band: str, cfg: CFG_DICT
     ) -> None:
         """
         Construct a Multi-date Value Map Rule
@@ -316,7 +317,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
     METADATA_VALUE_RULES: bool = True
 
     def __init__(
-        self, style_or_mdh: Union["StyleDefBase", "StyleDefBase.Legend"], cfg: CFG_DICT
+        self, style_or_mdh: StyleDefBase | StyleDefBase.Legend, cfg: CFG_DICT
     ) -> None:
         super().__init__(style_or_mdh, cfg)
         raw_cfg = cast("CFG_DICT", self._raw_cfg)
@@ -326,7 +327,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         self.patches: list[PatchTemplate] = []
 
     def register_value_map(
-        self, value_map: MutableMapping[str, list["AbstractValueMapRule"]]
+        self, value_map: MutableMapping[str, list[AbstractValueMapRule]]
     ) -> None:
         for band in value_map:
             for idx, rule in reversed(list(enumerate(value_map[band]))):
@@ -377,7 +378,7 @@ class ColorMapStyleDef(StyleDefBase):
 
     def __init__(
         self,
-        product: "OWSNamedLayer",
+        product: OWSNamedLayer,
         style_cfg: CFG_DICT,
         stand_alone: bool = False,
         user_defined: bool = False,
@@ -452,7 +453,7 @@ class ColorMapStyleDef(StyleDefBase):
         auto_legend = True
         non_animate_requires_aggregator = False
 
-        def __init__(self, style: "ColorMapStyleDef", cfg: CFG_DICT) -> None:
+        def __init__(self, style: ColorMapStyleDef, cfg: CFG_DICT) -> None:
             """
             First stage initialisation
 
@@ -473,13 +474,13 @@ class ColorMapStyleDef(StyleDefBase):
                 )
 
         @property
-        def value_map(self) -> dict[str, list["AbstractValueMapRule"]]:
+        def value_map(self) -> dict[str, list[AbstractValueMapRule]]:
             if self._value_map is None:
                 self._value_map = self.style.value_map
             return self._value_map
 
         @override
-        def transform_data(self, data: "xarray.Dataset") -> "xarray.Dataset":
+        def transform_data(self, data: xarray.Dataset) -> xarray.Dataset:
             """
             Apply image transformation
 

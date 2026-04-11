@@ -25,13 +25,13 @@ from datacube_ows.http_utils import (
     resp_headers,
 )
 from datacube_ows.ogc_exceptions import WCS2Exception
-from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.utils import log_call
 from datacube_ows.wcs2_utils import get_coverage_data
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
     from datacube_ows.protocol_versions import FlaskResponse
 
 _LOG: logging.Logger = logging.getLogger(__name__)

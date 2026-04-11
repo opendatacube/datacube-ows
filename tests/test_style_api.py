@@ -3,13 +3,13 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from decimal import Decimal
 
 import pytest
-import xarray as xr
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.styles.api import (
     StandaloneStyle,
     apply_ows_style,
@@ -22,6 +22,12 @@ from datacube_ows.styles.api import (
     plot_image_with_style_cfg,
     xarray_image_as_png,
 )
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    import xarray as xr
+
+    from datacube_ows.config_utils import CFG_DICT
 
 
 def test_indirect_imports() -> None:

@@ -3,18 +3,23 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import datetime
 import logging
 from zoneinfo import ZoneInfo
 
-from datacube.model import Dataset
 from dateutil.parser import parse
-from odc.geo import CRS, Geometry
-from odc.geo.geobox import GeoBox
+from odc.geo import CRS
 from timezonefinder import TimezoneFinder
 
-from datacube_ows.config_utils import OWSExtensibleConfigEntry
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube.model import Dataset
+    from odc.geo import Geometry
+    from odc.geo.geobox import GeoBox
+
+    from datacube_ows.config_utils import OWSExtensibleConfigEntry
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 tf = TimezoneFinder(in_memory=True)

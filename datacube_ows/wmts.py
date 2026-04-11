@@ -13,11 +13,11 @@ from datacube_ows.data import get_map
 from datacube_ows.feature_info import feature_info
 from datacube_ows.http_utils import cache_control_headers, get_service_base_url
 from datacube_ows.ogc_exceptions import WMSException, WMTSException
-from datacube_ows.ows_configuration import OWSConfig
 from datacube_ows.utils import log_call
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
     from datacube_ows.protocol_versions import FlaskResponse
 
 _LOG: logging.Logger = logging.getLogger(__name__)

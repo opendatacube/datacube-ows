@@ -7,32 +7,36 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Iterable
-from datetime import datetime
 from itertools import chain
 from typing import cast
 
 import numpy
-import xarray
-from datacube.model import Dataset
 from datacube.utils.masking import mask_to_dict
 from odc.geo import geom
 from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 
-from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.http_utils import html_json_response, json_response
-from datacube_ows.loading import DataStacker, ProductBandQuery
-from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
-from datacube_ows.styles import StyleDef
+from datacube_ows.loading import DataStacker
 from datacube_ows.time_utils import dataset_center_time
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import GetFeatureInfoParameters, img_coords_to_geopoint
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from datetime import datetime
+
+    import xarray
+    from datacube.model import Dataset
+
+    from datacube_ows.config_utils import CFG_DICT, RAW_CFG
+    from datacube_ows.loading import ProductBandQuery
+    from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
     from datacube_ows.protocol_versions import FlaskResponse
+    from datacube_ows.styles import StyleDef
 
 
 @log_call

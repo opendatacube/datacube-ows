@@ -3,18 +3,16 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import datetime
-from collections.abc import Iterable
 from threading import Lock
 from typing import Any, Literal
-from uuid import UUID
 
 import click
 from antimeridian import fix_shape
-from datacube import Datacube
 from datacube.drivers.common_psql import as_role
-from datacube.model import Dataset, Product, Range
+from datacube.model import Range
 from odc.geo import CRS, Geometry
 from sqlalchemy import text
 from typing_extensions import override
@@ -22,20 +20,27 @@ from typing_extensions import override
 from datacube_ows.index.api import (
     AbortRun,
     InsufficientDbPrivileges,
-    LayerExtent,
-    LayerSignature,
     OWSAbstractIndex,
     OWSAbstractIndexDriver,
-    TimeSearchTerm,
     check_perms,
 )
 from datacube_ows.index.sql import run_sql
-from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.utils import get_driver_name, get_sqlconn
 
 from ...utils import default_to_utc
 from .product_ranges import create_range_entry as create_range_entry_impl
 from .product_ranges import get_ranges as get_ranges_impl
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from uuid import UUID
+
+    from datacube import Datacube
+    from datacube.model import Dataset, Product
+
+    from datacube_ows.index.api import LayerExtent, LayerSignature, TimeSearchTerm
+    from datacube_ows.ows_configuration import OWSNamedLayer
 
 
 class OWSPostgisIndex(OWSAbstractIndex):

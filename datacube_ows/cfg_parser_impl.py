@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-
+from __future__ import annotations
 
 import json
 import os
@@ -17,13 +17,11 @@ from deepdiff import DeepDiff
 
 from datacube_ows import __version__
 from datacube_ows.config_utils import ConfigException
-from datacube_ows.ows_configuration import (
-    OWSConfig,
-    OWSFolder,
-    OWSLayer,
-    OWSNamedLayer,
-    read_config,
-)
+from datacube_ows.ows_configuration import OWSConfig, OWSFolder, read_config
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSLayer, OWSNamedLayer
 
 
 @click.group(invoke_without_command=True)

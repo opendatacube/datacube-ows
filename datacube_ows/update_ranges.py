@@ -4,22 +4,28 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-
+from __future__ import annotations
 
 import sys
 
 import click
 from datacube import Datacube
-from datacube.cfg import ODCEnvironment
 from datacube.index import IndexSetupError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datacube_ows import __version__
 from datacube_ows.config_utils import ConfigException, OWSConfigNotReady
-from datacube_ows.index import AbortRun, LayerSignature, ows_index
+from datacube_ows.index import AbortRun, ows_index
 from datacube_ows.index.api import InsufficientDbPrivileges
-from datacube_ows.ows_configuration import OWSConfig, get_config
+from datacube_ows.ows_configuration import get_config
 from datacube_ows.startup_utils import initialise_debugging
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube.cfg import ODCEnvironment
+
+    from datacube_ows.index import LayerSignature
+    from datacube_ows.ows_configuration import OWSConfig
 
 
 @click.command()

@@ -3,31 +3,37 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import contextlib
 import json
 import logging
 import os
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 from importlib import import_module
 from itertools import chain
-from typing import Any, Optional, TypeAlias, cast
+from typing import Any, TypeAlias, cast
 from urllib.parse import urlparse
 
 import fsspec
-from babel.messages import Catalog, Message
-from datacube.model import Product
 from datacube.utils.masking import make_mask
 from flask_babel import gettext as _
 from typing_extensions import override
-from xarray import DataArray
 
 from datacube_ows.config_toolkit import deepinherit
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from babel.messages import Catalog, Message
+    from datacube.model import Product
+    from xarray import DataArray
+
     import datacube_ows.ows_configuration
-    import datacube_ows.styles.base
+    from datacube_ows.ows_configuration import AttributionCfg, OWSConfig, OWSNamedLayer
+    from datacube_ows.styles import StyleDef
+    from datacube_ows.styles.base import StyleMask
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -316,13 +322,13 @@ class OWSMetadataConfig(OWSConfigEntry):
 
     # Inaccessible attributes to allow type checking
     abstract: str = ""
-    attribution: Optional["datacube_ows.ows_configuration.AttributionCfg"] = None
+    attribution: AttributionCfg | None = None
 
     def get_obj_label(self) -> str:
         """Return the metadata path prefix for this object."""
         return "global"
 
-    def can_inherit_from(self) -> Optional["OWSMetadataConfig"]:
+    def can_inherit_from(self) -> OWSMetadataConfig | None:
         """
         The parent config object this object can inherit metadata from.
 
@@ -541,7 +547,7 @@ class OWSMetadataConfig(OWSConfigEntry):
         """
         return self.read_inheritance(self.get_obj_label(), fld)
 
-    def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
+    def global_config(self) -> OWSConfig:
         """
         Return the global config object.
 
@@ -613,11 +619,8 @@ class OWSIndexedConfigEntry(OWSConfigEntry):
 
     @classmethod
     def lookup_impl(
-        cls,
-        cfg: "datacube_ows.ows_configuration.OWSConfig",
-        keyvals: dict[str, str],
-        subs: CFG_DICT | None = None,
-    ) -> "OWSIndexedConfigEntry":
+        cls, cfg: OWSConfig, keyvals: dict[str, str], subs: CFG_DICT | None = None
+    ) -> OWSIndexedConfigEntry:
         """
         Lookup a config entry of this type by identifying label(s)
 
@@ -640,7 +643,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
         self,
         cfg: RAW_CFG,
         keyvals: dict[str, str],
-        global_cfg: "datacube_ows.ows_configuration.OWSConfig",
+        global_cfg: OWSConfig,
         *args,
         keyval_subs: dict[str, Any] | None = None,
         keyval_defaults: dict[str, str] | None = None,
@@ -670,7 +673,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
     def expand_inherit(
         cls,
         cfg: CFG_DICT,
-        global_cfg: "datacube_ows.ows_configuration.OWSConfig",
+        global_cfg: OWSConfig,
         keyval_subs: dict[str, Any] | None = None,
         keyval_defaults: dict[str, str] | None = None,
     ) -> RAW_CFG:
@@ -736,12 +739,7 @@ class OWSFlagBand(OWSConfigEntry):
     Represents a flag band, which may come from the main product or a parallel secondary product.
     """
 
-    def __init__(
-        self,
-        cfg: CFG_DICT,
-        product_cfg: "datacube_ows.ows_configuration.OWSNamedLayer",
-        **kwargs,
-    ) -> None:
+    def __init__(self, cfg: CFG_DICT, product_cfg: OWSNamedLayer, **kwargs) -> None:
         """
         Class constructor, first round initialisation
 
@@ -844,9 +842,7 @@ class FlagProductBands(OWSConfigEntry):
     A collection of flag bands for a layer that all come from the same product (or multi-product product collection).
     """
 
-    def __init__(
-        self, flag_band: FlagBand, layer: "datacube_ows.ows_configuration.OWSNamedLayer"
-    ) -> None:
+    def __init__(self, flag_band: FlagBand, layer: OWSNamedLayer) -> None:
         """
         Class constructor, first round initialisation
 
@@ -918,10 +914,8 @@ class FlagProductBands(OWSConfigEntry):
 
     @classmethod
     def build_list_from_masks(
-        cls,
-        masks: Iterable["datacube_ows.styles.base.StyleMask"],
-        layer: "datacube_ows.ows_configuration.OWSNamedLayer",
-    ) -> list["FlagProductBands"]:
+        cls, masks: Iterable[StyleMask], layer: OWSNamedLayer
+    ) -> list[FlagProductBands]:
         """
         Class method to instantiate a list of FlagProductBands from a list of style masks.
 
@@ -945,10 +939,8 @@ class FlagProductBands(OWSConfigEntry):
 
     @classmethod
     def build_list_from_flagbands(
-        cls,
-        flagbands: Iterable[OWSFlagBand],
-        layer: "datacube_ows.ows_configuration.OWSNamedLayer",
-    ) -> list["FlagProductBands"]:
+        cls, flagbands: Iterable[OWSFlagBand], layer: OWSNamedLayer
+    ) -> list[FlagProductBands]:
         """
         Class method to instantiate a list of FlagProductBands from a list of OWS Flag Bands.
 
@@ -1116,14 +1108,11 @@ class FunctionWrapper:
             if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
                 if hasattr(product_or_style_cfg, "band_idx"):
                     # NamedLayer
-
                     named_layer = cast("OWSNamedLayer", product_or_style_cfg)
                     b_idx = named_layer.band_idx
                     self.band_mapper = b_idx.band
                 else:
                     # Style
-                    from datacube_ows.styles import StyleDef
-
                     style = cast("StyleDef", product_or_style_cfg)
                     b_idx = style.product.band_idx
                     delocaliser = style.local_band

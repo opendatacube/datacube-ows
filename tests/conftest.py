@@ -3,20 +3,26 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import datetime
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
-import flask
 import numpy as np
 import pytest
 import xarray as xr
 from datacube.cfg import ODCConfig
 
-from datacube_ows.config_utils import CFG_DICT
 from tests.utils import coords, dim1_da, dim1_da_time, dummy_da
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    import flask
+
+    from datacube_ows.config_utils import CFG_DICT
 
 
 @pytest.fixture

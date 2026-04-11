@@ -3,18 +3,22 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import logging
 import os
 import sys
 import warnings
-from collections.abc import Callable
-from logging import Logger
 from time import monotonic
 from typing import Any, TypeVar
 
 from flask import Flask, g, request
 from sqlalchemy.exc import OperationalError
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from logging import Logger
 
 __all__ = [
     "create_app",

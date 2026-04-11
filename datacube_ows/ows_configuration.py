@@ -11,6 +11,8 @@
 #
 #  Refer to the documentation for information on how to configure datacube_ows.
 #
+from __future__ import annotations
+
 import contextlib
 import datetime
 import enum
@@ -18,30 +20,24 @@ import json
 import logging
 import math
 import os
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from enum import Enum
 from threading import Lock
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import numpy
 from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po
 from datacube import Datacube
-from datacube.api.query import GroupBy
-from datacube.cfg import ODCConfig, ODCEnvironment
-from datacube.model import Measurement, Product
+from datacube.cfg import ODCConfig
 from odc.geo import CRS, CRSError
-from odc.geo.geobox import GeoBox
 from ows import Version
 from slugify import slugify
 from sqlalchemy.exc import OperationalError
 from typing_extensions import override
 
 from datacube_ows.config_utils import (
-    CFG_DICT,
-    RAW_CFG,
     ConfigException,
-    F,
     FlagProductBands,
     FunctionWrapper,
     ODCInitException,
@@ -55,7 +51,7 @@ from datacube_ows.config_utils import (
     import_python_obj,
     load_json_obj,
 )
-from datacube_ows.index.api import OWSAbstractIndex, ows_index
+from datacube_ows.index.api import ows_index
 from datacube_ows.ogc_utils import create_geobox
 from datacube_ows.resource_limits import OWSResourceManagementRules, parse_cache_age
 from datacube_ows.styles import StyleDef
@@ -65,7 +61,15 @@ from datacube_ows.utils import group_by_begin_datetime, group_by_mosaic, group_b
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from datacube_ows.index.api import LayerExtent
+    from collections.abc import Iterable
+
+    from datacube.api.query import GroupBy
+    from datacube.cfg import ODCEnvironment
+    from datacube.model import Measurement, Product
+    from odc.geo.geobox import GeoBox
+
+    from datacube_ows.config_utils import CFG_DICT, RAW_CFG, F
+    from datacube_ows.index.api import LayerExtent, OWSAbstractIndex
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -147,7 +151,7 @@ class BandIndex(OWSMetadataConfig):
     METADATA_TITLE = False
     METADATA_ABSTRACT = False
 
-    def __init__(self, layer: "OWSNamedLayer", band_cfg: CFG_DICT | None) -> None:
+    def __init__(self, layer: OWSNamedLayer, band_cfg: CFG_DICT | None) -> None:
         if band_cfg is None:
             band_cfg = {}
         super().__init__(band_cfg)
@@ -162,7 +166,7 @@ class BandIndex(OWSMetadataConfig):
         self.declare_unready("_dtypes")
 
     @override
-    def global_config(self) -> "OWSConfig":
+    def global_config(self) -> OWSConfig:
         return self.layer.global_config()
 
     @override
@@ -287,7 +291,7 @@ class BandIndex(OWSMetadataConfig):
 
 
 class AttributionCfg(OWSConfigEntry):
-    def __init__(self, cfg: CFG_DICT, owner: Union["OWSConfig", "OWSLayer"]) -> None:
+    def __init__(self, cfg: CFG_DICT, owner: OWSConfig | OWSLayer) -> None:
         super().__init__(cfg)
         self.owner = owner
         self.url = cast("str | None", cfg.get("url"))
@@ -319,8 +323,8 @@ class AttributionCfg(OWSConfigEntry):
 
     @classmethod
     def parse(
-        cls, cfg: CFG_DICT | None, owner: Union["OWSConfig", "OWSLayer"]
-    ) -> Optional["AttributionCfg"]:
+        cls, cfg: CFG_DICT | None, owner: OWSConfig | OWSLayer
+    ) -> AttributionCfg | None:
         if not cfg:
             return None
         return cls(cfg, owner)
@@ -328,7 +332,7 @@ class AttributionCfg(OWSConfigEntry):
 
 class SuppURL(OWSConfigEntry):
     @classmethod
-    def parse_list(cls, cfg: list[dict[str, str]] | None) -> list["SuppURL"]:
+    def parse_list(cls, cfg: list[dict[str, str]] | None) -> list[SuppURL]:
         if not cfg:
             return []
         return [cls(u) for u in cfg]
@@ -349,7 +353,7 @@ class OWSLayer(OWSMetadataConfig):
         self,
         cfg: CFG_DICT,
         object_label: str,
-        parent_layer: Optional["OWSLayer"] = None,
+        parent_layer: OWSLayer | None = None,
         **kwargs,
     ) -> None:
         super().__init__(cfg, **kwargs)
@@ -430,11 +434,11 @@ class OWSLayer(OWSMetadataConfig):
         return ows_index(self.dc)
 
     @override
-    def global_config(self) -> "OWSConfig":
+    def global_config(self) -> OWSConfig:
         return self.global_cfg
 
     @override
-    def can_inherit_from(self) -> Union["OWSConfig", "OWSLayer"]:
+    def can_inherit_from(self) -> OWSConfig | OWSLayer:
         if self.parent_layer:
             return self.parent_layer
         return self.global_cfg
@@ -458,8 +462,8 @@ class OWSFolder(OWSLayer):
     def __init__(
         self,
         cfg: CFG_DICT,
-        global_cfg: "OWSConfig",
-        parent_layer: Optional["OWSFolder"] = None,
+        global_cfg: OWSConfig,
+        parent_layer: OWSFolder | None = None,
         sibling: int = 0,
         **kwargs,
     ) -> None:
@@ -549,7 +553,7 @@ class TimeRes(Enum):
         return not self.is_subday()
 
     @classmethod
-    def parse(cls, cfg: str | None) -> Optional["TimeRes"]:
+    def parse(cls, cfg: str | None) -> TimeRes | None:
         if cfg is None:
             cfg = "solar"
         elif cfg == "raw":
@@ -618,7 +622,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     def __init__(
         self,
         cfg: CFG_DICT,
-        global_cfg: "OWSConfig",
+        global_cfg: OWSConfig,
         parent_layer: OWSFolder | None = None,
         **kwargs,
     ) -> None:
@@ -1265,7 +1269,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return True
 
     def time_range(
-        self, ranges: Optional["LayerExtent"] = None
+        self, ranges: LayerExtent | None = None
     ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
         if ranges is None:
             ranges = self.ranges
@@ -1282,7 +1286,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         return start, end
 
     @property
-    def ranges(self) -> "LayerExtent":
+    def ranges(self) -> LayerExtent:
         if self.dynamic:
             ranges_ok = self.force_range_update()
             if not ranges_ok:
@@ -1344,8 +1348,8 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
     @classmethod
     @override
     def lookup_impl(
-        cls, cfg: "OWSConfig", keyvals: dict[str, str], subs: CFG_DICT | None = None
-    ) -> "OWSNamedLayer":
+        cls, cfg: OWSConfig, keyvals: dict[str, str], subs: CFG_DICT | None = None
+    ) -> OWSNamedLayer:
         try:
             return cfg.layer_index[keyvals["layer"]]
         except KeyError:
@@ -1478,7 +1482,7 @@ class OWSMultiProductLayer(OWSNamedLayer):
 
 def parse_ows_layer(
     cfg: CFG_DICT,
-    global_cfg: "OWSConfig",
+    global_cfg: OWSConfig,
     parent_layer: OWSFolder | None = None,
     sibling: int = 0,
 ) -> OWSLayer:
@@ -1491,7 +1495,7 @@ def parse_ows_layer(
 
 class WCSFormat:
     @staticmethod
-    def from_cfg(cfg: dict[str, CFG_DICT]) -> list["WCSFormat"]:
+    def from_cfg(cfg: dict[str, CFG_DICT]) -> list[WCSFormat]:
         renderers: list[WCSFormat] = []
         for name, fmt in cfg.items():
             if "renderers" in fmt:
@@ -1538,7 +1542,7 @@ class WCSFormat:
 
 
 class ContactInfo(OWSConfigEntry):
-    def __init__(self, cfg: CFG_DICT, global_cfg: "OWSConfig") -> None:
+    def __init__(self, cfg: CFG_DICT, global_cfg: OWSConfig) -> None:
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.person = cfg.get("person")
@@ -1554,7 +1558,7 @@ class ContactInfo(OWSConfigEntry):
                 self.country = cfg.get("country")
 
             @classmethod
-            def parse(cls, cfg: dict[str, str] | None) -> Optional["Address"]:
+            def parse(cls, cfg: dict[str, str] | None) -> Address | None:
                 if not cfg:
                     return None
                 return cls(cfg)
@@ -1573,17 +1577,17 @@ class ContactInfo(OWSConfigEntry):
         return self.global_cfg.contact_position
 
     @classmethod
-    def parse(cls, cfg, global_cfg) -> Optional["ContactInfo"]:
+    def parse(cls, cfg, global_cfg) -> ContactInfo | None:
         if cfg:
             return cls(cfg, global_cfg)
         return None
 
 
 class OWSConfig(OWSMetadataConfig):
-    _instance: Optional["OWSConfig"] = None
+    _instance: OWSConfig | None = None
     initialised = False
 
-    def __new__(cls, *args, **kwargs) -> "OWSConfig":
+    def __new__(cls, *args, **kwargs) -> OWSConfig:
         if not cls._instance or kwargs.get("refresh"):
             cls._instance = super().__new__(cls)
         return cls._instance

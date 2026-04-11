@@ -3,31 +3,38 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
-import datetime
 import logging
 from collections import OrderedDict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from typing import cast
 from uuid import UUID
 
 import datacube
 import numpy
 import xarray
-from datacube.model import Dataset, Measurement, Product
-from odc.geo.crs import CRS
-from odc.geo.geobox import GeoBox
-from odc.geo.geom import Geometry
-from odc.geo.warp import Resampling
-from odc.loader.types import FuserFunc
 from typing_extensions import override
 
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ows_configuration import OWSNamedLayer
 from datacube_ows.startup_utils.creds import CredentialManager
-from datacube_ows.styles import StyleDef
 from datacube_ows.utils import log_call
 from datacube_ows.wms_utils import solar_correct_data
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    import datetime
+    from collections.abc import Mapping
+
+    from datacube.model import Dataset, Measurement, Product
+    from odc.geo.crs import CRS
+    from odc.geo.geobox import GeoBox
+    from odc.geo.geom import Geometry
+    from odc.geo.warp import Resampling
+    from odc.loader.types import FuserFunc
+
+    from datacube_ows.ows_configuration import OWSNamedLayer
+    from datacube_ows.styles import StyleDef
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -61,7 +68,7 @@ class ProductBandQuery:
     @classmethod
     def style_queries(
         cls, style: StyleDef, resource_limited: bool = False
-    ) -> list["ProductBandQuery"]:
+    ) -> list[ProductBandQuery]:
         queries = [
             cls.simple_layer_query(
                 style.product,
@@ -93,7 +100,7 @@ class ProductBandQuery:
     @classmethod
     def full_layer_queries(
         cls, layer: OWSNamedLayer, main_bands: list[str] | None = None
-    ) -> list["ProductBandQuery"]:
+    ) -> list[ProductBandQuery]:
         if main_bands:
             needed_bands: Iterable[str] = main_bands
         else:
@@ -134,7 +141,7 @@ class ProductBandQuery:
         manual_merge: bool = False,
         fuse_func: FuserFunc | str | None = None,
         resource_limited: bool = False,
-    ) -> "ProductBandQuery":
+    ) -> ProductBandQuery:
         main_products = layer.low_res_products if resource_limited else layer.products
         return cls(
             main_products,

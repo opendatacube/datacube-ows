@@ -3,9 +3,9 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Mapping
 from typing import Any, cast
 
 import affine
@@ -14,13 +14,16 @@ from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from odc.geo.geom import polygon
 
-from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException, OWSConfigEntry
+from datacube_ows.config_utils import ConfigException, OWSConfigEntry
 from datacube_ows.http_utils import cache_control_headers
 from datacube_ows.ogc_utils import create_geobox
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    import datacube_ows.ows_configuration
+    from collections.abc import Iterable, Mapping
+
+    from datacube_ows.config_utils import CFG_DICT, RAW_CFG
+    from datacube_ows.ows_configuration import OWSConfig
 
 
 def parse_cache_age(cfg: dict, entry, section, default: int = 0) -> int:
@@ -39,7 +42,7 @@ def parse_cache_age(cfg: dict, entry, section, default: int = 0) -> int:
 
 # pyre-ignore[13]
 class RequestScale:
-    standard_scale: "RequestScale"
+    standard_scale: RequestScale
 
     def __init__(
         self,
@@ -119,7 +122,7 @@ class RequestScale:
     def res_xy(self) -> int | float:
         return self.resolution[0] * self.resolution[1]
 
-    def __truediv__(self, other: "RequestScale") -> float:
+    def __truediv__(self, other: RequestScale) -> float:
         ratio = 1.0
         ratio = ratio * self.n_dates / other.n_dates
         for i in range(2):
@@ -241,12 +244,7 @@ class ResourceLimited(Exception):
 
 class OWSResourceManagementRules(OWSConfigEntry):
     # pylint: disable=attribute-defined-outside-init
-    def __init__(
-        self,
-        global_cfg: "datacube_ows.ows_configuration.OWSConfig",
-        cfg: CFG_DICT,
-        context: str,
-    ) -> None:
+    def __init__(self, global_cfg: OWSConfig, cfg: CFG_DICT, context: str) -> None:
         """
         Class constructor.
 

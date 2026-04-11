@@ -3,13 +3,17 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import pytest
 
 import datacube_ows.protocol_versions
 from datacube_ows.ogc_exceptions import OGCException
-from datacube_ows.ows_configuration import OWSConfig
-from datacube_ows.protocol_versions import FlaskResponse, SupportedSvc
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
+    from datacube_ows.protocol_versions import FlaskResponse, SupportedSvc
 
 
 class DummyException1(OGCException):

@@ -3,19 +3,22 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
-from collections.abc import Callable, Hashable
 from typing import Any, TypeAlias, cast
 
 import numpy as np
 from typing_extensions import override
 from xarray import DataArray, Dataset
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException, FunctionWrapper
+from datacube_ows.config_utils import ConfigException, FunctionWrapper
 from datacube_ows.styles.base import StyleDefBase
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Callable, Hashable
+
+    from datacube_ows.config_utils import CFG_DICT
     from datacube_ows.ows_configuration import OWSNamedLayer
 
 # pylint: disable=abstract-method
@@ -31,7 +34,7 @@ class ComponentStyleDef(StyleDefBase):
 
     def __init__(
         self,
-        product: "OWSNamedLayer",
+        product: OWSNamedLayer,
         style_cfg: CFG_DICT,
         stand_alone: bool = False,
         defer_multi_date: bool = False,

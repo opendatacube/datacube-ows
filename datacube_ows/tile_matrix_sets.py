@@ -3,13 +3,15 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from typing import cast
 
-from datacube_ows.config_utils import CFG_DICT, RAW_CFG, ConfigException, OWSConfigEntry
+from datacube_ows.config_utils import ConfigException, OWSConfigEntry
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from datacube_ows.config_utils import CFG_DICT, RAW_CFG
     from datacube_ows.ows_configuration import OWSConfig
 
 # Scale denominators for WebMercator QuadTree Scale Set, starting from zoom level 0.
@@ -68,7 +70,7 @@ class TileMatrixSet(OWSConfigEntry):
         }
     }
 
-    def __init__(self, identifier: str, cfg: CFG_DICT, global_cfg: "OWSConfig") -> None:
+    def __init__(self, identifier: str, cfg: CFG_DICT, global_cfg: OWSConfig) -> None:
         super().__init__(cfg)
         self.global_cfg = global_cfg
         self.identifier = identifier

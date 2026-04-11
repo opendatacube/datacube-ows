@@ -3,20 +3,23 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import operator
-from collections.abc import Callable
 from typing import Any, cast
 
 import lark
 from datacube.virtual.expr import formula_parser
-from xarray import Dataset
 
 from datacube_ows.config_utils import ConfigException
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    import datacube_ows.styles
+    from collections.abc import Callable
+
+    from xarray import Dataset
+
+    from datacube_ows.styles import StyleDef
 
 # Lark stuff.
 
@@ -107,7 +110,7 @@ class Expression:
     Expression wrapper for configurable expression elements
     """
 
-    def __init__(self, style: "datacube_ows.styles.StyleDef", expr_str: str) -> None:
+    def __init__(self, style: StyleDef, expr_str: str) -> None:
         """
         Class constructor
 

@@ -3,9 +3,9 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from threading import Lock
-from typing import Optional
 
 from datacube.drivers.driver_cache import load_drivers
 
@@ -20,7 +20,7 @@ class OWSIndexDriverCache:
     _instance = None
     _initialised = False
 
-    def __new__(cls, *args, **kwargs) -> "OWSIndexDriverCache":
+    def __new__(cls, *args, **kwargs) -> OWSIndexDriverCache:
         if cls._instance is None:
             with cache_lock:
                 if cls._instance is None:
@@ -33,7 +33,7 @@ class OWSIndexDriverCache:
                 self._initialised = True
                 self._drivers = load_drivers(group)
 
-    def __call__(self, name: str) -> Optional["OWSAbstractIndexDriver"]:
+    def __call__(self, name: str) -> OWSAbstractIndexDriver | None:
         """
         :returns: None if driver with a given name is not found
 
@@ -51,5 +51,5 @@ def ows_index_drivers() -> list[str]:
     return OWSIndexDriverCache("datacube_ows.plugins.index").drivers()
 
 
-def ows_index_driver_by_name(name: str) -> Optional["OWSAbstractIndexDriver"]:
+def ows_index_driver_by_name(name: str) -> OWSAbstractIndexDriver | None:
     return OWSIndexDriverCache("datacube_ows.plugins.index")(name)

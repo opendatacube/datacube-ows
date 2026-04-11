@@ -3,9 +3,13 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Callable
+from __future__ import annotations
 
-import xarray as xr
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import xarray as xr
 
 
 def trivial_identity(x):

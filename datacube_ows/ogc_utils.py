@@ -3,22 +3,25 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
-import datetime
 import logging
 from io import BytesIO
 from typing import Any, cast
 
 import numpy
-import xarray
 from affine import Affine
 from deprecat import deprecat
-from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from PIL import Image
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    import datetime
+
+    import xarray
+    from odc.geo.crs import CRS
+
     from datacube_ows.config_utils import OWSExtensibleConfigEntry
 
 
@@ -32,7 +35,7 @@ _LOG: logging.Logger = logging.getLogger(__name__)
 )
 def rolling_window_ndays(
     available_dates: list[datetime.datetime],
-    layer_cfg: "OWSExtensibleConfigEntry",
+    layer_cfg: OWSExtensibleConfigEntry,
     ndays: int = 6,
 ) -> tuple[datetime.datetime, datetime.datetime]:
     from datacube_ows.time_utils import rolling_window_ndays

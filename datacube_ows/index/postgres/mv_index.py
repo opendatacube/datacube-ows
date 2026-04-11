@@ -3,27 +3,33 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import datetime
 import json
 from collections.abc import Iterable
 from enum import Enum
-from types import UnionType
 from typing import cast
 from uuid import UUID as UUID_
 
-from datacube import Datacube
-from datacube.model import Dataset, Product
+from datacube.model import Dataset
 from geoalchemy2 import Geometry
 from geoalchemy2.functions import ST_AsGeoJSON, ST_Union
 from odc.geo.geom import Geometry as ODCGeom
 from sqlalchemy import SMALLINT, Column, MetaData, Table, and_, or_, select, text
 from sqlalchemy.dialects.postgresql import TSTZRANGE, UUID
 from sqlalchemy.engine import Row
-from sqlalchemy.sql.elements import ClauseElement
 from sqlalchemy.sql.functions import count, func
 
 from datacube_ows.utils import default_to_utc, get_driver_name, get_sqlconn
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from types import UnionType
+
+    from datacube import Datacube
+    from datacube.model import Product
+    from sqlalchemy.sql.elements import ClauseElement
 
 
 def get_st_view(meta: MetaData) -> Table:

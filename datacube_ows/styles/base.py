@@ -3,39 +3,47 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import io
 import logging
-from collections.abc import Iterable, Mapping, MutableMapping, Sized
 from threading import Lock
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
-import datacube.model
 import numpy as np
 import xarray as xr
 from flask_babel import get_locale
 from PIL import Image
 from typing_extensions import override
 
-import datacube_ows.band_utils
 from datacube_ows.config_utils import (
-    CFG_DICT,
-    RAW_CFG,
     AbstractMaskRule,
     ConfigException,
-    F,
-    FlagBand,
     FlagProductBands,
     FunctionWrapper,
     OWSConfigEntry,
     OWSEntryNotFound,
     OWSExtensibleConfigEntry,
     OWSFlagBandStandalone,
-    OWSIndexedConfigEntry,
     OWSMetadataConfig,
 )
 from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping, MutableMapping, Sized
+
+    import datacube.model
+
+    from datacube_ows.config_utils import (
+        CFG_DICT,
+        RAW_CFG,
+        F,
+        FlagBand,
+        OWSIndexedConfigEntry,
+    )
+    from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
 
 _LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -51,9 +59,9 @@ class LegendBase(OWSConfigEntry):
 
     def __init__(
         self,
-        style_or_mdh: Union[
-            "StyleDefBase", "StyleDefBase.Legend", "StyleDefBase.MultiDateHandler"
-        ],
+        style_or_mdh: StyleDefBase
+        | StyleDefBase.Legend
+        | StyleDefBase.MultiDateHandler,
         cfg: CFG_DICT,
     ) -> None:
         super().__init__(cfg)
@@ -103,7 +111,7 @@ class LegendBase(OWSConfigEntry):
         raise NotImplementedError()
 
     # For MetadataConfig (for subclasses that extend it)
-    def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
+    def global_config(self) -> OWSConfig:
         return self.style.global_config()
 
     def get_obj_label(self) -> str:
@@ -147,12 +155,12 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     def __new__(
         cls,
-        product: Optional["datacube_ows.ows_configuration.OWSNamedLayer"] = None,
+        product: OWSNamedLayer | None = None,
         style_cfg: CFG_DICT | None = None,
         stand_alone: bool = False,
         defer_multi_date: bool = False,
         user_defined: bool = False,
-    ) -> "StyleDefBase":
+    ) -> StyleDefBase:
         """
         Determine appropriate subclass to instantiate and initialise.
         """
@@ -177,7 +185,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     # FIXME: product type should also include StandaloneProductProxy.
     def __init__(
         self,
-        product: "datacube_ows.ows_configuration.OWSNamedLayer",
+        product: OWSNamedLayer,
         style_cfg: CFG_DICT,
         stand_alone: bool = False,
         defer_multi_date: bool = False,
@@ -212,7 +220,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         )
         if self.local_band_map:
             pass
-        self.product: datacube_ows.ows_configuration.OWSNamedLayer = product
+        self.product = product
         if self.stand_alone:
             self.name = cast("str", raw_cfg.get("name", "stand_alone"))
         else:
@@ -248,7 +256,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.max_count: int = 1
 
     @override
-    def global_config(self) -> "datacube_ows.ows_configuration.OWSConfig":
+    def global_config(self) -> OWSConfig:
         """Global config object"""
         return self.product.global_cfg
 
@@ -486,7 +494,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
     def get_multi_date_handler(
         self, count_or_sized_or_ds: int | Sized | xr.Dataset
-    ) -> Optional["StyleDefBase.MultiDateHandler"]:
+    ) -> StyleDefBase.MultiDateHandler | None:
         """
         Get the appropriate multidate handler.
 
@@ -506,7 +514,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     @classmethod
     def register_subclass(
         cls,
-        subclass: type["StyleDefBase"],
+        subclass: type[StyleDefBase],
         triggers: Iterable[str],
         priority: bool = False,
     ) -> None:
@@ -525,7 +533,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             style_class_reg.append((subclass, triggers))
 
     @classmethod
-    def determine_subclass(cls, cfg: CFG_DICT) -> type["StyleDefBase"] | None:
+    def determine_subclass(cls, cfg: CFG_DICT) -> type[StyleDefBase] | None:
         """
         Determine the subclass to use from a raw configuration
         :param cfg: The configuration for some StyleDef subclass
@@ -558,7 +566,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
 
         non_animate_requires_aggregator = True
 
-        def __init__(self, style: "StyleDefBase", cfg: CFG_DICT) -> None:
+        def __init__(self, style: StyleDefBase, cfg: CFG_DICT) -> None:
             """
             First stage initialisation
 
@@ -652,7 +660,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     @override
     def lookup_impl(
         cls,
-        cfg: "datacube_ows.ows_configuration.OWSConfig",
+        cfg: OWSConfig,
         keyvals: Mapping[str, Any],
         subs: Mapping[str, Any] | None = None,
     ) -> OWSIndexedConfigEntry:

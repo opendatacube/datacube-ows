@@ -3,22 +3,28 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import datetime
 import logging
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from contextlib import contextmanager
 from functools import wraps
 from time import monotonic
 from typing import Any, TypeVar, cast
 
-from datacube import Datacube
 from datacube.api.query import GroupBy, solar_day
-from datacube.index import Index
-from datacube.model import Dataset
 from numpy import datetime64 as npdt64
-from numpy import timedelta64 as npdelt64
-from sqlalchemy.engine.base import Connection
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from datacube import Datacube
+    from datacube.index import Index
+    from datacube.model import Dataset
+    from numpy import timedelta64 as npdelt64
+    from sqlalchemy.engine.base import Connection
 
 F = TypeVar("F", bound=Callable[..., Any])
 

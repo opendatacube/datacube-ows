@@ -3,24 +3,29 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import dataclasses
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
 from datetime import date, datetime
 from functools import wraps
-from typing import Any, Literal, NamedTuple, TypeAlias, Union
-from uuid import UUID
+from typing import Any, Literal, NamedTuple, TypeAlias
 
 from datacube import Datacube
-from datacube.model import Dataset, Product
 from odc.geo.crs import CRS
-from odc.geo.geom import Geometry, polygon
+from odc.geo.geom import polygon
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException
+from datacube_ows.config_utils import ConfigException
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+    from uuid import UUID
+
+    from datacube.model import Dataset, Product
+    from odc.geo.geom import Geometry
+
+    from datacube_ows.config_utils import CFG_DICT
     from datacube_ows.ows_configuration import OWSNamedLayer
 
 
@@ -103,18 +108,18 @@ class OWSAbstractIndex(ABC):
     # Range table update method (requires odc "manage" perms)
     @abstractmethod
     def create_range_entry(
-        self, layer: "OWSNamedLayer", cache: dict[LayerSignature, list[str]]
+        self, layer: OWSNamedLayer, cache: dict[LayerSignature, list[str]]
     ) -> None: ...
 
     # Range table read method (requires odc "user" perms)
     @abstractmethod
-    def get_ranges(self, layer: "OWSNamedLayer") -> LayerExtent | None: ...
+    def get_ranges(self, layer: OWSNamedLayer) -> LayerExtent | None: ...
 
     # Spatiotemporal search methods (requires odc "user" perms)
     @abstractmethod
     def ds_search(
         self,
-        layer: "OWSNamedLayer",
+        layer: OWSNamedLayer,
         times: Iterable[TimeSearchTerm] | None = None,
         geom: Geometry | None = None,
         products: Iterable[Product] | None = None,
@@ -122,7 +127,7 @@ class OWSAbstractIndex(ABC):
 
     def dsid_search(
         self,
-        layer: "OWSNamedLayer",
+        layer: OWSNamedLayer,
         times: Iterable[TimeSearchTerm] | None = None,
         geom: Geometry | None = None,
         products: Iterable[Product] | None = None,
@@ -132,7 +137,7 @@ class OWSAbstractIndex(ABC):
 
     def count(
         self,
-        layer: "OWSNamedLayer",
+        layer: OWSNamedLayer,
         times: Iterable[TimeSearchTerm] | None = None,
         geom: Geometry | None = None,
         products: Iterable[Product] | None = None,
@@ -141,7 +146,7 @@ class OWSAbstractIndex(ABC):
 
     def extent(
         self,
-        layer: "OWSNamedLayer",
+        layer: OWSNamedLayer,
         times: Iterable[TimeSearchTerm] | None = None,
         geom: Geometry | None = None,
         products: Iterable[Product] | None = None,
@@ -166,9 +171,7 @@ class OWSAbstractIndex(ABC):
         return ext
 
     @staticmethod
-    def _prep_geom(
-        layer: "OWSNamedLayer", any_geom: Geometry | None
-    ) -> Geometry | None:
+    def _prep_geom(layer: OWSNamedLayer, any_geom: Geometry | None) -> Geometry | None:
         # Prepare a Geometry for geospatial search
         # Perhaps Core can be updated so this is not needed?
         if any_geom is None:
@@ -228,9 +231,7 @@ def check_perms(
 ) -> Callable[[Callable], Callable]:
     def outer(f: Callable) -> Callable:
         @wraps(f)
-        def inner(
-            instance, dcl: Union[Datacube, "OWSNamedLayer"], *args, **kwargs
-        ) -> Any:
+        def inner(instance, dcl: Datacube | OWSNamedLayer, *args, **kwargs) -> Any:
             from datacube_ows.ows_configuration import OWSNamedLayer
 
             if isinstance(dcl, OWSNamedLayer):

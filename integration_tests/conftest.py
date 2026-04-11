@@ -3,18 +3,22 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
-
+from __future__ import annotations
 
 import os
-from collections.abc import Generator
 
 import pytest
 from click.testing import CliRunner
 from datacube.cfg import ODCConfig
-from flask import Flask
 from pytest_localserver.http import WSGIServer
 
 from datacube_ows import create_app
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from flask import Flask
 
 
 @pytest.fixture(scope="session")

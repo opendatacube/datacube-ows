@@ -9,7 +9,6 @@ from datetime import UTC
 
 import numpy
 import xarray
-import xarray as xr
 from affine import Affine
 from dateutil.parser import parse
 from odc.geo import geom
@@ -25,6 +24,8 @@ from datacube_ows.wcs_utils import get_bands_from_styles
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    import xarray as xr
+
     from datacube_ows.ows_configuration import OWSConfig
 
 

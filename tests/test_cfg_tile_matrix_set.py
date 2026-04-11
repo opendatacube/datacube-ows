@@ -3,13 +3,18 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from unittest.mock import MagicMock
 
 import pytest
 
-from datacube_ows.config_utils import CFG_DICT, ConfigException
+from datacube_ows.config_utils import ConfigException
 from datacube_ows.tile_matrix_sets import TileMatrixSet
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.config_utils import CFG_DICT
 
 
 @pytest.fixture
