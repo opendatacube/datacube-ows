@@ -17,7 +17,6 @@ dependencies = [
     "flask",
     "fsspec",
     "geoalchemy2",
-    "importlib_metadata",
     "lark",
     "matplotlib",
     "numpy>=1.22",
