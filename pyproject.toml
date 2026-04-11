@@ -23,7 +23,6 @@ dependencies = [
     "numpy>=1.22",
     "prometheus_flask_exporter",
     "pyows",
-    "pyparsing",
     "python_dateutil",
     "python_slugify",
     "rasterio",
