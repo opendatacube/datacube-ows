@@ -21,7 +21,7 @@ environment.
 
 ::
 
-     pip install datacube-ows
+     pip install datacube-ows[webserver]
 
 If you do not already have a local virtual environment set up, check that you have sufficient disk
 space available in your home directory (at least 3.5G), using a Jupyter Hub terminal tab:
@@ -54,6 +54,6 @@ tab:
     ./${EE}/bin/python3 -m ipykernel install --user --name 'ows' --display-name 'ODC (OWS)'
 
     # Install datacube-ows into the new environment
-    ./${EE}/bin/pip install datacube-ows
+    ./${EE}/bin/pip install datacube-ows[webserver]
 
 If you return to the Jupyter homepage, and the new environment should be visible.
