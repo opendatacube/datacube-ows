@@ -69,9 +69,7 @@ dev = [
 ]
 ops = [
     "blinker",
-    "gevent",
-    "gunicorn>=22.0.0",
-    "gunicorn[gevent]",
+    "gunicorn[gevent]>=22.0.0",
     "prometheus_client",
     "psycopg2",
     "psycopg[c]",

@@ -767,7 +767,6 @@ all = [
     { name = "blinker" },
     { name = "flask-cors" },
     { name = "fsspec" },
-    { name = "gevent" },
     { name = "gunicorn", extra = ["gevent"] },
     { name = "lxml" },
     { name = "mypy" },
@@ -800,7 +799,6 @@ dev = [
 ]
 ops = [
     { name = "blinker" },
-    { name = "gevent" },
     { name = "gunicorn", extra = ["gevent"] },
     { name = "prometheus-client" },
     { name = "psycopg", extra = ["c"] },
@@ -849,9 +847,7 @@ requires-dist = [
     { name = "fsspec" },
     { name = "fsspec", marker = "extra == 'test'" },
     { name = "geoalchemy2" },
-    { name = "gevent", marker = "extra == 'ops'" },
-    { name = "gunicorn", marker = "extra == 'ops'", specifier = ">=22.0.0" },
-    { name = "gunicorn", extras = ["gevent"], marker = "extra == 'ops'" },
+    { name = "gunicorn", extras = ["gevent"], marker = "extra == 'ops'", specifier = ">=22.0.0" },
     { name = "lark" },
     { name = "lxml", marker = "extra == 'test'" },
     { name = "matplotlib" },
