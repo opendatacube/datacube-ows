@@ -8,7 +8,7 @@
 https://click.palletsprojects.com/en/7.x/testing/
 """
 
-from datacube_ows.update_ranges_impl import main
+from datacube_ows.update_ranges import main
 
 
 def test_update_ranges_schema(runner) -> None:
