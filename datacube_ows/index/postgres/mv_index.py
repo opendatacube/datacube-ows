@@ -67,7 +67,7 @@ class MVSelectOpts(Enum):
         if self == self.IDS or self == self.DATASETS:
             return [stv.c.id]
         if self == self.COUNT:
-            return [cast(ClauseElement, count(stv.c.id))]
+            return [cast("ClauseElement", count(stv.c.id))]
         if self == self.EXTENT:
             return [ST_AsGeoJSON(ST_Union(text("spatial_extent")))]
         raise AssertionError("Invalid selection option")
@@ -167,7 +167,7 @@ def mv_search(
         with get_sqlconn(dc) as conn:
             for r in conn.execute(s):
                 if sel == MVSelectOpts.COUNT:
-                    return cast(int, r[0])
+                    return cast("int", r[0])
                 # MVSelectOpts.EXTENT
                 geojson = r[0]
                 if geojson is None:

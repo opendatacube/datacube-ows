@@ -116,7 +116,7 @@ def mask_by_nan(data: xarray.Dataset, band: str) -> numpy.ndarray:
     """
     Mask by nan, for bands with floating point data
     """
-    return ~numpy.isnan(cast(numpy.generic, data[band]))
+    return ~numpy.isnan(cast("numpy.generic", data[band]))
 
 
 # Example mosaic date function

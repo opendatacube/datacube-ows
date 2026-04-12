@@ -62,7 +62,7 @@ class RequestScale:
         else:
             self.total_band_size = sum(
                 np.dtype(band["dtype"]).itemsize
-                for band in cast(Iterable[Mapping[str, Any]], request_bands)
+                for band in cast("Iterable[Mapping[str, Any]]", request_bands)
             )
 
     def _standardise_geobox(self, geobox: GeoBox) -> GeoBox:
@@ -85,7 +85,7 @@ class RequestScale:
     ) -> tuple[float, float]:
         # Convert native resolution to metres for ready comparison.
         if crs.units == ("metre", "metre"):
-            return cast(tuple[float, float], tuple(abs(r) for r in resolution))
+            return cast("tuple[float, float]", tuple(abs(r) for r in resolution))
         resolution_rectangle = polygon(
             [(0, 0), (0, resolution[1]), resolution, (0, resolution[0]), (0, 0)],
             crs=crs,
@@ -155,7 +155,7 @@ class CacheControlRules(OWSConfigEntry):
         :param max_datasets: Over-arching maximum dataset limit in context.
         """
         super().__init__(cfg)
-        self.rules = cast(list[CFG_DICT] | None, self._raw_cfg)
+        self.rules = cast("list[CFG_DICT] | None", self._raw_cfg)
         self.use_caching: bool = self.rules is not None
         self.max_datasets = max_datasets
         if not self.use_caching:
@@ -164,7 +164,7 @@ class CacheControlRules(OWSConfigEntry):
         # Validate rules
         min_so_far: int = 0
         max_max_age_so_far: int = 0
-        for rule in cast(list[CFG_DICT], self.rules):
+        for rule in cast("list[CFG_DICT]", self.rules):
             if "min_datasets" not in rule:
                 raise ConfigException(
                     f"Dataset cache rule does not contain a 'min_datasets' element in {context}"
@@ -223,12 +223,12 @@ class CacheControlRules(OWSConfigEntry):
         ):
             return cache_control_headers(0)
         rule = None
-        for r in cast(list[CFG_DICT], self.rules):
-            if n_datasets < cast(int, r["min_datasets"]):
+        for r in cast("list[CFG_DICT]", self.rules):
+            if n_datasets < cast("int", r["min_datasets"]):
                 break
             rule = r
         if rule:
-            return cache_control_headers(cast(int, rule["max_age"]))
+            return cache_control_headers(cast("int", rule["max_age"]))
         return cache_control_headers(0)
 
 
@@ -254,11 +254,11 @@ class OWSResourceManagementRules(OWSConfigEntry):
         :param context: The context (e.g. layer name) for reporting validation errors.
         """
         super().__init__(cfg)
-        cfg = cast(CFG_DICT, self._raw_cfg)
-        wms_cfg = cast(CFG_DICT, cfg.get("wms", {}))
-        wcs_cfg = cast(CFG_DICT, cfg.get("wcs", {}))
+        cfg = cast("CFG_DICT", self._raw_cfg)
+        wms_cfg = cast("CFG_DICT", cfg.get("wms", {}))
+        wcs_cfg = cast("CFG_DICT", cfg.get("wcs", {}))
         self.zoom_fill = cast(
-            list[int], wms_cfg.get("zoomed_out_fill_colour", [150, 180, 200, 160])
+            "list[int]", wms_cfg.get("zoomed_out_fill_colour", [150, 180, 200, 160])
         )
         if len(self.zoom_fill) == 3:
             self.zoom_fill += [255]
@@ -266,11 +266,11 @@ class OWSResourceManagementRules(OWSConfigEntry):
             raise ConfigException(
                 f"zoomed_out_fill_colour must have 3 or 4 elements in {context}"
             )
-        self.min_zoom = cast(float | None, wms_cfg.get("min_zoom_factor"))
-        self.min_zoom_lvl = cast(int | float | None, wms_cfg.get("min_zoom_level"))
-        self.max_datasets_wms = cast(int, wms_cfg.get("max_datasets", 0))
-        self.max_datasets_wcs = cast(int, wcs_cfg.get("max_datasets", 0))
-        self.max_image_size_wcs = cast(int, wcs_cfg.get("max_image_size", 0))
+        self.min_zoom = cast("float | None", wms_cfg.get("min_zoom_factor"))
+        self.min_zoom_lvl = cast("int | float | None", wms_cfg.get("min_zoom_level"))
+        self.max_datasets_wms = cast("int", wms_cfg.get("max_datasets", 0))
+        self.max_datasets_wcs = cast("int", wcs_cfg.get("max_datasets", 0))
+        self.max_image_size_wcs = cast("int", wcs_cfg.get("max_image_size", 0))
         self.wms_cache_rules = CacheControlRules(
             wms_cfg.get("dataset_cache_rules"), context, self.max_datasets_wms
         )

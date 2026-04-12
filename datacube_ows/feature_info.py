@@ -176,8 +176,8 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
     all_time_datasets = stacker.datasets_all_time(point=geo_point_geobox.extent)
 
     # Taking the data as a single point so our indexes into the data should be 0,0
-    h_coord = cast(str, cfg.published_CRSs[params.crsid]["horizontal_coord"])
-    v_coord = cast(str, cfg.published_CRSs[params.crsid]["vertical_coord"])
+    h_coord = cast("str", cfg.published_CRSs[params.crsid]["horizontal_coord"])
+    v_coord = cast("str", cfg.published_CRSs[params.crsid]["vertical_coord"])
     s3_bucket = cfg.s3_bucket
     s3_url = cfg.s3_url
     isel_kwargs = {h_coord: 0, v_coord: 0}
@@ -218,7 +218,7 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
                 ds: Dataset | None = None
                 for pbq, dss in time_datasets.items():
                     if pbq.main:
-                        ds = cast(Dataset, dss.sel(time=dt).values.tolist()[0])
+                        ds = cast("Dataset", dss.sel(time=dt).values.tolist()[0])
                         break
                 assert ds is not None
                 if params.layer.multi_product:
@@ -245,9 +245,9 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
                         "%Y-%m-%d %H:%M:%S %Z"
                     )
                 # Collect raw band values for pixel and derived bands from styles
-                date_info["bands"] = cast(RAW_CFG, _make_band_dict(params.layer, td))
+                date_info["bands"] = cast("RAW_CFG", _make_band_dict(params.layer, td))
                 derived_band_dict = cast(
-                    RAW_CFG, _make_derived_band_dict(td, params.layer.style_index)
+                    "RAW_CFG", _make_derived_band_dict(td, params.layer.style_index)
                 )
                 if derived_band_dict:
                     date_info["band_derived"] = derived_band_dict
@@ -273,8 +273,8 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
                         # * the ODC Dataset model (i.e. full ODC metadata)
                         date_info[k] = f(td, ds)
 
-                cast(list[RAW_CFG], feature_json["data"]).append(date_info)
-                fi_date_index[dt] = cast(dict[str, list[RAW_CFG]], feature_json)[
+                cast("list[RAW_CFG]", feature_json["data"]).append(date_info)
+                fi_date_index[dt] = cast("dict[str, list[RAW_CFG]]", feature_json)[
                     "data"
                 ][-1]
             # Multidate custom includes reflect all selected times on multidate requests,
@@ -288,12 +288,12 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
                         # Function signature: pass in:
                         # * a multi-date single pixel (1x1xn) multiband xarray Dataset,
                         date_info[k] = f(data)
-                cast(list[RAW_CFG], feature_json["data"]).append(date_info)
+                cast("list[RAW_CFG]", feature_json["data"]).append(date_info)
         feature_json["data_available_for_dates"] = []
         pt_native = None
         for d in all_time_datasets.coords["time"].values:
             dt_datasets = all_time_datasets.sel(time=d)
-            for ds in cast(Iterable[Dataset], dt_datasets.values.item()):
+            for ds in cast("Iterable[Dataset]", dt_datasets.values.item()):
                 assert ds.crs is not None  # For type checker
                 if pt_native is None or pt_native.crs != ds.crs:
                     pt_native = geo_point.to_crs(ds.crs)
@@ -304,16 +304,16 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
                         pass
                     elif params.layer.time_resolution.is_subday():
                         cast(
-                            list[RAW_CFG], feature_json["data_available_for_dates"]
+                            "list[RAW_CFG]", feature_json["data_available_for_dates"]
                         ).append(dt.isoformat())
                     else:
                         cast(
-                            list[RAW_CFG], feature_json["data_available_for_dates"]
+                            "list[RAW_CFG]", feature_json["data_available_for_dates"]
                         ).append(dt.strftime("%Y-%m-%d"))
                     break
         if time_datasets:
             feature_json["data_links"] = cast(
-                RAW_CFG,
+                "RAW_CFG",
                 sorted(
                     get_s3_browser_uris(time_datasets, pt_native, s3_url, s3_bucket)
                 ),

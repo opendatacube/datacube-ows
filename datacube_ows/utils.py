@@ -37,7 +37,7 @@ def log_call(func: F) -> F:
         _LOG.debug("%s args: %s kwargs: %s", func.__name__, args, kwargs)
         return func(*args, **kwargs)
 
-    return cast(F, log_wrapper)
+    return cast("F", log_wrapper)
 
 
 def time_call(func: F) -> F:
@@ -59,7 +59,7 @@ def time_call(func: F) -> F:
         _LOG.debug("%s took: %d ms", func.__name__, int((stop - start) * 1000))
         return result
 
-    return cast(F, timing_wrapper)
+    return cast("F", timing_wrapper)
 
 
 def group_by_begin_datetime(

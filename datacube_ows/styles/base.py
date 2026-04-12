@@ -57,14 +57,14 @@ class LegendBase(OWSConfigEntry):
         cfg: CFG_DICT,
     ) -> None:
         super().__init__(cfg)
-        raw_cfg = cast(CFG_DICT, self._raw_cfg)
+        raw_cfg = cast("CFG_DICT", self._raw_cfg)
         self.style_or_mdh = style_or_mdh
         if isinstance(self.style_or_mdh, StyleDefBase):
             self.style: StyleDefBase = self.style_or_mdh
         else:
             self.style = self.style_or_mdh.style
         self.show_legend = cast(
-            bool, raw_cfg.get("show_legend", self.style_or_mdh.auto_legend)
+            "bool", raw_cfg.get("show_legend", self.style_or_mdh.auto_legend)
         )
         self.legend_urls: MutableMapping[str, str] = self.parse_urls(raw_cfg.get("url"))
 
@@ -81,7 +81,7 @@ class LegendBase(OWSConfigEntry):
         if isinstance(cfg, str):
             cfg_d: CFG_DICT = {def_loc: cfg}
         else:
-            cfg_d = cast(CFG_DICT, cfg)
+            cfg_d = cast("CFG_DICT", cfg)
         if def_loc not in cfg_d:
             raise ConfigException(
                 f"No legend url for {self.get_obj_label()} supplied for default language {def_loc}"
@@ -95,9 +95,9 @@ class LegendBase(OWSConfigEntry):
         return urls
 
     def parse_common_auto_elements(self, cfg: CFG_DICT) -> None:
-        self.width = cast(float, cfg.get("width", 4.0))
-        self.height = cast(float, cfg.get("height", 1.25))
-        self.mpl_rcparams = cast(MutableMapping[str, str], cfg.get("rcParams", {}))
+        self.width = cast("float", cfg.get("width", 4.0))
+        self.height = cast("float", cfg.get("height", 1.25))
+        self.mpl_rcparams = cast("MutableMapping[str, str]", cfg.get("rcParams", {}))
 
     def render(self, bytesio: io.BytesIO) -> None:
         raise NotImplementedError()
@@ -112,7 +112,7 @@ class LegendBase(OWSConfigEntry):
         if self.style == self.style_or_mdh:
             min_count: int = 1
         else:
-            min_count = cast(int, self.style_or_mdh.min_count)
+            min_count = cast("int", self.style_or_mdh.min_count)
         return f"{style_label}.legend.{min_count}"
 
 
@@ -158,7 +158,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         """
         if product and style_cfg:
             expanded_cfg = cast(
-                CFG_DICT,
+                "CFG_DICT",
                 cls.expand_inherit(
                     style_cfg,
                     global_cfg=product.global_cfg,
@@ -202,25 +202,25 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             keyval_subs={"layer": {product.name: product}},
             keyval_defaults={"layer": product.name},
         )
-        raw_cfg = cast(CFG_DICT, self._raw_cfg)
+        raw_cfg = cast("CFG_DICT", self._raw_cfg)
         self.stand_alone: bool = stand_alone
         if self.stand_alone:
             self._metadata_registry: dict[str, str] = {}
         self.user_defined: bool = user_defined
         self.local_band_map = cast(
-            MutableMapping[str, str], raw_cfg.get("band_map", {})
+            "MutableMapping[str, str]", raw_cfg.get("band_map", {})
         )
         if self.local_band_map:
             pass
         self.product: datacube_ows.ows_configuration.OWSNamedLayer = product
         if self.stand_alone:
-            self.name = cast(str, raw_cfg.get("name", "stand_alone"))
+            self.name = cast("str", raw_cfg.get("name", "stand_alone"))
         else:
-            self.name = cast(str, raw_cfg["name"])
+            self.name = cast("str", raw_cfg["name"])
         self.parse_metadata(raw_cfg)
         self.masks: list[StyleMask] = [
             StyleMask(mask_cfg, self)
-            for mask_cfg in cast(list[CFG_DICT], raw_cfg.get("pq_masks", []))
+            for mask_cfg in cast("list[CFG_DICT]", raw_cfg.get("pq_masks", []))
         ]
         if self.stand_alone:
             self.flag_products: list[FlagProductBands] = []
@@ -235,12 +235,12 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         self.declare_unready("flag_bands")
 
         custom_includes = cast(
-            dict[str, CFG_DICT | str | F], style_cfg.get("custom_includes", {})
+            "dict[str, CFG_DICT | str | F]", style_cfg.get("custom_includes", {})
         )
         self.feature_info_includes = {
             k: FunctionWrapper(self, v) for k, v in custom_includes.items()
         }
-        self.legend_cfg = self.Legend(self, cast(CFG_DICT, raw_cfg.get("legend", {})))
+        self.legend_cfg = self.Legend(self, cast("CFG_DICT", raw_cfg.get("legend", {})))
         if not defer_multi_date:
             self.parse_multi_date(raw_cfg)
 
@@ -328,7 +328,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
     def parse_multi_date(self, cfg: CFG_DICT) -> None:
         """Used by __init__()"""
         self.multi_date_handlers: list[StyleDefBase.MultiDateHandler] = []
-        for mb_cfg in cast(list[CFG_DICT], cfg.get("multi_date", [])):
+        for mb_cfg in cast("list[CFG_DICT]", cfg.get("multi_date", [])):
             self.multi_date_handlers.append(self.MultiDateHandler(self, mb_cfg))
 
     def to_mask(
@@ -398,7 +398,7 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                         flat_mask = mask_slice
                     else:
                         flat_mask &= mask_slice
-                mask = cast(xr.DataArray, flat_mask)
+                mask = cast("xr.DataArray", flat_mask)
             alpha = alpha.where(mask, other=0)
         return img_data.assign({"alpha": alpha})
 
@@ -566,35 +566,37 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
             :param cfg: The multidate handler configuration
             """
             super().__init__(cfg)
-            raw_cfg = cast(CFG_DICT, self._raw_cfg)
+            raw_cfg = cast("CFG_DICT", self._raw_cfg)
             self.style = style
             if "allowed_count_range" not in raw_cfg:
                 raise ConfigException(
                     "multi_date handler must have an allowed_count_range"
                 )
-            if len(cast(list[int], cfg["allowed_count_range"])) > 2:
+            if len(cast("list[int]", cfg["allowed_count_range"])) > 2:
                 raise ConfigException(
                     "multi_date handler allowed_count_range must have 2 and only 2 members"
                 )
-            self.min_count, self.max_count = cast(list[int], cfg["allowed_count_range"])
+            self.min_count, self.max_count = cast(
+                "list[int]", cfg["allowed_count_range"]
+            )
             if self.max_count < self.min_count:
                 raise ConfigException(
                     "multi_date handler allowed_count_range: minimum must be less than equal to maximum"
                 )
 
-            self.animate = cast(bool, cfg.get("animate", False))
+            self.animate = cast("bool", cfg.get("animate", False))
             self.frame_duration: int = 1000
             if "aggregator_function" in cfg:
                 self.aggregator: FunctionWrapper | None = FunctionWrapper(
                     style.product,
-                    cast(CFG_DICT, cfg["aggregator_function"]),
+                    cast("CFG_DICT", cfg["aggregator_function"]),
                     stand_alone=self.style.stand_alone,
                 )
             elif self.animate:
                 self.aggregator = FunctionWrapper(
                     style.product, lambda x: x, stand_alone=True
                 )
-                self.frame_duration = cast(int, cfg.get("frame_duration", 1000))
+                self.frame_duration = cast("int", cfg.get("frame_duration", 1000))
             else:
                 self.aggregator = None
                 if self.non_animate_requires_aggregator:
@@ -602,13 +604,13 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
                         "Aggregator function is required for non-animated multi-date handlers."
                     )
             self.legend_cfg = self.Legend(
-                self, cast(CFG_DICT, raw_cfg.get("legend", {}))
+                self, cast("CFG_DICT", raw_cfg.get("legend", {}))
             )
             self.preserve_user_date_order = cast(
-                bool, cfg.get("preserve_user_date_order", False)
+                "bool", cfg.get("preserve_user_date_order", False)
             )
             custom_includes = cast(
-                dict[str, CFG_DICT | str | F], cfg.get("custom_includes", {})
+                "dict[str, CFG_DICT | str | F]", cfg.get("custom_includes", {})
             )
             self.feature_info_includes = {
                 k: FunctionWrapper(self.style, v) for k, v in custom_includes.items()
@@ -691,7 +693,7 @@ class StyleMask(AbstractMaskRule):
     VALUES_LABEL = "enum"
 
     def __init__(self, cfg: CFG_DICT, style: StyleDefBase) -> None:
-        band = cast(str, cfg["band"])
+        band = cast("str", cfg["band"])
         super().__init__(band, cfg)
         self.stand_alone = style.stand_alone
         self.style = style
@@ -709,7 +711,7 @@ class StyleMask(AbstractMaskRule):
         if self.stand_alone:
             self.flag_band: FlagBand = OWSFlagBandStandalone(self.band)
         else:
-            self.flag_band = cast(FlagBand, self.style.product.flag_bands[self.band])
+            self.flag_band = cast("FlagBand", self.style.product.flag_bands[self.band])
 
     @override
     def create_mask(self, data: xr.DataArray) -> xr.DataArray | None:

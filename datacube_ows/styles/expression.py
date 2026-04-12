@@ -148,7 +148,7 @@ class Expression:
                 return data[self.ows_style.local_band(key.value)]
 
         # pyre-ignore[19]
-        return cast(ExpressionEvaluator, ExpressionDataEvaluator(self.style))
+        return cast("ExpressionEvaluator", ExpressionDataEvaluator(self.style))
 
     def __call__(self, data: Dataset) -> Any:
         evaluator: ExpressionEvaluator = self.eval_cls(data)

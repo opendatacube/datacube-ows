@@ -281,7 +281,7 @@ class DataStacker:
             raise WMSException(
                 "Cannot add default flag data as there is no non-flag data available"
             )
-        template = cast(xarray.DataArray, getattr(data, cast(str, var)))
+        template = cast("xarray.DataArray", getattr(data, cast("str", var)))
         data_new_bands = {}
         for band in pbq.bands:
             default_value = pbq.products[0].measurements[band].nodata
@@ -374,7 +374,7 @@ class DataStacker:
             assert data is not None
             qry_result.coords["time"] = data.coords["time"]
             data = cast(
-                xarray.Dataset,
+                "xarray.Dataset",
                 xarray.combine_by_coords([data, qry_result], join="exact"),
             )
 
@@ -405,7 +405,7 @@ class DataStacker:
         for dt in datasets.time.values:
             tds = datasets.sel(time=dt)
             merged = None
-            for ds in cast(Iterable[Dataset], tds.values.item()):
+            for ds in cast("Iterable[Dataset]", tds.values.item()):
                 d = self.read_data_for_single_dataset(
                     ds, measurements, self._geobox, fuse_func=fuse_func
                 )

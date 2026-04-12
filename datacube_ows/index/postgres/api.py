@@ -117,7 +117,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         products: Iterable[Product] | None = None,
     ) -> Iterable[Dataset]:
         return cast(
-            Iterable[Dataset],
+            "Iterable[Dataset]",
             mv_search(
                 layer.dc,
                 MVSelectOpts.DATASETS,
@@ -136,7 +136,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         products: Iterable[Product] | None = None,
     ) -> Iterable[UUID]:
         return cast(
-            Iterable[UUID],
+            "Iterable[UUID]",
             mv_search(
                 layer.dc,
                 MVSelectOpts.IDS,
@@ -155,7 +155,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         products: Iterable[Product] | None = None,
     ) -> int:
         return cast(
-            int,
+            "int",
             mv_search(
                 layer.dc,
                 MVSelectOpts.COUNT,
@@ -175,7 +175,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
         crs: CRS | None = None,
     ) -> Geometry | None:
         extent = cast(
-            Geometry | None,
+            "Geometry | None",
             mv_search(
                 layer.dc,
                 MVSelectOpts.EXTENT,
