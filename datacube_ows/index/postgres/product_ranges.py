@@ -170,7 +170,7 @@ def create_range_entry(
             # Get extent polygon from materialised views
 
             extent_4386 = cast(
-                Geometry,
+                "Geometry",
                 mv_search(layer.dc, MVSelectOpts.EXTENT, products=layer.products),
             )
 

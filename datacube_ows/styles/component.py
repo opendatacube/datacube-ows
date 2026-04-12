@@ -47,14 +47,14 @@ class ComponentStyleDef(StyleDefBase):
             defer_multi_date=defer_multi_date,
             user_defined=user_defined,
         )
-        style_cfg: CFG_DICT = cast(CFG_DICT, self._raw_cfg)
+        style_cfg: CFG_DICT = cast("CFG_DICT", self._raw_cfg)
         self.raw_rgb_components: dict[str, Callable | LINEAR_COMP_DICT] = {}
         raw_components = cast(
-            dict[str, Callable | LINEAR_COMP_DICT], style_cfg["components"]
+            "dict[str, Callable | LINEAR_COMP_DICT]", style_cfg["components"]
         )
         for imgband in ["red", "green", "blue", "alpha"]:
             components = cast(
-                Callable | LINEAR_COMP_DICT | CFG_DICT | None,
+                "Callable | LINEAR_COMP_DICT | CFG_DICT | None",
                 raw_components.get(imgband),
             )
             if components is None:
@@ -66,7 +66,7 @@ class ComponentStyleDef(StyleDefBase):
             if callable(components) or "function" in components:
                 self.raw_rgb_components[imgband] = FunctionWrapper(
                     self.product,
-                    cast(CFG_DICT | Callable, components),
+                    cast("CFG_DICT | Callable", components),
                     stand_alone=self.stand_alone,
                 )
                 if not self.stand_alone:
@@ -74,20 +74,20 @@ class ComponentStyleDef(StyleDefBase):
                         raise ConfigException(
                             "Style with a function component must declare additional_bands."
                         )
-                    for b in cast(list[str], style_cfg.get("additional_bands", [])):
+                    for b in cast("list[str]", style_cfg.get("additional_bands", [])):
                         self.raw_needed_bands.add(b)
             else:
-                components = cast(LINEAR_COMP_DICT, components)
+                components = cast("LINEAR_COMP_DICT", components)
                 self.raw_rgb_components[imgband] = components
                 for k in components:
                     if k != "scale_range":
                         self.raw_needed_bands.add(k)
-        self.rgb_components = cast(dict[str, None | Callable | LINEAR_COMP_DICT], {})
+        self.rgb_components = cast("dict[str, None | Callable | LINEAR_COMP_DICT]", {})
 
-        self.scale_factor = cast(float, style_cfg.get("scale_factor"))
+        self.scale_factor = cast("float", style_cfg.get("scale_factor"))
         if "scale_range" in style_cfg:
             self.scale_min, self.scale_max = cast(
-                list[float | None], style_cfg["scale_range"]
+                "list[float | None]", style_cfg["scale_range"]
             )
         elif self.scale_factor:
             self.scale_min = 0.0
@@ -99,15 +99,15 @@ class ComponentStyleDef(StyleDefBase):
         self.component_scale_ranges: dict[str, dict[str, float]] = {}
         for cn, cd in raw_components.items():
             if not callable(cd) and "scale_range" in cd:
-                scale_range = cast(list[float], cd["scale_range"])
+                scale_range = cast("list[float]", cd["scale_range"])
                 self.component_scale_ranges[cn] = {
                     "min": scale_range[0],
                     "max": scale_range[1],
                 }
             else:
                 self.component_scale_ranges[cn] = {
-                    "min": cast(float, self.scale_min),
-                    "max": cast(float, self.scale_max),
+                    "min": cast("float", self.scale_min),
+                    "max": cast("float", self.scale_max),
                 }
 
     # pylint: disable=attribute-defined-outside-init
@@ -118,7 +118,7 @@ class ComponentStyleDef(StyleDefBase):
 
         Mostly sorting out bands, esp flag bands.
         """
-        self.rgb_components = cast(dict[str, None | Callable | LINEAR_COMP_DICT], {})
+        self.rgb_components = cast("dict[str, None | Callable | LINEAR_COMP_DICT]", {})
         for band, component in self.raw_rgb_components.items():
             if not component or callable(component):
                 self.rgb_components[band] = component
@@ -168,9 +168,9 @@ class ComponentStyleDef(StyleDefBase):
         :param data: Raw data, all bands.
         :return: RGBA uint8 xarray
         """
-        imgdata = cast(dict[Hashable, Any], {})
+        imgdata = cast("dict[Hashable, Any]", {})
         for imgband, components in cast(
-            dict[str, Callable | LINEAR_COMP_DICT], self.rgb_components
+            "dict[str, Callable | LINEAR_COMP_DICT]", self.rgb_components
         ).items():
             if callable(components):
                 imgband_data = components(data)

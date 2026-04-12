@@ -46,8 +46,8 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
             stand_alone=stand_alone,
             user_defined=user_defined,
         )
-        style_cfg = cast(CFG_DICT, self._raw_cfg)
-        self.component_ratio = float(cast(float | str, style_cfg["component_ratio"]))
+        style_cfg = cast("CFG_DICT", self._raw_cfg)
+        self.component_ratio = float(cast("float | str", style_cfg["component_ratio"]))
         if self.component_ratio < 0.0 or self.component_ratio > 1.0:
             raise ConfigException(
                 "Component ratio must be a floating point number between 0 and 1"
@@ -75,14 +75,16 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
             )
             component_band_data: DataArray | None = None
             for c_band, c_intensity in cast(
-                LINEAR_COMP_DICT, self.rgb_components[band]
+                "LINEAR_COMP_DICT", self.rgb_components[band]
             ).items():
                 if callable(c_intensity):
                     imgband_component_data = cast(
-                        DataArray, c_intensity(data[c_band], c_band, band)
+                        "DataArray", c_intensity(data[c_band], c_band, band)
                     )
                 else:
-                    imgband_component_data = data[c_band] * cast(DataArray, c_intensity)
+                    imgband_component_data = data[c_band] * cast(
+                        "DataArray", c_intensity
+                    )
                 if component_band_data is not None:
                     component_band_data += imgband_component_data
                 else:
@@ -91,7 +93,7 @@ class HybridStyleDef(ColorRampDef, ComponentStyleDef):
                     component_band_data = self.compress_band(band, component_band_data)
             img_band_data = rampdata * 255.0 * (
                 1.0 - self.component_ratio
-            ) + self.component_ratio * cast(DataArray, component_band_data)
+            ) + self.component_ratio * cast("DataArray", component_band_data)
             imgdata[band] = (d.dims, img_band_data.astype("uint8").data)
 
         return imgdata

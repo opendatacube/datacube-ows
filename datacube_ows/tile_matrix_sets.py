@@ -63,7 +63,7 @@ class TileMatrixSet(OWSConfigEntry):
             "crs": "EPSG:3857",
             "matrix_origin": [-20037508.3427892, 20037508.3427892],
             "tile_size": [256, 256],
-            "scale_set": cast(RAW_CFG, webmerc_scale_set),
+            "scale_set": cast("RAW_CFG", webmerc_scale_set),
             "wkss": "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible",
         }
     }
@@ -73,41 +73,41 @@ class TileMatrixSet(OWSConfigEntry):
         self.global_cfg = global_cfg
         self.identifier = identifier
 
-        self.crs_name = cast(str, cfg["crs"])
+        self.crs_name = cast("str", cfg["crs"])
         if self.crs_name not in self.global_cfg.published_CRSs:
             raise ConfigException(
                 f"Tile matrix set {identifier} has unpublished CRS: {self.crs_name}"
             )
-        matrix_origin = cast(list, cfg["matrix_origin"])
+        matrix_origin = cast("list", cfg["matrix_origin"])
         validate_2d_array(matrix_origin, identifier, "Matrix origin", float)
-        self.matrix_origin = cast(list[float], matrix_origin)
+        self.matrix_origin = cast("list[float]", matrix_origin)
         if len(self.matrix_origin) != 2:
             raise ConfigException(
                 f"The origin coordinates of tile matrix set {identifier} must have 2 dimensions"
             )
-        tile_size = cast(list, cfg["tile_size"])
+        tile_size = cast("list", cfg["tile_size"])
         validate_2d_array(tile_size, identifier, "Tile size", int)
         if len(tile_size) != 2:
             raise ConfigException(
                 f"The tile size of tile matrix set {identifier} must have 2 dimensions"
             )
-        self.tile_size = cast(list[int], tile_size)
-        scale_set = cast(list, cfg["scale_set"])
+        self.tile_size = cast("list[int]", tile_size)
+        scale_set = cast("list", cfg["scale_set"])
         try:
             validate_array_typ(scale_set, identifier, "Scale set", float)
         except TypeError:
             raise ConfigException(
                 f"In tile matrix set {identifier}, scale_set is not a list"
             ) from None
-        self.scale_set = cast(list[float], scale_set)
+        self.scale_set = cast("list[float]", scale_set)
         if len(self.scale_set) < 1:
             raise ConfigException(
                 f"Tile matrix set {identifier} has no scale denominators in scale_set"
             )
         self.force_raw_crs_name = bool(cfg.get("force_raw_crs_name", False))
-        self.wkss = cast(str | None, cfg.get("wkss"))
+        self.wkss = cast("str | None", cfg.get("wkss"))
         initial_matrix_exponents = cast(
-            list, cfg.get("matrix_exponent_initial_offsets", [0, 0])
+            "list", cfg.get("matrix_exponent_initial_offsets", [0, 0])
         )
         validate_2d_array(
             initial_matrix_exponents, identifier, "Initial matrix exponents", int
@@ -116,14 +116,14 @@ class TileMatrixSet(OWSConfigEntry):
             raise ConfigException(
                 f"The initial matrix exponents of tile matrix set {identifier} must have 2 dimensions"
             )
-        self.initial_matrix_exponents = cast(list[int], initial_matrix_exponents)
-        unit_coefficients = cast(list, cfg.get("unit_coefficients", [1.0, -1.0]))
+        self.initial_matrix_exponents = cast("list[int]", initial_matrix_exponents)
+        unit_coefficients = cast("list", cfg.get("unit_coefficients", [1.0, -1.0]))
         validate_2d_array(unit_coefficients, identifier, "Unit coefficients", float)
         if len(unit_coefficients) != 2:
             raise ConfigException(
                 f"The unit coefficients of tile matrix set {identifier} must have 2 dimensions"
             )
-        self.unit_coefficients = cast(list[float], unit_coefficients)
+        self.unit_coefficients = cast("list[float]", unit_coefficients)
 
     @property
     def crs_cfg(self) -> CFG_DICT:

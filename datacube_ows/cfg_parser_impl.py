@@ -405,7 +405,7 @@ def layers_report(
             "styles_count": len(lyr.styles),
             "styles_list": [styl.name for styl in lyr.styles],
         }
-        cast(list[dict], report["layers"]).append(layer)
+        cast("list[dict]", report["layers"]).append(layer)
     if input_file:
         with open(input_file) as f:
             input_file_data = json.load(f)

@@ -62,7 +62,7 @@ def cfg_expand(
         if "include" in cfg_unexpanded:
             if cfg_unexpanded["include"] in inclusions:
                 raise ConfigException(f"Cyclic inclusion: {cfg_unexpanded['include']}")
-            raw_path = cast(str, cfg_unexpanded["include"])
+            raw_path = cast("str", cfg_unexpanded["include"])
             # Required to pass a copy of the list into recursive invocations,
             # test_cfg_inclusion.py will show how it fails otherwise.
             ninclusions: list[str] = inclusions.copy()
@@ -98,7 +98,7 @@ def cfg_expand(
                 f"Unsupported inclusion type: {cfg_unexpanded['type']!s}"
             )
         return {
-            k: cfg_expand(cast(CFG_DICT, v), cwd=cwd, inclusions=inclusions)
+            k: cfg_expand(cast("CFG_DICT", v), cwd=cwd, inclusions=inclusions)
             for k, v in cfg_unexpanded.items()
         }
     if isinstance(cfg_unexpanded, Sequence) and not isinstance(cfg_unexpanded, str):
@@ -156,7 +156,7 @@ def import_python_obj(path: str) -> CFG_DICT:
         obj = getattr(mod, obj_name)
     except (ImportError, ValueError, ModuleNotFoundError, AttributeError):
         raise ConfigException(f"Could not import python object: {path}") from None
-    return cast(CFG_DICT, obj)
+    return cast("CFG_DICT", obj)
 
 
 class ConfigException(Exception):
@@ -356,12 +356,12 @@ class OWSMetadataConfig(OWSConfigEntry):
                 self.register_metadata(
                     self.get_obj_label(),
                     FLD_TITLE,
-                    cast(str, cfg.get(FLD_TITLE, self.default_title)),
+                    cast("str", cfg.get(FLD_TITLE, self.default_title)),
                 )
             else:
                 try:
                     self.register_metadata(
-                        self.get_obj_label(), FLD_TITLE, cast(str, cfg[FLD_TITLE])
+                        self.get_obj_label(), FLD_TITLE, cast("str", cfg[FLD_TITLE])
                     )
                 except KeyError:
                     raise ConfigException(
@@ -384,10 +384,10 @@ class OWSMetadataConfig(OWSConfigEntry):
                 raise ConfigException(f"Entity {self.get_obj_label()} has no abstract")
             else:
                 self.register_metadata(
-                    self.get_obj_label(), "abstract", cast(str, local_abstract)
+                    self.get_obj_label(), "abstract", cast("str", local_abstract)
                 )
         if self.METADATA_KEYWORDS:
-            local_keyword_set = set(cast(list[str], cfg.get("keywords", [])))
+            local_keyword_set = set(cast("list[str]", cfg.get("keywords", [])))
             self.register_metadata(
                 self.get_obj_label(), FLD_KEYWORDS, ",".join(local_keyword_set)
             )
@@ -395,7 +395,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             self._keywords = keyword_set.union(local_keyword_set)
         if self.METADATA_ATTRIBUTION:
             inheriting = False
-            attrib = cast(dict[str, str], cfg.get("attribution"))
+            attrib = cast("dict[str, str]", cfg.get("attribution"))
             if attrib is None and inherit_from is not None:
                 attrib = inherit_from.attribution
                 inheriting = True
@@ -405,18 +405,18 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.get_obj_label(), FLD_ATTRIBUTION, attrib_title, inheriting
                 )
         if self.METADATA_FEES:
-            fees = cast(str, cfg.get(FLD_FEES))
+            fees = cast("str", cfg.get(FLD_FEES))
             if not fees:
                 fees = "none"
             self.register_metadata(self.get_obj_label(), FLD_FEES, fees)
         if self.METADATA_ACCESS_CONSTRAINTS:
-            acc = cast(str, cfg.get("access_contraints"))
+            acc = cast("str", cfg.get("access_contraints"))
             if not acc:
                 acc = "none"
             self.register_metadata(self.get_obj_label(), FLD_ACCESS_CONSTRAINTS, acc)
         if self.METADATA_CONTACT_INFO:
             cfg_contact_info: dict[str, str] = cast(
-                dict[str, str], cfg.get("contact_info", {})
+                "dict[str, str]", cfg.get("contact_info", {})
             )
             org = cfg_contact_info.get("organisation")
             position = cfg_contact_info.get("position")
@@ -429,7 +429,7 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.get_obj_label(), FLD_CONTACT_POSITION, position
                 )
         if self.METADATA_DEFAULT_BANDS:
-            band_map = cast(dict[str, list[str]], cfg)
+            band_map = cast("dict[str, list[str]]", cfg)
             for k, v in band_map.items():
                 if len(v):
                     self.register_metadata(self.get_obj_label(), k, v[0])
@@ -442,7 +442,7 @@ class OWSMetadataConfig(OWSConfigEntry):
                     self.get_obj_label(), f"rule_{patch.idx}", patch.label
                 )
         if self.METADATA_LEGEND_UNITS:
-            units = cast(str, cfg.get(FLD_UNITS))
+            units = cast("str", cfg.get(FLD_UNITS))
             if units is not None:
                 self.register_metadata(self.get_obj_label(), FLD_UNITS, units)
         if self.METADATA_TICK_LABELS:
@@ -490,7 +490,7 @@ class OWSMetadataConfig(OWSConfigEntry):
             if not msg:
                 msg_: str | None = self._metadata_registry.get(lookup)
             else:
-                msg_ = cast(str, msg.string)
+                msg_ = cast("str", msg.string)
             return msg_
         return self._metadata_registry.get(lookup)
 
@@ -658,7 +658,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
         """
         if not expanded:
             cfg = self.expand_inherit(
-                cast(CFG_DICT, cfg),
+                cast("CFG_DICT", cfg),
                 global_cfg,
                 keyval_subs=keyval_subs,
                 keyval_defaults=keyval_defaults,
@@ -687,7 +687,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
             lookup = True
             # Precludes e.g. defaulting style lookup to current layer.
             lookup_keys: dict[str, str] = {}
-            inherits = cast(dict[str, str], cfg["inherits"])
+            inherits = cast("dict[str, str]", cfg["inherits"])
             for k in cls.INDEX_KEYS:
                 if (
                     k not in inherits
@@ -708,7 +708,7 @@ class OWSExtensibleConfigEntry(OWSIndexedConfigEntry):
                 parent_cfg = parent._raw_cfg
             else:
                 parent_cfg = cfg["inherits"]
-            cfg = deepinherit(cast(dict[str, Any], parent_cfg), cfg)
+            cfg = deepinherit(cast("dict[str, Any]", parent_cfg), cfg)
             cfg["inheritance_expanded"] = True
         return cfg
 
@@ -749,10 +749,10 @@ class OWSFlagBand(OWSConfigEntry):
         :param product_cfg:  The OWSNamedLayer object this flag-band is associated with
         """
         super().__init__(cfg, **kwargs)
-        cfg = cast(CFG_DICT, self._raw_cfg)
+        cfg = cast("CFG_DICT", self._raw_cfg)
         self.layer = product_cfg
         pq_names = self.layer.parse_pq_names(cfg)
-        self.pq_names = cast(list[str], pq_names["pq_names"])
+        self.pq_names = cast("list[str]", pq_names["pq_names"])
         self.pq_low_res_names = pq_names["pq_low_res_names"]
         self.main_products = pq_names["main_products"]
         self.pq_band = str(cfg["band"])
@@ -760,7 +760,7 @@ class OWSFlagBand(OWSConfigEntry):
         if "fuse_func" in cfg:
             if self.layer.global_cfg.load_driver == "legacy":
                 self.pq_fuse_func: FunctionWrapper | str | None = FunctionWrapper(
-                    self.layer, cast(CFG_DICT, cfg["fuse_func"])
+                    self.layer, cast("CFG_DICT", cfg["fuse_func"])
                 )
             elif isinstance(cfg["fuse_func"], str):
                 self.pq_fuse_func = cfg["fuse_func"]
@@ -771,7 +771,7 @@ class OWSFlagBand(OWSConfigEntry):
         else:
             self.pq_fuse_func = None
         self.pq_ignore_time = bool(cfg.get("ignore_time", False))
-        self.ignore_info_flags = cast(list[str], cfg.get("ignore_info_flags", []))
+        self.ignore_info_flags = cast("list[str]", cfg.get("ignore_info_flags", []))
         self.pq_manual_merge = bool(cfg.get("manual_merge", False))
         self.declare_unready("pq_products")
         self.declare_unready("flags_def")
@@ -906,7 +906,7 @@ class FlagProductBands(OWSConfigEntry):
         Second round (db-aware) intialisation.
         """
         for fb in self.flag_bands.values():
-            fb = cast(OWSFlagBand, fb)
+            fb = cast("OWSFlagBand", fb)
             # pyre-ignore [16]
             self.products: list[Product] = fb.pq_products
             # pyre-ignore [16]
@@ -994,16 +994,16 @@ class AbstractMaskRule(OWSConfigEntry):
         self.values: list[list[int]] | list[int] | None = None
         self.invert: bool | list[bool] = bool(cfg.get("invert", False))
         if "flags" in cfg:
-            flags = cast(FlagSpec, cfg["flags"])
+            flags = cast("FlagSpec", cfg["flags"])
             if "or" in flags and "and" in flags:
                 raise ConfigException(
                     f"ValueMap rule in {self.context} combines 'and' and 'or' rules"
                 )
             if "or" in flags:
                 self.or_flags = True
-                flags = cast(FlagSpec, flags["or"])
+                flags = cast("FlagSpec", flags["or"])
             elif "and" in flags:
-                flags = cast(FlagSpec, flags["and"])
+                flags = cast("FlagSpec", flags["and"])
             self.flags = flags
         else:
             self.flags = None
@@ -1018,7 +1018,7 @@ class AbstractMaskRule(OWSConfigEntry):
             if isinstance(val, int):
                 self.values = [val]
             else:
-                self.values = cast(list[int], val)
+                self.values = cast("list[int]", val)
 
         if not self.flags and not self.values:
             raise ConfigException(
@@ -1038,7 +1038,7 @@ class AbstractMaskRule(OWSConfigEntry):
         """
         if self.values:
             mask: DataArray | None = None
-            for v in cast(list[int], self.values):
+            for v in cast("list[int]", self.values):
                 vmask = data == v
                 if mask is None:
                     mask = vmask
@@ -1046,14 +1046,14 @@ class AbstractMaskRule(OWSConfigEntry):
                     mask |= vmask
         elif self.or_flags:
             mask = None
-            for f in cast(CFG_DICT, self.flags).items():
+            for f in cast("CFG_DICT", self.flags).items():
                 d = {f[0]: f[1]}
                 if mask is None:
                     mask = make_mask(data, **d)
                 else:
                     mask |= make_mask(data, **d)
         else:
-            mask = make_mask(data, **cast(CFG_DICT, self.flags))
+            mask = make_mask(data, **cast("CFG_DICT", self.flags))
         if mask is not None and self.invert:
             mask = ~mask  # pylint: disable=invalid-unary-operand-type
         return mask
@@ -1104,9 +1104,9 @@ class FunctionWrapper:
                     "Directly including callable objects in configuration is no longer supported. Please reference callables by fully qualified name."
                 )
             else:
-                self._func = get_function(cast(str, func_cfg["function"]))
-            self._args = cast(list[RAW_CFG], func_cfg.get("args", []))
-            self._kwargs = cast(CFG_DICT, func_cfg.get("kwargs", {})).copy()
+                self._func = get_function(cast("str", func_cfg["function"]))
+            self._args = cast("list[RAW_CFG]", func_cfg.get("args", []))
+            self._kwargs = cast("CFG_DICT", func_cfg.get("kwargs", {})).copy()
             self.pass_layer_cfg = bool(func_cfg.get("pass_layer_cfg", False))
             if "pass_product_cfg" in func_cfg:
                 _LOG.warning(
@@ -1116,16 +1116,15 @@ class FunctionWrapper:
             if func_cfg.get("mapped_bands", func_cfg.get("pass_product_cfg", False)):
                 if hasattr(product_or_style_cfg, "band_idx"):
                     # NamedLayer
-                    from datacube_ows.ows_configuration import OWSNamedLayer
 
-                    named_layer = cast(OWSNamedLayer, product_or_style_cfg)
+                    named_layer = cast("OWSNamedLayer", product_or_style_cfg)
                     b_idx = named_layer.band_idx
                     self.band_mapper = b_idx.band
                 else:
                     # Style
                     from datacube_ows.styles import StyleDef
 
-                    style = cast(StyleDef, product_or_style_cfg)
+                    style = cast("StyleDef", product_or_style_cfg)
                     b_idx = style.product.band_idx
                     delocaliser = style.local_band
                     self.band_mapper = lambda b: b_idx.band(delocaliser(b))
