@@ -462,7 +462,7 @@ class OWSMetadataConfig(OWSConfigEntry):
     @classmethod
     def set_msg_src(cls, src: Catalog | None) -> None:
         """
-        Allow all OWSMetadatConfig subclasses to share a common message catalog.
+        Allow all OWSMetadataConfig subclasses to share a common message catalog.
         :param src: A Message Catalog object
         """
         OWSMetadataConfig._msg_src = src
