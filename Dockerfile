@@ -130,9 +130,10 @@ ENTRYPOINT ["/usr/local/bin/remap-user.sh"]
 CMD [\
     "gunicorn", \
     "-b", "0.0.0.0:8000", \
-    "--workers=3", \
+    "--workers=2", \
+    "--threads=2", \
     "-k", \
-    "gevent", \
+    "gthread", \
     "--timeout", "121", \
     "--pid", "/home/ubuntu/gunicorn.pid", \
     "--log-level", "info", \
