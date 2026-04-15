@@ -16,7 +16,8 @@ sys.path.append("/src")
 if os.path.isfile("/src/odc/.datacube.conf.local"):
     os.environ.setdefault("ODC_CONFIG_PATH", "/src/odc/.datacube.conf.local")
 
-from datacube_ows import __version__, create_app
+from datacube_ows import __version__
+from datacube_ows.startup_utils import create_app
 
 application = create_app()
 

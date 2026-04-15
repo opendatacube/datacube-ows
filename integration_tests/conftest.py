@@ -12,7 +12,7 @@ from click.testing import CliRunner
 from datacube.cfg import ODCConfig
 from pytest_localserver.http import WSGIServer
 
-from datacube_ows import create_app
+from datacube_ows.startup_utils import create_app
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
