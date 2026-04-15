@@ -28,7 +28,6 @@ licenseheaders.py
 license-template.txt
 load_test.sh
 Makefile
-update_ranges.py
 pylintrc
 test_urls.sh
 
