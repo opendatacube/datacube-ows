@@ -736,19 +736,14 @@ source = { editable = "." }
 dependencies = [
     { name = "affine" },
     { name = "antimeridian" },
-    { name = "babel" },
     { name = "click" },
     { name = "datacube", extra = ["performance", "s3"] },
     { name = "deepdiff" },
-    { name = "flask" },
-    { name = "flask-babel" },
     { name = "fsspec" },
     { name = "geoalchemy2" },
     { name = "lark" },
-    { name = "matplotlib" },
     { name = "numpy" },
     { name = "pillow" },
-    { name = "prometheus-flask-exporter" },
     { name = "pyows" },
     { name = "python-dateutil" },
     { name = "python-slugify" },
@@ -764,14 +759,19 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "babel" },
     { name = "blinker" },
+    { name = "flask" },
+    { name = "flask-babel" },
     { name = "flask-cors" },
     { name = "fsspec" },
     { name = "gunicorn", extra = ["gevent"] },
     { name = "lxml" },
+    { name = "matplotlib" },
     { name = "mypy" },
     { name = "owslib" },
     { name = "prometheus-client" },
+    { name = "prometheus-flask-exporter" },
     { name = "psycopg", extra = ["c"] },
     { name = "psycopg2" },
     { name = "pydevd-pycharm" },
@@ -788,7 +788,12 @@ all = [
     { name = "types-requests" },
 ]
 dev = [
+    { name = "babel" },
+    { name = "flask" },
+    { name = "flask-babel" },
+    { name = "matplotlib" },
     { name = "mypy" },
+    { name = "prometheus-flask-exporter" },
     { name = "pydevd-pycharm" },
     { name = "pylint" },
     { name = "ruff" },
@@ -798,9 +803,14 @@ dev = [
     { name = "types-requests" },
 ]
 ops = [
+    { name = "babel" },
     { name = "blinker" },
+    { name = "flask" },
+    { name = "flask-babel" },
     { name = "gunicorn", extra = ["gevent"] },
+    { name = "matplotlib" },
     { name = "prometheus-client" },
+    { name = "prometheus-flask-exporter" },
     { name = "psycopg", extra = ["c"] },
     { name = "psycopg2" },
     { name = "sentry-sdk" },
@@ -823,9 +833,17 @@ test = [
     { name = "pytest-localserver" },
     { name = "pytest-mock" },
 ]
+webserver = [
+    { name = "babel" },
+    { name = "flask" },
+    { name = "flask-babel" },
+    { name = "matplotlib" },
+    { name = "prometheus-flask-exporter" },
+]
 
 [package.dev-dependencies]
 doc = [
+    { name = "datacube-ows", extra = ["webserver"] },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "sphinx-click" },
@@ -835,14 +853,16 @@ doc = [
 requires-dist = [
     { name = "affine" },
     { name = "antimeridian" },
-    { name = "babel" },
+    { name = "babel", marker = "extra == 'webserver'" },
     { name = "blinker", marker = "extra == 'ops'" },
     { name = "click" },
     { name = "datacube", extras = ["performance", "s3"], specifier = ">=1.9.14,<1.10.0" },
     { name = "datacube-ows", extras = ["dev", "ops", "test"], marker = "extra == 'all'" },
+    { name = "datacube-ows", extras = ["webserver"], marker = "extra == 'dev'" },
+    { name = "datacube-ows", extras = ["webserver"], marker = "extra == 'ops'" },
     { name = "deepdiff" },
-    { name = "flask" },
-    { name = "flask-babel", specifier = ">3.0.0" },
+    { name = "flask", marker = "extra == 'webserver'" },
+    { name = "flask-babel", marker = "extra == 'webserver'", specifier = ">3.0.0" },
     { name = "flask-cors", marker = "extra == 'test'" },
     { name = "fsspec" },
     { name = "fsspec", marker = "extra == 'test'" },
@@ -850,13 +870,13 @@ requires-dist = [
     { name = "gunicorn", extras = ["gevent"], marker = "extra == 'ops'", specifier = ">=22.0.0" },
     { name = "lark" },
     { name = "lxml", marker = "extra == 'test'" },
-    { name = "matplotlib" },
+    { name = "matplotlib", marker = "extra == 'webserver'" },
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "numpy", specifier = ">=1.22" },
     { name = "owslib", marker = "extra == 'test'", specifier = ">0.29.2" },
     { name = "pillow", specifier = ">=10.2.0" },
     { name = "prometheus-client", marker = "extra == 'ops'" },
-    { name = "prometheus-flask-exporter" },
+    { name = "prometheus-flask-exporter", marker = "extra == 'webserver'" },
     { name = "psycopg", extras = ["c"], marker = "extra == 'ops'" },
     { name = "psycopg2", marker = "extra == 'ops'" },
     { name = "psycopg2", marker = "extra == 'postgres'" },
@@ -886,10 +906,11 @@ requires-dist = [
     { name = "urllib3" },
     { name = "xarray" },
 ]
-provides-extras = ["dev", "ops", "postgres", "setup", "test", "all"]
+provides-extras = ["dev", "ops", "postgres", "setup", "test", "webserver", "all"]
 
 [package.metadata.requires-dev]
 doc = [
+    { name = "datacube-ows", extras = ["webserver"] },
     { name = "sphinx", specifier = ">=8.2.3" },
     { name = "sphinx-click" },
 ]

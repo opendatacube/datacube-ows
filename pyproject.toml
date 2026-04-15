@@ -6,21 +6,16 @@ authors = [
     {name = "Open Data Cube", email = "earth.observation@ga.gov.au"},
 ]
 dependencies = [
-    "Babel",
-    "Flask-Babel>3.0.0",
     "Pillow>=10.2.0",
     "affine",
     "antimeridian",
     "click",
     "datacube[performance,s3]>=1.9.14,<1.10.0",
     "deepdiff",
-    "flask",
     "fsspec",
     "geoalchemy2",
     "lark",
-    "matplotlib",
     "numpy>=1.22",
-    "prometheus_flask_exporter",
     "pyows",
     "python_dateutil",
     "python_slugify",
@@ -52,12 +47,14 @@ Homepage = "https://github.com/opendatacube/datacube-ows"
 
 [dependency-groups]
 doc = [
+    "datacube-ows[webserver]",
     "Sphinx>=8.2.3",
     "sphinx-click",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "datacube-ows[webserver]",
     "mypy",
     "pydevd-pycharm~=252.26830.99",
     "pylint",
@@ -69,6 +66,7 @@ dev = [
 ]
 ops = [
     "blinker",
+    "datacube-ows[webserver]",
     "gunicorn[gevent]>=22.0.0",
     "prometheus_client",
     "psycopg2",
@@ -87,6 +85,13 @@ test = [
     "pytest_cov",
     "pytest_localserver",
     "pytest_mock",
+]
+webserver = [
+    "babel",
+    "flask",
+    "flask-babel>3.0.0",
+    "matplotlib",
+    "prometheus_flask_exporter",
 ]
 all = ["datacube_ows[dev,ops,test]"]
 
