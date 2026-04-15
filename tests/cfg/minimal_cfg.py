@@ -7,7 +7,7 @@
 ows_cfg = {
     "global": {
         "title": "Minimal test config",
-        "allowed_urls": [],
+        "allowed_urls": "",
         "info_url": "http://opendatacube.org",
         "env": "nosuchdb",
         "published_CRSs": {

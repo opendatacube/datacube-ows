@@ -1766,6 +1766,10 @@ class OWSConfig(OWSMetadataConfig):
             self.msg_file_name = cast(str | None, cfg.get("message_file"))
         self.parse_metadata(cfg)
         self.allowed_urls = cast(str | list[str], cfg["allowed_urls"])
+        if isinstance(self.allowed_urls, list) and len(self.allowed_urls) == 0:
+            raise ConfigException(
+                'Empty list for allowed_urls. Please use the empty string ("") instead.'
+            )
         self.info_url = cfg["info_url"]
         self.contact_info = ContactInfo.parse(cfg.get("contact_info"), self)
         self.attribution = AttributionCfg.parse(
