@@ -9,6 +9,6 @@ try:
 except ImportError:
     # Default version number.
     # Will only be used when running datacube-ows direct from source code (not properly installed)
-    __version__ = "1.9.8"
+    __version__ = "1.9.? (not correctly installed)"
 
 __all__ = ["__version__"]
